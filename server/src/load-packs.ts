@@ -1,8 +1,6 @@
 import {
   DatapackIndex,
-  MapPackIndex,
   Patterns,
-  assertMapPack,
   assertPatterns,
   DatapackMetadata,
   assertDatapack,
@@ -12,7 +10,6 @@ import pmap from "p-map";
 import fs from "fs/promises";
 import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
-import { parseMapPacks } from "./parse-map-packs.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
@@ -28,14 +25,12 @@ import Vibrant from "node-vibrant";
  * will stop parsing if an error is thrown
  * will keep parsed datapacks that don't have errors
  * @param datapackIndex the datapackIndex to load
- * @param mapPackIndex the mapPackIndex to load
  * @param decryptionDirectory the directory that has the decrypted files
  * @param datapacks the datapacks to load
  * @param type the type of datapack (and any additional properties that come with the type)
  */
 export async function loadIndexes(
   datapackIndex: DatapackIndex,
-  mapPackIndex: MapPackIndex,
   decryptionDirectory: string,
   datapacks: DatapackMetadata[],
   type: DatapackType
@@ -48,23 +43,17 @@ export async function loadIndexes(
         if (!baseDatapackProps) {
           return;
         }
+        if (datapackIndex[datapack.title]) {
+          throw new Error(`Datapack ${datapack.title} already exists`);
+        }
         const finalDatapack = { ...baseDatapackProps, ...type };
         assertDatapack(finalDatapack);
-        datapackIndex[datapack.file] = finalDatapack;
+        datapackIndex[datapack.title] = finalDatapack;
         console.log(chalk.green(`Successfully parsed ${datapack.file}`));
       })
       .catch((e) => {
         successful = false;
         console.log(chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.file} and error: ${e}`));
-      });
-    await parseMapPacks([datapack.file], decryptionDirectory)
-      .then((mapPack) => {
-        assertMapPack(mapPack);
-        mapPackIndex[datapack.file] = mapPack;
-      })
-      .catch((e) => {
-        successful = false;
-        console.log(chalk.red(`Cannot create a mapPack with datapack ${datapack.file} and error: ${e}`));
       });
   }
   successful =

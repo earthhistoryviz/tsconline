@@ -1,5 +1,5 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
-import { BaseDatapackProps, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { devSafeUrl } from "../../util";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
@@ -9,9 +9,9 @@ import { DatapackMenu } from "../../settings_tabs/Datapack";
 
 type TSCDatapackCardProps = {
   name: string;
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
   value: boolean;
-  onChange: (name: string) => void;
+  onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
@@ -29,13 +29,12 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
         <div className={styles.hc}>
           <Typography className={styles.header}>{datapack.title}</Typography>
           <DatapackMenu
-            name={name}
+            datapack={datapack}
             button={
               <IconButton className={styles.other} onClick={(e) => e.stopPropagation()}>
                 <span className={styles.more} />
               </IconButton>
             }
-            isUserDatapack={isPrivateUserDatapack(datapack)}
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>
@@ -55,7 +54,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
                 onClick={async (e) => {
                   e.stopPropagation();
                   setLoading(true);
-                  onChange(name);
+                  onChange(datapack);
                   setLoading(false);
                 }}>
                 {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}

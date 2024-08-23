@@ -1,28 +1,23 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { realpath, access, rm, mkdir, readFile, writeFile } from "fs/promises";
-import path, { join } from "path";
+import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
+import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import {
-  assertDatapackIndex,
-  assertIndexResponse,
-  assertMapPackIndex,
-  DatapackIndex,
-  MapPackIndex
-} from "@tsconline/shared";
+import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { deleteDatapack, loadFileMetadata, writeFileMetadata } from "../file-metadata-handler.js";
+import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadIndexes } from "../load-packs.js";
-import { uploadUserDatapackHandler } from "../upload-handlers.js";
-import logger from "../error-logger.js";
+import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
+import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
+import { fetchAllUsersDatapacks } from "../user/user-handler.js";
 
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>,
+  request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -32,27 +27,41 @@ export const requestDownload = async function requestDownload(
   }
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
-  const { filename } = request.params;
+  const { datapack } = request.params;
   const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  const datapackDir = path.join(userDir, "datapacks");
-  let filepath = path.join(datapackDir, filename);
-  const encryptedFilepathDir = path.join(userDir, "encrypted-datapacks");
-  let maybeEncryptedFilepath = path.join(encryptedFilepathDir, filename);
-  // check and sanitize filepath
+  const datapackDir = path.join(userDir, datapack);
+  const encryptedFilepathDir = path.join(datapackDir, "encrypted-datapacks");
+  let filepath = "";
+  let filename = "";
+  // get valid filepath/filename from cache
   try {
-    filepath = await realpath(path.resolve(filepath));
+    if (!(await verifyFilepath(datapackDir))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
+    const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
+    if (!(await verifyFilepath(cachedDatapackFilepath))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
+    filename = await getFileNameFromCachedDatapack(cachedDatapackFilepath);
+    filepath = path.join(datapackDir, filename);
+    // check and sanitize filepath
+    if (!(await verifyFilepath(filepath))) {
+      reply.status(403).send({ error: "Invalid file path" });
+      return;
+    }
   } catch (e) {
+    reply.status(500).send({ error: "Failed to load cached datapack" });
+    return;
+  }
+  // sanitize this differently since this might not exist
+  const maybeEncryptedFilepath = path.resolve(path.join(encryptedFilepathDir, filename));
+  if (!maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))) {
     reply.status(403).send({ error: "Invalid file path" });
     return;
   }
-  maybeEncryptedFilepath = path.resolve(maybeEncryptedFilepath);
-  if (
-    !filepath.startsWith(path.resolve(datapackDir)) ||
-    !maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))
-  ) {
-    reply.status(403).send({ error: "Invalid file path" });
-    return;
-  }
+  // user did not ask for an encryption, so send original file
   if (needEncryption === undefined) {
     try {
       await access(filepath);
@@ -62,7 +71,8 @@ export const requestDownload = async function requestDownload(
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
-        const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+        console.log(filepath);
+        const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
         reply.status(404).send({ error: errormsg });
       } else {
         reply.status(500).send({ error: "An error occurred: " + e });
@@ -70,6 +80,7 @@ export const requestDownload = async function requestDownload(
       return;
     }
   }
+  // see if we have already encrypted the file
   try {
     await access(maybeEncryptedFilepath);
     const file = await readFile(maybeEncryptedFilepath);
@@ -96,7 +107,7 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "The file requested " + filename + " does not exist within user's upload directory";
+      const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
@@ -129,7 +140,7 @@ export const requestDownload = async function requestDownload(
     } else {
       await rm(maybeEncryptedFilepath, { force: true });
       const errormsg =
-        "Java file was unable to encrypt the file " + filename + ", resulting in an incorrect encryption header.";
+        "Java file was unable to encrypt the file " + datapack + ", resulting in an incorrect encryption header.";
       reply.status(422).send({
         error: errormsg
       });
@@ -138,7 +149,7 @@ export const requestDownload = async function requestDownload(
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "Java file did not successfully process the file " + filename;
+      const errormsg = "Java file did not successfully process the file " + datapack;
       reply.status(404).send({ error: errormsg });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
@@ -149,14 +160,8 @@ export const requestDownload = async function requestDownload(
 export const fetchPublicDatapacks = async function fetchPublicDatapacks(request: FastifyRequest, reply: FastifyReply) {
   try {
     const publicDatapackIndexFilepath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
-    const publicMapPackIndexFilepath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
-    const { datapackIndex, mapPackIndex } = await loadPublicUserDatapacks(
-      publicDatapackIndexFilepath,
-      publicMapPackIndexFilepath
-    );
-    const indexResponse = { datapackIndex, mapPackIndex };
-    assertIndexResponse(indexResponse);
-    reply.send(indexResponse);
+    const { datapackIndex } = await loadPublicUserDatapacks(publicDatapackIndexFilepath);
+    reply.send(datapackIndex);
   } catch (e) {
     reply.status(500).send({ error: "Failed to load public datapacks" });
   }
@@ -181,28 +186,13 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     return;
   }
 
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-
   try {
-    await access(userDir);
-    await access(path.join(userDir, "DatapackIndex.json"));
-    await access(path.join(userDir, "MapPackIndex.json"));
+    const userDir = path.join(assetconfigs.uploadDirectory, uuid);
+    const datapackIndex = await fetchAllUsersDatapacks(userDir);
+    reply.send(datapackIndex);
   } catch (e) {
-    reply.send({ datapackIndex: {}, mapPackIndex: {} });
-    return;
-  }
-  try {
-    const datapackIndex = JSON.parse(await readFile(path.join(userDir, "DatapackIndex.json"), "utf8"));
-    assertDatapackIndex(datapackIndex);
-    const mapPackIndex = JSON.parse(await readFile(path.join(userDir, "MapPackIndex.json"), "utf8"));
-    assertMapPackIndex(mapPackIndex);
-    const indexResponse = { datapackIndex, mapPackIndex };
-    reply.status(200).send(indexResponse);
-  } catch (e) {
-    reply
-      .status(500)
-      .send({ error: "Failed to load indexes, corrupt json files present. Please contact customer service." });
-    return;
+    console.error(e);
+    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
   }
 };
 
@@ -224,12 +214,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
   let userDir: string;
-  let datapackDir: string;
+  let datapackDir: string = "";
   let filepath: string = "";
   try {
     userDir = path.join(assetconfigs.uploadDirectory, uuid);
-    datapackDir = path.join(userDir, "datapacks");
-    await mkdir(datapackDir, { recursive: true });
+    await mkdir(userDir, { recursive: true });
   } catch (e) {
     reply.status(500).send({ error: "Failed to create user directory with error " + e });
     return;
@@ -248,7 +237,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
-        filepath = path.join(datapackDir, uploadedFile.filename);
+        // store it in a temp file since we need to know title before we effectively save the file
+        filepath = path.join(userDir, "temp_" + uploadedFile.filename);
         try {
           await pipeline(uploadedFile.file, createWriteStream(filepath));
         } catch (e) {
@@ -293,12 +283,22 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   if (!datapackMetadata) {
     return;
   }
-  const ext = path.extname(filename);
-  const filenameWithoutExtension = path.basename(filename, ext);
-  const decryptDir = path.join(userDir, "decrypted");
-  const decryptedFilepathDir = path.join(decryptDir, filenameWithoutExtension);
-  const mapPackIndexFilepath = path.join(userDir, "MapPackIndex.json");
-  const datapackIndexFilepath = path.join(userDir, "DatapackIndex.json");
+  if (await checkFileExists(path.join(userDir, datapackMetadata.title))) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Datapack with the same title already exists" });
+    return;
+  }
+  try {
+    datapackDir = path.join(userDir, datapackMetadata.title);
+    await mkdir(datapackDir, { recursive: true });
+    await rename(filepath, path.join(datapackDir, datapackMetadata.file));
+    filepath = path.join(datapackDir, datapackMetadata.file);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
+  }
+  const decryptedDir = path.join(datapackDir, "decrypted");
+  const decryptedFilepathDir = path.join(decryptedDir, path.parse(filename).name);
+  const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -307,7 +307,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         // Decrypting these datapacks:
         `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${decryptDir.replaceAll("\\", "/")} `;
+        `-dest ${decryptedDir.replaceAll("\\", "/")} `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");
@@ -335,50 +335,24 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   }
 
   const datapackIndex: DatapackIndex = {};
-  const mapPackIndex: MapPackIndex = {};
   // check for if this user has a datapack index already
-  try {
-    const data = await readFile(datapackIndexFilepath, "utf-8");
-    Object.assign(datapackIndex, JSON.parse(data));
-    assertDatapackIndex(datapackIndex);
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
-      await errorHandler("Failed to parse DatapackIndex.json", 500, e);
-      return;
-    }
-  }
-  // check for if this user has a map index already
-  try {
-    const data = await readFile(mapPackIndexFilepath, "utf-8");
-    Object.assign(mapPackIndex, JSON.parse(data));
-    assertMapPackIndex(mapPackIndex);
-  } catch (e) {
-    if ((e as NodeJS.ErrnoException).code != "ENOENT") {
-      errorHandler("Failed to parse MapPackIndex.json", 500, e);
-      return;
-    }
-  }
-  const success = await loadIndexes(datapackIndex, mapPackIndex, decryptDir.replaceAll("\\", "/"), [datapackMetadata], {
+  const success = await loadIndexes(datapackIndex, decryptedDir.replaceAll("\\", "/"), [datapackMetadata], {
     type: isPublic ? "public_user" : "private_user",
     uuid
   });
-  if (!datapackIndex[filename] || !success) {
+  if (!datapackIndex[datapackMetadata.title] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
   if (isPublic) {
     try {
-      const publicDatapackPath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
-      const publicMappackPath = path.join(assetconfigs.publicDirectory, "MapPackIndex.json");
+      const publicDatapackPath = path.join(assetconfigs.publicDirectory, PUBLIC_DATAPACK_INDEX_FILENAME);
       await mkdir(assetconfigs.publicDirectory, { recursive: true });
       await addPublicUserDatapack(
-        filename,
-        datapackIndex[filename]!,
+        datapackIndex[datapackMetadata.title]!,
         publicDatapackPath,
-        publicMappackPath,
         filepath,
-        assetconfigs.publicUserDatapacksDirectory,
-        mapPackIndex[filename]
+        assetconfigs.publicUserDatapacksDirectory
       );
     } catch (e) {
       await errorHandler("Could not write to public datapacks, please try again later", 500, e);
@@ -386,21 +360,14 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     }
   }
   try {
-    await writeFile(datapackIndexFilepath, JSON.stringify(datapackIndex, null, 2));
-    await writeFile(mapPackIndexFilepath, JSON.stringify(mapPackIndex, null, 2));
+    const datapack = datapackIndex[datapackMetadata.title];
+    await writeFile(cachedDatapackFilepath, JSON.stringify(datapack, null, 2));
   } catch (e) {
-    await errorHandler("Failed to save indexes", 500, e);
+    await errorHandler("Failed to save index", 500, e);
     return;
   }
   try {
-    await writeFileMetadata(
-      assetconfigs.fileMetadata,
-      filename,
-      filepath,
-      decryptedFilepathDir,
-      mapPackIndexFilepath,
-      datapackIndexFilepath
-    );
+    await writeFileMetadata(assetconfigs.fileMetadata, filename, filepath, uuid);
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
@@ -422,9 +389,9 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     reply.status(400).send({ error: "Missing filename" });
     return;
   }
-  const path = join(assetconfigs.uploadDirectory, uuid, "datapacks", filename);
+  const filepath = path.join(assetconfigs.uploadDirectory, uuid, path.basename(filename));
   try {
-    if (!(await verifyFilepath(path))) {
+    if (!(await verifyFilepath(filepath))) {
       reply.status(403).send({ error: "Invalid filename/File doesn't exist" });
       return;
     }
@@ -433,25 +400,9 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     return;
   }
   try {
-    const metadataIndex = await loadFileMetadata(assetconfigs.fileMetadata);
-    const metadata = metadataIndex[path];
-    if (!metadata) {
-      // file exists but not in metadata (THIS CASE SHOULD NOT HAPPEN AND SHOULD BE INVESTIGATED IF OCCURS)
-      logger.error("File exists but not in metadata, could require extra supervision of deletion ", {
-        path,
-        uuid,
-        filename
-      });
-      await rm(path, { force: true });
-      reply
-        .status(404)
-        .send({ error: "File not found in metadata, but file was deleted. See administrator for more help." });
-      return;
-    }
-    await deleteDatapack(metadataIndex, path);
-    await writeFile(assetconfigs.fileMetadata, JSON.stringify(metadataIndex, null, 2));
+    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, filepath);
   } catch (e) {
-    reply.status(500).send({ error: "There was an error loading/writing file metadata" });
+    reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
   }
   reply.status(200).send({ message: "File deleted" });

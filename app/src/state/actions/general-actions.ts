@@ -4,12 +4,10 @@ import {
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   DatapackIndex,
-  MapPackIndex,
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
-  assertMapPackInfoChunk,
   assertDatapack,
   DatapackMetadata,
   defaultColumnRoot,
@@ -17,7 +15,10 @@ import {
   isPrivateUserDatapack,
   assertPrivateUserDatapack,
   Datapack,
-  assertServerDatapack
+  assertServerDatapack,
+  assertDatapackIndex,
+  DatapackConfigForChartRequest,
+  isUserDatapack
 } from "@tsconline/shared";
 
 import {
@@ -27,8 +28,6 @@ import {
   assertSuccessfulServerResponse,
   Presets,
   assertSVGStatus,
-  IndexResponse,
-  assertIndexResponse,
   assertPresets,
   assertPatterns
 } from "@tsconline/shared";
@@ -144,66 +143,6 @@ export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () =>
     console.error(e);
   }
 });
-
-export const fetchServerMapPackIndex = action("fetchMapPackIndex", async () => {
-  let start = 0;
-  let total = -1;
-  const mapPackIndex: MapPackIndex = {};
-  try {
-    while (total == -1 || start < total) {
-      const response = await fetcher(`/map-pack-index?start=${start}&increment=${increment}`, {
-        method: "GET"
-      });
-      const index = await response.json();
-      try {
-        assertMapPackInfoChunk(index);
-        Object.assign(mapPackIndex, index.mapPackIndex);
-        if (total == -1) total = index.totalChunks;
-        start += increment;
-      } catch (e) {
-        displayServerError(index, ErrorCodes.INVALID_MAPPACK_INFO, ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]);
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-    // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
-    // ^ this is to accomodate for the user datapacks and any other way to add datapacks
-    // TODO: potentially check for staleness sometime
-    setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
-    console.log("MapPacks loaded");
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-/**
- * This is not used to prioritize chunk loading to prevent ui lag
- * however, this will technichally load faster with the current datapacks 5/4/2024
- */
-export const fetchAllIndexes = action("fetchAllIndexes", async () => {
-  try {
-    const response = await fetcher("/datapackinfoindex", {
-      method: "GET"
-    });
-    const indexResponse = await response.json();
-    try {
-      assertIndexResponse(indexResponse);
-      loadIndexResponse(indexResponse);
-      console.log("Indexes loaded");
-    } catch (e) {
-      displayServerError(
-        indexResponse,
-        ErrorCodes.INVALID_DATAPACK_INFO,
-        ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
-      );
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
 export const fetchPresets = action("fetchPresets", async () => {
   try {
     const response = await fetcher("/presets");
@@ -228,12 +167,8 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data);
-      const { mapPackIndex: publicMapPackIndex, datapackIndex: publicDatapackIndex } = data;
-      const totalMapPackIndex = { ...state.mapPackIndex, ...publicMapPackIndex };
-      setMapPackIndex(totalMapPackIndex);
-      const totalDatapackIndex = { ...state.datapackIndex, ...publicDatapackIndex };
-      setDatapackIndex(totalDatapackIndex);
+      assertDatapackIndex(data);
+      setDatapackIndex({ ...state.datapackIndex, ...data });
       console.log("Public Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
@@ -255,19 +190,17 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data);
-      const { mapPackIndex, datapackIndex } = data;
-
+      assertDatapackIndex(data);
       // make sure these are private user datapacks since datapackIndex is ambiguous
-      Object.values(datapackIndex).forEach((datapack) => {
+      Object.values(data).forEach((datapack) => {
         assertPrivateUserDatapack(datapack);
       });
-      setMapPackIndex({ ...state.mapPackIndex, ...mapPackIndex });
-      setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
+      setDatapackIndex({ ...state.datapackIndex, ...data });
 
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      console.error(e);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -276,9 +209,9 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
 });
 
 export const uploadUserDatapack = action(
-  "uploadDatapack",
+  "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, options?: UploadOptions) => {
-    if (state.datapackIndex[file.name]) {
+    if (state.datapackIndex[metadata.title]) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -320,15 +253,6 @@ export const uploadUserDatapack = action(
   }
 );
 
-export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
-  // This is to prevent the UI from lagging
-  state.mapPackIndex = {};
-  for (const key in mapPackIndex) {
-    state.mapPackIndex[key] = mapPackIndex[key];
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-});
-
 export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: Datapack) => {
   state.datapackIndex[datapack] = info;
 });
@@ -341,11 +265,6 @@ export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex:
     });
     await new Promise((resolve) => setTimeout(resolve, 0));
   }
-});
-
-export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
-  setDatapackIndex(response.datapackIndex);
-  setMapPackIndex(response.mapPackIndex);
 });
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
@@ -454,9 +373,12 @@ export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isPr
   state.isProcessingDatapacks = isProcessingDatapacks;
 });
 
-export const setUnsavedDatapackConfig = action("setUnsavedDatapackConfig", (newDatapacks: string[]) => {
-  state.unsavedDatapackConfig = newDatapacks;
-});
+export const setUnsavedDatapackConfig = action(
+  "setUnsavedDatapackConfig",
+  (newDatapacks: DatapackConfigForChartRequest[]) => {
+    state.unsavedDatapackConfig = newDatapacks;
+  }
+);
 
 const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   resetSettings();
@@ -486,7 +408,7 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: string[], settingsPath?: string) => {
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return;
@@ -519,10 +441,9 @@ export const processDatapackConfig = action(
         );
 
         const message: SetDatapackConfigMessage = {
-          datapacks: datapacks,
+          datapacks,
           stateCopy: toJS(state)
         };
-
         setDatapackConfigWorker.postMessage(message);
 
         setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
@@ -559,8 +480,12 @@ export const processDatapackConfig = action(
         };
       });
     } catch (e) {
+      console.error(e);
+      setIsProcessingDatapacks(false);
       pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
+      return false;
     }
+    return true;
   }
 );
 
@@ -571,7 +496,7 @@ export const setDatapackConfig = action(
     foundDefaultAge: boolean,
     mapHierarchy: MapHierarchy,
     mapInfo: MapInfo,
-    datapacks: string[],
+    datapacks: DatapackConfigForChartRequest[],
     chartSettings: ChartInfoTSC | null
   ): Promise<boolean> => {
     resetSettings();
@@ -834,9 +759,19 @@ export const pushSnackbar = action("pushSnackbar", (text: string, severity: "suc
   });
 });
 
-export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
-  const response = await fetcher(`/images/${datapackName}/${imageName}`, {
-    method: "GET"
+export const fetchImage = action("fetchImage", async (datapack: DatapackConfigForChartRequest, imageName: string) => {
+  const { title, file } = datapack;
+  const response = await fetcher(`/images`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      datapackTitle: title,
+      datapackFilename: file,
+      imageName,
+      ...(isUserDatapack(datapack) ? { uuid: datapack.uuid } : {})
+    })
   });
   if (!response.ok) {
     if (response.status === 404) {
@@ -865,12 +800,12 @@ export async function getRecaptchaToken(token: string) {
   }
 }
 
-export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/user/datapack/${filename}`;
+    route = `/user/datapack/${datapack.title}`;
   } else {
-    route = `/user/datapack/${filename}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/${datapack.title}?needEncryption=${needEncryption}`;
   }
   const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
   if (!recaptchaToken) return null;
@@ -918,7 +853,7 @@ export const requestDownload = action(async (filename: string, needEncryption: b
         const aTag = document.createElement("a");
         aTag.href = fileURL;
 
-        aTag.setAttribute("download", filename);
+        aTag.setAttribute("download", datapack.file);
 
         document.body.appendChild(aTag);
         aTag.click();
@@ -992,11 +927,7 @@ export const setDefaultUserState = action(() => {
   const datapackIndex = Object.fromEntries(
     Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))
   );
-  const mapPackIndex = Object.fromEntries(
-    Object.entries(state.mapPackIndex).filter(([key]) => serverDatapacks.includes(key))
-  );
   setDatapackIndex(datapackIndex);
-  setMapPackIndex(mapPackIndex);
 });
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {

@@ -19,9 +19,9 @@ import type {
   ColumnInfo,
   Presets,
   DatapackIndex,
-  MapPackIndex,
   Patterns,
-  AdminSharedUser
+  AdminSharedUser,
+  DatapackConfigForChartRequest
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -86,7 +86,6 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -105,7 +104,7 @@ export type State = {
   snackbars: SnackbarInfo[];
   presetColors: string[];
   isProcessingDatapacks: boolean;
-  unsavedDatapackConfig: string[];
+  unsavedDatapackConfig: DatapackConfigForChartRequest[];
 };
 
 export const state = observable<State>({
@@ -190,7 +189,6 @@ export const state = observable<State>({
   },
   presets: {},
   datapackIndex: {},
-  mapPackIndex: {},
   mapPatterns: {
     patterns: {},
     sortedPatterns: []

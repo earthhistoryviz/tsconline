@@ -7,11 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "Vertabrates",
-      "file": "Vertebrates w_Images GTS2020 23Jan2021.dpk"
-    },
-    {
-      "name": "Hominids Datapack",
+      "name": "Human Evolution",
       "file": "Hominids_wImages_GTS2020_Encrypted.dpk"
     }
   ]

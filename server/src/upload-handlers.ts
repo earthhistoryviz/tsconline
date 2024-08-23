@@ -1,12 +1,24 @@
-import { isDateValid } from "@tsconline/shared";
+import { assertDatapack, assertPrivateUserDatapack, isDateValid } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { rm } from "fs/promises";
+import { readFile, rm } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { getBytes } from "./util.js";
+import { checkFileExists, getBytes } from "./util.js";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
   reply.status(code).send({ error: message });
+}
+export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
+  if (!(await checkFileExists(cachedFilepath))) {
+    throw new Error("File does not exist");
+  }
+  const datapack = JSON.parse(await readFile(cachedFilepath, "utf-8"));
+  if (!datapack) {
+    throw new Error("File is empty");
+  }
+  assertPrivateUserDatapack(datapack);
+  assertDatapack(datapack);
+  return datapack.file;
 }
 
 export async function uploadUserDatapackHandler(
@@ -23,6 +35,10 @@ export async function uploadUserDatapackHandler(
       "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]",
       filepath
     );
+    return;
+  }
+  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+    await userUploadHandler(reply, 400, "Invalid title", filepath);
     return;
   }
   if (!bytes) {

@@ -4,27 +4,21 @@ import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
   DatapackIndex,
   DatapackInfoChunk,
-  MapPackIndex,
-  MapPackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, adminconfig } from "../util.js";
+import { deleteDirectory, assetconfigs, adminconfig, verifyFilepath } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import {
-  publicDatapackIndex,
-  datapackIndex as serverDatapackindex,
-  mapPackIndex as serverMapPackIndex
-} from "../index.js";
-import { glob } from "glob";
+import { publicDatapackIndex, datapackIndex as serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
+import { getDirectories } from "../user/user-handler.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -35,7 +29,7 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const serverDatapack = serverDatapackindex[decodeURIComponent(name)];
+  const serverDatapack = serverDatapackIndex[decodeURIComponent(name)];
   if (!serverDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
@@ -50,7 +44,7 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const { start = 0, increment = 1 } = request.query;
   const startIndex = Number(start);
   let incrementValue = Number(increment);
-  const allDatapackKeys = Object.keys(serverDatapackindex);
+  const allDatapackKeys = Object.keys(serverDatapackIndex);
   if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
     reply.status(400).send({ error: "Invalid range" });
     return;
@@ -61,11 +55,11 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   const keys = allDatapackKeys.slice(startIndex, startIndex + incrementValue);
   const chunk: DatapackIndex = {};
   for (const key of keys) {
-    if (!serverDatapackindex[key]) {
+    if (!serverDatapackIndex[key]) {
       reply.status(500).send({ error: "Failed to load datapack" });
       return;
     }
-    chunk[key] = serverDatapackindex[key]!;
+    chunk[key] = serverDatapackIndex[key]!;
   }
   if (Object.keys(chunk).length === 0) {
     reply.send({ datapackIndex: {}, totalChunks: 0 });
@@ -75,46 +69,9 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
   reply.status(200).send(datapackInfoChunk);
 };
 
-export const fetchServerMapPackInfo = async function fetchServerMapPackInfo(
-  request: FastifyRequest<{ Querystring: { start?: number; increment?: number } }>,
-  reply: FastifyReply
-) {
-  const { start = 0, increment = 1 } = request.query;
-  const startIndex = Number(start);
-  let incrementValue = Number(increment);
-  const allMapPackKeys = Object.keys(serverMapPackIndex);
-  if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
-    reply.status(400).send({ error: "Invalid range" });
-    return;
-  }
-  if (startIndex + incrementValue > allMapPackKeys.length) {
-    incrementValue = allMapPackKeys.length - startIndex;
-  }
-  const keys = allMapPackKeys.slice(startIndex, startIndex + incrementValue);
-  const chunk: MapPackIndex = {};
-  for (const key of keys) {
-    if (!serverMapPackIndex[key]) {
-      reply.status(500).send({ error: "Failed to load map pack" });
-      return;
-    }
-    chunk[key] = serverMapPackIndex[key]!;
-  }
-  if (Object.keys(chunk).length === 0) {
-    reply.send({ mapPackIndex: {}, totalChunks: 0 });
-    return;
-  }
-  const mapPackInfoChunk: MapPackInfoChunk = { mapPackIndex: chunk!, totalChunks: allMapPackKeys.length };
-  reply.status(200).send(mapPackInfoChunk);
-};
-
-export const fetchImage = async function (
-  request: FastifyRequest<{ Params: { datapackName: string; imageName: string } }>,
-  reply: FastifyReply
-) {
+export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {
   const tryReadFile = async (filepath: string) => {
-    const root = process.cwd();
-    filepath = realpathSync(path.resolve(root, filepath));
-    if (!filepath.startsWith(root)) {
+    if (!(await verifyFilepath(filepath))) {
       reply.status(403).send({ error: "Invalid file path" });
       return;
     }
@@ -129,25 +86,35 @@ export const fetchImage = async function (
     }
   };
   try {
-    const imagePath = path.join(
-      assetconfigs.decryptionDirectory,
-      request.params.datapackName,
-      "datapack-images",
-      request.params.imageName
-    );
-    let image = await tryReadFile(imagePath);
-    const uuid = request.session.get("uuid");
-    if (!image && uuid) {
-      const userImagePath = path.join(
+    const { datapackTitle, datapackFilename, imageName, uuid } = request.body as {
+      datapackTitle: string;
+      datapackFilename: string;
+      imageName: string;
+      uuid?: string;
+    };
+    if (!datapackTitle || !imageName || !datapackFilename) {
+      reply.status(400).send({ error: "Invalid request" });
+    }
+    let imagePath = "";
+    if (uuid) {
+      imagePath = path.join(
         assetconfigs.uploadDirectory,
         uuid,
+        datapackTitle,
         "decrypted",
-        request.params.datapackName,
+        path.parse(datapackFilename).name,
         "datapack-images",
-        request.params.imageName
+        imageName
       );
-      image = await tryReadFile(userImagePath);
+    } else {
+      imagePath = path.join(
+        assetconfigs.decryptionDirectory,
+        path.parse(datapackFilename).name,
+        "datapack-images",
+        imageName
+      );
     }
+    const image = await tryReadFile(imagePath);
     if (!image) {
       reply.status(404).send({ error: "Image not found" });
       return;
@@ -252,31 +219,57 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const chartFilePath = chartUrlPath.slice(1);
   const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
-  const userDatapackFilepaths = await glob(`${assetconfigs.uploadDirectory}/${uuid}/datapacks/*`);
-  const userDatapackNames = userDatapackFilepaths.map((datapack) => path.basename(datapack));
-  const datapacks: string[] = [];
-  const userDatapacks = [];
-  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.file);
+  const userDatapacks = uuid ? await getDirectories(path.join(assetconfigs.uploadDirectory, uuid)) : [];
+  const datapacksToSendToCommandLine: string[] = [];
+  const usedUserDatapackFilepaths: string[] = [];
+  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.title);
 
   for (const datapack of chartrequest.datapacks) {
-    if (serverDatapacks.includes(datapack)) {
-      datapacks.push(`${assetconfigs.datapacksDirectory}/${datapack}`);
-    } else if (uuid && userDatapackNames.includes(datapack)) {
-      userDatapacks.push(path.join(assetconfigs.uploadDirectory, uuid, "datapacks", datapack));
-    } else if (publicDatapackIndex[datapack]) {
-      const datapackInfo = publicDatapackIndex[datapack]!;
-      datapacks.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
-    } else {
-      console.log("ERROR: datapack: ", datapack, " is not included in any configuration (server or user)");
-      console.log("adminconfig.datapacks: ", adminconfig.datapacks);
-      console.log("Available user datapacks: ", userDatapackNames);
-      console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-      reply.send({ error: "ERROR: failed to load datapacks" });
+    switch (datapack.type) {
+      case "server":
+        if (serverDatapacks.includes(datapack.title)) {
+          datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.file}`);
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the server configuration");
+          console.log("adminconfig.datapacks: ", adminconfig.datapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "private_user":
+        if (uuid && userDatapacks.includes(datapack.title)) {
+          const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.file);
+          datapacksToSendToCommandLine.push(filepath);
+          usedUserDatapackFilepaths.push(filepath);
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the user configuration");
+          console.log("Available user datapacks: ", userDatapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "public_user":
+        if (publicDatapackIndex[datapack.title]) {
+          const datapackInfo = publicDatapackIndex[datapack.title]!;
+          datapacksToSendToCommandLine.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
+        } else {
+          console.log("ERROR: datapack: ", datapack, " is not included in the public user configuration");
+          console.log("Available user datapacks: ", userDatapacks);
+          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
+          reply.send({ error: "ERROR: failed to load datapacks" });
+          return;
+        }
+        break;
+      case "workshop":
+        reply.send({ error: "ERROR: failed to load datapacks, workshop datapacks do not exist." });
+        break;
     }
   }
-  datapacks.push(...userDatapacks);
   try {
-    await updateFileMetadata(assetconfigs.fileMetadata, userDatapacks);
+    // update file metadata for all used datapacks (recently used datapacks will be updated)
+    await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths);
   } catch (e) {
     console.error("Error updating file metadata:", e);
     reply.status(500).send({ errorCode: 100, error: "Internal Server Error" });
@@ -326,7 +319,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       settingsFilePath,
       // Add datapacks:
       "-d",
-      ...datapacks,
+      ...datapacksToSendToCommandLine,
       // Tell it where to save chart
       "-o",
       chartFilePath,
