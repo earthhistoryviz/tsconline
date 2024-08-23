@@ -2273,8 +2273,8 @@ describe("login-routes tests", () => {
 
       expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-      expect(metadataModule.deleteAllUserMetadata);
       expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
       expect(deleteSessionSpy).toHaveBeenCalled();
       expect(loggerSpy).toHaveBeenCalledOnce();
       expect(response.statusCode).toBe(200);
@@ -2296,8 +2296,8 @@ describe("login-routes tests", () => {
 
       expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-      expect(metadataModule.deleteAllUserMetadata);
       expect(loggerSpy).toHaveBeenCalledOnce();
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
       expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
       expect(deleteSessionSpy).toHaveBeenCalled();
       expect(response.json().message).toBe("Profile deleted");
@@ -2317,6 +2317,7 @@ describe("login-routes tests", () => {
       expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
       expect(rmSpy).toHaveBeenCalledWith(normalize(`uploads/${testUser.uuid}`), { recursive: true, force: true });
       expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(deleteSessionSpy).toHaveBeenCalled();
       expect(response.statusCode).toBe(200);
