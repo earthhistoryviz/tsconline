@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, resetUploadDirectory, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -207,7 +207,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
-    await resetUploadDirectory(filepath, decryptedFilepathDir);
+    await rm(datapackDir, { recursive: true, force: true });
     reply.status(errorStatus).send({ error: message });
   }
   const parts = request.parts();
@@ -294,6 +294,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await rename(filepath, path.join(datapackDir, datapackMetadata.file));
     filepath = path.join(datapackDir, datapackMetadata.file);
   } catch (e) {
+    filepath && (await rm(filepath, { force: true }));
+    await rm(datapackDir, { recursive: true, force: true });
     reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
   }
   const decryptedDir = path.join(datapackDir, "decrypted");
@@ -307,7 +309,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         // Decrypting these datapacks:
         `-d "${filepath.replaceAll("\\", "/")}" ` +
         // Tell it where to send the datapacks
-        `-dest ${decryptedDir.replaceAll("\\", "/")} `;
+        `-dest "${decryptedDir.replaceAll("\\", "/")}" `;
       console.log("Calling Java decrypt.jar: ", cmd);
       exec(cmd, function (error, stdout, stderror) {
         console.log("Java decrypt.jar finished, sending reply to browser");
@@ -330,6 +332,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await access(decryptedFilepathDir);
     await access(path.join(decryptedFilepathDir, "datapacks"));
   } catch (e) {
+    console.log(decryptedFilepathDir);
+    console.log(path.join(decryptedFilepathDir, "datapacks"));
     await errorHandler("Failed to decrypt file", 500);
     return;
   }
