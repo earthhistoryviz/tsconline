@@ -1,5 +1,8 @@
 {
     "translation": {
+        "login": {
+            "signin": "Sign In"
+        },
         "title": {
             "main": "Time Scale Creator Online",
             "settings": "Settings"
@@ -20,7 +23,9 @@
             "Search": "Search",
             "Font": "Font",
             "Map Points": "Map Points",
-            "Datapacks": "Datapacks"
+            "Datapacks": "Datapacks",
+            "General": "General",
+            "Data Mining": "Data Mining"
         },
         "settings": {
             "time": {
@@ -31,13 +36,55 @@
                     "base-name": "Base Age/Stage Name",
                     "not-avaliable": "Not Available for this Unit",
                     "vertical-scale": "Vertical Scale (cm per 1 "
+                },
+                "checkboxs": {
+                    "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
+                    "mouse-over-info": "Add MouseOver info (popups)",
+                    "global-priority": "Enabled Global Priority Filtering for block columns",
+                    "stage-background": "Enabled stage background for event columns",
+                    "enable-legend": "Enable legend for the chart",
+                    "lithology-auto-indent": "Do not auto-indent lithology patterns",
+                    "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
+                    "hide-block-labels": "Hide block labels based on priority",
+                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
                 }
+            },
+            "column": {
+                "titles": {
+                    "column-menu-title": "Column Customization",
+                    "data-mining-title": "Data Mining Settings",
+                    "font-option-title": "Font Options for \"{{name}}\""
+                }
+            },
+            "search": {
+                "search-bar": "Search",
+                "found-result": "Found {{count}} Results",
+                "current-time-settings": "Current Time Settings(Top / Base)",
+                "header": {
+                    "status": "Status",
+                    "center": "Center",
+                    "extend": "Extend",
+                    "column": "Column",
+                    "age": "Age",
+                    "qualifier": "Qualifier",
+                    "notes": "Notes"
+                }
+            },
+            "font": {},
+            "map-points": {},
+            "datapacks": {
+                "see-info-guidance": "Click a datapack to see more information!",
+                "add-datapack-guidance": "Add a datapack by clicking the checkbox"
             }
+        },
+        "chart": {
+            "no-chart-yet": "You have not made a chart yet"
         },
         "button": {
             "generate": "Generate",
             "generate-chart": "Generate Chart",
-            "remove-cache": "Remove Cache"
+            "remove-cache": "Remove Cache",
+            "confirm-selection": "Confirm Selection"
         },
         "languageNames": {
             "en": "English",

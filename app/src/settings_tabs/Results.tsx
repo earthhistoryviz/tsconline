@@ -27,6 +27,7 @@ import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 
 import "./Results.css";
+import { useTranslation } from "react-i18next";
 
 const tooltipDelayTime = 400;
 
@@ -44,11 +45,11 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
   const ages = info.age;
   const dataInRange = ages
     ? checkIfDataIsInRange(
-        ages.topAge,
-        ages.baseAge,
-        state.settings.timeSettings[column.units].topStageAge,
-        state.settings.timeSettings[column.units].baseStageAge
-      )
+      ages.topAge,
+      ages.baseAge,
+      state.settings.timeSettings[column.units].topStageAge,
+      state.settings.timeSettings[column.units].baseStageAge
+    )
     : true;
   return (
     <div>
@@ -365,6 +366,7 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
+  const { t } = useTranslation();
   return (
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
@@ -390,25 +392,25 @@ export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEven
         fixedHeaderContent={() => (
           <TableRow>
             <TableCell className="event-group-header-text search-result-status-column" align="left">
-              Column On?
+              {t("settings.search.header.status")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-center-column" align="left">
-              Center
+              {t("settings.search.header.center")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-extend-column" align="left">
-              Extend
+              {t("settings.search.header.extend")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-column-column" align="left">
-              Column
+              {t("settings.search.header.column")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-age-column" align="center">
-              Age
+              {t("settings.search.header.age")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
-              Type
+              {t("settings.search.header.qualifier")}
             </TableCell>
             <TableCell className="event-group-header-text search-result-notes-column" align="right">
-              Notes
+              {t("settings.search.header.notes")}
             </TableCell>
           </TableRow>
         )}

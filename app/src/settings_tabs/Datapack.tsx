@@ -19,10 +19,12 @@ import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
 import { Datapack, DatapackConfigForChartRequest, DatapackIndex, isPrivateUserDatapack } from "@tsconline/shared";
 import { Work, Storage, Lock, Public } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (state.isLoggedIn) {
@@ -48,8 +50,8 @@ export const Datapacks = observer(function Datapacks() {
           </IconButton>
         </CustomTooltip>
         <div>
-          <Typography className={styles.h}>Click a datapack to see more information!</Typography>
-          <Typography className={styles.dh}>Add a datapack by clicking the checkbox</Typography>
+          <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
+          <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
         </div>
         <ToggleButtonGroup
           className={styles.display}
@@ -110,7 +112,7 @@ export const Datapacks = observer(function Datapacks() {
           onClick={async () => {
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
           }}>
-          Confirm Selection
+          {t("button.confirm-selection")}
         </TSCButton>
       </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>

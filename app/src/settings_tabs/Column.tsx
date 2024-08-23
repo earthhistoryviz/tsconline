@@ -20,6 +20,7 @@ import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
+import { useTranslation } from "react-i18next";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -235,11 +236,12 @@ const ColumnSearchBar = observer(() => {
     const term = event.target.value;
     actions.searchColumns(term);
   };
+  const { t } = useTranslation();
   return (
     <div className="column-search-bar-container">
       <TextField
         className="column-search-bar"
-        label="Search"
+        label={t("settings.search.search-bar")}
         variant="outlined"
         size="small"
         fullWidth

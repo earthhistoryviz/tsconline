@@ -19,6 +19,7 @@ import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
 import CookieConsent from "./CookieConsent";
 import "./Login.css";
+import { useTranslation } from "react-i18next";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -130,7 +131,7 @@ export const Login: React.FC = observer(() => {
     };
     await handleLogin(false, formData);
   };
-
+  const { t } = useTranslation();
   return (
     <Box className="login-box">
       <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
@@ -140,7 +141,7 @@ export const Login: React.FC = observer(() => {
         <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
       ) : (
         <>
-          <Typography variant="h5">Sign In</Typography>
+          <Typography variant="h5">{t("login.signin")}</Typography>
           <Box component="form" onSubmit={handleSubmit} className="form-box">
             <TextField
               margin="normal"

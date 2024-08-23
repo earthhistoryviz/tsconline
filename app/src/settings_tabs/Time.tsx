@@ -152,7 +152,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.timeSettings[units].skipEmptyColumns}
                 />
               }
-              label="Gray out (and do not draw) columns which do not have data on the selected time interval"
+              label={t("settings.time.checkboxs.skip-empty-columns")}
             />
             <FormControlLabel
               name="mouse-over-info-checkbox"
@@ -163,7 +163,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.mouseOverPopupsEnabled}
                 />
               }
-              label="Add MouseOver info (popups)"
+              label={t("settings.time.checkboxs.mouse-over-info")}
             />
             <FormControlLabel
               name="global-priority-checkbox"
@@ -174,7 +174,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enablePriority}
                 />
               }
-              label="Enabled Global Priority Filtering for block columns"
+              label={t("settings.time.checkboxs.global-priority")}
             />
             <FormControlLabel
               name="stage-background-checkbox"
@@ -185,7 +185,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableColumnBackground}
                 />
               }
-              label="Enabled stage background for event columns"
+              label={t("settings.time.checkboxs.stage-background")}
             />
             <FormControlLabel
               name="enable-legend-checkbox"
@@ -196,7 +196,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableChartLegend}
                 />
               }
-              label="Enable legend for the chart"
+              label={t("settings.time.checkboxs.enable-legend")}
             />
             <FormControlLabel
               control={
@@ -207,12 +207,12 @@ export const Time = observer(function Time() {
                 />
               }
               name="lithology-auto-indent-checkbox"
-              label="Do not auto-indent lithology patterns"
+              label={t("settings.time.checkboxs.lithology-auto-indent")}
             />
             <FormControlLabel
               name="conserve-chart-checkbox"
               control={<TSCCheckbox className="time-settings-checkbox" />}
-              label="Conserve Chart Space in Family Tree Plotting (Not implemented)"
+              label={t("settings.time.checkboxs.conserve-chart")}
             />
             <FormControlLabel
               name="hide-block-labels-checkbox"
@@ -223,7 +223,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableHideBlockLabel}
                 />
               }
-              label="Hide block labels based on priority"
+              label={t("settings.time.checkboxs.hide-block-labels")}
             />
             <FormControlLabel
               name="use-suggested-age-spans"
@@ -234,7 +234,7 @@ export const Time = observer(function Time() {
                   checked={!state.settings.useDatapackSuggestedAge}
                 />
               }
-              label="Do not use the Data-Pack's suggested age span"
+              label={t("settings.time.checkboxs.use-suggested-age-spans")}
             />
           </FormGroup>
         </div>
