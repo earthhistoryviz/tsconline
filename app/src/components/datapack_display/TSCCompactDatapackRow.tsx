@@ -68,7 +68,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         <Box
           onClick={async (e) => {
             e.stopPropagation();
-            await actions.userDeleteDatapack(datapack.file);
+            await actions.userDeleteDatapack(datapack.title);
           }}>
           <Lottie
             className={styles.lottie}

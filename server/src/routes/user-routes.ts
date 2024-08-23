@@ -369,7 +369,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   try {
-    await writeFileMetadata(assetconfigs.fileMetadata, filename, filepath, uuid);
+    await writeFileMetadata(assetconfigs.fileMetadata, filename, datapackDir, uuid);
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;
@@ -378,7 +378,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 };
 
 export const userDeleteDatapack = async function userDeleteDatapack(
-  request: FastifyRequest<{ Params: { filename: string } }>,
+  request: FastifyRequest<{ Params: { datapack: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -386,15 +386,15 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const { filename } = request.params;
-  if (!filename) {
-    reply.status(400).send({ error: "Missing filename" });
+  const { datapack } = request.params;
+  if (!datapack) {
+    reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const filepath = path.join(assetconfigs.uploadDirectory, uuid, path.basename(filename));
+  const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack);
   try {
     if (!(await verifyFilepath(filepath))) {
-      reply.status(403).send({ error: "Invalid filename/File doesn't exist" });
+      reply.status(403).send({ error: "Invalid datapack/File doesn't exist" });
       return;
     }
   } catch (e) {
@@ -404,6 +404,7 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   try {
     await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, filepath);
   } catch (e) {
+    console.log(e);
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
   }

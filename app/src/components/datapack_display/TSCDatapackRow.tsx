@@ -91,7 +91,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           <Box
             onClick={async (e) => {
               e.stopPropagation();
-              await actions.userDeleteDatapack(datapack.file);
+              await actions.userDeleteDatapack(datapack.title);
             }}>
             <Lottie
               className={styles.lottie}
