@@ -87,6 +87,7 @@ export const TSCPopupManager = () => {
       message={processedPopupContent}
       onClose={() => setPopupContent((prev) => ({ ...prev, open: false }))}
       dangerous={true}
+      maxWidth="lg"
     />
   );
 };

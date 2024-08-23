@@ -249,7 +249,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
   { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } }
+  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
+  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {

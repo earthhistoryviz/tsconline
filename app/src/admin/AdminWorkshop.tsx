@@ -40,7 +40,6 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
     form.append("workshopId", "123");
     const invalidEmails = await actions.adminAddUsersToWorkshop(form);
     setInvalidEmails(invalidEmails || "");
-    await actions.adminFetchUsers();
     setFile(null);
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {

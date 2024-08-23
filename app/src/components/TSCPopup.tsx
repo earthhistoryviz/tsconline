@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, IconButton, Box, Typography, useTheme } from "@mui/material";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import "./TSCPopup.css";
+import DOMPurify from "dompurify";
 
 type TSCPopupProps = {
   open: boolean;
@@ -19,6 +20,7 @@ export const TSCPopup: React.FC<TSCPopupProps> = ({
   maxWidth = "sm"
 }) => {
   const theme = useTheme();
+  const sanitizedMessage = dangerous ? DOMPurify.sanitize(message) : message;
   return (
     <Dialog className="popup-dialog" open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={true}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -33,7 +35,7 @@ export const TSCPopup: React.FC<TSCPopupProps> = ({
         </IconButton>
       </Box>
       <DialogContent className="popup-content">
-        {dangerous ? <div dangerouslySetInnerHTML={{ __html: message }} /> : <>{message}</>}
+        {dangerous ? <div dangerouslySetInnerHTML={{ __html: sanitizedMessage }} /> : <>{message}</>}
       </DialogContent>
     </Dialog>
   );

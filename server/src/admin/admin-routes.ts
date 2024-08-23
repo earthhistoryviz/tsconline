@@ -18,6 +18,7 @@ import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
+import logger from "../error-logger.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -476,7 +477,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     let invalidEmails: string[] = [];
     if (file && filepath) {
       try {
-        const excelData = await parseExcelFile(filepath, 0, false);
+        const excelData = await parseExcelFile(filepath);
         emailList = excelData.flat().map((email) => String(email).trim());
       } catch (e) {
         console.error("Error parsing excel file:", e);
@@ -523,7 +524,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
   } finally {
     if (file && filepath) {
       await rm(filepath, { force: true }).catch((e) => {
-        console.error("Error cleaning up file:", e);
+        logger.error("Error cleaning up file:", e);
       });
     }
   }
