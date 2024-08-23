@@ -35,7 +35,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     try {
       const datapacks = selectedNodes.map((node) => {
         assertBaseDatapackProps(node.data);
-        return node.data.file;
+        return node.data.title;
       });
       await actions.adminDeleteServerDatapacks(datapacks);
     } catch (e) {

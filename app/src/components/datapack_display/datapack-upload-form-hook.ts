@@ -53,7 +53,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
-    if (state.datapackIndex[file.name]) {
+    if (state.datapackIndex[title]) {
       actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -103,10 +103,6 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     }
     if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
       actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
-      return;
-    }
-    if (state.datapackIndex[file.name]) {
-      actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
     actions.removeAllErrors();

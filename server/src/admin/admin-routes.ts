@@ -251,6 +251,11 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   if (!datapackMetadata) {
     return;
   }
+  if (adminconfig.datapacks.some((dp) => dp.title === datapackMetadata.title || dp.file === filename)) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(409).send({ error: "Datapack already exists" });
+    return;
+  }
   const errorHandler = async (error: string) => {
     if (!filepath || !decryptedFilepath || !filename)
       throw new Error("Missing required variables for file deletion and error handling");
@@ -318,35 +323,14 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Missing datapack id" });
     return;
   }
-  if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(datapack))) {
-    reply.status(400).send({ error: "Invalid file extension" });
-    return;
-  }
-  let filepath;
-  let decryptedFilepath;
-  try {
-    filepath = resolve(assetconfigs.datapacksDirectory, datapack);
-    decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(datapack).name);
-    if (
-      !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
-      !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
-    ) {
-      reply.status(403).send({ error: "Directory traversal detected" });
-      return;
-    }
-    await realpath(filepath);
-    await realpath(decryptedFilepath);
-  } catch (e) {
-    reply.status(500).send({ error: "Datapack file does not exist" });
-    return;
-  }
-  if (!adminconfig.datapacks.some((dp) => dp.file === datapack)) {
+  const datapackMetadata = adminconfig.datapacks.find((dp) => dp.title === datapack);
+  if (!datapackMetadata) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  if (adminconfig.datapacks.some((dp) => dp.file === datapack)) {
-    adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.file !== datapack);
-  }
+  const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.file);
+  const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.file).name);
+  adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.title !== datapack);
   if (datapackIndex[datapack]) {
     delete datapackIndex[datapack];
   }

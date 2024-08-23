@@ -273,7 +273,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
 export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
   const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
   if (!recaptchaToken) return;
-  if (state.datapackIndex[file.name]) {
+  if (state.datapackIndex[metadata.title]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
@@ -300,7 +300,7 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
     const data = await response.json();
 
     if (response.ok) {
-      const pack = await fetchServerDatapack(file.name);
+      const pack = await fetchServerDatapack(metadata.title);
       if (!pack) {
         return;
       }
