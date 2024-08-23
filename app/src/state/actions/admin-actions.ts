@@ -316,9 +316,9 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
 });
 
 export const adminAddUsersToWorkshop = action(async (formData: FormData): Promise<string | undefined> => {
-  const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
-  if (!recaptchaToken) return;
   try {
+    const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+    if (!recaptchaToken) return;
     const response = await fetcher(`/admin/workshop/users`, {
       method: "POST",
       body: formData,
@@ -329,6 +329,7 @@ export const adminAddUsersToWorkshop = action(async (formData: FormData): Promis
     });
     if (response.ok) {
       removeAllErrors();
+      adminFetchUsers();
       pushSnackbar("Users added to workshop successfully", "success");
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
