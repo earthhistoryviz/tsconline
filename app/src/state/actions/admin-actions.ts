@@ -10,7 +10,14 @@ import {
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
-import { addDatapackToIndex, fetchServerDatapack, getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
+import {
+  addDatapackToIndex,
+  fetchServerDatapack,
+  getRecaptchaToken,
+  pushError,
+  pushSnackbar,
+  removeAllErrors
+} from "./general-actions";
 import { State } from "../state";
 
 export const adminFetchUsers = action(async () => {
@@ -120,8 +127,6 @@ export const adminAddUser = action(async (email: string, password: string, isAdm
 });
 
 export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminDeleteUsers");
-  if (!recaptchaToken) return;
   let deletedAllUsers = true;
   for (const user of users) {
     if (user.email === state.user.email) {
@@ -133,6 +138,8 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
       uuid: user.uuid
     });
     try {
+      const recaptchaToken = await getRecaptchaToken("adminDeleteUsers");
+      if (!recaptchaToken) return;
       const response = await fetcher("/admin/user", {
         method: "DELETE",
         headers: {
@@ -301,6 +308,45 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
       pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+export const adminAddUsersToWorkshop = action(async (formData: FormData): Promise<string | undefined> => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop/users`, {
+      method: "POST",
+      body: formData,
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      credentials: "include"
+    });
+    if (response.ok) {
+      removeAllErrors();
+      adminFetchUsers();
+      pushSnackbar("Users added to workshop successfully", "success");
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 409:
+          errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      const serverResponse = await response.json();
+      displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
+      return serverResponse.invalidEmails;
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);

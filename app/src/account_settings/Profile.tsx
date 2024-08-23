@@ -20,7 +20,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "../util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "../util";
 import { displayServerError } from "../state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "../components";
+import { Lottie, TSCButton, TSCYesNoPopup, CustomFormControlLabel } from "../components";
 import loader from "../assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import { observer } from "mobx-react-lite";
@@ -238,7 +238,7 @@ export const Profile = observer(() => {
     </Box>
   ) : (
     <Container maxWidth="md">
-      <TSCPopupDialog
+      <TSCYesNoPopup
         open={popupOpen}
         title="Are you sure you want to delete your profile?"
         message="This action cannot be undone. All your data (including datapacks) will be lost."
