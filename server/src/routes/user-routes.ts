@@ -332,8 +332,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await access(decryptedFilepathDir);
     await access(path.join(decryptedFilepathDir, "datapacks"));
   } catch (e) {
-    console.log(decryptedFilepathDir);
-    console.log(path.join(decryptedFilepathDir, "datapacks"));
     await errorHandler("Failed to decrypt file", 500);
     return;
   }
