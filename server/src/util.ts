@@ -141,18 +141,6 @@ export function capitalizeFirstLetter(input: string): string {
 }
 
 /**
- * delete the uploaded file and the decrypted directory if they exist
- * @param uploadedFile
- * @param decryptedUploadedDirectory
- */
-export async function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
-  await rm(uploadedFile, { force: true });
-  if (fs.existsSync(decryptedUploadedDirectory)) {
-    deleteDirectory(decryptedUploadedDirectory);
-  }
-}
-
-/**
  * This is different from Object.assign because it only sets the properties that are common between the two objects
  * @param o1
  * @param o2
