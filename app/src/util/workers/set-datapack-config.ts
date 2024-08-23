@@ -14,7 +14,7 @@ import {
 } from "../../types";
 import { cloneDeep } from "lodash";
 import { State } from "../../state";
-import { getDatapackFromIndex } from "../../state/actions";
+import { getDatapackFromIndex } from "../../state/non-action-util";
 
 /**
  * sets chart to newval and requests info on the datapacks from the server

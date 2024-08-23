@@ -8,9 +8,10 @@ import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { getDatapackFromIndex, pushSnackbar } from "./general-actions";
+import { pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
+import { getDatapackFromIndex } from "../non-action-util";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
