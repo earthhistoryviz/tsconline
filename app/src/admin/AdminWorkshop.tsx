@@ -8,6 +8,9 @@ import { TSCButton, InputFileUpload } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { TSCPopup } from "../components/TSCPopup";
+import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import "./AdminWorkshop.css";
 
 const workshopColDefs: ColDef[] = [
   {
@@ -24,10 +27,33 @@ const workshopColDefs: ColDef[] = [
 export const AdminWorkshop = observer(function AdminWorkshop() {
   const theme = useTheme();
   const { actions } = useContext(context);
-  const [formOpen, setFormOpen] = useState(false);
+  const [addUsersFormOpen, setAddUsersFormOpen] = useState(false);
+  const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleCreateWorkshopSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const title = form.get("workshopTitle")?.toString();
+    if (!title) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
+      return;
+    }
+    const startDate = form.get("startDate")?.toString();
+    const endDate = form.get("endDate")?.toString();
+    if (!startDate || !endDate) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
+      return;
+    }
+    const start = dayjs(startDate).format("YYYY-MM-DD HH:mm");
+    const end = dayjs(endDate).format("YYYY-MM-DD HH:mm");
+    if (dayjs(start).isAfter(dayjs(end))) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
+      return;
+    }
+    await actions.adminCreateWorkshop(title, start, end);
+  }
+  const handleAddUsersSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const emails = form.get("emails")?.toString();
@@ -67,9 +93,9 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       <Box display="flex" m="10px" gap="20px">
         <TSCButton
           onClick={() => {
-            setFormOpen(true);
+            setCreateWorkshopFormOpen(true);
           }}>
-          Add Users to Workshop
+          Create Workshop
         </TSCButton>
         <TSCPopup
           open={!!invalidEmails}
@@ -78,8 +104,64 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
           onClose={() => setInvalidEmails("")}
           maxWidth="xs"
         />
-        <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
-          <Box width="30vw" textAlign="center" padding="10px">
+        <Dialog open={createWorkshopFormOpen} onClose={() => setCreateWorkshopFormOpen(false)}>
+          <Box textAlign="center" padding="10px">
+            <Typography variant="h5" mb="5px">
+              Create Workshop
+            </Typography>
+            <Box
+              component="form"
+              gap="20px"
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              onSubmit={handleCreateWorkshopSubmit}>
+              <TextField
+                label="Workshop Title"
+                name="workshopTitle"
+                placeholder="Enter a title for the workshop"
+                fullWidth
+                size="small"
+                required
+              />
+              <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap={5}>
+                <DateTimePicker
+                  label="Start Date"
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock
+                  }}
+                  disablePast
+                  slotProps={{
+                    textField: {
+                      required: true,
+                      size: "small"
+                    },
+                    popper: { className: "date-time-picker" }
+                  }}
+                />
+                <DateTimePicker
+                  label="End Date"
+                  viewRenderers={{
+                    hours: renderTimeViewClock,
+                    minutes: renderTimeViewClock
+                  }}
+                  disablePast
+                  slotProps={{
+                    textField: {
+                      required: true,
+                      size: "small"
+                    },
+                    popper: { className: "date-time-picker" }
+                  }}
+                />
+              </Box>
+              <TSCButton type="submit">Submit</TSCButton>
+            </Box>
+          </Box>
+        </Dialog>
+        <Dialog open={addUsersFormOpen} onClose={() => setAddUsersFormOpen(false)}>
+          <Box textAlign="center" padding="10px">
             <Typography variant="h5" mb="5px">
               Add Users
             </Typography>
@@ -89,7 +171,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
               display="flex"
               flexDirection="column"
               alignItems="center"
-              onSubmit={handleSubmit}>
+              onSubmit={handleAddUsersSubmit}>
               <TextField
                 label="Paste Emails"
                 name="emails"
@@ -108,7 +190,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                 />
                 <Typography ml="10px">{file?.name || "No file selected"}</Typography>
               </Box>
-              <TSCButton type="submit" onClick={() => setFormOpen(false)}>
+              <TSCButton type="submit" onClick={() => setAddUsersFormOpen(false)}>
                 Submit
               </TSCButton>
             </Box>
