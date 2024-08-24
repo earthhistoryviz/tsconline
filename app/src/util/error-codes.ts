@@ -72,6 +72,7 @@ export enum ErrorCodes {
   ADMIN_EMAIL_INVALID = "ADMIN_EMAIL_INVALID",
   ADMIN_WORKSHOP_FIELDS_EMPTY = "ADMIN_WORKSHOP_FIELDS_EMPTY",
   UNRECOGNIZED_EXCEL_FILE = "UNRECOGNIZED_EXCEL_FILE",
+  ADMIN_WORKSHOP_START_AFTER_END = "ADMIN_WORKSHOP_START_AFTER_END",
   SERVER_DATAPACK_ALREADY_EXISTS = "SERVER_DATAPACK_ALREADY_EXISTS"
 }
 
@@ -157,6 +158,7 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_EMAIL_INVALID]: "Invalid email. Please fix the email and try again.",
   [ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY]: "You must provide at least one field to add users to a workshop.",
   [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: "Unrecognized Excel file. Please upload a valid Excel file.",
+  [ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END]: "The start date must be before the end date.",
   [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
     "Server datapack already exists. Please upload a unique datapack (different filename and title)."
 };
