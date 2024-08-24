@@ -7,11 +7,12 @@ import { ColumnInfo } from "@tsconline/shared";
 
 export const EditNameField: React.FC<{
   column: ColumnInfo;
-}> = observer(({ column }) => {
+  text: string;
+}> = observer(({ column, text }) => {
   const { actions } = useContext(context);
   return (
     <div>
-      <Typography id="edit-name-text">Edit Title</Typography>
+      <Typography id="edit-name-text">{text}</Typography>
       <TextField
         hiddenLabel
         fullWidth
