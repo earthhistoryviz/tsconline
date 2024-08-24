@@ -54,6 +54,40 @@
                     "column-menu-title": "个性化设置列",
                     "data-mining-title": "数据挖掘设置",
                     "font-option-title": "设置\"{{name}}\"列的字体"
+                },
+                "menu": {
+                    "shift-row": "移动位置",
+                    "edit-name": "编辑标题",
+                    "background-color": "背景颜色",
+                    "enable-title": "显示标题",
+                    "show-age-label": "显示年代",
+                    "info-box": "信息与参考",
+                    "add-blank-column": "添加一个空白列",
+                    "add-age-column": "添加一个年代列",
+                    "width": "宽",
+                    "orientation": {
+                        "title": "图标排布",
+                        "horizontal": "横向",
+                        "vertical": "纵向"
+                    },
+                    "show-uncertainty": "显示不确定性",
+                    "events": "事件",
+                    "ranges": "范围",
+                    "first-occurrence": "首先发生的优先",
+                    "last-occurrence": "最后发生的优先",
+                    "alphabetical": "按字母顺序排列",
+                    "ruler": {
+                        "title": "调整年代刻度尺",
+                        "left": "左对齐",
+                        "right": "右对齐"
+                    }
+                },
+                "font-menu": {
+                    "change": "更改字体",
+                    "additional": "子列的更多字体选项"
+                },
+                "datamining-menu": {
+                    "title": "数据挖掘设置"
                 }
             },
             "search": {
@@ -61,7 +95,7 @@
                 "found-result": "找到 {{count}} 个结果",
                 "current-time-settings": "当前时间区间设置(顶部 / 底部)",
                 "header": {
-                    "status": "状态",
+                    "status": "是否已选",
                     "center": "居中",
                     "extend": "延展",
                     "column": "列名称",
@@ -70,8 +104,14 @@
                     "notes": "注释"
                 }
             },
-            "font": {},
-            "map-points": {},
+            "font": {
+                "notes1": "这些是系统默认的全局字体",
+                "notes2": "在此处更改字体会影响整个图表",
+                "notes3": "注意：可以通过每列的“字体”按钮单独更改每列的字体"
+            },
+            "map-points": {
+                "not-avaliable": "改数据包暂无地图可用"
+            },
             "datapacks": {
                 "see-info-guidance": "点击数据包以查看更多信息！",
                 "add-datapack-guidance": "点击加号添加数据包"

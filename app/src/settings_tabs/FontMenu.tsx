@@ -164,11 +164,12 @@ export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
 });
 
 const MetaColumnFontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
+  const { t } = useTranslation();
   return (
     <Box display="flex" flexDirection="column" gap="5px">
-      <Typography className="change-font-header">Change Font</Typography>
+      <Typography className="change-font-header">{t("settings.column.font-menu.change")}</Typography>
       <FontMenuRow column={column} target="Column Header" />
-      <Typography className="change-font-header">Additional fonts for child columns</Typography>
+      <Typography className="change-font-header">{t("settings.column.font-menu.additional")}</Typography>
       {Array.from(column.fontOptions).map((target) => {
         if (target === "Column Header") return null;
         return (
@@ -185,9 +186,10 @@ type LeafColumnFontMenuProps = {
   className?: string;
 } & FontMenuProps;
 export const LeafColumnFontMenu: React.FC<LeafColumnFontMenuProps> = observer(({ className, column }) => {
+  const { t } = useTranslation();
   return (
     <Box className={`leaf-column-font-menu ${className}`}>
-      <Typography className="change-font-header">Change Font</Typography>
+      <Typography className="change-font-header">{t("settings.column.font-menu.change")}</Typography>
       {Array.from(column.fontOptions).map((target) => (
         <Box key={target}>
           <FontMenuRow column={column} target={target} />

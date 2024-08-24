@@ -15,17 +15,19 @@ import { observer } from "mobx-react-lite";
 import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { context } from "../../state";
+import { useTranslation } from "react-i18next";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
 };
 export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const [openMenu, setOpenMenu] = useState(false);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") return;
   return (
     <div>
       <Button onClick={() => setOpenMenu(true)} variant="contained">
-        Data Mining Settings
+        {t("settings.column.datamining-menu.title")}
       </Button>
       <Dialog open={openMenu} onClose={() => setOpenMenu(false)}>
         <DataMiningSettings column={column} />
@@ -36,6 +38,7 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   const dataMiningSettings = column.columnSpecificSettings;
   if (!dataMiningSettings) return;
   assertDataMiningSettings(dataMiningSettings);
@@ -43,7 +46,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
     <StyledScrollbar>
       <Box className="data-mining-settings-container">
         <Typography className="advanced-settings-header" variant="h6">
-          Data Mining Settings
+          {t("settings.column.datamining-menu.title")}
         </Typography>
         <CustomDivider className="settings-header-divider" />
         <div className="data-mining-settings-content">

@@ -7,9 +7,10 @@ import { context } from "../../state"; // Import the context
 
 interface AccordionPositionControlsProps {
   column: ColumnInfo;
+  text: string;
 }
 
-const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {
+const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column, text }) => {
   const { actions } = useContext(context); // Use the context to get actions
 
   const incrementPosition = () => {
@@ -24,10 +25,9 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
   // This IS the file, along with column-actions.ts
   // I am not sure why it is refered to as shift row in the original Java program this is based off of,
   // since everywhere else refers to it as a column, as does the final product.
-
   return (
     <div className="accordion-position-controls">
-      <Typography>Shift Row Positions</Typography>
+      <Typography>{text}</Typography>
       <div className="lightgray-square">
         <IconButton
           className="custom-icon-button"

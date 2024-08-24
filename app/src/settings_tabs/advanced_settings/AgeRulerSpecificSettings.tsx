@@ -3,12 +3,16 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import { title } from "process";
 
 type AgeRulerSpecificSettingsProps = {
   column: ColumnInfo;
+  titleText: string;
+  leftText: string;
+  rightText: string;
 };
 
-export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> = observer(({ column }) => {
+export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> = observer(({ column, titleText, leftText, rightText }) => {
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) return null;
   assertRulerSettings(column.columnSpecificSettings);
@@ -20,11 +24,11 @@ export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> =
   return (
     <TSCRadioGroup
       onChange={changeAgeColumnJustification}
-      name={"Age Ruler Justification"}
+      name={titleText}
       value={column.columnSpecificSettings.justification}
       radioArray={[
-        { value: "left", label: "Left" },
-        { value: "right", label: "Right" }
+        { value: "left", label: leftText },
+        { value: "right", label: rightText }
       ]}
     />
   );

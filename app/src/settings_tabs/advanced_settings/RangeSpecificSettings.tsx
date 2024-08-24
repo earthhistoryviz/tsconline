@@ -6,8 +6,12 @@ import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 
 type RangeSpecificSettingsProps = {
   column: ColumnInfo;
+  firstOccurrenceText: string;
+  lastOccurrenceText: string;
+  alphabeticalText: string;
 };
-export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = observer(({ column }) => {
+export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = observer(({ column, firstOccurrenceText,
+  lastOccurrenceText, alphabeticalText }) => {
   const { actions } = useContext(context);
   if (column.columnDisplayType !== "Range" || !column.columnSpecificSettings) return null;
   assertRangeSettings(column.columnSpecificSettings);
@@ -26,9 +30,9 @@ export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = obser
       value={column.columnSpecificSettings.rangeSort}
       name={""}
       radioArray={[
-        { value: "first occurrence", label: "First Occurrence" },
-        { value: "last occurrence", label: "Last Occurrence" },
-        { value: "alphabetical", label: "Alphabetical" }
+        { value: "first occurrence", label: firstOccurrenceText },
+        { value: "last occurrence", label: lastOccurrenceText },
+        { value: "alphabetical", label: alphabeticalText }
       ]}
     />
   );

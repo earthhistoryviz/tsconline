@@ -25,7 +25,8 @@
             "Map Points": "Map Points",
             "Datapacks": "Datapacks",
             "General": "General",
-            "Data Mining": "Data Mining"
+            "Data Mining": "Data Mining",
+            "Curve Drawing": "Curve Drawing"
         },
         "settings": {
             "time": {
@@ -54,6 +55,40 @@
                     "column-menu-title": "Column Customization",
                     "data-mining-title": "Data Mining Settings",
                     "font-option-title": "Font Options for \"{{name}}\""
+                },
+                "menu": {
+                    "shift-row": "Shift Row Positions",
+                    "edit-name": "Edit Title",
+                    "background-color": "Background Color",
+                    "enable-title": "Enable Title",
+                    "show-age-label": "Show Age Label",
+                    "info-box": "Information and References",
+                    "add-blank-column": "Add Blank Column",
+                    "add-age-column": "Add Age Column",
+                    "width": "Width",
+                    "orientation": {
+                        "title": "Label Orientation",
+                        "horizontal": "Horizontal",
+                        "vertical": "Vertical"
+                    },
+                    "show-uncertainty": "Show Uncertainty Labels",
+                    "events": "Events",
+                    "ranges": "Ranges",
+                    "first-occurrence": "First Occurrence",
+                    "last-occurrence": "Last Occurrence",
+                    "alphabetical": "Alphabetical",
+                    "ruler": {
+                        "title": "Age Ruler Justification",
+                        "left": "Left",
+                        "right": "Right"
+                    }
+                },
+                "font-menu": {
+                    "change": "Change Font",
+                    "additional": "Additional fonts for child columns"
+                },
+                "datamining-menu": {
+                    "title": "Data Mining Settings"
                 }
             },
             "search": {
@@ -61,17 +96,23 @@
                 "found-result": "Found {{count}} Results",
                 "current-time-settings": "Current Time Settings(Top / Base)",
                 "header": {
-                    "status": "Status",
+                    "status": "Column On?",
                     "center": "Center",
                     "extend": "Extend",
                     "column": "Column",
                     "age": "Age",
-                    "qualifier": "Qualifier",
+                    "qualifier": "Type",
                     "notes": "Notes"
                 }
             },
-            "font": {},
-            "map-points": {},
+            "font": {
+                "notes1": "These are the default systemwide fonts.",
+                "notes2": "Changing one here will affect the entire chart.",
+                "notes3": "NOTE: These fonts can be changed on a column by column basis by using the Font button for each column"
+            },
+            "map-points": {
+                "not-avaliable": "No Map Points available for this datapack"
+            },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
                 "add-datapack-guidance": "Add a datapack by clicking the checkbox"
