@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser, createWorkshop, findWorkshop } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
@@ -81,7 +81,8 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       pictureUrl: pictureUrl ?? null,
       isAdmin: isAdmin,
       emailVerified: 1,
-      invalidateSession: 0
+      invalidateSession: 0,
+      workshopId: 0
     };
     await createUser(customUser);
     const newUser = await findUser({ email });
@@ -480,7 +481,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           invalidateSession: 0,
           pictureUrl: null,
           username: email,
-          uuid: randomUUID()
+          uuid: randomUUID(),
+          workshopId: workshopId
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
@@ -499,5 +501,43 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         logger.error("Error cleaning up file:", e);
       });
     }
+  }
+};
+
+/**
+ * Create a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminCreateWorkshop = async function adminCreateWorkshop(
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
+  reply: FastifyReply
+) {
+  const { title, start, end } = request.body;
+  if (!title || !start || !end) {
+    reply.status(400).send({ error: "Missing required fields" });
+    return;
+  }
+  const workshop = await findWorkshop({ title });
+  if (workshop.length > 0) {
+    reply.status(409).send({ error: "Workshop with that tile already exists" });
+    return;
+  }
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime()) {
+    reply.status(400).send({ error: "Invalid date format or start date is after end date" });
+    return;
+  }
+  try {
+    const workshopId = await createWorkshop({ title, start: startDate.toISOString(), end: endDate.toISOString() });
+    if (!workshopId) {
+      throw new Error("Workshop not created");
+    }
+    reply.send({ workshopId });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
   }
 };

@@ -354,6 +354,47 @@ export const adminAddUsersToWorkshop = action(async (formData: FormData): Promis
   }
 });
 
+export const adminCreateWorkshop = action(async (title: string, start: string, end: string) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/workshop", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ title, start, end }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      // adminFetchWorkshops();
+      pushSnackbar("Workshop created successfully", "success");
+    } else {
+      let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 409:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(
+        await response.json(),
+        errorCode,
+        ErrorMessages[errorCode]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
   if (!state.admin.displayedUserDatapacks[uuid]) throw new Error(`User ${uuid} not found in displayedUserDatapacks`);
   state.admin.displayedUserDatapacks[uuid] = {};
