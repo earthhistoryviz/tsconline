@@ -36,13 +36,13 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
     const form = new FormData(event.currentTarget);
     const title = form.get("workshopTitle")?.toString();
     if (!title) {
-      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
+      actions.pushError(ErrorCodes.INVALID_FORM);
       return;
     }
     const startDate = form.get("startDate")?.toString();
     const endDate = form.get("endDate")?.toString();
     if (!startDate || !endDate) {
-      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
+      actions.pushError(ErrorCodes.INVALID_FORM);
       return;
     }
     const start = dayjs(startDate).format("YYYY-MM-DD HH:mm");
@@ -52,7 +52,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       return;
     }
     await actions.adminCreateWorkshop(title, start, end);
-  }
+  };
   const handleAddUsersSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -127,6 +127,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
               <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap={5}>
                 <DateTimePicker
                   label="Start Date"
+                  name="startDate"
                   viewRenderers={{
                     hours: renderTimeViewClock,
                     minutes: renderTimeViewClock
@@ -142,6 +143,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                 />
                 <DateTimePicker
                   label="End Date"
+                  name="endDate"
                   viewRenderers={{
                     hours: renderTimeViewClock,
                     minutes: renderTimeViewClock
@@ -156,7 +158,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   }}
                 />
               </Box>
-              <TSCButton type="submit">Submit</TSCButton>
+              <TSCButton type="submit" onClick={() => setCreateWorkshopFormOpen(false)}>Submit</TSCButton>
             </Box>
           </Box>
         </Dialog>

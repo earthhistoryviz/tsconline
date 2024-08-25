@@ -73,7 +73,9 @@ export enum ErrorCodes {
   ADMIN_WORKSHOP_FIELDS_EMPTY = "ADMIN_WORKSHOP_FIELDS_EMPTY",
   UNRECOGNIZED_EXCEL_FILE = "UNRECOGNIZED_EXCEL_FILE",
   ADMIN_WORKSHOP_START_AFTER_END = "ADMIN_WORKSHOP_START_AFTER_END",
-  SERVER_DATAPACK_ALREADY_EXISTS = "SERVER_DATAPACK_ALREADY_EXISTS"
+  SERVER_DATAPACK_ALREADY_EXISTS = "SERVER_DATAPACK_ALREADY_EXISTS",
+  ADMIN_CREATE_WORKSHOP_FAILED = "ADMIN_CREATE_WORKSHOP_FAILED",
+  ADMIN_WORKSHOP_ALREADY_EXISTS = "ADMIN_WORKSHOP_ALREADY_EXISTS"
 }
 
 export const ErrorMessages = {
@@ -160,5 +162,7 @@ export const ErrorMessages = {
   [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: "Unrecognized Excel file. Please upload a valid Excel file.",
   [ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END]: "The start date must be before the end date.",
   [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
-    "Server datapack already exists. Please upload a unique datapack (different filename and title)."
+    "Server datapack already exists. Please upload a unique datapack (different filename and title).",
+  [ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]: "Unable to create workshop. Please try again later.",
+  [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: "Workshop with that title already exists. Please try a different title."
 };
