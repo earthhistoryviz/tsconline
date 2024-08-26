@@ -260,7 +260,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     filepath = actualFilepath;
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
-    reply.status(500).send({ error: "Error moving file" });
+    reply.status(500).send({ error: "Error moving temp file" });
     return;
   }
   const errorHandler = async (error: string) => {
