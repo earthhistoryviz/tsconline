@@ -5,7 +5,7 @@ import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
 import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
-import { readFile, realpath, rm, writeFile } from "fs/promises";
+import { readFile, realpath, rm, writeFile, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { datapackIndex } from "../index.js";
@@ -193,7 +193,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
       filename = file.filename;
-      filepath = resolve(assetconfigs.datapacksDirectory, filename);
+      // store it temporarily in the upload directory
+      // this is because we can't check if the file should overwrite the existing file until we verify it
+      filepath = resolve(assetconfigs.datapacksDirectory, `__temp${await hash(randomUUID(), 10)}${filename}`);
       decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
@@ -204,15 +206,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       }
       if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(file.filename))) {
         reply.status(400).send({ error: "Invalid file type" });
-        return;
-      }
-      if (
-        (await checkFileExists(filepath)) &&
-        (await checkFileExists(decryptedFilepath)) &&
-        adminconfig.datapacks.some((datapack) => datapack.file === filename) &&
-        datapackIndex[filename]
-      ) {
-        reply.status(409).send({ error: "File already exists" });
         return;
       }
       try {
@@ -251,9 +244,23 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   if (!datapackMetadata) {
     return;
   }
-  if (adminconfig.datapacks.some((dp) => dp.title === datapackMetadata.title || dp.file === filename)) {
+  const actualFilepath = join(assetconfigs.datapacksDirectory, filename);
+  if (
+    (await checkFileExists(actualFilepath)) &&
+    (await checkFileExists(decryptedFilepath)) &&
+    adminconfig.datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
+    datapackIndex[datapackMetadata.title]
+  ) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(409).send({ error: "Datapack already exists" });
+    return;
+  }
+  try {
+    await rename(filepath, actualFilepath);
+    filepath = actualFilepath;
+  } catch (e) {
+    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Error moving file" });
     return;
   }
   const errorHandler = async (error: string) => {
