@@ -211,15 +211,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
         reply.status(400).send({ error: "Invalid file type" });
         return;
       }
-      if (
-        (await checkFileExists(filepath)) &&
-        (await checkFileExists(decryptedFilepath)) &&
-        adminconfig.datapacks.some((datapack) => datapack.file === filename) &&
-        serverDatapackIndex[filename]
-      ) {
-        reply.status(409).send({ error: "File already exists" });
-        return;
-      }
       try {
         await pipeline(file.file, createWriteStream(filepath));
       } catch (error) {
