@@ -87,7 +87,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
     for (const parent in mapPack.mapHierarchy) {
       const children = mapPack.mapHierarchy[parent];
       if (mapHierarchy[parent]) {
-        mapHierarchy[parent].concat(children);
+        mapHierarchy[parent] = mapHierarchy[parent].concat(children);
       } else {
         mapHierarchy[parent] = children;
       }
