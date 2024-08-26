@@ -173,12 +173,13 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
   return (
     <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
       <Box className={styles.header}>
-        <SvgIcon>
-          <HeaderIcon />
+        <SvgIcon className={styles.sdi}>
+          <HeaderIcon/>
         </SvgIcon>
         <Typography
           variant="h5"
           fontWeight={700}
+          fontSize="1.2rem"
           className={styles.idh}>{`${header} (${numberOfDatapacks})`}</Typography>
       </Box>
       <CustomDivider className={styles.divider} />
