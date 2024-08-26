@@ -12,7 +12,7 @@ import {
 } from "@tsconline/shared";
 import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { actions, context } from "../../state";
+import { context } from "../../state";
 import { useTransformEffect } from "react-zoom-pan-pinch";
 import { calculateRectBoundsPosition, calculateRectButton, calculateVertBoundsPosition } from "../../util/coordinates";
 import NotListedLocationIcon from "@mui/icons-material/NotListedLocation";
@@ -20,7 +20,7 @@ import LocationOffIcon from "@mui/icons-material/LocationOff";
 import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../../util";
 import { BorderedIcon } from "../../components";
-import { checkIfDataIsInRange } from "../../util/util";
+import { checkIfDataIsInRange, willColumnBeVisibleOnChart } from "../../util/util";
 
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
@@ -74,12 +74,12 @@ type MapPointButtonProps = {
 const MapPointButton: React.FC<MapPointButtonProps> = observer(
   ({ mapPoint, x, y, name, isInfo = false, container }) => {
     const theme = useTheme();
-    const { state } = useContext(context);
+    const { state, actions } = useContext(context);
     const column = state.settingsTabs.columnHashMap.get(name);
     if (!column) {
       console.log(`Column ${name} not found in columnHashMap`);
     }
-    const clicked = column ? column.on : false;
+    const clicked = column ? willColumnBeVisibleOnChart(column, state.settingsTabs.columnHashMap) : false;
     // is an info point if given or doesn't exist in hash map
     isInfo = isInfo || !column;
     const disabled = column
@@ -165,7 +165,7 @@ interface TransectLineProps {
  */
 const TransectLine: React.FC<TransectLineProps> = observer(
   ({ name, startPosition, endPosition, transect, onColor, offColor, container }) => {
-    const { state } = useContext(context);
+    const { state, actions } = useContext(context);
     const column = state.settingsTabs.columnHashMap.get(name);
     if (!column) {
       console.log(`Column ${name} not found in columnHashMap`);
