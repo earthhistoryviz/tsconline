@@ -53,6 +53,13 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
+    if (
+      type === "server" &&
+      (Object.values(state.datapackIndex).some((dp) => dp.file === file.name) || state.datapackIndex[title])
+    ) {
+      actions.pushError(ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS);
+      return;
+    }
     if (state.datapackIndex[title]) {
       actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;

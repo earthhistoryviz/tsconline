@@ -195,7 +195,10 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       filename = file.filename;
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
-      filepath = resolve(assetconfigs.datapacksDirectory, `__temp${await hash(randomUUID(), 10)}${filename}`);
+      filepath = resolve(
+        assetconfigs.datapacksDirectory,
+        `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`
+      );
       decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
