@@ -338,9 +338,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  if (adminconfig.datapacks.some((dp) => dp.file === datapack)) {
-    adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.file !== datapack);
-  }
+  adminconfig.datapacks = adminconfig.datapacks.filter((dp) => dp.title !== datapack);
   if (serverDatapackIndex[datapack]) {
     delete serverDatapackIndex[datapack];
   }
