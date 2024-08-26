@@ -174,7 +174,7 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
     <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
       <Box className={styles.header}>
         <SvgIcon className={styles.sdi}>
-          <HeaderIcon/>
+          <HeaderIcon />
         </SvgIcon>
         <Typography
           variant="h5"
