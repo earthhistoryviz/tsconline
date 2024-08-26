@@ -25,7 +25,7 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
   return (minDataAge > userTopAge && minDataAge < userBaseAge) || (maxDataAge < userBaseAge && maxDataAge > userTopAge);
 }
 
-export const willColumnBeVisibleOnChart = (column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>) => {
+export const willColumnBeVisibleOnChart = (column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>): boolean => {
   if (!column.on) return false;
   // reached the top, so it will be visible
   if (!column.parent) return true;
