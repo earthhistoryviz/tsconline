@@ -1,7 +1,7 @@
 import { Box, Dialog, useTheme, TextField, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import { useContext, useState } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
 import { TSCButton, InputFileUpload } from "../components";
@@ -9,8 +9,10 @@ import { ErrorCodes } from "../util/error-codes";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { TSCPopup } from "../components/TSCPopup";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
+import { Workshop } from "@tsconline/shared";
 import dayjs from "dayjs";
 import "./AdminWorkshop.css";
+import { toJS } from "mobx";
 
 const workshopColDefs: ColDef[] = [
   {
@@ -20,13 +22,13 @@ const workshopColDefs: ColDef[] = [
     filter: true,
     flex: 1
   },
-  { headerName: "Workshop Start Date", field: "startDate", flex: 1 },
-  { headerName: "Workshop End Date", field: "endDate", flex: 1 }
+  { headerName: "Workshop Start Date", field: "start", flex: 1 },
+  { headerName: "Workshop End Date", field: "end", flex: 1 }
 ];
 
 export const AdminWorkshop = observer(function AdminWorkshop() {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const [addUsersFormOpen, setAddUsersFormOpen] = useState(false);
   const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -204,7 +206,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         rowSelection="multiple"
         rowDragManaged
         rowMultiSelectWithClick
-        rowData={null}
+        rowData={toJS(state.admin.workshops)}
       />
     </Box>
   );

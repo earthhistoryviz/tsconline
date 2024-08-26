@@ -75,7 +75,8 @@ export enum ErrorCodes {
   ADMIN_WORKSHOP_START_AFTER_END = "ADMIN_WORKSHOP_START_AFTER_END",
   SERVER_DATAPACK_ALREADY_EXISTS = "SERVER_DATAPACK_ALREADY_EXISTS",
   ADMIN_CREATE_WORKSHOP_FAILED = "ADMIN_CREATE_WORKSHOP_FAILED",
-  ADMIN_WORKSHOP_ALREADY_EXISTS = "ADMIN_WORKSHOP_ALREADY_EXISTS"
+  ADMIN_WORKSHOP_ALREADY_EXISTS = "ADMIN_WORKSHOP_ALREADY_EXISTS",
+  ADMIN_FETCH_WORKSHOPS_FAILED = "ADMIN_FETCH_WORKSHOPS_FAILED",
 }
 
 export const ErrorMessages = {
@@ -164,5 +165,6 @@ export const ErrorMessages = {
   [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
     "Server datapack already exists. Please upload a unique datapack (different filename and title).",
   [ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]: "Unable to create workshop. Please try again later.",
-  [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: "Workshop with that title already exists. Please try a different title."
+  [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: "Workshop with that title already exists. Please try a different title.",
+  [ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]: "Unable to fetch workshops. Please try again later.",
 };

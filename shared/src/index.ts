@@ -7,6 +7,13 @@ export * from "./constants.js";
 export * from "./util.js";
 export * from "./settings-types.js";
 
+export type Workshop = {
+  title: string;
+  start: string;
+  end: string;
+  workshopId: number;
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -598,6 +605,21 @@ export type TimescaleItem = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertWorkshop(o: any): asserts o is Workshop {
+  if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
+  if (typeof o.title !== "string") throwError("Workshop", "title", "string", o.title);
+  if (typeof o.start !== "string") throwError("Workshop", "start", "string", o.start);
+  if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
+  if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
+}
+
+export function assertWorkshopArray(o: any): asserts o is Workshop[] {
+  if (!Array.isArray(o)) throw new Error("Workshop must be an array");
+  for (const workshop of o) {
+    assertWorkshop(workshop);
+  }
+}
 
 export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
   if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");

@@ -5,8 +5,11 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
   DatapackMetadata,
+  Workshop,
   assertAdminSharedUserArray,
   assertDatapackIndex,
+  assertWorkshop,
+  assertWorkshopArray,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -354,6 +357,34 @@ export const adminAddUsersToWorkshop = action(async (formData: FormData): Promis
   }
 });
 
+export const adminFetchWorkshops = action(async () => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/workshops", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+    });
+    if (response.ok) {
+      const workshops = (await response.json()).workshops;
+      assertWorkshopArray(workshops);
+      state.admin.workshops.push(...workshops);
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
 export const adminCreateWorkshop = action(async (title: string, start: string, end: string) => {
   try {
     const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
@@ -368,7 +399,14 @@ export const adminCreateWorkshop = action(async (title: string, start: string, e
       credentials: "include"
     });
     if (response.ok) {
-      // adminFetchWorkshops();
+      const workShop: Workshop = { 
+        title,
+        start,
+        end,
+        workshopId: (await response.json()).workshopId
+      };
+      assertWorkshop(workShop);
+      state.admin.workshops.push(workShop);
       pushSnackbar("Workshop created successfully", "success");
     } else {
       let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;

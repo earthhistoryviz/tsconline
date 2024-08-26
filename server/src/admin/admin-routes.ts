@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser, createWorkshop, findWorkshop } from "../database.js";
+import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser, updateUser, createWorkshop, findWorkshop } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
@@ -14,7 +14,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import { Workshop, assertAdminSharedUser, assertDatapackIndex, assertWorkshop, assertWorkshopArray } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -470,7 +470,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        // TODO: Update existing user to workshop user
+        await updateUser({ email }, { workshopId });
       } else {
         // TODO: These users cannot login yet, needs to be a workshop system to give them a password
         await createUser({
@@ -501,6 +501,38 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         logger.error("Error cleaning up file:", e);
       });
     }
+  }
+};
+
+/**
+ * Fetch all workshops
+ * @param _request
+ * @param reply
+ * @returns
+ */
+export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true
+  });
+  try {
+    const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
+      return {
+        title: workshop.title,
+        start: formatter.format(new Date(workshop.start)),
+        end: formatter.format(new Date(workshop.end)),
+        workshopId: workshop.id
+      };
+    });
+    assertWorkshopArray(workshops);
+    reply.send({ workshops });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
   }
 };
 

@@ -9,7 +9,8 @@ import {
   adminDeleteServerDatapack,
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
-  adminCreateWorkshop
+  adminCreateWorkshop,
+  adminGetWorkshops
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -165,5 +166,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     getAllUserDatapacks
   );
   fastify.post("/workshop/users", { config: { rateLimit: looseRateLimit } }, adminAddUsersToWorkshop);
+  fastify.get("/workshops", { config: { rateLimit: looseRateLimit } }, adminGetWorkshops);
   fastify.post("/workshop", { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit } }, adminCreateWorkshop);
 }
