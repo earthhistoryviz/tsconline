@@ -829,6 +829,7 @@ describe("adminUploadServerDatapack", () => {
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const rename = vi.spyOn(fsPromises, "rename");
   const testDatapackDescription: DatapackMetadata = {
     file: "test.dpk",
     description: "test-description",
@@ -978,6 +979,19 @@ describe("adminUploadServerDatapack", () => {
       force: true
     });
     expect(await response.json()).toEqual({ error: "Error saving file" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if rename throws error", async () => {
+    rename.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(rename).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ error: "Error moving temp file" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if execFile throws error", async () => {
