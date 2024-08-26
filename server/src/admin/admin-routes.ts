@@ -261,7 +261,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     (await checkFileExists(actualFilepath)) &&
     (await checkFileExists(decryptedFilepath)) &&
     adminconfig.datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
-    datapackIndex[datapackMetadata.title]
+    serverDatapackIndex[datapackMetadata.title]
   ) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(409).send({ error: "Datapack already exists" });
@@ -354,6 +354,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     delete serverDatapackIndex[datapack];
   }
   try {
+    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.file);
+    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.file).name);
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
   } catch (e) {
