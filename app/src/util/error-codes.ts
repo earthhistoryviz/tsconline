@@ -71,7 +71,8 @@ export enum ErrorCodes {
   ADMIN_ADD_USERS_TO_WORKSHOP_FAILED = "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED",
   ADMIN_EMAIL_INVALID = "ADMIN_EMAIL_INVALID",
   ADMIN_WORKSHOP_FIELDS_EMPTY = "ADMIN_WORKSHOP_FIELDS_EMPTY",
-  UNRECOGNIZED_EXCEL_FILE = "UNRECOGNIZED_EXCEL_FILE"
+  UNRECOGNIZED_EXCEL_FILE = "UNRECOGNIZED_EXCEL_FILE",
+  SERVER_DATAPACK_ALREADY_EXISTS = "SERVER_DATAPACK_ALREADY_EXISTS"
 }
 
 export const ErrorMessages = {
@@ -155,5 +156,7 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED]: "Unable to add users to workshop. Please try again later.",
   [ErrorCodes.ADMIN_EMAIL_INVALID]: "Invalid email. Please fix the email and try again.",
   [ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY]: "You must provide at least one field to add users to a workshop.",
-  [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: "Unrecognized Excel file. Please upload a valid Excel file."
+  [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: "Unrecognized Excel file. Please upload a valid Excel file.",
+  [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
+    "Server datapack already exists. Please upload a unique datapack (different filename and title)."
 };
