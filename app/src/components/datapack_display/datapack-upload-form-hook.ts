@@ -57,7 +57,11 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     const doesServerDatapackExist =
       type === "server" && Object.values(index).some((dp) => dp.file === file.name || dp.title === title);
     const doesPublicDatapackExistIfPublic =
-      type === "user" && isPublic && Object.values(index).some((dp) => dp.title === title || dp.file === file.name);
+      type === "user" &&
+      isPublic &&
+      Object.values(state.datapackCollection.publicUserDatapackIndex).some(
+        (dp) => dp.title === title || dp.file === file.name
+      );
     if (doesServerDatapackExist || doesPublicDatapackExistIfPublic) {
       actions.pushError(ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS);
       return;

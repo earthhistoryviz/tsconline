@@ -25,42 +25,44 @@ export async function addPublicUserDatapack(
 ) {
   const release = await mutex.acquire();
   try {
-    const { datapackIndex: parsedPublicDatapackIndex } = await loadPublicUserDatapacks(datapackIndexFilepath);
-    // so we can modify it and not the original
-    datapack = _.cloneDeep(datapack);
-    datapack.type = "public_user";
-    parsedPublicDatapackIndex[datapack.title] = datapack;
-    if (!(await checkFileExists(datapackFilepath))) {
-      throw new Error("Datapack file does not exist");
-    }
     if (
       publicDatapackIndex[datapack.title] ||
       Object.values(publicDatapackIndex).some((dp) => dp.file === datapack.file)
     ) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
+    // so we can modify it and not the original
+    datapack = _.cloneDeep(datapack);
+    datapack.type = "public_user";
+    publicDatapackIndex[datapack.title] = datapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
     await copyFile(datapackFilepath, join(publicDatapacksDirectory, datapack.file));
     // update the file
-    await writeFile(datapackIndexFilepath, JSON.stringify(parsedPublicDatapackIndex, null, 2));
-    // Update the in-memory index
-    publicDatapackIndex[datapack.title] = datapack;
+    await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
+    if (!(await checkFileExists(datapackFilepath))) {
+      throw new Error("Datapack file does not exist");
+    }
   } finally {
     release();
   }
 }
 
 export async function loadPublicUserDatapacks(datapackIndexFilepath: string) {
-  let parsedPublicDatapackIndex: DatapackIndex = {};
-  if (await checkFileExists(datapackIndexFilepath)) {
-    try {
-      parsedPublicDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-      assertDatapackIndex(parsedPublicDatapackIndex);
-    } catch (e) {
-      console.error("Error parsing public datapack index", e);
-      return { datapackIndex: {} };
+  const relase = await mutex.acquire();
+  try {
+    let parsedPublicDatapackIndex: DatapackIndex = {};
+    if (await checkFileExists(datapackIndexFilepath)) {
+      try {
+        parsedPublicDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
+        assertDatapackIndex(parsedPublicDatapackIndex);
+      } catch (e) {
+        console.error("Error parsing public datapack index", e);
+        return { datapackIndex: {} };
+      }
     }
+    return { datapackIndex: parsedPublicDatapackIndex };
+  } finally {
+    relase();
   }
-  return { datapackIndex: parsedPublicDatapackIndex };
 }
