@@ -33,7 +33,10 @@ export async function addPublicUserDatapack(
     if (!(await checkFileExists(datapackFilepath))) {
       throw new Error("Datapack file does not exist");
     }
-    if (publicDatapackIndex[datapack.title]) {
+    if (
+      publicDatapackIndex[datapack.title] ||
+      Object.values(publicDatapackIndex).some((dp) => dp.file === datapack.file)
+    ) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
     await mkdir(publicDatapacksDirectory, { recursive: true });

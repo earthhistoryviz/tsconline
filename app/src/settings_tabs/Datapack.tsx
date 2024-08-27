@@ -210,7 +210,7 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
           />
         );
       })}
-      {Object.keys(index).length === 0 && <Typography>No {header} Available</Typography>}
+      {numberOfDatapacks === 0 && <Typography>No {header} Available</Typography>}
     </Box>
   );
 });
