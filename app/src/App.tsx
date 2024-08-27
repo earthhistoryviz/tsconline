@@ -32,11 +32,18 @@ export default observer(function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
+  const backgroundColor = theme.palette.backgroundColor.main;
+  document.documentElement.style.backgroundColor = backgroundColor;
+  document.body.style.backgroundColor = backgroundColor;
+  // listen for changes in preferred color scheme
   useEffect(() => {
-    const backgroundColor = theme.palette.backgroundColor.main;
-    document.documentElement.style.backgroundColor = backgroundColor;
-    document.body.style.backgroundColor = backgroundColor;
-  }, [theme]);
+    const cleanup = actions.listenForSystemDarkMode();
+    return () => {
+      cleanup();
+    };
+  }, []);
+
+  // on theme change, update the background color
   const checkOpen =
     location.pathname === "/settings" &&
     state.settingsTabs.selected !== "datapacks" &&

@@ -26,6 +26,7 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
+import { getInitialDarkMode } from "./actions";
 
 export type State = {
   chartTab: {
@@ -132,7 +133,7 @@ export const state = observable<State>({
     isGoogleUser: false,
     isAdmin: false,
     settings: {
-      darkMode: false,
+      darkMode: getInitialDarkMode(),
       language: "English"
     }
   },
