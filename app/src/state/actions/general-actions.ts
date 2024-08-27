@@ -930,6 +930,33 @@ export const setDefaultUserState = action(() => {
   setDatapackIndex(datapackIndex);
 });
 
+// This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
+export const getInitialDarkMode = () => {
+  const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const storedDarkMode = localStorage.getItem("darkMode");
+  if (storedDarkMode !== null) {
+    return storedDarkMode === "true";
+  }
+  return prefersDarkMode;
+};
+
+// This is a helper function to listen for system dark mode changes (if the user has not set a preference)
+export const listenForSystemDarkMode = () => {
+  const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleChange = () => {
+    if (localStorage.getItem("darkMode") === null) {
+      // this is external dark mode changing (not in our ui)
+      runInAction(() => {
+        state.user.settings.darkMode = darkModeMediaQuery.matches;
+      });
+    }
+  };
+  darkModeMediaQuery.addEventListener("change", handleChange);
+  return () => {
+    darkModeMediaQuery.removeEventListener("change", handleChange);
+  };
+};
+
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
   state.chartTab.chartTimelineEnabled = enabled;
 });
@@ -946,6 +973,9 @@ export const setPictureUrl = action("setPictureUrl", (url: string) => {
   state.user.pictureUrl = url;
 });
 export const setDarkMode = action("setDarkMode", (newval: boolean) => {
+  if (state.cookieConsent) {
+    localStorage.setItem("darkMode", newval.toString());
+  }
   state.user.settings.darkMode = newval;
 });
 export const setLanguage = action("setLanguage", (newval: string) => {
@@ -1067,8 +1097,11 @@ export const updatePresetColors = action("updatePresetColors", (newColor: string
     updatedColors = updatedColors.slice(0, 10);
   }
   state.presetColors = updatedColors;
-  localStorage.setItem("savedColors", JSON.stringify(updatedColors));
+  if (state.cookieConsent) {
+    localStorage.setItem("savedColors", JSON.stringify(updatedColors));
+  }
 });
+
 export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
