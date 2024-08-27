@@ -1119,10 +1119,12 @@ export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
 }
 export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
+  if (o.type !== "private_user") throwError("PrivateUserDatapack", "type", "private_user", o.type);
   if (typeof o.uuid !== "string") throwError("PrivateUserDatapack", "uuid", "string", o.uuid);
 }
 export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapack {
   if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
+  if (o.type !== "public_user") throwError("PublicUserDatapack", "type", "public_user", o.type);
   if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
 

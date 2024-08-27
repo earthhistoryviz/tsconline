@@ -243,6 +243,7 @@ export const uploadUserDatapack = action(
 
       if (response.ok) {
         fetchUserDatapacks();
+        if (options?.isPublic) fetchPublicDatapacks();
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);

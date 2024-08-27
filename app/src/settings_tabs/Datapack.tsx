@@ -184,20 +184,17 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
       </Box>
       <CustomDivider className={styles.divider} />
       {Object.keys(index).map((datapack) => {
+        const value = state.unsavedDatapackConfig.some(
+          (dp) => dp.title === datapack && dp.type === index[datapack].type
+        );
         return state.settingsTabs.datapackDisplayType === "rows" ? (
-          <TSCDatapackRow
-            key={datapack}
-            name={datapack}
-            datapack={index[datapack]}
-            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
-            onChange={onChange}
-          />
+          <TSCDatapackRow key={datapack} name={datapack} datapack={index[datapack]} value={value} onChange={onChange} />
         ) : state.settingsTabs.datapackDisplayType === "compact" ? (
           <TSCCompactDatapackRow
             key={datapack}
             name={datapack}
             datapack={index[datapack]}
-            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
+            value={value}
             onChange={onChange}
           />
         ) : (
@@ -205,7 +202,7 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
             key={datapack}
             name={datapack}
             datapack={index[datapack]}
-            value={state.unsavedDatapackConfig.map((dp) => dp.title).includes(datapack)}
+            value={value}
             onChange={onChange}
           />
         );
