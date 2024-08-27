@@ -134,6 +134,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                       true,
                       mapViewerRef.current
                     )}
+                  {/* Load all the transects */}
                   {imageLoaded &&
                     imageRef &&
                     imageRef.current &&

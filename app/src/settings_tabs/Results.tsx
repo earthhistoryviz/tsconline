@@ -19,7 +19,7 @@ import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import { checkIfDataIsInRange, trimQuotes } from "../util/util";
+import { checkIfDataIsInRange, trimQuotes, willColumnBeVisibleOnChart } from "../util/util";
 import bigDecimal from "js-big-decimal";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
@@ -40,21 +40,7 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  const ColumnPathToRootOn = () => {
-    let currColumn = column!;
-    while (currColumn.parent) {
-      if (currColumn.on === false) {
-        return false;
-      }
-      const parent = state.settingsTabs.columnHashMap.get(currColumn.parent);
-      if (!parent) {
-        console.error("parent of " + currColumn.name + "not found");
-        return false;
-      }
-      currColumn = parent;
-    }
-    return true;
-  };
+  const on = willColumnBeVisibleOnChart(column, state.settingsTabs.columnHashMap);
   const ages = info.age;
   const dataInRange = ages
     ? checkIfDataIsInRange(
@@ -72,12 +58,12 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
           enterNextDelay={tooltipDelayTime}
           disableInteractive
           placement="top"
-          title={ColumnPathToRootOn() ? "Column Toggled ON" : "Column Toggled OFF"}>
+          title={on ? "Column Toggled ON" : "Column Toggled OFF"}>
           <TSCCheckbox
             className="status-checkbox"
             size="large"
             onClick={() => actions.toggleSettingsTabColumn(column)}
-            checked={ColumnPathToRootOn()}
+            checked={on}
           />
         </CustomTooltip>
       ) : (
