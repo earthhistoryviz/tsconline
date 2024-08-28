@@ -240,8 +240,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "private_user":
         if (uuid && userDatapacks.includes(datapack.title)) {
           const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.file);
+          const datapackDirectory = path.dirname(filepath);
           datapacksToSendToCommandLine.push(filepath);
-          usedUserDatapackFilepaths.push(filepath);
+          usedUserDatapackFilepaths.push(datapackDirectory);
         } else {
           console.log("ERROR: datapack: ", datapack, " is not included in the user configuration");
           console.log("Available user datapacks: ", userDatapacks);
