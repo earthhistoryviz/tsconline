@@ -17,6 +17,7 @@
     "ag-grid-react": "^32.0.1",
     "clsx": "^2.1.0",
     "color": "^4.2.3",
+    "d3": "^7.9.0",
     "dayjs": "^1.11.12",
     "dompurify": "^3.0.11",
     "file-saver": "^2.0.5",
@@ -43,6 +44,7 @@
   },
   "devDependencies": {
     "@types/color": "^3.0.6",
+    "@types/d3": "^7",
     "@types/dompurify": "^3",
     "@types/file-saver": "^2.0.7",
     "@types/lodash": "^4.17.4",

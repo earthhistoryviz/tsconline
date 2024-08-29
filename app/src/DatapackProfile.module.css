@@ -94,6 +94,7 @@
 .description {
   font-size: 1.1rem;
   width: 100%;
+  margin-bottom: 10px;
 }
 
 .tags {
@@ -140,6 +141,13 @@
   align-items: center;
   justify-content: center;
 }
+
+.vd {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+}
+
 @media (max-width: 590px) {
   .di {
     width: 200px;
