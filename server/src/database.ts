@@ -130,6 +130,7 @@ export async function findUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   return await query.selectAll().execute();
 }
 
@@ -144,6 +145,7 @@ export async function updateUser(criteria: Partial<User>, updatedUser: UpdatedUs
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   return await query.execute();
 }
 
@@ -158,6 +160,7 @@ export async function deleteUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   return await query.execute();
 }
 
@@ -218,15 +221,33 @@ export async function checkForUsersWithUsernameOrEmail(username: string, email: 
 }
 
 export async function createWorkshop(criteria: NewWorkshop): Promise<number | undefined> {
-  const result = await db.insertInto("workshop").values(criteria).returning("id").executeTakeFirst();
-  return result?.id;
+  const result = await db.insertInto("workshop").values(criteria).returning("workshopId").executeTakeFirst();
+  return result?.workshopId;
 }
 
 export async function findWorkshop(criteria: Partial<NewWorkshop>) {
   let query = db.selectFrom("workshop");
-  if (criteria.id) query = query.where("id", "=", criteria.id);
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
   return await query.selectAll().execute();
+}
+
+export async function updateWorkshop(criteria: Partial<NewWorkshop>, updatedWorkshop: NewWorkshop) {
+  let query = db.updateTable("workshop").set(updatedWorkshop);
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.title) query = query.where("title", "=", criteria.title);
+  if (criteria.start) query = query.where("start", "=", criteria.start);
+  if (criteria.end) query = query.where("end", "=", criteria.end);
+  return await query.execute();
+}
+
+export async function deleteWorkshop(criteria: Partial<NewWorkshop>) {
+  let query = db.deleteFrom("workshop");
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.title) query = query.where("title", "=", criteria.title);
+  if (criteria.start) query = query.where("start", "=", criteria.start);
+  if (criteria.end) query = query.where("end", "=", criteria.end);
+  return await query.execute();
 }

@@ -187,7 +187,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   }}
                 />
               </Box>
-              <TSCButton type="submit" onClick={() => setCreateWorkshopFormOpen(false)}>
+              <TSCButton type="submit">
                 Submit
               </TSCButton>
             </Box>
