@@ -1,29 +1,52 @@
-import { Box, Dialog, useTheme, TextField, Typography } from "@mui/material";
+import { Box, Dialog, useTheme, TextField, Typography, IconButton } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
-import { TSCButton, InputFileUpload } from "../components";
+import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { TSCPopup } from "../components/TSCPopup";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
-import { Workshop } from "@tsconline/shared";
+import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import dayjs from "dayjs";
+import { Workshop } from "@tsconline/shared";
 import "./AdminWorkshop.css";
-import { toJS } from "mobx";
+
+type EditCellRendererProps = {
+  context: {
+    handleAddUsersFormOpen: (workshopId: number) => void;
+  };
+  data: Workshop;
+};
+const EditCellRenderer: React.FC<EditCellRendererProps> = (props) => {
+  const { handleAddUsersFormOpen } = props.context;
+  const { workshopId } = props.data;
+  return (
+    <CustomTooltip title="Add Users" enterDelay={800}>
+      <IconButton onClick={() => handleAddUsersFormOpen(workshopId)}>
+        <GroupAddIcon />
+      </IconButton>
+    </CustomTooltip>
+  );
+};
 
 const workshopColDefs: ColDef[] = [
   {
     headerName: "Workshop Title",
     field: "title",
-    sortable: true,
     filter: true,
     flex: 1
   },
   { headerName: "Workshop Start Date", field: "start", flex: 1 },
-  { headerName: "Workshop End Date", field: "end", flex: 1 }
+  { headerName: "Workshop End Date", field: "end", flex: 1 },
+  {
+    headerName: "Actions",
+    field: "actions",
+    cellRenderer: EditCellRenderer,
+    width: 100,
+    cellStyle: { textAlign: "center", border: "none" }
+  }
 ];
 
 export const AdminWorkshop = observer(function AdminWorkshop() {
@@ -33,6 +56,11 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
   const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
+  const [workshopId, setWorkshopId] = useState<number>(-1);
+  const handleAddUsersFormOpen = (workshopId: number): void => {
+    setWorkshopId(workshopId);
+    setAddUsersFormOpen(true);
+  };
   const handleCreateWorkshopSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -64,8 +92,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       return;
     }
     if (file) form.append("file", file);
-    // TODO: Add some sort of id here, probably generated when the workshop is created
-    form.append("workshopId", "123");
+    form.append("workshopId", workshopId.toString());
     const invalidEmails = await actions.adminAddUsersToWorkshop(form);
     setInvalidEmails(invalidEmails || "");
     setFile(null);
@@ -160,11 +187,13 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   }}
                 />
               </Box>
-              <TSCButton type="submit" onClick={() => setCreateWorkshopFormOpen(false)}>Submit</TSCButton>
+              <TSCButton type="submit" onClick={() => setCreateWorkshopFormOpen(false)}>
+                Submit
+              </TSCButton>
             </Box>
           </Box>
         </Dialog>
-        <Dialog open={addUsersFormOpen} onClose={() => setAddUsersFormOpen(false)}>
+        <Dialog open={addUsersFormOpen} onClose={() => setAddUsersFormOpen(false)} fullWidth>
           <Box textAlign="center" padding="10px">
             <Typography variant="h5" mb="5px">
               Add Users
@@ -194,19 +223,16 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                 />
                 <Typography ml="10px">{file?.name || "No file selected"}</Typography>
               </Box>
-              <TSCButton type="submit" onClick={() => setAddUsersFormOpen(false)}>
-                Submit
-              </TSCButton>
+              <TSCButton type="submit">Submit</TSCButton>
             </Box>
           </Box>
         </Dialog>
       </Box>
       <AgGridReact
         columnDefs={workshopColDefs}
-        rowSelection="multiple"
-        rowDragManaged
-        rowMultiSelectWithClick
-        rowData={toJS(state.admin.workshops)}
+        rowData={Array.from(state.admin.workshops.values())}
+        components={{ EditCellRenderer }}
+        context={{ handleAddUsersFormOpen }}
       />
     </Box>
   );

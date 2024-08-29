@@ -74,7 +74,7 @@ export type State = {
   admin: {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
-    workshops: Workshop[];
+    workshops: Map<string, Workshop>;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -152,7 +152,7 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: []
+    workshops: new Map<string, Workshop>()
   },
   chartLoading: false,
   madeChart: false,

@@ -20,7 +20,7 @@ Database Schema Details (Post-Migration):
   - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
   - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
   - isAdmin (integer): Non-nullable, default is 0, indicates if the user is an admin.
-  - workshopId (integer): Non-nullable, default is 0. Links to the workshop table. If this field is not 0, the user is associated with a workshop. Foreign key to the workshop table.
+  - workshopId (integer): Non-nullable, default is 0. Links to the workshop table. If this field is not 0, the user is associated with a workshop.
 
 - verification Table:
   - id (integer): Primary key, auto-increment.
@@ -218,11 +218,7 @@ export async function checkForUsersWithUsernameOrEmail(username: string, email: 
 }
 
 export async function createWorkshop(criteria: NewWorkshop): Promise<number | undefined> {
-  const result = await db
-    .insertInto("workshop")
-    .values(criteria)
-    .returning("id")
-    .executeTakeFirst();
+  const result = await db.insertInto("workshop").values(criteria).returning("id").executeTakeFirst();
   return result?.id;
 }
 
