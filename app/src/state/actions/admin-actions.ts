@@ -343,6 +343,10 @@ export const adminAddUsersToWorkshop = action(async (formData: FormData): Promis
         case 409:
           errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
           break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          adminFetchWorkshops();
+          break;
         case 422:
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
           break;
@@ -371,6 +375,12 @@ export const adminFetchWorkshops = action(async () => {
     if (response.ok) {
       const workshops = (await response.json()).workshops;
       assertWorkshopArray(workshops);
+      const fetchedWorkshopTitles = new Set(workshops.map(workshop => workshop.title));
+      state.admin.workshops.forEach((_, title) => {
+        if (!fetchedWorkshopTitles.has(title)) {
+          state.admin.workshops.delete(title);
+        }
+      });
       workshops.forEach((workshop) => adminUpdateWorkshop(workshop));
     } else {
       displayServerError(

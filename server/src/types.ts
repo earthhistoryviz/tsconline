@@ -35,7 +35,7 @@ export interface IpTable {
 }
 
 export interface WorkshopTable {
-  id: Generated<number>;
+  workshopId: Generated<number>;
   title: string;
   start: string;
   end: string;

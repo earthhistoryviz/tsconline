@@ -34,7 +34,9 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
-    assertDatapackIndex: vi.fn().mockReturnValue(true)
+    assertDatapackIndex: vi.fn().mockReturnValue(true),
+    assertWorkshop: vi.fn().mockImplementation(actual.assertWorkshop),
+    assertWorkshopArray: vi.fn().mockImplementation(actual.assertWorkshopArray)
   };
 });
 
@@ -78,7 +80,8 @@ vi.mock("../src/util", async () => {
       ]
     },
     checkFileExists: vi.fn().mockResolvedValue(true),
-    verifyFilepath: vi.fn().mockReturnValue(true)
+    verifyFilepath: vi.fn().mockReturnValue(true),
+    formatDate: vi.fn().mockReturnValue("date")
   };
 });
 
@@ -157,7 +160,8 @@ vi.mock("../src/database", async (importOriginal) => {
     checkForUsersWithUsernameOrEmail: vi.fn().mockResolvedValue([]),
     createUser: vi.fn().mockResolvedValue({}),
     deleteUser: vi.fn().mockResolvedValue({}),
-    findUsers: vi.fn().mockResolvedValue([])
+    findWorkshop: vi.fn().mockResolvedValue([]),
+    updateUser: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -215,6 +219,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.setSystemTime(mockDate);
 });
 
 afterAll(async () => {
@@ -230,11 +235,23 @@ const testAdminUser = {
   username: "testuser",
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 1
+  isAdmin: 1,
+  workshopId: 0
 };
 const testNonAdminUser = {
   ...testAdminUser,
   isAdmin: 0
+};
+const mockDate = new Date("2024-08-20T00:00:00Z");
+const start = new Date(mockDate);
+start.setHours(mockDate.getHours() + 1);
+const end = new Date(mockDate);
+end.setHours(mockDate.getHours() + 2);
+const testWorkshop: shared.Workshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -249,7 +266,13 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
-  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } }
+  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
+  { method: "GET", url: "/admin/workshops" },
+  {
+    method: "POST",
+    url: "/admin/workshop",
+    body: { title: "test", start: "2024-08-29T04:00:00.000Z", end: "2024-08-30T04:00:00.000Z" }
+  }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -372,7 +395,8 @@ describe("adminCreateUser tests", () => {
     hashedPassword: "hashedPassword",
     uuid: "random-uuid",
     emailVerified: 1,
-    invalidateSession: 0
+    invalidateSession: 0,
+    workshopId: 0
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
@@ -1479,6 +1503,8 @@ describe("adminAddUsersToWorkshop", () => {
   const findUser = vi.spyOn(database, "findUser");
   const createUser = vi.spyOn(database, "createUser");
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
+  const updateUser = vi.spyOn(database, "updateUser");
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1604,6 +1630,7 @@ describe("adminAddUsersToWorkshop", () => {
     });
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
+    expect(response.statusCode).toBe(400);
   });
   it("should return 400 if missing workshopId", async () => {
     createForm({ workshopId: "" });
@@ -1658,7 +1685,7 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid email addresses provided", invalidEmails: "test1, test2" });
     expect(response.statusCode).toBe(409);
   });
-  it("should return 500 if parseExcelFile fails", async () => {
+  it("should return 400 if parseExcelFile fails", async () => {
     parseExcelFile.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
@@ -1670,8 +1697,25 @@ describe("adminAddUsersToWorkshop", () => {
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Error parsing excel file" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 404 if findWorkshop returns empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(findWorkshop).toHaveBeenCalledTimes(1);
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(await response.json()).toEqual({ error: "Workshop not found" });
+    expect(response.statusCode).toBe(404);
   });
   it("should return 500 if findUser returns empty", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
@@ -1683,8 +1727,10 @@ describe("adminAddUsersToWorkshop", () => {
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Error creating user", invalidEmails: "test@gmail.com" });
+    expect(response.statusCode).toBe(500);
   });
   it("should return 500 if findUser throws an error", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
@@ -1696,8 +1742,10 @@ describe("adminAddUsersToWorkshop", () => {
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and add new users", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1712,31 +1760,35 @@ describe("adminAddUsersToWorkshop", () => {
     expect(createUser).toHaveBeenCalledTimes(2);
     expect(createUser).toHaveBeenNthCalledWith(1, {
       email: "test@gmail.com",
-      hashedPassword: null,
+      hashedPassword: "hashedPassword",
       isAdmin: 0,
       emailVerified: 1,
       invalidateSession: 0,
       pictureUrl: null,
       username: "test@gmail.com",
-      uuid: "random-uuid"
+      uuid: "random-uuid",
+      workshopId: 1
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
       email: "test2@gmail.com",
-      hashedPassword: null,
+      hashedPassword: "hashedPassword",
       isAdmin: 0,
       emailVerified: 1,
       invalidateSession: 0,
       pictureUrl: null,
       username: "test2@gmail.com",
-      uuid: "random-uuid"
+      uuid: "random-uuid",
+      workshopId: 1
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
     expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
     expect(findUser).toHaveBeenNthCalledWith(3, { email: "test2@gmail.com" });
+    expect(updateUser).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and update old users", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
     checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
     const response = await app.inject({
       method: "POST",
@@ -1749,9 +1801,187 @@ describe("adminAddUsersToWorkshop", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(updateUser).toHaveBeenCalledTimes(2);
+    expect(updateUser).toHaveBeenNthCalledWith(
+      1,
+      {
+        email: "test@gmail.com"
+      },
+      { workshopId: 1 }
+    );
+    expect(updateUser).toHaveBeenNthCalledWith(
+      2,
+      {
+        email: "test2@gmail.com"
+      },
+      { workshopId: 1 }
+    );
     expect(createUser).not.toHaveBeenCalled();
     expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
     expect(await response.json()).toEqual({ message: "Users added" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminGetWorkshops", () => {
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 500 if findWorkshops throws an error", async () => {
+    findWorkshop.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/workshops",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful", async () => {
+    const formatDate = vi.spyOn(util, "formatDate");
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    formatDate.mockReturnValueOnce(testWorkshop.start).mockReturnValueOnce(testWorkshop.end);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/workshops",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledTimes(1);
+    expect(formatDate).toHaveBeenCalledTimes(2);
+    expect(formatDate).toHaveBeenNthCalledWith(1, new Date(testWorkshop.start));
+    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(testWorkshop.end));
+    expect(await response.json()).toEqual({ workshops: [testWorkshop] });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminCreateWorkshop", () => {
+  const createWorkshop = vi.spyOn(database, "createWorkshop");
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const body = {
+    title: testWorkshop.title,
+    start: testWorkshop.start,
+    end: testWorkshop.end
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if incorrect body", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: {},
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'title'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if title is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, title: "" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, start: "" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if end is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, end: "" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is after end", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, start: testWorkshop.end, end: testWorkshop.start },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid date format or dates are not valid" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is before current date", async () => {
+    const start = new Date(mockDate);
+    start.setHours(mockDate.getHours() - 1);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, start: start.toISOString(), end: testWorkshop.end },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid date format or dates are not valid" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 409 if workshop with title already exists", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledTimes(1);
+    expect(findWorkshop).toHaveBeenCalledWith({ title: body.title });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Workshop with that title already exists" });
+    expect(response.statusCode).toBe(409);
+  });
+  it("should return 500 if createWorkshop does not return a workshopId", async () => {
+    createWorkshop.mockResolvedValueOnce(undefined);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(createWorkshop).toHaveBeenCalledTimes(1);
+    expect(createWorkshop).toHaveBeenCalledWith(body);
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful", async () => {
+    const formatDate = vi.spyOn(util, "formatDate");
+    formatDate.mockReturnValueOnce(body.start).mockReturnValueOnce(body.end);
+    createWorkshop.mockResolvedValueOnce(1);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(createWorkshop).toHaveBeenCalledTimes(1);
+    expect(createWorkshop).toHaveBeenCalledWith(body);
+    expect(formatDate).toHaveBeenNthCalledWith(1, new Date(body.start));
+    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(body.end));
+    expect(await response.json()).toEqual({ workshop: testWorkshop });
     expect(response.statusCode).toBe(200);
   });
 });

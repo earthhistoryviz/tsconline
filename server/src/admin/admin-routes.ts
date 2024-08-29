@@ -6,7 +6,9 @@ import {
   deleteUser,
   updateUser,
   createWorkshop,
-  findWorkshop
+  findWorkshop,
+  db,
+  deleteWorkshop
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -33,6 +35,10 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
+import cron from "node-cron";
+import { sendEmail } from "../send-email.js";
+import { randomBytes } from "crypto";
+import { Email } from "../types.js";
 import "dotenv/config";
 
 /**
@@ -482,20 +488,23 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
+    const workshop = await findWorkshop({ workshopId: workshopId });
+    if (!workshop || workshop.length !== 1 || !workshop[0]) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    if (workshop[0].end < new Date().toISOString()) {
+      await deleteWorkshop({ workshopId });
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    if (!process.env.WORKSHOP_PASSWORD && process.env.NODE_ENV == "production")
+      throw new Error("Must have a workshop password defined in production");
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
         await updateUser({ email }, { workshopId });
       } else {
-        const workshop = await findWorkshop({ id: workshopId });
-        if (!workshop || workshop.length !== 1 || !workshop[0]) {
-          logger.error(
-            `Workshop not found with id: ${workshopId}. Expected exactly 1 workshop, found: ${workshop.length}`
-          );
-          throw new Error("Workshop not found");
-        }
-        if (!process.env.WORKSHOP_PASSWORD && process.env.NODE_ENV == "production")
-          throw new Error("Must have aworkshop password defined in production");
         await createUser({
           email,
           hashedPassword: await hash(process.env.WORKSHOP_PASSWORD ?? "workshop", 10),
@@ -535,12 +544,13 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
+    await db.deleteFrom("workshop").where("end", "<", new Date().toISOString()).execute();
     const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
       return {
         title: workshop.title,
         start: formatDate(new Date(workshop.start)),
         end: formatDate(new Date(workshop.end)),
-        workshopId: workshop.id
+        workshopId: workshop.workshopId
       };
     });
     assertWorkshopArray(workshops);
@@ -566,15 +576,15 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
-  const workshop = await findWorkshop({ title });
-  if (workshop.length > 0) {
-    reply.status(409).send({ error: "Workshop with that tile already exists" });
-    return;
-  }
   const startDate = new Date(start);
   const endDate = new Date(end);
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime()) {
-    reply.status(400).send({ error: "Invalid date format or start date is after end date" });
+  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime() || startDate.getTime() < Date.now()) {
+    reply.status(400).send({ error: "Invalid date format or dates are not valid" });
+    return;
+  }
+  const workshop = await findWorkshop({ title });
+  if (workshop.length > 0) {
+    reply.status(409).send({ error: "Workshop with that title already exists" });
     return;
   }
   try {

@@ -129,7 +129,8 @@ const testUser = {
   username: "testuser",
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 0
+  isAdmin: 0,
+  workshopId: 0
 };
 const mockDate = new Date("2022-01-01T00:00:00Z");
 const testToken: Verification = {

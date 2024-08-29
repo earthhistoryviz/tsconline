@@ -16,7 +16,7 @@ import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import "dotenv/config";
-import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
+import { db, findIp, createIp, updateIp, initializeDatabase, findUser, updateUser, findWorkshop } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path, { join } from "path";
@@ -25,6 +25,9 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
+import logger from "./error-logger.js";
+import { hash } from "bcrypt-ts";
+import { randomBytes } from "crypto";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -304,7 +307,11 @@ setInterval(async () => {
 }, sunsetInterval);
 setInterval(
   () => {
-    db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+    try {
+      db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+    } catch (e) {
+      logger.error("Error deleting verification: ", e);
+    }
   },
   1000 * 60 * 60 * 24 * 7
 ); // 1 week
@@ -332,13 +339,13 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
         await sendEmail(notificationEmail);
         await db.deleteFrom("ip").execute();
       } catch (e) {
-        console.error("Error sending email: ", e);
+        logger.error("Error sending email: ", e);
       }
     }
   );
 }
 
-server.setNotFoundHandler((request, reply) => {
+server.setNotFoundHandler((_request, reply) => {
   void reply.sendFile("index.html");
 });
 
