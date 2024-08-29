@@ -66,7 +66,7 @@ export const Admin = observer(function Admin() {
     },
     {
       tabName: "Workshops",
-      component: <AdminWorkshop/>
+      component: <AdminWorkshop />
     }
   ];
   return (

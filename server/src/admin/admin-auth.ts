@@ -167,5 +167,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   );
   fastify.post("/workshop/users", { config: { rateLimit: looseRateLimit } }, adminAddUsersToWorkshop);
   fastify.get("/workshops", { config: { rateLimit: looseRateLimit } }, adminGetWorkshops);
-  fastify.post("/workshop", { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit } }, adminCreateWorkshop);
-}
+  fastify.post(
+    "/workshop",
+    { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminCreateWorkshop
+  );
+};

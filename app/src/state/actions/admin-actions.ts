@@ -366,12 +366,12 @@ export const adminFetchWorkshops = action(async () => {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      },
+      }
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
       assertWorkshopArray(workshops);
-      state.admin.workshops.push(...workshops);
+      workshops.forEach((workshop) => adminUpdateWorkshop(workshop));
     } else {
       displayServerError(
         await response.json(),
@@ -399,14 +399,10 @@ export const adminCreateWorkshop = action(async (title: string, start: string, e
       credentials: "include"
     });
     if (response.ok) {
-      const workShop: Workshop = { 
-        title,
-        start,
-        end,
-        workshopId: (await response.json()).workshopId
-      };
-      assertWorkshop(workShop);
-      state.admin.workshops.push(workShop);
+      const workshop = (await response.json()).workshop;
+      assertWorkshop(workshop);
+      adminUpdateWorkshop(workshop);
+      removeAllErrors();
       pushSnackbar("Workshop created successfully", "success");
     } else {
       let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
@@ -421,16 +417,16 @@ export const adminCreateWorkshop = action(async (title: string, start: string, e
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
           break;
       }
-      displayServerError(
-        await response.json(),
-        errorCode,
-        ErrorMessages[errorCode]
-      );
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
     }
   } catch (error) {
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
+});
+
+export const adminUpdateWorkshop = action((workshop: Workshop) => {
+  state.admin.workshops.set(workshop.title, workshop);
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {

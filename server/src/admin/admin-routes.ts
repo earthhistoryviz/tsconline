@@ -1,9 +1,17 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser, updateUser, createWorkshop, findWorkshop } from "../database.js";
+import {
+  checkForUsersWithUsernameOrEmail,
+  createUser,
+  findUser,
+  deleteUser,
+  updateUser,
+  createWorkshop,
+  findWorkshop
+} from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { adminconfig, assetconfigs, checkFileExists, verifyFilepath, formatDate } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -14,11 +22,18 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { Workshop, assertAdminSharedUser, assertDatapackIndex, assertWorkshop, assertWorkshopArray } from "@tsconline/shared";
+import {
+  Workshop,
+  assertAdminSharedUser,
+  assertDatapackIndex,
+  assertWorkshop,
+  assertWorkshopArray
+} from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
+import "dotenv/config";
 
 /**
  * Get all users for admin to configure on frontend
@@ -472,10 +487,18 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       if (user.length > 0) {
         await updateUser({ email }, { workshopId });
       } else {
-        // TODO: These users cannot login yet, needs to be a workshop system to give them a password
+        const workshop = await findWorkshop({ id: workshopId });
+        if (!workshop || workshop.length !== 1 || !workshop[0]) {
+          logger.error(
+            `Workshop not found with id: ${workshopId}. Expected exactly 1 workshop, found: ${workshop.length}`
+          );
+          throw new Error("Workshop not found");
+        }
+        if (!process.env.WORKSHOP_PASSWORD && process.env.NODE_ENV == "production")
+          throw new Error("Must have aworkshop password defined in production");
         await createUser({
           email,
-          hashedPassword: null,
+          hashedPassword: await hash(process.env.WORKSHOP_PASSWORD ?? "workshop", 10),
           isAdmin: 0,
           emailVerified: 1,
           invalidateSession: 0,
@@ -511,20 +534,12 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  * @returns
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
-  const formatter = new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true
-  });
   try {
     const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
       return {
         title: workshop.title,
-        start: formatter.format(new Date(workshop.start)),
-        end: formatter.format(new Date(workshop.end)),
+        start: formatDate(new Date(workshop.start)),
+        end: formatDate(new Date(workshop.end)),
         workshopId: workshop.id
       };
     });
@@ -563,11 +578,22 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     return;
   }
   try {
-    const workshopId = await createWorkshop({ title, start: startDate.toISOString(), end: endDate.toISOString() });
+    const workshopId = await createWorkshop({
+      title,
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    });
     if (!workshopId) {
       throw new Error("Workshop not created");
     }
-    reply.send({ workshopId });
+    const workshop: Workshop = {
+      title,
+      start: formatDate(startDate),
+      end: formatDate(endDate),
+      workshopId
+    };
+    assertWorkshop(workshop);
+    reply.send({ workshop });
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
