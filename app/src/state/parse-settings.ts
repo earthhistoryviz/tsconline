@@ -41,6 +41,7 @@ import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
+import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 
 /**
  * casts a string to a specified type
@@ -665,7 +666,14 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
   return xml;
 }
 
-export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
+export function jsonToXml(
+  state: ColumnInfo,
+  hash: Map<string, ColumnInfo>,
+  settings: ChartSettings,
+  version: string = "PRO8.1"
+): string {
+  normalizeColumnProperties(state);
+  changeManuallyAddedColumns(state, hash);
   let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
