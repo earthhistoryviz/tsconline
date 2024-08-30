@@ -1,4 +1,4 @@
-import { DatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useContext, useState } from "react";
 import { context } from "../../state";
@@ -9,9 +9,10 @@ import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pic
 type DatapackUploadFormProps = {
   upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
   type: "user" | "server";
+  index: DatapackIndex;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload, type } = props;
+  const { upload, type, index } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -53,14 +54,19 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
-    if (
-      type === "server" &&
-      (Object.values(state.datapackIndex).some((dp) => dp.file === file.name) || state.datapackIndex[title])
-    ) {
+    const doesServerDatapackExist =
+      type === "server" && Object.values(index).some((dp) => dp.file === file.name || dp.title === title);
+    const doesPublicDatapackExistIfPublic =
+      type === "user" &&
+      isPublic &&
+      Object.values(state.datapackCollection.publicUserDatapackIndex).some(
+        (dp) => dp.title === title || dp.file === file.name
+      );
+    if (doesServerDatapackExist || doesPublicDatapackExistIfPublic) {
       actions.pushError(ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS);
       return;
     }
-    if (state.datapackIndex[title]) {
+    if (index[title]) {
       actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }

@@ -85,7 +85,6 @@ export const AccountMenu = observer(() => {
           </ListItemIcon>
           Add another account
         </MenuItem>
-        {/* TODO: Implement Admin Controls */}
         {state.user.isAdmin && (
           <MenuItem onClick={() => navigate("/admin")}>
             <ListItemIcon>

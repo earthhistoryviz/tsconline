@@ -16,7 +16,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import { join, normalize, parse, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
-import { DatapackMetadata, Datapack } from "@tsconline/shared";
+import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 
@@ -144,7 +144,7 @@ vi.mock("../src/verify", async () => {
 
 vi.mock("../src/index", async () => {
   return {
-    datapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
+    serverDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
     mapPackIndex: {}
   };
 });
@@ -1156,8 +1156,8 @@ describe("adminUploadServerDatapack", () => {
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
   });
-  it("should return 200 if successful where datapack is already a part of adminconfigs but isn't in datapackIndex", async () => {
-    vi.spyOn(index, "datapackIndex", "get").mockReturnValueOnce({});
+  it("should return 200 if successful where datapack is already a part of adminconfigs but isn't in serverDatapackIndex", async () => {
+    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValueOnce({});
     vi.spyOn(util, "adminconfig", "get").mockReturnValueOnce({ datapacks: [testDatapackDescription] });
     const response = await app.inject({
       method: "POST",
@@ -1274,7 +1274,9 @@ describe("adminDeleteServerDatapack", () => {
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(util, "adminconfig", "get").mockReturnValue({ datapacks: [] });
-    vi.spyOn(index, "datapackIndex", "get").mockReturnValue({ [body.datapack]: {} as Datapack });
+    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValue({
+      [body.datapack]: {} as ServerDatapackIndex[string]
+    });
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -1348,7 +1350,7 @@ describe("adminDeleteServerDatapack", () => {
         headers
       });
       expect(util.adminconfig).toEqual({ datapacks: [] });
-      expect(index.datapackIndex).toEqual({});
+      expect(index.serverDatapackIndex).toEqual({});
       expect(rm).toHaveBeenCalledTimes(2);
       expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
       expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
@@ -1374,7 +1376,7 @@ describe("adminDeleteServerDatapack", () => {
         message: `Datapack ${body.datapack} deleted`
       });
       expect(util.adminconfig).toEqual({ datapacks: [] });
-      expect(index.datapackIndex).toEqual({});
+      expect(index.serverDatapackIndex).toEqual({});
       expect(rm).toHaveBeenCalledTimes(2);
       expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
       expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
