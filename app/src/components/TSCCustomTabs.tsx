@@ -85,7 +85,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
                 setSelectedTab(index);
                 if (onChange) onChange(index);
               }}>
-              {t(`settingsTabs.${val.tab}`)}
+              {(val.id) !== "Warnings" ? t(`settingsTabs.${val.tab}`) : val.tab}
             </Button>
           ))}
         </div>

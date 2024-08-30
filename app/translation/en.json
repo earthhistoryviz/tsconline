@@ -17,6 +17,11 @@
             "help": "Help",
             "about": "About"
         },
+        "loading": {
+            "loading-chart": "Loading Chart...",
+            "loading-datapacks": "Loading Datapacks...",
+            "time": "this could take more than a minute"
+        },
         "settingsTabs": {
             "Time": "Time",
             "Column": "Column",
@@ -26,7 +31,11 @@
             "Datapacks": "Datapacks",
             "General": "General",
             "Data Mining": "Data Mining",
-            "Curve Drawing": "Curve Drawing"
+            "Curve Drawing": "Curve Drawing",
+            "About": "About",
+            "View Data": "View Data",
+            "Discussion": "Discussion",
+            "Warnings": "Warnings"
         },
         "settings": {
             "time": {
@@ -36,7 +45,8 @@
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
                     "not-avaliable": "Not Available for this Unit",
-                    "vertical-scale": "Vertical Scale (cm per 1 "
+                    "vertical-scale": "Vertical Scale (cm per 1 ",
+                    "helper-text": "Base age should be older than top age"
                 },
                 "checkboxs": {
                     "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
@@ -121,12 +131,101 @@
         "chart": {
             "no-chart-yet": "You have not made a chart yet"
         },
+        "dialogs": {
+            "confirm-datapack-change": {
+                "title": "Confirm Datapack Selection Change",
+                "message": "You have unsaved changes! Do you want to save your changes?",
+                "yes": "Save",
+                "no": "Discard"
+            },
+            "default-age": {
+                "title": "Use default age range?"
+            }
+        },
+        "errors": {
+            "title": "Error",
+            "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
+            "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
+            "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",
+            "INVALID_PATTERN_INFO": "Invalid pattern info received from server. Please try again later.",
+            "INVALID_TIME_SCALE": "Invalid time scale received from server. Please try again later.",
+            "INVALID_DATAPACK_CONFIG": "Datapacks were not properly set. Please try again later.",
+            "INVALID_SVG_READY_RESPONSE": "Invalid SVG ready response received from server. Please try again later.",
+            "INVALID_SETTINGS_RESPONSE": "Invalid settings response received from server. Please try again later.",
+            "INVALID_CHART_RESPONSE": "Invalid chart response received from server. Please try again later.",
+            "INVALID_PATH": "The requested path was invalid. Please ensure the path is correct.",
+            "INVALID_DATAPACK_UPLOAD": "Invalid datapack upload.",
+            "INVALID_USER_DATAPACKS": "Invalid user datapacks received from server. Please try again later.",
+            "INVALID_PUBLIC_DATAPACKS": "Invalid public datapacks received from server. Please try again later.",
+            "NO_DATAPACK_FILE_FOUND": "No datapack file found. Please upload a datapack file first.",
+            "DATAPACK_FILE_NAME_TOO_LONG": "Datapack file name is too long. Please shorten the file name.",
+            "UNRECOGNIZED_DATAPACK_EXTENSION": "Unrecognized datapack extension. File must be of type .dpk, .mdpk, .map, .txt. Please upload a valid datapack file.",
+            "UNRECOGNIZED_DATAPACK_FILE": "Unrecognized datapack file. Please upload a valid datapack file.",
+            "UNFINISHED_DATAPACK_UPLOAD_FORM": "Please finish the datapack upload form before attempting to upload the file.",
+            "DATAPACK_ALREADY_EXISTS": "Datapack already exists. Please upload a datapack with a unique title.",
+            "NO_DATAPACKS_SELECTED": "No datapacks selected. Please select at least one datapack to generate.",
+            "NO_COLUMNS_SELECTED": "No columns selected. Please select at least one column to generate.",
+            "IS_BAD_RANGE": "Base age must be greater than the top age.",
+            "INVALID_MAPPACK_INFO": "Invalid mappack info received from server. Please try again later.",
+            "UNABLE_TO_LOGIN_SERVER": "Unable to login due to server error. Please try again later.",
+            "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL": "Unable to login with Google credentials. Please try again.",
+            "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD": "Invalid username or password. Please try again.",
+            "UNABLE_TO_LOGIN_EXISTING_USER": "User with that email already exists. Please log in or sign up with a different email.",
+            "UNABLE_TO_LOGOUT": "Unable to logout. Please try again later.",
+            "UNABLE_TO_SIGNUP_SERVER": "Unable to sign up due to server error. Please try again later.",
+            "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL": "Email or username already exists. Please try again with a different email or username.",
+            "INVALID_FORM": "Invalid form. Please ensure all fields are filled out correctly.",
+            "UNABLE_TO_VERIFY_ACCOUNT": "Your email is not verified. Please verify your email first. If you did not receive an email, please resend.",
+            "ALREADY_VERIFIED_ACCOUNT": "Account is already verified. Please log in.",
+            "UNABLE_TO_VERIFY_ACCOUNT_SERVER": "Unable to verify account due to server error. Please try again later.",
+            "TOKEN_EXPIRED_OR_INVALID": "Your token is either invalid or has expired. Please request a new verification email.",
+            "UNABLE_TO_SEND_EMAIL": "Unable to send email. Please try again later.",
+            "UNABLE_TO_RESET_PASSWORD": "Unable to reset password. Please try again later.",
+            "UNABLE_TO_RESET_EMAIL": "Unable to reset email. Please try again later.",
+            "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "Your account has been locked. Please check your email for more information or contact support.",
+            "UNABLE_TO_RECOVER_ACCOUNT": "Unable to recover account. Please contact support for more information.",
+            "NOT_LOGGED_IN": "You are not logged in. Please log in to access this page.",
+            "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "The datapack requested was not found on the server. Please try again later or contact our support team.",
+            "INCORRECT_ENCRYPTION_HEADER": "Unable to encrypt the file, please try again later.",
+            "TOO_MANY_REQUESTS": "You have made too many requests. Please try again later.",
+            "RECAPTCHA_FAILED": "Recaptcha failed. Please try again.",
+            "COOKIE_REJECTED": "You must accept cookies to sign in.",
+            "UNRECOGNIZED_IMAGE_FILE": "Unrecognized image extension. Please upload a valid image file.",
+            "UPLOAD_PROFILE_PICTURE_FAILED": "Unable to upload profile picture. Please try again later.",
+            "UNABLE_TO_CHANGE_USERNAME": "Unable to change username. Please try again later.",
+            "UNABLE_TO_DELETE_PROFILE": "Unable to delete profile. Please try again later.",
+            "INCORRECT_PASSWORD": "Incorrect password. Please try again.",
+            "USERNAME_TAKEN": "Username is already taken. Please try a different username.",
+            "UNABLE_TO_READ_FILE_OR_EMPTY_FILE": "Unable to read file or file is empty. Please try again.",
+            "FETCH_USERS_FAILED": "Unable to fetch users for admin display. Please try again later.",
+            "ADMIN_ADD_USER_FAILED": "Unable to add user. Please try again later.",
+            "SERVER_TIMEOUT": "Server timed out. Please try again later.",
+            "SERVER_BUSY": "Server is too busy. Please try again later.",
+            "ADMIN_DELETE_USER_FAILED": "Unable to delete user. Please try again later.",
+            "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
+            "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
+            "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "Unable to delete server datapack. Please try again later.",
+            "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "Cannot delete root datapack. Ask server admin for assistance.",
+            "INVALID_SERVER_DATAPACK_REQUEST": "Invalid server datapack request. Please try again later.",
+            "SERVER_FILE_METADATA_ERROR": "Server file metadata error. Please try again later.",
+            "USER_DELETE_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "UNABLE_TO_PROCESS_DATAPACK_CONFIG": "Failed to process datapack config. Please try again later.",
+            "INVALID_SETTINGS": "Invalid settings. Please try again.",
+            "INTERNAL_ERROR": "There was an internal error while generating the chart. Please try again later.",
+            "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "Unable to add users to workshop. Please try again later.",
+            "ADMIN_EMAIL_INVALID": "Invalid email. Please fix the email and try again.",
+            "ADMIN_WORKSHOP_FIELDS_EMPTY": "You must provide at least one field to add users to a workshop.",
+            "UNRECOGNIZED_EXCEL_FILE": "Unrecognized Excel file. Please upload a valid Excel file."
+        },
         "button": {
             "generate": "Generate",
             "generate-chart": "Generate Chart",
             "remove-cache": "Remove Cache",
             "confirm-selection": "Confirm Selection"
         },
+        "yes": "Yes",
+        "no": "No",
         "languageNames": {
             "en": "English",
             "zh": "中文"
