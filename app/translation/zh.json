@@ -17,6 +17,11 @@
             "help": "帮助",
             "about": "关于"
         },
+        "loading": {
+            "loading-chart": "加载图表...",
+            "loading-datapacks": "加载数据包...",
+            "time": "这可能需要超过一分钟"
+        },
         "settingsTabs": {
             "Time": "选择时间区间",
             "Column": "选择列",
@@ -25,7 +30,11 @@
             "Map Points": "地图",
             "Datapacks": "选择数据包",
             "General": "基础选项",
-            "Data Mining": "数据挖掘"
+            "Data Mining": "数据挖掘",
+            "About": "关于",
+            "View Data": "查看数据",
+            "Discussion": "讨论",
+            "Warnings": "警告"
         },
         "settings": {
             "time": {
@@ -35,7 +44,8 @@
                     "top-name": "年代/阶段 名称",
                     "base-name": "年代/阶段 名称",
                     "not-avaliable": "该时间单位无可选年代",
-                    "vertical-scale": "垂直比例（厘米 每 1"
+                    "vertical-scale": "垂直比例（厘米 每 1",
+                    "helper-text": "区间底部年代应大于区间顶部年代"
                 },
                 "checkboxs": {
                     "skip-empty-columns": "在已选时间段内没有数据的列将不会被画出",
@@ -110,7 +120,7 @@
                 "notes3": "注意：可以通过每列的“字体”按钮单独更改每列的字体"
             },
             "map-points": {
-                "not-avaliable": "改数据包暂无地图可用"
+                "not-avaliable": "该数据包暂无地图可用"
             },
             "datapacks": {
                 "see-info-guidance": "点击数据包以查看更多信息！",
@@ -120,12 +130,101 @@
         "chart": {
             "no-chart-yet": "您还未制作任何图表"
         },
+        "dialogs": {
+            "confirm-datapack-change": {
+                "title": "确认更改数据包",
+                "message": "你有未保存的更改! 你想保存你的更改吗?",
+                "yes": "保存",
+                "no": "不保存"
+            },
+            "default-age": {
+                "title": "使用默认时间区间？"
+            }
+        },
+        "errors": {
+            "title": "错误",
+            "SERVER_RESPONSE_ERROR": "服务器错误。请稍后再试。",
+            "INVALID_DATAPACK_INFO": "从服务器接收到的数据包信息无效。请稍后再试。",
+            "INVALID_PRESET_INFO": "从服务器接收到的预置无效。请稍后再试。",
+            "INVALID_PATTERN_INFO": "从服务器接收到的模式信息无效。请稍后再试。",
+            "INVALID_TIME_SCALE": "从服务器收到的时间刻度无效。请稍后再试。",
+            "INVALID_DATAPACK_CONFIG": "数据包未正确设置。请稍后再试。",
+            "INVALID_SVG_READY_RESPONSE": "从服务器收到的SVG就绪响应无效。请稍后再试。",
+            "INVALID_SETTINGS_RESPONSE": "从服务器收到的设置响应无效。请稍后再试。",
+            "INVALID_CHART_RESPONSE": "从服务器收到的图表响应无效。请稍后再试。",
+            "INVALID_PATH": "请求的文件路径无效。请确保文件路径正确。",
+            "INVALID_DATAPACK_UPLOAD": "无效的数据包上传",
+            "INVALID_USER_DATAPACKS": "从服务器收到的用户数据包无效。请稍后再试。",
+            "INVALID_PUBLIC_DATAPACKS": "从服务器收到的公共数据包无效。请稍后再试。",
+            "NO_DATAPACK_FILE_FOUND": "暂无数据包。请先上传一个数据包。",
+            "DATAPACK_FILE_NAME_TOO_LONG": "数据包名称过长。请缩短名称。",
+            "UNRECOGNIZED_DATAPACK_EXTENSION": "无法识别数据包扩展名。文件必须是 .dpk, .mdpk, .map, .txt格式。请上传有效文件格式。",
+            "UNRECOGNIZED_DATAPACK_FILE": "无法识别数据包。请上传有效文件。",
+            "UNFINISHED_DATAPACK_UPLOAD_FORM": "请完成数据包上传表单后再尝试上传文件。",
+            "DATAPACK_ALREADY_EXISTS": "数据包已存在。请上传不重名的数据包。",
+            "NO_DATAPACKS_SELECTED": "未选择数据包。请至少选择一个数据包进行绘制。",
+            "NO_COLUMNS_SELECTED": "未选择列。请至少选择一个列进行绘制。",
+            "IS_BAD_RANGE": "区间底部年代应大于区间顶部年代。",
+            "INVALID_MAPPACK_INFO": "从服务器接收到无效的地图包信息。请稍后再试。",
+            "UNABLE_TO_LOGIN_SERVER": "由于服务器错误无法登陆。请稍后再试。",
+            "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL": "无法使用Google登陆。请稍后再试。",
+            "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD": "无效的用户名或密码。请稍后再试。",
+            "UNABLE_TO_LOGIN_EXISTING_USER": "已存在使用该电子邮件的用户。请登录或使用其他电子邮件注册。",
+            "UNABLE_TO_LOGOUT": "无法登出。请稍后再试。",
+            "UNABLE_TO_SIGNUP_SERVER": "由于服务器错误无法注册。请稍后再试。",
+            "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL": "电子邮件或用户名已存在。请使用不同的电子邮件或用户名重试。",
+            "INVALID_FORM": "表格无效。请确保所有栏目填写正确。",
+            "UNABLE_TO_VERIFY_ACCOUNT": "您的电子邮件未经验证。请先验证您的电子邮件。如果您没有收到电子邮件，请重新发送。",
+            "ALREADY_VERIFIED_ACCOUNT": "帐户已验证。请登录。",
+            "UNABLE_TO_VERIFY_ACCOUNT_SERVER": "由于服务器错误，无法验证帐户。请稍后再试。",
+            "TOKEN_EXPIRED_OR_INVALID": "您的令牌无效或已过期。请申请新的验证电子邮件。",
+            "UNABLE_TO_SEND_EMAIL": "无法发送邮件。请稍后再试。",
+            "UNABLE_TO_RESET_PASSWORD": "无法重置密码。请稍后再试。",
+            "UNABLE_TO_RESET_EMAIL": "无法重置邮箱。请稍后再试。",
+            "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "您的账户已被锁定。请查看您的电子邮件以获取更多信息或联系技术支持获得帮助。",
+            "UNABLE_TO_RECOVER_ACCOUNT": "无法恢复账户。请联系技术支持获取更多信息。",
+            "NOT_LOGGED_IN": "您尚未登录。请登录后访问此页面。",
+            "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "服务器上未找到所请求的数据包。请稍后再试，或联系我们的技术支持团队。",
+            "INCORRECT_ENCRYPTION_HEADER": "无法加密文件。请稍后再试。",
+            "TOO_MANY_REQUESTS": "请求过于频繁。请稍后再试。",
+            "RECAPTCHA_FAILED": "验证失败. 请稍后再试。",
+            "COOKIE_REJECTED": "您必须接受 Cookie 才能登录。",
+            "UNRECOGNIZED_IMAGE_FILE": "图像扩展名无法识别。请上传有效的图像文件。",
+            "UPLOAD_PROFILE_PICTURE_FAILED": "无法上传个人资料图片。请稍后再试。",
+            "UNABLE_TO_CHANGE_USERNAME": "无法更改用户名。请稍后再试。",
+            "UNABLE_TO_DELETE_PROFILE": "无法删除用户。请稍后再试。",
+            "INCORRECT_PASSWORD": "密码错误。请稍后再试。",
+            "USERNAME_TAKEN": "用户名已被使用。请使用一个新的用户名。",
+            "UNABLE_TO_READ_FILE_OR_EMPTY_FILE": "无法读取文件或文件为空。请稍后再试。",
+            "FETCH_USERS_FAILED": "无法获取用户信息供管理员查阅。请稍后再试。",
+            "ADMIN_ADD_USER_FAILED": "无法添加用户。请稍后再试。",
+            "SERVER_TIMEOUT": "服务器超时。请稍后再试。",
+            "SERVER_BUSY": "服务器忙。请稍后再试。",
+            "ADMIN_DELETE_USER_FAILED": "无法删除用户。请稍后再试。",
+            "UNABLE_TO_FETCH_USER_DATAPACKS": "无法获取用户数据包。请稍后再试。",
+            "CANNOT_DELETE_ROOT_USER": "不能删除根用户。",
+            "ADMIN_DELETE_USER_DATAPACK_FAILED": "无法删除用户数据包。请稍后再试。",
+            "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "无法删除服务器数据包。请稍后再试。",
+            "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "无法删除根数据包。请向服务器管理员寻求帮助。",
+            "INVALID_SERVER_DATAPACK_REQUEST": "无效的服务器数据包请求。请稍后再试。",
+            "SERVER_FILE_METADATA_ERROR": "服务器文件元数据错误。请稍后再试。",
+            "USER_DELETE_DATAPACK_FAILED": "无法删除用户数据包。请稍后再试。",
+            "UNABLE_TO_PROCESS_DATAPACK_CONFIG": "处理数据包配置失败。请稍后再试。",
+            "INVALID_SETTINGS": "无效的设置。请稍后再试。",
+            "INTERNAL_ERROR": "生成图表时出现内部错误。请稍后再试。",
+            "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "无法将用户添加到工作坊。请稍后再试。",
+            "ADMIN_EMAIL_INVALID": "电子邮件无效。请修复电子邮件并重试。",
+            "ADMIN_WORKSHOP_FIELDS_EMPTY": "您必须提供至少一个领域才能将用户添加到工作坊。",
+            "UNRECOGNIZED_EXCEL_FILE": "无法识别 Excel 文件。请上传有效的 Excel 文件。"
+        },
         "button": {
             "generate": "绘制",
             "generate-chart": "绘制图表",
             "remove-cache": "清除缓存",
             "confirm-selection": "确认选择"
         },
+        "yes": "是",
+        "no": "否",
         "languageNames": {
             "en": "English",
             "zh": "中文"

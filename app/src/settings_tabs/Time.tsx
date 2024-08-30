@@ -81,7 +81,7 @@ export const Time = observer(function Time() {
                 actions.setTopStageAge(parseFloat(event.target.value), units);
               }}
               error={checkAgeRange()}
-              helperText={checkAgeRange() ? "Base age should be older than top age" : ""}
+              helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>
@@ -127,7 +127,7 @@ export const Time = observer(function Time() {
                 actions.setBaseStageAge(parseFloat(event.target.value), units);
               }}
               error={checkAgeRange()}
-              helperText={checkAgeRange() ? "Base age should be older than top age" : ""}
+              helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>

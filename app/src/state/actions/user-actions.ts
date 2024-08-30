@@ -24,8 +24,8 @@ export const userDeleteDatapack = action(async (datapack: string) => {
     } else {
       displayServerError(
         response,
-        ErrorCodes.USER_DELETE_DATAPAACK_FAILED,
-        ErrorMessages[ErrorCodes.USER_DELETE_DATAPAACK_FAILED]
+        ErrorCodes.USER_DELETE_DATAPACK_FAILED,
+        ErrorMessages[ErrorCodes.USER_DELETE_DATAPACK_FAILED]
       );
     }
   } catch (e) {

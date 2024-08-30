@@ -26,11 +26,13 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
 import { toJS } from "mobx";
+import { useTranslation } from "react-i18next";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
   const backgroundColor = theme.palette.backgroundColor.main;
   document.documentElement.style.backgroundColor = backgroundColor;
@@ -82,7 +84,7 @@ export default observer(function App() {
           ))}
           <TSCYesNoPopup
             open={state.showSuggestedAgePopup}
-            title="Use default age range?"
+            title={t("dialogs.default-age.title")}
             onYes={() => actions.handlePopupResponse(true, navigate)}
             onNo={() => actions.handlePopupResponse(false, navigate)}
             onClose={() => actions.fetchChartFromServer(navigate)}
@@ -90,8 +92,8 @@ export default observer(function App() {
           <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
           <TSCYesNoPopup
             open={checkOpen}
-            title="Confirm Datapack Selection Change"
-            message="You have unsaved changes! Do you want to save your changes?"
+            title={t("dialogs.confirm-datapack-change.title")}
+            message={t("dialogs.confirm-datapack-change.message")}
             onNo={async () => {
               actions.setUnsavedDatapackConfig(state.config.datapacks);
             }}
@@ -101,8 +103,8 @@ export default observer(function App() {
             onClose={async () => {
               actions.setUnsavedDatapackConfig(state.config.datapacks);
             }}
-            customNo="Discard"
-            customYes="Save"
+            customNo={t("dialogs.confirm-datapack-change.no")}
+            customYes={t("dialogs.confirm-datapack-change.yes")}
           />
           {state.snackbars.map((info, index) => (
             <TSCSnackbar
