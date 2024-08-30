@@ -34,7 +34,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
     <Box
       className={styles.rc}
       bgcolor="secondaryBackground.main"
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}
+      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}
       sx={{
         "&:hover": {
           bgcolor:

@@ -11,7 +11,7 @@ import {
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import {
-  addDatapackToIndex,
+  addDatapackToServerDatapackIndex,
   fetchServerDatapack,
   getRecaptchaToken,
   pushError,
@@ -251,7 +251,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
       } else {
         deletedNoDatapacks = false;
         runInAction(() => {
-          delete state.datapackIndex[datapack];
+          delete state.datapackCollection.serverDatapackIndex[datapack];
         });
       }
     } catch (error) {
@@ -273,7 +273,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
 export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
   const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
   if (!recaptchaToken) return;
-  if (state.datapackIndex[metadata.title]) {
+  if (state.datapackCollection.serverDatapackIndex[metadata.title]) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
@@ -304,7 +304,7 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
       if (!pack) {
         return;
       }
-      addDatapackToIndex(file.name, pack);
+      addDatapackToServerDatapackIndex(file.name, pack);
       pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);

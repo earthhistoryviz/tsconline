@@ -8,7 +8,7 @@ import { createWriteStream } from "fs";
 import { readFile, realpath, rm, writeFile, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import { datapackIndex } from "../index.js";
+import { serverDatapackIndex } from "../index.js";
 import { loadIndexes } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
@@ -252,7 +252,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     (await checkFileExists(actualFilepath)) &&
     (await checkFileExists(decryptedFilepath)) &&
     adminconfig.datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
-    datapackIndex[datapackMetadata.title]
+    serverDatapackIndex[datapackMetadata.title]
   ) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(409).send({ error: "Datapack already exists" });
@@ -271,8 +271,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
-    if (datapackIndex[filename]) {
-      delete datapackIndex[filename];
+    if (serverDatapackIndex[filename]) {
+      delete serverDatapackIndex[filename];
     }
     reply.status(500).send({ error });
   };
@@ -299,7 +299,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-  const successful = await loadIndexes(datapackIndex, assetconfigs.decryptionDirectory, [datapackMetadata], {
+  const successful = await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, [datapackMetadata], {
     type: "server"
   });
   if (!successful) {
@@ -338,13 +338,13 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.file);
-  const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.file).name);
-  adminconfig.datapacks = adminconfig.datapacks.filter((pack) => pack.title !== datapack);
-  if (datapackIndex[datapack]) {
-    delete datapackIndex[datapack];
+  adminconfig.datapacks = adminconfig.datapacks.filter((dp) => dp.title !== datapack);
+  if (serverDatapackIndex[datapack]) {
+    delete serverDatapackIndex[datapack];
   }
   try {
+    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.file);
+    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.file).name);
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
   } catch (e) {
@@ -376,7 +376,7 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
   let userDatapackIndex;
   try {
     userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-    assertDatapackIndex(datapackIndex);
+    assertDatapackIndex(userDatapackIndex);
   } catch (e) {
     reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
   }

@@ -339,7 +339,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const datapackIndex: DatapackIndex = {};
   // check for if this user has a datapack index already
   const success = await loadIndexes(datapackIndex, decryptedDir.replaceAll("\\", "/"), [datapackMetadata], {
-    type: isPublic ? "public_user" : "private_user",
+    type: "private_user",
     uuid
   });
   if (!datapackIndex[datapackMetadata.title] || !success) {

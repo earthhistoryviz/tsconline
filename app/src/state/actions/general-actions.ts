@@ -8,17 +8,16 @@ import {
   assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
-  assertDatapack,
   DatapackMetadata,
   defaultColumnRoot,
   FontsInfo,
-  isPrivateUserDatapack,
-  assertPrivateUserDatapack,
   Datapack,
-  assertServerDatapack,
   assertDatapackIndex,
   DatapackConfigForChartRequest,
-  isUserDatapack
+  isUserDatapack,
+  assertServerDatapackWithBaseProps,
+  assertPrivateUserDatapackIndex,
+  ServerDatapackIndex
 } from "@tsconline/shared";
 
 import {
@@ -66,10 +65,7 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
-      // we add this just to make sure it is the correct type
-      assertServerDatapack(data);
-      // this is to make sure the BaseDatapackProps are available
-      assertDatapack(data);
+      assertServerDatapackWithBaseProps(data);
       return data;
     } else {
       displayServerError(
@@ -136,7 +132,10 @@ export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () =>
     // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
     // ^ this is to accomodate for the user datapacks and any other way to add datapacks
     // TODO: potentially check for staleness sometime
-    setDatapackIndex({ ...state.datapackIndex, ...datapackIndex });
+    setLargeDataIndex(state.datapackCollection.serverDatapackIndex, {
+      ...state.datapackCollection.serverDatapackIndex,
+      ...datapackIndex
+    });
     console.log("Datapacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -168,7 +167,10 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
     const data = await response.json();
     try {
       assertDatapackIndex(data);
-      setDatapackIndex({ ...state.datapackIndex, ...data });
+      setLargeDataIndex(state.datapackCollection.publicUserDatapackIndex, {
+        ...state.datapackCollection.publicUserDatapackIndex,
+        ...data
+      });
       console.log("Public Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
@@ -190,13 +192,12 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertDatapackIndex(data);
-      // make sure these are private user datapacks since datapackIndex is ambiguous
-      Object.values(data).forEach((datapack) => {
-        assertPrivateUserDatapack(datapack);
+      // this does not check for duplicated keys! will overwrite old keys!
+      assertPrivateUserDatapackIndex(data);
+      setLargeDataIndex(state.datapackCollection.privateUserDatapackIndex, {
+        ...state.datapackCollection.privateUserDatapackIndex,
+        ...data
       });
-      setDatapackIndex({ ...state.datapackIndex, ...data });
-
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
@@ -211,7 +212,7 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, options?: UploadOptions) => {
-    if (state.datapackIndex[metadata.title]) {
+    if (state.datapackCollection.privateUserDatapackIndex[metadata.title]) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -242,6 +243,7 @@ export const uploadUserDatapack = action(
 
       if (response.ok) {
         fetchUserDatapacks();
+        if (options?.isPublic) fetchPublicDatapacks();
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
@@ -253,19 +255,26 @@ export const uploadUserDatapack = action(
   }
 );
 
-export const addDatapackToIndex = action("addDatapackToIndex", (datapack: string, info: Datapack) => {
-  state.datapackIndex[datapack] = info;
-});
-export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
-  // This is to prevent the UI from lagging
-  state.datapackIndex = {};
-  for (const key in datapackIndex) {
-    runInAction(() => {
-      state.datapackIndex[key] = datapackIndex[key];
-    });
-    await new Promise((resolve) => setTimeout(resolve, 0));
+export const addDatapackToServerDatapackIndex = action(
+  "addDatapackToServerDatapackIndex",
+  (datapack: string, info: ServerDatapackIndex[string]) => {
+    state.datapackCollection.serverDatapackIndex[datapack] = info;
   }
-});
+);
+export const setLargeDataIndex = action(
+  "setLargeDataIndex",
+  async <T>(target: Record<string, T>, index: Record<string, T>) => {
+    // This is to prevent the UI from lagging
+    // we delete so we don't reassign
+    Object.keys(index).forEach((key) => delete target[key]);
+    for (const key in index) {
+      runInAction(() => {
+        target[key] = index[key];
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+  }
+);
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
     const response = await fetcher("/timescale", { method: "GET" });
@@ -476,7 +485,7 @@ export const processDatapackConfig = action(
         setDatapackConfigWorker.onerror = function (error) {
           setDatapackConfigWorker.terminate();
           setIsProcessingDatapacks(false);
-          reject(new Error("Webworker failed with error." + error));
+          reject(new Error("Webworker failed with error." + error.message));
         };
       });
     } catch (e) {
@@ -921,13 +930,9 @@ export const setDefaultUserState = action(() => {
     }
   };
   // Take out all the user datapacks
-  const serverDatapacks = Object.values(state.datapackIndex)
-    .filter((datapack) => !isPrivateUserDatapack(datapack))
-    .map((datapack) => datapack.file);
-  const datapackIndex = Object.fromEntries(
-    Object.entries(state.datapackIndex).filter(([key]) => serverDatapacks.includes(key))
-  );
-  setDatapackIndex(datapackIndex);
+  runInAction(() => {
+    state.datapackCollection.privateUserDatapackIndex = {};
+  });
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)

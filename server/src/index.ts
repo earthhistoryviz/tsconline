@@ -6,7 +6,7 @@ import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
-import { DatapackIndex } from "@tsconline/shared";
+import { ServerDatapackIndex } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
 import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
@@ -79,9 +79,9 @@ try {
   process.exit(1);
 }
 
-export const datapackIndex: DatapackIndex = {};
+export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(datapackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
+await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
   type: "server"
 });
 export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(

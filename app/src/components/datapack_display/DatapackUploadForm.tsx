@@ -18,7 +18,7 @@ import { TSCButton } from "../TSCButton";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
-import { DatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
 import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
@@ -29,10 +29,11 @@ import { UploadOptions } from "../../types";
 type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
+  index: DatapackIndex; // the index of datapacks to check duplicates
   type?: "user" | "server";
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type = "user" }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, index, type = "user" }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, index });
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
