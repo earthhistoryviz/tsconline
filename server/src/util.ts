@@ -5,7 +5,7 @@ import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
-import { AdminConfig, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
+import { AdminConfigType, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -198,7 +198,7 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
-export let adminconfig: AdminConfig = { datapacks: [] };
+export let adminconfig: AdminConfigType = { datapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
