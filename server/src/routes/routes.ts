@@ -8,14 +8,14 @@ import {
   assertChartRequest,
   assertTimescale
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, adminconfig, verifyFilepath } from "../util.js";
+import { deleteDirectory, assetconfigs, verifyFilepath } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { publicDatapackIndex, serverDatapackIndex } from "../index.js";
+import { publicDatapackIndex, serverDatapackIndex, adminConfig } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { getDirectories } from "../user/user-handler.js";
@@ -222,7 +222,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapacks = uuid ? await getDirectories(path.join(assetconfigs.uploadDirectory, uuid)) : [];
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
-  const serverDatapacks = adminconfig.datapacks.map((datapackInfo) => datapackInfo.title);
+  const adminConfigDatapacks = adminConfig.getAdminConfigDatapacks();
+  const serverDatapacks = adminConfigDatapacks.map((datapackInfo) => datapackInfo.title);
 
   for (const datapack of chartrequest.datapacks) {
     switch (datapack.type) {
@@ -231,7 +232,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
           datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.file}`);
         } else {
           console.log("ERROR: datapack: ", datapack, " is not included in the server configuration");
-          console.log("adminconfig.datapacks: ", adminconfig.datapacks);
+          console.log("adminconfig.datapacks: ", adminConfigDatapacks);
           console.log("chartrequest.datapacks: ", chartrequest.datapacks);
           reply.send({ error: "ERROR: failed to load datapacks" });
           return;

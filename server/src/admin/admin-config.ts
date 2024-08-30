@@ -89,6 +89,9 @@ export class AdminConfig {
       this.handleError(`Datapack ${datapack.title} already in admin config`);
     }
   }
+  getAdminConfigDatapacks() {
+    return this._adminConfig.datapacks;
+  }
   /**
    * reset the admin config to the default config
    */
