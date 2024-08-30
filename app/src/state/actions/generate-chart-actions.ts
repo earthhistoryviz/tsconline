@@ -8,7 +8,6 @@ import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromIndex } from "../non-action-util";
@@ -125,11 +124,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartTabZoomFitMidCoordIsX(true);
   let body;
   try {
-    normalizeColumnProperties(state.settingsTabs.columns!);
-    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    changeManuallyAddedColumns(columnCopy);
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-    const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
+    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
     body = JSON.stringify({
       settings: xmlSettings,
       datapacks: state.config.datapacks,
@@ -212,52 +209,6 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   } catch (e) {
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  }
-});
-
-/**
- * Since we hash by name only to allow consistency between facies maps and
- * the column page, a generic like Facies Label will cause errors.
- * The solution @Paolo came up with is to prepend the name of the parent
- * and change before the conversion to xml. The downside is we must check
- * every ColumnInfo object which may cause problems with time consistency.
- * However, this is asyncronous, which makes it less likely to cause problems.
- * @param column
- */
-const changeManuallyAddedColumns = action((column: ColumnInfo) => {
-  const parent = column.parent && state.settingsTabs.columnHashMap.get(column.parent);
-  if (parent && parent.columnDisplayType === "BlockSeriesMetaColumn") {
-    if (column.name === `${column.parent} Facies Label`) {
-      column.name = "Facies Label";
-    } else if (column.name === `${column.parent} Series Label`) {
-      column.name = "Series Label";
-    } else if (column.name === `${column.parent} Members`) {
-      column.name = "Members";
-    } else if (column.name === `${column.parent} Facies`) {
-      column.name = "Facies";
-    } else if (column.name === `${column.parent} Chron`) {
-      column.name = "Chron";
-    } else if (column.name === `${column.parent} Chron Label`) {
-      column.name = "Chron Label";
-    }
-  }
-  if (column.columnDisplayType === "RootColumn" && column.name.substring(0, 14) === "Chart Title in") {
-    column.name = column.name.substring(15, column.name.length);
-  }
-  for (const child of column.children) {
-    changeManuallyAddedColumns(child);
-  }
-});
-
-const normalizeColumnProperties = action((column: ColumnInfo) => {
-  if (column.width !== undefined && (isNaN(column.width) || column.width < 20)) {
-    column.width = 20;
-    let name = column.name.substring(0, 17);
-    if (name.length < column.name.length) name += "...";
-    pushSnackbar("Invalid width input found, updating " + name + " width to 20", "warning");
-  }
-  for (const child of column.children) {
-    normalizeColumnProperties(child);
   }
 });
 

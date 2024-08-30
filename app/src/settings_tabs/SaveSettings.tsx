@@ -30,7 +30,9 @@ const SaveSettings = observer(() => {
     }
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     const settingsCopy: ChartSettings = cloneDeep(state.settings);
-    const blob = new Blob([jsonToXml(columnCopy, settingsCopy)], { type: "text/plain;charset=utf-8" });
+    const blob = new Blob([jsonToXml(columnCopy, state.settingsTabs.columnHashMap, settingsCopy)], {
+      type: "text/plain;charset=utf-8"
+    });
     FileSaver.saveAs(blob, filename + ".tsc");
     actions.pushSnackbar("Successfully saved settings!", "success");
   }
