@@ -76,7 +76,8 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
       .map((name) => {
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        return `${topDirectory}/${filename}/${botDirectory}/.*`;
+        const escapedFilename = filename.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+        return `${topDirectory}/${escapedFilename}/${botDirectory}/.*`;
       })
       .join("|")
   );
