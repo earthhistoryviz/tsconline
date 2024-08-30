@@ -79,7 +79,7 @@ export const fetchImage = async function (request: FastifyRequest, reply: Fastif
       const file = await readFile(filepath);
       return file;
     } catch (e) {
-      if ((e as NodeJS.ErrnoException).code === "ENOENT") {
+      if (e instanceof Error && (e as NodeJS.ErrnoException).code === "ENOENT") {
         return null;
       }
       throw e;
