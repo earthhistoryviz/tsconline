@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { configure, observable } from "mobx";
 
 import {
   SnackbarInfo,
@@ -31,6 +31,7 @@ import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
+configure({ enforceActions: "observed" });
 
 export type State = {
   chartTab: {
