@@ -1,7 +1,7 @@
 import { Box, Dialog, useTheme, TextField, Typography, IconButton } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import React, { useContext, useState, useRef } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
 import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup, Lottie } from "../components";
@@ -11,19 +11,26 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import dayjs from "dayjs";
-import "./AdminWorkshop.css";
 import { Workshop } from "@tsconline/shared";
+import "./AdminWorkshop.css";
 
-type EditCellRendererProps = {
+type AddUsersCellRendererProps = {
   context: {
     setAddUsersFormOpen: (open: boolean) => void;
+    setWorkshopId: (workshopId: number) => void;
   };
+  data: Workshop;
 };
-const EditCellRenderer: React.FC<EditCellRendererProps> = (props) => {
-  const { setAddUsersFormOpen } = props.context;
+const AddUsersCellRenderer: React.FC<AddUsersCellRendererProps> = (props) => {
+  const { setAddUsersFormOpen, setWorkshopId } = props.context;
+  const { data } = props;
+  const handleClick = () => {
+    setAddUsersFormOpen(true);
+    setWorkshopId(data.workshopId);
+  };
   return (
     <CustomTooltip title="Add Users" enterDelay={800}>
-      <IconButton onClick={() => setAddUsersFormOpen(true)}>
+      <IconButton onClick={handleClick}>
         <GroupAddIcon />
       </IconButton>
     </CustomTooltip>
@@ -92,8 +99,7 @@ const workshopColDefs: ColDef[] = [
   { headerName: "Workshop End Date", field: "end", flex: 1 },
   {
     headerName: "Actions",
-    field: "actions",
-    cellRenderer: EditCellRenderer,
+    cellRenderer: AddUsersCellRenderer,
     width: 100,
     cellStyle: { textAlign: "center", border: "none" }
   }
@@ -102,19 +108,16 @@ const workshopColDefs: ColDef[] = [
 export const AdminWorkshop = observer(function AdminWorkshop() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
-  const gridRef = useRef<AgGridReact<Workshop>>(null);
   const [addUsersFormOpen, setAddUsersFormOpen] = useState(false);
   const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
   const [loading, setLoading] = useState(false);
+  const [workshopId, setWorkshopId] = useState<number | null>(null);
   const handleAddUsersSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       setLoading(true);
       event.preventDefault();
-      const selectedNodes = gridRef.current?.api.getSelectedNodes();
-      if (!selectedNodes || !selectedNodes.length) return;
-      const workshopId = selectedNodes[0].data?.workshopId;
       if (!workshopId) {
         actions.pushError(ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED);
         return;
@@ -299,9 +302,9 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       <AgGridReact
         columnDefs={workshopColDefs}
         rowData={Array.from(state.admin.workshops.values())}
-        components={{ EditCellRenderer }}
-        context={{ setAddUsersFormOpen }}
-        ref={gridRef}
+        components={{ AddUsersCellRenderer }}
+        context={{ setAddUsersFormOpen, setWorkshopId }}
+        rowSelection="single"
       />
     </Box>
   );
