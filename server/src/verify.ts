@@ -30,7 +30,7 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
  * @returns The generated token
  */
 export function generateToken(uuid: string): string {
-  return encrypt(uuid);
+  return randomBytes(16).toString("hex") + encrypt(uuid);
 }
 
 /**

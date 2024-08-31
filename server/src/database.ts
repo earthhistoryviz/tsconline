@@ -39,7 +39,7 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, must be unique, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
-  - password (text): Non-nullable, the password signed to workshop users.
+  - password (text): Non-nullable, the password assigned to workshop users.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.

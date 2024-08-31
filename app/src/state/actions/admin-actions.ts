@@ -430,9 +430,8 @@ export const adminCreateWorkshop = action(
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertWorkshop(workshop);
-        const workshopId = workshop.workshopId;
         adminUpdateWorkshop(workshop);
-        return workshopId;
+        return workshop.workshopId;
       } else {
         let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
         switch (response.status) {

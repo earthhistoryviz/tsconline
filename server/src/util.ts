@@ -8,15 +8,6 @@ import levenshtein from "js-levenshtein";
 import { AdminConfig, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
- * Converts a date to a cron string
- * @param date Date to convert to cron
- * @returns Cron string
- */
-export function dateToCron(date: Date): string {
-  return `${date.getMinutes()} ${date.getHours()} ${date.getDate()} ${date.getMonth() + 1} *`;
-}
-
-/**
  * Format date to human readable format
  * @param date Date to format
  * @returns Human readable date
