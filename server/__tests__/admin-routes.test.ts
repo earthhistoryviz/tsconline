@@ -141,7 +141,9 @@ vi.mock("node:crypto", async () => {
 
 vi.mock("../src/verify", async () => {
   return {
-    checkRecaptchaToken: vi.fn().mockResolvedValue(1)
+    checkRecaptchaToken: vi.fn().mockResolvedValue(1),
+    encrypt: vi.fn().mockReturnValue("encryptedPassword"),
+    decrypt: vi.fn().mockReturnValue("password")
   };
 });
 
@@ -1517,6 +1519,7 @@ describe("adminAddUsersToWorkshop", () => {
   const updateUser = vi.spyOn(database, "updateUser");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
   const deleteWorkshop = vi.spyOn(database, "deleteWorkshop");
+  const decrypt = vi.spyOn(verify, "decrypt");
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1539,6 +1542,20 @@ describe("adminAddUsersToWorkshop", () => {
   beforeEach(() => {
     createForm();
     vi.clearAllMocks();
+    process.env.TOKEN_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
+    process.env.TOKEN_IV = "2005a53ec2407229ba7c73763b620713";
+  });
+  it("should return 500 if TOKEN_SECRET_KEY is not set or TOKEN_IV is not set", async () => {
+    delete process.env.TOKEN_SECRET_KEY;
+    delete process.env.TOKEN_IV;
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Missing encryption key or iv" });
+    expect(response.statusCode).toBe(500);
   });
   it("should return 403 if file attempts directory traversal", async () => {
     vi.mocked(path.resolve)
@@ -1787,6 +1804,8 @@ describe("adminAddUsersToWorkshop", () => {
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(decrypt).toHaveBeenCalledTimes(1);
+    expect(decrypt).toHaveBeenCalledWith(serverTestWorkshop.password);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
@@ -1831,6 +1850,8 @@ describe("adminAddUsersToWorkshop", () => {
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(decrypt).toHaveBeenCalledTimes(1);
+    expect(decrypt).toHaveBeenCalledWith(serverTestWorkshop.password);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
@@ -1893,6 +1914,7 @@ describe("adminGetWorkshops", () => {
 describe("adminCreateWorkshop", () => {
   const createWorkshop = vi.spyOn(database, "createWorkshop");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const encrypt = vi.spyOn(verify, "encrypt");
   const body = {
     title: sharedTestWorkshop.title,
     start: sharedTestWorkshop.start,
@@ -1901,6 +1923,8 @@ describe("adminCreateWorkshop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.WORKSHOP_PASSWORD = "password";
+    process.env.TOKEN_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
+    process.env.TOKEN_IV = "2005a53ec2407229ba7c73763b620713";
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -2008,8 +2032,10 @@ describe("adminCreateWorkshop", () => {
       payload: body,
       headers
     });
+    expect(encrypt).toHaveBeenCalledTimes(1);
+    expect(encrypt).toHaveBeenCalledWith(serverTestWorkshop.password);
     expect(createWorkshop).toHaveBeenCalledTimes(1);
-    expect(createWorkshop).toHaveBeenCalledWith({ ...body, password: process.env.WORKSHOP_PASSWORD });
+    expect(createWorkshop).toHaveBeenCalledWith({ ...body, password: "encryptedPassword" });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
@@ -2025,8 +2051,10 @@ describe("adminCreateWorkshop", () => {
       payload: bodyWithPassword,
       headers
     });
+    expect(encrypt).toHaveBeenCalledTimes(1);
+    expect(encrypt).toHaveBeenCalledWith("test");
     expect(createWorkshop).toHaveBeenCalledTimes(1);
-    expect(createWorkshop).toHaveBeenCalledWith(bodyWithPassword);
+    expect(createWorkshop).toHaveBeenCalledWith({ ...body, password: "encryptedPassword" });
     expect(formatDate).toHaveBeenNthCalledWith(1, new Date(body.start));
     expect(formatDate).toHaveBeenNthCalledWith(2, new Date(body.end));
     expect(await response.json()).toEqual({ workshop: sharedTestWorkshop });
