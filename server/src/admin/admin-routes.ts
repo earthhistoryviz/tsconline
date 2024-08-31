@@ -35,8 +35,8 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
+import { decrypt, encrypt } from "../verify.js";
 import "dotenv/config";
-
 /**
  * Get all users for admin to configure on frontend
  * @param _request
@@ -408,6 +408,10 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @returns
  */
 export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
+  if (!process.env.TOKEN_SECRET_KEY || !process.env.TOKEN_IV) {
+    reply.status(500).send({ error: "Missing encryption key or iv" });
+    return;
+  }
   const parts = request.parts();
   let file: MultipartFile | undefined;
   let filename: string | undefined;
@@ -495,7 +499,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
-    const workshopPassword = workshop[0].password;
+    const encryptedWorkshopPassword = workshop[0].password;
+    const workshopPassword = decrypt(encryptedWorkshopPassword);
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -583,6 +588,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(500).send({ error: "Missing password and default not set up" });
     return;
   }
+  if (!process.env.TOKEN_SECRET_KEY || !process.env.TOKEN_IV) {
+    reply.status(500).send({ error: "Missing encryption key or iv" });
+    return;
+  }
   const startDate = new Date(start);
   const endDate = new Date(end);
   if (
@@ -599,12 +608,13 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(409).send({ error: "Workshop with that title already exists" });
     return;
   }
+  const encryptedPassword = encrypt(password || process.env.WORKSHOP_PASSWORD!);
   try {
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
-      password: password ?? process.env.WORKSHOP_PASSWORD
+      password: encryptedPassword
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
