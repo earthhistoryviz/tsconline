@@ -35,10 +35,6 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import cron from "node-cron";
-import { sendEmail } from "../send-email.js";
-import { randomBytes } from "crypto";
-import { Email } from "../types.js";
 import "dotenv/config";
 
 /**
@@ -467,6 +463,17 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
+    const workshop = await findWorkshop({ workshopId: workshopId });
+    if (!workshop || workshop.length !== 1 || !workshop[0]) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    if (workshop[0].end < new Date().toISOString()) {
+      await deleteWorkshop({ workshopId });
+      await updateUser({ workshopId }, { workshopId: 0 });
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
     let emailList: string[] = [];
     let invalidEmails: string[] = [];
     if (file && filepath) {
@@ -488,18 +495,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
-    const workshop = await findWorkshop({ workshopId: workshopId });
-    if (!workshop || workshop.length !== 1 || !workshop[0]) {
-      reply.status(404).send({ error: "Workshop not found" });
-      return;
-    }
-    if (workshop[0].end < new Date().toISOString()) {
-      await deleteWorkshop({ workshopId });
-      reply.status(404).send({ error: "Workshop not found" });
-      return;
-    }
-    if (!process.env.WORKSHOP_PASSWORD && process.env.NODE_ENV == "production")
-      throw new Error("Must have a workshop password defined in production");
+    const workshopPassword = workshop[0].password;
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -507,7 +503,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       } else {
         await createUser({
           email,
-          hashedPassword: await hash(process.env.WORKSHOP_PASSWORD ?? "workshop", 10),
+          hashedPassword: await hash(workshopPassword, 10),
           isAdmin: 0,
           emailVerified: 1,
           invalidateSession: 0,
@@ -544,7 +540,14 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    await db.deleteFrom("workshop").where("end", "<", new Date().toISOString()).execute();
+    const workshopIds = await db
+      .deleteFrom("workshop")
+      .where("end", "<", new Date().toISOString())
+      .returning("workshopId")
+      .execute();
+    for (const workshopId of workshopIds) {
+      await updateUser({ workshopId: workshopId.workshopId }, { workshopId: 0 });
+    }
     const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
       return {
         title: workshop.title,
@@ -568,17 +571,26 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string; password: string } }>,
   reply: FastifyReply
 ) {
-  const { title, start, end } = request.body;
+  const { title, start, end, password } = request.body;
   if (!title || !start || !end) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
+  if (!password && !process.env.WORKSHOP_PASSWORD) {
+    reply.status(500).send({ error: "Missing password and default not set up" });
+    return;
+  }
   const startDate = new Date(start);
   const endDate = new Date(end);
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime() || startDate.getTime() < Date.now()) {
+  if (
+    isNaN(startDate.getTime()) ||
+    isNaN(endDate.getTime()) ||
+    startDate.getTime() > endDate.getTime() ||
+    startDate.getTime() < Date.now()
+  ) {
     reply.status(400).send({ error: "Invalid date format or dates are not valid" });
     return;
   }
@@ -591,7 +603,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString()
+      end: endDate.toISOString(),
+      password: password ?? process.env.WORKSHOP_PASSWORD
     });
     if (!workshopId) {
       throw new Error("Workshop not created");

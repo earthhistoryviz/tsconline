@@ -16,7 +16,7 @@ import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import "dotenv/config";
-import { db, findIp, createIp, updateIp, initializeDatabase, findUser, updateUser, findWorkshop } from "./database.js";
+import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path, { join } from "path";
@@ -26,8 +26,6 @@ import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
 import logger from "./error-logger.js";
-import { hash } from "bcrypt-ts";
-import { randomBytes } from "crypto";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;

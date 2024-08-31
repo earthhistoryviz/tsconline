@@ -168,5 +168,5 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]: "Unable to create workshop. Please try again later.",
   [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: "Workshop with that title already exists. Please try a different title.",
   [ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]: "Unable to fetch workshops. Please try again later.",
-  [ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND]: "Workshop not found on server, it has likely ended and been deleted."
+  [ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND]: "Workshop not found on server, it has likely ended or been deleted."
 };
