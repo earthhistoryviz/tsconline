@@ -8,6 +8,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("title", "text", (col) => col.notNull().unique())
     .addColumn("start", "datetime", (col) => col.notNull())
     .addColumn("end", "datetime", (col) => col.notNull())
+    .addColumn("password", "text", (col) => col.notNull())
     .execute();
   await db.schema
     .alterTable("users")

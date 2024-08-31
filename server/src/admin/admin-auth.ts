@@ -104,7 +104,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     properties: {
       title: { type: "string" },
       start: { type: "string" },
-      end: { type: "string" }
+      end: { type: "string" },
+      password: { type: "string" }
     },
     required: ["title", "start", "end"]
   };

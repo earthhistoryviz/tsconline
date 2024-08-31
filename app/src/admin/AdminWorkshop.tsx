@@ -1,35 +1,85 @@
 import { Box, Dialog, useTheme, TextField, Typography, IconButton } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useRef } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
-import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup } from "../components";
+import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup, Lottie } from "../components";
+import loader from "../assets/icons/loading.json";
 import { ErrorCodes } from "../util/error-codes";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import dayjs from "dayjs";
-import { Workshop } from "@tsconline/shared";
 import "./AdminWorkshop.css";
+import { Workshop } from "@tsconline/shared";
 
 type EditCellRendererProps = {
   context: {
-    handleAddUsersFormOpen: (workshopId: number) => void;
+    setAddUsersFormOpen: (open: boolean) => void;
   };
-  data: Workshop;
 };
 const EditCellRenderer: React.FC<EditCellRendererProps> = (props) => {
-  const { handleAddUsersFormOpen } = props.context;
-  const { workshopId } = props.data;
+  const { setAddUsersFormOpen } = props.context;
   return (
     <CustomTooltip title="Add Users" enterDelay={800}>
-      <IconButton onClick={() => handleAddUsersFormOpen(workshopId)}>
+      <IconButton onClick={() => setAddUsersFormOpen(true)}>
         <GroupAddIcon />
       </IconButton>
     </CustomTooltip>
   );
 };
+
+type AddUsersFormProps = {
+  handleFileUpload: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  file: File | null;
+  loading: boolean;
+};
+const AddUsersForm: React.FC<AddUsersFormProps> = observer(({ handleFileUpload, file, loading }) => {
+  return (
+    <Box textAlign="center" width="100%">
+      <Typography variant="h5" mb="5px">
+        Add Users
+      </Typography>
+      <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+        <TextField
+          label="Paste Emails"
+          name="emails"
+          multiline
+          rows={5}
+          placeholder="Enter multiple emails, separated by commas"
+          size="small"
+          fullWidth
+        />
+        <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+          <InputFileUpload
+            text="Upload Excel File of Emails"
+            onChange={handleFileUpload}
+            accept=".xls,.xlsx"
+            startIcon={<CloudUploadIcon />}
+          />
+          <Typography ml="10px">{file?.name || "No file selected"}</Typography>
+        </Box>
+        <TSCButton type="submit">Submit</TSCButton>
+      </Box>
+      {loading && (
+        <Box
+          position="absolute"
+          top={0}
+          left={0}
+          width="100%"
+          height="100%"
+          display="flex"
+          justifyContent="center"
+          alignItems="center"
+          bgcolor="rgba(255, 255, 255, 0.7)"
+          zIndex={1}>
+          <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
+        </Box>
+      )}
+    </Box>
+  );
+});
 
 const workshopColDefs: ColDef[] = [
   {
@@ -52,50 +102,92 @@ const workshopColDefs: ColDef[] = [
 export const AdminWorkshop = observer(function AdminWorkshop() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
+  const gridRef = useRef<AgGridReact<Workshop>>(null);
   const [addUsersFormOpen, setAddUsersFormOpen] = useState(false);
   const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
-  const [workshopId, setWorkshopId] = useState<number>(-1);
-  const handleAddUsersFormOpen = (workshopId: number): void => {
-    setWorkshopId(workshopId);
-    setAddUsersFormOpen(true);
+  const [loading, setLoading] = useState(false);
+  const handleAddUsersSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    try {
+      setLoading(true);
+      event.preventDefault();
+      const selectedNodes = gridRef.current?.api.getSelectedNodes();
+      if (!selectedNodes || !selectedNodes.length) return;
+      const workshopId = selectedNodes[0].data?.workshopId;
+      if (!workshopId) {
+        actions.pushError(ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED);
+        return;
+      }
+      const response = await handleAddUsers(new FormData(event.currentTarget), workshopId);
+      if (!response.success) {
+        setInvalidEmails(response.invalidEmails);
+      } else {
+        actions.pushSnackbar("Users added successfully to workshop", "success");
+        setAddUsersFormOpen(false);
+      }
+    } finally {
+      setLoading(false);
+    }
   };
   const handleCreateWorkshopSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const title = form.get("workshopTitle")?.toString();
-    if (!title) {
-      actions.pushError(ErrorCodes.INVALID_FORM);
-      return;
+    try {
+      setLoading(true);
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const title = form.get("workshopTitle")?.toString();
+      if (!title) {
+        actions.pushError(ErrorCodes.INVALID_FORM);
+        return;
+      }
+      const startDate = form.get("startDate")?.toString();
+      const endDate = form.get("endDate")?.toString();
+      if (!startDate || !endDate) {
+        actions.pushError(ErrorCodes.INVALID_FORM);
+        return;
+      }
+      const start = dayjs(startDate).format("YYYY-MM-DD HH:mm");
+      const end = dayjs(endDate).format("YYYY-MM-DD HH:mm");
+      if (dayjs(start).isAfter(dayjs(end))) {
+        actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
+        return;
+      }
+      const password = form.get("password")?.toString();
+      const createdWorkshopId = await actions.adminCreateWorkshop(title, start, end, password);
+      if (!createdWorkshopId) {
+        return;
+      }
+      if (file || form.get("emails")) {
+        const response = await handleAddUsers(form, createdWorkshopId);
+        if (!response.success) {
+          actions.pushSnackbar("Workshop created successfully but users could not be added", "warning");
+          setInvalidEmails(response.invalidEmails);
+          return;
+        } else {
+          actions.pushSnackbar("Workshop created succesfully and users added succesfully", "success");
+        }
+      } else {
+        actions.pushSnackbar("Workshop created successfully", "success");
+      }
+      setCreateWorkshopFormOpen(false);
+    } finally {
+      setLoading(false);
     }
-    const startDate = form.get("startDate")?.toString();
-    const endDate = form.get("endDate")?.toString();
-    if (!startDate || !endDate) {
-      actions.pushError(ErrorCodes.INVALID_FORM);
-      return;
-    }
-    const start = dayjs(startDate).format("YYYY-MM-DD HH:mm");
-    const end = dayjs(endDate).format("YYYY-MM-DD HH:mm");
-    if (dayjs(start).isAfter(dayjs(end))) {
-      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
-      return;
-    }
-    await actions.adminCreateWorkshop(title, start, end);
   };
-  const handleAddUsersSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const handleAddUsers = async (
+    form: FormData,
+    workshopId: number
+  ): Promise<{ success: boolean; invalidEmails: string }> => {
     const emails = form.get("emails")?.toString();
     if (!emails && !file) {
       actions.pushError(ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY);
-      return;
+      return { success: false, invalidEmails: "" };
     }
     if (file) form.append("file", file);
     form.append("workshopId", workshopId.toString());
-    const invalidEmails = await actions.adminAddUsersToWorkshop(form);
-    setInvalidEmails(invalidEmails || "");
+    const response = await actions.adminAddUsersToWorkshop(form);
     setFile(null);
+    return response;
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
@@ -187,44 +279,20 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   }}
                 />
               </Box>
-              <TSCButton type="submit">
-                Submit
-              </TSCButton>
+              <TextField
+                label="Password"
+                name="password"
+                placeholder="Enter a password for the workshop"
+                fullWidth
+                size="small"
+              />
+              <AddUsersForm handleFileUpload={handleFileUpload} file={file} loading={loading} />
             </Box>
           </Box>
         </Dialog>
         <Dialog open={addUsersFormOpen} onClose={() => setAddUsersFormOpen(false)} fullWidth>
-          <Box textAlign="center" padding="10px">
-            <Typography variant="h5" mb="5px">
-              Add Users
-            </Typography>
-            <Box
-              component="form"
-              gap="20px"
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              onSubmit={handleAddUsersSubmit}>
-              <TextField
-                label="Paste Emails"
-                name="emails"
-                multiline
-                rows={5}
-                placeholder="Enter multiple emails, separated by commas"
-                size="small"
-                fullWidth
-              />
-              <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-                <InputFileUpload
-                  text="Upload Excel File of Emails"
-                  onChange={handleFileUpload}
-                  accept=".xls,.xlsx"
-                  startIcon={<CloudUploadIcon />}
-                />
-                <Typography ml="10px">{file?.name || "No file selected"}</Typography>
-              </Box>
-              <TSCButton type="submit">Submit</TSCButton>
-            </Box>
+          <Box component="form" onSubmit={handleAddUsersSubmit} padding="10px">
+            <AddUsersForm handleFileUpload={handleFileUpload} file={file} loading={loading} />
           </Box>
         </Dialog>
       </Box>
@@ -232,7 +300,8 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         columnDefs={workshopColDefs}
         rowData={Array.from(state.admin.workshops.values())}
         components={{ EditCellRenderer }}
-        context={{ handleAddUsersFormOpen }}
+        context={{ setAddUsersFormOpen }}
+        ref={gridRef}
       />
     </Box>
   );

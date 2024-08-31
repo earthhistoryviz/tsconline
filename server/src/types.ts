@@ -39,6 +39,7 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
+  password: string;
 }
 
 export type User = Selectable<UserTable>;
