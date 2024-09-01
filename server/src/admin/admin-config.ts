@@ -1,12 +1,12 @@
 import { readFile, writeFile } from "fs/promises";
-import { assertAdminConfig } from "../types";
-import { AdminConfigType } from "../types";
+import { AdminConfigType, assertAdminConfig } from "../types.js";
 import { Mutex } from "async-mutex";
 import { DatapackMetadata } from "@tsconline/shared";
 
 const ADMIN_DEFAULT_CONFIG: AdminConfigType = {
   datapacks: []
 };
+let adminConfig: AdminConfig;
 
 export class AdminConfig {
   private mutex = new Mutex();
@@ -50,7 +50,7 @@ export class AdminConfig {
     }
   }
   /**
-   * set the admin config
+   * set the admin config NOTE: this does not save the file
    * @param adminConfig the admin config
    */
   async setAdminConfig(adminConfig: AdminConfigType) {
@@ -110,4 +110,22 @@ export class AdminConfig {
       console.error(e);
     }
   }
+}
+
+/**
+ * This loads the admin config to be exported
+ * @param file 
+ */
+export async function loadAdminConfig(file: string) {
+  try {
+    adminConfig = new AdminConfig(file);
+    await adminConfig.loadFile();
+  } catch (e) {
+    console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
+    process.exit(1);
+  }
+}
+
+export function getAdminConfig() {
+  return adminConfig;
 }

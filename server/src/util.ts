@@ -6,6 +6,7 @@ import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
+import { AdminConfig } from "./admin/admin-config.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
