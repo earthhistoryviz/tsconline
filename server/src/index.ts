@@ -25,7 +25,7 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
-import { AdminConfig } from "./admin/admin-config.js";
+import { getAdminConfig, loadAdminConfig } from "./admin/admin-config.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -48,8 +48,7 @@ const server = fastify({
 const presets = await loadPresets();
 // Load the current asset config:
 await loadAssetConfigs();
-export const adminConfig = new AdminConfig(assetconfigs.adminConfigPath);
-await adminConfig.loadFile();
+await loadAdminConfig(assetconfigs.adminConfigPath);
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);
@@ -64,6 +63,7 @@ if (!(await checkFileExists(decryptionJarPath))) {
 }
 
 // this try will run the decryption jar to decrypt all files in the datapack folder
+const adminConfig = getAdminConfig();
 try {
   const datapackPaths = adminConfig
     .getAdminConfigDatapacks()
