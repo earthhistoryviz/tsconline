@@ -408,7 +408,7 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @returns
  */
 export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
-  if (!process.env.TOKEN_SECRET_KEY || !process.env.TOKEN_IV) {
+  if (!process.env.AES_SECRET_KEY || !process.env.AES_IV) {
     reply.status(500).send({ error: "Missing encryption key or iv" });
     return;
   }
@@ -588,7 +588,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(500).send({ error: "Missing password and default not set up" });
     return;
   }
-  if (!process.env.TOKEN_SECRET_KEY || !process.env.TOKEN_IV) {
+  if (!process.env.AES_SECRET_KEY || !process.env.AES_IV) {
     reply.status(500).send({ error: "Missing encryption key or iv" });
     return;
   }

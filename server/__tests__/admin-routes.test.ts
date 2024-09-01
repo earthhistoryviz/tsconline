@@ -1542,12 +1542,12 @@ describe("adminAddUsersToWorkshop", () => {
   beforeEach(() => {
     createForm();
     vi.clearAllMocks();
-    process.env.TOKEN_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
-    process.env.TOKEN_IV = "2005a53ec2407229ba7c73763b620713";
+    process.env.AES_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
+    process.env.AES_IV = "2005a53ec2407229ba7c73763b620713";
   });
-  it("should return 500 if TOKEN_SECRET_KEY is not set or TOKEN_IV is not set", async () => {
-    delete process.env.TOKEN_SECRET_KEY;
-    delete process.env.TOKEN_IV;
+  it("should return 500 if AES_SECRET_KEY is not set or AES_IV is not set", async () => {
+    delete process.env.AES_SECRET_KEY;
+    delete process.env.AES_IV;
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1923,8 +1923,8 @@ describe("adminCreateWorkshop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.WORKSHOP_PASSWORD = "password";
-    process.env.TOKEN_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
-    process.env.TOKEN_IV = "2005a53ec2407229ba7c73763b620713";
+    process.env.AES_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
+    process.env.AES_IV = "2005a53ec2407229ba7c73763b620713";
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({

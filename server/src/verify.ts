@@ -34,31 +34,31 @@ export function generateToken(uuid: string): string {
 }
 
 /**
- * Encrypts the data using AES-256-CBC. The key and IV are read from the environment variables TOKEN_SECRET_KEY and TOKEN_IV. If these are not set, random keys are generated.
+ * Encrypts the data using AES-256-CBC. The key and IV are read from the environment variables AES_SECRET_KEY and AES_IV. If these are not set, random keys are generated.
  * @param data The data to encrypt
  * @returns The encrypted data
  */
 export function encrypt(data: string): string {
   // Ensure that the key is 32 bytes (256 bits)
-  const key = process.env.TOKEN_SECRET_KEY ? Buffer.from(process.env.TOKEN_SECRET_KEY, "hex") : randomBytes(32);
+  const key = process.env.AES_SECRET_KEY ? Buffer.from(process.env.AES_SECRET_KEY, "hex") : randomBytes(32);
   // Ensure that the IV is 16 bytes (128 bits)
-  const iv = process.env.TOKEN_IV ? Buffer.from(process.env.TOKEN_IV, "hex") : randomBytes(16);
+  const iv = process.env.AES_IV ? Buffer.from(process.env.AES_IV, "hex") : randomBytes(16);
   const aesCipher = createCipheriv("aes-256-cbc", key, iv);
   return aesCipher.update(data, "utf8", "hex") + aesCipher.final("hex");
 }
 
 /**
- * Decrypts the data using AES-256-CBC. The key and IV are read from the environment variables TOKEN_SECRET_KEY and TOKEN_IV. If these are not set, this function will throw an error.
+ * Decrypts the data using AES-256-CBC. The key and IV are read from the environment variables AES_SECRET_KEY and AES_IV. If these are not set, this function will throw an error.
  * @param data The data to decrypt
- * @throws If the TOKEN_SECRET_KEY or TOKEN_IV environment variables are not set
+ * @throws If the AES_SECRET_KEY or AES_IV environment variables are not set
  * @returns The decrypted data
  */
 export function decrypt(data: string): string {
-  if (!process.env.TOKEN_SECRET_KEY || !process.env.TOKEN_IV) throw new Error("Token secret key or IV not set");
+  if (!process.env.AES_SECRET_KEY || !process.env.AES_IV) throw new Error("Token secret key or IV not set");
   // Ensure that the key is 32 bytes (256 bits)
-  const key = Buffer.from(process.env.TOKEN_SECRET_KEY, "hex");
+  const key = Buffer.from(process.env.AES_SECRET_KEY, "hex");
   // Ensure that the IV is 16 bytes (128 bits)
-  const iv = Buffer.from(process.env.TOKEN_IV, "hex");
+  const iv = Buffer.from(process.env.AES_IV, "hex");
   const aesDecipher = createDecipheriv("aes-256-cbc", key, iv);
   return aesDecipher.update(data, "hex", "utf8") + aesDecipher.final("utf8");
 }
