@@ -1,7 +1,11 @@
 {
     "translation": {
         "login": {
-            "signin": "Sign In"
+            "signin": "Sign In",
+            "forgot-password": "Forgot password?",
+            "signup": "Don't have an account? Sign Up",
+            "username": "Username",
+            "password": "Password"
         },
         "title": {
             "main": "Time Scale Creator Online",
@@ -216,7 +220,8 @@
             "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "Unable to add users to workshop. Please try again later.",
             "ADMIN_EMAIL_INVALID": "Invalid email. Please fix the email and try again.",
             "ADMIN_WORKSHOP_FIELDS_EMPTY": "You must provide at least one field to add users to a workshop.",
-            "UNRECOGNIZED_EXCEL_FILE": "Unrecognized Excel file. Please upload a valid Excel file."
+            "UNRECOGNIZED_EXCEL_FILE": "Unrecognized Excel file. Please upload a valid Excel file.",
+            "SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists. Please upload a unique datapack (different filename and title)."
         },
         "button": {
             "generate": "Generate",

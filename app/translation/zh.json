@@ -1,7 +1,11 @@
 {
     "translation": {
         "login": {
-            "signin": "登陆"
+            "signin": "登陆",
+            "forgot-password": "忘记密码?",
+            "signup": "还没有账户？注册账户",
+            "username": "用户名",
+            "password": "密码"
         },
         "title": {
             "main": "Time Scale Creator 在线版",
@@ -215,7 +219,8 @@
             "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "无法将用户添加到工作坊。请稍后再试。",
             "ADMIN_EMAIL_INVALID": "电子邮件无效。请修复电子邮件并重试。",
             "ADMIN_WORKSHOP_FIELDS_EMPTY": "您必须提供至少一个领域才能将用户添加到工作坊。",
-            "UNRECOGNIZED_EXCEL_FILE": "无法识别 Excel 文件。请上传有效的 Excel 文件。"
+            "UNRECOGNIZED_EXCEL_FILE": "无法识别 Excel 文件。请上传有效的 Excel 文件。",
+            "SERVER_DATAPACK_ALREADY_EXISTS": "服务器数据包已存在。请上传一个独特的数据包（不同的文件名和标题）。"
         },
         "button": {
             "generate": "绘制",
