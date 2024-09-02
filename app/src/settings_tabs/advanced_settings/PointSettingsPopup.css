@@ -50,9 +50,6 @@
   flex-direction: column;
   height: min-content;
 }
-.point-range-settings-container .MuiIconButton-root {
-  padding: 5px;
-}
 
 .point-range-settings-header-container {
   display: flex;
@@ -95,7 +92,7 @@
   align-items: flex-start;
 }
 
-.point-settings-adjustment-buttons,
+
 .point-adjustment-rgb-modifier {
   display: flex;
   flex-wrap: wrap;
@@ -208,10 +205,4 @@
   height: 16px;
   top: -7px;
   left: 7px;
-}
-
-.MuiToggleButton-root.Mui-disabled .rectangle-icon,
-.MuiToggleButton-root.Mui-disabled .circle-icon,
-.MuiToggleButton-root.Mui-disabled .cross-icon {
-  opacity: 0.5;
 }

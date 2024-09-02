@@ -35,52 +35,15 @@
   margin-bottom: 10px;
 }
 
-.MuiTextField-root.font-size-container {
-  width: 60px;
-  margin-right: 10px;
-  min-width: 50px;
-}
-.font-size-container > .MuiInputBase-root > .MuiInputBase-input {
-  font-size: 0.8rem;
-  height: 17px;
-}
-
 .font-family-select {
   width: 105px;
   height: 34px;
-}
-
-#HeadingContainer {
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-#FontOptionsTitle {
-  font-weight: bold;
-  font-size: 18px;
-}
-
-#Bold {
-  font-weight: bold;
 }
 
 .change-font-header {
   font-size: 0.9rem;
   font-weight: 600;
   padding-bottom: 5px;
-}
-
-#AdditionalFontsText {
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
-#CloseButtonContainer {
-  display: flex;
-  justify-content: center;
-  margin-top: 10px;
 }
 
 #ColorInputContainer {

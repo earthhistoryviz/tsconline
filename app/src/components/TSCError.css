@@ -20,26 +20,6 @@
   align-items: center;
 }
 
-.alert-text .simplebar-content {
-  margin-left: var(--side-margin);
-  margin-right: var(--side-margin);
-  width: calc(var(--alert-width) - 2 * var(--side-margin));
-}
-
-.MuiIconButton-root.alert-close {
-  width: 20px;
-  height: 20px;
-  padding: 0px;
-  justify-content: center;
-}
-
-.MuiSvgIcon-root.alert-close-icon {
-  width: inherit;
-  height: inherit;
-  color: white;
-  margin: 0px;
-}
-
 .alert-header {
   width: calc(var(--alert-width) - var(--side-margin));
   display: inline-flex;

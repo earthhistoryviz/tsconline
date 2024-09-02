@@ -17,17 +17,8 @@
   min-height: 100vh;
 }
 
-@media screen and (max-width: 982px) {
-  .font-menu-setting-tab-config > .MuiGrid-root > .font-row-container {
-    flex-wrap: nowrap;
-  }
-}
-
 @media screen and (max-width: 620px) {
   .font-menu-setting-tab-config {
     width: 100%;
-  }
-  .font-menu-setting-tab-config > .MuiGrid-root > .font-row-container {
-    flex-wrap: wrap;
   }
 }

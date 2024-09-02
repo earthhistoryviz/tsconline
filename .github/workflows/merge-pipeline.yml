@@ -114,6 +114,35 @@ jobs:
         if: steps.eslint.outputs.eslint_failed == 'true' || steps.prettier.outputs.prettify_failed == 'true'
         run: exit 1
 
+      - name: Check for Unused CSS (Simulation)
+        id: check_unused_css
+        run: |
+          # Use PurgeCSS to simulate the removal of unused CSS
+          yarn purge-css --dry-run || true
+          # Check if there are changes detected (indicating unused CSS)
+          if git status --porcelain | grep '^ M'; then
+            echo "unused_css_detected=true" >> $GITHUB_OUTPUT
+          fi
+        continue-on-error: true
+
+      - name: Comment PR on Unused CSS detection
+        if: steps.check_unused_css.outputs.unused_css_detected == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const message = `🚨 Unused CSS has been detected. Please run 'yarn check-quality' locally and fix the unused styles.`;
+            const prNumber = context.payload.pull_request.number;
+            github.rest.issues.createComment({
+              ...context.repo,
+              issue_number: prNumber,
+              body: message,
+            });
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check for any failures
+        if: steps.eslint.outputs.eslint_failed == 'true' || steps.prettier.outputs.prettify_failed == 'true' || steps.check_unused_css.outputs.unused_css_detected == 'true'
+        run: exit 1
+
   build-and-test:
     runs-on: ubuntu-latest
     steps:

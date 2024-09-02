@@ -5,6 +5,7 @@
     "fastify": "^4.27.0"
   },
   "devDependencies": {
+    "@fullhuman/postcss-purgecss": "^6.0.0",
     "@types/eslint": "^8",
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
@@ -18,6 +19,8 @@
     "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
     "form-auto-content": "^3.2.1",
+    "postcss": "^8.4.43",
+    "postcss-cli": "^11.0.0",
     "prettier": "^3.2.5",
     "syncpack": "^12.3.0",
     "ts-node": "^10.9.2",
@@ -28,7 +31,8 @@
   "private": true,
   "scripts": {
     "build": "echo \"Cleaning all workspaces...\" && yarn clean && echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --parallel --exclude @tsconline/shared --exclude tsconline/mono-repo run build",
-    "check-quality": "yarn prettier-format && yarn lint-check",
+    "purge-css": "postcss ./app/src/**/*.css --replace",
+    "check-quality": "yarn prettier-format && yarn lint-check && yarn purge-css",
     "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude tsconline/mono-repo -p -v run install",
     "install:prod": "echo \"Installing production packages of specified workspaces...\" && yarn workspaces focus @tsconline/server @tsconline/app --production",
     "lint-check": "yarn eslint **/*.{tsx,ts} --quiet --config ./.eslintrc.json --no-cache",

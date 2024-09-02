@@ -10,13 +10,6 @@
   min-width: 0px;
 }
 
-#column-generate-button-top {
-  margin-top: 1%;
-  margin-bottom: 1%;
-  width: 200px;
-  font-size: 1rem;
-}
-
 .column-search-bar {
   width: 400px;
 }
@@ -67,29 +60,11 @@
   /* Firefox */
 }
 
-.column-selected-color {
-  background-color: lightblue;
-}
-
-.column-base-color {
-  background-color: transparent;
-}
-
-.MuiSvgIcon-root.column-error-icon {
-  width: 20px;
-  height: 20px;
-}
-
 .filtered-border {
   border: 1px solid lightcoral;
 }
 
-.column-top-level .MuiTypography-root {
-  margin: 10;
-}
-
-.column-checkbox,
-.MuiSvgIcon-root.column-error-icon {
+.column-checkbox {
   margin: 0 9px 0 0px;
   padding: 0px;
 }
@@ -129,12 +104,6 @@
   background-color: transparent;
 }
 
-.MuiIconButton-root.expand-collapse-column-buttons {
-  width: 30px;
-  height: 30px;
-  padding: 2px;
-}
-
 .column-accordion-summary {
   padding-left: 0px;
   display: flex;
@@ -152,29 +121,8 @@
   text-overflow: ellipsis;
 }
 
-.column-accordion-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
-  transform: rotate(90deg);
-  display: flex;
-  order: -1;
-}
-
-.column-accordion-summary > .MuiAccordionSummary-expandIconWrapper {
-  margin-right: 5px;
-  margin-left: 4px;
-}
-
 .column-leaf {
   margin-left: 23.2px;
-}
-
-.column-accordion-summary > .MuiAccordionSummary-content {
-  order: 2;
-  flex-grow: 1;
-  align-items: center;
-  margin: 0;
-  display: flex;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 .column-row-container {
   display: flex;
@@ -257,12 +205,6 @@
   }
   .column-search-bar {
     width: 80vw;
-  }
-  .column-search-bar > .MuiInputBase-root {
-    font-size: 0.8rem;
-  }
-  .column-search-bar > .MuiFormLabel-root {
-    font-size: 0.8rem;
   }
 }
 
