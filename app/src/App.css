@@ -1,9 +1,3 @@
 :root {
   --selection-color: #9792e3;
 }
-.konkonkitsune {
-  background-color: var(--selection-color);
-}
-#hifriends {
-  color: var(--selection-color);
-}
