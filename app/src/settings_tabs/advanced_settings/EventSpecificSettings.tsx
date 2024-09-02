@@ -16,53 +16,53 @@ type EventSpecificSettingsProps = {
   lastOccurrenceText: string;
   alphabeticalText: string;
 };
-export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = observer(({ column, eventsText, rangesText, firstOccurrenceText,
-  lastOccurrenceText, alphabeticalText
-}) => {
-  const { actions } = useContext(context);
-  if (column.columnDisplayType !== "Event" || !column.columnSpecificSettings) return null;
-  assertEventSettings(column.columnSpecificSettings);
-  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = observer(
+  ({ column, eventsText, rangesText, firstOccurrenceText, lastOccurrenceText, alphabeticalText }) => {
+    const { actions } = useContext(context);
+    if (column.columnDisplayType !== "Event" || !column.columnSpecificSettings) return null;
     assertEventSettings(column.columnSpecificSettings);
-    const value = event.target.value;
-    if (!isEventType(value) || !column.columnSpecificSettings) {
-      actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
-      return;
-    }
-    actions.setEventColumnSettings(column.columnSpecificSettings, { type: value });
-  };
-  const handleRangeSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    assertEventSettings(column.columnSpecificSettings);
-    const value = event.target.value;
-    if (!isRangeSort(value) || !column.columnSpecificSettings) {
-      actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
-      return;
-    }
-    actions.setEventColumnSettings(column.columnSpecificSettings, { rangeSort: value });
-  };
-  return (
-    <Box display="flex" flexDirection="column">
-      <TSCRadioGroup
-        onChange={handleTypeChange}
-        value={column.columnSpecificSettings.type}
-        name={""}
-        radioArray={[
-          { value: "events", label: eventsText, imageSrc: EventLogo },
-          { value: "ranges", label: rangesText, imageSrc: RangeLogo }
-        ]}
-      />
-      <TSCRadioGroup
-        className="range-sort-sub-radio-group"
-        disabled={column.columnSpecificSettings.type === "events"}
-        onChange={handleRangeSortChange}
-        value={column.columnSpecificSettings.rangeSort}
-        name={""}
-        radioArray={[
-          { value: "first occurrence", label: firstOccurrenceText },
-          { value: "last occurrence", label: lastOccurrenceText },
-          { value: "alphabetical", label: alphabeticalText }
-        ]}
-      />
-    </Box>
-  );
-});
+    const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      assertEventSettings(column.columnSpecificSettings);
+      const value = event.target.value;
+      if (!isEventType(value) || !column.columnSpecificSettings) {
+        actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
+        return;
+      }
+      actions.setEventColumnSettings(column.columnSpecificSettings, { type: value });
+    };
+    const handleRangeSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+      assertEventSettings(column.columnSpecificSettings);
+      const value = event.target.value;
+      if (!isRangeSort(value) || !column.columnSpecificSettings) {
+        actions.pushSnackbar("This feature is not yet implemented for value " + value + ".", "warning");
+        return;
+      }
+      actions.setEventColumnSettings(column.columnSpecificSettings, { rangeSort: value });
+    };
+    return (
+      <Box display="flex" flexDirection="column">
+        <TSCRadioGroup
+          onChange={handleTypeChange}
+          value={column.columnSpecificSettings.type}
+          name={""}
+          radioArray={[
+            { value: "events", label: eventsText, imageSrc: EventLogo },
+            { value: "ranges", label: rangesText, imageSrc: RangeLogo }
+          ]}
+        />
+        <TSCRadioGroup
+          className="range-sort-sub-radio-group"
+          disabled={column.columnSpecificSettings.type === "events"}
+          onChange={handleRangeSortChange}
+          value={column.columnSpecificSettings.rangeSort}
+          name={""}
+          radioArray={[
+            { value: "first occurrence", label: firstOccurrenceText },
+            { value: "last occurrence", label: lastOccurrenceText },
+            { value: "alphabetical", label: alphabeticalText }
+          ]}
+        />
+      </Box>
+    );
+  }
+);

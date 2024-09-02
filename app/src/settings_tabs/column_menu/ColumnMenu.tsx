@@ -100,12 +100,13 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
 
   switch (tab) {
     case "General":
-
       return (
         <StyledScrollbar>
           <Box display="flex" flexDirection="column" gap="10px">
             <EditNameField column={column} text={t("settings.column.menu.edit-name")} />
-            {column.children.length === 0 && <ChangeBackgroundColor column={column} text={t("settings.column.menu.background-color")} />}
+            {column.children.length === 0 && (
+              <ChangeBackgroundColor column={column} text={t("settings.column.menu.background-color")} />
+            )}
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
               <GenericTextField
                 orientation="start"
@@ -126,11 +127,38 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <div className="column-advanced-controls">
               <AccordionPositionControls column={column} text={t("settings.column.menu.shift-row")} />
             </div>
-            <ShowTitles column={column} showTitleText={t("settings.column.menu.enable-title")} showAgeText={t("settings.column.menu.show-age-label")} showUncertaintyText={t("settings.column.menu.show-uncertainty")} />
-            <EventSpecificSettings column={column} eventsText={t("settings.column.menu.events")} rangesText={t("settings.column.menu.ranges")} firstOccurrenceText={t("settings.column.menu.first-occurrence")} lastOccurrenceText={t("settings.column.menu.last-occurrence")} alphabeticalText={t("settings.column.menu.alphabetical")} />
-            <RangeSpecificSettings column={column} firstOccurrenceText={t("settings.column.menu.first-occurrence")} lastOccurrenceText={t("settings.column.menu.last-occurrence")} alphabeticalText={t("settings.column.menu.alphabetical")} />
-            <AgeRulerSpecificSettings column={column} titleText={t("settings.column.menu.ruler.title")} leftText={t("settings.column.menu.ruler.left")} rightText={t("settings.column.menu.ruler.right")} />
-            <ZoneSpecificSettings column={column} titleText={t("settings.column.menu.orientation.title")} horizontalText={t("settings.column.menu.orientation.horizontal")} verticalText={t("settings.column.menu.orientation.vertical")} />
+            <ShowTitles
+              column={column}
+              showTitleText={t("settings.column.menu.enable-title")}
+              showAgeText={t("settings.column.menu.show-age-label")}
+              showUncertaintyText={t("settings.column.menu.show-uncertainty")}
+            />
+            <EventSpecificSettings
+              column={column}
+              eventsText={t("settings.column.menu.events")}
+              rangesText={t("settings.column.menu.ranges")}
+              firstOccurrenceText={t("settings.column.menu.first-occurrence")}
+              lastOccurrenceText={t("settings.column.menu.last-occurrence")}
+              alphabeticalText={t("settings.column.menu.alphabetical")}
+            />
+            <RangeSpecificSettings
+              column={column}
+              firstOccurrenceText={t("settings.column.menu.first-occurrence")}
+              lastOccurrenceText={t("settings.column.menu.last-occurrence")}
+              alphabeticalText={t("settings.column.menu.alphabetical")}
+            />
+            <AgeRulerSpecificSettings
+              column={column}
+              titleText={t("settings.column.menu.ruler.title")}
+              leftText={t("settings.column.menu.ruler.left")}
+              rightText={t("settings.column.menu.ruler.right")}
+            />
+            <ZoneSpecificSettings
+              column={column}
+              titleText={t("settings.column.menu.orientation.title")}
+              horizontalText={t("settings.column.menu.orientation.horizontal")}
+              verticalText={t("settings.column.menu.orientation.vertical")}
+            />
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
                 <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
@@ -191,55 +219,67 @@ function addRangeFields(
   ];
 }
 
-const ShowTitles = observer(({ column, showTitleText, showAgeText, showUncertaintyText }: { column: ColumnInfo, showTitleText: string, showAgeText: string, showUncertaintyText: string }) => {
-  const { actions } = useContext(context);
-  return (
-    <div className="show-titles-container">
-      <CustomFormControlLabel
-        name="enableTitle"
-        label={showTitleText}
-        control={
-          <TSCCheckbox
-            outlineColor="gray"
-            checked={column.enableTitle}
-            onChange={() => {
-              actions.setEnableTitle(!column.enableTitle, column);
-            }}
+const ShowTitles = observer(
+  ({
+    column,
+    showTitleText,
+    showAgeText,
+    showUncertaintyText
+  }: {
+    column: ColumnInfo;
+    showTitleText: string;
+    showAgeText: string;
+    showUncertaintyText: string;
+  }) => {
+    const { actions } = useContext(context);
+    return (
+      <div className="show-titles-container">
+        <CustomFormControlLabel
+          name="enableTitle"
+          label={showTitleText}
+          control={
+            <TSCCheckbox
+              outlineColor="gray"
+              checked={column.enableTitle}
+              onChange={() => {
+                actions.setEnableTitle(!column.enableTitle, column);
+              }}
+            />
+          }
+        />
+        {column.showAgeLabels !== undefined && (
+          <CustomFormControlLabel
+            width={130}
+            name="showAgeLabel"
+            label={showAgeText}
+            control={
+              <TSCCheckbox
+                outlineColor="gray"
+                checked={column.showAgeLabels}
+                onChange={() => {
+                  actions.setShowAgeLabels(!column.showAgeLabels, column);
+                }}
+              />
+            }
           />
-        }
-      />
-      {column.showAgeLabels !== undefined && (
-        <CustomFormControlLabel
-          width={130}
-          name="showAgeLabel"
-          label={showAgeText}
-          control={
-            <TSCCheckbox
-              outlineColor="gray"
-              checked={column.showAgeLabels}
-              onChange={() => {
-                actions.setShowAgeLabels(!column.showAgeLabels, column);
-              }}
-            />
-          }
-        />
-      )}
-      {column.showUncertaintyLabels !== undefined && (
-        <CustomFormControlLabel
-          width={175}
-          name="showUncertaintyLabels"
-          label={showUncertaintyText}
-          control={
-            <TSCCheckbox
-              outlineColor="gray"
-              checked={column.showUncertaintyLabels}
-              onChange={() => {
-                actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
-              }}
-            />
-          }
-        />
-      )}
-    </div>
-  );
-});
+        )}
+        {column.showUncertaintyLabels !== undefined && (
+          <CustomFormControlLabel
+            width={175}
+            name="showUncertaintyLabels"
+            label={showUncertaintyText}
+            control={
+              <TSCCheckbox
+                outlineColor="gray"
+                checked={column.showUncertaintyLabels}
+                onChange={() => {
+                  actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
+                }}
+              />
+            }
+          />
+        )}
+      </div>
+    );
+  }
+);

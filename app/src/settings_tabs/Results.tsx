@@ -45,11 +45,11 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
   const ages = info.age;
   const dataInRange = ages
     ? checkIfDataIsInRange(
-      ages.topAge,
-      ages.baseAge,
-      state.settings.timeSettings[column.units].topStageAge,
-      state.settings.timeSettings[column.units].baseStageAge
-    )
+        ages.topAge,
+        ages.baseAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
     : true;
   return (
     <div>

@@ -8,7 +8,6 @@ import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } fro
 import { OptionsBar } from "./ChartOptionsBar";
 import { Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { t } from "i18next";
 import { useTranslation } from "react-i18next";
 
 export const Chart = observer(() => {

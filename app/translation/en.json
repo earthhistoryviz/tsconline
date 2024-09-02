@@ -129,7 +129,15 @@
             },
             "datapacks": {
                 "see-info-guidance": "Click a datapack to see more information!",
-                "add-datapack-guidance": "Add a datapack by clicking the checkbox"
+                "add-datapack-guidance": "Add a datapack by clicking the checkbox",
+                "title": {
+                    "server": "Server Datapacks",
+                    "public-user": "Public User Datapacks",
+                    "workshop": "Workshop Datapacks",
+                    "your": "Your Datapacks"
+                },
+                "no": "No",
+                "avaliable": "Avaliable"
             }
         },
         "chart": {

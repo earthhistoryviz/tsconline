@@ -18,10 +18,7 @@ export const Font = observer(function Font() {
           <div className="root-font-description">
             <Typography> {t("settings.font.notes1")}</Typography>
             <Typography> {t("settings.font.notes2")}</Typography>
-            <Typography>
-              {" "}
-              {t("settings.font.notes3")}
-            </Typography>
+            <Typography> {t("settings.font.notes3")}</Typography>
           </div>
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LeafColumnFontMenu className="font-menu-setting-tab-config" column={rootColumn} />
