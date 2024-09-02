@@ -1,3 +1,6 @@
 :root {
   --selection-color: #9792e3;
 }
+.testing {
+  color: var(--selection-color);
+}
