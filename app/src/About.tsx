@@ -18,7 +18,7 @@ import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png";
 import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
 import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
 import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
-import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png"
+import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
