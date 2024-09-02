@@ -100,7 +100,8 @@ const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
   const { t } = useTranslation();
   return (
     <div className={styles.wtc}>
-      {t("settingsTabs.Warnings")}{count > 0 && <span className={styles.number}>{`${count > 99 ? `99+` : count}`}</span>}
+      {t("settingsTabs.Warnings")}
+      {count > 0 && <span className={styles.number}>{`${count > 99 ? `99+` : count}`}</span>}
     </div>
   );
 };
@@ -180,10 +181,10 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           <div className={styles.tags}>
             {datapack.tags[0]
               ? datapack.tags.map((tag) => (
-                <TagButton key={tag}>
-                  <Typography fontSize="0.9rem">{tag}</Typography>
-                </TagButton>
-              ))
+                  <TagButton key={tag}>
+                    <Typography fontSize="0.9rem">{tag}</Typography>
+                  </TagButton>
+                ))
               : "No tags"}
           </div>
         </div>

@@ -32,7 +32,7 @@ const TSCOnlineHeader = () => {
   return (
     <HeaderContainer>
       <TSCIcon src={TSCreatorLogo} alt="Logo" size="80px" marginTop="20px" />
-      <HeaderTitle variant="h2">{t('title.main')}</HeaderTitle>
+      <HeaderTitle variant="h2">{t("title.main")}</HeaderTitle>
     </HeaderContainer>
   );
 };

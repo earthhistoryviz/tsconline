@@ -5,7 +5,7 @@ import "./InfoBox.css";
 import { StyledScrollbar } from "../../components";
 import { trimQuotes } from "../../util/util";
 
-export const InfoBox: React.FC<{ info: string, titleText: string }> = observer(({ info, titleText }) => {
+export const InfoBox: React.FC<{ info: string; titleText: string }> = observer(({ info, titleText }) => {
   const addTargetBlank = (html: string) => {
     return html.replace(/<a\s+href=/g, '<a target="_blank" href=');
   };

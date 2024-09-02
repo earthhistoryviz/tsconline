@@ -77,24 +77,24 @@ export const Datapacks = observer(function Datapacks() {
       </div>
       <DatapackIndexDisplay
         index={state.datapackCollection.serverDatapackIndex}
-        header="Server Datapacks"
+        header={t("settings.datapacks.title.server")}
         HeaderIcon={Storage}
       />
       {state.isLoggedIn && (
         <DatapackIndexDisplay
           index={state.datapackCollection.privateUserDatapackIndex}
-          header="Your Datapacks"
+          header={t("settings.datapacks.title.your")}
           HeaderIcon={Lock}
         />
       )}
       <DatapackIndexDisplay
         index={state.datapackCollection.publicUserDatapackIndex}
-        header="Public User Datapacks"
+        header={t("settings.datapacks.title.public-user")}
         HeaderIcon={Public}
       />
       <DatapackIndexDisplay
         index={state.datapackCollection.workshopDatapackIndex}
-        header="Workshop Datapacks"
+        header={t("settings.datapacks.title.workshop")}
         HeaderIcon={Work}
       />
       <Box className={styles.container}>
@@ -161,6 +161,7 @@ type DatapackIndexDisplayProps = {
 };
 const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ index, header, HeaderIcon }) => {
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(
@@ -209,7 +210,11 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
           />
         );
       })}
-      {numberOfDatapacks === 0 && <Typography>No {header} Available</Typography>}
+      {numberOfDatapacks === 0 && (
+        <Typography>
+          {t("settings.datapacks.no")} {header} {t("settings.datapacks.avaliable")}
+        </Typography>
+      )}
     </Box>
   );
 });

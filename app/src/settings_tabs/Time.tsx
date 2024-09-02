@@ -46,7 +46,9 @@ export const Time = observer(function Time() {
           <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
-            <InputLabel>{disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.top-name")}</InputLabel>
+            <InputLabel>
+              {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.top-name")}
+            </InputLabel>
             <Select
               className="SelectTop"
               inputProps={{ id: "top-age-selector" }}

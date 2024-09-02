@@ -17,7 +17,7 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
-import LanguageIcon from '@mui/icons-material/Language';
+import LanguageIcon from "@mui/icons-material/Language";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 
@@ -29,8 +29,6 @@ const StyledAppBar = styled(AppBar)(({ theme }) => ({
   WebkitBackdropFilter: "blur(8px)"
 }));
 
-
-
 export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
@@ -39,8 +37,14 @@ export const NavBar = observer(function Navbar() {
   const languageRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
   const [languageMenuState, languageMenuToggle] = useMenuState({ transition: true });
-  const { anchorProps: settingsAnchorProps, hoverProps: settingsHoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
-  const { anchorProps: langAnchorProps, hoverProps: langHoverProps } = useHover(languageMenuState.state, languageMenuToggle);
+  const { anchorProps: settingsAnchorProps, hoverProps: settingsHoverProps } = useHover(
+    settingsMenuState.state,
+    settingsMenuToggle
+  );
+  const { anchorProps: langAnchorProps, hoverProps: langHoverProps } = useHover(
+    languageMenuState.state,
+    languageMenuToggle
+  );
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
   const avaliableLanguages = i18next.languages;
@@ -109,8 +113,7 @@ export const NavBar = observer(function Navbar() {
                 value={5}
                 ref={languageRef}
                 {...langAnchorProps}
-                onClick={() => {
-                }}>
+                onClick={() => {}}>
                 <LanguageIcon />
                 <Typography>{t(`languageNames.${currentLanguage}`)}</Typography>
               </IconButton>
