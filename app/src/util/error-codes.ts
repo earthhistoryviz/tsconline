@@ -1,4 +1,3 @@
-//will show "Cannot find module '../../i18n' or its corresponding type declarations." but is actually fine
 import i18n from "../../i18n";
 
 export enum ErrorCodes {

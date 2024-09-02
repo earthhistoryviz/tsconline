@@ -2575,6 +2575,7 @@ __metadata:
     "@types/d3": "npm:^7"
     "@types/dompurify": "npm:^3"
     "@types/file-saver": "npm:^2.0.7"
+    "@types/i18next": "npm:^13.0.0"
     "@types/lodash": "npm:^4.17.4"
     "@types/react": "npm:^18.0.27"
     "@types/react-dom": "npm:^18.0.10"
@@ -3100,6 +3101,15 @@ __metadata:
   version: 4.0.4
   resolution: "@types/http-cache-semantics@npm:4.0.4"
   checksum: a59566cff646025a5de396d6b3f44a39ab6a74f2ed8150692e0f31cc52f3661a68b04afe3166ebe0d566bd3259cb18522f46e949576d5204781cd6452b7fe0c5
+  languageName: node
+  linkType: hard
+
+"@types/i18next@npm:^13.0.0":
+  version: 13.0.0
+  resolution: "@types/i18next@npm:13.0.0"
+  dependencies:
+    i18next: "npm:*"
+  checksum: da3e56065d593bea786c9a35e625064a2502f67cdddb8e19338016c4f8dc3952aa55ab915a6f76fdebd61d5c04bb9aff9f2603eb809deb811dab0729cce72fe4
   languageName: node
   linkType: hard
 
@@ -7251,7 +7261,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"i18next@npm:^23.14.0":
+"i18next@npm:*, i18next@npm:^23.14.0":
   version: 23.14.0
   resolution: "i18next@npm:23.14.0"
   dependencies:
