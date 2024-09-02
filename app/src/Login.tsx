@@ -148,7 +148,7 @@ export const Login: React.FC = observer(() => {
               required
               fullWidth
               id="username"
-              label="Username"
+              label={t("login.username")}
               name="username"
               autoComplete="username"
               autoFocus
@@ -159,7 +159,7 @@ export const Login: React.FC = observer(() => {
               required
               fullWidth
               name="password"
-              label="Password"
+              label={t("login.password")}
               type="password"
               id="password"
               autoComplete="current-password"
@@ -172,14 +172,14 @@ export const Login: React.FC = observer(() => {
               sx={{ mt: 3, mb: 2 }}
               endIcon={<LoginIcon />}
               disabled={!state.cookieConsent}>
-              Sign In
+              {t("login.signin")}
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/forgot-password">Forgot password?</Link>
+                <Link href="/forgot-password">{t("login.forgot-password")}</Link>
               </Grid>
               <Grid item>
-                <Link href="/signup">Don&apos;t have an account? Sign Up</Link>
+                <Link href="/signup">{t("login.signup")}</Link>
               </Grid>
             </Grid>
             <Box className="divider-box">
