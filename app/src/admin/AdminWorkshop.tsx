@@ -12,6 +12,7 @@ import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import dayjs from "dayjs";
 import { Workshop } from "@tsconline/shared";
+import { displayServerError } from "../state/actions/util-actions";
 import "./AdminWorkshop.css";
 
 type AddUsersCellRendererProps = {
@@ -43,6 +44,7 @@ type AddUsersFormProps = {
   loading: boolean;
 };
 const AddUsersForm: React.FC<AddUsersFormProps> = observer(({ handleFileUpload, file, loading }) => {
+  const theme = useTheme();
   return (
     <Box textAlign="center" width="100%">
       <Typography variant="h5" mb="5px">
@@ -79,7 +81,7 @@ const AddUsersForm: React.FC<AddUsersFormProps> = observer(({ handleFileUpload, 
           display="flex"
           justifyContent="center"
           alignItems="center"
-          bgcolor="rgba(255, 255, 255, 0.7)"
+          bgcolor={theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)"}
           zIndex={1}>
           <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
         </Box>
@@ -129,6 +131,12 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         actions.pushSnackbar("Users added successfully to workshop", "success");
         setAddUsersFormOpen(false);
       }
+    } catch (error) {
+      displayServerError(
+        error,
+        ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED,
+        ErrorCodes[ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED]
+      );
     } finally {
       setLoading(false);
     }
@@ -167,12 +175,18 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
           setInvalidEmails(response.invalidEmails);
           return;
         } else {
-          actions.pushSnackbar("Workshop created succesfully and users added succesfully", "success");
+          actions.pushSnackbar("Workshop created successfully and users added successfully", "success");
         }
       } else {
         actions.pushSnackbar("Workshop created successfully", "success");
       }
       setCreateWorkshopFormOpen(false);
+    } catch (error) {
+      displayServerError(
+        error,
+        ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED,
+        ErrorCodes[ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]
+      );
     } finally {
       setLoading(false);
     }
@@ -262,7 +276,14 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                       required: true,
                       size: "small"
                     },
-                    popper: { className: "date-time-picker" }
+                    popper: {
+                      className: "date-time-picker",
+                      sx: {
+                        "& .MuiPaper-root": {
+                          backgroundColor: theme.palette.secondaryBackground.main
+                        }
+                      }
+                    }
                   }}
                 />
                 <DateTimePicker
@@ -278,7 +299,14 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                       required: true,
                       size: "small"
                     },
-                    popper: { className: "date-time-picker" }
+                    popper: {
+                      className: "date-time-picker",
+                      sx: {
+                        "& .MuiPaper-root": {
+                          backgroundColor: theme.palette.secondaryBackground.main
+                        }
+                      }
+                    }
                   }}
                 />
               </Box>
