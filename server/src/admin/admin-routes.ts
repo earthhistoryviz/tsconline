@@ -37,6 +37,7 @@ import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { decrypt, encrypt } from "../verify.js";
 import "dotenv/config";
+
 /**
  * Get all users for admin to configure on frontend
  * @param _request
@@ -45,17 +46,27 @@ import "dotenv/config";
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
-    const displayedUsers = users.map((user) => {
-      const { hashedPassword, ...displayedUser } = user;
-      return {
-        ...displayedUser,
-        username: displayedUser.username,
-        isGoogleUser: hashedPassword === null,
-        isAdmin: user.isAdmin === 1,
-        emailVerified: user.emailVerified === 1,
-        invalidateSession: user.invalidateSession === 1
-      };
-    });
+    const displayedUsers = await Promise.all(
+      users.map(async (user) => {
+        const { hashedPassword, workshopId, ...displayedUser } = user;
+        let workshopTitle = "";
+        if (workshopId) {
+          const workshop = await findWorkshop({ workshopId });
+          if (workshop && workshop.length === 1) {
+            workshopTitle = workshop[0]?.title ?? "";
+          }
+        }
+        return {
+          ...displayedUser,
+          username: displayedUser.username,
+          isGoogleUser: hashedPassword === null,
+          isAdmin: user.isAdmin === 1,
+          emailVerified: user.emailVerified === 1,
+          invalidateSession: user.invalidateSession === 1,
+          ...(workshopTitle && { workshopTitle })
+        };
+      })
+    );
     displayedUsers.forEach((user) => {
       assertAdminSharedUser(user);
     });
@@ -603,13 +614,13 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(400).send({ error: "Invalid date format or dates are not valid" });
     return;
   }
-  const workshop = await findWorkshop({ title });
-  if (workshop.length > 0) {
-    reply.status(409).send({ error: "Workshop with that title already exists" });
-    return;
-  }
-  const encryptedPassword = encrypt(password || process.env.WORKSHOP_PASSWORD!);
   try {
+    const existingWorkshops = await findWorkshop({ title });
+    if (existingWorkshops.length > 0) {
+      reply.status(409).send({ error: "Workshop with that title already exists" });
+      return;
+    }
+    const encryptedPassword = encrypt(password || process.env.WORKSHOP_PASSWORD!);
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),

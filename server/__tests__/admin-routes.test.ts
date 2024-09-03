@@ -245,10 +245,24 @@ const testAdminUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 0
+  workshopId: 1
 };
 const testNonAdminUser = {
   ...testAdminUser,
+  isAdmin: 0
+};
+const testSharedAdminUser = {
+  userId: 123,
+  uuid: "123e4567-e89b-12d3-a456-426614174000",
+  email: "test@example.com",
+  emailVerified: 1,
+  invalidateSession: 0,
+  username: "testuser",
+  pictureUrl: "https://example.com/picture.jpg",
+  isAdmin: 1
+};
+const testNonSharedAdminUser = {
+  ...testSharedAdminUser,
   isAdmin: 0
 };
 const mockDate = new Date("2024-08-20T00:00:00Z");
@@ -1226,6 +1240,7 @@ describe("adminUploadServerDatapack", () => {
 });
 describe("getUsers", () => {
   const findUser = vi.spyOn(database, "findUser");
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
@@ -1236,16 +1251,43 @@ describe("getUsers", () => {
     expect(await response.json()).toEqual({
       users: [
         {
-          ...testAdminUser,
-          hashedPassword: undefined,
+          ...testSharedAdminUser,
           isAdmin: true,
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true
         },
         {
-          ...testNonAdminUser,
-          hashedPassword: undefined,
+          ...testNonSharedAdminUser,
+          isAdmin: false,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true
+        }
+      ]
+    });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return user with workshopTitle and one without", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
+    findWorkshop.mockResolvedValueOnce([serverTestWorkshop]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/users",
+      headers
+    });
+    expect(await response.json()).toEqual({
+      users: [
+        {
+          ...testSharedAdminUser,
+          isAdmin: true,
+          isGoogleUser: false,
+          invalidateSession: false,
+          emailVerified: true,
+          workshopTitle: serverTestWorkshop.title
+        },
+        {
+          ...testNonSharedAdminUser,
           isAdmin: false,
           isGoogleUser: false,
           invalidateSession: false,
@@ -1276,8 +1318,7 @@ describe("getUsers", () => {
     });
     expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
     expect(assertAdminSharedUser).toHaveBeenCalledWith({
-      ...testAdminUser,
-      hashedPassword: undefined,
+      ...testSharedAdminUser,
       isAdmin: true,
       isGoogleUser: false,
       invalidateSession: false,
