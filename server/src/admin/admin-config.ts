@@ -6,126 +6,106 @@ import { DatapackMetadata } from "@tsconline/shared";
 const ADMIN_DEFAULT_CONFIG: AdminConfigType = {
   datapacks: []
 };
-let adminConfig: AdminConfig;
-
-export class AdminConfig {
-  private mutex = new Mutex();
-  private _adminConfig: AdminConfigType;
-  private _filepath: string;
-  constructor(filepath: string) {
-    this._filepath = filepath;
-    this._adminConfig = ADMIN_DEFAULT_CONFIG;
-  }
-  /**
-   * Load the admin config file
-   */
-  async loadFile() {
-    const release = await this.mutex.acquire();
-    try {
-      const raw = await readFile(this._filepath, "utf8");
-      const adminconfig = JSON.parse(raw);
-      assertAdminConfig(adminconfig);
-      this.setAdminConfig(adminconfig);
-    } catch (e) {
-      if (e instanceof Error && (e as NodeJS.ErrnoException).code === "ENOENT") {
-        console.error("Admin config file not found. Loading default admin config.");
-        this.setAdminConfig(ADMIN_DEFAULT_CONFIG);
-      }
-      this.handleError(e);
-    } finally {
-      release();
-    }
-  }
-  /**
-   * Save the admin config to the file
-   */
-  async saveFile() {
-    const release = await this.mutex.acquire();
-    try {
-      await writeFile(this._filepath, JSON.stringify(this._adminConfig, null, 2));
-    } catch (e) {
-      this.handleError(e);
-    } finally {
-      release();
-    }
-  }
-  /**
-   * set the admin config NOTE: this does not save the file
-   * @param adminConfig the admin config
-   */
-  async setAdminConfig(adminConfig: AdminConfigType) {
-    this._adminConfig = adminConfig;
-  }
-
-  /**
-   * get the admin config
-   * @returns admin config
-   */
-  getAdminConfig() {
-    return this._adminConfig;
-  }
-
-  /**
-   * remove a datapack from the admin config
-   * @param datapack the datapack to remove
-   */
-  async removeAdminConfigDatapack(datapack: DatapackMetadata) {
-    if (this._adminConfig.datapacks.find((d) => d.title === datapack.title)) {
-      this._adminConfig.datapacks = this._adminConfig.datapacks.filter((d) => d.title !== datapack.title);
-      await this.saveFile();
-    } else {
-      this.handleError(`Datapack ${datapack.title} not found in admin config`);
-    }
-  }
-  /**
-   * add a datapack to the admin config
-   * @param datapack the datapack to add
-   */
-  async addAdminConfigDatapack(datapack: DatapackMetadata) {
-    if (!this._adminConfig.datapacks.find((d) => d.title === datapack.title)) {
-      this._adminConfig.datapacks.push(datapack);
-      await this.saveFile();
-    } else {
-      this.handleError(`Datapack ${datapack.title} already in admin config`);
-    }
-  }
-  getAdminConfigDatapacks() {
-    return this._adminConfig.datapacks;
-  }
-  /**
-   * reset the admin config to the default config
-   */
-  async resetAdminConfig() {
-    this._adminConfig = ADMIN_DEFAULT_CONFIG;
-    await this.saveFile();
-  }
-  /**
-   * error handler
-   * @param e the error to handle
-   */
-  handleError(e: unknown) {
-    if (e instanceof Error) {
-      console.error(e.message);
-    } else {
-      console.error(e);
-    }
-  }
-}
+let adminConfig: AdminConfigType;
+let filepath: string;
+const mutex = new Mutex();
 
 /**
- * This loads the admin config to be exported
- * @param file 
+ * Load the admin config file
+ * @param filepath the file path to the admin config file if not provided it will use the default file path
  */
-export async function loadAdminConfig(file: string) {
+export async function loadAdminConfig(newFilepath?: string) {
+  const release = await mutex.acquire();
+  const tempPath = newFilepath || filepath;
   try {
-    adminConfig = new AdminConfig(file);
-    await adminConfig.loadFile();
+    if (!tempPath) throw new Error("No file path provided/loaded initially");
+    const raw = await readFile(tempPath, "utf8");
+    const adminconfig = JSON.parse(raw);
+    assertAdminConfig(adminconfig);
+    setAdminConfig(adminconfig);
   } catch (e) {
-    console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
-    process.exit(1);
+    if (e instanceof Error && (e as NodeJS.ErrnoException).code === "ENOENT") {
+      console.error("Admin config file not found. Loading default admin config.");
+      setAdminConfig(ADMIN_DEFAULT_CONFIG);
+    } else {
+      handleError(e);
+    }
+  } finally {
+    filepath = tempPath;
+    release();
   }
 }
-
-export function getAdminConfig() {
-  return adminConfig;
+/**
+ * Save the admin config to the file
+ */
+export async function saveAdminConfig() {
+  const release = await mutex.acquire();
+  try {
+    await writeFile(filepath, JSON.stringify(adminConfig, null, 2));
+  } catch (e) {
+    handleError(e);
+  } finally {
+    release();
+  }
+}
+/**
+ * set the admin config NOTE: this does not save the file
+ * @param adminConfig the admin config
+ */
+function  setAdminConfig(newAdminConfig: AdminConfigType) {
+  adminConfig = newAdminConfig;
+}
+/**
+ * remove a datapack from the admin config
+ * @param datapack the datapack to remove
+ */
+export async function removeAdminConfigDatapack(datapack: DatapackMetadata) {
+  if (!adminConfig.datapacks) {
+    throw new Error("adminConfig has not been loaded/set");
+  }
+  if (adminConfig.datapacks.find((d) => d.title === datapack.title)) {
+    adminConfig.datapacks = adminConfig.datapacks.filter((d) => d.title !== datapack.title);
+    await saveAdminConfig();
+  } else {
+    handleError(`Datapack ${datapack.title} not found in admin config`);
+  }
+}
+/**
+ * add a datapack to the admin config
+ * @param datapack the datapack to add
+ */
+export async function addAdminConfigDatapack(datapack: DatapackMetadata) {
+  if (!adminConfig.datapacks) {
+    throw new Error("adminConfig has not been loaded/set");
+  }
+  if (!adminConfig.datapacks.find((d) => d.title === datapack.title)) {
+    adminConfig.datapacks.push(datapack);
+    await saveAdminConfig();
+  } else {
+    handleError(`Datapack ${datapack.title} already in admin config`);
+  }
+}
+export function getAdminConfigDatapacks() {
+  if (!adminConfig.datapacks) {
+    throw new Error("adminConfig has not been loaded/set");
+  }
+  return adminConfig.datapacks;
+}
+/**
+ * reset the admin config to the default config
+ */
+export async function resetAdminConfig() {
+  adminConfig = ADMIN_DEFAULT_CONFIG;
+  await saveAdminConfig();
+}
+/**
+ * error handler
+ * @param e the error to handle
+ */
+function handleError(e: unknown) {
+  if (e instanceof Error) {
+    console.error(e.message);
+  } else {
+    console.error(e);
+  }
 }

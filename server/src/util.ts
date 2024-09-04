@@ -6,7 +6,6 @@ import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
-import { AdminConfig } from "./admin/admin-config.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -77,7 +76,7 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
       .map((name) => {
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        const escapedFilename = filename.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+        const escapedFilename = filename.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
         return `${topDirectory}/${escapedFilename}/${botDirectory}/.*`;
       })
       .join("|")
