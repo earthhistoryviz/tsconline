@@ -235,6 +235,10 @@ afterAll(async () => {
   await app.close();
 });
 
+beforeEach(() => {
+  process.env.NODE_ENV = "test";
+});
+
 const testAdminUser = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -1585,6 +1589,7 @@ describe("adminAddUsersToWorkshop", () => {
     vi.clearAllMocks();
     process.env.AES_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
     process.env.AES_IV = "2005a53ec2407229ba7c73763b620713";
+    process.env.NODE_ENV = "production";
   });
   it("should return 500 if AES_SECRET_KEY is not set or AES_IV is not set", async () => {
     delete process.env.AES_SECRET_KEY;
@@ -1966,6 +1971,7 @@ describe("adminCreateWorkshop", () => {
     process.env.WORKSHOP_PASSWORD = "password";
     process.env.AES_SECRET_KEY = "53d33e76a3f328784e715440af4f714a42d07a1cd1a4652f6360c7d3cccfeb65";
     process.env.AES_IV = "2005a53ec2407229ba7c73763b620713";
+    process.env.NODE_ENV = "production";
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
