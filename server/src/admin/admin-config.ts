@@ -52,7 +52,7 @@ export async function saveAdminConfig() {
  * set the admin config NOTE: this does not save the file
  * @param adminConfig the admin config
  */
-function  setAdminConfig(newAdminConfig: AdminConfigType) {
+function setAdminConfig(newAdminConfig: AdminConfigType) {
   adminConfig = newAdminConfig;
 }
 /**
