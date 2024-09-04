@@ -15,10 +15,11 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { publicDatapackIndex, serverDatapackIndex, adminConfig } from "../index.js";
+import { publicDatapackIndex, serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { getDirectories } from "../user/user-handler.js";
+import { getAdminConfigDatapacks } from "../admin/admin-config.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -222,7 +223,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userDatapacks = uuid ? await getDirectories(path.join(assetconfigs.uploadDirectory, uuid)) : [];
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
-  const adminConfigDatapacks = adminConfig.getAdminConfigDatapacks();
+  const adminConfigDatapacks = getAdminConfigDatapacks();
   const serverDatapacks = adminConfigDatapacks.map((datapackInfo) => datapackInfo.title);
 
   for (const datapack of chartrequest.datapacks) {
