@@ -19,7 +19,7 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { getAdminConfig } from "./admin-config.js";
+import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -189,7 +189,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  const datapacks = getAdminConfig().getAdminConfigDatapacks();
+  const datapacks = getAdminConfigDatapacks();
+  console.log(datapacks);
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -309,7 +310,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    await getAdminConfig().addAdminConfigDatapack(datapackMetadata);
+    await addAdminConfigDatapack(datapackMetadata);
   } catch (e) {
     await errorHandler("Error updating admin config");
     return;
@@ -332,7 +333,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Missing datapack id" });
     return;
   }
-  const datapackMetadata = getAdminConfig().getAdminConfigDatapacks().find((dp) => dp.title === datapack);
+  const datapackMetadata = getAdminConfigDatapacks().find((dp) => dp.title === datapack);
   if (!datapackMetadata) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
@@ -350,7 +351,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     return;
   }
   try {
-    await getAdminConfig().removeAdminConfigDatapack(datapackMetadata);
+    await removeAdminConfigDatapack(datapackMetadata);
   } catch (e) {
     reply.status(500).send({
       error:

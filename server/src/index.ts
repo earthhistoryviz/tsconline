@@ -25,7 +25,7 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
-import { getAdminConfig, loadAdminConfig } from "./admin/admin-config.js";
+import { getAdminConfigDatapacks, loadAdminConfig } from "./admin/admin-config.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -46,9 +46,14 @@ const server = fastify({
 
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
-// Load the current asset config:
-await loadAssetConfigs();
-await loadAdminConfig(assetconfigs.adminConfigPath);
+try {
+  // Load the current asset config:
+  await loadAssetConfigs();
+  await loadAdminConfig(assetconfigs.adminConfigPath);
+} catch (e) {
+  console.error("Error loading configs: ", e);
+  process.exit(1);
+}
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);
@@ -62,12 +67,10 @@ if (!(await checkFileExists(decryptionJarPath))) {
   process.exit(1);
 }
 
-// this try will run the decryption jar to decrypt all files in the datapack folder
-const adminConfig = getAdminConfig();
 try {
-  const datapackPaths = adminConfig
-    .getAdminConfigDatapacks()
-    .map((datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"');
+  const datapackPaths = getAdminConfigDatapacks().map(
+    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
+  );
   const cmd =
     `java -jar ${assetconfigs.decryptionJar} ` +
     // Decrypting these datapacks:
@@ -84,9 +87,14 @@ try {
 
 export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, adminConfig.getAdminConfigDatapacks(), {
-  type: "server"
-});
+try {
+  await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, getAdminConfigDatapacks(), {
+    type: "server"
+  });
+} catch (e) {
+  console.error("Error loading datapacks: ", e);
+  process.exit(1);
+}
 export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(
   join(assetconfigs.publicDirectory, "DatapackIndex.json")
 );
