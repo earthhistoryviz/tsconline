@@ -419,7 +419,7 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @returns
  */
 export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
-  if (!process.env.AES_SECRET_KEY || !process.env.AES_IV) {
+  if (process.env.NODE_ENV == "production" && (!process.env.AES_SECRET_KEY || !process.env.AES_IV)) {
     reply.status(500).send({ error: "Missing encryption key or iv" });
     return;
   }
@@ -511,7 +511,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       return;
     }
     const encryptedWorkshopPassword = workshop[0].password;
-    const workshopPassword = decrypt(encryptedWorkshopPassword);
+    const workshopPassword =
+      process.env.NODE_ENV === "production" ? decrypt(encryptedWorkshopPassword) : encryptedWorkshopPassword;
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -599,7 +600,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(500).send({ error: "Missing password and default not set up" });
     return;
   }
-  if (!process.env.AES_SECRET_KEY || !process.env.AES_IV) {
+  if (process.env.NODE_ENV == "production" && (!process.env.AES_SECRET_KEY || !process.env.AES_IV)) {
     reply.status(500).send({ error: "Missing encryption key or iv" });
     return;
   }
@@ -620,7 +621,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       reply.status(409).send({ error: "Workshop with that title already exists" });
       return;
     }
-    const encryptedPassword = encrypt(password || process.env.WORKSHOP_PASSWORD!);
+    const passwordToUse = password || process.env.WORKSHOP_PASSWORD!;
+    const encryptedPassword = process.env.NODE_ENV === "production" ? encrypt(passwordToUse) : passwordToUse;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
