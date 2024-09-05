@@ -3,7 +3,7 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } fr
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, makeTempFilename, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -188,6 +188,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let filename: string | undefined;
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
+  let originalFilename: string | undefined;
   const fields: { [fieldname: string]: string } = {};
   const datapacks = getAdminConfigDatapacks();
   for await (const part of parts) {
@@ -195,12 +196,10 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
       filename = file.filename;
+      originalFilename = filename;
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
-      filepath = resolve(
-        assetconfigs.datapacksDirectory,
-        `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`
-      );
+      filepath = resolve(assetconfigs.datapacksDirectory, await makeTempFilename(filename));
       decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
@@ -235,7 +234,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  if (!file || !filepath || !filename || !decryptedFilepath) {
+  if (!file || !filepath || !filename || !decryptedFilepath || !originalFilename) {
     reply.status(400).send({ error: "Missing file" });
     return;
   }
@@ -302,7 +301,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   const successful = await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, [datapackMetadata], {
-    type: "server"
+    type: "server",
+    originalFilename
   });
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");

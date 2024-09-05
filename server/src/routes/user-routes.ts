@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, makeTempFilename, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -216,6 +216,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   let userDir: string;
   let datapackDir: string = "";
   let filepath: string = "";
+  let originalFilename: string = "";
   try {
     userDir = path.join(assetconfigs.uploadDirectory, uuid);
     await mkdir(userDir, { recursive: true });
@@ -237,8 +238,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
+        originalFilename = uploadedFile.filename;
         // store it in a temp file since we need to know title before we effectively save the file
-        filepath = path.join(userDir, "temp_" + uploadedFile.filename);
+        filepath = path.join(userDir, await makeTempFilename(originalFilename));
         try {
           await pipeline(uploadedFile.file, createWriteStream(filepath));
         } catch (e) {
@@ -264,7 +266,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath) {
+  if (!uploadedFile || !filepath || !originalFilename) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(400).send({ error: "No file uploaded" });
     return;
@@ -354,7 +356,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         datapackIndex[datapackMetadata.title]!,
         publicDatapackPath,
         filepath,
-        assetconfigs.publicUserDatapacksDirectory
+        assetconfigs.publicUserDatapacksDirectory,
+        originalFilename
       );
     } catch (e) {
       await errorHandler("Could not write to public datapacks, please try again later", 500, e);
