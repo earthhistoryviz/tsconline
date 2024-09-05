@@ -6,6 +6,8 @@ import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
+import { hash } from "bcrypt-ts";
+import { randomUUID } from "crypto";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -262,4 +264,8 @@ export async function countFiles(filepath: string): Promise<number> {
   } catch {
     return 0;
   }
+}
+
+export async function makeTempFilename(filename: string) {
+  return `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`;
 }

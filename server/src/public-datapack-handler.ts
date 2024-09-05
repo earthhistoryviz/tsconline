@@ -1,4 +1,4 @@
-import { Datapack, DatapackIndex, assertDatapackIndex } from "@tsconline/shared";
+import { Datapack, DatapackIndex, assertDatapackIndex, assertPublicUserDatapack } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
 import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
@@ -21,7 +21,8 @@ export async function addPublicUserDatapack(
   datapack: Datapack,
   datapackIndexFilepath: string,
   datapackFilepath: string,
-  publicDatapacksDirectory: string
+  publicDatapacksDirectory: string,
+  originalFilename: string
 ) {
   const release = await mutex.acquire();
   try {
@@ -32,8 +33,12 @@ export async function addPublicUserDatapack(
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
     // so we can modify it and not the original
-    datapack = _.cloneDeep(datapack);
-    datapack.type = "public_user";
+    const publicDatapack = {
+      ..._.cloneDeep(datapack),
+      type: "public_user",
+      originalFilename
+    };
+    assertPublicUserDatapack(publicDatapack);
     publicDatapackIndex[datapack.title] = datapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)

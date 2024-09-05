@@ -78,6 +78,7 @@ export type BaseDatapackProps = {
 
 type ServerDatapack = {
   type: "server";
+  originalFilename: string;
 };
 type WorkshopDatapack = {
   type: "workshop";
@@ -89,6 +90,7 @@ type PrivateUserDatapack = {
 type PublicUserDatapack = {
   type: "public_user";
   uuid: string;
+  originalFilename: string;
 };
 export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
 export type Datapack = DatapackType & BaseDatapackProps;
@@ -1034,13 +1036,13 @@ export function assertDatapack(o: any): asserts o is Datapack {
   assertBaseDatapackProps(o);
 }
 export function isServerDatapack(o: any): o is ServerDatapack {
-  return o.type === "server";
+  return o.type === "server" && typeof o.originalFilename === "string";
 }
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
   return o.type === "workshop";
 }
 export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
-  return o.type === "public_user" && typeof o.uuid === "string";
+  return o.type === "public_user" && typeof o.uuid === "string" && typeof o.originalFilename === "string";
 }
 export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDatapack {
   return isPublicUserDatapack(o) || isPrivateUserDatapack(o);
@@ -1111,6 +1113,8 @@ export function assertServerDatapack(o: any): asserts o is ServerDatapack {
   if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
   if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
   if (o.type !== "server") throwError("ServerDatapack", "type", "server", o.type);
+  if (typeof o.originalFilename !== "string")
+    throwError("ServerDatapack", "originalFilename", "string", o.originalFilename);
 }
 export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
   if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
@@ -1126,6 +1130,8 @@ export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapac
   if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
   if (o.type !== "public_user") throwError("PublicUserDatapack", "type", "public_user", o.type);
   if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
+  if (typeof o.originalFilename !== "string")
+    throwError("PublicUserDatapack", "originalFilename", "string", o.originalFilename);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
