@@ -300,6 +300,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     filepath && (await rm(filepath, { force: true }));
     await rm(datapackDir, { recursive: true, force: true });
     reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
+    return;
   }
   const decryptedDir = path.join(datapackDir, "decrypted");
   const decryptedFilepathDir = path.join(decryptedDir, path.parse(filename).name);
