@@ -158,5 +158,5 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY]: "You must provide at least one field to add users to a workshop.",
   [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: "Unrecognized Excel file. Please upload a valid Excel file.",
   [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
-    "Server datapack already exists. Please upload a unique datapack (different filename and title)."
+    "Server datapack already exists. Please upload a unique datapack (different title)."
 };
