@@ -23,7 +23,8 @@ describe("uploadUserDatapackHandler", () => {
     references: JSON.stringify(["reference"]),
     tags: JSON.stringify(["tag"]),
     filepath: "filepath",
-    filename: "filename",
+    originalFileName: "originalFileName",
+    storedFileName: "storedFileName",
     date: "12-12-2000"
   };
   beforeEach(async () => {
@@ -47,12 +48,14 @@ describe("uploadUserDatapackHandler", () => {
     { authoredBy: "" },
     { title: "" },
     { description: "" },
-    { filename: "" }
+    { originalFileName: "" },
+    { storedFileName: "" }
   ])(`should return a 400 error if %p is missing`, async (field) => {
     const val = await uploadUserDatapackHandler(reply, { ...fields, ...field }, 1);
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({
-      error: "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]"
+      error:
+        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]"
     });
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
     expect(val).toBeUndefined();
@@ -61,7 +64,8 @@ describe("uploadUserDatapackHandler", () => {
     const val = await uploadUserDatapackHandler(reply, { ...fields, filepath: "" }, 1);
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({
-      error: "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]"
+      error:
+        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]"
     });
     expect(rm).not.toHaveBeenCalled();
     expect(val).toBeUndefined();
@@ -104,7 +108,8 @@ describe("uploadUserDatapackHandler", () => {
     expect(reply.send).not.toHaveBeenCalled();
     expect(reply.status).not.toHaveBeenCalled();
     expect(val).toEqual({
-      file: fields.filename,
+      originalFileName: fields.originalFileName,
+      storedFileName: fields.storedFileName,
       description: fields.description,
       title: fields.title,
       authoredBy: fields.authoredBy,
