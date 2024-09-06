@@ -1083,6 +1083,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fullhuman/postcss-purgecss@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "@fullhuman/postcss-purgecss@npm:6.0.0"
+  dependencies:
+    purgecss: "npm:^6.0.0"
+  peerDependencies:
+    postcss: ^8.0.0
+  checksum: ca9e611bb283e13933652799f79bd2dd789850bdb1c91a725994937a29216063708c914b3a5d06ef9a1c3e2bf58a8c3cf4c95f52469e05ef8f6605d1c458414e
+  languageName: node
+  linkType: hard
+
 "@gar/promisify@npm:^1.0.1":
   version: 1.1.3
   resolution: "@gar/promisify@npm:1.1.3"
@@ -4437,6 +4448,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^12.0.0":
+  version: 12.1.0
+  resolution: "commander@npm:12.1.0"
+  checksum: cdaeb672d979816853a4eed7f1310a9319e8b976172485c2a6b437ed0db0a389a44cfb222bfbde772781efa9f215bdd1b936f80d6b249485b465c6cb906e1f93
+  languageName: node
+  linkType: hard
+
 "comment-json@npm:^2.2.0":
   version: 2.4.2
   resolution: "comment-json@npm:2.4.2"
@@ -4621,6 +4639,15 @@ __metadata:
   dependencies:
     utrie: "npm:^1.0.2"
   checksum: e75cae40de511026228d4fa69e8d464895714f8899880b8268a446b57f0faa84b490ba1bdda5ed9e7f38f99ab947c6bc941bb505d8119c49072db079c1cacea5
+  languageName: node
+  linkType: hard
+
+"cssesc@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "cssesc@npm:3.0.0"
+  bin:
+    cssesc: bin/cssesc
+  checksum: 0e161912c1306861d8f46e1883be1cbc8b1b2879f0f509287c0db71796e4ddfb97ac96bdfca38f77f452e2c10554e1bb5678c99b07a5cf947a12778f73e47e12
   languageName: node
   linkType: hard
 
@@ -8854,6 +8881,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"postcss-selector-parser@npm:^6.0.7":
+  version: 6.1.2
+  resolution: "postcss-selector-parser@npm:6.1.2"
+  dependencies:
+    cssesc: "npm:^3.0.0"
+    util-deprecate: "npm:^1.0.2"
+  checksum: 190034c94d809c115cd2f32ee6aade84e933450a43ec3899c3e78e7d7b33efd3a2a975bb45d7700b6c5b196c06a7d9acf3f1ba6f1d87032d9675a29d8bca1dd3
+  languageName: node
+  linkType: hard
+
 "postcss@npm:^8.4.38":
   version: 8.4.38
   resolution: "postcss@npm:8.4.38"
@@ -8862,6 +8899,17 @@ __metadata:
     picocolors: "npm:^1.0.0"
     source-map-js: "npm:^1.2.0"
   checksum: 6e44a7ed835ffa9a2b096e8d3e5dfc6bcf331a25c48aeb862dd54e3aaecadf814fa22be224fd308f87d08adf2299164f88c5fd5ab1c4ef6cbd693ceb295377f4
+  languageName: node
+  linkType: hard
+
+"postcss@npm:^8.4.4":
+  version: 8.4.45
+  resolution: "postcss@npm:8.4.45"
+  dependencies:
+    nanoid: "npm:^3.3.7"
+    picocolors: "npm:^1.0.1"
+    source-map-js: "npm:^1.2.0"
+  checksum: 7eaf7346d04929ee979548ece5e34d253eae6f175346e298b2c4621ad6f4ee00adfe7abe72688640e910c0361ae50537c5dda3e35fd1066491282c342b3ee5c8
   languageName: node
   linkType: hard
 
@@ -9062,6 +9110,20 @@ __metadata:
   version: 6.1.0
   resolution: "pure-rand@npm:6.1.0"
   checksum: 256aa4bcaf9297256f552914e03cbdb0039c8fe1db11fa1e6d3f80790e16e563eb0a859a1e61082a95e224fc0c608661839439f8ecc6a3db4e48d46d99216ee4
+  languageName: node
+  linkType: hard
+
+"purgecss@npm:^6.0.0":
+  version: 6.0.0
+  resolution: "purgecss@npm:6.0.0"
+  dependencies:
+    commander: "npm:^12.0.0"
+    glob: "npm:^10.3.10"
+    postcss: "npm:^8.4.4"
+    postcss-selector-parser: "npm:^6.0.7"
+  bin:
+    purgecss: bin/purgecss.js
+  checksum: 77d1b8e4aad02f2115d2e1a9da749af3780890be7275ee303c8a5b3d01cb4d2116363b24292eb040340a8f56e0810fbec7b3e24777d0703efd8ff3a55023d2cb
   languageName: node
   linkType: hard
 
@@ -10860,6 +10922,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "tsconline-monorepo@workspace:."
   dependencies:
+    "@fullhuman/postcss-purgecss": "npm:^6.0.0"
     "@types/eslint": "npm:^8"
     "@types/node": "npm:^20.11.28"
     "@typescript-eslint/eslint-plugin": "npm:^7.0.2"
@@ -10875,6 +10938,7 @@ __metadata:
     fastify: "npm:^4.27.0"
     form-auto-content: "npm:^3.2.1"
     prettier: "npm:^3.2.5"
+    purgecss: "npm:^6.0.0"
     syncpack: "npm:^12.3.0"
     ts-node: "npm:^10.9.2"
     typescript: "npm:5.2.2"
@@ -11188,7 +11252,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"util-deprecate@npm:^1.0.1, util-deprecate@npm:~1.0.1":
+"util-deprecate@npm:^1.0.1, util-deprecate@npm:^1.0.2, util-deprecate@npm:~1.0.1":
   version: 1.0.2
   resolution: "util-deprecate@npm:1.0.2"
   checksum: 474acf1146cb2701fe3b074892217553dfcf9a031280919ba1b8d651a068c9b15d863b7303cb15bd00a862b498e6cf4ad7b4a08fb134edd5a6f7641681cb54a2
