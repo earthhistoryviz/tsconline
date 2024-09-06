@@ -26,10 +26,10 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const storedFileName = type === "server" || isPublic ? await makeTempFilename(datapack.originalFileName) : "";
+  const filename = file?.name || "";
   const metadata = {
-    storedFileName: file?.name || "",
-    originalFileName: file?.name || "",
+    storedFileName: "", // don't write storedFileName to the metadata (need this to be set for types)
+    originalFileName: filename,
     description,
     title,
     isPublic,

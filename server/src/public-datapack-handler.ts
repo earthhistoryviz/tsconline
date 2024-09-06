@@ -1,7 +1,13 @@
-import { Datapack, DatapackIndex, assertDatapackIndex, assertPublicUserDatapack } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackIndex,
+  assertDatapackIndex,
+  assertPublicUserDatapack,
+  makeTempFilename
+} from "@tsconline/shared";
 import { Mutex } from "async-mutex";
 import { readFile, writeFile, mkdir, rename } from "fs/promises";
-import { checkFileExists, makeTempFilename } from "./util.js";
+import { checkFileExists } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
 import _ from "lodash";
@@ -28,7 +34,7 @@ export async function addPublicUserDatapack(
     if (publicDatapackIndex[datapack.title]) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
-    const storedFileName = await makeTempFilename(datapack.originalFileName);
+    const storedFileName = makeTempFilename(datapack.originalFileName);
     // so we can modify it and not the original
     const publicDatapack = {
       ..._.cloneDeep(datapack),

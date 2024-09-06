@@ -2,10 +2,10 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, join, relative, parse } from "path";
-import { assetconfigs, checkFileExists, makeTempFilename, verifyFilepath } from "../util.js";
+import { resolve, extname, join, relative } from "path";
+import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
-import { readFile, realpath, rm, rename } from "fs/promises";
+import { readFile, realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { serverDatapackIndex } from "../index.js";
@@ -14,7 +14,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import { assertAdminSharedUser, assertDatapackIndex, makeTempFilename } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -196,7 +196,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
       originalFileName = file.filename;
-      storedFileName = await makeTempFilename(originalFileName);
+      storedFileName = makeTempFilename(originalFileName);
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
       filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
@@ -239,7 +239,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   fields.filepath = filepath;
-  fields.filename = originalFileName;
+  fields.storedFileName = storedFileName;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });

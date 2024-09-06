@@ -2,9 +2,9 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, makeTempFilename, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, verifyFilepath } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackIndex } from "@tsconline/shared";
+import { DatapackIndex, makeTempFilename } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -240,7 +240,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         }
         originalFilename = uploadedFile.filename;
         // store it in a temp file since we need to know title before we effectively save the file
-        filepath = path.join(userDir, await makeTempFilename(originalFilename));
+        filepath = path.join(userDir, makeTempFilename(originalFilename));
         try {
           await pipeline(uploadedFile.file, createWriteStream(filepath));
         } catch (e) {
@@ -273,8 +273,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   }
   const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
-  fields.originalFileName = filename;
   fields.storedFileName = filename;
+  fields.originalFileName = originalFilename;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
     async (e) => {

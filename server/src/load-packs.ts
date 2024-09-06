@@ -49,13 +49,15 @@ export async function loadDatapackIntoIndex(
       const finalDatapack = { ...baseDatapackProps, ...type };
       assertDatapack(finalDatapack);
       datapackIndex[datapack.title] = finalDatapack;
-      console.log(chalk.green(`Successfully parsed ${datapack.file}`));
+      console.log(chalk.green(`Successfully parsed ${datapack.originalFileName}`));
     })
     .catch((e) => {
       successful = false;
-      console.log(chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.file} and error: ${e}`));
+      console.log(
+        chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.originalFileName} and error: ${e}`)
+      );
     });
-  successful = (await grabMapImages([datapack.file], decryptionDirectory)).successful && successful;
+  successful = (await grabMapImages([datapack.storedFileName], decryptionDirectory)).successful && successful;
   return successful;
 }
 /**
@@ -131,7 +133,7 @@ async function getDominantRGB(filepath: string) {
  * For access from fastify server servicing
  */
 export async function grabMapImages(
-  datapacks: string[] = getAdminConfigDatapacks().map((datapack) => datapack.file),
+  datapacks: string[] = getAdminConfigDatapacks().map((datapack) => datapack.storedFileName),
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
   if (datapacks.length === 0) return { images: [], successful: true };
