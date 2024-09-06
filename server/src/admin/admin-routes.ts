@@ -35,7 +35,6 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { decrypt, encrypt } from "../verify.js";
 import "dotenv/config";
 
 /**
@@ -419,10 +418,6 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
  * @returns
  */
 export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request: FastifyRequest, reply: FastifyReply) {
-  if (process.env.NODE_ENV == "production" && (!process.env.AES_SECRET_KEY || !process.env.AES_IV)) {
-    reply.status(500).send({ error: "Missing encryption key or iv" });
-    return;
-  }
   const parts = request.parts();
   let file: MultipartFile | undefined;
   let filename: string | undefined;
@@ -510,9 +505,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
-    const encryptedWorkshopPassword = workshop[0].password;
-    const workshopPassword =
-      process.env.NODE_ENV === "production" ? decrypt(encryptedWorkshopPassword) : encryptedWorkshopPassword;
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -520,7 +512,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       } else {
         await createUser({
           email,
-          hashedPassword: await hash(workshopPassword, 10),
+          hashedPassword: await hash(email, 10),
           isAdmin: 0,
           emailVerified: 1,
           invalidateSession: 0,
@@ -588,20 +580,12 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string; password: string } }>,
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
   reply: FastifyReply
 ) {
-  const { title, start, end, password } = request.body;
+  const { title, start, end } = request.body;
   if (!title || !start || !end) {
     reply.status(400).send({ error: "Missing required fields" });
-    return;
-  }
-  if (!password && !process.env.WORKSHOP_PASSWORD) {
-    reply.status(500).send({ error: "Missing password and default not set up" });
-    return;
-  }
-  if (process.env.NODE_ENV == "production" && (!process.env.AES_SECRET_KEY || !process.env.AES_IV)) {
-    reply.status(500).send({ error: "Missing encryption key or iv" });
     return;
   }
   const startDate = new Date(start);
@@ -621,13 +605,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       reply.status(409).send({ error: "Workshop with that title already exists" });
       return;
     }
-    const passwordToUse = password || process.env.WORKSHOP_PASSWORD!;
-    const encryptedPassword = process.env.NODE_ENV === "production" ? encrypt(passwordToUse) : passwordToUse;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      password: encryptedPassword
+      end: endDate.toISOString()
     });
     if (!workshopId) {
       throw new Error("Workshop not created");

@@ -163,8 +163,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
         return;
       }
-      const password = form.get("password")?.toString();
-      const createdWorkshopId = await actions.adminCreateWorkshop(title, start, end, password);
+      const createdWorkshopId = await actions.adminCreateWorkshop(title, start, end);
       if (!createdWorkshopId) {
         return;
       }
@@ -310,13 +309,6 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                   }}
                 />
               </Box>
-              <TextField
-                label="Password"
-                name="password"
-                placeholder="Enter a password for the workshop"
-                fullWidth
-                size="small"
-              />
               <AddUsersForm handleFileUpload={handleFileUpload} file={file} loading={loading} />
             </Box>
           </Box>
