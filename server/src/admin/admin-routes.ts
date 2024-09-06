@@ -9,7 +9,7 @@ import { readFile, realpath, rm, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { serverDatapackIndex } from "../index.js";
-import { loadIndexes } from "../load-packs.js";
+import { loadDatapackIntoIndex } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
@@ -185,22 +185,22 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
 ) {
   const parts = request.parts();
   let file: MultipartFile | undefined;
-  let filename: string | undefined;
+  let storedFileName: string | undefined;
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
-  let originalFilename: string | undefined;
+  let originalFileName: string | undefined;
   const fields: { [fieldname: string]: string } = {};
   const datapacks = getAdminConfigDatapacks();
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
-      filename = file.filename;
-      originalFilename = filename;
+      originalFileName = file.filename;
+      storedFileName = await makeTempFilename(originalFileName);
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
-      filepath = resolve(assetconfigs.datapacksDirectory, await makeTempFilename(filename));
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(filename).name);
+      filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
+      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, storedFileName);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
@@ -234,12 +234,12 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  if (!file || !filepath || !filename || !decryptedFilepath || !originalFilename) {
+  if (!file || !filepath || !storedFileName || !decryptedFilepath || !originalFileName) {
     reply.status(400).send({ error: "Missing file" });
     return;
   }
   fields.filepath = filepath;
-  fields.filename = filename;
+  fields.filename = originalFileName;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });
@@ -248,9 +248,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   if (!datapackMetadata) {
     return;
   }
-  const actualFilepath = join(assetconfigs.datapacksDirectory, filename);
   if (
-    (await checkFileExists(actualFilepath)) &&
+    (await checkFileExists(filepath)) &&
     (await checkFileExists(decryptedFilepath)) &&
     datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
     serverDatapackIndex[datapackMetadata.title]
@@ -259,21 +258,13 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     reply.status(409).send({ error: "Datapack already exists" });
     return;
   }
-  try {
-    await rename(filepath, actualFilepath);
-    filepath = actualFilepath;
-  } catch (e) {
-    filepath && (await rm(filepath, { force: true }));
-    reply.status(500).send({ error: "Error moving temp file" });
-    return;
-  }
   const errorHandler = async (error: string) => {
-    if (!filepath || !decryptedFilepath || !filename)
+    if (!filepath || !decryptedFilepath || !storedFileName || !datapackMetadata)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
-    if (serverDatapackIndex[filename]) {
-      delete serverDatapackIndex[filename];
+    if (serverDatapackIndex[datapackMetadata.title]) {
+      delete serverDatapackIndex[datapackMetadata.title];
     }
     reply.status(500).send({ error });
   };
@@ -300,10 +291,14 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("File was not decrypted properly");
     return;
   }
-  const successful = await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, [datapackMetadata], {
-    type: "server",
-    originalFilename
-  });
+  const successful = await loadDatapackIntoIndex(
+    serverDatapackIndex,
+    assetconfigs.decryptionDirectory,
+    datapackMetadata,
+    {
+      type: "server"
+    }
+  );
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");
     return;
@@ -341,8 +336,8 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     delete serverDatapackIndex[datapack];
   }
   try {
-    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.file);
-    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.file).name);
+    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.storedFileName);
+    const decryptedFilepath = join(assetconfigs.decryptionDirectory, datapackMetadata.storedFileName);
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
   } catch (e) {

@@ -1,3 +1,6 @@
+import { randomUUID } from "crypto";
+import { hash } from "bcrypt-ts";
+
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
   return Math.round(value * factor) / factor;
@@ -11,4 +14,7 @@ export function calculateAutoScale(min: number, max: number) {
   const scaleStep = roundToDecimalPlace((upperRange - lowerRange) * 0.2, 3);
   const scaleStart = 0;
   return { lowerRange, upperRange, scaleStep, scaleStart };
+}
+export async function makeTempFilename(filename: string) {
+  return `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`;
 }

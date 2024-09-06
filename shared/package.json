@@ -20,6 +20,7 @@
   },
   "type": "module",
   "dependencies": {
+    "bcrypt-ts": "^5.0.2",
     "validator": "^13.12.0"
   }
 }

@@ -26,8 +26,10 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const storedFileName = type === "server" || isPublic ? await makeTempFilename(datapack.originalFileName) : "";
   const metadata = {
-    file: file?.name || "",
+    storedFileName: file?.name || "",
+    originalFileName: file?.name || "",
     description,
     title,
     isPublic,
@@ -54,14 +56,9 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
-    const doesServerDatapackExist =
-      type === "server" && Object.values(index).some((dp) => dp.file === file.name || dp.title === title);
+    const doesServerDatapackExist = type === "server" && index[title];
     const doesPublicDatapackExistIfPublic =
-      type === "user" &&
-      isPublic &&
-      Object.values(state.datapackCollection.publicUserDatapackIndex).some(
-        (dp) => dp.title === title || dp.file === file.name
-      );
+      type === "user" && isPublic && state.datapackCollection.publicUserDatapackIndex[title];
     if (doesServerDatapackExist || doesPublicDatapackExistIfPublic) {
       actions.pushError(ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS);
       return;

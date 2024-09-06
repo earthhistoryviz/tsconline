@@ -1,7 +1,7 @@
 import { Datapack, DatapackIndex, assertDatapackIndex, assertPublicUserDatapack } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
-import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
-import { checkFileExists } from "./util.js";
+import { readFile, writeFile, mkdir, rename } from "fs/promises";
+import { checkFileExists, makeTempFilename } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
 import _ from "lodash";
@@ -21,28 +21,25 @@ export async function addPublicUserDatapack(
   datapack: Datapack,
   datapackIndexFilepath: string,
   datapackFilepath: string,
-  publicDatapacksDirectory: string,
-  originalFilename: string
+  publicDatapacksDirectory: string
 ) {
   const release = await mutex.acquire();
   try {
-    if (
-      publicDatapackIndex[datapack.title] ||
-      Object.values(publicDatapackIndex).some((dp) => dp.file === datapack.file)
-    ) {
+    if (publicDatapackIndex[datapack.title]) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
+    const storedFileName = await makeTempFilename(datapack.originalFileName);
     // so we can modify it and not the original
     const publicDatapack = {
       ..._.cloneDeep(datapack),
       type: "public_user",
-      originalFilename
+      storedFileName
     };
     assertPublicUserDatapack(publicDatapack);
     publicDatapackIndex[datapack.title] = datapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
-    await copyFile(datapackFilepath, join(publicDatapacksDirectory, datapack.file));
+    await rename(datapackFilepath, join(publicDatapacksDirectory, storedFileName));
     // update the file
     await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
     if (!(await checkFileExists(datapackFilepath))) {
