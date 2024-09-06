@@ -265,7 +265,3 @@ export async function countFiles(filepath: string): Promise<number> {
     return 0;
   }
 }
-
-export async function makeTempFilename(filename: string) {
-  return `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`;
-}

@@ -59,7 +59,8 @@ vi.mock("../src/util", async (importOriginal) => {
       adminConfigPath: "testdir/adminConfig.json"
     },
     checkFileExists: vi.fn().mockResolvedValue(true),
-    verifyFilepath: vi.fn().mockReturnValue(true)
+    verifyFilepath: vi.fn().mockReturnValue(true),
+    makeTempFilename: vi.fn().mockReturnValue("tempFilename")
   };
 });
 
@@ -978,7 +979,7 @@ describe("adminUploadServerDatapack", () => {
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(execFile).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(await response.json()).toEqual({ error: "Error saving file" });
@@ -1032,7 +1033,7 @@ describe("adminUploadServerDatapack", () => {
     expect(execFile).not.toHaveBeenCalled();
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(await response.json()).toEqual({ error: "File too large" });
@@ -1048,7 +1049,7 @@ describe("adminUploadServerDatapack", () => {
     });
     expect(addAdminConfigDatapack).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
@@ -1102,7 +1103,7 @@ describe("adminUploadServerDatapack", () => {
     });
     expect(addAdminConfigDatapack).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(execFile).not.toHaveBeenCalled();

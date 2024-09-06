@@ -9,7 +9,7 @@ import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
-import { loadIndexes } from "../load-packs.js";
+import { loadDatapackIntoIndex } from "../load-packs.js";
 import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
@@ -273,7 +273,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   }
   const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
-  fields.filename = filename;
+  fields.originalFileName = filename;
+  fields.storedFileName = filename;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
     async (e) => {
@@ -293,8 +294,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   try {
     datapackDir = path.join(userDir, datapackMetadata.title);
     await mkdir(datapackDir, { recursive: true });
-    await rename(filepath, path.join(datapackDir, datapackMetadata.file));
-    filepath = path.join(datapackDir, datapackMetadata.file);
+    await rename(filepath, path.join(datapackDir, datapackMetadata.storedFileName));
+    filepath = path.join(datapackDir, datapackMetadata.storedFileName);
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     await rm(datapackDir, { recursive: true, force: true });
@@ -340,7 +341,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   const datapackIndex: DatapackIndex = {};
   // check for if this user has a datapack index already
-  const success = await loadIndexes(datapackIndex, decryptedDir.replaceAll("\\", "/"), [datapackMetadata], {
+  const success = await loadDatapackIntoIndex(datapackIndex, decryptedDir.replaceAll("\\", "/"), datapackMetadata, {
     type: "private_user",
     uuid
   });
@@ -356,8 +357,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
         datapackIndex[datapackMetadata.title]!,
         publicDatapackPath,
         filepath,
-        assetconfigs.publicUserDatapacksDirectory,
-        originalFilename
+        assetconfigs.publicUserDatapacksDirectory
       );
     } catch (e) {
       await errorHandler("Could not write to public datapacks, please try again later", 500, e);
