@@ -817,12 +817,13 @@ describe("adminUploadServerDatapack", () => {
   const execFile = vi.spyOn(childProcess, "execFile");
   const rm = vi.spyOn(fsPromises, "rm");
   const realpath = vi.spyOn(fsPromises, "realpath");
-  const loadIndexes = vi.spyOn(loadPacks, "loadIndexes");
+  const loadIndexes = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const checkFileExists = vi.spyOn(util, "checkFileExists");
   const rename = vi.spyOn(fsPromises, "rename");
   const testDatapackDescription: DatapackMetadata = {
-    file: "test.dpk",
+    originalFileName: "test.dpk",
+    storedFileName: "",
     description: "test-description",
     title: "test-title",
     size: "30MB",
@@ -1263,7 +1264,8 @@ describe("adminDeleteServerDatapack", () => {
   const testDatapackDescription: DatapackMetadata = {
     title: "test-title",
     description: "test-description",
-    file: "active-datapack.dpk",
+    originalFileName: "active-datapack.dpk",
+    storedFileName: "",
     size: "30MB",
     date: "2021-01-01",
     tags: ["test-tag"],
@@ -1277,8 +1279,8 @@ describe("adminDeleteServerDatapack", () => {
   const body = {
     datapack: testDatapackDescription.title
   };
-  const filepath = join("testdir", "datapacksDirectory", testDatapackDescription.file);
-  const decryptedFilepath = join("testdir", "decryptionDirectory", parse(testDatapackDescription.file).name);
+  const filepath = join("testdir", "datapacksDirectory", "tempFilename");
+  const decryptedFilepath = join("testdir", "decryptionDirectory", testDatapackDescription.originalFileName);
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValue({

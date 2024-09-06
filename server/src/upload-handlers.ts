@@ -41,7 +41,7 @@ export async function uploadUserDatapackHandler(
     await userUploadHandler(
       reply,
       400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]",
+      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]",
       filepath
     );
     return;

@@ -2,8 +2,8 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, join, relative } from "path";
-import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { resolve, extname, join, relative, parse } from "path";
+import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -14,7 +14,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex, makeTempFilename } from "@tsconline/shared";
+import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -200,7 +200,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
       filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, storedFileName);
+      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(storedFileName).name);
       if (
         !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
         !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
@@ -240,6 +240,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
+  fields.originalFileName = originalFileName;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });
@@ -337,7 +338,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   }
   try {
     const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.storedFileName);
-    const decryptedFilepath = join(assetconfigs.decryptionDirectory, datapackMetadata.storedFileName);
+    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.storedFileName).name);
     await rm(filepath, { force: true });
     await rm(decryptedFilepath, { force: true, recursive: true });
   } catch (e) {

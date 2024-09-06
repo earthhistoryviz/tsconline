@@ -77,7 +77,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { join } from "path";
+import { join, parse } from "path";
 import { parseMapPacks } from "./parse-map-packs.js";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
@@ -305,8 +305,8 @@ export async function parseDatapacks(
     columnTypeCount: columnTypeCounter,
     image: "",
     datapackImageCount:
-      (await countFiles(join(decryptFilePath, datapackInfo.storedFileName, "datapack-images"))) +
-      (await countFiles(join(decryptFilePath, datapackInfo.storedFileName, "MapImages"))),
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
     mapPack: await parseMapPacks([datapackInfo.storedFileName], decryptFilePath),
     ...datapackInfo

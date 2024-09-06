@@ -1,13 +1,7 @@
-import {
-  Datapack,
-  DatapackIndex,
-  assertDatapackIndex,
-  assertPublicUserDatapack,
-  makeTempFilename
-} from "@tsconline/shared";
+import { Datapack, DatapackIndex, assertDatapackIndex, assertPublicUserDatapack } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
-import { readFile, writeFile, mkdir, rename } from "fs/promises";
-import { checkFileExists } from "./util.js";
+import { readFile, writeFile, mkdir, copyFile, rm } from "fs/promises";
+import { checkFileExists, makeTempFilename } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
 import _ from "lodash";
@@ -30,11 +24,11 @@ export async function addPublicUserDatapack(
   publicDatapacksDirectory: string
 ) {
   const release = await mutex.acquire();
+  const storedFileName = makeTempFilename(datapack.originalFileName);
   try {
     if (publicDatapackIndex[datapack.title]) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
-    const storedFileName = makeTempFilename(datapack.originalFileName);
     // so we can modify it and not the original
     const publicDatapack = {
       ..._.cloneDeep(datapack),
@@ -45,12 +39,17 @@ export async function addPublicUserDatapack(
     publicDatapackIndex[datapack.title] = datapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
-    await rename(datapackFilepath, join(publicDatapacksDirectory, storedFileName));
+    await copyFile(datapackFilepath, join(publicDatapacksDirectory, storedFileName));
     // update the file
     await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
     if (!(await checkFileExists(datapackFilepath))) {
       throw new Error("Datapack file does not exist");
     }
+  } catch (e) {
+    await rm(join(publicDatapacksDirectory, storedFileName), { force: true });
+    delete publicDatapackIndex[datapack.title];
+    await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
+    throw e;
   } finally {
     release();
   }
