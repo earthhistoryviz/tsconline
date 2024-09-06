@@ -190,7 +190,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let decryptedFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
   const datapacks = getAdminConfigDatapacks();
-  console.log(datapacks);
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
