@@ -18,6 +18,7 @@ import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png";
 import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
 import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
 import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
+import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -125,6 +126,13 @@ const members = [
     homeTown: "West Lafayette, IN",
     timeWorked: "2024 - Present",
     proPic: KevinChang
+  },
+  {
+    name: "Samyukta Balaji",
+    role: "Member",
+    homeTown: "Sacramento, California",
+    timeWorked: "2024-Present",
+    proPic: SamyPic
   }
 ];
 
