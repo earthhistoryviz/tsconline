@@ -29,6 +29,7 @@ export async function loadAdminConfig(newFilepath?: string) {
       setAdminConfig(ADMIN_DEFAULT_CONFIG);
     } else {
       handleError(e);
+      throw e;
     }
   } finally {
     filepath = tempPath;
