@@ -39,7 +39,6 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, must be unique, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
-  - password (text): Non-nullable, the password assigned to workshop users.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -232,7 +231,6 @@ export async function findWorkshop(criteria: Partial<NewWorkshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.password) query = query.where("password", "=", criteria.password);
   return await query.selectAll().execute();
 }
 
@@ -242,7 +240,6 @@ export async function updateWorkshop(criteria: Partial<NewWorkshop>, updatedWork
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.password) query = query.where("password", "=", criteria.password);
   return await query.execute();
 }
 
@@ -252,6 +249,5 @@ export async function deleteWorkshop(criteria: Partial<NewWorkshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.password) query = query.where("password", "=", criteria.password);
   return await query.execute();
 }
