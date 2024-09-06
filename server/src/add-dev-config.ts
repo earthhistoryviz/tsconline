@@ -38,16 +38,16 @@ try {
   console.log(chalk.green(`${successSymbol} Dev config read successfully`));
   const unaddedDatapacks = [];
   for (const datapack of devConfig) {
-    if (adminConfig.datapacks.find((d) => d.file === datapack.file)) {
+    if (adminConfig.datapacks.find((d) => d.title === datapack.title || d.storedFileName === datapack.storedFileName)) {
       console.log(
         chalk.yellowBright(
-          `${skipSymbol} Skipping ${chalk.bold(chalk.rgb(255, 100, 100)(datapack.file))} because it is already in the admin config`
+          `${skipSymbol} Skipping ${chalk.bold(chalk.rgb(255, 100, 100)(datapack.originalFileName))} because it is already in the admin config`
         )
       );
     } else {
       console.log(
         chalk.green(
-          `${successSymbol} ${chalk.green(`Adding`)} ${chalk.bold(chalk.rgb(214, 97, 230)(datapack.file))} ${chalk.green(`to the admin config`)}`
+          `${successSymbol} ${chalk.green(`Adding`)} ${chalk.bold(chalk.rgb(214, 97, 230)(datapack.originalFileName))} ${chalk.green(`to the admin config`)}`
         )
       );
       unaddedDatapacks.push(datapack);

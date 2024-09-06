@@ -77,7 +77,7 @@ import {
 } from "./util.js";
 import { createInterface } from "readline";
 import _ from "lodash";
-import { join, parse } from "path";
+import { join } from "path";
 import { parseMapPacks } from "./parse-map-packs.js";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;

@@ -1,5 +1,4 @@
-import { randomUUID } from "crypto";
-import { hash } from "bcrypt-ts";
+import { createHash, randomUUID } from "crypto";
 
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
@@ -15,6 +14,10 @@ export function calculateAutoScale(min: number, max: number) {
   const scaleStart = 0;
   return { lowerRange, upperRange, scaleStep, scaleStart };
 }
-export async function makeTempFilename(filename: string) {
-  return `__temp${(await hash(randomUUID(), 10)).replace(/[./]/g, "")}${filename}`;
+// so similar filenames are always unique
+export function makeTempFilename(filename: string) {
+  const hash = createHash("sha256");
+  hash.update(randomUUID());
+  const uniqueHash = hash.digest("hex");
+  return `__temp${uniqueHash}${filename}`;
 }
