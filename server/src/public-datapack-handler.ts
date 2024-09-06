@@ -36,7 +36,7 @@ export async function addPublicUserDatapack(
       storedFileName
     };
     assertPublicUserDatapack(publicDatapack);
-    publicDatapackIndex[datapack.title] = datapack;
+    publicDatapackIndex[datapack.title] = publicDatapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
     await copyFile(datapackFilepath, join(publicDatapacksDirectory, storedFileName));

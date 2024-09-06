@@ -255,7 +255,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
     serverDatapackIndex[datapackMetadata.title]
   ) {
-    filepath && (await rm(filepath, { force: true }));
     reply.status(409).send({ error: "Datapack already exists" });
     return;
   }
