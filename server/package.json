@@ -71,6 +71,7 @@
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
+    "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist"
   },

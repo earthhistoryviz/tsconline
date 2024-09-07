@@ -1,6 +1,6 @@
 import path from "path";
 import { AdminConfigType, assertAdminConfig } from "./types.js";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, rm, writeFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
 import { assertDatapackMetadataArray } from "@tsconline/shared";
 import chalk from "chalk";
@@ -31,6 +31,10 @@ const skipSymbol = chalk.yellow("⚠");
  * Adds all datapacks from the dev config that are not already in the admin config
  */
 try {
+  const args = process.argv;
+  if (args.includes("--overwrite")) {
+    await rm(adminConfigPath, { force: true });
+  }
   console.log("Reading asset config...");
   const adminConfig = await readAdminConfig();
   console.log(chalk.green(`${successSymbol} Admin config read successfully`));
