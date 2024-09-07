@@ -3,7 +3,7 @@ import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
 import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import { ServerDatapackIndex } from "@tsconline/shared";
@@ -25,6 +25,7 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
 import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
+import { getAdminConfigDatapacks, loadAdminConfig } from "./admin/admin-config.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -45,8 +46,14 @@ const server = fastify({
 
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
-// Load the current asset config:
-await loadAssetConfigs();
+try {
+  // Load the current asset config:
+  await loadAssetConfigs();
+  await loadAdminConfig(assetconfigs.adminConfigPath);
+} catch (e) {
+  console.error("Error loading configs: ", e);
+  process.exit(1);
+}
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);
@@ -60,9 +67,8 @@ if (!(await checkFileExists(decryptionJarPath))) {
   process.exit(1);
 }
 
-// this try will run the decryption jar to decrypt all files in the datapack folder
 try {
-  const datapackPaths = adminconfig.datapacks.map(
+  const datapackPaths = getAdminConfigDatapacks().map(
     (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
   );
   const cmd =
@@ -81,9 +87,14 @@ try {
 
 export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, adminconfig.datapacks, {
-  type: "server"
-});
+try {
+  await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, getAdminConfigDatapacks(), {
+    type: "server"
+  });
+} catch (e) {
+  console.error("Error loading datapacks: ", e);
+  process.exit(1);
+}
 export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(
   join(assetconfigs.publicDirectory, "DatapackIndex.json")
 );

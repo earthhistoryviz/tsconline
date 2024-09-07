@@ -1,11 +1,11 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { rm, readFile, access, mkdir, readdir, copyFile, writeFile, realpath } from "fs/promises";
+import { readFile, access, mkdir, readdir, copyFile, realpath } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
-import { AdminConfig, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
+import { assertAssetConfig, AssetConfig } from "./types.js";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -76,7 +76,8 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
       .map((name) => {
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        return `${topDirectory}/${filename}/${botDirectory}/.*`;
+        const escapedFilename = filename.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+        return path.join(topDirectory, escapedFilename, botDirectory, ".*");
       })
       .join("|")
   );
@@ -198,7 +199,6 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
-export let adminconfig: AdminConfig = { datapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
@@ -208,28 +208,6 @@ export async function loadAssetConfigs() {
     console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
     process.exit(1);
   }
-  if (await checkFileExists(assetconfigs.adminConfigPath)) {
-    try {
-      adminconfig = await loadAdminConfig();
-    } catch (e) {
-      console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
-      console.error("Removing admin-config.json and writing a new config file");
-      adminconfig = { datapacks: [] };
-      try {
-        await rm(assetconfigs.adminConfigPath);
-        await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
-      } catch (e) {
-        console.log("ERROR: Failed to write admin configs to assets/admin-config.json.  Error was: ", e);
-        process.exit(1);
-      }
-    }
-  }
-}
-
-export async function loadAdminConfig() {
-  const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
-  assertAdminConfig(content);
-  return content;
 }
 
 /**

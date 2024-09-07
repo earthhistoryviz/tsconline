@@ -1,5 +1,5 @@
 import path from "path";
-import { AdminConfig, assertAdminConfig } from "./types.js";
+import { AdminConfigType, assertAdminConfig } from "./types.js";
 import { readFile, writeFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
 import { assertDatapackMetadataArray } from "@tsconline/shared";
@@ -8,7 +8,7 @@ import chalk from "chalk";
 const adminConfigPath = path.resolve(process.cwd(), "assets", "admin-config.json");
 const devConfigPath = path.resolve(process.cwd(), "assets", "dev-config.json");
 async function readAdminConfig() {
-  let adminConfig: AdminConfig = { datapacks: [] };
+  let adminConfig: AdminConfigType = { datapacks: [] };
   if (await checkFileExists(adminConfigPath)) {
     adminConfig = JSON.parse(await readFile(adminConfigPath, "utf8"));
   }
@@ -53,7 +53,7 @@ try {
       unaddedDatapacks.push(datapack);
     }
   }
-  const newAdminConfig: AdminConfig = {
+  const newAdminConfig: AdminConfigType = {
     datapacks: adminConfig.datapacks.concat(unaddedDatapacks)
   };
   await writeFile(adminConfigPath, JSON.stringify(newAdminConfig, null, 2));
