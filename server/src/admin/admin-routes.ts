@@ -3,9 +3,9 @@ import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } fr
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { adminconfig, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
-import { readFile, realpath, rm, writeFile, rename } from "fs/promises";
+import { readFile, realpath, rm, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { serverDatapackIndex } from "../index.js";
@@ -19,6 +19,7 @@ import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
+import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -188,6 +189,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let filepath: string | undefined;
   let decryptedFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
+  const datapacks = getAdminConfigDatapacks();
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -251,7 +253,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   if (
     (await checkFileExists(actualFilepath)) &&
     (await checkFileExists(decryptedFilepath)) &&
-    adminconfig.datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
+    datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
     serverDatapackIndex[datapackMetadata.title]
   ) {
     filepath && (await rm(filepath, { force: true }));
@@ -307,10 +309,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    if (!adminconfig.datapacks.some((dp) => dp.file === filename)) {
-      adminconfig.datapacks.push(datapackMetadata);
-    }
-    await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
+    await addAdminConfigDatapack(datapackMetadata);
   } catch (e) {
     await errorHandler("Error updating admin config");
     return;
@@ -333,12 +332,11 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     reply.status(400).send({ error: "Missing datapack id" });
     return;
   }
-  const datapackMetadata = adminconfig.datapacks.find((dp) => dp.title === datapack);
+  const datapackMetadata = getAdminConfigDatapacks().find((dp) => dp.title === datapack);
   if (!datapackMetadata) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  adminconfig.datapacks = adminconfig.datapacks.filter((dp) => dp.title !== datapack);
   if (serverDatapackIndex[datapack]) {
     delete serverDatapackIndex[datapack];
   }
@@ -352,7 +350,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     return;
   }
   try {
-    await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
+    await removeAdminConfigDatapack(datapackMetadata);
   } catch (e) {
     reply.status(500).send({
       error:
