@@ -19,6 +19,7 @@ import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
 import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
 import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
 import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png";
+import MichaelPic from "./assets/aboutPictures/MichaelPic.jpg";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -133,6 +134,13 @@ const members = [
     homeTown: "Sacramento, California",
     timeWorked: "2024-Present",
     proPic: SamyPic
+  },
+  {
+    name: "Michael Knaack",
+    role: "Member",
+    homeTown: "Denville, NJ",
+    timeWorked: "2024 - Present",
+    proPic: MichaelPic
   }
 ];
 
