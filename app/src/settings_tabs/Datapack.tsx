@@ -104,7 +104,7 @@ export const Datapacks = observer(function Datapacks() {
             onClick={() => {
               setFormOpen(!formOpen);
             }}>
-            Upload Datapack
+            {t("settings.datapacks.upload")}
           </TSCButton>
         )}
         <TSCButton

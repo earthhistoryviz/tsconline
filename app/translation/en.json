@@ -1,13 +1,41 @@
 {
     "translation": {
+        "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
         "login": {
             "signin": "Sign In",
             "forgot-password": "Forgot password?",
             "signup": "Don't have an account? Sign Up",
             "username": "Username",
-            "password": "Password"
+            "password": "Password",
+            "tooltip": "Account Settings",
+            "profile": "Profile",
+            "add": "Add another account",
+            "logout": "Logout",
+            "admin": "Admin",
+            "profile-info": "Profile Information",
+            "welcome": "Welcome",
+            "email": "Email",
+            "settings": "Settings",
+            "dark-mode": "Dark Mode",
+            "delete": "Delete Profile",
+            "save": "Save",
+            "cancel": "Cancel",
+            "change": "Change",
+            "current-password": "Current Password",
+            "new-password": "New Password",
+            "new-email": "New Email",
+            "new-username": "New Username"
+        },
+        "signup": {
+            "title": "Sign Up",
+            "email": "Email Address",
+            "username": "Username",
+            "password": "Password",
+            "signin": "Already have an account? Sign in",
+            "email-sent": "Email sent. Please check your email to verify your account."
         },
         "title": {
+            "about": "About",
             "main": "Time Scale Creator Online",
             "settings": "Settings"
         },
@@ -42,6 +70,20 @@
             "Warnings": "Warnings"
         },
         "settings": {
+            "settings-file": {
+                "load": "Load Settings",
+                "save": "Save Settings",
+                "load-dialog": {
+                    "message": "This will overwrite any changes you've made!",
+                    "cancel": "Cancel",
+                    "load": "Load"
+                },
+                "save-dialog": {
+                    "message": "Please enter the filename below.",
+                    "cancel": "Cancel",
+                    "save": "Save"
+                }
+            },
             "time": {
                 "interval": {
                     "top": "Top of Interval",
@@ -65,6 +107,11 @@
                 }
             },
             "column": {
+                "tooltip": {
+                    "not-in-range": "Data not included in time range",
+                    "auto-scale": "Auto Scale",
+                    "flip": "Flip Range"
+                },
                 "titles": {
                     "column-menu-title": "Column Customization",
                     "data-mining-title": "Data Mining Settings",
@@ -102,7 +149,41 @@
                     "additional": "Additional fonts for child columns"
                 },
                 "datamining-menu": {
-                    "title": "Data Mining Settings"
+                    "title": "Data Mining Settings",
+                    "window-size": "Window Size",
+                    "step-size": "Step Size",
+                    "options": {
+                        "frequency": "Frequency",
+                        "max-val": "Maximum Value",
+                        "min-val": "Minimum Value",
+                        "avg-val": "Average Value",
+                        "roc": "Rate of Change",
+                        "freq-of-LAD": "Frequency of LAD",
+                        "freq-of-FAD": "Frequency of FAD",
+                        "combined-events": "Combined Events"
+                    },
+                    "options-title": {
+                        "event": "Event Type",
+                        "chron": "Chron Type",
+                        "plot": "Data Type to Plot"
+                    }
+                },
+                "curve-drawing-menu": {
+                    "title": "Point Settings",
+                    "rod": "Range of Data",
+                    "lower-range": "Lower Range",
+                    "upper-range": "Upper Range",
+                    "scale-start": "Scale Start",
+                    "scale-step": "Scale Step",
+                    "show-scale": "Show Scale",
+                    "draw-points": "Draw Points",
+                    "point-shape": "Point Shape",
+                    "line": "Line",
+                    "fill": "Fill",
+                    "background-gradient": "Background Gradient",
+                    "curve-gradient": "Curve Gradient",
+                    "start": "Start",
+                    "end": "End"
                 }
             },
             "search": {
@@ -137,11 +218,38 @@
                     "your": "Your Datapacks"
                 },
                 "no": "No",
-                "avaliable": "Avaliable"
+                "avaliable": "Avaliable",
+                "upload": "Upload Datapack",
+                "upload-form": {
+                    "title": "Upload Your Own Datapack",
+                    "no-file": "No file selected",
+                    "name": "Datapack Name",
+                    "name-placeholder": "Enter a name for your datapack.",
+                    "author": "Authored By",
+                    "author-placeholder": "Credited to...",
+                    "description": "Datapack Description",
+                    "description-placeholder": "Enter a description for your datapack.",
+                    "tags": "Tags",
+                    "make-public": "Make Datapack Publicly Accessible",
+                    "button": {
+                        "add-ref": "Add Reference",
+                        "more": "More Options",
+                        "finish": "Finish & Upload",
+                        "startover": "Start Over"
+                    },
+                    "reference": "Reference",
+                    "contact": "Contact",
+                    "contact-placeholder": "Enter your contact information",
+                    "contact-helper-text": "(OPTIONAL) If you would like others to contact you about this datapack",
+                    "notes": "Notes",
+                    "notes-placeholder": "Enter notes for the datapack here",
+                    "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
+                }
             }
         },
         "chart": {
-            "no-chart-yet": "You have not made a chart yet"
+            "no-chart-yet": "You have not made a chart yet",
+            "save": "Save Chart"
         },
         "dialogs": {
             "confirm-datapack-change": {
@@ -240,6 +348,7 @@
         "yes": "Yes",
         "no": "No",
         "languageNames": {
+            "en-US": "English",
             "en": "English",
             "zh": "中文"
         }

@@ -129,35 +129,18 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             </div>
             <ShowTitles
               column={column}
-              showTitleText={t("settings.column.menu.enable-title")}
-              showAgeText={t("settings.column.menu.show-age-label")}
-              showUncertaintyText={t("settings.column.menu.show-uncertainty")}
             />
             <EventSpecificSettings
               column={column}
-              eventsText={t("settings.column.menu.events")}
-              rangesText={t("settings.column.menu.ranges")}
-              firstOccurrenceText={t("settings.column.menu.first-occurrence")}
-              lastOccurrenceText={t("settings.column.menu.last-occurrence")}
-              alphabeticalText={t("settings.column.menu.alphabetical")}
             />
             <RangeSpecificSettings
               column={column}
-              firstOccurrenceText={t("settings.column.menu.first-occurrence")}
-              lastOccurrenceText={t("settings.column.menu.last-occurrence")}
-              alphabeticalText={t("settings.column.menu.alphabetical")}
             />
             <AgeRulerSpecificSettings
               column={column}
-              titleText={t("settings.column.menu.ruler.title")}
-              leftText={t("settings.column.menu.ruler.left")}
-              rightText={t("settings.column.menu.ruler.right")}
             />
             <ZoneSpecificSettings
               column={column}
-              titleText={t("settings.column.menu.orientation.title")}
-              horizontalText={t("settings.column.menu.orientation.horizontal")}
-              verticalText={t("settings.column.menu.orientation.vertical")}
             />
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
@@ -221,22 +204,17 @@ function addRangeFields(
 
 const ShowTitles = observer(
   ({
-    column,
-    showTitleText,
-    showAgeText,
-    showUncertaintyText
+    column
   }: {
     column: ColumnInfo;
-    showTitleText: string;
-    showAgeText: string;
-    showUncertaintyText: string;
   }) => {
     const { actions } = useContext(context);
+    const { t } = useTranslation();
     return (
       <div className="show-titles-container">
         <CustomFormControlLabel
           name="enableTitle"
-          label={showTitleText}
+          label={t("settings.column.menu.enable-title")}
           control={
             <TSCCheckbox
               outlineColor="gray"
@@ -251,7 +229,7 @@ const ShowTitles = observer(
           <CustomFormControlLabel
             width={130}
             name="showAgeLabel"
-            label={showAgeText}
+            label={t("settings.column.menu.show-age-label")}
             control={
               <TSCCheckbox
                 outlineColor="gray"
@@ -267,7 +245,7 @@ const ShowTitles = observer(
           <CustomFormControlLabel
             width={175}
             name="showUncertaintyLabels"
-            label={showUncertaintyText}
+            label={t("settings.column.menu.show-uncertainty")}
             control={
               <TSCCheckbox
                 outlineColor="gray"

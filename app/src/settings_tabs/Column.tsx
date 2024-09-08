@@ -179,6 +179,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 
 const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   const theme = useTheme();
   const dataInrange = checkIfDataIsInRange(
     column.minAge,
@@ -189,7 +190,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip
-        title="Data not included in time range"
+        title={t("settings.column.tooltip。not-in-range")}
         placement="top"
         arrow
         slotProps={{
