@@ -151,20 +151,24 @@
 }
 
 .tooltipPieChart {
-    position: absolute;
-    background: #fff;
-    border: 1px solid #ccc;
-    padding: 5px;
-    border-radius: 4px;
-    pointer-events: none;
-    opacity: 0;
-    color: black;
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  color: black;
 }
 
 @media (max-width: 590px) {
   .di {
     width: 200px;
     height: 100px;
+  }
+  .vd {
+    padding: 10px;
+    min-height: 0;
   }
 }
 @media (max-width: 500px) {

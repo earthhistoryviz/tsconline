@@ -4,7 +4,7 @@ import styles from "./DatapackProfile.module.css";
 import { useContext, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import {Box, IconButton, Typography, useTheme} from "@mui/material";
+import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -139,8 +139,18 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
       <div className={styles.ah}>
         <Typography className={styles.dt}>Description</Typography>
         <Typography className={styles.description}>{datapack.description}</Typography>
-        {datapack.notes && <><Typography className={styles.dt}>Notes</Typography><Typography className={styles.description}>{datapack.notes}</Typography></>}
-        {datapack.contact && <><Typography className={styles.dt}>Contact</Typography><Typography className={styles.description}>{datapack.contact}</Typography></>}
+        {datapack.notes && (
+          <>
+            <Typography className={styles.dt}>Notes</Typography>
+            <Typography className={styles.description}>{datapack.notes}</Typography>
+          </>
+        )}
+        {datapack.contact && (
+          <>
+            <Typography className={styles.dt}>Contact</Typography>
+            <Typography className={styles.description}>{datapack.contact}</Typography>
+          </>
+        )}
       </div>
       <div className={styles.additional}>
         <div className={styles.ai}>
@@ -203,32 +213,44 @@ type ViewDataProps = {
 };
 
 const ViewData: React.FC<ViewDataProps> = observer(({ datapack }) => {
-    const theme = useTheme()
-  function convertToPieChartData(data: Record<string, number>): { label: string, value: number }[] {
-    return Object.keys(data).filter(key => data[key] !== 0)
-      .map(key => ({
-      id: key,
-      label: key,
-      value: data[key],
-    }));
+  const theme = useTheme();
+  function convertToPieChartData(data: Record<string, number>): { label: string; value: number }[] {
+    return Object.keys(data)
+      .filter((key) => data[key] !== 0)
+      .map((key) => ({
+        id: key,
+        label: key,
+        value: data[key]
+      }));
   }
   return (
-    <div style={{ width: "100%", height:"100%"}}>
+    <div style={{ width: "100%", height: "100%" }}>
       <Box className={styles.vd} bgcolor="secondaryBackground.main">
         <Typography className={styles.dt}>Number of Columns</Typography>
-        <ResponsivePie data={convertToPieChartData(datapack.columnTypeCount)} margin={{top: 40, right: 80, bottom: 80, left: 80}} innerRadius={.5} padAngle={.75} cornerRadius={2} activeOuterRadiusOffset={8} borderWidth={1} borderColor={{from: "color", modifiers: [["darker", .2]]}} arcLinkLabelsSkipAngle={1}
-                       arcLinkLabelsTextColor={theme.palette.text.primary}
-                       arcLinkLabelsThickness={2}
-                       arcLinkLabelsColor={{ from: "color" }}
-                       arcLabelsSkipAngle={2}
-                       arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }} theme={{
+        <ResponsivePie
+          data={convertToPieChartData(datapack.columnTypeCount)}
+          margin={{ top: 40, right: 80, bottom: 80, left: 80 }}
+          innerRadius={0.5}
+          padAngle={0.75}
+          cornerRadius={2}
+          activeOuterRadiusOffset={8}
+          borderWidth={1}
+          borderColor={{ from: "color", modifiers: [["darker", 0.2]] }}
+          arcLinkLabelsSkipAngle={1}
+          arcLinkLabelsTextColor={theme.palette.text.primary}
+          arcLinkLabelsThickness={2}
+          arcLinkLabelsColor={{ from: "color" }}
+          arcLabelsSkipAngle={2}
+          arcLabelsTextColor={{ from: "color", modifiers: [["darker", 2]] }}
+          theme={{
             tooltip: {
-                container: {
-                    background: "#ffffff",
-                    color: "#333333"
-                }
+              container: {
+                background: "#ffffff",
+                color: "#333333"
+              }
             }
-        }}  />
+          }}
+        />
       </Box>
     </div>
   );
