@@ -18,6 +18,7 @@ import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
 import { context } from "./state";
 import "./Login.css";
+import { useTranslation } from "react-i18next";
 
 export const SignUp: React.FC = observer(() => {
   const theme = useTheme();
@@ -89,7 +90,7 @@ export const SignUp: React.FC = observer(() => {
       setLoading(false);
     }
   };
-
+  const { t } = useTranslation();
   return (
     <Container component="main" maxWidth="xs">
       <Box className="login-box">
@@ -100,12 +101,12 @@ export const SignUp: React.FC = observer(() => {
           <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
         ) : submitted ? (
           <Typography variant="h5" sx={{ m: 1, textAlign: "center" }}>
-            Email sent. Please check your email to verify your account.
+            {t("signup.email-sent")}
           </Typography>
         ) : (
           <>
             <Typography component="h1" variant="h5">
-              Sign up
+              {t("signup.title")}
             </Typography>
             <Box component="form" onSubmit={handleSubmit} sx={{ mt: 3 }}>
               <Grid container spacing={2}>
@@ -114,7 +115,7 @@ export const SignUp: React.FC = observer(() => {
                     required
                     fullWidth
                     id="email"
-                    label="Email Address"
+                    label={t("signup.email")}
                     name="email"
                     autoComplete="username"
                     type="email"
@@ -125,7 +126,7 @@ export const SignUp: React.FC = observer(() => {
                     required
                     fullWidth
                     id="username"
-                    label="Username"
+                    label={t("signup.username")}
                     name="username"
                     autoComplete="username"
                   />
@@ -135,7 +136,7 @@ export const SignUp: React.FC = observer(() => {
                     required
                     fullWidth
                     name="password"
-                    label="Password"
+                    label={t("signup.password")}
                     type="password"
                     id="password"
                     autoComplete="new-password"
@@ -143,11 +144,11 @@ export const SignUp: React.FC = observer(() => {
                 </Grid>
               </Grid>
               <TSCButton type="submit" fullWidth variant="contained" sx={{ mt: 3, mb: 2 }} endIcon={<LoginIcon />}>
-                Sign Up
+                {t("signup.title")}
               </TSCButton>
               <Grid container justifyContent="flex-end">
                 <Grid item>
-                  <Link href="/login">Already have an account? Sign in</Link>
+                  <Link href="/login">{t("signup.signin")}</Link>
                 </Grid>
               </Grid>
             </Box>

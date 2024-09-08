@@ -20,6 +20,7 @@ import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
 import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
 import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png";
 import MichaelPic from "./assets/aboutPictures/MichaelPic.jpg";
+import { useTranslation } from "react-i18next";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -145,6 +146,7 @@ const members = [
 ];
 
 export const About = observer(function About() {
+  const { t } = useTranslation();
   return (
     <div className="whole_page">
       <TSCOnlineHeader />
@@ -164,11 +166,9 @@ export const About = observer(function About() {
             alignSelf: "center",
             width: "50%"
           }}>
-          <Typography style={{ fontSize: 48, marginBottom: "1vh" }}>About</Typography>
+          <Typography style={{ fontSize: 48, marginBottom: "1vh" }}>{t("title.about")}</Typography>
           <Typography style={{ fontSize: 22, marginBottom: "3vh" }}>
-            TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale
-            from an extensive suite of global and regional events in Earth History. The internal database suite
-            encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.
+            {t("about")}
           </Typography>
         </div>
       </div>

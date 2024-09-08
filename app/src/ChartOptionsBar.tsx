@@ -33,6 +33,7 @@ import React from "react";
 import isValidFilename from "valid-filename";
 import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
+import { t } from "i18next";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -275,7 +276,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     return (
       <div>
         <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
-          Save Chart
+          {t("chart.save")}
         </TSCButton>
         <Dialog
           disableRestoreFocus

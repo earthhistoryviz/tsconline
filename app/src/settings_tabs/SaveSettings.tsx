@@ -18,6 +18,7 @@ import isValidFilename from "valid-filename";
 import "./SaveSettings.css";
 import { observer } from "mobx-react-lite";
 import { CustomTooltip, TSCButton } from "../components";
+import { useTranslation } from "react-i18next";
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
   function saveSettings(filename: string) {
@@ -46,10 +47,10 @@ const SaveSettings = observer(() => {
   const handleClose = () => {
     setOpen(false);
   };
-
+  const { t } = useTranslation();
   return (
     <React.Fragment>
-      <CustomTooltip title="Save Settings">
+      <CustomTooltip title={t("settings.settings-file.save")}>
         <IconButton className="icon-save-settings-button" onClick={handleClickOpen}>
           <DownloadIcon className="save-settings-button" />
         </IconButton>
@@ -69,9 +70,9 @@ const SaveSettings = observer(() => {
             handleClose();
           }
         }}>
-        <DialogTitle>Save Settings</DialogTitle>
+        <DialogTitle>{t("settings.settings-file.save")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>Please enter the filename below.</DialogContentText>
+          <DialogContentText>{t("settings.settings-file.save-dialog.message")}</DialogContentText>
           <TextField
             value={state.loadSaveFilename}
             autoFocus
@@ -86,10 +87,10 @@ const SaveSettings = observer(() => {
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("settings.settings-file.save-dialog.cancel")}
           </Button>
           <TSCButton variant="text" type="submit">
-            Save
+            {t("settings.settings-file.save-dialog.save")}
           </TSCButton>
         </DialogActions>
       </Dialog>

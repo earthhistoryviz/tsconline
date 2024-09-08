@@ -1,13 +1,41 @@
 {
     "translation": {
+        "about": "通过 TimeScale Creator 在线版, 您可以从地球历史上大量的全球和地区事件中探索和创建地质时间尺度任意部分的图表。内部数据库套件包括 20,000 多个生物、地磁、海平面、稳定同位素和其他事件。",
         "login": {
             "signin": "登陆",
             "forgot-password": "忘记密码?",
             "signup": "还没有账户？注册账户",
             "username": "用户名",
-            "password": "密码"
+            "password": "密码",
+            "tooltip": "账户设置",
+            "profile": "个人主页",
+            "add": "添加账户",
+            "logout": "退出登陆",
+            "admin": "管理员",
+            "profile-info": "个人信息",
+            "welcome": "欢迎",
+            "email": "邮箱",
+            "settings": "设置",
+            "dark-mode": "深色模式",
+            "delete": "删除账户",
+            "save": "保存更改",
+            "cancel": "取消更改",
+            "change": "更改",
+            "current-password": "当前密码",
+            "new-password": "新密码",
+            "new-email": "新邮箱",
+            "new-username": "新用户名"
+        },
+        "signup": {
+            "title": "注册账户",
+            "email": "邮箱地址",
+            "username": "用户名",
+            "password": "密码",
+            "signin": "已有账户？登陆",
+            "email-sent": "已发送电子邮件。请检查您的电子邮件以验证您的账户"
         },
         "title": {
+            "about": "关于我们",
             "main": "Time Scale Creator 在线版",
             "settings": "设置"
         },
@@ -35,12 +63,27 @@
             "Datapacks": "选择数据包",
             "General": "基础选项",
             "Data Mining": "数据挖掘",
+            "Curve Drawing": "绘制曲线图",
             "About": "关于",
             "View Data": "查看数据",
             "Discussion": "讨论",
             "Warnings": "警告"
         },
         "settings": {
+            "settings-file": {
+                "load": "上传设置",
+                "save": "保存设置",
+                "load-dialog": {
+                    "message": "这将覆盖你所做的任何更改！",
+                    "cancel": "取消",
+                    "load": "上传"
+                },
+                "save-dialog": {
+                    "message": "请输入文件名",
+                    "cancel": "取消",
+                    "save": "保存"
+                }
+            },
             "time": {
                 "interval": {
                     "top": "区间顶部",
@@ -64,6 +107,11 @@
                 }
             },
             "column": {
+                "tooltip": {
+                    "note-in-range": "数据不在所选时间区间内",
+                    "auto-scale": "自动缩放",
+                    "flip": "翻转区间"
+                },
                 "titles": {
                     "column-menu-title": "个性化设置列",
                     "data-mining-title": "数据挖掘设置",
@@ -101,7 +149,41 @@
                     "additional": "子列的更多字体选项"
                 },
                 "datamining-menu": {
-                    "title": "数据挖掘设置"
+                    "title": "数据挖掘设置",
+                    "window-size": "窗口大小",
+                    "step-size": "步长",
+                    "options": {
+                        "frequency": "频率",
+                        "max-val": "最大值",
+                        "min-val": "最小值",
+                        "avg-val": "平均值",
+                        "roc": "变化率",
+                        "freq-of-LAD": "LAD 频率",
+                        "freq-of-FAD": "FAD 频率",
+                        "combined-events": "组合事件"
+                    },
+                    "options-title": {
+                        "event": "事件类型",
+                        "chron": "年代类型",
+                        "plot": "绘制数据类型"
+                    }
+                },
+                "curve-drawing-menu": {
+                    "title": "点设置",
+                    "rod": "数据范围",
+                    "lower-range": "下限",
+                    "upper-range": "上限",
+                    "scale-start": "刻度起点",
+                    "scale-step": "刻度步长",
+                    "show-scale": "显示刻度",
+                    "draw-points": "绘制点",
+                    "point-shape": "点形状",
+                    "line": "线条",
+                    "fill": "填充",
+                    "background-gradient": "背景渐变",
+                    "curve-gradient": "曲线渐变",
+                    "start": "起点",
+                    "end": "终点"
                 }
             },
             "search": {
@@ -136,11 +218,38 @@
                     "your": "你的数据包"
                 },
                 "no": "暂无",
-                "avaliable": "可用"
+                "avaliable": "可用",
+                "upload": "上传数据包",
+                "upload-form": {
+                    "title": "上传你的数据包",
+                    "no-file": "没有选择文件",
+                    "name": "数据包名称",
+                    "name-placeholder": "请为你的数据包输入名称",
+                    "author": "作者",
+                    "author-placeholder": "作者为...",
+                    "description": "数据包概述",
+                    "description-placeholder": "请为你的数据包添加概述",
+                    "tags": "标签",
+                    "make-public": "使数据包对公共可见",
+                    "button": {
+                        "add-ref": "添加引用",
+                        "more": "更多选项",
+                        "finish": "完成并上传",
+                        "startover": "重新开始"
+                    },
+                    "reference": "引用",
+                    "contact": "联系方式",
+                    "contact-placeholder": "输入你的联系方式",
+                    "contact-helper-text": "如果想要其他用户就此数据包问题联系你，请填写",
+                    "notes": "注释",
+                    "notes-placeholder": "为你的数据包添加注释",
+                    "notes-helper-text": "如果想要指导其他用户如何有效地使用此数据包，请填写"
+                }
             }
         },
         "chart": {
-            "no-chart-yet": "您还未制作任何图表"
+            "no-chart-yet": "您还未制作任何图表",
+            "save": "保存图表"
         },
         "dialogs": {
             "confirm-datapack-change": {
