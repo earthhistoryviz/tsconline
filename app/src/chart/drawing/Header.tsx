@@ -1,42 +1,37 @@
-import { observer } from 'mobx-react-lite';
-import { Layer, Text, Image } from 'react-konva';
-import useImage from 'use-image';
-import logo from "../../assets/TSCreatorLogo.png"
-import { context } from '../../state';
-import { useContext } from 'react';
-import { StateService } from 'ag-grid-community/dist/types/core/misc/state/stateService';
-export const Header = observer(function Header() {
-    const { state } = useContext(context);
-    const [image] = useImage(logo);
-    return (
-        <Layer>
-        <Text
-          x={state.chart.width / 2}
-          y={20}
-          text="Chart Title"
-          fontSize={24}
-          fontFamily="Arial"
-          fill="black"
-          width={200}
-          align="center"
-          offsetX={100} // Center the text based on its width
-        />
+import { observer } from "mobx-react-lite";
+import { Layer, Text, Image } from "react-konva";
+import useImage from "use-image";
+import logo from "../../assets/TSCreatorLogo.png";
+import { context } from "../../state";
+import { useContext } from "react";
+type HeaderProps = {
+  title: string;
+};
+export const Header: React.FC<HeaderProps> = observer(function Header({ title }) {
+  const { state } = useContext(context);
+  const [image] = useImage(logo);
+  const logoHeight = 50;
+  const logoWidth = 50;
+  const paddingX = 20;
+  const paddingY = 20;
+  const fontSize = 20;
+  return (
+    <Layer x={paddingX} y={paddingY}>
+      <Text
+        x={logoWidth}
+        y={(logoHeight - fontSize) / 2}
+        text={title}
+        width={state.chart.width - 2 * (logoHeight + logoWidth)}
+        fontSize={fontSize}
+        fontFamily="Arial"
+        fill="black"
+        align="center"
+        verticalAlign="center"
+      />
 
-        <Image
-          image={image}
-          x={20}
-          y={20}
-          width={50}
-          height={50}
-        />
+      <Image image={image} width={logoWidth} height={logoHeight} />
 
-        <Image
-          image={image}
-          x={state.chart.width - 70} 
-          y={20}
-          width={50}
-          height={50}
-        />
-        </Layer>
-    );
+      <Image image={image} x={state.chart.width - logoWidth - 2 * paddingX} width={logoWidth} height={logoHeight} />
+    </Layer>
+  );
 });
