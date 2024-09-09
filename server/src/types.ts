@@ -86,7 +86,7 @@ export type AssetConfig = {
   publicUserDatapacksDirectory: string;
 };
 
-export type AdminConfig = {
+export type AdminConfigType = {
   datapacks: DatapackMetadata[];
 };
 
@@ -104,9 +104,9 @@ export type FileMetadata = {
   uuid: string;
 };
 
-export function assertAdminConfig(o: any): asserts o is AdminConfig {
-  if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
-  if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
+export function assertAdminConfig(o: any): asserts o is AdminConfigType {
+  if (typeof o !== "object" || !o) throw "AdminConfigType must be an object";
+  if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfigType must have a "datapacks" array';
   for (const datapack of o.datapacks) {
     assertDatapackMetadata(datapack);
   }

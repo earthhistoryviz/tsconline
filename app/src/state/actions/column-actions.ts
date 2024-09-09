@@ -435,10 +435,24 @@ export const setWidth = action((newWidth: number, column: ColumnInfo) => {
 });
 
 export const setColumnSelected = action((name: string) => {
-  state.settingsTabs.columnSelected = name;
-  if (!state.settingsTabs.columnHashMap.has(name)) {
+  state.columnMenu.columnSelected = name;
+  const column = state.settingsTabs.columnHashMap.get(name);
+  setColumnMenuTabValue(0);
+  setColumnMenuTabs(["General", "Font"]);
+  if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Chron")) {
+    setColumnMenuTabs(["General", "Font", "Data Mining"]);
+  } else if (column && column.columnDisplayType === "Point") {
+    setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
+  } else setColumnMenuTabs(["General", "Font"]);
+  if (!column) {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
+});
+export const setColumnMenuTabs = action((tabs: string[]) => {
+  state.columnMenu.tabs = tabs;
+});
+export const setColumnMenuTabValue = action((tabValue: number) => {
+  state.columnMenu.tabValue = tabValue;
 });
 
 let searchColumnsAbortController: AbortController | null = null;
