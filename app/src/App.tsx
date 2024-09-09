@@ -25,6 +25,7 @@ import { Admin } from "./admin/Admin";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
+import { DevChart } from "./chart/DevChart";
 import { toJS } from "mobx";
 
 export default observer(function App() {
@@ -60,6 +61,7 @@ export default observer(function App() {
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/chart" element={<Chart />} />
+            {!import.meta.env.PROD && <Route path="/dev-chart" element={<DevChart />} />}
             <Route path="/help" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />

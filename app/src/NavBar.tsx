@@ -86,8 +86,9 @@ export const NavBar = observer(function Navbar() {
                 ref={settingsRef}
                 {...anchorProps}
               />
-              <Tab value={3} disableRipple label="Help" to="/help" component={Link} />
-              <Tab value={4} disableRipple label="About" to="/about" component={Link} />
+              <Tab value={3} disableRipple label={"Help"} to="/help" component={Link} />
+              <Tab value={4} disableRipple label={"About"} to="/about" component={Link} />
+              {!import.meta.env.PROD && <Tab value={5} disableRipple label="Dev Chart" to="/dev-chart" component={Link} />}
             </Tabs>
             <ControlledMenu
               {...hoverProps}

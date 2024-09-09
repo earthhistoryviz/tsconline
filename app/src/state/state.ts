@@ -48,6 +48,12 @@ export type State = {
     enableScrollZoom: boolean;
     unsafeChartContent: string;
   };
+  chart: {
+    backgroundColor: string,
+    title: string,
+    width: number,
+    height: number,
+  };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
@@ -136,6 +142,12 @@ export const state = observable<State>({
     isSavingChart: false,
     enableScrollZoom: false,
     unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
+  },
+  chart: {
+    backgroundColor: "#ffffff",
+    title: "",
+    width: 800,
+    height: 800
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
