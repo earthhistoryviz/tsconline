@@ -127,21 +127,11 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             <div className="column-advanced-controls">
               <AccordionPositionControls column={column} text={t("settings.column.menu.shift-row")} />
             </div>
-            <ShowTitles
-              column={column}
-            />
-            <EventSpecificSettings
-              column={column}
-            />
-            <RangeSpecificSettings
-              column={column}
-            />
-            <AgeRulerSpecificSettings
-              column={column}
-            />
-            <ZoneSpecificSettings
-              column={column}
-            />
+            <ShowTitles column={column} />
+            <EventSpecificSettings column={column} />
+            <RangeSpecificSettings column={column} />
+            <AgeRulerSpecificSettings column={column} />
+            <ZoneSpecificSettings column={column} />
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
                 <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
@@ -202,62 +192,56 @@ function addRangeFields(
   ];
 }
 
-const ShowTitles = observer(
-  ({
-    column
-  }: {
-    column: ColumnInfo;
-  }) => {
-    const { actions } = useContext(context);
-    const { t } = useTranslation();
-    return (
-      <div className="show-titles-container">
+const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
+  const { actions } = useContext(context);
+  const { t } = useTranslation();
+  return (
+    <div className="show-titles-container">
+      <CustomFormControlLabel
+        name="enableTitle"
+        label={t("settings.column.menu.enable-title")}
+        control={
+          <TSCCheckbox
+            outlineColor="gray"
+            checked={column.enableTitle}
+            onChange={() => {
+              actions.setEnableTitle(!column.enableTitle, column);
+            }}
+          />
+        }
+      />
+      {column.showAgeLabels !== undefined && (
         <CustomFormControlLabel
-          name="enableTitle"
-          label={t("settings.column.menu.enable-title")}
+          width={130}
+          name="showAgeLabel"
+          label={t("settings.column.menu.show-age-label")}
           control={
             <TSCCheckbox
               outlineColor="gray"
-              checked={column.enableTitle}
+              checked={column.showAgeLabels}
               onChange={() => {
-                actions.setEnableTitle(!column.enableTitle, column);
+                actions.setShowAgeLabels(!column.showAgeLabels, column);
               }}
             />
           }
         />
-        {column.showAgeLabels !== undefined && (
-          <CustomFormControlLabel
-            width={130}
-            name="showAgeLabel"
-            label={t("settings.column.menu.show-age-label")}
-            control={
-              <TSCCheckbox
-                outlineColor="gray"
-                checked={column.showAgeLabels}
-                onChange={() => {
-                  actions.setShowAgeLabels(!column.showAgeLabels, column);
-                }}
-              />
-            }
-          />
-        )}
-        {column.showUncertaintyLabels !== undefined && (
-          <CustomFormControlLabel
-            width={175}
-            name="showUncertaintyLabels"
-            label={t("settings.column.menu.show-uncertainty")}
-            control={
-              <TSCCheckbox
-                outlineColor="gray"
-                checked={column.showUncertaintyLabels}
-                onChange={() => {
-                  actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
-                }}
-              />
-            }
-          />
-        )}
-      </div>
-    );
-  }
-);
+      )}
+      {column.showUncertaintyLabels !== undefined && (
+        <CustomFormControlLabel
+          width={175}
+          name="showUncertaintyLabels"
+          label={t("settings.column.menu.show-uncertainty")}
+          control={
+            <TSCCheckbox
+              outlineColor="gray"
+              checked={column.showUncertaintyLabels}
+              onChange={() => {
+                actions.setShowUncertaintyLabels(!column.showUncertaintyLabels, column);
+              }}
+            />
+          }
+        />
+      )}
+    </div>
+  );
+});
