@@ -599,7 +599,9 @@ export const resetState = action("resetState", () => {
   setSettingsTabsSelected("time");
   setSettingsColumns(undefined);
   setMapInfo({});
-  state.settingsTabs.columnSelected = null;
+  state.columnMenu.columnSelected = null;
+  state.columnMenu.tabValue = 0;
+  state.columnMenu.tabs = ["General", "Font"];
   state.settingsXML = "";
 });
 

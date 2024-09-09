@@ -60,10 +60,14 @@ export type State = {
   showPresetInfo: boolean;
   geologicalTopStageAges: TimescaleItem[];
   geologicalBaseStageAges: TimescaleItem[];
+  columnMenu: {
+    columnSelected: string | null;
+    tabs: string[];
+    tabValue: number;
+  };
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
-    columnSelected: string | null;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
@@ -159,10 +163,14 @@ export const state = observable<State>({
   showPresetInfo: false,
   geologicalTopStageAges: [],
   geologicalBaseStageAges: [],
+  columnMenu: {
+    columnSelected: null,
+    tabs: ["General", "Font"],
+    tabValue: 0
+  },
   settingsTabs: {
     selected: "time",
     columns: undefined,
-    columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact",
