@@ -121,7 +121,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.settingsTabs.columnSelected ? "selected-column" : "";
+  const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -134,7 +134,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     );
   }
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.settingsTabs.columnSelected)
+  const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
     ? { opacity: 1 }
     : {};
   return (
