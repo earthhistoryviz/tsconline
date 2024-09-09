@@ -19,16 +19,6 @@
   box-shadow: 1px 0px 15px rgba(0, 0, 0, 1);
   transition: 0.13s ease;
 }
-.MuiIconButton-root.move-maps-button {
-  width: 35px;
-  height: 35px;
-  padding-left: 35px;
-  padding-right: 35px;
-}
-.MuiSvgIcon-root.icon-button {
-  width: inherit;
-  height: inherit;
-}
 .header-title {
   display: flex;
 }
@@ -45,11 +35,6 @@
 .MuiTypography-root.map-viewer-header {
   font-size: 23px;
   font-weight: 600;
-}
-.MuiButton-root.legend-button {
-  height: 30px;
-  width: 90px;
-  background-color: transparent;
 }
 .buttons {
   display: flex;
@@ -76,14 +61,6 @@
   align-items: center;
   padding-right: 30px;
 }
-.MuiTextField-root.dot-input-form {
-  margin-right: 20px;
-  width: 45px;
-}
-.MuiTextField-root.age-text-field {
-  padding-right: 20px;
-  width: 123px;
-}
 
 .slider .MuiSlider-track {
   border: none;
@@ -93,28 +70,15 @@
   height: 13px;
   width: 13px;
 }
-.MuiSlider-root.slider {
-  width: 50%;
-}
 
 .slider .MuiSlider-thumb:focus,
 .slider .MuiSlider-thumb:hover,
-.slider .MuiSlider-thumb.Mui-active,
 .slider .MuiSlider-thumb.Mui-focusVisible {
   box-shadow: inherit;
 }
 
 .slider .MuiSlider-thumb::before {
   display: none;
-}
-
-.slider .MuiSlider-valueLabel {
-  line-height: 1.2;
-  font-size: 12px;
-  background: unset;
-  width: auto;
-  height: 20px;
-  background-color: black;
 }
 .age-text-form-input {
   height: 40px;
@@ -128,29 +92,12 @@
   padding-bottom: 5px;
   width: auto;
 }
-
-.slider .MuiSlider-valueLabel::before {
-  display: none;
-}
 @media screen and (max-width: 700px) {
-  .MuiSlider-root.slider {
-    width: 40%;
-  }
   .facies-buttons {
     gap: 0px;
-  }
-  .MuiTextField-root.dot-input-form {
-    width: 34px;
   }
   .dot-text-form-input {
     padding-right: 5px;
     padding-left: 5px;
-  }
-  .MuiTextField-root.age-text-field > .MuiInputBase-root {
-    padding-right: 0;
-  }
-  .MuiTextField-root.age-text-field {
-    padding-right: 20px;
-    width: 110px;
   }
 }

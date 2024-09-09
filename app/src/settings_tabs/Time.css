@@ -22,12 +22,6 @@
 .IntervalLabel {
   margin-bottom: 2px;
 }
-.MuiToggleButtonGroup-root.ToggleButtonGroup {
-  margin-top: 10px;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
-}
 
 .FormControlIntervals {
   width: 100%;
@@ -41,18 +35,8 @@
   margin-bottom: 15px;
 }
 
-.MuiTextField-root.UnitTextField {
-  margin-bottom: 10px;
-  width: 100%;
-}
-
 .SelectBase {
   margin-bottom: 10px;
-  width: 100%;
-}
-
-.MuiTextField-root.VerticalScale {
-  margin-bottom: 20px;
   width: 100%;
 }
 

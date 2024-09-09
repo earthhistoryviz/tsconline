@@ -84,16 +84,6 @@
   gap: 10px;
 }
 
-.column-menu-tabs {
-  padding: 10px;
-  width: 100px;
-}
-
-.column-menu-tab {
-  min-width: 0px;
-  white-space: wrap;
-}
-
 .column-menu-custom-tabs {
   padding: 10px;
   flex-shrink: 0;

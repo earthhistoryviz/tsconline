@@ -18,41 +18,8 @@
   height: 10px;
   border-radius: 5px;
 }
-.MuiIconButton-root.scroll-top {
-  position: absolute;
-  left: calc(50% - var(--icon-size) / 2);
-  width: var(--icon-size);
-  height: var(--icon-size);
-  z-index: 1;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition:
-    opacity 0.5s ease,
-    visibility 0s 0.5s,
-    transform 0.5s ease;
-  transform: translateY(-2px);
-  margin-right: 8px;
-}
-.MuiIconButton-root.scroll-top.show {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition-delay: 0s;
-  margin-right: 8px;
-}
-.szh-menu__item.sub-menu-item {
-  justify-content: space-between;
-}
 .MuiTypography-root.color-text {
   margin-right: 13px;
-}
-
-.MuiBox-root.legend-item-container {
-  display: flex;
-  margin-bottom: 20px;
-  align-items: center;
 }
 .legend-container {
   margin-top: 10px;
@@ -95,18 +62,6 @@
   flex-direction: column;
   align-items: flex-start;
 }
-.MuiTextField-root.search-bar {
-  width: 230px;
-}
-.MuiIconButton-root.filter-button,
-.MuiButton-root.filter-button {
-  margin-left: 6px;
-  margin-top: 5px;
-  margin-right: 8px;
-}
-.MuiButton-root.filter-button {
-  margin-right: 10px;
-}
 .filters {
   display: flex;
   justify-content: space-between;
@@ -114,10 +69,4 @@
 }
 .color-lens-icon {
   margin-right: 10px;
-}
-.szh-menu__submenu.color-menu > .szh-menu__item {
-  padding-left: 16px;
-}
-.szh-menu-container.filter-menu > .szh-menu {
-  z-index: 1300;
 }

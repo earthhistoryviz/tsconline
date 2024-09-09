@@ -4,19 +4,9 @@
   margin-bottom: 20px;
   align-self: center;
 }
-
-.MuiTextField-root.datapack-name-input > .MuiInputLabel-root,
-.MuiTextField-root.datapack-description-input > .MuiInputLabel-root {
-  color: gray;
-}
 .datapack-upload-form-container {
   width: 70vw;
   height: 70vh;
-}
-.datapack-upload-form-container .simplebar-content {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 .add-reference-plus-button {
   width: 15px;
@@ -42,18 +32,6 @@
   top: 5px;
   display: flex;
 }
-.MuiIconButton-root.icon {
-  width: 35px;
-  height: 35px;
-}
-
-.MuiSvgIcon-root.close-icon {
-  border-radius: 50%;
-  object-fit: contain;
-  padding: 0;
-  margin: 0;
-  z-index: 1;
-}
 
 .file-upload {
   margin: 10px;
@@ -63,7 +41,4 @@
   align-items: center;
   justify-content: center;
   margin-top: 30px;
-}
-.datapack-date-picker .MuiPickersYear-yearButton {
-  font-size: 1rem; /*HACK this is bugged for some reason on the main library */
 }

@@ -102,24 +102,12 @@
   font-size: 1.15rem;
   padding: 10px;
 }
-.MuiCardMedia-root.info-media {
-  width: 350px;
-  height: 100px;
-}
 .date {
   color: #fff;
   opacity: 0.72;
   font-size: 0.75rem;
   padding: 0 0.5rem;
   border-radius: 12px;
-}
-.MuiGrid-root.info-grid {
-  margin-top: 0px;
-}
-.info-container .simplebar-content {
-  display: flex;
-  position: relative;
-  flex-direction: column;
 }
 .MuiTypography-root.info-description {
   padding-left: 12px;
@@ -148,21 +136,6 @@
   z-index: 1;
   gap: 10px;
 }
-.MuiSvgIcon-root.add-icon {
-  color: white;
-  width: inherit;
-  height: inherit;
-}
-.MuiIconButton-root.icon-button {
-  width: 35px;
-  height: 35px;
-}
-.MuiIconButton-root.add-button {
-  width: 45px;
-  height: 45px;
-  padding: 0;
-  margin: 0;
-}
 .info-text-container {
   height: 100%;
   display: flex;
@@ -170,17 +143,4 @@
   align-items: left;
   justify-content: left;
   padding-left: 20px;
-}
-.MuiList-root.list {
-  padding: 0;
-  padding-left: 12px;
-  padding-bottom: 20px;
-}
-.MuiListItem-root.list-item {
-  margin: 0;
-  padding: 0;
-}
-.MuiListItemText-root.list-item-text {
-  margin: 0;
-  padding-left: 12px;
 }

@@ -8,13 +8,6 @@
   gap: 2px;
 }
 
-.svg-style {
-  width: 200px;
-  height: 200px;
-  display: block;
-  grid-row: 2;
-}
-
 .loading {
   font-size: 30px;
   padding: 8px;
