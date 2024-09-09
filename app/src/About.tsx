@@ -167,9 +167,7 @@ export const About = observer(function About() {
             width: "50%"
           }}>
           <Typography style={{ fontSize: 48, marginBottom: "1vh" }}>{t("title.about")}</Typography>
-          <Typography style={{ fontSize: 22, marginBottom: "3vh" }}>
-            {t("about")}
-          </Typography>
+          <Typography style={{ fontSize: 22, marginBottom: "3vh" }}>{t("about")}</Typography>
         </div>
       </div>
       <div style={{ display: "flex", justifyContent: "center", width: "100%" }}>

@@ -39,7 +39,9 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
             <div className="point-range-and-toggle-container">
               <div className="point-range-settings-container">
                 <div className="point-range-settings-header-container">
-                  <Typography className="point-range-settings-header">{t("settings.column.curve-drawing-menu.rod")}</Typography>
+                  <Typography className="point-range-settings-header">
+                    {t("settings.column.curve-drawing-menu.rod")}
+                  </Typography>
                   <div>
                     <CustomTooltip title={t("settings.column.tooltip.auto-scale")} placement="top" arrow>
                       <IconButton onClick={() => actions.setAutoScale(pointSettings)}>
