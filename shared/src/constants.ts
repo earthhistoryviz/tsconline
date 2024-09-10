@@ -51,6 +51,8 @@ export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
   frequency: null,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
 export const defaultChronSettings: ChronSettings = {
@@ -433,6 +435,8 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   dataMiningPointDataType: null,
   isDataMiningColumn: false,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
 
