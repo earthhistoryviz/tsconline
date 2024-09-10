@@ -296,7 +296,9 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   rangeSort: "first occurrence",
   drawExtraColumn: null,
   windowSize: 2,
-  stepSize: 1
+  stepSize: 1,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null
 };
 
 export const defaultChronColumnInfoTSC: ChronColumnInfoTSC = {
@@ -384,7 +386,9 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   pointType: "rect",
   drawExtraColumn: null,
   windowSize: 2,
-  stepSize: 1
+  stepSize: 1,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null
 };
 
 export const defaultPointSettings: PointSettings = {
