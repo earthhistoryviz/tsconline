@@ -26,7 +26,8 @@ export type SharedUser = {
 export type DatapackMetadata = {
   description: string;
   title: string;
-  file: string;
+  originalFileName: string;
+  storedFileName: string;
   size: string;
   date?: string;
   authoredBy: string;
@@ -69,7 +70,8 @@ export type BaseDatapackProps = {
   verticalScale?: number;
   description: string;
   title: string;
-  file: string;
+  storedFileName: string;
+  originalFileName: string;
   size: string;
   warnings?: DatapackWarning[];
   image: string;
@@ -994,7 +996,9 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
   if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
   if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
-  if (typeof o.file !== "string") throw new Error("DatapackMetadata file must be of type string");
+  if (typeof o.originalFileName !== "string")
+    throw new Error("DatapackMetadata originalFileName must be of type string");
+  if (typeof o.storedFileName !== "string") throw new Error("DatapackMetadata storedFileName must be of type string");
   if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
   if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
   if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
@@ -1201,7 +1205,8 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if ("uuid" in o && typeof o.uuid !== "string") throwError("BaseDatapackProps", "uuid", "string", o.uuid);
   if (typeof o.description !== "string") throwError("BaseDatapackProps", "description", "string", o.description);
   if (typeof o.title !== "string") throwError("BaseDatapackProps", "title", "string", o.title);
-  if (typeof o.file !== "string") throwError("BaseDatapackProps", "file", "string", o.file);
+  if (typeof o.storedFileName !== "string") throwError("BaseDatapackProps", "storedFileName", "string", o.file);
+  if (typeof o.originalFileName !== "string") throwError("BaseDatapackProps", "originalFileName", "string", o.file);
   if (typeof o.size !== "string") throwError("BaseDatapackProps", "size", "string", o.size);
   if ("warnings" in o) {
     if (!Array.isArray(o.warnings)) throwError("BaseDatapackProps", "warnings", "array", o.warnings);

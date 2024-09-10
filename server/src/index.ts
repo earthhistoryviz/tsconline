@@ -8,7 +8,7 @@ import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import { ServerDatapackIndex } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
-import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
+import { loadFaciesPatterns, loadDatapackIntoIndex } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
@@ -70,7 +70,7 @@ if (!(await checkFileExists(decryptionJarPath))) {
 
 try {
   const datapackPaths = getAdminConfigDatapacks().map(
-    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
+    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.storedFileName + '"'
   );
   const cmd =
     `java -jar ${assetconfigs.decryptionJar} ` +
@@ -89,11 +89,13 @@ try {
 export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
 try {
-  await loadIndexes(serverDatapackIndex, assetconfigs.decryptionDirectory, getAdminConfigDatapacks(), {
-    type: "server"
-  });
+  for (const datapack of getAdminConfigDatapacks()) {
+    await loadDatapackIntoIndex(serverDatapackIndex, assetconfigs.decryptionDirectory, datapack, {
+      type: "server"
+    });
+  }
 } catch (e) {
-  console.error("Error loading datapacks: ", e);
+  console.error("Error loading indexes: ", e);
   process.exit(1);
 }
 export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(

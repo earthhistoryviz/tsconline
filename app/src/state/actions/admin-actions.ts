@@ -307,7 +307,7 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
       if (!pack) {
         return;
       }
-      addDatapackToServerDatapackIndex(pack.title, pack);
+      addDatapackToServerDatapackIndex(title, pack);
       pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);

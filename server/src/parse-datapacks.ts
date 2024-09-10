@@ -168,9 +168,11 @@ export async function parseDatapacks(
   datapackInfo: DatapackMetadata,
   decryptFilePath: string
 ): Promise<BaseDatapackProps | null> {
-  const decryptPaths = await grabFilepaths([datapackInfo.file], decryptFilePath, "datapacks");
+  const decryptPaths = await grabFilepaths([datapackInfo.storedFileName], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
-    throw new Error(`Did not find any datapacks for ${datapackInfo.file} in decryptFilePath ${decryptFilePath}`);
+    throw new Error(
+      `Did not find any datapacks for ${datapackInfo.originalFileName} in decryptFilePath ${decryptFilePath}`
+    );
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
   const allEntries: Map<string, ParsedColumnEntry> = new Map();
@@ -303,10 +305,10 @@ export async function parseDatapacks(
     columnTypeCount: columnTypeCounter,
     image: "",
     datapackImageCount:
-      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "datapack-images"))) +
-      (await countFiles(join(decryptFilePath, parse(datapackInfo.file).name, "MapImages"))),
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    mapPack: await parseMapPacks([datapackInfo.file], decryptFilePath),
+    mapPack: await parseMapPacks([datapackInfo.storedFileName], decryptFilePath),
     ...datapackInfo
   };
   // use datapack date if date not given by user

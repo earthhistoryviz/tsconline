@@ -59,7 +59,8 @@ describe("general parse-datapacks tests", () => {
   const datapack: DatapackMetadata = {
     description: "description",
     title: "Title",
-    file: "file.dpk",
+    originalFileName: "file.dpk",
+    storedFileName: "tempFileName",
     size: "size",
     tags: [],
     authoredBy: "authoredBy",
@@ -71,7 +72,7 @@ describe("general parse-datapacks tests", () => {
         ...datapack,
         title: "Africa Bight",
         description: "Africa Bight Map",
-        file: "AfricaBight.map",
+        originalFileName: "AfricaBight.map",
         size: "200.98 KB"
       },
       "parse-datapacks-test-1.txt"
