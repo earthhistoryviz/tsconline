@@ -864,7 +864,7 @@ export const requestDownload = action(async (datapack: Datapack, needEncryption:
         const aTag = document.createElement("a");
         aTag.href = fileURL;
 
-        aTag.setAttribute("download", datapack.file);
+        aTag.setAttribute("download", datapack.originalFileName);
 
         document.body.appendChild(aTag);
         aTag.click();

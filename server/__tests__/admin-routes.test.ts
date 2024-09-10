@@ -13,7 +13,7 @@ import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { join, normalize, parse, resolve } from "path";
+import { join, normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
@@ -59,7 +59,8 @@ vi.mock("../src/util", async (importOriginal) => {
       adminConfigPath: "testdir/adminConfig.json"
     },
     checkFileExists: vi.fn().mockResolvedValue(true),
-    verifyFilepath: vi.fn().mockReturnValue(true)
+    verifyFilepath: vi.fn().mockReturnValue(true),
+    makeTempFilename: vi.fn().mockReturnValue("tempFilename")
   };
 });
 
@@ -98,7 +99,6 @@ vi.mock("fs/promises", async (importOriginal) => {
   const actual = await importOriginal<typeof fsPromises>();
   return {
     ...actual,
-    rename: vi.fn().mockResolvedValue(undefined),
     rm: vi.fn().mockResolvedValue({}),
     writeFile: vi.fn().mockResolvedValue({}),
     realpath: vi.fn().mockImplementation(async (path) => path)
@@ -154,7 +154,7 @@ vi.mock("../src/database", async (importOriginal) => {
 
 vi.mock("../src/load-packs", async () => {
   return {
-    loadIndexes: vi.fn().mockResolvedValue(true)
+    loadDatapackIntoIndex: vi.fn().mockResolvedValue(true)
   };
 });
 
@@ -816,12 +816,12 @@ describe("adminUploadServerDatapack", () => {
   const execFile = vi.spyOn(childProcess, "execFile");
   const rm = vi.spyOn(fsPromises, "rm");
   const realpath = vi.spyOn(fsPromises, "realpath");
-  const loadIndexes = vi.spyOn(loadPacks, "loadIndexes");
+  const loadIndexes = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const checkFileExists = vi.spyOn(util, "checkFileExists");
-  const rename = vi.spyOn(fsPromises, "rename");
   const testDatapackDescription: DatapackMetadata = {
-    file: "test.dpk",
+    originalFileName: "test.dpk",
+    storedFileName: "",
     description: "test-description",
     title: "test-title",
     size: "30MB",
@@ -832,6 +832,7 @@ describe("adminUploadServerDatapack", () => {
     notes: "test-notes",
     authoredBy: "test-author"
   };
+  const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
   const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
   const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
   const uploadUserDatapackHandler = vi
@@ -978,24 +979,10 @@ describe("adminUploadServerDatapack", () => {
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(execFile).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(await response.json()).toEqual({ error: "Error saving file" });
-    expect(response.statusCode).toBe(500);
-  });
-  it("should return 500 if rename throws error", async () => {
-    rename.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(rename).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledOnce();
-    expect(await response.json()).toEqual({ error: "Error moving temp file" });
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if execFile throws error", async () => {
@@ -1032,7 +1019,7 @@ describe("adminUploadServerDatapack", () => {
     expect(execFile).not.toHaveBeenCalled();
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(await response.json()).toEqual({ error: "File too large" });
@@ -1048,7 +1035,7 @@ describe("adminUploadServerDatapack", () => {
     });
     expect(addAdminConfigDatapack).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
@@ -1102,7 +1089,7 @@ describe("adminUploadServerDatapack", () => {
     });
     expect(addAdminConfigDatapack).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/__temphashedPasswordtest.dpk`), {
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(execFile).not.toHaveBeenCalled();
@@ -1149,12 +1136,13 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
+    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(execFile).toHaveBeenCalledTimes(1);
     expect(execFile).toHaveBeenCalledWith("java", [
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      "testdir/datapacksDirectory/test.dpk",
+      filepath,
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1184,7 +1172,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      "testdir/datapacksDirectory/test.dpk",
+      filepath,
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1262,7 +1250,8 @@ describe("adminDeleteServerDatapack", () => {
   const testDatapackDescription: DatapackMetadata = {
     title: "test-title",
     description: "test-description",
-    file: "active-datapack.dpk",
+    originalFileName: "active-datapack.dpk",
+    storedFileName: "tempFilename",
     size: "30MB",
     date: "2021-01-01",
     tags: ["test-tag"],
@@ -1276,8 +1265,8 @@ describe("adminDeleteServerDatapack", () => {
   const body = {
     datapack: testDatapackDescription.title
   };
-  const filepath = join("testdir", "datapacksDirectory", testDatapackDescription.file);
-  const decryptedFilepath = join("testdir", "decryptionDirectory", parse(testDatapackDescription.file).name);
+  const filepath = join("testdir", "datapacksDirectory", testDatapackDescription.storedFileName);
+  const decryptedFilepath = join("testdir", "decryptionDirectory", testDatapackDescription.storedFileName);
   beforeEach(async () => {
     vi.clearAllMocks();
     vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValue({
