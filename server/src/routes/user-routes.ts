@@ -2,14 +2,14 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, verifyFilepath } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, verifyFilepath, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackIndex } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
-import { loadIndexes } from "../load-packs.js";
+import { loadDatapackIntoIndex } from "../load-packs.js";
 import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
@@ -216,6 +216,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   let userDir: string;
   let datapackDir: string = "";
   let filepath: string = "";
+  let originalFilename: string = "";
   try {
     userDir = path.join(assetconfigs.uploadDirectory, uuid);
     await mkdir(userDir, { recursive: true });
@@ -237,8 +238,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
+        originalFilename = uploadedFile.filename;
         // store it in a temp file since we need to know title before we effectively save the file
-        filepath = path.join(userDir, "temp_" + uploadedFile.filename);
+        filepath = path.join(userDir, makeTempFilename(originalFilename));
         try {
           await pipeline(uploadedFile.file, createWriteStream(filepath));
         } catch (e) {
@@ -264,14 +266,15 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath) {
+  if (!uploadedFile || !filepath || !originalFilename) {
     filepath && (await rm(filepath, { force: true }));
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
   const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
-  fields.filename = filename;
+  fields.storedFileName = filename;
+  fields.originalFileName = originalFilename;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
     async (e) => {
@@ -291,12 +294,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   try {
     datapackDir = path.join(userDir, datapackMetadata.title);
     await mkdir(datapackDir, { recursive: true });
-    await rename(filepath, path.join(datapackDir, datapackMetadata.file));
-    filepath = path.join(datapackDir, datapackMetadata.file);
+    await rename(filepath, path.join(datapackDir, datapackMetadata.storedFileName));
+    filepath = path.join(datapackDir, datapackMetadata.storedFileName);
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     await rm(datapackDir, { recursive: true, force: true });
     reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
+    return;
   }
   const decryptedDir = path.join(datapackDir, "decrypted");
   const decryptedFilepathDir = path.join(decryptedDir, path.parse(filename).name);
@@ -338,7 +342,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   const datapackIndex: DatapackIndex = {};
   // check for if this user has a datapack index already
-  const success = await loadIndexes(datapackIndex, decryptedDir.replaceAll("\\", "/"), [datapackMetadata], {
+  const success = await loadDatapackIntoIndex(datapackIndex, decryptedDir.replaceAll("\\", "/"), datapackMetadata, {
     type: "private_user",
     uuid
   });

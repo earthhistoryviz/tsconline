@@ -6,6 +6,7 @@ import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
+import { createHash, randomUUID } from "crypto";
 
 /**
  * Format date to human readable format
@@ -279,4 +280,11 @@ export async function countFiles(filepath: string): Promise<number> {
   } catch {
     return 0;
   }
+}
+// so similar filenames are always unique
+export function makeTempFilename(filename: string) {
+  const hash = createHash("sha256");
+  hash.update(randomUUID());
+  const uniqueHash = hash.digest("hex").substring(0, 10);
+  return `temp__${uniqueHash}__${filename}`;
 }
