@@ -1,7 +1,7 @@
-import { Datapack, DatapackIndex, assertDatapackIndex } from "@tsconline/shared";
+import { Datapack, DatapackIndex, assertDatapackIndex, assertPublicUserDatapack } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
-import { readFile, writeFile, mkdir, copyFile } from "fs/promises";
-import { checkFileExists } from "./util.js";
+import { readFile, writeFile, mkdir, copyFile, rm } from "fs/promises";
+import { checkFileExists, makeTempFilename } from "./util.js";
 import { publicDatapackIndex } from "./index.js";
 import { join } from "path";
 import _ from "lodash";
@@ -24,25 +24,32 @@ export async function addPublicUserDatapack(
   publicDatapacksDirectory: string
 ) {
   const release = await mutex.acquire();
+  const storedFileName = makeTempFilename(datapack.originalFileName);
   try {
-    if (
-      publicDatapackIndex[datapack.title] ||
-      Object.values(publicDatapackIndex).some((dp) => dp.file === datapack.file)
-    ) {
+    if (publicDatapackIndex[datapack.title]) {
       throw new Error(`Datapack ${datapack.title} already exists`);
     }
     // so we can modify it and not the original
-    datapack = _.cloneDeep(datapack);
-    datapack.type = "public_user";
-    publicDatapackIndex[datapack.title] = datapack;
+    const publicDatapack = {
+      ..._.cloneDeep(datapack),
+      type: "public_user",
+      storedFileName
+    };
+    assertPublicUserDatapack(publicDatapack);
+    publicDatapackIndex[datapack.title] = publicDatapack;
     await mkdir(publicDatapacksDirectory, { recursive: true });
     // copy the file (so charts can be generated seperate from the user dir)
-    await copyFile(datapackFilepath, join(publicDatapacksDirectory, datapack.file));
+    await copyFile(datapackFilepath, join(publicDatapacksDirectory, storedFileName));
     // update the file
     await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
     if (!(await checkFileExists(datapackFilepath))) {
       throw new Error("Datapack file does not exist");
     }
+  } catch (e) {
+    await rm(join(publicDatapacksDirectory, storedFileName), { force: true });
+    delete publicDatapackIndex[datapack.title];
+    await writeFile(datapackIndexFilepath, JSON.stringify(publicDatapackIndex, null, 2));
+    throw e;
   } finally {
     release();
   }

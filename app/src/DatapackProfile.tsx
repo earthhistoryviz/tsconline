@@ -167,7 +167,7 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <Typography>{datapack.file}</Typography>
+          <Typography>{datapack.originalFileName}</Typography>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>

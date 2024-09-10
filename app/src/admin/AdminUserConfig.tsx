@@ -165,8 +165,8 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        if (!node.data?.file || !isPrivateUserDatapack(node.data)) throw new Error("Invalid datapack");
-        return { uuid: node.data.uuid, datapack: node.data.file };
+        if (!node.data?.storedFileName || !isPrivateUserDatapack(node.data)) throw new Error("Invalid datapack");
+        return { uuid: node.data.uuid, datapack: node.data.storedFileName };
       });
       const uuids = new Set<string>(datapacks.map((dp) => dp.uuid));
       await actions.adminDeleteUserDatapacks(datapacks);

@@ -18,7 +18,7 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   }
   assertPrivateUserDatapack(datapack);
   assertDatapack(datapack);
-  return datapack.file;
+  return datapack.storedFileName;
 }
 
 export async function uploadUserDatapackHandler(
@@ -26,13 +26,22 @@ export async function uploadUserDatapackHandler(
   fields: Record<string, string>,
   bytes: number
 ): Promise<DatapackMetadata | void> {
-  const { title, description, authoredBy, contact, notes, date, filepath, filename } = fields;
+  const { title, description, authoredBy, contact, notes, date, filepath, originalFileName, storedFileName } = fields;
   let { references, tags } = fields;
-  if (!tags || !references || !authoredBy || !title || !description || !filepath || !filename) {
+  if (
+    !tags ||
+    !references ||
+    !authoredBy ||
+    !title ||
+    !description ||
+    !filepath ||
+    !originalFileName ||
+    !storedFileName
+  ) {
     await userUploadHandler(
       reply,
       400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, filename]",
+      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]",
       filepath
     );
     return;
@@ -65,7 +74,8 @@ export async function uploadUserDatapackHandler(
     return;
   }
   return {
-    file: filename,
+    originalFileName,
+    storedFileName,
     description,
     title,
     authoredBy,
