@@ -256,7 +256,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "public_user":
         if (publicDatapackIndex[datapack.title]) {
           const datapackInfo = publicDatapackIndex[datapack.title]!;
-          datapacksToSendToCommandLine.push(path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.file));
+          datapacksToSendToCommandLine.push(
+            path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.storedFileName)
+          );
         } else {
           console.log("ERROR: datapack: ", datapack, " is not included in the public user configuration");
           console.log("Available user datapacks: ", userDatapacks);
