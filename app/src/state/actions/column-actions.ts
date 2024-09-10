@@ -76,7 +76,12 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       assertEventColumnInfoTSC(settings);
       assertEventSettings(column.columnSpecificSettings);
       if (column.columnSpecificSettings)
-        setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+        setEventColumnSettings(column.columnSpecificSettings, {
+          type: settings.type,
+          rangeSort: settings.rangeSort,
+          isDualColCompColumn: settings.isDualColCompColumn,
+          drawDualColCompColumn: settings.drawDualColCompColumn
+        });
       break;
     case "PointColumn":
       assertPointColumnInfoTSC(settings);
@@ -100,7 +105,9 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         smoothed: settings.drawSmooth,
         lowerRange: settings.minWindow,
         upperRange: settings.maxWindow,
-        isDataMiningColumn: settings.isDataMiningColumn
+        isDataMiningColumn: settings.isDataMiningColumn,
+        isDualColCompColumn: settings.isDualColCompColumn,
+        drawDualColCompColumn: settings.drawDualColCompColumn
       });
       break;
     case "SequenceColumn":
@@ -285,6 +292,12 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol) {
     setColumnProperties(curcol, settings);
+  }
+  if (
+    curcol?.name.includes("Tropical (red) and Global Average (black)") ||
+    curcol?.name.includes("Miocene-Paleocene Oxy-18 events")
+  ) {
+    console.log(JSON.parse(JSON.stringify(curcol)));
   }
 
   addColumnToDataMiningCache(settings);
