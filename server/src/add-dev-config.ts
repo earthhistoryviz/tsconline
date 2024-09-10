@@ -1,6 +1,6 @@
 import path from "path";
 import { AdminConfigType, assertAdminConfig } from "./types.js";
-import { readFile, writeFile } from "fs/promises";
+import { readFile, rm, writeFile } from "fs/promises";
 import { checkFileExists } from "./util.js";
 import { assertDatapackMetadataArray } from "@tsconline/shared";
 import chalk from "chalk";
@@ -31,6 +31,10 @@ const skipSymbol = chalk.yellow("⚠");
  * Adds all datapacks from the dev config that are not already in the admin config
  */
 try {
+  const args = process.argv;
+  if (args.includes("--overwrite")) {
+    await rm(adminConfigPath, { force: true });
+  }
   console.log("Reading asset config...");
   const adminConfig = await readAdminConfig();
   console.log(chalk.green(`${successSymbol} Admin config read successfully`));
@@ -38,16 +42,16 @@ try {
   console.log(chalk.green(`${successSymbol} Dev config read successfully`));
   const unaddedDatapacks = [];
   for (const datapack of devConfig) {
-    if (adminConfig.datapacks.find((d) => d.file === datapack.file)) {
+    if (adminConfig.datapacks.find((d) => d.title === datapack.title || d.storedFileName === datapack.storedFileName)) {
       console.log(
         chalk.yellowBright(
-          `${skipSymbol} Skipping ${chalk.bold(chalk.rgb(255, 100, 100)(datapack.file))} because it is already in the admin config`
+          `${skipSymbol} Skipping ${chalk.bold(chalk.rgb(255, 100, 100)(datapack.originalFileName))} because it is already in the admin config`
         )
       );
     } else {
       console.log(
         chalk.green(
-          `${successSymbol} ${chalk.green(`Adding`)} ${chalk.bold(chalk.rgb(214, 97, 230)(datapack.file))} ${chalk.green(`to the admin config`)}`
+          `${successSymbol} ${chalk.green(`Adding`)} ${chalk.bold(chalk.rgb(214, 97, 230)(datapack.originalFileName))} ${chalk.green(`to the admin config`)}`
         )
       );
       unaddedDatapacks.push(datapack);

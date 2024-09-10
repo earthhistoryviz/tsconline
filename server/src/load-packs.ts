@@ -30,40 +30,34 @@ import { getAdminConfigDatapacks } from "./admin/admin-config.js";
  * @param datapacks the datapacks to load
  * @param type the type of datapack (and any additional properties that come with the type)
  */
-export async function loadIndexes(
+export async function loadDatapackIntoIndex(
   datapackIndex: DatapackIndex,
   decryptionDirectory: string,
-  datapacks: DatapackMetadata[],
+  datapack: DatapackMetadata,
   type: DatapackType
 ) {
   let successful = true;
-  console.log(`\nParsing datapacks \n`);
-  for (const datapack of datapacks) {
-    await parseDatapacks(datapack, decryptionDirectory)
-      .then((baseDatapackProps) => {
-        if (!baseDatapackProps) {
-          return;
-        }
-        if (datapackIndex[datapack.title]) {
-          throw new Error(`Datapack ${datapack.title} already exists`);
-        }
-        const finalDatapack = { ...baseDatapackProps, ...type };
-        assertDatapack(finalDatapack);
-        datapackIndex[datapack.title] = finalDatapack;
-        console.log(chalk.green(`Successfully parsed ${datapack.file}`));
-      })
-      .catch((e) => {
-        successful = false;
-        console.log(chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.file} and error: ${e}`));
-      });
-  }
-  successful =
-    (
-      await grabMapImages(
-        datapacks.map((datapack) => datapack.file),
-        decryptionDirectory
-      )
-    ).successful && successful;
+  console.log(`\nParsing datapack ${datapack.title} \n`);
+  await parseDatapacks(datapack, decryptionDirectory)
+    .then((baseDatapackProps) => {
+      if (!baseDatapackProps) {
+        return;
+      }
+      if (datapackIndex[datapack.title]) {
+        throw new Error(`Datapack ${datapack.title} already exists`);
+      }
+      const finalDatapack = { ...baseDatapackProps, ...type };
+      assertDatapack(finalDatapack);
+      datapackIndex[datapack.title] = finalDatapack;
+      console.log(chalk.green(`Successfully parsed ${datapack.originalFileName}`));
+    })
+    .catch((e) => {
+      successful = false;
+      console.log(
+        chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.originalFileName} and error: ${e}`)
+      );
+    });
+  successful = (await grabMapImages([datapack.storedFileName], decryptionDirectory)).successful && successful;
   return successful;
 }
 /**
@@ -139,7 +133,7 @@ async function getDominantRGB(filepath: string) {
  * For access from fastify server servicing
  */
 export async function grabMapImages(
-  datapacks: string[] = getAdminConfigDatapacks().map((datapack) => datapack.file),
+  datapacks: string[] = getAdminConfigDatapacks().map((datapack) => datapack.storedFileName),
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
   if (datapacks.length === 0) return { images: [], successful: true };
