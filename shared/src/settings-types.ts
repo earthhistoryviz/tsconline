@@ -101,6 +101,8 @@ export type EventColumnInfoTSC = ColumnBasicInfoTSC & {
   windowSize: number;
   stepSize: number;
   drawExtraColumn: EventFrequency | null;
+  isDualColCompColumn: boolean;
+  drawDualColCompColumn: string | null;
 };
 
 export type ZoneColumnInfoTSC = ColumnBasicInfoTSC & {
@@ -153,6 +155,8 @@ export type PointColumnInfoTSC = ColumnBasicInfoTSC & {
   windowSize: number;
   stepSize: number;
   isDataMiningColumn: boolean;
+  isDualColCompColumn: boolean;
+  drawDualColCompColumn: string | null;
 };
 
 export function convertPointTypeToPointShape(type: "rect" | "round" | "tick"): PointShape {
@@ -262,6 +266,9 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (typeof o.stepSize !== "number") throwError("EventColumnInfoTSC", "stepSize", "number", o.stepSize);
   if (o.drawExtraColumn != null && (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn)))
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
+  if (typeof o.isDualColCompColumn !== "boolean") {
+    throwError("EventColumnInfoTSC", "isDualColCompColumn", "boolean", o.isDualColCompColumn);
+  }
   assertColumnBasicInfoTSC(o);
 }
 export function assertSequenceColumnInfoTSC(o: any): asserts o is SequenceColumnInfoTSC {
