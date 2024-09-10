@@ -11,6 +11,7 @@ import {
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
   assertChronSettings,
+  assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
@@ -243,6 +244,16 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
           if (child.getAttribute("isDataMiningColumn") === "true") {
             assertPointColumnInfoTSC(childColumn);
             childColumn.isDataMiningColumn = true;
+          }
+          if (child.getAttribute("isDualColCompColumn") === "true" && childName) {
+            if (extractColumnType(childName) === "EventColumn") {
+              assertEventColumnInfoTSC(childColumn);
+              childColumn.isDualColCompColumn = true;
+            }
+            if (extractColumnType(childName) === "PointColumn") {
+              assertPointColumnInfoTSC(childColumn);
+              childColumn.isDualColCompColumn = true;
+            }
           }
           column.children.push(childColumn);
         } else if (child.nodeName === "fonts") {
