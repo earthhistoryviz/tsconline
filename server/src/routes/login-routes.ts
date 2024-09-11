@@ -8,7 +8,9 @@ import {
   createVerification,
   deleteVerification,
   deleteUser,
-  checkForUsersWithUsernameOrEmail
+  checkForUsersWithUsernameOrEmail,
+  findWorkshop,
+  deleteWorkshop
 } from "../database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -205,13 +207,29 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword, isAdmin } = user;
+    const { email, username, pictureUrl, hashedPassword, isAdmin, workshopId } = user;
+    let workshopTitle = "";
+    if (workshopId) {
+      const workshop = (await findWorkshop({ workshopId }))[0];
+      if (workshop) {
+        const now = new Date();
+        if (new Date(workshop.end) < now) {
+          await deleteWorkshop({ workshopId });
+          await updateUser({ workshopId }, { workshopId: 0 });
+        } else if (new Date(workshop.start) >= now) {
+          workshopTitle = workshop.title;
+        }
+      } else {
+        await updateUser({ workshopId }, { workshopId: 0 });
+      }
+    }
     const sharedUser: SharedUser = {
       email,
       username,
       pictureUrl,
       isGoogleUser: !hashedPassword,
-      isAdmin: Boolean(isAdmin)
+      isAdmin: Boolean(isAdmin),
+      ...(workshopTitle && { workshopTitle })
     };
     assertSharedUser(sharedUser);
     reply.send({ authenticated: true, user: sharedUser });
