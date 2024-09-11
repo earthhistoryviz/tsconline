@@ -471,7 +471,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
-    if (workshop[0].end < new Date().toISOString()) {
+    if (new Date(workshop[0].end) < new Date()) {
       await deleteWorkshop({ workshopId });
       await updateUser({ workshopId }, { workshopId: 0 });
       reply.status(404).send({ error: "Workshop not found" });

@@ -4,7 +4,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyMultipart from "@fastify/multipart";
 import { OAuth2Client } from "google-auth-library";
 import { compare } from "bcrypt-ts";
-import { Verification } from "../src/types";
+import { Verification, Workshop } from "../src/types";
 import formAutoContent from "form-auto-content";
 import * as cryptoModule from "crypto";
 import * as loginRoutes from "../src/routes/login-routes";
@@ -36,7 +36,9 @@ vi.mock("../src/database", async (importOriginal) => {
     findVerification: vi.fn(() => Promise.resolve([testToken])),
     deleteVerification: vi.fn().mockResolvedValue({}),
     updateUser: vi.fn().mockResolvedValue({}),
-    deleteUser: vi.fn().mockResolvedValue({})
+    deleteUser: vi.fn().mockResolvedValue({}),
+    findWorkshop: vi.fn().mockResolvedValue([]),
+    deleteWorkshop: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -141,6 +143,15 @@ const testToken: Verification = {
 };
 let cookieHeader: Record<string, string>;
 let deleteSessionSpy: MockInstance;
+const start = mockDate;
+const end = new Date(mockDate);
+end.setHours(end.getHours() + 1);
+const workshop: Workshop = {
+  workshopId: 1,
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString()
+};
 
 beforeAll(async () => {
   app = fastify();
@@ -1754,6 +1765,11 @@ describe("login-routes tests", () => {
   });
 
   describe("/session-check", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+    const findWorkshopSpy = vi.spyOn(databaseModule, "findWorkshop");
+    const deleteWorkshopSpy = vi.spyOn(databaseModule, "deleteWorkshop");
     it("should return 200 and authenticated false if not logged in", async () => {
       const response = await app.inject({
         method: "POST",
@@ -1820,6 +1836,85 @@ describe("login-routes tests", () => {
       });
 
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().authenticated).toBe(true);
+      expect(response.json().user).toEqual({
+        email: testUser.email,
+        username: testUser.username,
+        pictureUrl: testUser.pictureUrl,
+        isGoogleUser: false,
+        isAdmin: false
+      });
+    });
+
+    it("should return 200 and workshop title if user is in workshop and workshop is active", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/session-check",
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(findWorkshopSpy).toHaveBeenCalledWith({ workshopId: 1 });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().authenticated).toBe(true);
+      expect(response.json().user).toEqual({
+        email: testUser.email,
+        username: testUser.username,
+        pictureUrl: testUser.pictureUrl,
+        isGoogleUser: false,
+        isAdmin: false,
+        workshopTitle: "test"
+      });
+    });
+
+    it("should return 200 and update user if workshop is not active", async () => {
+      const updateUserSpy = vi.spyOn(databaseModule, "updateUser");
+      const end = new Date(mockDate);
+      end.setMinutes(end.getMinutes() - 1);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop, end: end.toISOString() }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/session-check",
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(deleteWorkshopSpy).toHaveBeenCalledWith({ workshopId: 1 });
+      expect(updateUserSpy).toHaveBeenCalledWith({ workshopId: 1 }, { workshopId: 0 });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().authenticated).toBe(true);
+      expect(response.json().user).toEqual({
+        email: testUser.email,
+        username: testUser.username,
+        pictureUrl: testUser.pictureUrl,
+        isGoogleUser: false,
+        isAdmin: false
+      });
+    });
+
+    it("should return 200 and update user if workshop is not found", async () => {
+      const updateUserSpy = vi.spyOn(databaseModule, "updateUser");
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/session-check",
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(updateUserSpy).toHaveBeenCalledWith({ workshopId: 1 }, { workshopId: 0 });
+      expect(deleteWorkshopSpy).not.toHaveBeenCalled();
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
