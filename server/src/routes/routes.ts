@@ -230,7 +230,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     switch (datapack.type) {
       case "server":
         if (serverDatapacks.includes(datapack.title)) {
-          datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.file}`);
+          datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.storedFileName}`);
         } else {
           console.log("ERROR: datapack: ", datapack, " is not included in the server configuration");
           console.log("adminconfig.datapacks: ", adminConfigDatapacks);
@@ -241,7 +241,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         break;
       case "private_user":
         if (uuid && userDatapacks.includes(datapack.title)) {
-          const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.file);
+          const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.storedFileName);
           const datapackDirectory = path.dirname(filepath);
           datapacksToSendToCommandLine.push(filepath);
           usedUserDatapackFilepaths.push(datapackDirectory);
