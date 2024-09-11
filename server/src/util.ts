@@ -9,6 +9,23 @@ import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
 
 /**
+ * Format date to human readable format
+ * @param date Date to format
+ * @returns Human readable date
+ */
+export function formatDate(date: Date) {
+  const formatter = new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true
+  });
+  return formatter.format(date);
+}
+
+/**
  * Recursively deletes directory INCLUDING directoryPath
  *
  * @param directoryPath
