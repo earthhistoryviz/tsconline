@@ -53,7 +53,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          onChange({ ...datapack, file: datapack.storedFileName });
+          onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
