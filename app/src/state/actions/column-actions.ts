@@ -30,6 +30,7 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
+  defaultEventSettings,
   defaultPointSettings,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
@@ -513,6 +514,69 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     }
   }
   searchColumnsAbortController = null;
+});
+
+export const addDualColCompColumn = action((column: ColumnInfo) => {
+  if (column.columnDisplayType === "Event") {
+    assertEventSettings(column.columnSpecificSettings);
+    if (column.columnSpecificSettings.drawDualColCompColumn === null) {
+      console.log("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      return;
+    }
+  }
+  else if (column.columnDisplayType === "Point") {
+    assertPointSettings(column.columnSpecificSettings);
+    if (column.columnSpecificSettings.drawDualColCompColumn === null) {
+      console.log("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      return;
+    }
+  }
+  else {
+    console.log("WARNING: tried to add a dual col comp column to a column that is not an event or point column");
+    return;
+  }
+  if (!column.parent) {
+    console.log("WARNING: tried to add a data mining column to a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === column.name);
+  if (index === -1) {
+    console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+    return;
+  }
+  const dualColCompColumnName = "Overlay for " + column.editName;
+  const dualColCompColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    name: dualColCompColumnName,
+    editName: dualColCompColumnName,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  });
+  if (column.columnDisplayType === "Event") {
+    dualColCompColumn.columnDisplayType = "Event";
+    dualColCompColumn.columnSpecificSettings = {
+      ...cloneDeep(defaultEventSettings),
+      isDualColCompColumn: true
+    };
+  } else if (column.columnDisplayType === "Point") {
+    dualColCompColumn.columnDisplayType = "Point";
+    dualColCompColumn.columnSpecificSettings = {
+      ...cloneDeep(defaultPointSettings),
+      isDualColCompColumn: true
+    };
+  }
+  parent.children.splice(index + 1, 0, dualColCompColumn);
+  state.settingsTabs.columnHashMap.set(dualColCompColumnName, dualColCompColumn);
+  return dualColCompColumnName;
 });
 
 export const addDataMiningColumn = action(
