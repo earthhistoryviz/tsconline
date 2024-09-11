@@ -8,30 +8,25 @@ type HeaderProps = {
   title: string;
 };
 export const Header: React.FC<HeaderProps> = observer(function Header({ title }) {
-  const { state } = useContext(context);
+  const { chartState } = useContext(context);
   const [image] = useImage(logo);
-  const logoHeight = 50;
-  const logoWidth = 50;
-  const paddingX = 20;
-  const paddingY = 20;
-  const fontSize = 20;
   return (
-    <Layer x={paddingX} y={paddingY}>
+    <Layer x={chartState.header.paddingX} y={chartState.header.paddingY}>
       <Text
-        x={logoWidth}
-        y={(logoHeight - fontSize) / 2}
+        x={chartState.header.logoWidth}
+        y={(chartState.header.logoHeight - chartState.header.fontSize) / 2}
         text={title}
-        width={state.chart.width - 2 * (logoHeight + logoWidth)}
-        fontSize={fontSize}
+        width={chartState.width - 2 * (chartState.header.logoHeight + chartState.header.logoWidth)}
+        fontSize={chartState.header.fontSize}
         fontFamily="Arial"
         fill="black"
         align="center"
         verticalAlign="center"
       />
 
-      <Image image={image} width={logoWidth} height={logoHeight} />
+      <Image image={image} width={chartState.header.logoWidth} height={chartState.header.logoHeight} />
 
-      <Image image={image} x={state.chart.width - logoWidth - 2 * paddingX} width={logoWidth} height={logoHeight} />
+      <Image image={image} x={chartState.width - chartState.header.logoWidth - 2 * chartState.header.paddingX} width={chartState.header.logoWidth} height={chartState.header.logoHeight} />
     </Layer>
   );
 });
