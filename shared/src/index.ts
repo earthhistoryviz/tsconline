@@ -230,7 +230,7 @@ export type SubBlockInfo = {
 };
 
 export type DatapackConfigForChartRequest = {
-  file: string;
+  storedFileName: string;
   title: string;
 } & DatapackType;
 
@@ -626,7 +626,8 @@ export function assertWorkshopArray(o: any): asserts o is Workshop[] {
 
 export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
   if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");
-  if (typeof o.file !== "string") throwError("DatapackConfigForChartRequest", "filename", "string", o.file);
+  if (typeof o.storedFileName !== "string")
+    throwError("DatapackConfigForChartRequest", "storedFileName", "string", o.storedFileName);
   if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
   assertDatapackType(o);
 }

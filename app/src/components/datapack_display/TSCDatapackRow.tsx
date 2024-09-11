@@ -56,7 +56,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          onChange({ ...datapack, file: datapack.storedFileName });
+          onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
