@@ -44,6 +44,7 @@ export const Admin = observer(function Admin() {
     if (!state.user.isAdmin) return;
     loadRecaptcha().then(async () => {
       await actions.adminFetchUsers();
+      await actions.adminFetchWorkshops();
     });
     return () => {
       removeRecaptcha();

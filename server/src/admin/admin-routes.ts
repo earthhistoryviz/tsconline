@@ -1,9 +1,19 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { checkForUsersWithUsernameOrEmail, createUser, findUser, deleteUser } from "../database.js";
+import {
+  checkForUsersWithUsernameOrEmail,
+  createUser,
+  findUser,
+  deleteUser,
+  updateUser,
+  createWorkshop,
+  findWorkshop,
+  db,
+  deleteWorkshop
+} from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath, formatDate } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -14,12 +24,19 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
-import { assertAdminSharedUser, assertDatapackIndex } from "@tsconline/shared";
+import {
+  Workshop,
+  assertAdminSharedUser,
+  assertDatapackIndex,
+  assertWorkshop,
+  assertWorkshopArray
+} from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
+import "dotenv/config";
 
 /**
  * Get all users for admin to configure on frontend
@@ -29,17 +46,27 @@ import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatap
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
-    const displayedUsers = users.map((user) => {
-      const { hashedPassword, ...displayedUser } = user;
-      return {
-        ...displayedUser,
-        username: displayedUser.username,
-        isGoogleUser: hashedPassword === null,
-        isAdmin: user.isAdmin === 1,
-        emailVerified: user.emailVerified === 1,
-        invalidateSession: user.invalidateSession === 1
-      };
-    });
+    const displayedUsers = await Promise.all(
+      users.map(async (user) => {
+        const { hashedPassword, workshopId, ...displayedUser } = user;
+        let workshopTitle = "";
+        if (workshopId) {
+          const workshop = await findWorkshop({ workshopId });
+          if (workshop && workshop.length === 1) {
+            workshopTitle = workshop[0]?.title ?? "";
+          }
+        }
+        return {
+          ...displayedUser,
+          username: displayedUser.username,
+          isGoogleUser: hashedPassword === null,
+          isAdmin: user.isAdmin === 1,
+          emailVerified: user.emailVerified === 1,
+          invalidateSession: user.invalidateSession === 1,
+          ...(workshopTitle && { workshopTitle })
+        };
+      })
+    );
     displayedUsers.forEach((user) => {
       assertAdminSharedUser(user);
     });
@@ -82,7 +109,8 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       pictureUrl: pictureUrl ?? null,
       isAdmin: isAdmin,
       emailVerified: 1,
-      invalidateSession: 0
+      invalidateSession: 0,
+      workshopId: 0
     };
     await createUser(customUser);
     const newUser = await findUser({ email });
@@ -438,6 +466,17 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
+    const workshop = await findWorkshop({ workshopId: workshopId });
+    if (!workshop || workshop.length !== 1 || !workshop[0]) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    if (workshop[0].end < new Date().toISOString()) {
+      await deleteWorkshop({ workshopId });
+      await updateUser({ workshopId }, { workshopId: 0 });
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
     let emailList: string[] = [];
     let invalidEmails: string[] = [];
     if (file && filepath) {
@@ -462,18 +501,18 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        // TODO: Update existing user to workshop user
+        await updateUser({ email }, { workshopId });
       } else {
-        // TODO: These users cannot login yet, needs to be a workshop system to give them a password
         await createUser({
           email,
-          hashedPassword: null,
+          hashedPassword: await hash(email, 10),
           isAdmin: 0,
           emailVerified: 1,
           invalidateSession: 0,
           pictureUrl: null,
           username: email,
-          uuid: randomUUID()
+          uuid: randomUUID(),
+          workshopId: workshopId
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
@@ -492,5 +531,91 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         logger.error("Error cleaning up file:", e);
       });
     }
+  }
+};
+
+/**
+ * Fetch all workshops
+ * @param _request
+ * @param reply
+ * @returns
+ */
+export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const workshopIds = await db
+      .deleteFrom("workshop")
+      .where("end", "<", new Date().toISOString())
+      .returning("workshopId")
+      .execute();
+    for (const workshopId of workshopIds) {
+      await updateUser({ workshopId: workshopId.workshopId }, { workshopId: 0 });
+    }
+    const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
+      return {
+        title: workshop.title,
+        start: formatDate(new Date(workshop.start)),
+        end: formatDate(new Date(workshop.end)),
+        workshopId: workshop.workshopId
+      };
+    });
+    assertWorkshopArray(workshops);
+    reply.send({ workshops });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  }
+};
+
+/**
+ * Create a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminCreateWorkshop = async function adminCreateWorkshop(
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
+  reply: FastifyReply
+) {
+  const { title, start, end } = request.body;
+  if (!title || !start || !end) {
+    reply.status(400).send({ error: "Missing required fields" });
+    return;
+  }
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (
+    isNaN(startDate.getTime()) ||
+    isNaN(endDate.getTime()) ||
+    startDate.getTime() > endDate.getTime() ||
+    startDate.getTime() < Date.now()
+  ) {
+    reply.status(400).send({ error: "Invalid date format or dates are not valid" });
+    return;
+  }
+  try {
+    const existingWorkshops = await findWorkshop({ title });
+    if (existingWorkshops.length > 0) {
+      reply.status(409).send({ error: "Workshop with that title already exists" });
+      return;
+    }
+    const workshopId = await createWorkshop({
+      title,
+      start: startDate.toISOString(),
+      end: endDate.toISOString()
+    });
+    if (!workshopId) {
+      throw new Error("Workshop not created");
+    }
+    const workshop: Workshop = {
+      title,
+      start: formatDate(startDate),
+      end: formatDate(endDate),
+      workshopId
+    };
+    assertWorkshop(workshop);
+    reply.send({ workshop });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
   }
 };
