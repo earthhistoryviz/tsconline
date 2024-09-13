@@ -266,6 +266,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime@npm:^7.20.6":
+  version: 7.25.6
+  resolution: "@babel/runtime@npm:7.25.6"
+  dependencies:
+    regenerator-runtime: "npm:^0.14.0"
+  checksum: 0c4134734deb20e1005ffb9165bf342e1074576621b246d8e5e41cc7cb315a885b7d98950fbf5c63619a2990a56ae82f444d35fe8c4691a0b70c2fe5673667dc
+  languageName: node
+  linkType: hard
+
 "@babel/runtime@npm:^7.23.2, @babel/runtime@npm:^7.24.8, @babel/runtime@npm:^7.25.0":
   version: 7.25.0
   resolution: "@babel/runtime@npm:7.25.0"
@@ -2594,6 +2603,7 @@ __metadata:
     jspdf: "npm:^2.5.1"
     lodash: "npm:^4.17.21"
     lottie-web: "npm:^5.12.2"
+    material-ui-popup-state: "npm:^5.3.1"
     mobx: "npm:^6.8.0"
     mobx-react-lite: "npm:^3.4.0"
     node-fetch: "npm:^3.3.0"
@@ -3271,6 +3281,16 @@ __metadata:
     "@types/prop-types": "npm:*"
     csstype: "npm:^3.0.2"
   checksum: a85eed82c1009dc9d979281d9ea1f5322255003de3378390f35d897b4bdaf1d34ea748636c03e9e9b4b7cc97c2f4582993d2d60e40846226ad497d97c7d8565a
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:^18.0.26":
+  version: 18.3.5
+  resolution: "@types/react@npm:18.3.5"
+  dependencies:
+    "@types/prop-types": "npm:*"
+    csstype: "npm:^3.0.2"
+  checksum: ba0477c5ad4a762157c6262a199af6ccf9e24576877a26a7f516d5a9ba35374a6ac7f8686a10e5e8030513214f02bcb66e8363e43905afb7cd313deaf673de05
   languageName: node
   linkType: hard
 
@@ -4720,7 +4740,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"classnames@npm:^2.3.2":
+"classnames@npm:^2.2.6, classnames@npm:^2.3.2":
   version: 2.5.1
   resolution: "classnames@npm:2.5.1"
   checksum: 58eb394e8817021b153bb6e7d782cfb667e4ab390cb2e9dac2fc7c6b979d1cc2b2a733093955fc5c94aa79ef5c8c89f11ab77780894509be6afbb91dddd79d15
@@ -8341,6 +8361,22 @@ __metadata:
     socks-proxy-agent: "npm:^6.0.0"
     ssri: "npm:^8.0.0"
   checksum: a868e74fc223a78afb7a1f8115133befdffae84f07a5f5dd9317cbf9f784a8373f28829a73ae3f31060e1b0cb4944e73257733c3b10c314354060fab412b6028
+  languageName: node
+  linkType: hard
+
+"material-ui-popup-state@npm:^5.3.1":
+  version: 5.3.1
+  resolution: "material-ui-popup-state@npm:5.3.1"
+  dependencies:
+    "@babel/runtime": "npm:^7.20.6"
+    "@types/prop-types": "npm:^15.7.3"
+    "@types/react": "npm:^18.0.26"
+    classnames: "npm:^2.2.6"
+    prop-types: "npm:^15.7.2"
+  peerDependencies:
+    "@mui/material": ^5.0.0 || ^6.0.0
+    react: ^16.8.0 || ^17.0.0 || ^18.0.0
+  checksum: d88baa569a7cf5a091c5a113f65208b1234bec4bbab5f5df701b9ecc92442295c9cc579604d615da50e7d2953d555b68d64cfffa8c575b33ed7e4b9fa898cf23
   languageName: node
   linkType: hard
 

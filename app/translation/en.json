@@ -24,7 +24,11 @@
             "current-password": "Current Password",
             "new-password": "New Password",
             "new-email": "New Email",
-            "new-username": "New Username"
+            "new-username": "New Username",
+            "reset-password": "Enter your email to receive a password reset link.",
+            "enter-new-password": "Please enter your new password.",
+            "recovery": "Password Recovery",
+            "send": "Send"
         },
         "signup": {
             "title": "Sign Up",

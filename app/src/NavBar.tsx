@@ -20,6 +20,11 @@ import { toJS } from "mobx";
 import LanguageIcon from "@mui/icons-material/Language";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
+import Button from '@mui/material/Button';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
+import React from "react";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -34,16 +39,10 @@ export const NavBar = observer(function Navbar() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const settingsRef = useRef(null);
-  const languageRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
-  const [languageMenuState, languageMenuToggle] = useMenuState({ transition: true });
-  const { anchorProps: settingsAnchorProps, hoverProps: settingsHoverProps } = useHover(
+  const { anchorProps, hoverProps } = useHover(
     settingsMenuState.state,
     settingsMenuToggle
-  );
-  const { anchorProps: langAnchorProps, hoverProps: langHoverProps } = useHover(
-    languageMenuState.state,
-    languageMenuToggle
   );
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
@@ -98,28 +97,35 @@ export const NavBar = observer(function Navbar() {
                 to="/settings"
                 component={Link}
                 ref={settingsRef}
-                {...settingsAnchorProps}
+                {...anchorProps}
               />
               <Tab value={3} disableRipple label={t("navBar.help")} to="/help" component={Link} />
               <Tab value={4} disableRipple label={t("navBar.about")} to="/about" component={Link} />
-
-              <IconButton
-                size="large"
-                sx={{
-                  "&:hover": {
-                    opacity: 0.9
-                  }
-                }}
-                value={5}
-                ref={languageRef}
-                {...langAnchorProps}
-                onClick={() => {}}>
-                <LanguageIcon />
-                <Typography>{t(`languageNames.${currentLanguage}`)}</Typography>
-              </IconButton>
+              <PopupState variant="popover" popupId="demo-popup-menu">
+                {(popupState) => (
+                  <React.Fragment>
+                    <Button variant="text" {...bindTrigger(popupState)}>
+                      <LanguageIcon />
+                      <Typography>{t(`languageNames.${currentLanguage}`)}</Typography>
+                    </Button>
+                    <Menu {...bindMenu(popupState)}>
+                      {avaliableLanguages.map((value, index) => (
+                        <MenuItem
+                          key={index}
+                          className="settings-sub-menu-item"
+                          onClick={() => {
+                            i18next.changeLanguage(value);
+                          }}>
+                          <Typography>{t(`languageNames.${value}`)}</Typography>
+                        </MenuItem>
+                      ))}
+                    </Menu>
+                  </React.Fragment>
+                )}
+              </PopupState>
             </Tabs>
             <ControlledMenu
-              {...settingsHoverProps}
+              {...hoverProps}
               {...settingsMenuState}
               anchorRef={settingsRef}
               className="settings-sub-menu"
@@ -146,7 +152,7 @@ export const NavBar = observer(function Navbar() {
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
-            <ControlledMenu
+            {/* <ControlledMenu
               {...langHoverProps}
               {...languageMenuState}
               anchorRef={languageRef}
@@ -169,7 +175,7 @@ export const NavBar = observer(function Navbar() {
                   <Typography>{t(`languageNames.${value}`)}</Typography>
                 </TSCMenuItem>
               ))}
-            </ControlledMenu>
+            </ControlledMenu> */}
           </>
         }
         <div style={{ flexGrow: 1 }} />
