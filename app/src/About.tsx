@@ -83,7 +83,7 @@ const members = [
     name: "Leyton Bostre",
     role: "Member",
     homeTown: "Long Beach, CA",
-    timeWorked: "2024",
+    timeWorked: "2024 - Present",
     proPic: LeytonPic
   },
   {
