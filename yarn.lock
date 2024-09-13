@@ -1629,14 +1629,14 @@ __metadata:
   linkType: hard
 
 "@mui/lab@npm:^5.0.0-alpha.172":
-  version: 5.0.0-alpha.172
-  resolution: "@mui/lab@npm:5.0.0-alpha.172"
+  version: 5.0.0-alpha.173
+  resolution: "@mui/lab@npm:5.0.0-alpha.173"
   dependencies:
     "@babel/runtime": "npm:^7.23.9"
     "@mui/base": "npm:5.0.0-beta.40"
-    "@mui/system": "npm:^5.16.1"
+    "@mui/system": "npm:^5.16.5"
     "@mui/types": "npm:^7.2.15"
-    "@mui/utils": "npm:^5.16.1"
+    "@mui/utils": "npm:^5.16.5"
     clsx: "npm:^2.1.0"
     prop-types: "npm:^15.8.1"
   peerDependencies:
@@ -1653,7 +1653,7 @@ __metadata:
       optional: true
     "@types/react":
       optional: true
-  checksum: 8d05664c115eda2d7594fe52ad2cb8cb6ee45fe01a44d88fd30abe2848c51911c8310f08122f7a98e5cc9658e3cedc9e7ccbf31c503a838cb4abd00c0c176b7a
+  checksum: 6b5bd0665f524d074bba41f76ea70d2938be16dbb7c0360d4d6be6c61d540a4fc06d765ed277ca205a40686212361e528c945b9150caefe40bac483cdec525e0
   languageName: node
   linkType: hard
 

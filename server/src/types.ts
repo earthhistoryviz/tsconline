@@ -5,6 +5,7 @@ export interface Database {
   users: UserTable;
   verification: VerificationTable;
   ip: IpTable;
+  workshop: WorkshopTable;
 }
 
 export interface UserTable {
@@ -17,6 +18,7 @@ export interface UserTable {
   emailVerified: number;
   invalidateSession: number;
   isAdmin: number;
+  workshopId: number;
 }
 
 export interface VerificationTable {
@@ -32,6 +34,13 @@ export interface IpTable {
   count: number;
 }
 
+export interface WorkshopTable {
+  workshopId: Generated<number>;
+  title: string;
+  start: string;
+  end: string;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
@@ -42,6 +51,10 @@ export type NewVerification = Insertable<VerificationTable>;
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;
 export type UpdatedIp = Updateable<IpTable>;
+
+export type Workshop = Selectable<WorkshopTable>;
+export type NewWorkshop = Insertable<WorkshopTable>;
+export type UpdatedWorkshop = Updateable<WorkshopTable>;
 
 export type Email = {
   from: string;

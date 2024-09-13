@@ -1,0 +1,8 @@
+.date-time-picker .MuiPickersYear-yearButton {
+  font-size: 1rem;
+}
+
+.date-time-picker .Mui-disabled,
+.date-time-picker .MuiPickersDay-root.Mui-disabled {
+  color: darkgray;
+}

@@ -7,6 +7,7 @@ export * from "./TSCFileUpload";
 export { TSCYesNoPopup } from "./TSCYesNoPopup";
 export { TSCSvgComponent } from "./TSCSvgComponent";
 export { TSCPopupManager } from "./TSCPopupManager";
+export { TSCPopup } from "./TSCPopup";
 export * from "./TSCComponents";
 export * from "./TSCError";
 export * from "./TSCSnackbar";
