@@ -24,7 +24,11 @@
             "current-password": "当前密码",
             "new-password": "新密码",
             "new-email": "新邮箱",
-            "new-username": "新用户名"
+            "new-username": "新用户名",
+            "reset-password": "输入邮箱以接收密码重置链接",
+            "enter-new-password": "请输入新密码",
+            "recovery": "密码找回",
+            "send": "发送"
         },
         "signup": {
             "title": "注册账户",
