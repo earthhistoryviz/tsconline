@@ -20,10 +20,10 @@ import { toJS } from "mobx";
 import LanguageIcon from "@mui/icons-material/Language";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
-import Button from '@mui/material/Button';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import PopupState, { bindTrigger, bindMenu } from 'material-ui-popup-state';
+import Button from "@mui/material/Button";
+import Menu from "@mui/material/Menu";
+import MenuItem from "@mui/material/MenuItem";
+import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
@@ -40,10 +40,7 @@ export const NavBar = observer(function Navbar() {
   const navigate = useNavigate();
   const settingsRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
-  const { anchorProps, hoverProps } = useHover(
-    settingsMenuState.state,
-    settingsMenuToggle
-  );
+  const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
   const avaliableLanguages = i18next.languages;
