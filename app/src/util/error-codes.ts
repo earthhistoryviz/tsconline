@@ -156,12 +156,12 @@ export const ErrorMessages = {
   [ErrorCodes.ADMIN_EMAIL_INVALID]: i18n.t("errors.ADMIN_EMAIL_INVALID"),
   [ErrorCodes.ADMIN_WORKSHOP_FIELDS_EMPTY]: i18n.t("errors.ADMIN_WORKSHOP_FIELDS_EMPTY"),
   [ErrorCodes.UNRECOGNIZED_EXCEL_FILE]: i18n.t("errors.UNRECOGNIZED_EXCEL_FILE"),
-  [ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END]: "The start date must be before the end date.",
+  [ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END]: i18n.t("errors.ADMIN_WORKSHOP_START_AFTER_END"),
   [ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS]:
-    i18n.t("errors.SERVER_DATAPACK_ALREADY_EXISTS"),// "Server datapack already exists. Please upload a unique datapack (different title)."
-  [ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]: "Unable to create workshop. Please try again later.",
-  [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: "Workshop with that title already exists. Please try a different title.",
-  [ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]: "Unable to fetch workshops. Please try again later.",
-  [ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND]: "Workshop not found on server, it has likely ended or been deleted."
+    i18n.t("errors.SERVER_DATAPACK_ALREADY_EXISTS"),
+  [ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]: i18n.t("errors.ADMIN_CREATE_WORKSHOP_FAILED"),
+  [ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS]: i18n.t("errors.ADMIN_WORKSHOP_ALREADY_EXISTS"),
+  [ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]: i18n.t("errors.ADMIN_FETCH_WORKSHOPS_FAILED"),
+  [ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND]: i18n.t("errors.ADMIN_WORKSHOP_NOT_FOUND")
 
 };
