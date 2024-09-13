@@ -25,6 +25,7 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
+import languageList from "../translation/avaliable-language.json";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -43,7 +44,6 @@ export const NavBar = observer(function Navbar() {
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
-  const avaliableLanguages = i18next.languages;
   const location = useLocation();
   return (
     <StyledAppBar position="fixed">
@@ -103,17 +103,17 @@ export const NavBar = observer(function Navbar() {
                   <React.Fragment>
                     <Button variant="text" {...bindTrigger(popupState)}>
                       <LanguageIcon />
-                      <Typography>{t(`languageNames.${currentLanguage}`)}</Typography>
+                      <Typography>{t(`language-names.${currentLanguage}`)}</Typography>
                     </Button>
                     <Menu {...bindMenu(popupState)}>
-                      {avaliableLanguages.map((value, index) => (
+                      {Object.entries(languageList).map(([key, value]) => (
                         <MenuItem
-                          key={index}
+                          key={key}
                           className="settings-sub-menu-item"
                           onClick={() => {
                             i18next.changeLanguage(value);
                           }}>
-                          <Typography>{t(`languageNames.${value}`)}</Typography>
+                          <Typography>{t(`language-names.${value}`)}</Typography>
                         </MenuItem>
                       ))}
                     </Menu>
@@ -149,30 +149,6 @@ export const NavBar = observer(function Navbar() {
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
-            {/* <ControlledMenu
-              {...langHoverProps}
-              {...languageMenuState}
-              anchorRef={languageRef}
-              className="settings-sub-menu"
-              align="center"
-              menuStyle={{
-                color: theme.palette.dark.contrastText,
-                backgroundColor: theme.palette.dark.light,
-                border: `1px solid ${theme.palette.divider}`
-              }}
-              gap={-2}
-              onClose={() => languageMenuToggle(false)}>
-              {avaliableLanguages.map((value, index) => (
-                <TSCMenuItem
-                  key={index}
-                  className="settings-sub-menu-item"
-                  onClick={() => {
-                    i18next.changeLanguage(value);
-                  }}>
-                  <Typography>{t(`languageNames.${value}`)}</Typography>
-                </TSCMenuItem>
-              ))}
-            </ControlledMenu> */}
           </>
         }
         <div style={{ flexGrow: 1 }} />

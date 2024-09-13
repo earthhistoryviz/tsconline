@@ -356,7 +356,7 @@
         },
         "yes": "是",
         "no": "否",
-        "languageNames": {
+        "language-names": {
             "en-US": "English",
             "en": "English",
             "zh": "中文"
