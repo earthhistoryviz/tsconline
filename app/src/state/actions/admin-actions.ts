@@ -5,8 +5,11 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
   DatapackMetadata,
+  Workshop,
   assertAdminSharedUserArray,
   assertDatapackIndex,
+  assertWorkshop,
+  assertWorkshopArray,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -315,43 +318,145 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
   }
 });
 
-export const adminAddUsersToWorkshop = action(async (formData: FormData): Promise<string | undefined> => {
+/**
+ * Adds users to a workshop
+ * @param formData The form data containing the users to add
+ * @returns Whether the operation was successful and any invalid emails
+ */
+export const adminAddUsersToWorkshop = action(
+  async (formData: FormData): Promise<{ success: boolean; invalidEmails: string }> => {
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+      if (!recaptchaToken) return { success: false, invalidEmails: "" };
+      const response = await fetcher(`/admin/workshop/users`, {
+        method: "POST",
+        body: formData,
+        headers: {
+          "recaptcha-token": recaptchaToken
+        },
+        credentials: "include"
+      });
+      if (response.ok) {
+        removeAllErrors();
+        adminFetchUsers();
+        return { success: true, invalidEmails: "" };
+      } else {
+        let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
+        switch (response.status) {
+          case 400:
+            errorCode = ErrorCodes.INVALID_FORM;
+            break;
+          case 404:
+            errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+            adminFetchWorkshops();
+            break;
+          case 409:
+            errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+        }
+        const serverResponse = await response.json();
+        displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
+        return { success: false, invalidEmails: serverResponse.invalidEmails };
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+    return { success: false, invalidEmails: "" };
+  }
+);
+
+/**
+ * Fetches all workshops
+ */
+export const adminFetchWorkshops = action(async () => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+    const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
     if (!recaptchaToken) return;
-    const response = await fetcher(`/admin/workshop/users`, {
-      method: "POST",
-      body: formData,
+    const response = await fetcher("/admin/workshops", {
+      method: "GET",
+      credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      },
-      credentials: "include"
+      }
     });
     if (response.ok) {
-      removeAllErrors();
-      adminFetchUsers();
-      pushSnackbar("Users added to workshop successfully", "success");
+      const workshops = (await response.json()).workshops;
+      assertWorkshopArray(workshops);
+      adminDeleteWorkshops();
+      workshops.forEach((workshop) => adminUpdateWorkshop(workshop));
     } else {
-      let errorCode = ErrorCodes.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED;
-      switch (response.status) {
-        case 400:
-          errorCode = ErrorCodes.INVALID_FORM;
-          break;
-        case 409:
-          errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
-          break;
-        case 422:
-          errorCode = ErrorCodes.RECAPTCHA_FAILED;
-          break;
-      }
-      const serverResponse = await response.json();
-      displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
-      return serverResponse.invalidEmails;
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]
+      );
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
+});
+
+/**
+ * Creates a new workshop
+ * @param title The title of the workshop
+ * @param start The start date of the workshop
+ * @param end The end date of the workshop
+ * @param password The password for the workshop (optional)
+ * @returns The workshop ID if successful, undefined otherwise
+ */
+export const adminCreateWorkshop = action(
+  async (title: string, start: string, end: string): Promise<number | undefined> => {
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
+      if (!recaptchaToken) return;
+      const body: Record<string, string> = { title, start, end };
+      const response = await fetcher("/admin/workshop", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify(body),
+        credentials: "include"
+      });
+      if (response.ok) {
+        const workshop = (await response.json()).workshop;
+        assertWorkshop(workshop);
+        adminUpdateWorkshop(workshop);
+        return workshop.workshopId;
+      } else {
+        let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
+        switch (response.status) {
+          case 400:
+            errorCode = ErrorCodes.INVALID_FORM;
+            break;
+          case 409:
+            errorCode = ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS;
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+        }
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+);
+
+export const adminDeleteWorkshops = action(() => {
+  state.admin.workshops.clear();
+});
+
+export const adminUpdateWorkshop = action((workshop: Workshop) => {
+  state.admin.workshops.set(workshop.title, workshop);
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {

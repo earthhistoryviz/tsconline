@@ -771,7 +771,7 @@ export const pushSnackbar = action("pushSnackbar", (text: string, severity: "suc
 });
 
 export const fetchImage = action("fetchImage", async (datapack: DatapackConfigForChartRequest, imageName: string) => {
-  const { title, file } = datapack;
+  const { title, storedFileName } = datapack;
   const response = await fetcher(`/images`, {
     method: "POST",
     headers: {
@@ -779,7 +779,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
     },
     body: JSON.stringify({
       datapackTitle: title,
-      datapackFilename: file,
+      datapackFilename: storedFileName,
       imageName,
       ...(isUserDatapack(datapack) ? { uuid: datapack.uuid } : {})
     })

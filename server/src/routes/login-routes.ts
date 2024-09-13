@@ -665,7 +665,8 @@ export const signup = async function signup(
       pictureUrl: null,
       emailVerified: 0,
       invalidateSession: 0,
-      isAdmin: 0
+      isAdmin: 0,
+      workshopId: 0
     };
     await createUser(newUser);
     const insertedUser = (await findUser({ email }))[0];
@@ -789,7 +790,8 @@ export const googleLogin = async function googleLogin(
       pictureUrl: payload.picture,
       emailVerified: 1,
       invalidateSession: 0,
-      isAdmin: 0
+      isAdmin: 0,
+      workshopId: 0
     };
     await createUser(user);
     const insertedUser = (await findUser({ email: payload.email }))[0];
