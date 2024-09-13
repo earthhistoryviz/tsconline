@@ -5,9 +5,7 @@ import Backend from 'i18next-http-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import enTranslation from './translation/en.json';
 import zhTranslation from './translation/zh.json';
-// don't want to use this?
-// have a look at the Quick start guide 
-// for passing in lng and translations on init
+
 
 i18n
     // load translation using http -> see /public/locales (i.e. https://github.com/i18next/react-i18next/tree/master/example/react/public/locales)
@@ -31,7 +29,10 @@ i18n
         resources: {
             en: enTranslation, //English
             zh: zhTranslation  //Chinese
-        }
+        },
+        missingKeyHandler: function (lng, ns, key, fallbackValue) {
+            console.error(`Missing translation for key "${key}" in namespace "${ns}" and language "${lng}"`);
+        },
     });
 
 

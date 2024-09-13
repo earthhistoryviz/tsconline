@@ -348,6 +348,7 @@
         "yes": "是",
         "no": "否",
         "languageNames": {
+            "en-US": "English",
             "en": "English",
             "zh": "中文"
         }
