@@ -161,7 +161,8 @@ vi.mock("../src/database", async (importOriginal) => {
     deleteUser: vi.fn().mockResolvedValue({}),
     findWorkshop: vi.fn().mockResolvedValue([]),
     updateUser: vi.fn().mockResolvedValue({}),
-    deleteWorkshop: vi.fn().mockResolvedValue({})
+    deleteWorkshop: vi.fn().mockResolvedValue({}),
+    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(sharedTestWorkshop))
   };
 });
 
@@ -1542,8 +1543,7 @@ describe("adminAddUsersToWorkshop", () => {
   const createUser = vi.spyOn(database, "createUser");
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const updateUser = vi.spyOn(database, "updateUser");
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const deleteWorkshop = vi.spyOn(database, "deleteWorkshop");
+  const getAndHandleWorkshopEnd = vi.spyOn(database, "getAndHandleWorkshopEnd");
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1710,7 +1710,8 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Missing either emails or file" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 404 if findWorkshop returns empty", async () => {
+  it("should return 404 if getAndHandleWorkshopEnd returns empty", async () => {
+    getAndHandleWorkshopEnd.mockResolvedValueOnce(null);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1718,34 +1719,13 @@ describe("adminAddUsersToWorkshop", () => {
       headers: formHeaders
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(findWorkshop).toHaveBeenCalledTimes(1);
-    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
-    expect(await response.json()).toEqual({ error: "Workshop not found" });
-    expect(response.statusCode).toBe(404);
-  });
-  it("should return 404 if workshop ends before today", async () => {
-    const end = new Date(mockDate);
-    end.setHours(mockDate.getHours() - 1);
-    findWorkshop.mockResolvedValueOnce([{ ...sharedTestWorkshop, end: end.toISOString() }]);
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/workshop/users",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(findWorkshop).toHaveBeenCalledTimes(1);
-    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
-    expect(deleteWorkshop).toHaveBeenCalledTimes(1);
-    expect(deleteWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
-    expect(updateUser).toHaveBeenCalledTimes(1);
-    expect(updateUser).toHaveBeenCalledWith({ workshopId: 1 }, { workshopId: 0 });
+    expect(getAndHandleWorkshopEnd).toHaveBeenCalledTimes(1);
+    expect(getAndHandleWorkshopEnd).toHaveBeenCalledWith(sharedTestWorkshop.workshopId);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Workshop not found" });
     expect(response.statusCode).toBe(404);
   });
   it("should return 400 if emails is invalid", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     createForm({ emails: "test1, test2" });
     const response = await app.inject({
       method: "POST",
@@ -1760,7 +1740,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(409);
   });
   it("should return 400 if parseExcelFile fails", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     parseExcelFile.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
@@ -1775,7 +1754,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 500 if findUser returns empty", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
@@ -1790,7 +1768,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 500 if findUser throws an error", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     findUser.mockResolvedValueOnce([testAdminUser]).mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
@@ -1805,7 +1782,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and add new users", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1848,7 +1824,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and update old users", async () => {
-    findWorkshop.mockResolvedValueOnce([sharedTestWorkshop]);
     checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
     const response = await app.inject({
       method: "POST",
