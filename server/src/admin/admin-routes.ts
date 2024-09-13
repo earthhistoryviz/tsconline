@@ -8,7 +8,7 @@ import {
   createWorkshop,
   findWorkshop,
   db,
-  deleteWorkshop
+  getAndHandleWorkshopEnd
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -466,14 +466,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
-    const workshop = await findWorkshop({ workshopId: workshopId });
-    if (!workshop || workshop.length !== 1 || !workshop[0]) {
-      reply.status(404).send({ error: "Workshop not found" });
-      return;
-    }
-    if (new Date(workshop[0].end) < new Date()) {
-      await deleteWorkshop({ workshopId });
-      await updateUser({ workshopId }, { workshopId: 0 });
+    const workshop = await getAndHandleWorkshopEnd(workshopId);
+    if (!workshop) {
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }

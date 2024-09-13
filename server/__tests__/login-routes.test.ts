@@ -38,7 +38,8 @@ vi.mock("../src/database", async (importOriginal) => {
     updateUser: vi.fn().mockResolvedValue({}),
     deleteUser: vi.fn().mockResolvedValue({}),
     findWorkshop: vi.fn().mockResolvedValue([]),
-    deleteWorkshop: vi.fn().mockResolvedValue({})
+    deleteWorkshop: vi.fn().mockResolvedValue({}),
+    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null)
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -1768,8 +1769,7 @@ describe("login-routes tests", () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
-    const findWorkshopSpy = vi.spyOn(databaseModule, "findWorkshop");
-    const deleteWorkshopSpy = vi.spyOn(databaseModule, "deleteWorkshop");
+    const getAndHandleWorkshopEndSpy = vi.spyOn(databaseModule, "getAndHandleWorkshopEnd");
     it("should return 200 and authenticated false if not logged in", async () => {
       const response = await app.inject({
         method: "POST",
@@ -1851,6 +1851,7 @@ describe("login-routes tests", () => {
     it("should return 200 and workshop title if user is in workshop and workshop is active", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
+      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
 
       const response = await app.inject({
         method: "POST",
@@ -1859,7 +1860,7 @@ describe("login-routes tests", () => {
       });
 
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-      expect(findWorkshopSpy).toHaveBeenCalledWith({ workshopId: 1 });
+      expect(getAndHandleWorkshopEndSpy).toHaveBeenCalledWith(workshop.workshopId);
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
@@ -1873,12 +1874,10 @@ describe("login-routes tests", () => {
       });
     });
 
-    it("should return 200 and update user if workshop is not active", async () => {
-      const updateUserSpy = vi.spyOn(databaseModule, "updateUser");
-      const end = new Date(mockDate);
-      end.setMinutes(end.getMinutes() - 1);
+    it("should return 200 and without workshop title if no workshop is provided", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
-      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop, end: end.toISOString() }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
+      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(null);
 
       const response = await app.inject({
         method: "POST",
@@ -1887,34 +1886,6 @@ describe("login-routes tests", () => {
       });
 
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-      expect(deleteWorkshopSpy).toHaveBeenCalledWith({ workshopId: 1 });
-      expect(updateUserSpy).toHaveBeenCalledWith({ workshopId: 1 }, { workshopId: 0 });
-      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-      expect(response.statusCode).toBe(200);
-      expect(response.json().authenticated).toBe(true);
-      expect(response.json().user).toEqual({
-        email: testUser.email,
-        username: testUser.username,
-        pictureUrl: testUser.pictureUrl,
-        isGoogleUser: false,
-        isAdmin: false
-      });
-    });
-
-    it("should return 200 and update user if workshop is not found", async () => {
-      const updateUserSpy = vi.spyOn(databaseModule, "updateUser");
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
-      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([]);
-
-      const response = await app.inject({
-        method: "POST",
-        url: "/session-check",
-        headers: cookieHeader
-      });
-
-      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-      expect(updateUserSpy).toHaveBeenCalledWith({ workshopId: 1 }, { workshopId: 0 });
-      expect(deleteWorkshopSpy).not.toHaveBeenCalled();
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
