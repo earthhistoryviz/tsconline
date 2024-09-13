@@ -1,5 +1,4 @@
 import { action } from "mobx";
-import { state } from "../state";
 import { chartState } from "../chart-state";
 
 export const setChartHeight = action((height: number) => {

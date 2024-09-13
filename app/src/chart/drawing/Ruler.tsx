@@ -1,5 +1,5 @@
 import React, { useCallback, useMemo } from "react";
-import { FastLayer, Group, Layer, Line, Rect, Text } from "react-konva";
+import { FastLayer, Group, Line, Rect, Text } from "react-konva";
 import { TimeSettings } from "../../types";
 
 interface RulerProps {
@@ -23,8 +23,8 @@ const Ruler: React.FC<RulerProps> = ({ width, height, x, y, timeSettings, mirror
   const UNITS_PER_TICK = 6; // Example value
   let minorInterval = 0.2;
   let majorInterval = 1;
-  let intermediateInterval = 0.5;
-  let labelInterval = 10;
+  const intermediateInterval = 0.5;
+  // let labelInterval = 10;
   const scale = timeSettings.unitsPerMY * 30;
 
   const MYperTick = UNITS_PER_TICK / scale;
@@ -40,7 +40,7 @@ const Ruler: React.FC<RulerProps> = ({ width, height, x, y, timeSettings, mirror
     if (minorInterval === 1) {
       minorInterval = -1;
     }
-    labelInterval = majorInterval * 5;
+    // labelInterval = majorInterval * 5;
   } else {
     minorInterval = -1;
     let mulIndex = 0;
@@ -50,7 +50,7 @@ const Ruler: React.FC<RulerProps> = ({ width, height, x, y, timeSettings, mirror
     }
     minorInterval = majorInterval;
     majorInterval *= 5;
-    labelInterval = majorInterval;
+    // labelInterval = majorInterval;
   }
   const handleWidthChange = useCallback((width: number) => {
     setTimeout(() => {
