@@ -26,7 +26,12 @@ export const Header: React.FC<HeaderProps> = observer(function Header({ title })
 
       <Image image={image} width={chartState.header.logoWidth} height={chartState.header.logoHeight} />
 
-      <Image image={image} x={chartState.width - chartState.header.logoWidth - 2 * chartState.header.paddingX} width={chartState.header.logoWidth} height={chartState.header.logoHeight} />
+      <Image
+        image={image}
+        x={chartState.width - chartState.header.logoWidth - 2 * chartState.header.paddingX}
+        width={chartState.header.logoWidth}
+        height={chartState.header.logoHeight}
+      />
     </Layer>
   );
 });
