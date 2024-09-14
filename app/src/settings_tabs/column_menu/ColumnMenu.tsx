@@ -104,9 +104,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
         <StyledScrollbar>
           <Box display="flex" flexDirection="column" gap="10px">
             <EditNameField column={column} />
-            {column.children.length === 0 && (
-              <ChangeBackgroundColor column={column} text={t("settings.column.menu.background-color")} />
-            )}
+            {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
             {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
               <GenericTextField
                 orientation="start"
