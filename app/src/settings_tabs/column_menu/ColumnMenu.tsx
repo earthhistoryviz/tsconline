@@ -103,7 +103,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       return (
         <StyledScrollbar>
           <Box display="flex" flexDirection="column" gap="10px">
-            <EditNameField column={column} text={t("settings.column.menu.edit-name")} />
+            <EditNameField column={column} />
             {column.children.length === 0 && (
               <ChangeBackgroundColor column={column} text={t("settings.column.menu.background-color")} />
             )}
@@ -125,7 +125,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
               />
             )}
             <div className="column-advanced-controls">
-              <AccordionPositionControls column={column} text={t("settings.column.menu.shift-row")} />
+              <AccordionPositionControls column={column} />
             </div>
             <ShowTitles column={column} />
             <EventSpecificSettings column={column} />
@@ -142,7 +142,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 </TSCButton>
               </Box>
             )}
-            {!!column.popup && <InfoBox info={column.popup} titleText={t("settings.column.menu.info-box")} />}
+            {!!column.popup && <InfoBox info={column.popup} />}
           </Box>
         </StyledScrollbar>
       );
