@@ -8,6 +8,7 @@ import "./TSCError.css";
 import Color from "color";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
+import { useTranslation } from "react-i18next";
 
 type TSCErrorProps = {
   errorContext: ErrorCodes;
@@ -29,6 +30,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
     if (reason === "clickaway") return;
     actions.removeError(errorContext);
   }
+  const { t } = useTranslation();
   return (
     <Snackbar
       open={true}
@@ -48,7 +50,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
           <div className="alert-title">
             <ErrorIcon className="error-icon-alert" sx={{ color: theme.palette.error.dark }} />
             <Typography className="error-title" variant="h2" color="error.dark">
-              Error {countDisplay}
+              {t("errors.title")} {countDisplay}
             </Typography>
           </div>
           <IconButton className="alert-close" onClick={handleCloseError} size="large">

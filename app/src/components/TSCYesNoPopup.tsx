@@ -2,6 +2,7 @@ import React from "react";
 import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
 import { TSCButton } from "./TSCButton";
 import "./TSCYesNoPopup.css";
+import { useTranslation } from "react-i18next";
 
 type TSCYesNoPopup = {
   open: boolean;
@@ -23,6 +24,7 @@ export const TSCYesNoPopup: React.FC<TSCYesNoPopup> = ({
   customNo,
   customYes
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -36,10 +38,10 @@ export const TSCYesNoPopup: React.FC<TSCYesNoPopup> = ({
       </DialogContent>
       <DialogActions className="dialog-actions">
         <Button variant="outlined" className="tsc-button" onClick={onNo}>
-          {customNo ?? "No"}
+          {customNo ?? t("no")}
         </Button>
         <TSCButton buttonType="gradient" className="tsc-button" onClick={onYes}>
-          {customYes ?? "Yes"}
+          {customYes ?? t("yes")}
         </TSCButton>
       </DialogActions>
     </Dialog>

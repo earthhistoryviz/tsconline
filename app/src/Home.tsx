@@ -12,6 +12,7 @@ import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
 import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -27,10 +28,11 @@ const HeaderTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const TSCOnlineHeader = () => {
+  const { t } = useTranslation();
   return (
     <HeaderContainer>
       <TSCIcon src={TSCreatorLogo} alt="Logo" size="80px" marginTop="20px" />
-      <HeaderTitle variant="h2">Time Scale Creator Online</HeaderTitle>
+      <HeaderTitle variant="h2">{t("title.main")}</HeaderTitle>
     </HeaderContainer>
   );
 };
@@ -39,6 +41,7 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="whole_page">
       <TSCOnlineHeader />
@@ -55,7 +58,7 @@ export const Home = observer(function Home() {
             actions.removeCache();
             actions.resetState();
           }}>
-          Remove Cache
+          {t("button.remove-cache")}
         </TSCButton>
       </div>
     </div>
@@ -74,6 +77,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
+  const { t } = useTranslation();
   const handleAccordionChange = () => {
     setExpanded(!expanded);
   };
@@ -89,7 +93,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
           aria-controls="panel1a-content"
           id="panel1a-header"
           className="preset-summary">
-          <Typography className="preset-type-title">{`${type} PRESETS`}</Typography>
+          <Typography className="preset-type-title">{t(`presets.${type}`)}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <StyledScrollbar>

@@ -25,6 +25,7 @@ import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
 import { TSCCheckbox } from "../TSCCheckbox";
 import { UploadOptions } from "../../types";
+import { useTranslation } from "react-i18next";
 
 type DatapackUploadFormProps = {
   close: () => void;
@@ -34,6 +35,7 @@ type DatapackUploadFormProps = {
 };
 export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, index, type = "user" }) => {
   const { state, setters, handlers } = useDatapackUploadForm({ upload, type, index });
+  const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
@@ -42,7 +44,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
         </IconButton>
       </div>
       <Typography className="upload-datapack-header" variant="h4">
-        Upload Your Own Datapack
+        {t("settings.datapacks.upload-form.title")}
       </Typography>
       <CustomDivider />
       <form onSubmit={handlers.handleSubmit}>
@@ -50,12 +52,12 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           <Box className="file-upload">
             <InputFileUpload
               startIcon={<CloudUploadIcon />}
-              text="Upload Datapack"
+              text={t("settings.datapacks.upload")}
               variant="contained"
               onChange={handlers.handleFileUpload}
             />
             <Typography className="file-upload-text" variant="body2">
-              {state.file ? state.file.name : "No file selected"}
+              {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
             </Typography>
             {state.file && (
               <IconButton className="icon" onClick={() => setters.setFile(null)}>
@@ -65,18 +67,18 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           </Box>
           <Box gap="10px" display="flex">
             <TextField
-              label="Datapack Name"
+              label={t("settings.datapacks.upload-form.name")}
               required
               sx={{ flexGrow: 0.5 }}
-              placeholder="Enter a name for your datapack."
+              placeholder={t("settings.datapacks.upload-form.name-placeholder")}
               InputLabelProps={{ shrink: true }}
               value={state.title}
               onChange={(event) => setters.setTitle(event.target.value)}
             />
             <TextField
-              label="Authored By"
+              label={t("settings.datapacks.upload-form.author")}
               sx={{ flexGrow: 1 }}
-              placeholder="Credited to..."
+              placeholder={t("settings.datapacks.upload-form.author-placeholder")}
               required
               InputLabelProps={{ shrink: true }}
               value={state.authoredBy}
@@ -87,8 +89,8 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             multiline
             required
             rows={5}
-            label="Datapack Description"
-            placeholder="Enter a description for your datapack."
+            label={t("settings.datapacks.upload-form.description")}
+            placeholder={t("settings.datapacks.upload-form.description-placeholder")}
             inputProps={{ className: "datapack-description-input-text" }}
             InputLabelProps={{ shrink: true }}
             value={state.description}
@@ -113,7 +115,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             onChange={(_, value) => setters.setTags(value)}
             options={[]}
             freeSolo
-            renderInput={(params) => <TextField {...params} label="Tags" />}
+            renderInput={(params) => <TextField {...params} label={t("settings.datapacks.upload-form.tags")} />}
           />
           {type === "user" && (
             <FormControlLabel
@@ -121,14 +123,14 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               control={
                 <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
               }
-              label="Make Datapack Publicly Accessible"
+              label={t("settings.datapacks.upload-form.make-public")}
             />
           )}
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">
                 <TextField
-                  label={`Reference ${index + 1}`}
+                  label={`${t("settings.datapacks.upload-form.reference")} ${index + 1}`}
                   variant="outlined"
                   value={reference.reference}
                   onChange={(event) => handlers.changeReference(index, event)}
@@ -147,29 +149,29 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             className="add-reference-button"
             onClick={handlers.addReference}
             startIcon={<AddCircleOutline className="add-reference-plus-button" />}>
-            Add reference
+            {t("settings.datapacks.upload-form.button.add-ref")}
           </Button>
           <Accordion className="additional-options-upload-form" disableGutters>
             <AccordionSummary expandIcon={<ExpandMore />}>
               <Typography variant="body2" alignSelf="flex-start">
-                More Options
+                {t("settings.datapacks.upload-form.button.more")}
               </Typography>
             </AccordionSummary>
             <AccordionDetails>
               <Box gap="10px" display="flex">
                 <TextField
-                  label="Contact"
-                  placeholder="Enter your contact information"
+                  label={t("settings.datapacks.upload-form.contact")}
+                  placeholder={t("settings.datapacks.upload-form.contact-placeholder")}
                   sx={{ flexGrow: 0.5 }}
-                  helperText="(OPTIONAL) If you would like others to contact you about this datapack"
+                  helperText={t("settings.datapacks.upload-form.contact-helper-text")}
                   InputLabelProps={{ shrink: true }}
                   value={state.contact}
                   onChange={(event) => setters.setContact(event.target.value)}
                 />
                 <TextField
-                  label="Notes"
-                  placeholder="Enter notes for the datapack here"
-                  helperText="(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
+                  label={t("settings.datapacks.upload-form.notes")}
+                  placeholder={t("settings.datapacks.upload-form.notes-placeholder")}
+                  helperText={t("settings.datapacks.upload-form.notes-helper-text")}
                   sx={{ flexGrow: 1 }}
                   InputLabelProps={{ shrink: true }}
                   value={state.notes}
@@ -180,8 +182,8 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           </Accordion>
         </StyledScrollbar>
         <Box display="flex" gap="20px" justifyContent="center">
-          <TSCButton onClick={handlers.resetForm}>Start Over</TSCButton>
-          <TSCButton type="submit">Finish & Upload</TSCButton>
+          <TSCButton onClick={handlers.resetForm}>{t("settings.datapacks.upload-form.button.startover")}</TSCButton>
+          <TSCButton type="submit">{t("settings.datapacks.upload-form.button.finish")}</TSCButton>
         </Box>
       </form>
     </Box>

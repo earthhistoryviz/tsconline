@@ -13,6 +13,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
+import { useTranslation } from "react-i18next";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -96,9 +97,11 @@ type WarningTabProps = {
   count: number;
 };
 const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
+  const { t } = useTranslation();
   return (
     <div className={styles.wtc}>
-      Warnings{count > 0 && <span className={styles.number}>{`${count > 99 ? `99+` : count}`}</span>}
+      {t("settingsTabs.Warnings")}
+      {count > 0 && <span className={styles.number}>{`${count > 99 ? `99+` : count}`}</span>}
     </div>
   );
 };

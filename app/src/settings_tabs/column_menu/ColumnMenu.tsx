@@ -25,6 +25,7 @@ import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSetting
 import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings";
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
+import { useTranslation } from "react-i18next";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -52,12 +53,13 @@ export const ColumnMenu = observer(() => {
       resizeObserver.disconnect();
     };
   }, []);
+  const { t } = useTranslation();
   return (
     <div className="column-menu">
       <div className="column-menu-header">
         <div className="column-menu-label">
           <Typography component="h1" variant="h5" whiteSpace={"nowrap"}>
-            Column Customization
+            {t("settings.column.titles.column-menu-title")}
           </Typography>
         </div>
       </div>
@@ -88,12 +90,14 @@ type ColumnContentProps = {
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation(); //pass translation to components to avoid hook bugs
   function addBlankColumn() {
     actions.addBlankColumn(column);
   }
   function addAgeColumn() {
     actions.addAgeColumn(column);
   }
+
   switch (tab) {
     case "General":
       return (
@@ -107,7 +111,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 helperOrientation="start"
                 inputs={[
                   {
-                    helperText: "Width",
+                    helperText: t("settings.column.menu.width"),
                     id: "width",
                     value: column.width,
                     onValueChange: (value: number) => {
@@ -129,10 +133,10 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
                 <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
-                  <Typography>Add Blank Column</Typography>
+                  <Typography>{t("settings.column.menu.add-blank-column")}</Typography>
                 </TSCButton>
                 <TSCButton className="add-blank-or-age-button" onClick={addAgeColumn}>
-                  <Typography>Add Age Column</Typography>
+                  <Typography>{t("settings.column.menu.add-age-column")}</Typography>
                 </TSCButton>
               </Box>
             )}
@@ -188,11 +192,12 @@ function addRangeFields(
 
 const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   return (
     <div className="show-titles-container">
       <CustomFormControlLabel
         name="enableTitle"
-        label="Enable Title"
+        label={t("settings.column.menu.enable-title")}
         control={
           <TSCCheckbox
             outlineColor="gray"
@@ -207,7 +212,7 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
         <CustomFormControlLabel
           width={130}
           name="showAgeLabel"
-          label="Show Age Label"
+          label={t("settings.column.menu.show-age-label")}
           control={
             <TSCCheckbox
               outlineColor="gray"
@@ -223,7 +228,7 @@ const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
         <CustomFormControlLabel
           width={175}
           name="showUncertaintyLabels"
-          label="Show Uncertainty Labels"
+          label={t("settings.column.menu.show-uncertainty")}
           control={
             <TSCCheckbox
               outlineColor="gray"
