@@ -15,17 +15,19 @@ import { observer } from "mobx-react-lite";
 import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { context } from "../../state";
+import { useTranslation } from "react-i18next";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
 };
 export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const [openMenu, setOpenMenu] = useState(false);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") return;
   return (
     <div>
       <Button onClick={() => setOpenMenu(true)} variant="contained">
-        Data Mining Settings
+        {t("settings.column.datamining-menu.title")}
       </Button>
       <Dialog open={openMenu} onClose={() => setOpenMenu(false)}>
         <DataMiningSettings column={column} />
@@ -36,6 +38,7 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
 
 export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   const dataMiningSettings = column.columnSpecificSettings;
   if (!dataMiningSettings) return;
   assertDataMiningSettings(dataMiningSettings);
@@ -43,14 +46,14 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
     <StyledScrollbar>
       <Box className="data-mining-settings-container">
         <Typography className="advanced-settings-header" variant="h6">
-          Data Mining Settings
+          {t("settings.column.datamining-menu.title")}
         </Typography>
         <CustomDivider className="settings-header-divider" />
         <div className="data-mining-settings-content">
           <GenericTextField
             inputs={[
               {
-                helperText: "Window Size",
+                helperText: t("settings.column.datamining-menu.window-size"),
                 id: "windowSize",
                 value: dataMiningSettings.windowSize,
                 onValueChange: (value) => {
@@ -58,7 +61,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
                 }
               },
               {
-                helperText: "Step Size",
+                helperText: t("settings.column.datamining-menu.step-size"),
                 id: "stepSize",
                 value: dataMiningSettings.stepSize,
                 onValueChange: (value) => {
@@ -77,6 +80,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
 });
 export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Chron") return;
   const chronSettings = column.columnSpecificSettings;
   assertChronSettings(chronSettings);
@@ -98,15 +102,16 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       <TSCRadioGroup
         onChange={handleFrequencyChange}
         onClear={clearDataMiningColumn}
-        name="Chron Type"
+        name={t("settings.column.datamining-menu.options-title.chron")}
         value={chronSettings.dataMiningChronDataType}
-        radioArray={[{ value: "Frequency", label: "Frequency" }]}
+        radioArray={[{ value: "Frequency", label: t("settings.column.datamining-menu.options.frequency") }]}
       />
     </Box>
   );
 });
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Event") return;
   const eventSettings = column.columnSpecificSettings;
   assertEventSettings(eventSettings);
@@ -126,12 +131,12 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       <TSCRadioGroup
         onChange={handleFrequencyChange}
         onClear={clearDataMiningColumn}
-        name="Event Type"
+        name={t("settings.column.datamining-menu.options-title.event")}
         value={eventSettings.frequency}
         radioArray={[
-          { value: "FAD", label: "Frequency of FAD" },
-          { value: "LAD", label: "Frequency of LAD" },
-          { value: "Combined Events", label: "Combined Events" }
+          { value: "FAD", label: t("settings.column.datamining-menu.options.freq-of-FAD") },
+          { value: "LAD", label: t("settings.column.datamining-menu.options.freq-of-LAD") },
+          { value: "Combined Events", label: t("settings.column.datamining-menu.options.combined-events") }
         ]}
       />
     </Box>
@@ -140,6 +145,7 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
 
 export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Point") return;
   const pointSettings = column.columnSpecificSettings;
   assertPointSettings(pointSettings);
@@ -160,14 +166,14 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       <TSCRadioGroup
         onChange={handleDataTypeChange}
         onClear={clearDataMiningColumn}
-        name="Data Type to Plot"
+        name={t("settings.column.datamining-menu.options-title.plot")}
         value={pointSettings.dataMiningPointDataType}
         radioArray={[
-          { value: "Frequency", label: "Frequency" },
-          { value: "Maximum Value", label: "Maximum Value" },
-          { value: "Minimum Value", label: "Minimum Value" },
-          { value: "Average Value", label: "Average Value" },
-          { value: "Rate of Change", label: "Rate of Change" }
+          { value: "Frequency", label: t("settings.column.datamining-menu.options.frequency") },
+          { value: "Maximum Value", label: t("settings.column.datamining-menu.options.max-val") },
+          { value: "Minimum Value", label: t("settings.column.datamining-menu.options.min-val") },
+          { value: "Average Value", label: t("settings.column.datamining-menu.options.avg-val") },
+          { value: "Rate of Change", label: t("settings.column.datamining-menu.options.roc") }
         ]}
       />
     </Box>

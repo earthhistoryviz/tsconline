@@ -3,6 +3,7 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import { useTranslation } from "react-i18next";
 
 type ZoneSpecificSettingsProps = {
   column: ColumnInfo;
@@ -10,6 +11,7 @@ type ZoneSpecificSettingsProps = {
 
 export const ZoneSpecificSettings: React.FC<ZoneSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Zone") return null;
   assertZoneSettings(column.columnSpecificSettings);
   function changeZoneColumnOrientation(event: React.ChangeEvent<HTMLInputElement>) {
@@ -19,11 +21,11 @@ export const ZoneSpecificSettings: React.FC<ZoneSpecificSettingsProps> = observe
   return (
     <TSCRadioGroup
       onChange={changeZoneColumnOrientation}
-      name={"Label Orientation"}
+      name={t("settings.column.menu.orientation.title")}
       value={column.columnSpecificSettings.orientation}
       radioArray={[
-        { value: "normal", label: "Horizontal" },
-        { value: "vertical", label: "Vertical" }
+        { value: "normal", label: t("settings.column.menu.orientation.horizontal") },
+        { value: "vertical", label: t("settings.column.menu.orientation.vertical") }
       ]}
     />
   );

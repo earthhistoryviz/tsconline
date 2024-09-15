@@ -15,10 +15,13 @@ import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
 import { StyledScrollbar } from "../components";
+import { useTranslation } from "react-i18next";
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
   const countRef = useRef(0);
   const theme = useTheme();
+  const { t } = useTranslation();
+  const count = countRef.current; //can't directly pass countRef.current to the translator
   const TimeDisplay = observer(() => {
     return (
       <TableContainer
@@ -34,7 +37,7 @@ export const Search = observer(function Search() {
                   sx={{ background: theme.palette.backgroundColor.main }}
                   align="center"
                   colSpan={2}>
-                  Current Time Settings
+                  {t("settings.search.current-time-settings")}
                 </TableCell>
               </TableRow>
               <TableRow>
@@ -74,7 +77,7 @@ export const Search = observer(function Search() {
         <div className="search-and-options">
           <TextField
             className="search-bar"
-            label="Search"
+            label={t("settings.search.search-bar")}
             variant="outlined"
             size="small"
             fullWidth
@@ -83,7 +86,7 @@ export const Search = observer(function Search() {
             }}
             value={state.settingsTabs.eventSearchTerm}
           />
-          <div>Found {countRef.current} Results</div>
+          <div>{t("settings.search.found-result", { count })}</div>
         </div>
         <TimeDisplay />
       </div>

@@ -7,6 +7,7 @@ import FormControlLabel from "@mui/material/FormControlLabel";
 import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
+import { useTranslation } from "react-i18next";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -20,6 +21,7 @@ export const Time = observer(function Time() {
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
+  const { t } = useTranslation();
   return (
     <div>
       <ToggleButtonGroup
@@ -41,10 +43,12 @@ export const Time = observer(function Time() {
       </ToggleButtonGroup>
       <Box className="time-settings-container" bgcolor="secondaryBackground.main">
         <Box className="time-settings-age-container">
-          <Typography className="IntervalLabel">Top of Interval</Typography>
+          <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
-            <InputLabel>{disabled ? "Not Available for this Unit" : "Top Age/Stage Name"}</InputLabel>
+            <InputLabel>
+              {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.top-name")}
+            </InputLabel>
             <Select
               className="SelectTop"
               inputProps={{ id: "top-age-selector" }}
@@ -79,15 +83,15 @@ export const Time = observer(function Time() {
                 actions.setTopStageAge(parseFloat(event.target.value), units);
               }}
               error={checkAgeRange()}
-              helperText={checkAgeRange() ? "Base age should be older than top age" : ""}
+              helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>
-          <Typography className="IntervalLabel">Base of Interval</Typography>
+          <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
             <InputLabel htmlFor="base-age-selector">
-              {disabled ? "Not Available for this Unit" : "Base Age/Stage Name"}
+              {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.base-name")}
             </InputLabel>
             <Select
               className="SelectBase"
@@ -125,13 +129,13 @@ export const Time = observer(function Time() {
                 actions.setBaseStageAge(parseFloat(event.target.value), units);
               }}
               error={checkAgeRange()}
-              helperText={checkAgeRange() ? "Base age should be older than top age" : ""}
+              helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>
           <TextField
             className="VerticalScale"
-            label={`Vertical Scale (cm per 1 ${units}):`}
+            label={`${t("settings.time.interval.vertical-scale")} ${units}):`}
             type="number"
             size="small"
             name="vertical-scale-text-field"
@@ -150,7 +154,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.timeSettings[units].skipEmptyColumns}
                 />
               }
-              label="Gray out (and do not draw) columns which do not have data on the selected time interval"
+              label={t("settings.time.checkboxs.skip-empty-columns")}
             />
             <FormControlLabel
               name="mouse-over-info-checkbox"
@@ -161,7 +165,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.mouseOverPopupsEnabled}
                 />
               }
-              label="Add MouseOver info (popups)"
+              label={t("settings.time.checkboxs.mouse-over-info")}
             />
             <FormControlLabel
               name="global-priority-checkbox"
@@ -172,7 +176,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enablePriority}
                 />
               }
-              label="Enabled Global Priority Filtering for block columns"
+              label={t("settings.time.checkboxs.global-priority")}
             />
             <FormControlLabel
               name="stage-background-checkbox"
@@ -183,7 +187,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableColumnBackground}
                 />
               }
-              label="Enabled stage background for event columns"
+              label={t("settings.time.checkboxs.stage-background")}
             />
             <FormControlLabel
               name="enable-legend-checkbox"
@@ -194,7 +198,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableChartLegend}
                 />
               }
-              label="Enable legend for the chart"
+              label={t("settings.time.checkboxs.enable-legend")}
             />
             <FormControlLabel
               control={
@@ -205,12 +209,12 @@ export const Time = observer(function Time() {
                 />
               }
               name="lithology-auto-indent-checkbox"
-              label="Do not auto-indent lithology patterns"
+              label={t("settings.time.checkboxs.lithology-auto-indent")}
             />
             <FormControlLabel
               name="conserve-chart-checkbox"
               control={<TSCCheckbox className="time-settings-checkbox" />}
-              label="Conserve Chart Space in Family Tree Plotting (Not implemented)"
+              label={t("settings.time.checkboxs.conserve-chart")}
             />
             <FormControlLabel
               name="hide-block-labels-checkbox"
@@ -221,7 +225,7 @@ export const Time = observer(function Time() {
                   checked={state.settings.enableHideBlockLabel}
                 />
               }
-              label="Hide block labels based on priority"
+              label={t("settings.time.checkboxs.hide-block-labels")}
             />
             <FormControlLabel
               name="use-suggested-age-spans"
@@ -232,7 +236,7 @@ export const Time = observer(function Time() {
                   checked={!state.settings.useDatapackSuggestedAge}
                 />
               }
-              label="Do not use the Data-Pack's suggested age span"
+              label={t("settings.time.checkboxs.use-suggested-age-spans")}
             />
           </FormGroup>
         </div>

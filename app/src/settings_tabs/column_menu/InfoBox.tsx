@@ -4,6 +4,7 @@ import { Box, Typography } from "@mui/material";
 import "./InfoBox.css";
 import { StyledScrollbar } from "../../components";
 import { trimQuotes } from "../../util/util";
+import { useTranslation } from "react-i18next";
 
 export const InfoBox: React.FC<{ info: string }> = observer(({ info }) => {
   const addTargetBlank = (html: string) => {
@@ -12,9 +13,10 @@ export const InfoBox: React.FC<{ info: string }> = observer(({ info }) => {
 
   const content = trimQuotes(info).replaceAll('""', '"');
   const processedContent = addTargetBlank(content);
+  const { t } = useTranslation();
   return (
     <div className="column-popup-container">
-      <Typography variant="h6">Information and References</Typography>
+      <Typography variant="h6">{t("settings.column.menu.info-box")}</Typography>
       <Box className="column-popup-box">
         <StyledScrollbar className="scroll-bar">
           <Box

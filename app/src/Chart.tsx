@@ -8,6 +8,7 @@ import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } fro
 import { OptionsBar } from "./ChartOptionsBar";
 import { Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import { useTranslation } from "react-i18next";
 
 export const Chart = observer(() => {
   const { state, actions } = useContext(context);
@@ -110,6 +111,7 @@ export const Chart = observer(() => {
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
   }, [state.chartContent]);
+  const { t } = useTranslation();
 
   return (
     <div
@@ -156,7 +158,7 @@ export const Chart = observer(() => {
         </div>
       ) : (
         <div className="loading-container">
-          <Typography className="loading"> You have not made a chart yet </Typography>
+          <Typography className="loading"> {t("chart.no-chart-yet")} </Typography>
         </div>
       )}
       <TSCPopupManager />
