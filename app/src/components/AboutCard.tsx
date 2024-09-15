@@ -2,7 +2,6 @@ import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
-import defaultProPic from "../assets/defaultpropic.jpg";
 
 type AboutCardProps = {
   name: string;
@@ -11,7 +10,8 @@ type AboutCardProps = {
   timeWorked: string;
   proPic: string | undefined;
 };
-export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = defaultProPic }: AboutCardProps) => {
+const serverURL = `${import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000"}/public/aboutPictures`;
+export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = `${serverURL}/defaultpropic.jpg`}: AboutCardProps) => {
   return (
     <Card
       sx={{
@@ -23,7 +23,7 @@ export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = defaultPr
         marginTop: ".5vw",
         marginBottom: ".5vw"
       }}>
-      <CardMedia sx={{ height: 250 }} image={proPic} title={name} />
+      <CardMedia sx={{ height: 250 }} image={`${serverURL}/${proPic}`} title={name} />
       <CardContent>
         <Typography gutterBottom variant="h5" component="div">
           {name}
