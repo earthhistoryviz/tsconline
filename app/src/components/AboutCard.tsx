@@ -11,7 +11,13 @@ type AboutCardProps = {
   proPic: string | undefined;
 };
 const serverURL = `${import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000"}/public/aboutPictures`;
-export const AboutCard = ({ name, role, homeTown, timeWorked, proPic = `${serverURL}/defaultpropic.jpg`}: AboutCardProps) => {
+export const AboutCard = ({
+  name,
+  role,
+  homeTown,
+  timeWorked,
+  proPic = `${serverURL}/defaultpropic.jpg`
+}: AboutCardProps) => {
   return (
     <Card
       sx={{

@@ -126,7 +126,7 @@ const members = [
     role: "Member",
     homeTown: "Denville, NJ",
     timeWorked: "2024 - Present",
-    proPic:"MichaelPic.jpg"
+    proPic: "MichaelPic.jpg"
   }
 ];
 
