@@ -1,9 +1,10 @@
-import { mkdir, readFile, readdir } from "fs/promises";
+import { mkdir, readFile, readdir, rename, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { checkFileExists } from "../util.js";
-import { DatapackIndex, assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
+import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { Datapack, DatapackIndex, assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
+import { changeFileMetadataKey } from "../file-metadata-handler.js";
 
 export async function getDirectories(source: string): Promise<string[]> {
   const entries = await readdir(source, { withFileTypes: true });
@@ -28,4 +29,47 @@ export async function fetchAllUsersDatapacks(userDirectory: string): Promise<Dat
     datapackIndex[datapack] = parsedCachedDatapack;
   }
   return datapackIndex;
+}
+
+export async function constructUserDirectory(uuid: string): Promise<string> {
+  const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
+  if (!(await verifyFilepath(userDirectory))) {
+    throw new Error("Invalid filepath");
+  }
+  return userDirectory;
+}
+
+export async function fetchUserDatapack(userDirectory: string, datapack: string): Promise<Datapack> {
+  const cachedDatapack = path.join(userDirectory, datapack, CACHED_USER_DATAPACK_FILENAME);
+  if (!(await verifyFilepath(cachedDatapack)) || !(await checkFileExists(cachedDatapack))) {
+    throw new Error(`File ${datapack} doesn't exist`);
+  }
+  const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
+  assertPrivateUserDatapack(parsedCachedDatapack);
+  assertDatapack(parsedCachedDatapack);
+  return parsedCachedDatapack;
+}
+
+// here we rename a user datapack title which means we have to rename the folder and the file metadata (the key only)
+export async function renameUserDatapack(
+  userDirectory: string,
+  oldDatapack: string,
+  datapack: Datapack
+): Promise<void> {
+  const oldDatapackPath = path.join(userDirectory, oldDatapack);
+  const newDatapackPath = path.join(userDirectory, datapack.title);
+  if (!(await verifyFilepath(oldDatapackPath)) || !(await verifyFilepath(newDatapackPath))) {
+    throw new Error("Invalid filepath");
+  }
+  await rename(oldDatapackPath, newDatapackPath);
+  await writeUserDatapack(userDirectory, datapack);
+  await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath);
+}
+
+export async function writeUserDatapack(userDirectory: string, datapack: Datapack): Promise<void> {
+  const datapackPath = path.join(userDirectory, datapack.title);
+  if (!(await verifyFilepath(datapackPath))) {
+    throw new Error("Invalid filepath");
+  }
+  await writeFile(datapackPath, JSON.stringify(datapack, null, 2));
 }
