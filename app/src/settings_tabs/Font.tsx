@@ -5,21 +5,20 @@ import { context } from "../state";
 import { useContext } from "react";
 import { LeafColumnFontMenu } from "./FontMenu";
 import "./Font.css";
+import { useTranslation } from "react-i18next";
 export const Font = observer(function Font() {
   const theme = useTheme();
   const { state } = useContext(context);
   const rootColumn = state.settingsTabs.columns;
+  const { t } = useTranslation();
   return (
     <>
       {rootColumn ? (
         <div className="root-font-options">
           <div className="root-font-description">
-            <Typography> These are the default systemwide fonts.</Typography>
-            <Typography> Changing one here will affect the entire chart.</Typography>
-            <Typography>
-              {" "}
-              NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
-            </Typography>
+            <Typography> {t("settings.font.notes1")}</Typography>
+            <Typography> {t("settings.font.notes2")}</Typography>
+            <Typography> {t("settings.font.notes3")}</Typography>
           </div>
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
             <LeafColumnFontMenu className="font-menu-setting-tab-config" column={rootColumn} />

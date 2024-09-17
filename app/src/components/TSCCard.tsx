@@ -12,6 +12,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import checkIcon from "../assets/icons/check-icon.json";
 import FolderIcon from "@mui/icons-material/Folder";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
+import { useTranslation } from "react-i18next";
 
 const CardBackground = styled("div")(({ theme }) => ({
   background: theme.palette.cardBackground
@@ -29,6 +30,7 @@ const ContrastTypography = styled(Typography)(({ theme }) => ({
 export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; generateChart?: () => void }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [added, setAdded] = useState(false);
+  const { t } = useTranslation();
   function handleFlip() {
     setIsFlipped(!isFlipped);
   }
@@ -66,7 +68,7 @@ export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; genera
                     fontSize: "0.85rem"
                   }}
                   onClick={generateChart}>
-                  Generate
+                  {t("button.generate")}
                 </TSCButton>
               </Grid>
               <Grid item xs onClick={handleFlip}>

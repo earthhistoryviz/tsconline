@@ -302,7 +302,7 @@ export async function parseDatapacks(
     ageUnits,
     defaultChronostrat,
     formatVersion,
-    columnTypeCount: columnTypeCounter,
+    columnTypeCount: _.cloneDeep(columnTypeCounter),
     image: "",
     datapackImageCount:
       (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "datapack-images"))) +
