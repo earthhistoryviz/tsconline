@@ -2,6 +2,7 @@ import { HTMLAttributes, useEffect, useState } from "react";
 import "./TSCCustomTabs.css";
 import { observer } from "mobx-react-lite";
 import { Box, Button } from "@mui/material";
+import { useTranslation } from "react-i18next";
 type CustomTabsProps = {
   tabs: { id: string; tab: React.ReactNode }[];
   value?: number;
@@ -54,6 +55,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
       width: `2px`,
       left: `${orientation === "vertical-left" ? "0" : `${width}px`}`
     };
+    const { t } = useTranslation();
     return (
       <div className="tsc-custom-tabs" {...props}>
         <div
@@ -83,7 +85,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
                 setSelectedTab(index);
                 if (onChange) onChange(index);
               }}>
-              {val.tab}
+              {val.id !== "Warnings" ? t(`settingsTabs.${val.tab}`) : val.tab}
             </Button>
           ))}
         </div>

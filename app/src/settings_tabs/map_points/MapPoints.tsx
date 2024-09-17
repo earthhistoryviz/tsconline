@@ -9,6 +9,7 @@ import { observer } from "mobx-react-lite";
 import React from "react";
 import { MapViewer } from "./MapViewer";
 import "./MapPoints.css";
+import { useTranslation } from "react-i18next";
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
@@ -23,6 +24,7 @@ const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
 export const MapPoints = observer(function MapPoint() {
   const { state } = useContext(context);
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <div>
       {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
@@ -31,7 +33,7 @@ export const MapPoints = observer(function MapPoint() {
             sx={{
               fontSize: theme.typography.pxToRem(18)
             }}>
-            No Map Points available for this datapack
+            {t("settings.map-points.not-avaliable")}
           </Typography>
         </div>
       ) : (

@@ -14,16 +14,18 @@ import "./Settings.css";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
+import { useTranslation } from "react-i18next";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const SettingsHeader = () => {
+    const { t } = useTranslation();
     return (
       <div className="settings-header">
         <LoadSettings />
         <Typography className="settings-header-title" variant="h3">
-          Settings
+          {t("title.settings")}
         </Typography>
         <SaveSettings />
       </div>

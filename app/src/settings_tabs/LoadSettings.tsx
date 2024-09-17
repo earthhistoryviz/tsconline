@@ -12,6 +12,7 @@ import { CircularProgress, IconButton } from "@mui/material";
 import FileUploadIcon from "@mui/icons-material/FileUpload";
 import { CustomTooltip, InputFileUpload } from "../components";
 import "./LoadSettings.css";
+import { useTranslation } from "react-i18next";
 export default function LoadSettings() {
   const { actions } = useContext(context);
   const [open, setOpen] = React.useState(false);
@@ -57,7 +58,7 @@ export default function LoadSettings() {
       <div>
         {isLoading === false && (
           <InputFileUpload
-            text="Load"
+            text={t("settings.settings-file.load-dialog.load")}
             variant="text"
             onChange={(e) => {
               handleClick(e);
@@ -68,9 +69,10 @@ export default function LoadSettings() {
       </div>
     );
   };
+  const { t } = useTranslation();
   return (
     <>
-      <CustomTooltip title="Load Settings">
+      <CustomTooltip title={t("settings.settings-file.load")}>
         <IconButton className="icon-load-settings-button" onClick={handleClickOpen}>
           <FileUploadIcon className="load-settings-button" />
         </IconButton>
@@ -81,13 +83,13 @@ export default function LoadSettings() {
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
-        <DialogTitle>Load Settings</DialogTitle>
+        <DialogTitle>{t("settings.settings-file.load")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>This will overwrite any changes you&apos;ve made!</DialogContentText>
+          <DialogContentText>{t("settings.settings-file.load-dialog.message")}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={handleClose}>
-            Cancel
+            {t("settings.settings-file.load-dialog.cancel")}
           </Button>
           <LoadButton />
         </DialogActions>
