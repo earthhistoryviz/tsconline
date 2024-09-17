@@ -4,7 +4,7 @@ import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, verifyFilepath, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata, assertDatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -19,7 +19,8 @@ import {
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   getDirectories,
-  renameUserDatapack} from "../user/user-handler.js";
+  renameUserDatapack
+} from "../user/user-handler.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
@@ -33,6 +34,10 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   }
   if (!body) {
     reply.status(400).send({ error: "Missing body" });
+    return;
+  }
+  if (!isPartialDatapackMetadata(body)) {
+    reply.status(400).send({ error: "Invalid body" });
     return;
   }
   const uuid = request.session.get("uuid");
