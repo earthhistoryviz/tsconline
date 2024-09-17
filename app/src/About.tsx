@@ -3,24 +3,9 @@ import { Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { TSCIcon } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
-import "./About.css";
 import { AboutCard } from "./components/AboutCard";
-
-import LeytonPic from "./assets/aboutPictures/LeytonBostre.jpg";
-import JacquiPic from "./assets/aboutPictures/JacquiLi.jpeg";
-import PaoloPic from "./assets/aboutPictures/PaoloGumasing.jpeg";
-import JayPic from "./assets/aboutPictures/JayLee.png";
-import RohanPic from "./assets/aboutPictures/RohanNachnani.jpg";
-import SejalPic from "./assets/aboutPictures/SejalKumar.jpg";
-import AdityaPic from "./assets/aboutPictures/AdityaSivathanu.jpg";
-import AaronPic from "./assets/aboutPictures/AaronAult.jpg";
-import TobyPic from "./assets/aboutPictures/TobyOnyekwere.png";
-import RebeccaPic from "./assets/aboutPictures/RebeccaRupp.png";
-import JenniferPic from "./assets/aboutPictures/JenniferYu.jpg";
-import KevinChang from "./assets/aboutPictures/KevinChang.jpg";
-import SamyPic from "./assets/aboutPictures/SamyuktaBalaji.png";
-import MichaelPic from "./assets/aboutPictures/MichaelPic.jpg";
 import { useTranslation } from "react-i18next";
+import "./About.css";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -50,98 +35,98 @@ const members = [
     role: "Advisor",
     homeTown: "Rochester, IN",
     timeWorked: "2008 - Present",
-    proPic: AaronPic
+    proPic: "AaronAult.jpg"
   },
   {
     name: "Paolo Gumasing",
     role: "Team Lead",
     homeTown: "Lafayette, IN",
     timeWorked: "2023 - Present",
-    proPic: PaoloPic
+    proPic: "PaoloGumasing.jpeg"
   },
   {
     name: "Jay Lee",
     role: "Member",
     homeTown: "Seoul, South Korea",
     timeWorked: "2023 - Present",
-    proPic: JayPic
+    proPic: "JayLee.png"
   },
   {
     name: "Sejal Kumar",
     role: "Member",
     homeTown: "Canton, MI",
     timeWorked: "2023 - 2024",
-    proPic: SejalPic
+    proPic: "SejalKumar.jpg"
   },
   {
     name: "Aditya Sivathanu",
     role: "Member",
     homeTown: "West Lafayette, IN",
     timeWorked: "2023 - Present",
-    proPic: AdityaPic
+    proPic: "AdityaSivathanu.jpg"
   },
   {
     name: "Leyton Bostre",
     role: "Member",
     homeTown: "Long Beach, CA",
     timeWorked: "2024 - Present",
-    proPic: LeytonPic
+    proPic: "LeytonBostre.jpg"
   },
   {
     name: "Jiaqing Li (Jacqui)",
     role: "Member",
     homeTown: "Wuhan, China",
     timeWorked: "2024 - Present",
-    proPic: JacquiPic
+    proPic: "JacquiLi.jpeg"
   },
   {
     name: "Toby Onyekwere",
     role: "Member",
     homeTown: "Nigeria",
     timeWorked: "2024",
-    proPic: TobyPic
+    proPic: "TobyOnyekwere.png"
   },
   {
     name: "Rohan Nachnani",
     role: "Member",
     homeTown: "Bangalore, India",
     timeWorked: "2024",
-    proPic: RohanPic
+    proPic: "RohanNachnani.jpg"
   },
   {
     name: "Rebecca Rupp",
     role: "Member",
     homeTown: "Houston, Texas",
     timeWorked: "2024 - Present",
-    proPic: RebeccaPic
+    proPic: "RebeccaRupp.png"
   },
   {
     name: "Jennifer Yu",
     role: "Member",
     homeTown: "West Lafayette, IN",
     timeWorked: "2024",
-    proPic: JenniferPic
+    proPic: "JenniferYu.jpg"
   },
   {
     name: "Kevin Chang",
     role: "Member",
     homeTown: "West Lafayette, IN",
     timeWorked: "2024 - Present",
-    proPic: KevinChang
+    proPic: "KevinChang.jpg"
   },
   {
     name: "Samyukta Balaji",
     role: "Member",
     homeTown: "Sacramento, California",
     timeWorked: "2024-Present",
-    proPic: SamyPic
+    proPic: "SamyuktaBalaji.png"
   },
   {
     name: "Michael Knaack",
     role: "Member",
     homeTown: "Denville, NJ",
     timeWorked: "2024 - Present",
-    proPic: MichaelPic
+    proPic: "MichaelPic.jpg"
   }
 ];
 

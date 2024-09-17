@@ -11,5 +11,8 @@ export default defineConfig({
   },
   worker: {
     format: "es"
+  },
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"]
   }
 });
