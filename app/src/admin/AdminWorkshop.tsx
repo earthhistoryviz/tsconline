@@ -11,7 +11,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import GroupAddIcon from "@mui/icons-material/GroupAdd";
 import dayjs from "dayjs";
-import { Workshop } from "@tsconline/shared";
+import { SharedWorkshop } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import "./AdminWorkshop.css";
 
@@ -20,7 +20,7 @@ type AddUsersCellRendererProps = {
     setAddUsersFormOpen: (open: boolean) => void;
     setWorkshopId: (workshopId: number) => void;
   };
-  data: Workshop;
+  data: SharedWorkshop;
 };
 const AddUsersCellRenderer: React.FC<AddUsersCellRendererProps> = (props) => {
   const { setAddUsersFormOpen, setWorkshopId } = props.context;
@@ -90,6 +90,14 @@ const AddUsersForm: React.FC<AddUsersFormProps> = observer(({ handleFileUpload, 
   );
 });
 
+const checkboxRenderer = (params: { value: boolean }) => {
+  if (params.value === true) {
+    return <span className="ag-icon-tick" />;
+  } else {
+    return <span className="ag-icon-cross" />;
+  }
+};
+
 const workshopColDefs: ColDef[] = [
   {
     headerName: "Workshop Title",
@@ -99,10 +107,11 @@ const workshopColDefs: ColDef[] = [
   },
   { headerName: "Workshop Start Date", field: "start", flex: 1 },
   { headerName: "Workshop End Date", field: "end", flex: 1 },
+  { headerName: "Active", field: "active", flex: 0.2, cellRenderer: checkboxRenderer },
   {
     headerName: "Actions",
     cellRenderer: AddUsersCellRenderer,
-    width: 100,
+    flex: 0.2,
     cellStyle: { textAlign: "center", border: "none" }
   }
 ];
