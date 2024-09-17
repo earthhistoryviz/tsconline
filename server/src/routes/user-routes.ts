@@ -4,7 +4,7 @@ import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, verifyFilepath, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackIndex } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -14,7 +14,63 @@ import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upl
 import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
-import { fetchAllUsersDatapacks } from "../user/user-handler.js";
+import {
+  constructUserDirectory,
+  fetchAllUsersDatapacks,
+  fetchUserDatapack,
+  getDirectories,
+  renameUserDatapack} from "../user/user-handler.js";
+
+export const editDatapackMetadata = async function editDatapackMetadata(
+  request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.params;
+  const body = request.body;
+  if (!datapack) {
+    reply.status(400).send({ error: "Missing datapack" });
+    return;
+  }
+  if (!body) {
+    reply.status(400).send({ error: "Missing body" });
+    return;
+  }
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const userDir = await constructUserDirectory(uuid).catch((e) => {
+    reply.status(500).send({ error: "Failed to create user directory with error " + e });
+  });
+  if (!userDir) {
+    return;
+  }
+  const datapackTitles = await getDirectories(userDir);
+  if (body.title && datapackTitles.includes(body.title)) {
+    reply.status(400).send({ error: "Title already exists" });
+    return;
+  }
+  const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
+    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
+  });
+  if (!metadata) {
+    return;
+  }
+  // edit metadata
+  Object.assign(metadata, body);
+
+  // check if title is being changed so that we can rename the directory
+  if (body.title && metadata.title !== datapack) {
+    try {
+      await renameUserDatapack(userDir, datapack, metadata);
+    } catch (e) {
+      reply.status(500).send({ error: "Failed to change datapack title." });
+      return;
+    }
+  }
+  reply.send({ message: `Successfully updated ${datapack}` });
+};
 
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,

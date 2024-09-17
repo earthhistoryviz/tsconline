@@ -2,6 +2,7 @@ import { access, readFile, rm, writeFile } from "fs/promises";
 import { assertFileMetadataIndex } from "./types.js";
 import { checkFileExists } from "./util.js";
 import { Mutex } from "async-mutex";
+import _ from "lodash";
 
 const mutex = new Mutex();
 export const sunsetInterval = 1000 * 60 * 60 * 24 * 14;
@@ -120,6 +121,20 @@ export async function updateFileMetadata(fileMetadataFilepath: string, filepath:
       if (!metadata[file]) throw new Error(`File ${file} not found in metadata`);
       metadata[file]!.lastUpdated = new Date().toISOString();
     }
+    await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
+  } finally {
+    release();
+  }
+}
+
+export async function changeFileMetadataKey(fileMetadataFilepath: string, oldFilepath: string, newFilepath: string) {
+  const release = await mutex.acquire();
+  try {
+    const metadata = await loadFileMetadata(fileMetadataFilepath);
+    if (!metadata[oldFilepath]) throw new Error(`File ${oldFilepath} not found in metadata`);
+    if (metadata[newFilepath]) throw new Error(`File ${newFilepath} already exists in metadata`);
+    metadata[newFilepath] = _.cloneDeep(metadata[oldFilepath]!);
+    delete metadata[oldFilepath];
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } finally {
     release();
