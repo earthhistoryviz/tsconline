@@ -7,8 +7,8 @@ import {
   updateUser,
   createWorkshop,
   findWorkshop,
-  db,
-  getAndHandleWorkshopEnd
+  getAndHandleWorkshopEnd,
+  updateWorkshopStatusAndGetActive
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -25,11 +25,11 @@ import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import {
-  Workshop,
+  SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackIndex,
-  assertWorkshop,
-  assertWorkshopArray
+  assertSharedWorkshop,
+  assertSharedWorkshopArray
 } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
@@ -536,23 +536,16 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const workshopIds = await db
-      .deleteFrom("workshop")
-      .where("end", "<", new Date().toISOString())
-      .returning("workshopId")
-      .execute();
-    for (const workshopId of workshopIds) {
-      await updateUser({ workshopId: workshopId.workshopId }, { workshopId: 0 });
-    }
-    const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
+    const workshops: SharedWorkshop[] = (await updateWorkshopStatusAndGetActive()).map((workshop) => {
       return {
         title: workshop.title,
         start: formatDate(new Date(workshop.start)),
         end: formatDate(new Date(workshop.end)),
-        workshopId: workshop.workshopId
+        workshopId: workshop.workshopId,
+        active: true
       };
     });
-    assertWorkshopArray(workshops);
+    assertSharedWorkshopArray(workshops);
     reply.send({ workshops });
   } catch (error) {
     console.error(error);
@@ -587,26 +580,28 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     return;
   }
   try {
-    const existingWorkshops = await findWorkshop({ title });
+    const existingWorkshops = await findWorkshop({ title, start: startDate.toISOString(), end: endDate.toISOString() });
     if (existingWorkshops.length > 0) {
-      reply.status(409).send({ error: "Workshop with that title already exists" });
+      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString()
+      end: endDate.toISOString(),
+      status: "inactive"
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
     }
-    const workshop: Workshop = {
+    const workshop: SharedWorkshop = {
       title,
       start: formatDate(startDate),
       end: formatDate(endDate),
-      workshopId
+      workshopId,
+      active: false
     };
-    assertWorkshop(workshop);
+    assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
     console.error(error);
