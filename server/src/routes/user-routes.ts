@@ -4,7 +4,7 @@ import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, verifyFilepath, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackIndex, DatapackMetadata, assertDatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
@@ -57,7 +57,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     return;
   }
   const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
-    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
+    reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
   });
   if (!metadata) {
     return;
@@ -70,6 +70,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     try {
       await renameUserDatapack(userDir, datapack, metadata);
     } catch (e) {
+      console.error(e);
       reply.status(500).send({ error: "Failed to change datapack title." });
       return;
     }

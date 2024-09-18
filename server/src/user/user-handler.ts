@@ -58,16 +58,28 @@ export async function renameUserDatapack(
 ): Promise<void> {
   const oldDatapackPath = path.join(userDirectory, oldDatapack);
   const newDatapackPath = path.join(userDirectory, datapack.title);
-  if (!(await verifyFilepath(oldDatapackPath)) || !(await verifyFilepath(newDatapackPath))) {
+  const oldDatapackMetadata = await fetchUserDatapack(userDirectory, oldDatapack);
+  if (!(await verifyFilepath(oldDatapackPath))) {
+    throw new Error("Invalid filepath");
+  }
+  if (!path.resolve(newDatapackPath).startsWith(path.resolve(userDirectory))) {
     throw new Error("Invalid filepath");
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await writeUserDatapack(userDirectory, datapack);
-  await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath);
+  await writeUserDatapack(userDirectory, datapack).catch(async (e) => {
+    await rename(newDatapackPath, oldDatapackPath);
+    throw e;
+  });
+  await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+    await rename(newDatapackPath, oldDatapackPath);
+    // revert the write if the metadata change fails
+    await writeUserDatapack(userDirectory, oldDatapackMetadata);
+    throw e;
+  });
 }
 
 export async function writeUserDatapack(userDirectory: string, datapack: Datapack): Promise<void> {
-  const datapackPath = path.join(userDirectory, datapack.title);
+  const datapackPath = path.join(userDirectory, datapack.title, CACHED_USER_DATAPACK_FILENAME);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
