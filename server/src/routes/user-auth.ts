@@ -79,7 +79,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
     userDeleteDatapack
   );
-  fastify.post(
+  fastify.patch(
     "/datapack/:datapack",
     { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
     editDatapackMetadata
