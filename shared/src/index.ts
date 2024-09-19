@@ -995,6 +995,24 @@ export function assertPatterns(o: any): asserts o is Patterns {
 
 export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
   if (!o || typeof o !== "object") return false;
+  const validKeys = [
+    "description",
+    "title",
+    "originalFileName",
+    "storedFileName",
+    "size",
+    "authoredBy",
+    "tags",
+    "date",
+    "references",
+    "contact",
+    "notes"
+  ];
+  for (const key in o) {
+    if (!validKeys.includes(key)) {
+      return false;
+    }
+  }
   if ("description" in o && typeof o.description !== "string") return false;
   if ("title" in o && typeof o.title !== "string") return false;
   if ("originalFileName" in o && typeof o.originalFileName !== "string") return false;

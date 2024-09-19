@@ -11,6 +11,8 @@ import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
 import path from "path";
 import * as pathModule from "path";
+import * as userHandler from "../src/user/user-handler";
+import { Datapack } from "@tsconline/shared";
 
 vi.mock("../src/upload-handlers", async () => {
   return {
@@ -80,6 +82,16 @@ vi.mock("../src/util", async (importOriginal) => {
     deleteDirectory: vi.fn().mockImplementation(() => {}),
     resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
+  };
+});
+
+vi.mock("../src/user/user-handler", () => {
+  return {
+    getUserDirectory: vi.fn().mockResolvedValue("userDirectory"),
+    getDirectories: vi.fn().mockResolvedValue([]),
+    fetchUserDatapack: vi.fn().mockResolvedValue({}),
+    renameUserDatapack: vi.fn().mockResolvedValue({}),
+    writeUserDatapack: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -172,7 +184,8 @@ const testUser = {
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "GET", url: `/user/datapack/${filename}` },
   { method: "POST", url: "/user/datapack" },
-  { method: "DELETE", url: `/user/datapack/${filename}` }
+  { method: "DELETE", url: `/user/datapack/${filename}` },
+  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } }
 ];
 
 describe("verifySession tests", () => {
@@ -257,6 +270,159 @@ describe("verifyRecaptcha tests", () => {
       expect(response.statusCode).toBe(500);
       expect(await response.json()).toEqual({ error: "Recaptcha error" });
     });
+  });
+});
+
+describe("edit datapack tests", () => {
+  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
+  const getDirectories = vi.spyOn(userHandler, "getDirectories");
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const renameUserDatapack = vi.spyOn(userHandler, "renameUserDatapack");
+  const writeUserDatapack = vi.spyOn(userHandler, "writeUserDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 400 if no datapack is provided", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/",
+      headers
+    });
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Missing datapack");
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if no body is provided", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers
+    });
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Missing body");
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if body is not partial datapack metadata", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { wrong_key: "new_title" }
+    });
+    expect(response.json().error).toBe("Invalid body");
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in getUserDirectory", async () => {
+    getUserDirectory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Failed to get user directory");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 400 if the datapack already exists", async () => {
+    getDirectories.mockResolvedValueOnce(["new_title"]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Title already exists");
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in fetchUserDatapack", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Datapack does not exist or cannot be found");
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if an error occurred in renameUserDatapack", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    renameUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Failed to change datapack title.");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if an error occurred in writeUserDatapack", async () => {
+    writeUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { authoredBy: "author" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Failed to write datapack information to file system");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if the datapack is successfully edited (no title)", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { authoredBy: "new_author" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ message: "Successfully updated test" });
+  });
+  it("should return 200 if the datapack is successfully edited (with title)", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ message: "Successfully updated test" });
   });
 });
 
