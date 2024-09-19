@@ -15,11 +15,12 @@ import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
 import {
-  constructUserDirectory,
+  getUserDirectory,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   getDirectories,
-  renameUserDatapack
+  renameUserDatapack,
+  writeUserDatapack
 } from "../user/user-handler.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
@@ -45,8 +46,8 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const userDir = await constructUserDirectory(uuid).catch((e) => {
-    reply.status(500).send({ error: "Failed to create user directory with error " + e });
+  const userDir = await getUserDirectory(uuid).catch(() => {
+    reply.status(500).send({ error: "Failed to get user directory" });
   });
   if (!userDir) {
     return;
@@ -72,6 +73,13 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     } catch (e) {
       console.error(e);
       reply.status(500).send({ error: "Failed to change datapack title." });
+      return;
+    }
+  } else {
+    try {
+      await writeUserDatapack(userDir, metadata);
+    } catch (e) {
+      reply.status(500).send({ error: "Failed to write datapack information to file system" });
       return;
     }
   }
@@ -133,7 +141,6 @@ export const requestDownload = async function requestDownload(
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
       if (error.code === "ENOENT") {
-        console.log(filepath);
         const errormsg = "The file requested " + datapack + " does not exist within user's upload directory";
         reply.status(404).send({ error: errormsg });
       } else {
@@ -470,7 +477,6 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   try {
     await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, filepath);
   } catch (e) {
-    console.log(e);
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
   }

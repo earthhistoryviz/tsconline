@@ -31,7 +31,7 @@ export async function fetchAllUsersDatapacks(userDirectory: string): Promise<Dat
   return datapackIndex;
 }
 
-export async function constructUserDirectory(uuid: string): Promise<string> {
+export async function getUserDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
