@@ -11,6 +11,20 @@ export async function up(db: Kysely<any>): Promise<void> {
     .execute();
 
   const workshops = await db.selectFrom("workshop").select(["workshopId", "title", "start", "end"]).execute();
+  const backupExists = await db
+    .selectFrom("sqlite_master")
+    .select("name")
+    .where("type", "=", "table")
+    .where("name", "=", "workshopBackup")
+    .execute();
+  if (backupExists.length > 0) {
+    const backupWorkshops = await db
+      .selectFrom("workshopBackup")
+      .select(["workshopId", "title", "start", "end"])
+      .execute();
+    workshops.push(...backupWorkshops);
+    await db.schema.dropTable("workshopBackup").execute();
+  }
   for (const workshop of workshops) {
     await db.insertInto("workshop_temp").values(workshop).execute();
   }
