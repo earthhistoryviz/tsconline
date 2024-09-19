@@ -1736,9 +1736,9 @@ describe("adminAddUsersToWorkshop", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    // expect(pipeline).toHaveBeenCalledTimes(1);
-    // expect(parseExcelFile).toHaveBeenCalledTimes(1);
-    // expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Invalid email addresses provided", invalidEmails: "test1, test2" });
     expect(response.statusCode).toBe(409);
   });
