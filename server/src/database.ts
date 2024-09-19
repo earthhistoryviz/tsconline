@@ -46,7 +46,7 @@ Database Schema Details (Post-Migration):
 
 - workshop Table:
   - id (integer): Primary key, auto-increment.
-  - title (text): Non-nullable, must be unique, the title of the workshop.
+  - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - status (string): Non-nullable, default is 'expired', indicates if the workshop is status or not. Possible values are 'status' and 'expired'.

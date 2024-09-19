@@ -542,7 +542,7 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         start: formatDate(new Date(workshop.start)),
         end: formatDate(new Date(workshop.end)),
         workshopId: workshop.workshopId,
-        active: true
+        status: workshop.status
       };
     });
     assertSharedWorkshopArray(workshops);
@@ -599,7 +599,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: formatDate(startDate),
       end: formatDate(endDate),
       workshopId,
-      active: false
+      status: "inactive"
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
