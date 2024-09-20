@@ -37,6 +37,10 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing body" });
     return;
   }
+  if (body.originalFileName || body.storedFileName || body.size) {
+    reply.status(400).send({ error: "Cannot edit originalFileName, storedFileName, or size" });
+    return;
+  }
   if (!isPartialDatapackMetadata(body)) {
     reply.status(400).send({ error: "Invalid body" });
     return;
