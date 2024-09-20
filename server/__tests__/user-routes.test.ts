@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
+import { test, vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
@@ -304,6 +304,20 @@ describe("edit datapack tests", () => {
     expect(response.json().error).toBe("Missing body");
     expect(response.statusCode).toBe(400);
   });
+  test.each([{ storedFileName: "new_title" }, { originalFileName: "new_title" }, { size: 100 }])(
+    `should reply 400 if bad body (DatapackMetadata props)`,
+    async (body) => {
+      const response = await app.inject({
+        method: "PATCH",
+        url: "/user/datapack/test",
+        headers,
+        body
+      });
+      expect(getUserDirectory).not.toHaveBeenCalled();
+      expect(renameUserDatapack).not.toHaveBeenCalled();
+      expect(response.json().error).toBe("Cannot edit originalFileName, storedFileName, or size");
+    }
+  );
   it("should reply 400 if body is not partial datapack metadata", async () => {
     const response = await app.inject({
       method: "PATCH",
