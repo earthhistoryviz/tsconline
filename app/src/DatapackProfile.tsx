@@ -4,8 +4,8 @@ import styles from "./DatapackProfile.module.css";
 import { useContext, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { CustomDivider, TagButton } from "./components";
+import { Box, Button, IconButton, SvgIcon, Typography, useTheme } from "@mui/material";
+import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
@@ -14,6 +14,7 @@ import { PageNotFound } from "./PageNotFound";
 import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
+import CreateIcon from "@mui/icons-material/Create";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -137,6 +138,7 @@ type AboutProps = {
   datapack: BaseDatapackProps;
 };
 const About: React.FC<AboutProps> = ({ datapack }) => {
+  const [editMode, setEditMode] = useState(false);
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
@@ -156,6 +158,31 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         )}
       </div>
       <div className={styles.additional}>
+        {!editMode ? (
+          <Box className={styles.pencilIconContainer} onClick={() => setEditMode(!editMode)}>
+            <SvgIcon className={styles.pencilIcon}>
+              <CreateIcon />
+            </SvgIcon>
+          </Box>
+        ) : (
+          <Box className={styles.editButtonContainer}>
+            <Button
+              variant="outlined"
+              sx={{
+                borderColor: "error.main",
+                color: "error.main",
+                ":hover": {
+                  borderColor: "error.light",
+                  backgroundColor: "transparent"
+                }
+              }}
+              className={styles.editButton}
+              onClick={() => setEditMode(false)}>
+              Cancel
+            </Button>
+            <TSCButton className={styles.editButton}>Save</TSCButton>
+          </Box>
+        )}
         <div className={styles.ai}>
           <Typography className={styles.aih}>Authored By</Typography>
           <Typography>{datapack.authoredBy}</Typography>
