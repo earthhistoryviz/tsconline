@@ -19,6 +19,7 @@ export interface UserTable {
   invalidateSession: number;
   isAdmin: number;
   workshopId: number;
+  accountType: string;
 }
 
 export interface VerificationTable {
