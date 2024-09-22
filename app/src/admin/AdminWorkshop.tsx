@@ -90,8 +90,8 @@ const AddUsersForm: React.FC<AddUsersFormProps> = observer(({ handleFileUpload, 
   );
 });
 
-const checkboxRenderer = (params: { value: string }) => {
-  if (params.value === "active") {
+const checkboxRenderer = (params: { value: boolean }) => {
+  if (params.value === true) {
     return <span className="ag-icon-tick" />;
   } else {
     return <span className="ag-icon-cross" />;
@@ -107,7 +107,7 @@ const workshopColDefs: ColDef[] = [
   },
   { headerName: "Workshop Start Date", field: "start", flex: 1 },
   { headerName: "Workshop End Date", field: "end", flex: 1 },
-  { headerName: "Active", field: "status", flex: 0.2, cellRenderer: checkboxRenderer },
+  { headerName: "Active", field: "active", flex: 0.2, cellRenderer: checkboxRenderer },
   {
     headerName: "Actions",
     cellRenderer: AddUsersCellRenderer,

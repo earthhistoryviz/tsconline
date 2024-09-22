@@ -7,8 +7,7 @@ import {
   updateUser,
   createWorkshop,
   findWorkshop,
-  getAndHandleWorkshopEnd,
-  updateWorkshopStatusAndGetActive
+  getAndHandleWorkshopEnd
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -536,13 +535,16 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const workshops: SharedWorkshop[] = (await updateWorkshopStatusAndGetActive()).map((workshop) => {
+    const workshops: SharedWorkshop[] = (await findWorkshop({})).map((workshop) => {
+      const now = new Date();
+      const start = new Date(workshop.start);
+      const end = new Date(workshop.end);
       return {
         title: workshop.title,
-        start: formatDate(new Date(workshop.start)),
-        end: formatDate(new Date(workshop.end)),
+        start: formatDate(start),
+        end: formatDate(end),
         workshopId: workshop.workshopId,
-        status: workshop.status
+        active: start <= now && now <= end
       };
     });
     assertSharedWorkshopArray(workshops);
@@ -588,8 +590,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString(),
-      status: "inactive"
+      end: endDate.toISOString()
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
@@ -599,7 +600,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: formatDate(startDate),
       end: formatDate(endDate),
       workshopId,
-      status: "inactive"
+      active: false
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });

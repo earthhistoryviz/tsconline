@@ -39,7 +39,6 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
-  status: "active" | "inactive" | "expired";
 }
 
 export type User = Selectable<UserTable>;
