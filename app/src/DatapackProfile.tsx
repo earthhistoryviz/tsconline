@@ -1,10 +1,10 @@
 import { observer } from "mobx-react-lite";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import { Box, Button, IconButton, SvgIcon, Typography, useTheme } from "@mui/material";
+import { Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -15,6 +15,7 @@ import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared"
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
+import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -139,6 +140,27 @@ type AboutProps = {
 };
 const About: React.FC<AboutProps> = ({ datapack }) => {
   const [editMode, setEditMode] = useState(false);
+  const { state, setters, handlers } = useDatapackProfileForm(datapack);
+  // for when user tries to navigate away with unsaved changes
+  useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      state.unsavedChanges &&
+      currentLocation.pathname !== nextLocation.pathname &&
+      !window.confirm("Unsaved changes to your will be lost.")
+  );
+  // for when user tries to leave page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (state.unsavedChanges) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [state.unsavedChanges]);
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
@@ -177,7 +199,18 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
                 }
               }}
               className={styles.editButton}
-              onClick={() => setEditMode(false)}>
+              onClick={() => {
+                if (
+                  !state.unsavedChanges ||
+                  window.confirm("Unsaved changes to your data will be lost. Do you want to proceed?")
+                ) {
+                  setEditMode(false);
+                  // reset the metadata if the user cancels
+                  if (state.unsavedChanges) {
+                    handlers.resetDatapackMetadata();
+                  }
+                }
+              }}>
               Cancel
             </Button>
             <TSCButton className={styles.editButton}>Save</TSCButton>
@@ -185,7 +218,15 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         )}
         <div className={styles.ai}>
           <Typography className={styles.aih}>Authored By</Typography>
-          <Typography>{datapack.authoredBy}</Typography>
+          {editMode ? (
+            <TextField
+              fullWidth
+              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, authoredBy: e.target.value })}
+              value={state.datapackMetadata.authoredBy}
+            />
+          ) : (
+            <Typography>{datapack.authoredBy}</Typography>
+          )}
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
