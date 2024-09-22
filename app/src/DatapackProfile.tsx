@@ -141,12 +141,13 @@ type AboutProps = {
 const About: React.FC<AboutProps> = ({ datapack }) => {
   const [editMode, setEditMode] = useState(false);
   const { state, setters, handlers } = useDatapackProfileForm(datapack);
+  const { t } = useTranslation();
   // for when user tries to navigate away with unsaved changes
   useBlocker(
     ({ currentLocation, nextLocation }) =>
       state.unsavedChanges &&
       currentLocation.pathname !== nextLocation.pathname &&
-      !window.confirm("Unsaved changes to your will be lost.")
+      !window.confirm(t("dialogs.confirm-changes.message"))
   );
   // for when user tries to leave page with unsaved changes
   useEffect(() => {
@@ -200,10 +201,7 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
               }}
               className={styles.editButton}
               onClick={() => {
-                if (
-                  !state.unsavedChanges ||
-                  window.confirm("Unsaved changes to your data will be lost. Do you want to proceed?")
-                ) {
+                if (!state.unsavedChanges || window.confirm(t("dialogs.confirm-changes.message"))) {
                   setEditMode(false);
                   // reset the metadata if the user cancels
                   if (state.unsavedChanges) {
