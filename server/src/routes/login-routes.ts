@@ -677,7 +677,6 @@ export const signup = async function signup(
       emailVerified: 0,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(newUser);
@@ -803,7 +802,6 @@ export const googleLogin = async function googleLogin(
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(user);

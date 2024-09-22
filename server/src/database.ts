@@ -5,7 +5,7 @@ import {
   UpdatedUser,
   Verification,
   NewVerification,
-  NewWorkshop,
+  NewWorkshop, newUsersWorkshops,
   Workshop,
   UpdatedWorkshop
 } from "./types.js";
@@ -50,6 +50,10 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+
+- usersWorkshops Table:
+  - workshopId (integer): Non-nullable, links to the workshop table.
+  - userId (integer): Non-nullable, links to the users table.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -119,7 +123,6 @@ export async function initializeDatabase() {
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 1,
-      workshopId: 0,
       accountType: "default"
     });
   }
@@ -142,7 +145,7 @@ export async function findUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.selectAll().execute();
 }
@@ -158,7 +161,6 @@ export async function updateUser(criteria: Partial<User>, updatedUser: UpdatedUs
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
@@ -174,7 +176,6 @@ export async function deleteUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
@@ -233,6 +234,42 @@ export async function checkForUsersWithUsernameOrEmail(username: string, email: 
     .selectAll()
     .where((eb) => eb("username", "=", username).or("email", "=", email))
     .execute();
+}
+
+export async function checkWorkshopHasUser(userId: number, workshopId: number) {
+  return await db
+    .selectFrom("usersWorkshops")
+    .selectAll()
+    .where((eb) => eb('userId', '=', userId).and('workshopId', '=', workshopId))
+    .execute();
+}
+
+export async function findWorkshopInUsersWorkshops(workshopId: number) {
+  return await db
+    .selectFrom("usersWorkshops")
+    .selectAll()
+    .where((eb) => eb('workshopId', '=', workshopId))
+    .execute();
+}
+
+export async function findUserInUsersWorkshops(userId: number) {
+  return await db
+    .selectFrom("usersWorkshops")
+    .selectAll()
+    .where((eb) => eb('userId', '=', userId))
+    .execute();
+}
+
+export async function deleteWorkshopInUsersWorkshops(workshopId: number) {
+  return await db.deleteFrom("usersWorkshops").where("workshopId", "=", workshopId).execute();
+}
+
+export async function deleteUserInUsersWorkshops(userId: number) {
+  return await db.deleteFrom("usersWorkshops").where("userId", "=", userId).execute();
+}
+
+export async function createUsersWorkshops(newUsersWorkshops: newUsersWorkshops) {
+  return await db.insertInto("usersWorkshops").values(newUsersWorkshops).execute();
 }
 
 export async function createWorkshop(criteria: NewWorkshop): Promise<number | undefined> {
