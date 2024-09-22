@@ -31,6 +31,7 @@ Database Schema Details (Post-Migration):
   - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
   - isAdmin (integer): Non-nullable, default is 0, indicates if the user is an admin.
   - workshopId (integer): Non-nullable, default is 0. Links to the workshop table. If this field is not 0, the user is associated with a workshop.
+  - accountType (text): Non-nullable, default is "default", indicates user account type.
 
 - verification Table:
   - id (integer): Primary key, auto-increment.
@@ -118,7 +119,8 @@ export async function initializeDatabase() {
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 1,
-      workshopId: 0
+      workshopId: 0,
+      accountType: "default"
     });
   }
 }
@@ -141,6 +143,7 @@ export async function findUser(criteria: Partial<User>) {
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.selectAll().execute();
 }
 
@@ -156,6 +159,7 @@ export async function updateUser(criteria: Partial<User>, updatedUser: UpdatedUs
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
 
@@ -171,6 +175,7 @@ export async function deleteUser(criteria: Partial<User>) {
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
 

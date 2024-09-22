@@ -111,7 +111,8 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0,
-      workshopId: 0
+      workshopId: 0,
+      accountType: "default"
     };
     await createUser(customUser);
     const newUser = await findUser({ email });
@@ -180,6 +181,40 @@ export const adminDeleteUser = async function adminDeleteUser(
     return;
   }
   reply.send({ message: "User deleted" });
+};
+
+/**
+ * Admin sends a request to change a user's account type
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminChangeAccountType = async function adminChangeAccountType(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const { username, email, accountType } = request.body as {
+    username: string;
+    email: string;
+    accountType: string;
+  };
+  if (!email || !validator.isEmail(email) || !accountType) {
+    reply.status(400).send({ error: "Missing/invalid required fields" });
+    return;
+  }
+  try {
+    const user = await checkForUsersWithUsernameOrEmail(username || email, email);
+    if (user.length == 0) {
+      reply.status(409).send({ error: "User does not exist." });
+      return;
+    }
+    await updateUser({ email }, { accountType });
+    reply.send({ message: "User account type changed." });
+  } catch (error) {
+    reply.status(500).send({ error: "Database error" });
+    return;
+  }
+  reply.send({ message: "User account type changed" });
 };
 
 export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
@@ -507,7 +542,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           pictureUrl: null,
           username: email,
           uuid: randomUUID(),
-          workshopId: workshopId
+          workshopId: workshopId,
+          accountType: "default"
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
