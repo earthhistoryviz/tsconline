@@ -49,7 +49,6 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
-  - status (string): Non-nullable, default is 'expired', indicates if the workshop is status or not. Possible values are 'status' and 'expired'.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -242,7 +241,6 @@ export async function findWorkshop(criteria: Partial<Workshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.status) query = query.where("status", "=", criteria.status);
   return await query.selectAll().execute();
 }
 
@@ -252,7 +250,6 @@ export async function updateWorkshop(criteria: Partial<Workshop>, updatedWorksho
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.status) query = query.where("status", "=", criteria.status);
   return await query.execute();
 }
 
@@ -262,31 +259,10 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
-  if (criteria.status) query = query.where("status", "=", criteria.status);
   return await query.execute();
 }
 
-/**
- * Gets all status workshops and updates the status status of each workshop.
- */
-export async function updateWorkshopStatusAndGetActive(): Promise<Workshop[]> {
-  const now = new Date().toISOString();
-  await db.updateTable("workshop").set({ status: "active" }).where("start", "<=", now).execute();
-  const endedWorkshops = await db
-    .updateTable("workshop")
-    .set({ status: "expired" })
-    .where("end", "<", now)
-    .where("status", "=", "active")
-    .returning("workshopId")
-    .execute();
-  //TODO: This should be removed in Jacqui's PR since workshopId won't be in the users table
-  if (endedWorkshops.length > 0) {
-    const endedWorkshopIds = endedWorkshops.map((workshop) => workshop.workshopId);
-    await db.updateTable("users").set({ workshopId: 0 }).where("workshopId", "in", endedWorkshopIds).execute();
-  }
-  return await db.selectFrom("workshop").where("status", "=", "active").selectAll().execute();
-}
-
+//TODO: The functionality of this function needs to be changed in Jacqui's PR
 /**
  * Checks if a workshop has ended and performs necessary cleanup.
  * @param workshopId The workshop ID to check if it has ended
@@ -300,8 +276,6 @@ export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Works
   }
   const end = new Date(workshop.end);
   if (end < new Date()) {
-    await updateWorkshop({ workshopId }, { status: "expired" });
-    //TODO: This should be removed in Jacqui's PR since workshopId won't be in the users table
     await updateUser({ workshopId }, { workshopId: 0 });
     return null;
   }

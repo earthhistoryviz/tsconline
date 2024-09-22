@@ -163,8 +163,7 @@ vi.mock("../src/database", async (importOriginal) => {
     findWorkshop: vi.fn().mockResolvedValue([]),
     updateUser: vi.fn().mockResolvedValue({}),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop)),
-    updateWorkshopStatusAndGetActive: vi.fn().mockResolvedValue({})
+    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop))
   };
 });
 
@@ -272,8 +271,7 @@ const testWorkshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString(),
-  workshopId: 1,
-  status: "active"
+  workshopId: 1
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -1862,35 +1860,50 @@ describe("adminAddUsersToWorkshop", () => {
 });
 
 describe("adminGetWorkshops", () => {
-  const updateWorkshopStatusAndGetActive = vi.spyOn(database, "updateWorkshopStatusAndGetActive");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should return 500 if updateWorkshopStatusAndGetActive throws an error", async () => {
-    updateWorkshopStatusAndGetActive.mockRejectedValueOnce(new Error());
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  it("should return 500 if findWorkshop throws an error", async () => {
+    findWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(updateWorkshopStatusAndGetActive).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
-  it("should return 200 if successful", async () => {
+  it("should return 200 if successful and workshop active as false", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
     const formatDate = vi.spyOn(util, "formatDate");
-    updateWorkshopStatusAndGetActive.mockResolvedValueOnce([testWorkshop]);
     formatDate.mockReturnValueOnce(testWorkshop.start).mockReturnValueOnce(testWorkshop.end);
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(updateWorkshopStatusAndGetActive).toHaveBeenCalledTimes(1);
     expect(formatDate).toHaveBeenCalledTimes(2);
     expect(formatDate).toHaveBeenNthCalledWith(1, new Date(testWorkshop.start));
     expect(formatDate).toHaveBeenNthCalledWith(2, new Date(testWorkshop.end));
-    expect(await response.json()).toEqual({ workshops: [testWorkshop] });
+    expect(await response.json()).toEqual({ workshops: [{ ...testWorkshop, active: false }] });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and workshop active as true", async () => {
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshop, start: mockDate.toISOString() }]);
+    const formatDate = vi.spyOn(util, "formatDate");
+    formatDate.mockReturnValueOnce(mockDate.toISOString()).mockReturnValueOnce(testWorkshop.end);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/workshops",
+      headers
+    });
+    expect(formatDate).toHaveBeenCalledTimes(2);
+    expect(formatDate).toHaveBeenNthCalledWith(1, mockDate);
+    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(testWorkshop.end));
+    expect(await response.json()).toEqual({
+      workshops: [{ ...testWorkshop, start: mockDate.toISOString(), active: true }]
+    });
     expect(response.statusCode).toBe(200);
   });
 });
@@ -2001,7 +2014,7 @@ describe("adminCreateWorkshop", () => {
       headers
     });
     expect(createWorkshop).toHaveBeenCalledTimes(1);
-    expect(createWorkshop).toHaveBeenCalledWith({ ...body, status: "inactive" });
+    expect(createWorkshop).toHaveBeenCalledWith(body);
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
@@ -2016,10 +2029,10 @@ describe("adminCreateWorkshop", () => {
       headers
     });
     expect(createWorkshop).toHaveBeenCalledTimes(1);
-    expect(createWorkshop).toHaveBeenCalledWith({ ...body, status: "inactive" });
+    expect(createWorkshop).toHaveBeenCalledWith(body);
     expect(formatDate).toHaveBeenNthCalledWith(1, new Date(body.start));
     expect(formatDate).toHaveBeenNthCalledWith(2, new Date(body.end));
-    expect(await response.json()).toEqual({ workshop: { ...testWorkshop, status: "inactive" } });
+    expect(await response.json()).toEqual({ workshop: { ...testWorkshop, active: false } });
     expect(response.statusCode).toBe(200);
   });
 });

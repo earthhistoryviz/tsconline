@@ -12,7 +12,7 @@ export type SharedWorkshop = {
   start: string;
   end: string;
   workshopId: number;
-  status: "active" | "inactive" | "expired";
+  active: boolean;
 };
 
 export type SharedUser = {
@@ -616,8 +616,7 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.start !== "string") throwError("Workshop", "start", "string", o.start);
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
-  if (!["active", "inactive", "expired"].includes(o.status))
-    throwError("Workshop", "status", "active | inactive | expired", o.status);
+  if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
