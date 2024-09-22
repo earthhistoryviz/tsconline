@@ -9,7 +9,12 @@ import {
   findWorkshop,
   getAndHandleWorkshopEnd,
   updateWorkshop,
-  deleteWorkshop
+  deleteWorkshop,
+  checkWorkshopHasUser,
+  createUsersWorkshops,
+  findUserInUsersWorkshops,
+  deleteWorkshopInUsersWorkshops,
+  deleteUserInUsersWorkshops
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -58,14 +63,28 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const users = await findUser({});
     const displayedUsers = await Promise.all(
       users.map(async (user) => {
-        const { hashedPassword, workshopId, ...displayedUser } = user;
-        let workshopTitle = "";
-        if (workshopId) {
+        //const { hashedPassword, workshopId, ...displayedUser } = user;
+        const { hashedPassword, userId, ...displayedUser } = user;
+        const userWorkshops = await findUserInUsersWorkshops(userId);
+        //let workshopTitle = "";
+        let workshopTitle: string[] = [];
+        // if (workshopId) {
+        //   const workshop = await findWorkshop({ workshopId });
+        //   if (workshop && workshop.length === 1) {
+        //     workshopTitle = workshop[0]?.title ?? "";
+        //   }
+        // }
+
+        for (const userWorkshop of userWorkshops) {
+          const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
           if (workshop && workshop.length === 1) {
-            workshopTitle = workshop[0]?.title ?? "";
+            if (workshop[0]?.title) {
+              workshopTitle.push(workshop[0].title)
+            }
           }
         }
+
         return {
           ...displayedUser,
           username: displayedUser.username,
@@ -73,7 +92,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopTitle && { workshopTitle })
+          ...(workshopTitle.length > 0 && { workshopTitle })
         };
       })
     );
@@ -120,7 +139,6 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(customUser);
@@ -169,7 +187,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -469,6 +487,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
+
     let emailList: string[] = [];
     let invalidEmails: string[] = [];
     if (file && filepath) {
@@ -493,7 +512,24 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        await updateUser({ email }, { workshopId });
+        //await updateUser({ email }, { workshopId });
+        for (const eachUser of user) {
+          const { userId } = eachUser;
+          const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
+          if (existingRelationship.length == 0) {
+            createUsersWorkshops({ userId: userId, workshopId: workshopId });
+            const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+            if (newRelationship.length !== 1) {
+              reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
+              return;
+            }
+          } else if (existingRelationship.length > 1) {
+
+            reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
+            return;
+          }
+
+        }
       } else {
         await createUser({
           email,
@@ -504,13 +540,21 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           pictureUrl: null,
           username: email,
           uuid: randomUUID(),
-          workshopId: workshopId,
           accountType: "default"
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
           reply.status(500).send({ error: "Error creating user", invalidEmails: email });
           return;
+        }
+        for (const eachUser of user) {
+          const { userId } = eachUser;
+          createUsersWorkshops({ userId: userId, workshopId: workshopId });
+          const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+          if (newRelationship.length !== 1) {
+            reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
+            return;
+          }
         }
       }
     }
