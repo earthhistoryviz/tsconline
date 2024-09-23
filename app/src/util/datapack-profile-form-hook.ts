@@ -2,7 +2,7 @@ import { DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pic
 import { DatapackMetadata } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useState } from "react";
-type ChangeAbleDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+export type ChangeAbleDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
 
 export const useDatapackProfileForm = (datapack: DatapackMetadata) => {
   const [datapackMetadata, setDatapackMetadata] = useState<ChangeAbleDatapackMetadata>({
