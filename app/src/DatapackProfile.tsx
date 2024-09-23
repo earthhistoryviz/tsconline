@@ -15,7 +15,7 @@ import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared"
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
-import { ChangeAbleDatapackMetadata, useDatapackProfileForm } from "./util/datapack-profile-form-hook";
+import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
 import { DatePicker, DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 
@@ -168,58 +168,24 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
         <Typography className={styles.dt}>Description</Typography>
-        {editMode ? (
-          <TextField
-            value={state.datapackMetadata.description}
-            onChange={(e) => setters.updateDatapackMetadata({ ...datapack, description: e.target.value })}
-            fullWidth
-            placeholder="A brief description of the data"
-            multiline
-            minRows={7}
-          />
-        ) : (
-          <Typography className={styles.description}>{datapack.description}</Typography>
-        )}
-        {editMode ? (
-          <>
-            <Typography className={styles.dt}>Notes</Typography>
-            <TextField
-              value={state.datapackMetadata.notes}
-              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, notes: e.target.value })}
-              fullWidth
-              placeholder="Any additional notes for use of generating charts for this datapack"
-              multiline
-              minRows={3}
-            />
-          </>
-        ) : (
-          datapack.notes && (
-            <>
-              <Typography className={styles.dt}>Notes</Typography>
-              <Typography className={styles.description}>{datapack.notes}</Typography>
-            </>
-          )
-        )}
-        {editMode ? (
-          <>
-            <Typography className={styles.dt}>Contact</Typography>
-            <TextField
-              value={state.datapackMetadata.contact}
-              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, contact: e.target.value })}
-              fullWidth
-              multiline
-              placeholder="Who can be contacted for more information"
-              minRows={3}
-            />
-          </>
-        ) : (
-          datapack.contact && (
-            <>
-              <Typography className={styles.dt}>Contact</Typography>
-              <Typography className={styles.description}>{datapack.contact}</Typography>
-            </>
-          )
-        )}
+        <Description
+          description={datapack.description}
+          editableDescription={state.datapackMetadata.description}
+          editMode={editMode}
+          updateDescription={(description) => setters.updateDatapackMetadata({ ...datapack, description })}
+        />
+        <Notes
+          notes={datapack.notes}
+          editableNotes={state.datapackMetadata.notes}
+          editMode={editMode}
+          updateNotes={(notes) => setters.updateDatapackMetadata({ ...datapack, notes })}
+        />
+        <Contact
+          contact={datapack.contact}
+          editableContact={state.datapackMetadata.contact}
+          editMode={editMode}
+          updateContact={(contact) => setters.updateDatapackMetadata({ ...datapack, contact })}
+        />
       </div>
       <div className={styles.additional}>
         <EditButtons
@@ -276,6 +242,94 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
       </div>
     </Box>
+  );
+};
+type DescriptionProps = {
+  editMode: boolean;
+  description: string | undefined;
+  editableDescription: string | undefined;
+  updateDescription: (description: string) => void;
+};
+const Description: React.FC<DescriptionProps> = ({ description, editMode, editableDescription, updateDescription }) => {
+  return (
+    <>
+      {editMode ? (
+        <TextField
+          value={editableDescription}
+          onChange={(e) => updateDescription(e.target.value)}
+          fullWidth
+          multiline
+          placeholder="A brief description of the data"
+          minRows={7}
+        />
+      ) : (
+        <Typography className={styles.description}>{description}</Typography>
+      )}
+    </>
+  );
+};
+type ContactProps = {
+  editMode: boolean;
+  updateContact: (contact: string) => void;
+  contact: string | undefined;
+  editableContact: string | undefined;
+};
+const Contact: React.FC<ContactProps> = ({ editableContact, editMode, updateContact, contact }) => {
+  return (
+    <>
+      {editMode ? (
+        <>
+          <Typography className={styles.dt}>Contact</Typography>
+          <TextField
+            value={editableContact}
+            onChange={(e) => updateContact(e.target.value)}
+            fullWidth
+            multiline
+            placeholder="Who can be contacted for more information"
+            minRows={3}
+          />
+        </>
+      ) : (
+        contact && (
+          <>
+            <Typography className={styles.dt}>Contact</Typography>
+            <Typography className={styles.description}>{contact}</Typography>
+          </>
+        )
+      )}
+    </>
+  );
+};
+type NotesProps = {
+  notes: string | undefined;
+  editableNotes: string | undefined;
+  editMode: boolean;
+  updateNotes: (notes: string) => void;
+};
+const Notes: React.FC<NotesProps> = ({ notes, editMode, editableNotes, updateNotes }) => {
+  return (
+    <>
+      {editMode ? (
+        <>
+          <Typography className={styles.dt}>Notes</Typography>
+          <TextField
+            value={editableNotes}
+            onChange={(e) => updateNotes(e.target.value)}
+            fullWidth
+            placeholder="Any additional notes for use of generating charts for this datapack"
+            multiline
+            minRows={3}
+          />
+        </>
+      ) : (
+        notes && (
+          <>
+            <Typography className={styles.dt}>Notes</Typography>
+            <Typography className={styles.description}>{notes}</Typography>
+          </>
+        )
+      )}
+    </>
   );
 };
 type EditButtonsProps = {
