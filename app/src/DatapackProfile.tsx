@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
 import { Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
@@ -15,9 +15,9 @@ import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared"
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
-import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
-import { DatePicker } from "@mui/x-date-pickers";
-import dayjs from "dayjs";
+import { ChangeAbleDatapackMetadata, useDatapackProfileForm } from "./util/datapack-profile-form-hook";
+import { DatePicker, DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pickers";
+import dayjs, { Dayjs } from "dayjs";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -173,59 +173,61 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
             value={state.datapackMetadata.description}
             onChange={(e) => setters.updateDatapackMetadata({ ...datapack, description: e.target.value })}
             fullWidth
+            placeholder="A brief description of the data"
             multiline
             minRows={7}
           />
         ) : (
           <Typography className={styles.description}>{datapack.description}</Typography>
         )}
-        {datapack.notes && (
+        {editMode ? (
           <>
             <Typography className={styles.dt}>Notes</Typography>
-            <Typography className={styles.description}>{datapack.notes}</Typography>
+            <TextField
+              value={state.datapackMetadata.notes}
+              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, notes: e.target.value })}
+              fullWidth
+              placeholder="Any additional notes for use of generating charts for this datapack"
+              multiline
+              minRows={3}
+            />
           </>
+        ) : (
+          datapack.notes && (
+            <>
+              <Typography className={styles.dt}>Notes</Typography>
+              <Typography className={styles.description}>{datapack.notes}</Typography>
+            </>
+          )
         )}
-        {datapack.contact && (
+        {editMode ? (
           <>
             <Typography className={styles.dt}>Contact</Typography>
-            <Typography className={styles.description}>{datapack.contact}</Typography>
+            <TextField
+              value={state.datapackMetadata.contact}
+              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, contact: e.target.value })}
+              fullWidth
+              multiline
+              placeholder="Who can be contacted for more information"
+              minRows={3}
+            />
           </>
+        ) : (
+          datapack.contact && (
+            <>
+              <Typography className={styles.dt}>Contact</Typography>
+              <Typography className={styles.description}>{datapack.contact}</Typography>
+            </>
+          )
         )}
       </div>
       <div className={styles.additional}>
-        {!editMode ? (
-          <Box className={styles.pencilIconContainer} onClick={() => setEditMode(!editMode)}>
-            <SvgIcon className={styles.pencilIcon}>
-              <CreateIcon />
-            </SvgIcon>
-          </Box>
-        ) : (
-          <Box className={styles.editButtonContainer}>
-            <Button
-              variant="outlined"
-              sx={{
-                borderColor: "error.main",
-                color: "error.main",
-                ":hover": {
-                  borderColor: "error.light",
-                  backgroundColor: "transparent"
-                }
-              }}
-              className={styles.editButton}
-              onClick={() => {
-                if (!state.unsavedChanges || window.confirm(t("dialogs.confirm-changes.message"))) {
-                  setEditMode(false);
-                  // reset the metadata if the user cancels
-                  if (state.unsavedChanges) {
-                    handlers.resetDatapackMetadata();
-                  }
-                }
-              }}>
-              Cancel
-            </Button>
-            <TSCButton className={styles.editButton}>Save</TSCButton>
-          </Box>
-        )}
+        <EditButtons
+          editMode={editMode}
+          setEditMode={setEditMode}
+          unsavedChanges={state.unsavedChanges}
+          resetForm={handlers.resetDatapackMetadata}
+        />
         <div className={styles.ai}>
           <Typography className={styles.aih}>Authored By</Typography>
           {editMode ? (
@@ -240,32 +242,13 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
-          {editMode ? (
-            <DatePicker
-              value={datapack.date ? dayjs(datapack.date) : null}
-              maxDate={dayjs()}
-              slotProps={{
-                field: {
-                  clearable: true,
-                  onClear: () => setters.updateDatapackMetadata({ ...datapack, date: undefined })
-                },
-                textField: { helperText: state.dateError },
-                popper: {
-                  sx: {
-                    "& .MuiPickersYear-yearButton": {
-                      fontSize: "1rem"
-                    },
-                    "& .MuiPaper-root": {
-                      backgroundColor: "secondaryBackground.main"
-                    }
-                  }
-                }
-              }}
-              onChange={handlers.handleDateChange}
-            />
-          ) : (
-            <Typography>{datapack.date || "Unknown"}</Typography>
-          )}
+          <DateField
+            editMode={editMode}
+            handleDateChange={handlers.handleDateChange}
+            datapackDate={datapack.date}
+            editableDate={state.datapackMetadata.date}
+            clearDate={() => setters.updateDatapackMetadata({ ...datapack, date: undefined })}
+          />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -293,6 +276,94 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
       </div>
     </Box>
+  );
+};
+type EditButtonsProps = {
+  editMode: boolean;
+  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
+  unsavedChanges: boolean;
+  resetForm: () => void;
+};
+
+const EditButtons: React.FC<EditButtonsProps> = ({
+  editMode,
+  setEditMode,
+  unsavedChanges,
+  resetForm
+}: EditButtonsProps) => {
+  const { t } = useTranslation();
+  return (
+    <>
+      {!editMode ? (
+        <Box className={styles.pencilIconContainer} onClick={() => setEditMode(!editMode)}>
+          <SvgIcon className={styles.pencilIcon}>
+            <CreateIcon />
+          </SvgIcon>
+        </Box>
+      ) : (
+        <Box className={styles.editButtonContainer}>
+          <Button
+            variant="outlined"
+            sx={{
+              borderColor: "error.main",
+              color: "error.main",
+              ":hover": {
+                borderColor: "error.light",
+                backgroundColor: "transparent"
+              }
+            }}
+            className={styles.editButton}
+            onClick={() => {
+              if (!unsavedChanges || window.confirm(t("dialogs.confirm-changes.message"))) {
+                setEditMode(false);
+                // reset the metadata if the user cancels
+                if (unsavedChanges) {
+                  resetForm();
+                }
+              }
+            }}>
+            Cancel
+          </Button>
+          <TSCButton className={styles.editButton}>Save</TSCButton>
+        </Box>
+      )}
+    </>
+  );
+};
+
+type DateFieldProps = {
+  editMode: boolean;
+  datapackDate: string | undefined;
+  editableDate: string | undefined;
+  handleDateChange: (date: Dayjs | null, context: PickerChangeHandlerContext<DateValidationError>) => void;
+  clearDate: () => void;
+};
+const DateField: React.FC<DateFieldProps> = ({ clearDate, editMode, datapackDate, editableDate, handleDateChange }) => {
+  return editMode ? (
+    <DatePicker
+      value={editableDate ? dayjs(editableDate) : null}
+      maxDate={dayjs()}
+      slotProps={{
+        field: {
+          clearable: true,
+          onClear: clearDate
+        },
+        textField: { helperText: null },
+        popper: {
+          sx: {
+            "& .MuiPickersYear-yearButton": {
+              fontSize: "1rem"
+            },
+            "& .MuiPaper-root": {
+              backgroundColor: "secondaryBackground.main"
+            }
+          }
+        }
+      }}
+      onChange={handleDateChange}
+    />
+  ) : (
+    <Typography>{datapackDate || "Unknown"}</Typography>
   );
 };
 
