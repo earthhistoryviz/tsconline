@@ -243,7 +243,8 @@ const testAdminUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 1
+  workshopId: 1,
+  accountType: "default"
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -257,7 +258,8 @@ const testSharedAdminUser = {
   invalidateSession: 0,
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 1
+  isAdmin: 1,
+  accountType: "default"
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -423,7 +425,8 @@ describe("adminCreateUser tests", () => {
     uuid: "random-uuid",
     emailVerified: 1,
     invalidateSession: 0,
-    workshopId: 0
+    workshopId: 0,
+    accountType: "default"
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
@@ -1202,7 +1205,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      filepath,
+      filepath.replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1232,7 +1235,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      filepath,
+      filepath.replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1811,7 +1814,8 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      workshopId: 1,
+      accountType: "default"
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
       email: "test2@gmail.com",
@@ -1822,7 +1826,8 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test2@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      workshopId: 1,
+      accountType: "default"
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
     expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
