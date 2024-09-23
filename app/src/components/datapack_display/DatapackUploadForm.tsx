@@ -104,7 +104,14 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               slotProps={{
                 field: { clearable: true, onClear: () => setters.setDate(null) },
                 textField: { helperText: state.dateError },
-                popper: { className: "datapack-date-picker" }
+                popper: {
+                  className: "datapack-date-picker",
+                  sx: {
+                    "& .MuiPaper-root": {
+                      backgroundColor: "secondaryBackground.main"
+                    }
+                  }
+                }
               }}
               onChange={handlers.handleDateChange}
             />

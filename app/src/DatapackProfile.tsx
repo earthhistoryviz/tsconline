@@ -16,6 +16,8 @@ import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
 import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -228,7 +230,32 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
-          <Typography>{datapack.date || "Unknown"}</Typography>
+          {editMode ? (
+            <DatePicker
+              value={datapack.date ? dayjs(datapack.date) : null}
+              maxDate={dayjs()}
+              slotProps={{
+                field: {
+                  clearable: true,
+                  onClear: () => setters.updateDatapackMetadata({ ...datapack, date: undefined })
+                },
+                textField: { helperText: state.dateError },
+                popper: {
+                  sx: {
+                    "& .MuiPickersYear-yearButton": {
+                      fontSize: "1rem"
+                    },
+                    "& .MuiPaper-root": {
+                      backgroundColor: "secondaryBackground.main"
+                    }
+                  }
+                }
+              }}
+              onChange={handlers.handleDateChange}
+            />
+          ) : (
+            <Typography>{datapack.date || "Unknown"}</Typography>
+          )}
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
