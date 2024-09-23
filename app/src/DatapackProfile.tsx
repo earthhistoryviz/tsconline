@@ -168,7 +168,17 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
         <Typography className={styles.dt}>Description</Typography>
-        <Typography className={styles.description}>{datapack.description}</Typography>
+        {editMode ? (
+          <TextField
+            value={state.datapackMetadata.description}
+            onChange={(e) => setters.updateDatapackMetadata({ ...datapack, description: e.target.value })}
+            fullWidth
+            multiline
+            minRows={7}
+          />
+        ) : (
+          <Typography className={styles.description}>{datapack.description}</Typography>
+        )}
         {datapack.notes && (
           <>
             <Typography className={styles.dt}>Notes</Typography>
