@@ -995,6 +995,39 @@ export function assertPatterns(o: any): asserts o is Patterns {
   }
 }
 
+export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
+  if (!o || typeof o !== "object") return false;
+  const validKeys = [
+    "description",
+    "title",
+    "originalFileName",
+    "storedFileName",
+    "size",
+    "authoredBy",
+    "tags",
+    "date",
+    "references",
+    "contact",
+    "notes"
+  ];
+  for (const key in o) {
+    if (!validKeys.includes(key)) {
+      return false;
+    }
+  }
+  if ("description" in o && typeof o.description !== "string") return false;
+  if ("title" in o && typeof o.title !== "string") return false;
+  if ("originalFileName" in o && typeof o.originalFileName !== "string") return false;
+  if ("storedFileName" in o && typeof o.storedFileName !== "string") return false;
+  if ("size" in o && typeof o.size !== "string") return false;
+  if ("authoredBy" in o && typeof o.authoredBy !== "string") return false;
+  if ("tags" in o && !Array.isArray(o.tags)) return false;
+  if ("date" in o && typeof o.date !== "string") return false;
+  if ("references" in o && !Array.isArray(o.references)) return false;
+  if ("contact" in o && typeof o.contact !== "string") return false;
+  if ("notes" in o && typeof o.notes !== "string") return false;
+  return true;
+}
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
   if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
