@@ -20,6 +20,7 @@ import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { getDirectories } from "../user/user-handler.js";
 import { getAdminConfigDatapacks } from "../admin/admin-config.js";
+import { findUser } from "../database.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -210,6 +211,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   }
   const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
+  const workshopId = uuid ? (await findUser({ uuid }))[0]?.workshopId ?? 0 : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
@@ -414,7 +416,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   try {
-    const priority = uuid ? 1 : 0;
+    const priority = workshopId ? 2 : uuid ? 1 : 0;
     await queue.add(async () => {
       await execJavaCommand(1000 * 30), { priority };
     });

@@ -1,4 +1,14 @@
-import { Database, User, NewUser, UpdatedUser, Verification, NewVerification, NewWorkshop } from "./types.js";
+import {
+  Database,
+  User,
+  NewUser,
+  UpdatedUser,
+  Verification,
+  NewVerification,
+  NewWorkshop,
+  Workshop,
+  UpdatedWorkshop
+} from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
 import { exec } from "child_process";
@@ -36,7 +46,7 @@ Database Schema Details (Post-Migration):
 
 - workshop Table:
   - id (integer): Primary key, auto-increment.
-  - title (text): Non-nullable, must be unique, the title of the workshop.
+  - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
 
@@ -225,7 +235,7 @@ export async function createWorkshop(criteria: NewWorkshop): Promise<number | un
   return result?.workshopId;
 }
 
-export async function findWorkshop(criteria: Partial<NewWorkshop>) {
+export async function findWorkshop(criteria: Partial<Workshop>) {
   let query = db.selectFrom("workshop");
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.title) query = query.where("title", "=", criteria.title);
@@ -234,7 +244,7 @@ export async function findWorkshop(criteria: Partial<NewWorkshop>) {
   return await query.selectAll().execute();
 }
 
-export async function updateWorkshop(criteria: Partial<NewWorkshop>, updatedWorkshop: NewWorkshop) {
+export async function updateWorkshop(criteria: Partial<Workshop>, updatedWorkshop: UpdatedWorkshop) {
   let query = db.updateTable("workshop").set(updatedWorkshop);
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.title) query = query.where("title", "=", criteria.title);
@@ -243,11 +253,31 @@ export async function updateWorkshop(criteria: Partial<NewWorkshop>, updatedWork
   return await query.execute();
 }
 
-export async function deleteWorkshop(criteria: Partial<NewWorkshop>) {
+export async function deleteWorkshop(criteria: Partial<Workshop>) {
   let query = db.deleteFrom("workshop");
   if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
   return await query.execute();
+}
+
+//TODO: The functionality of this function needs to be changed in Jacqui's PR
+/**
+ * Checks if a workshop has ended and performs necessary cleanup.
+ * @param workshopId The workshop ID to check if it has ended
+ * @returns The workshop if it has not ended, null if it has ended
+ */
+export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Workshop | null> {
+  const workshop = (await findWorkshop({ workshopId }))[0];
+  if (!workshop) {
+    await updateUser({ workshopId }, { workshopId: 0 });
+    return null;
+  }
+  const end = new Date(workshop.end);
+  if (end < new Date()) {
+    await updateUser({ workshopId }, { workshopId: 0 });
+    return null;
+  }
+  return workshop;
 }
