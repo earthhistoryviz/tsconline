@@ -15,10 +15,8 @@ import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared"
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
-import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
-import { DatePicker, DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pickers";
-import dayjs, { Dayjs } from "dayjs";
-import { values } from "lodash";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -81,7 +79,11 @@ export const DatapackProfile = observer(() => {
           <IconButton className={styles.back} onClick={() => navigate("/settings")}>
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
-          <Typography className={styles.ht}>{datapack.title}</Typography>
+          {state.datapackProfilePage.editMode ? (
+            <TextField value={datapack.title} />
+          ) : (
+            <Typography className={styles.ht}>{datapack.title}</Typography>
+          )}
           <img className={styles.di} src={datapack.image || defaultImageUrl} />
         </div>
         <CustomTabs
@@ -141,21 +143,20 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
 type AboutProps = {
   datapack: BaseDatapackProps;
 };
-const About: React.FC<AboutProps> = ({ datapack }) => {
-  const { state: contextState, actions } = useContext(context);
-  const { state, setters, handlers } = useDatapackProfileForm(datapack);
+const About: React.FC<AboutProps> = observer(({ datapack }) => {
+  const { state, actions } = useContext(context);
   const { t } = useTranslation();
   // for when user tries to navigate away with unsaved changes
   useBlocker(
     ({ currentLocation, nextLocation }) =>
-      state.unsavedChanges &&
+      state.datapackProfilePage.unsavedChanges &&
       currentLocation.pathname !== nextLocation.pathname &&
       !window.confirm(t("dialogs.confirm-changes.message"))
   );
   // for when user tries to leave page with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (state.unsavedChanges) {
+      if (state.datapackProfilePage.unsavedChanges) {
         event.preventDefault();
         event.returnValue = "";
       }
@@ -164,44 +165,27 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [state.unsavedChanges]);
+  }, [state.datapackProfilePage.unsavedChanges]);
+  actions.setEditableDatapackMetadata(datapack);
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
         <Typography className={styles.dt}>Description</Typography>
-        <Description
-          description={datapack.description}
-          editableDescription={state.datapackMetadata.description}
-          updateDescription={(description) => setters.updateDatapackMetadata({ description })}
-        />
-        <Notes
-          notes={datapack.notes}
-          editableNotes={state.datapackMetadata.notes}
-          updateNotes={(notes) => setters.updateDatapackMetadata({ notes })}
-        />
-        <Contact
-          contact={datapack.contact}
-          editableContact={state.datapackMetadata.contact}
-          updateContact={(contact) => setters.updateDatapackMetadata({ contact })}
-        />
+        <Description description={datapack.description} />
+        <Notes notes={datapack.notes} />
+        <Contact contact={datapack.contact} />
       </div>
       <div className={styles.additional}>
-        <EditButtons unsavedChanges={state.unsavedChanges} resetForm={handlers.resetDatapackMetadata} />
+        <EditButtons
+          unsavedChanges={state.datapackProfilePage.unsavedChanges}
+          resetForm={() => actions.setEditableDatapackMetadata(datapack)}
+        />
         <div className={styles.ai}>
-          <AuthoredBy
-            authoredBy={datapack.authoredBy}
-            editableAuthoredBy={state.datapackMetadata.authoredBy}
-            updateAuthoredBy={(authoredBy) => setters.updateDatapackMetadata({ authoredBy })}
-          />
+          <AuthoredBy authoredBy={datapack.authoredBy} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
-          <DateField
-            handleDateChange={handlers.handleDateChange}
-            datapackDate={datapack.date}
-            editableDate={state.datapackMetadata.date}
-            clearDate={() => setters.updateDatapackMetadata({ date: undefined })}
-          />
+          <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -216,34 +200,28 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          <Tags
-            editableTags={state.datapackMetadata.tags}
-            tags={datapack.tags}
-            setTags={(tags) => setters.updateDatapackMetadata({ tags })}
-          />
+          <Tags tags={datapack.tags} />
         </div>
       </div>
     </Box>
   );
-};
+});
 
 type TagsProps = {
   tags: string[];
-  editableTags: string[];
-  setTags: (tags: string[]) => void;
 };
 
-const Tags: React.FC<TagsProps> = observer(({ tags, setTags, editableTags }) => {
-  const { state } = useContext(context);
+const Tags: React.FC<TagsProps> = observer(({ tags }) => {
+  const { state, actions } = useContext(context);
   return (
     <>
       <Typography className={styles.aih}>Tags</Typography>
       {state.datapackProfilePage.editMode ? (
         <Autocomplete
           multiple
-          value={editableTags}
+          value={state.datapackProfilePage.editableDatapackMetadata?.tags}
           onChange={(_, values) => {
-            setTags(values);
+            actions.updateEditableDatapackMetadata({ tags: values });
           }}
           options={[]}
           freeSolo
@@ -266,22 +244,20 @@ const Tags: React.FC<TagsProps> = observer(({ tags, setTags, editableTags }) => 
   );
 });
 
-type AutheoredByProps = {
+type AuthoredByProps = {
   authoredBy: string;
-  editableAuthoredBy: string | undefined;
-  updateAuthoredBy: (authoredBy: string) => void;
 };
-const AuthoredBy: React.FC<AutheoredByProps> = observer(({ authoredBy, editableAuthoredBy, updateAuthoredBy }) => {
-  const { state } = useContext(context);
+const AuthoredBy: React.FC<AuthoredByProps> = observer(({ authoredBy }) => {
+  const { state, actions } = useContext(context);
   return (
     <>
       <Typography className={styles.aih}>Authored By</Typography>
       {state.datapackProfilePage.editMode ? (
         <TextField
           fullWidth
-          onChange={(e) => updateAuthoredBy(e.target.value)}
+          onChange={(e) => actions.updateEditableDatapackMetadata({ authoredBy: e.target.value })}
           placeholder="Creator of the data pack"
-          value={editableAuthoredBy}
+          value={state.datapackProfilePage.editableDatapackMetadata?.authoredBy}
         />
       ) : (
         <Typography>{authoredBy}</Typography>
@@ -291,17 +267,15 @@ const AuthoredBy: React.FC<AutheoredByProps> = observer(({ authoredBy, editableA
 });
 type DescriptionProps = {
   description: string | undefined;
-  editableDescription: string | undefined;
-  updateDescription: (description: string) => void;
 };
-const Description: React.FC<DescriptionProps> = observer(({ description, editableDescription, updateDescription }) => {
-  const { state } = useContext(context);
+const Description: React.FC<DescriptionProps> = observer(({ description }) => {
+  const { state, actions } = useContext(context);
   return (
     <>
       {state.datapackProfilePage.editMode ? (
         <TextField
-          value={editableDescription}
-          onChange={(e) => updateDescription(e.target.value)}
+          value={state.datapackProfilePage.editableDatapackMetadata?.description}
+          onChange={(e) => actions.updateEditableDatapackMetadata({ description: e.target.value })}
           fullWidth
           multiline
           placeholder="A brief description of the data"
@@ -314,20 +288,18 @@ const Description: React.FC<DescriptionProps> = observer(({ description, editabl
   );
 });
 type ContactProps = {
-  updateContact: (contact: string) => void;
   contact: string | undefined;
-  editableContact: string | undefined;
 };
-const Contact: React.FC<ContactProps> = observer(({ editableContact, updateContact, contact }) => {
-  const { state } = useContext(context);
+const Contact: React.FC<ContactProps> = observer(({ contact }) => {
+  const { state, actions } = useContext(context);
   return (
     <>
       {state.datapackProfilePage.editMode ? (
         <>
           <Typography className={styles.dt}>Contact</Typography>
           <TextField
-            value={editableContact}
-            onChange={(e) => updateContact(e.target.value)}
+            value={state.datapackProfilePage.editableDatapackMetadata}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ contact: e.target.value })}
             fullWidth
             multiline
             placeholder="Who can be contacted for more information"
@@ -347,19 +319,17 @@ const Contact: React.FC<ContactProps> = observer(({ editableContact, updateConta
 });
 type NotesProps = {
   notes: string | undefined;
-  editableNotes: string | undefined;
-  updateNotes: (notes: string) => void;
 };
-const Notes: React.FC<NotesProps> = observer(({ notes, editableNotes, updateNotes }) => {
-  const { state } = useContext(context);
+const Notes: React.FC<NotesProps> = observer(({ notes }) => {
+  const { state, actions } = useContext(context);
   return (
     <>
       {state.datapackProfilePage.editMode ? (
         <>
           <Typography className={styles.dt}>Notes</Typography>
           <TextField
-            value={editableNotes}
-            onChange={(e) => updateNotes(e.target.value)}
+            value={state.datapackProfilePage.editableDatapackMetadata?.notes}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ notes: e.target.value })}
             fullWidth
             placeholder="Any additional notes for use of generating charts for this datapack"
             multiline
@@ -426,20 +396,21 @@ const EditButtons: React.FC<EditButtonsProps> = observer(({ unsavedChanges, rese
 
 type DateFieldProps = {
   datapackDate: string | undefined;
-  editableDate: string | undefined;
-  handleDateChange: (date: Dayjs | null, context: PickerChangeHandlerContext<DateValidationError>) => void;
-  clearDate: () => void;
 };
-const DateField: React.FC<DateFieldProps> = observer(({ clearDate, datapackDate, editableDate, handleDateChange }) => {
-  const { state } = useContext(context);
+const DateField: React.FC<DateFieldProps> = observer(({ datapackDate }) => {
+  const { state, actions } = useContext(context);
   return state.datapackProfilePage.editMode ? (
     <DatePicker
-      value={editableDate ? dayjs(editableDate) : null}
+      value={
+        state.datapackProfilePage.editableDatapackMetadata
+          ? dayjs(state.datapackProfilePage.editableDatapackMetadata?.date)
+          : null
+      }
       maxDate={dayjs()}
       slotProps={{
         field: {
           clearable: true,
-          onClear: clearDate
+          onClear: () => actions.updateEditableDatapackMetadata({ date: undefined })
         },
         textField: { helperText: null },
         popper: {
@@ -453,7 +424,7 @@ const DateField: React.FC<DateFieldProps> = observer(({ clearDate, datapackDate,
           }
         }
       }}
-      onChange={handleDateChange}
+      onChange={(val) => actions.updateEditableDatapackMetadata({ date: val?.format("YYYY-MM-DD") })}
     />
   ) : (
     <Typography>{datapackDate || "Unknown"}</Typography>

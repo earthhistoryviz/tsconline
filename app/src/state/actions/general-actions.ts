@@ -45,6 +45,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SettingsTabs,
@@ -54,7 +55,7 @@ import {
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
-import { cloneDeep } from "lodash";
+import { cloneDeep, set } from "lodash";
 
 const increment = 1;
 
@@ -1181,4 +1182,22 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 });
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
+});
+export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata) => {
+  setUnsavedChanges(false);
+  state.datapackProfilePage.editableDatapackMetadata = metadata;
+});
+export const setUnsavedChanges = action((unsavedChanges: boolean) => {
+  state.datapackProfilePage.unsavedChanges = unsavedChanges;
+});
+export const updateEditableDatapackMetadata = action((metadata: Partial<EditableDatapackMetadata>) => {
+  if (!state.datapackProfilePage.editableDatapackMetadata) {
+    console.error("Editable datapack metadata is not initialized");
+    return;
+  }
+  setUnsavedChanges(true);
+  state.datapackProfilePage.editableDatapackMetadata = {
+    ...state.datapackProfilePage.editableDatapackMetadata,
+    ...metadata
+  };
 });
