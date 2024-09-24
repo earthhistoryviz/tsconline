@@ -7,8 +7,7 @@ import {
   updateUser,
   createWorkshop,
   findWorkshop,
-  db,
-  deleteWorkshop
+  getAndHandleWorkshopEnd
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -25,11 +24,11 @@ import { pipeline } from "stream/promises";
 import { execFile } from "node:child_process";
 import { promisify } from "util";
 import {
-  Workshop,
+  SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackIndex,
-  assertWorkshop,
-  assertWorkshopArray
+  assertSharedWorkshop,
+  assertSharedWorkshopArray
 } from "@tsconline/shared";
 import { NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
@@ -466,14 +465,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
-    const workshop = await findWorkshop({ workshopId: workshopId });
-    if (!workshop || workshop.length !== 1 || !workshop[0]) {
-      reply.status(404).send({ error: "Workshop not found" });
-      return;
-    }
-    if (workshop[0].end < new Date().toISOString()) {
-      await deleteWorkshop({ workshopId });
-      await updateUser({ workshopId }, { workshopId: 0 });
+    const workshop = await getAndHandleWorkshopEnd(workshopId);
+    if (!workshop) {
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
@@ -542,23 +535,19 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const workshopIds = await db
-      .deleteFrom("workshop")
-      .where("end", "<", new Date().toISOString())
-      .returning("workshopId")
-      .execute();
-    for (const workshopId of workshopIds) {
-      await updateUser({ workshopId: workshopId.workshopId }, { workshopId: 0 });
-    }
-    const workshops: Workshop[] = (await findWorkshop({})).map((workshop) => {
+    const workshops: SharedWorkshop[] = (await findWorkshop({})).map((workshop) => {
+      const now = new Date();
+      const start = new Date(workshop.start);
+      const end = new Date(workshop.end);
       return {
         title: workshop.title,
-        start: formatDate(new Date(workshop.start)),
-        end: formatDate(new Date(workshop.end)),
-        workshopId: workshop.workshopId
+        start: formatDate(start),
+        end: formatDate(end),
+        workshopId: workshop.workshopId,
+        active: start <= now && now <= end
       };
     });
-    assertWorkshopArray(workshops);
+    assertSharedWorkshopArray(workshops);
     reply.send({ workshops });
   } catch (error) {
     console.error(error);
@@ -593,9 +582,9 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     return;
   }
   try {
-    const existingWorkshops = await findWorkshop({ title });
+    const existingWorkshops = await findWorkshop({ title, start: startDate.toISOString(), end: endDate.toISOString() });
     if (existingWorkshops.length > 0) {
-      reply.status(409).send({ error: "Workshop with that title already exists" });
+      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
     const workshopId = await createWorkshop({
@@ -606,13 +595,14 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     if (!workshopId) {
       throw new Error("Workshop not created");
     }
-    const workshop: Workshop = {
+    const workshop: SharedWorkshop = {
       title,
       start: formatDate(startDate),
       end: formatDate(endDate),
-      workshopId
+      workshopId,
+      active: false
     };
-    assertWorkshop(workshop);
+    assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
     console.error(error);

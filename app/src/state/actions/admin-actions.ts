@@ -5,11 +5,11 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
   DatapackMetadata,
-  Workshop,
+  SharedWorkshop,
   assertAdminSharedUserArray,
   assertDatapackIndex,
-  assertWorkshop,
-  assertWorkshopArray,
+  assertSharedWorkshop,
+  assertSharedWorkshopArray,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -385,9 +385,8 @@ export const adminFetchWorkshops = action(async () => {
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
-      assertWorkshopArray(workshops);
-      adminDeleteWorkshops();
-      workshops.forEach((workshop) => adminUpdateWorkshop(workshop));
+      assertSharedWorkshopArray(workshops);
+      adminSetWorkshop(workshops);
     } else {
       displayServerError(
         await response.json(),
@@ -426,8 +425,8 @@ export const adminCreateWorkshop = action(
       });
       if (response.ok) {
         const workshop = (await response.json()).workshop;
-        assertWorkshop(workshop);
-        adminUpdateWorkshop(workshop);
+        assertSharedWorkshop(workshop);
+        runInAction(() => state.admin.workshops.push(workshop));
         return workshop.workshopId;
       } else {
         let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
@@ -451,12 +450,8 @@ export const adminCreateWorkshop = action(
   }
 );
 
-export const adminDeleteWorkshops = action(() => {
-  state.admin.workshops.clear();
-});
-
-export const adminUpdateWorkshop = action((workshop: Workshop) => {
-  state.admin.workshops.set(workshop.title, workshop);
+export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
+  state.admin.workshops = workshop;
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {

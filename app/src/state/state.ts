@@ -22,7 +22,7 @@ import type {
   Patterns,
   AdminSharedUser,
   DatapackConfigForChartRequest,
-  Workshop,
+  SharedWorkshop,
   ServerDatapackIndex,
   PrivateUserDatapackIndex,
   PublicUserDatapackIndex,
@@ -78,7 +78,7 @@ export type State = {
   admin: {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
-    workshops: Map<string, Workshop>;
+    workshops: SharedWorkshop[];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -156,7 +156,7 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: new Map<string, Workshop>()
+    workshops: []
   },
   chartLoading: false,
   madeChart: false,
