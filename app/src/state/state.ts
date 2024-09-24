@@ -9,7 +9,8 @@ import {
   Config,
   SettingsTabs,
   User,
-  GroupedEventSearchInfo
+  GroupedEventSearchInfo,
+  EditableDatapackMetadata
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -26,7 +27,8 @@ import type {
   ServerDatapackIndex,
   PrivateUserDatapackIndex,
   PublicUserDatapackIndex,
-  WorkshopDatapackIndex
+  WorkshopDatapackIndex,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -82,6 +84,8 @@ export type State = {
   };
   datapackProfilePage: {
     editMode: boolean;
+    editableDatapackMetadata: EditableDatapackMetadata | null;
+    unsavedChanges: boolean;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -162,7 +166,9 @@ export const state = observable<State>({
     workshops: []
   },
   datapackProfilePage: {
-    editMode: false
+    editMode: false,
+    editableDatapackMetadata: null,
+    unsavedChanges: false
   },
   chartLoading: false,
   madeChart: false,

@@ -2,17 +2,17 @@ import { DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pic
 import { DatapackMetadata } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useState } from "react";
-export type ChangeAbleDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+import { EditableDatapackMetadata } from "../types";
 
 export const useDatapackProfileForm = (datapack: DatapackMetadata) => {
-  const [datapackMetadata, setDatapackMetadata] = useState<ChangeAbleDatapackMetadata>({
+  const [datapackMetadata, setDatapackMetadata] = useState<EditableDatapackMetadata>({
     ...datapack
   });
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [dateError, setDateError] = useState<string | null>(null);
   const [tag, setTag] = useState<string>("");
   const [tagError, setTagError] = useState<string | null>(null);
-  const updateDatapackMetadata = (newMetadata: Partial<ChangeAbleDatapackMetadata>) => {
+  const updateDatapackMetadata = (newMetadata: Partial<EditableDatapackMetadata>) => {
     setDatapackMetadata({ ...datapackMetadata, ...newMetadata });
     setUnsavedChanges(true);
   };
