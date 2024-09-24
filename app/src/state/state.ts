@@ -80,6 +80,9 @@ export type State = {
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
     workshops: SharedWorkshop[];
   };
+  datapackProfilePage: {
+    editMode: boolean;
+  };
   mapState: {
     mapInfo: MapInfo;
     mapHierarchy: MapHierarchy;
@@ -157,6 +160,9 @@ export const state = observable<State>({
     displayedUsers: [],
     displayedUserDatapacks: {},
     workshops: []
+  },
+  datapackProfilePage: {
+    editMode: false
   },
   chartLoading: false,
   madeChart: false,
