@@ -1068,6 +1068,9 @@ export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHiera
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
+export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
+  state.datapackProfilePage.editMode = editMode;
+});
 export const setTopStageAge = action("setTopStageAge", (age: number, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);

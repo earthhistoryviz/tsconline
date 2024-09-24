@@ -142,7 +142,7 @@ type AboutProps = {
   datapack: BaseDatapackProps;
 };
 const About: React.FC<AboutProps> = ({ datapack }) => {
-  const [editMode, setEditMode] = useState(false);
+  const { state: contextState, actions } = useContext(context);
   const { state, setters, handlers } = useDatapackProfileForm(datapack);
   const { t } = useTranslation();
   // for when user tries to navigate away with unsaved changes
@@ -172,41 +172,31 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         <Description
           description={datapack.description}
           editableDescription={state.datapackMetadata.description}
-          editMode={editMode}
           updateDescription={(description) => setters.updateDatapackMetadata({ description })}
         />
         <Notes
           notes={datapack.notes}
           editableNotes={state.datapackMetadata.notes}
-          editMode={editMode}
           updateNotes={(notes) => setters.updateDatapackMetadata({ notes })}
         />
         <Contact
           contact={datapack.contact}
           editableContact={state.datapackMetadata.contact}
-          editMode={editMode}
           updateContact={(contact) => setters.updateDatapackMetadata({ contact })}
         />
       </div>
       <div className={styles.additional}>
-        <EditButtons
-          editMode={editMode}
-          setEditMode={setEditMode}
-          unsavedChanges={state.unsavedChanges}
-          resetForm={handlers.resetDatapackMetadata}
-        />
+        <EditButtons unsavedChanges={state.unsavedChanges} resetForm={handlers.resetDatapackMetadata} />
         <div className={styles.ai}>
           <AuthoredBy
             authoredBy={datapack.authoredBy}
             editableAuthoredBy={state.datapackMetadata.authoredBy}
-            editMode={editMode}
             updateAuthoredBy={(authoredBy) => setters.updateDatapackMetadata({ authoredBy })}
           />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
           <DateField
-            editMode={editMode}
             handleDateChange={handlers.handleDateChange}
             datapackDate={datapack.date}
             editableDate={state.datapackMetadata.date}
@@ -227,7 +217,6 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Tags
-            editMode={editMode}
             editableTags={state.datapackMetadata.tags}
             tags={datapack.tags}
             setTags={(tags) => setters.updateDatapackMetadata({ tags })}
@@ -239,17 +228,17 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
 };
 
 type TagsProps = {
-  editMode: boolean;
   tags: string[];
   editableTags: string[];
   setTags: (tags: string[]) => void;
 };
 
-const Tags: React.FC<TagsProps> = ({ tags, editMode, setTags, editableTags }) => {
+const Tags: React.FC<TagsProps> = observer(({ tags, setTags, editableTags }) => {
+  const { state } = useContext(context);
   return (
     <>
       <Typography className={styles.aih}>Tags</Typography>
-      {editMode ? (
+      {state.datapackProfilePage.editMode ? (
         <Autocomplete
           multiple
           value={editableTags}
@@ -275,19 +264,19 @@ const Tags: React.FC<TagsProps> = ({ tags, editMode, setTags, editableTags }) =>
       )}
     </>
   );
-};
+});
 
 type AutheoredByProps = {
-  editMode: boolean;
   authoredBy: string;
   editableAuthoredBy: string | undefined;
   updateAuthoredBy: (authoredBy: string) => void;
 };
-const AuthoredBy: React.FC<AutheoredByProps> = ({ authoredBy, editMode, editableAuthoredBy, updateAuthoredBy }) => {
+const AuthoredBy: React.FC<AutheoredByProps> = observer(({ authoredBy, editableAuthoredBy, updateAuthoredBy }) => {
+  const { state } = useContext(context);
   return (
     <>
       <Typography className={styles.aih}>Authored By</Typography>
-      {editMode ? (
+      {state.datapackProfilePage.editMode ? (
         <TextField
           fullWidth
           onChange={(e) => updateAuthoredBy(e.target.value)}
@@ -299,17 +288,17 @@ const AuthoredBy: React.FC<AutheoredByProps> = ({ authoredBy, editMode, editable
       )}
     </>
   );
-};
+});
 type DescriptionProps = {
-  editMode: boolean;
   description: string | undefined;
   editableDescription: string | undefined;
   updateDescription: (description: string) => void;
 };
-const Description: React.FC<DescriptionProps> = ({ description, editMode, editableDescription, updateDescription }) => {
+const Description: React.FC<DescriptionProps> = observer(({ description, editableDescription, updateDescription }) => {
+  const { state } = useContext(context);
   return (
     <>
-      {editMode ? (
+      {state.datapackProfilePage.editMode ? (
         <TextField
           value={editableDescription}
           onChange={(e) => updateDescription(e.target.value)}
@@ -323,17 +312,17 @@ const Description: React.FC<DescriptionProps> = ({ description, editMode, editab
       )}
     </>
   );
-};
+});
 type ContactProps = {
-  editMode: boolean;
   updateContact: (contact: string) => void;
   contact: string | undefined;
   editableContact: string | undefined;
 };
-const Contact: React.FC<ContactProps> = ({ editableContact, editMode, updateContact, contact }) => {
+const Contact: React.FC<ContactProps> = observer(({ editableContact, updateContact, contact }) => {
+  const { state } = useContext(context);
   return (
     <>
-      {editMode ? (
+      {state.datapackProfilePage.editMode ? (
         <>
           <Typography className={styles.dt}>Contact</Typography>
           <TextField
@@ -355,17 +344,17 @@ const Contact: React.FC<ContactProps> = ({ editableContact, editMode, updateCont
       )}
     </>
   );
-};
+});
 type NotesProps = {
   notes: string | undefined;
   editableNotes: string | undefined;
-  editMode: boolean;
   updateNotes: (notes: string) => void;
 };
-const Notes: React.FC<NotesProps> = ({ notes, editMode, editableNotes, updateNotes }) => {
+const Notes: React.FC<NotesProps> = observer(({ notes, editableNotes, updateNotes }) => {
+  const { state } = useContext(context);
   return (
     <>
-      {editMode ? (
+      {state.datapackProfilePage.editMode ? (
         <>
           <Typography className={styles.dt}>Notes</Typography>
           <TextField
@@ -387,25 +376,19 @@ const Notes: React.FC<NotesProps> = ({ notes, editMode, editableNotes, updateNot
       )}
     </>
   );
-};
+});
 type EditButtonsProps = {
-  editMode: boolean;
-  setEditMode: React.Dispatch<React.SetStateAction<boolean>>;
   unsavedChanges: boolean;
   resetForm: () => void;
 };
 
-const EditButtons: React.FC<EditButtonsProps> = ({
-  editMode,
-  setEditMode,
-  unsavedChanges,
-  resetForm
-}: EditButtonsProps) => {
+const EditButtons: React.FC<EditButtonsProps> = observer(({ unsavedChanges, resetForm }: EditButtonsProps) => {
   const { t } = useTranslation();
+  const { state, actions } = useContext(context);
   return (
     <>
-      {!editMode ? (
-        <Box className={styles.pencilIconContainer} onClick={() => setEditMode(!editMode)}>
+      {!state.datapackProfilePage.editMode ? (
+        <Box className={styles.pencilIconContainer} onClick={() => actions.setDatapackProfilePageEditMode(true)}>
           <SvgIcon className={styles.pencilIcon}>
             <CreateIcon />
           </SvgIcon>
@@ -425,7 +408,7 @@ const EditButtons: React.FC<EditButtonsProps> = ({
             className={styles.editButton}
             onClick={() => {
               if (!unsavedChanges || window.confirm(t("dialogs.confirm-changes.message"))) {
-                setEditMode(false);
+                actions.setDatapackProfilePageEditMode(false);
                 // reset the metadata if the user cancels
                 if (unsavedChanges) {
                   resetForm();
@@ -439,17 +422,17 @@ const EditButtons: React.FC<EditButtonsProps> = ({
       )}
     </>
   );
-};
+});
 
 type DateFieldProps = {
-  editMode: boolean;
   datapackDate: string | undefined;
   editableDate: string | undefined;
   handleDateChange: (date: Dayjs | null, context: PickerChangeHandlerContext<DateValidationError>) => void;
   clearDate: () => void;
 };
-const DateField: React.FC<DateFieldProps> = ({ clearDate, editMode, datapackDate, editableDate, handleDateChange }) => {
-  return editMode ? (
+const DateField: React.FC<DateFieldProps> = observer(({ clearDate, datapackDate, editableDate, handleDateChange }) => {
+  const { state } = useContext(context);
+  return state.datapackProfilePage.editMode ? (
     <DatePicker
       value={editableDate ? dayjs(editableDate) : null}
       maxDate={dayjs()}
@@ -475,7 +458,7 @@ const DateField: React.FC<DateFieldProps> = ({ clearDate, editMode, datapackDate
   ) : (
     <Typography>{datapackDate || "Unknown"}</Typography>
   );
-};
+});
 
 type DatapackWarningProps = {
   warning: DatapackWarning;
