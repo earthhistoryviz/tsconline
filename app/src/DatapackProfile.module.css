@@ -18,6 +18,10 @@
   padding: 16px;
   gap: 20px;
 }
+.addTagButton {
+  width: 20px;
+  height: 20px;
+}
 .editButton {
   display: flex;
   justify-content: center;
@@ -136,7 +140,6 @@
   flex-direction: row;
   gap: 10px;
   flex-wrap: wrap;
-  max-width: 170px;
 }
 
 .dwc {

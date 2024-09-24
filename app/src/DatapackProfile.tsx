@@ -4,7 +4,7 @@ import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import { Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
+import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -18,6 +18,7 @@ import CreateIcon from "@mui/icons-material/Create";
 import { useDatapackProfileForm } from "./util/datapack-profile-form-hook";
 import { DatePicker, DateValidationError, PickerChangeHandlerContext } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
+import { values } from "lodash";
 
 export const DatapackProfile = observer(() => {
   const { state } = useContext(context);
@@ -172,19 +173,19 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           description={datapack.description}
           editableDescription={state.datapackMetadata.description}
           editMode={editMode}
-          updateDescription={(description) => setters.updateDatapackMetadata({ ...datapack, description })}
+          updateDescription={(description) => setters.updateDatapackMetadata({ description })}
         />
         <Notes
           notes={datapack.notes}
           editableNotes={state.datapackMetadata.notes}
           editMode={editMode}
-          updateNotes={(notes) => setters.updateDatapackMetadata({ ...datapack, notes })}
+          updateNotes={(notes) => setters.updateDatapackMetadata({ notes })}
         />
         <Contact
           contact={datapack.contact}
           editableContact={state.datapackMetadata.contact}
           editMode={editMode}
-          updateContact={(contact) => setters.updateDatapackMetadata({ ...datapack, contact })}
+          updateContact={(contact) => setters.updateDatapackMetadata({ contact })}
         />
       </div>
       <div className={styles.additional}>
@@ -195,16 +196,12 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           resetForm={handlers.resetDatapackMetadata}
         />
         <div className={styles.ai}>
-          <Typography className={styles.aih}>Authored By</Typography>
-          {editMode ? (
-            <TextField
-              fullWidth
-              onChange={(e) => setters.updateDatapackMetadata({ ...datapack, authoredBy: e.target.value })}
-              value={state.datapackMetadata.authoredBy}
-            />
-          ) : (
-            <Typography>{datapack.authoredBy}</Typography>
-          )}
+          <AuthoredBy
+            authoredBy={datapack.authoredBy}
+            editableAuthoredBy={state.datapackMetadata.authoredBy}
+            editMode={editMode}
+            updateAuthoredBy={(authoredBy) => setters.updateDatapackMetadata({ authoredBy })}
+          />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
@@ -213,7 +210,7 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
             handleDateChange={handlers.handleDateChange}
             datapackDate={datapack.date}
             editableDate={state.datapackMetadata.date}
-            clearDate={() => setters.updateDatapackMetadata({ ...datapack, date: undefined })}
+            clearDate={() => setters.updateDatapackMetadata({ date: undefined })}
           />
         </div>
         <div className={styles.ai}>
@@ -229,19 +226,78 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>Tags</Typography>
+          <Tags
+            editMode={editMode}
+            editableTags={state.datapackMetadata.tags}
+            tags={datapack.tags}
+            setTags={(tags) => setters.updateDatapackMetadata({ tags })}
+          />
+        </div>
+      </div>
+    </Box>
+  );
+};
+
+type TagsProps = {
+  editMode: boolean;
+  tags: string[];
+  editableTags: string[];
+  setTags: (tags: string[]) => void;
+};
+
+const Tags: React.FC<TagsProps> = ({ tags, editMode, setTags, editableTags }) => {
+  return (
+    <>
+      <Typography className={styles.aih}>Tags</Typography>
+      {editMode ? (
+        <Autocomplete
+          multiple
+          value={editableTags}
+          onChange={(_, values) => {
+            setTags(values);
+          }}
+          options={[]}
+          freeSolo
+          renderInput={(params) => <TextField {...params} />}
+        />
+      ) : (
+        <>
           <div className={styles.tags}>
-            {datapack.tags[0]
-              ? datapack.tags.map((tag) => (
+            {tags[0]
+              ? tags.map((tag) => (
                   <TagButton key={tag}>
                     <Typography fontSize="0.9rem">{tag}</Typography>
                   </TagButton>
                 ))
               : "No tags"}
           </div>
-        </div>
-      </div>
-    </Box>
+        </>
+      )}
+    </>
+  );
+};
+
+type AutheoredByProps = {
+  editMode: boolean;
+  authoredBy: string;
+  editableAuthoredBy: string | undefined;
+  updateAuthoredBy: (authoredBy: string) => void;
+};
+const AuthoredBy: React.FC<AutheoredByProps> = ({ authoredBy, editMode, editableAuthoredBy, updateAuthoredBy }) => {
+  return (
+    <>
+      <Typography className={styles.aih}>Authored By</Typography>
+      {editMode ? (
+        <TextField
+          fullWidth
+          onChange={(e) => updateAuthoredBy(e.target.value)}
+          placeholder="Creator of the data pack"
+          value={editableAuthoredBy}
+        />
+      ) : (
+        <Typography>{authoredBy}</Typography>
+      )}
+    </>
   );
 };
 type DescriptionProps = {
