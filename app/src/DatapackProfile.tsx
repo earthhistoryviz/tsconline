@@ -25,6 +25,7 @@ import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
+import { ErrorCodes } from "./util/error-codes";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -83,43 +84,62 @@ export const DatapackProfile = observer(() => {
       tab: <WarningsTab count={datapack?.warnings ? datapack.warnings.length : 0} />
     }
   ];
+  const Content: React.FC = observer(() => (
+    <>
+      <div className={styles.header}>
+        <IconButton className={styles.back} onClick={() => navigate("/settings")}>
+          <ArrowBackIcon className={styles.icon} />
+        </IconButton>
+        {state.datapackProfilePage.editMode ? (
+          <TextField
+            value={state.datapackProfilePage.editableDatapackMetadata?.title}
+            required
+            fullWidth
+            size="medium"
+            multiline
+            maxRows={2}
+            inputProps={{ maxLength: MAX_DATAPACK_TITLE_LENGTH }}
+            sx={{
+              "& .MuiInputBase-root": {
+                fontSize: "1.7rem",
+                fontWeight: 600
+              }
+            }}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ title: e.target.value })}
+          />
+        ) : (
+          <Typography className={styles.ht}>{datapack.title}</Typography>
+        )}
+        <img className={styles.di} src={datapack.image || defaultImageUrl} />
+      </div>
+      <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
+      <CustomDivider className={styles.divider} />
+      <DatapackProfileContent index={tabIndex} datapack={datapack} />
+    </>
+  ));
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (state.datapackProfilePage.editableDatapackMetadata) {
+      actions.handleDatapackEdit(state.datapackProfilePage.editableDatapackMetadata);
+    }
+  };
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <IconButton className={styles.back} onClick={() => navigate("/settings")}>
-            <ArrowBackIcon className={styles.icon} />
-          </IconButton>
-          {state.datapackProfilePage.editMode ? (
-            <TextField
-              value={state.datapackProfilePage.editableDatapackMetadata?.title}
-              fullWidth
-              size="medium"
-              multiline
-              maxRows={2}
-              inputProps={{ maxLength: MAX_DATAPACK_TITLE_LENGTH }}
-              sx={{
-                "& .MuiInputBase-root": {
-                  fontSize: "1.5rem",
-                  fontWeight: 600
-                }
-              }}
-              onChange={(e) => actions.updateEditableDatapackMetadata({ title: e.target.value })}
-            />
-          ) : (
-            <Typography className={styles.ht}>{datapack.title}</Typography>
-          )}
-          <img className={styles.di} src={datapack.image || defaultImageUrl} />
-        </div>
-        <CustomTabs
-          className={styles.tabs}
-          centered
-          value={tabIndex}
-          onChange={(val) => setTabIndex(val)}
-          tabs={tabs}
-        />
-        <CustomDivider className={styles.divider} />
-        <DatapackProfileContent index={tabIndex} datapack={datapack} />
+        {/* Conditionally render in a form to handle edit submissions */}
+        {state.datapackProfilePage.editMode ? (
+          <form onSubmit={handleSubmit}>
+            <Content />
+          </form>
+        ) : (
+          <Content />
+        )}
       </div>
     </div>
   );
@@ -296,6 +316,7 @@ const AuthoredBy: React.FC<AuthoredByProps> = observer(({ authoredBy }) => {
       {state.datapackProfilePage.editMode ? (
         <TextField
           fullWidth
+          required
           onChange={(e) => actions.updateEditableDatapackMetadata({ authoredBy: e.target.value })}
           placeholder="Creator of the data pack"
           inputProps={{ maxLength: MAX_AUTHORED_BY_LENGTH }}
@@ -319,6 +340,7 @@ const Description: React.FC<DescriptionProps> = observer(({ description }) => {
           value={state.datapackProfilePage.editableDatapackMetadata?.description}
           onChange={(e) => actions.updateEditableDatapackMetadata({ description: e.target.value })}
           fullWidth
+          required
           multiline
           placeholder="A brief description of the data"
           minRows={7}
@@ -429,7 +451,9 @@ const EditButtons: React.FC<EditButtonsProps> = observer(({ unsavedChanges, rese
             }}>
             Cancel
           </Button>
-          <TSCButton className={styles.editButton}>Save</TSCButton>
+          <TSCButton className={styles.editButton} type="submit">
+            Save
+          </TSCButton>
         </Box>
       )}
     </>

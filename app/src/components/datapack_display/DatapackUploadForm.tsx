@@ -18,7 +18,13 @@ import { TSCButton } from "../TSCButton";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
-import { DatapackIndex, DatapackMetadata, MAX_DATAPACK_TAGS_ALLOWED, MAX_DATAPACK_TAG_LENGTH, MAX_DATAPACK_TITLE_LENGTH } from "@tsconline/shared";
+import {
+  DatapackIndex,
+  DatapackMetadata,
+  MAX_DATAPACK_TAGS_ALLOWED,
+  MAX_DATAPACK_TAG_LENGTH,
+  MAX_DATAPACK_TITLE_LENGTH
+} from "@tsconline/shared";
 import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
@@ -129,9 +135,13 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             options={[]}
             freeSolo
             limitTags={MAX_DATAPACK_TAGS_ALLOWED}
-            renderInput={(params) => <TextField {...params} label={t("settings.datapacks.upload-form.tags")} 
-            inputProps={{ ...params.inputProps, maxLength: MAX_DATAPACK_TAG_LENGTH }}
-            />}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label={t("settings.datapacks.upload-form.tags")}
+                inputProps={{ ...params.inputProps, maxLength: MAX_DATAPACK_TAG_LENGTH }}
+              />
+            )}
           />
           {type === "user" && (
             <FormControlLabel
