@@ -27,9 +27,7 @@ import type {
   ServerDatapackIndex,
   PrivateUserDatapackIndex,
   PublicUserDatapackIndex,
-  WorkshopDatapackIndex,
-  DatapackMetadata
-} from "@tsconline/shared";
+  WorkshopDatapackIndex} from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
