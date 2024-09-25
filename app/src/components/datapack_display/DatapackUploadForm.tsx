@@ -18,7 +18,7 @@ import { TSCButton } from "../TSCButton";
 import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
-import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata, MAX_DATAPACK_TAGS_ALLOWED, MAX_DATAPACK_TAG_LENGTH, MAX_DATAPACK_TITLE_LENGTH } from "@tsconline/shared";
 import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
@@ -73,6 +73,9 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               placeholder={t("settings.datapacks.upload-form.name-placeholder")}
               InputLabelProps={{ shrink: true }}
               value={state.title}
+              inputProps={{
+                maxLength: MAX_DATAPACK_TITLE_LENGTH
+              }}
               onChange={(event) => setters.setTitle(event.target.value)}
             />
             <TextField
@@ -81,6 +84,9 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               placeholder={t("settings.datapacks.upload-form.author-placeholder")}
               required
               InputLabelProps={{ shrink: true }}
+              inputProps={{
+                maxLength: MAX_DATAPACK_TITLE_LENGTH
+              }}
               value={state.authoredBy}
               onChange={(event) => setters.setAuthoredBy(event.target.value)}
             />
@@ -122,7 +128,10 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             onChange={(_, value) => setters.setTags(value)}
             options={[]}
             freeSolo
-            renderInput={(params) => <TextField {...params} label={t("settings.datapacks.upload-form.tags")} />}
+            limitTags={MAX_DATAPACK_TAGS_ALLOWED}
+            renderInput={(params) => <TextField {...params} label={t("settings.datapacks.upload-form.tags")} 
+            inputProps={{ ...params.inputProps, maxLength: MAX_DATAPACK_TAG_LENGTH }}
+            />}
           />
           {type === "user" && (
             <FormControlLabel
