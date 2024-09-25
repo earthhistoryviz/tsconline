@@ -99,12 +99,12 @@
 }
 
 .ah {
-  flex: 3 1 0;
+  position: relative;
+  flex: 1 1 0;
 }
 
 .additional {
-  position: relative;
-  flex: 1 1 0;
+  flex: 3 1 0;
   flex-shrink: 0;
   border-left: 1px solid #e0e0e0;
   padding: 16px;

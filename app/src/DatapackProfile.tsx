@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
 import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
@@ -19,14 +19,14 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 
 export const DatapackProfile = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const { id } = useParams();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
-  if (!id) return <PageNotFound />;
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
+    if (!id) return;
     let datapack: Datapack | undefined;
     switch (query.get("index")) {
       case "server":
@@ -53,7 +53,10 @@ export const DatapackProfile = observer(() => {
     return datapack;
   };
   const datapack = fetchDatapack();
-  if (!datapack) return <PageNotFound />;
+  useEffect(() => {
+    if (datapack) actions.setEditableDatapackMetadata(datapack);
+  }, [datapack]);
+  if (!datapack || !id) return <PageNotFound />;
   const tabs = [
     {
       id: "About",
@@ -69,7 +72,7 @@ export const DatapackProfile = observer(() => {
     },
     {
       id: "Warnings",
-      tab: <WarningsTab count={datapack.warnings ? datapack.warnings.length : 0} />
+      tab: <WarningsTab count={datapack?.warnings ? datapack.warnings.length : 0} />
     }
   ];
   return (
@@ -80,7 +83,10 @@ export const DatapackProfile = observer(() => {
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
           {state.datapackProfilePage.editMode ? (
-            <TextField value={datapack.title} />
+            <TextField
+              value={state.datapackProfilePage.editableDatapackMetadata?.title}
+              onChange={(e) => actions.updateEditableDatapackMetadata({ title: e.target.value })}
+            />
           ) : (
             <Typography className={styles.ht}>{datapack.title}</Typography>
           )}
@@ -146,9 +152,18 @@ type AboutProps = {
 const About: React.FC<AboutProps> = observer(({ datapack }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
+  // TODO used to prevent a warning with the useBlocker hook (will need to revisit later to see whether this is still necessary)
+  const isMountedRef = useRef<boolean>();
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
   // for when user tries to navigate away with unsaved changes
   useBlocker(
     ({ currentLocation, nextLocation }) =>
+      isMountedRef &&
       state.datapackProfilePage.unsavedChanges &&
       currentLocation.pathname !== nextLocation.pathname &&
       !window.confirm(t("dialogs.confirm-changes.message"))
@@ -166,16 +181,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
-  actions.setEditableDatapackMetadata(datapack);
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        <Typography className={styles.dt}>Description</Typography>
-        <Description description={datapack.description} />
-        <Notes notes={datapack.notes} />
-        <Contact contact={datapack.contact} />
-      </div>
-      <div className={styles.additional}>
         <EditButtons
           unsavedChanges={state.datapackProfilePage.unsavedChanges}
           resetForm={() => actions.setEditableDatapackMetadata(datapack)}
@@ -202,6 +210,12 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         <div className={styles.ai}>
           <Tags tags={datapack.tags} />
         </div>
+      </div>
+      <div className={styles.additional}>
+        <Typography className={styles.dt}>Description</Typography>
+        <Description description={datapack.description} />
+        <Notes notes={datapack.notes} />
+        <Contact contact={datapack.contact} />
       </div>
     </Box>
   );
@@ -298,7 +312,7 @@ const Contact: React.FC<ContactProps> = observer(({ contact }) => {
         <>
           <Typography className={styles.dt}>Contact</Typography>
           <TextField
-            value={state.datapackProfilePage.editableDatapackMetadata}
+            value={state.datapackProfilePage.editableDatapackMetadata?.contact}
             onChange={(e) => actions.updateEditableDatapackMetadata({ contact: e.target.value })}
             fullWidth
             multiline

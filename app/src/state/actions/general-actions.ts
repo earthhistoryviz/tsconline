@@ -55,7 +55,7 @@ import {
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
-import { cloneDeep, set } from "lodash";
+import { cloneDeep } from "lodash";
 
 const increment = 1;
 
@@ -1183,7 +1183,7 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
 });
-export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata) => {
+export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   state.datapackProfilePage.editableDatapackMetadata = metadata;
 });
