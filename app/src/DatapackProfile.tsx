@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { devSafeUrl } from "./util";
+import { devSafeUrl, loadRecaptcha } from "./util";
 import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
@@ -66,6 +66,7 @@ export const DatapackProfile = observer(() => {
     if (datapack) actions.setEditableDatapackMetadata(datapack);
   }, [datapack]);
   if (!datapack || !id) return <PageNotFound />;
+  if (state.datapackProfilePage.editMode) loadRecaptcha();
   const tabs = [
     {
       id: "About",
