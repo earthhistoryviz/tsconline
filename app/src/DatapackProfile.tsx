@@ -11,7 +11,15 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
-import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared";
+import {
+  BaseDatapackProps,
+  Datapack,
+  DatapackWarning,
+  MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_TAGS_ALLOWED,
+  MAX_DATAPACK_TAG_LENGTH,
+  MAX_DATAPACK_TITLE_LENGTH
+} from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
@@ -85,6 +93,17 @@ export const DatapackProfile = observer(() => {
           {state.datapackProfilePage.editMode ? (
             <TextField
               value={state.datapackProfilePage.editableDatapackMetadata?.title}
+              fullWidth
+              size="medium"
+              multiline
+              maxRows={2}
+              inputProps={{ maxLength: MAX_DATAPACK_TITLE_LENGTH }}
+              sx={{
+                "& .MuiInputBase-root": {
+                  fontSize: "1.5rem",
+                  fontWeight: 600
+                }
+              }}
               onChange={(e) => actions.updateEditableDatapackMetadata({ title: e.target.value })}
             />
           ) : (
@@ -237,9 +256,17 @@ const Tags: React.FC<TagsProps> = observer(({ tags }) => {
           onChange={(_, values) => {
             actions.updateEditableDatapackMetadata({ tags: values });
           }}
+          fullWidth
           options={[]}
           freeSolo
-          renderInput={(params) => <TextField {...params} />}
+          limitTags={MAX_DATAPACK_TAGS_ALLOWED}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              inputProps={{ ...params.inputProps, maxLength: MAX_DATAPACK_TAG_LENGTH }}
+              placeholder="Add tags"
+            />
+          )}
         />
       ) : (
         <>
@@ -271,6 +298,7 @@ const AuthoredBy: React.FC<AuthoredByProps> = observer(({ authoredBy }) => {
           fullWidth
           onChange={(e) => actions.updateEditableDatapackMetadata({ authoredBy: e.target.value })}
           placeholder="Creator of the data pack"
+          inputProps={{ maxLength: MAX_AUTHORED_BY_LENGTH }}
           value={state.datapackProfilePage.editableDatapackMetadata?.authoredBy}
         />
       ) : (
