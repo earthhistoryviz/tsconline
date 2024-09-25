@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -77,10 +77,19 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const { t } = useTranslation();
   const handleAccordionChange = () => {
     setExpanded(!expanded);
   };
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(true);
+    }, 2000);
+  }, []);
+
+
   return (
     <>
       <Accordion
@@ -102,6 +111,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                 <Grid item key={index} className="preset-item">
                   <TSCCard
                     preset={preset}
+                    isLoading={isLoading}
                     generateChart={async () => {
                       let datapacks: DatapackConfigForChartRequest[] = [];
                       try {

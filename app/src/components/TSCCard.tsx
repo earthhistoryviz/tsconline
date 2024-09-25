@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { styled } from "@mui/material/styles";
-import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText } from "@mui/material";
+import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText, Skeleton } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
 import ReactCardFlip from "react-card-flip";
@@ -27,30 +27,46 @@ const ContrastTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary
 }));
 
-export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; generateChart?: () => void }) => {
+export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartConfig; generateChart?: () => void; isLoading: boolean }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const { t } = useTranslation();
+
   function handleFlip() {
     setIsFlipped(!isFlipped);
   }
+
   function add() {
     setAdded(!added);
   }
+
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
-      {/* This is the front card */}
+      {/* Front card */}
       <Box className="front-card">
-        <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
+      {isLoading ? (
+          <Box>
+          </Box>
+        ) : (
+          <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
+        )}
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" />
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
-                <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
+                {isLoading ? (
+                  <Skeleton variant="circular" width={40} height={40} />
+                ) : (
+                  <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
+                )}
               </Grid>
               <Grid item xs>
-                <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
+                {isLoading ? (
+                  <Skeleton width="60%" />
+                ) : (
+                  <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
+                )}
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
@@ -60,28 +76,33 @@ export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; genera
                 </IconButton>
               </Grid>
               <Grid item>
-                <TSCButton
-                  buttonType="gradient"
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                    fontSize: "0.85rem"
-                  }}
-                  onClick={generateChart}>
-                  {t("button.generate")}
-                </TSCButton>
+                {isLoading ? (
+                  <Skeleton width={80} height={35} />
+                ) : (
+                  <TSCButton
+                    buttonType="gradient"
+                    style={{
+                      width: "auto",
+                      height: "auto",
+                      fontSize: "0.85rem"
+                    }}
+                    onClick={generateChart}>
+                    {t("button.generate")}
+                  </TSCButton>
+                )}
               </Grid>
               <Grid item xs onClick={handleFlip}>
                 <Box display="flex" justifyContent="flex-end">
-                  <Date className="date">{preset.date}</Date>
+                  {isLoading ? <Skeleton width={50} /> : <Date className="date">{preset.date}</Date>}
                 </Box>
               </Grid>
             </Grid>
           </Box>
         </div>
       </Box>
-      {/* This is the back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
+
+      {/* Back card */}
+      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} isLoading={isLoading} />
     </ReactCardFlip>
   );
 };
@@ -90,37 +111,55 @@ const BackCard = ({
   preset,
   handleFlip,
   add,
-  added
+  added,
+  isLoading
 }: {
   preset: ChartConfig;
   handleFlip: () => void;
   add: () => void;
   added: boolean;
+  isLoading: boolean;
 }) => {
   return (
     <Box className="back-card">
       <CardBackground className="card-background" />
       <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
-          <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
-          <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
+          {isLoading ? (
+            <Skeleton variant="rectangular" width="100%" height={100} />
+          ) : (
+            <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
+          )}
+          {isLoading ? (
+            <Skeleton width="60%" height={30} style={{ marginTop: 10 }} />
+          ) : (
+            <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
+          )}
           <div className="info-text-container">
             <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Included Datapacks</CustomHeader>
-            <List className="list">
-              {preset.datapacks.map((datapack, index) => (
-                <ListItem className="list-item" key={index}>
-                  <FolderIcon color="icon" />
-                  <ListItemText
-                    className="list-item-text"
-                    primary={<ContrastTypography>{datapack.name}</ContrastTypography>}
-                  />
-                </ListItem>
-              ))}
-            </List>
+            {isLoading ? (
+              <Skeleton width="80%" height={25} />
+            ) : (
+              <List className="list">
+                {preset.datapacks.map((datapack, index) => (
+                  <ListItem className="list-item" key={index}>
+                    <FolderIcon color="icon" />
+                    <ListItemText
+                      className="list-item-text"
+                      primary={<ContrastTypography>{datapack.name}</ContrastTypography>}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
             <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Additional Info</CustomHeader>
-            <ContrastTypography className="info-description" variant="body1">
-              {preset.description}
-            </ContrastTypography>
+            {isLoading ? (
+              <Skeleton width="90%" height={50} style={{ marginTop: 10 }} />
+            ) : (
+              <ContrastTypography className="info-description" variant="body1">
+                {preset.description}
+              </ContrastTypography>
+            )}
           </div>
         </StyledScrollbar>
       </div>

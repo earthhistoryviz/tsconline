@@ -4,7 +4,7 @@ import styles from "./DatapackProfile.module.css";
 import { useContext, useState } from "react";
 import { context } from "./state";
 import { devSafeUrl } from "./util";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, IconButton, Typography, useTheme, Skeleton } from "@mui/material";
 import { CustomDivider, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -70,27 +70,13 @@ export const DatapackProfile = observer(() => {
     }
   ];
   return (
-    <div className={styles.adjcontainer}>
-      <div className={styles.container}>
-        <div className={styles.header}>
-          <IconButton className={styles.back} onClick={() => navigate("/settings")}>
-            <ArrowBackIcon className={styles.icon} />
-          </IconButton>
-          <Typography className={styles.ht}>{datapack.title}</Typography>
-          <img className={styles.di} src={datapack.image || defaultImageUrl} />
-        </div>
-        <CustomTabs
-          className={styles.tabs}
-          centered
-          value={tabIndex}
-          onChange={(val) => setTabIndex(val)}
-          tabs={tabs}
-        />
-        <CustomDivider className={styles.divider} />
-        <DatapackProfileContent index={tabIndex} datapack={datapack} />
-      </div>
+    <div style={{ padding: "20px" }}>
+      <Skeleton variant="rectangular" width={300} height={200} />
+      <Skeleton variant="text" width={200} height={50} />
+      <Skeleton variant="text" width={200} height={50} />
+      <Skeleton variant="rectangular" width={300} height={200} />
     </div>
-  );
+  ); 
 });
 
 type WarningTabProps = {
