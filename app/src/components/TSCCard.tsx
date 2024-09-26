@@ -113,55 +113,37 @@ const BackCard = ({
   preset,
   handleFlip,
   add,
-  added,
-  isLoading
+  added
 }: {
   preset: ChartConfig;
   handleFlip: () => void;
   add: () => void;
   added: boolean;
-  isLoading: boolean;
 }) => {
   return (
     <Box className="back-card">
       <CardBackground className="card-background" />
       <div className="back-background card-content">
         <StyledScrollbar className="info-container" autoHide={false}>
-          {isLoading ? (
-            <Skeleton variant="rectangular" width="100%" height={100} />
-          ) : (
-            <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
-          )}
-          {isLoading ? (
-            <Skeleton width="60%" height={30} style={{ marginTop: 10 }} />
-          ) : (
-            <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
-          )}
+          <CardMedia className="info-media" component="img" image={devSafeUrl(preset.background)} />
+          <ContrastTypography className="info-title">{preset.title}</ContrastTypography>
           <div className="info-text-container">
             <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Included Datapacks</CustomHeader>
-            {isLoading ? (
-              <Skeleton width="80%" height={25} />
-            ) : (
-              <List className="list">
-                {preset.datapacks.map((datapack, index) => (
-                  <ListItem className="list-item" key={index}>
-                    <FolderIcon color="icon" />
-                    <ListItemText
-                      className="list-item-text"
-                      primary={<ContrastTypography>{datapack.name}</ContrastTypography>}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
+            <List className="list">
+              {preset.datapacks.map((datapack, index) => (
+                <ListItem className="list-item" key={index}>
+                  <FolderIcon color="icon" />
+                  <ListItemText
+                    className="list-item-text"
+                    primary={<ContrastTypography>{datapack.name}</ContrastTypography>}
+                  />
+                </ListItem>
+              ))}
+            </List>
             <CustomHeader sx={{ color: "cardBackground.contrastText" }}>Additional Info</CustomHeader>
-            {isLoading ? (
-              <Skeleton width="90%" height={50} style={{ marginTop: 10 }} />
-            ) : (
-              <ContrastTypography className="info-description" variant="body1">
-                {preset.description}
-              </ContrastTypography>
-            )}
+            <ContrastTypography className="info-description" variant="body1">
+              {preset.description}
+            </ContrastTypography>
           </div>
         </StyledScrollbar>
       </div>
