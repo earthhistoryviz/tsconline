@@ -84,10 +84,12 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   };
 
   useEffect(() => {
-    setTimeout(() => {
+    if (configArray && configArray.length > 0) {
+      setIsLoading(false);
+    } else {
       setIsLoading(true);
-    }, 2000);
-  }, []);
+    }
+  }, [configArray]);
 
 
   return (
