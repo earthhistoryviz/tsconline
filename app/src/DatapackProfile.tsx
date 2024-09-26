@@ -65,6 +65,9 @@ export const DatapackProfile = observer(() => {
   const datapack = fetchDatapack();
   useEffect(() => {
     if (datapack) actions.setEditableDatapackMetadata(datapack);
+    return () => {
+      actions.setDatapackProfilePageEditMode(false);
+    };
   }, [datapack]);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();

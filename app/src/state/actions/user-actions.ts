@@ -24,6 +24,11 @@ export const handleDatapackEdit = action(
         Object.assign(body, { [castedKey]: editedDatapack[castedKey] });
       }
     }
+    if (Object.keys(body).length === 0) {
+      pushSnackbar("No changes made", "info");
+      setDatapackProfilePageEditMode(false);
+      return;
+    }
     try {
       const recaptcha = await getRecaptchaToken("handleDatapackEdit");
       if (!recaptcha) return;
