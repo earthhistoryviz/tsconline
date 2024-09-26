@@ -13,6 +13,7 @@ import path from "path";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import { Datapack } from "@tsconline/shared";
+import { User } from "../src/types";
 
 vi.mock("../src/upload-handlers", async () => {
   return {
@@ -182,11 +183,78 @@ const testUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: `/user/datapack/download/${filename}` },
+  { method: "GET", url: `/user/datapack/download/${filename}`, body: { title: "title" } },
   { method: "POST", url: "/user/datapack" },
   { method: "DELETE", url: `/user/datapack/${filename}` },
-  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } }
+  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
+  { method: "GET", url: `/user/datapack/${filename}` }
 ];
+
+describe("get a single user datapack", () => {
+  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const findUser = vi.spyOn(database, "findUser");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 the user is not find", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(401);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+  });
+  it("should reply 500 if an error occurred in findUser", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]).mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Database error" });
+  });
+  it("should reply 500 if an error occurred in getUserDirectory", async () => {
+    getUserDirectory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Failed to get user directory" });
+  });
+  it("should reply 500 if an error occurred in fetchUserDatapack", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
+  });
+  it("should reply 200 if the datapack is successfully retrieved", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ title: "test" });
+  });
+});
 
 describe("verifySession tests", () => {
   describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
@@ -462,7 +530,7 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).not.toHaveBeenCalled();
@@ -479,11 +547,11 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}`,
       headers
     });
+    expect(response.json().error).toBe("Invalid file path");
     expect(accessSpy).not.toHaveBeenCalled();
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(checkHeaderSpy).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(403);
-    expect(response.json().error).toBe("Invalid file path");
   });
   it("should reply 403 when encrypted filepath given is malicious", async () => {
     const resolveSpy = vi.spyOn(path, "resolve").mockReturnValueOnce("bad/file/path");
@@ -914,7 +982,7 @@ describe("userDeleteDatapack tests", () => {
     verifyFilepathSpy.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/download/${filename}`,
+      url: `/user/datapack/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "Invalid datapack/File doesn't exist" });
@@ -926,7 +994,7 @@ describe("userDeleteDatapack tests", () => {
     verifyFilepathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/download/${filename}`,
+      url: `/user/datapack/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "Failed to verify file path" });
@@ -938,7 +1006,7 @@ describe("userDeleteDatapack tests", () => {
     deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/download/${filename}`,
+      url: `/user/datapack/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "There was an error deleting the datapack" });
@@ -950,7 +1018,7 @@ describe("userDeleteDatapack tests", () => {
   it("should reply 200 when the file exists and has metadata", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/download/${filename}`,
+      url: `/user/datapack/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ message: "File deleted" });
