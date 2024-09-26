@@ -99,7 +99,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -239,7 +239,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -261,7 +261,6 @@ const testAdminUser: User = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 1,
   accountType: "default"
 };
 const testNonAdminUser = {
@@ -452,7 +451,6 @@ describe("adminCreateUser tests", () => {
     uuid: "random-uuid",
     emailVerified: 1,
     invalidateSession: 0,
-    workshopId: 0,
     accountType: "default"
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
@@ -1679,7 +1677,6 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1,
       accountType: "default"
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
@@ -1691,7 +1688,6 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test2@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1,
       accountType: "default"
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
