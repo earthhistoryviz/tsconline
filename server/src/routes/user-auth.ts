@@ -1,5 +1,11 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
-import { editDatapackMetadata, requestDownload, uploadDatapack, userDeleteDatapack } from "./user-routes.js";
+import {
+  editDatapackMetadata,
+  fetchSingleUserDatapack,
+  requestDownload,
+  uploadDatapack,
+  userDeleteDatapack
+} from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
@@ -64,8 +70,9 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
+  fastify.get("/datapack/:datapack", { schema: { params: datapackTitleParams } }, fetchSingleUserDatapack);
   fastify.get(
-    "/datapack/:datapack",
+    "/datapack/download/:datapack",
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: datapackTitleParams, querystring: requestDownloadQuery }

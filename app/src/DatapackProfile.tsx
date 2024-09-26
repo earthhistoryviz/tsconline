@@ -119,7 +119,7 @@ export const DatapackProfile = observer(() => {
       <DatapackProfileContent index={tabIndex} datapack={datapack} />
     </>
   ));
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
@@ -128,7 +128,10 @@ export const DatapackProfile = observer(() => {
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {
-      actions.handleDatapackEdit(state.datapackProfilePage.editableDatapackMetadata);
+      await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      if (state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
+        navigate(`/datapack/${state.datapackProfilePage.editableDatapackMetadata.title}?index=${query.get("index")}`);
+      }
     }
   };
   return (
@@ -136,7 +139,7 @@ export const DatapackProfile = observer(() => {
       <div className={styles.container}>
         {/* Conditionally render in a form to handle edit submissions */}
         {state.datapackProfilePage.editMode ? (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className={styles.formContainer}>
             <Content />
           </form>
         ) : (
