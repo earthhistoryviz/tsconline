@@ -70,7 +70,16 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
-  fastify.get("/datapack/:datapack", { schema: { params: datapackTitleParams } }, fetchSingleUserDatapack);
+  fastify.get(
+    "/datapack/:datapack",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      schema: { params: datapackTitleParams }
+    },
+    fetchSingleUserDatapack
+  );
   fastify.get(
     "/datapack/download/:datapack",
     {

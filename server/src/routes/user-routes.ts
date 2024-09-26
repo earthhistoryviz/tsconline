@@ -28,9 +28,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  const body = request.body as Partial<DatapackMetadata>;
-  console.log(body);
-  console.log(typeof body);
+  const body = request.body;
   if (!datapack) {
     reply.status(400).send({ error: "Missing datapack" });
     return;
@@ -112,19 +110,23 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
     reply.status(500).send({ error: "Database error" });
     return;
   }
-  const userDir = await getUserDirectory(uuid).catch(() => {
-    reply.status(500).send({ error: "Failed to get user directory" });
-  });
-  if (!userDir) {
-    return;
+  try {
+    const userDir = await getUserDirectory(uuid).catch(() => {
+      reply.status(500).send({ error: "Failed to get user directory" });
+    });
+    if (!userDir) {
+      return;
+    }
+    const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
+      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
+    });
+    if (!metadata) {
+      return;
+    }
+    reply.send(metadata);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to fetch datapacks" });
   }
-  const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
-    reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
-  });
-  if (!metadata) {
-    return;
-  }
-  reply.send(metadata);
 };
 
 export const requestDownload = async function requestDownload(
