@@ -33,7 +33,9 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
   const { t } = useTranslation();
 
   function handleFlip() {
-    setIsFlipped(!isFlipped);
+    if (!isLoading) {
+      setIsFlipped(!isFlipped);
+    }
   }
 
   function add() {
