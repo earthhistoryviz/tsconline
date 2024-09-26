@@ -5,7 +5,7 @@ import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { Box, Divider, Typography, useTheme } from "@mui/material";
+import { Box, Button, Divider, Menu, MenuItem, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import {
   AdminSharedUser,
@@ -14,8 +14,11 @@ import {
   assertAdminSharedUser,
   isUserDatapack
 } from "@tsconline/shared";
-import { TSCButton } from "../components";
+import { CustomTooltip, TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
+import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
+import React from "react";
+import SearchIcon from '@mui/icons-material/Search';
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -23,6 +26,36 @@ const checkboxRenderer = (params: { value: boolean }) => {
   } else {
     return <span className="ag-icon-cross" />;
   }
+};
+
+
+const ShowWorkshopTitleRenderer = (params: { value: string[] }) => {
+
+  const workshops = Array.isArray(params.value) ? Array.from(params.value) : ["No workshops enrolled"];
+
+  return (
+    <PopupState variant="popover" popupId="demo-popup-menu">
+      {(popupState) => (
+        <React.Fragment>
+          <Button variant="text" {...bindTrigger(popupState)}>
+            <CustomTooltip title="Check Enrolled Workshop">
+              <SearchIcon />
+            </CustomTooltip>
+          </Button>
+          <Menu {...bindMenu(popupState)}>
+            {workshops.map((value, index) => (
+              <MenuItem
+                key={index}
+                className="settings-sub-menu-item"
+              >
+                <Typography>{value}</Typography>
+              </MenuItem>
+            ))}
+          </Menu>
+        </React.Fragment>
+      )}
+    </PopupState>
+  );
 };
 
 const userColDefs: ColDef[] = [
@@ -68,12 +101,15 @@ const userColDefs: ColDef[] = [
   },
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
-    headerName: "Workshop Title",
+    //headerName: "Workshop Title",
+    headerName: "Actions",
     field: "workshopTitle",
+    //field: "workshopNumber",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,
-    flex: 1
+    flex: 1,
+    cellRenderer: ShowWorkshopTitleRenderer
   }
 ];
 const userDefaultColDefs = {
@@ -117,6 +153,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
+        components={{ ShowWorkshopTitleRenderer }}
         onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
