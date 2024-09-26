@@ -18,7 +18,8 @@ import {
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
-  MAX_DATAPACK_TITLE_LENGTH
+  MAX_DATAPACK_TITLE_LENGTH,
+  isUserDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -224,10 +225,12 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        <EditButtons
-          unsavedChanges={state.datapackProfilePage.unsavedChanges}
-          resetForm={() => actions.setEditableDatapackMetadata(datapack)}
-        />
+        {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
+          <EditButtons
+            unsavedChanges={state.datapackProfilePage.unsavedChanges}
+            resetForm={() => actions.setEditableDatapackMetadata(datapack)}
+          />
+        )}
         <div className={styles.ai}>
           <AuthoredBy authoredBy={datapack.authoredBy} />
         </div>

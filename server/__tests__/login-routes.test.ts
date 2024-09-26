@@ -1844,7 +1844,8 @@ describe("login-routes tests", () => {
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
-        isAdmin: false
+        isAdmin: false,
+        uuid: testUser.uuid
       });
     });
 
