@@ -478,8 +478,8 @@ const DateField: React.FC<DateFieldProps> = observer(({ datapackDate }) => {
   return state.datapackProfilePage.editMode ? (
     <DatePicker
       value={
-        state.datapackProfilePage.editableDatapackMetadata
-          ? dayjs(state.datapackProfilePage.editableDatapackMetadata?.date)
+        state.datapackProfilePage.editableDatapackMetadata?.date
+          ? dayjs(state.datapackProfilePage.editableDatapackMetadata.date)
           : null
       }
       maxDate={dayjs()}
