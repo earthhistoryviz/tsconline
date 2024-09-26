@@ -9,6 +9,13 @@
   align-items: flex-start;
   width: 90%;
 }
+.formContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
 .header {
   display: flex;
   flex-direction: row;
@@ -101,6 +108,7 @@
 .ah {
   position: relative;
   flex: 1 1 0;
+  min-width: 300px;
 }
 
 .additional {

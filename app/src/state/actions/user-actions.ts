@@ -1,35 +1,84 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { getRecaptchaToken, pushError, pushSnackbar } from "./general-actions";
+import {
+  addDatapackToUserDatapackIndex,
+  getRecaptchaToken,
+  pushError,
+  pushSnackbar,
+  removeDatapackFromUserDatapackIndex,
+  setDatapackProfilePageEditMode,
+  setEditableDatapackMetadata
+} from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { state } from "../state";
 import { EditableDatapackMetadata } from "../../types";
+import { assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
 
-export const handleDatapackEdit = action(async (datapack: EditableDatapackMetadata) => {
-  const formData = new FormData();
-  for (const key in datapack) {
-    const value = datapack[key as keyof EditableDatapackMetadata];
-    if (value !== undefined) formData.append(key, String(value));
+export const handleDatapackEdit = action(
+  async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
+    const body = {} as Partial<EditableDatapackMetadata>;
+    for (const key in editedDatapack) {
+      const castedKey = key as keyof EditableDatapackMetadata;
+      if (editedDatapack[castedKey] !== originalDatapack[castedKey]) {
+        Object.assign(body, { [castedKey]: editedDatapack[castedKey] });
+      }
+    }
+    try {
+      const recaptcha = await getRecaptchaToken("handleDatapackEdit");
+      if (!recaptcha) return;
+      const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
+        method: "PATCH",
+        body: JSON.stringify(body),
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptcha
+        }
+      });
+      if (response.ok) {
+        pushSnackbar("Datapack updated", "success");
+        setEditableDatapackMetadata(editedDatapack);
+        setDatapackProfilePageEditMode(false);
+        const datapack = await fetchUserDatapack(editedDatapack.title);
+        if (!datapack) return;
+        addDatapackToUserDatapackIndex(editedDatapack.title, datapack);
+        if (originalDatapack.title !== editedDatapack.title) {
+          removeDatapackFromUserDatapackIndex(originalDatapack.title);
+        }
+      } else {
+        displayServerError(
+          response,
+          ErrorCodes.USER_EDIT_DATAPACK_FAILED,
+          ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+        );
+      }
+    } catch (e) {
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
   }
+);
+
+export const fetchUserDatapack = action(async (datapack: string) => {
   try {
-    const recaptcha = await getRecaptchaToken("handleDatapackEdit");
+    const recaptcha = await getRecaptchaToken("fetchUserDatapack");
     if (!recaptcha) return;
-    const response = await fetcher(`/user/datapack/${datapack.title}`, {
-      method: "PATCH",
-      body: formData,
+    const response = await fetcher(`/user/datapack/${datapack}`, {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptcha
       }
     });
     if (response.ok) {
-      pushSnackbar("Datapack updated", "success");
+      const data = await response.json();
+      assertPrivateUserDatapack(data);
+      assertDatapack(data);
+      return data;
     } else {
       displayServerError(
         response,
-        ErrorCodes.USER_EDIT_DATAPACK_FAILED,
-        ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+        ErrorCodes.USER_FETCH_DATAPACK_FAILED,
+        ErrorMessages[ErrorCodes.USER_FETCH_DATAPACK_FAILED]
       );
     }
   } catch (e) {

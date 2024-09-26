@@ -17,7 +17,8 @@ import {
   isUserDatapack,
   assertServerDatapackWithBaseProps,
   assertPrivateUserDatapackIndex,
-  ServerDatapackIndex
+  ServerDatapackIndex,
+  PrivateUserDatapackIndex
 } from "@tsconline/shared";
 
 import {
@@ -260,6 +261,15 @@ export const addDatapackToServerDatapackIndex = action(
   "addDatapackToServerDatapackIndex",
   (datapack: string, info: ServerDatapackIndex[string]) => {
     state.datapackCollection.serverDatapackIndex[datapack] = info;
+  }
+);
+export const removeDatapackFromUserDatapackIndex = action("removeDatapackFromUserDatapackIndex", (datapack: string) => {
+  delete state.datapackCollection.privateUserDatapackIndex[datapack];
+});
+export const addDatapackToUserDatapackIndex = action(
+  "addDatapackToUserDatapackIndex",
+  (datapack: string, info: PrivateUserDatapackIndex[string]) => {
+    state.datapackCollection.privateUserDatapackIndex[datapack] = info;
   }
 );
 export const setLargeDataIndex = action(

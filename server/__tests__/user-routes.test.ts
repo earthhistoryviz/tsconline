@@ -182,7 +182,7 @@ const testUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: `/user/datapack/${filename}` },
+  { method: "GET", url: `/user/datapack/download/${filename}` },
   { method: "POST", url: "/user/datapack" },
   { method: "DELETE", url: `/user/datapack/${filename}` },
   { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } }
@@ -449,7 +449,7 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).not.toHaveBeenCalled();
@@ -476,7 +476,7 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).not.toHaveBeenCalled();
@@ -489,7 +489,7 @@ describe("requestDownload", () => {
     const resolveSpy = vi.spyOn(path, "resolve").mockReturnValueOnce("bad/file/path");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(resolveSpy).toHaveBeenCalledTimes(2);
@@ -514,7 +514,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(2);
@@ -532,7 +532,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(1);
@@ -546,7 +546,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(1);
@@ -568,7 +568,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -594,7 +594,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -622,7 +622,7 @@ describe("requestDownload", () => {
     });
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
 
@@ -645,7 +645,7 @@ describe("requestDownload", () => {
       });
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -658,7 +658,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
 
@@ -689,7 +689,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -711,7 +711,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
@@ -737,7 +737,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
@@ -762,7 +762,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -785,7 +785,7 @@ describe("requestDownload", () => {
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(readFileSpy).not.toHaveBeenCalled();
@@ -798,7 +798,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(readFileSpy).not.toHaveBeenCalled();
@@ -818,7 +818,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(2);
@@ -848,7 +848,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(response.statusCode).toBe(404);
@@ -877,7 +877,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(response.json().error).toBe("An error occurred: Error: Unknown Error");
@@ -914,7 +914,7 @@ describe("userDeleteDatapack tests", () => {
     verifyFilepathSpy.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "Invalid datapack/File doesn't exist" });
@@ -926,7 +926,7 @@ describe("userDeleteDatapack tests", () => {
     verifyFilepathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "Failed to verify file path" });
@@ -938,7 +938,7 @@ describe("userDeleteDatapack tests", () => {
     deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("Unknown Error"));
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ error: "There was an error deleting the datapack" });
@@ -950,7 +950,7 @@ describe("userDeleteDatapack tests", () => {
   it("should reply 200 when the file exists and has metadata", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(await response.json()).toEqual({ message: "File deleted" });
