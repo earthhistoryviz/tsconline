@@ -22,6 +22,7 @@ export type SharedUser = {
   isGoogleUser: boolean;
   isAdmin: boolean;
   workshopTitle?: string;
+  uuid: string;
 };
 
 export type DatapackMetadata = {
@@ -680,6 +681,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
   if (o.workshopTitle != null && typeof o.workshopTitle !== "string")
     throwError("User", "workshopTitle", "number", o.workshopTitle);
 }

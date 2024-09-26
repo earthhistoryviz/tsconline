@@ -927,6 +927,7 @@ export const setDefaultUserState = action(() => {
     pictureUrl: "",
     isAdmin: false,
     isGoogleUser: false,
+    uuid: "",
     settings: {
       darkMode: false,
       language: "en"
