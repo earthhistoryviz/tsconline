@@ -44,7 +44,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
 
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
-      {/* Front card */}
+      {/* This is the front card */}
       <Box className="front-card">
       {isLoading ? (
           <Box>
@@ -103,7 +103,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
         </div>
       </Box>
 
-      {/* Back card */}
+      {/* This is the back card */}
       <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
     </ReactCardFlip>
   );
