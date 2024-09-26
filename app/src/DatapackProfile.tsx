@@ -14,7 +14,7 @@ import {
   SvgIcon,
   TextField,
   Typography,
-  useTheme, Skeleton
+  useTheme
 } from "@mui/material";
 import { CustomDivider, InputFileUpload, TSCButton, TSCSwitch, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
