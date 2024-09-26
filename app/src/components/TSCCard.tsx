@@ -104,7 +104,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
       </Box>
 
       {/* Back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} isLoading={isLoading} />
+      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
     </ReactCardFlip>
   );
 };
