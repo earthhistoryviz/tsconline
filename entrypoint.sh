@@ -20,8 +20,9 @@ XERR="/root/.Xerrors"
 rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
-yarn && yarn build
+yarn
 if [ "$NODE_ENV" == "production" ]; then
+  yarn build
   yarn production
 else
   yarn dev:config

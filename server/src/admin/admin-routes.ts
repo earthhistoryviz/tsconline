@@ -546,7 +546,7 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         start: start.toISOString(),
         end: end.toISOString(),
         workshopId: workshop.workshopId,
-        active: start <= now && now <= end
+        status: start <= now ? (now <= end ? "active" : "expired") : "inactive"
       };
     });
     assertSharedWorkshopArray(workshops);
@@ -602,7 +602,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       workshopId,
-      active: false
+      status: "inactive"
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });

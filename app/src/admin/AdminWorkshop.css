@@ -6,3 +6,33 @@
 .date-time-picker .MuiPickersDay-root.Mui-disabled {
   color: darkgray;
 }
+
+.active-icon {
+  color: green;
+}
+
+.inactive-icon {
+  color: red;
+}
+
+.expired-workshop {
+  background-color: #dbd9d9;
+  font-style: italic;
+}
+
+.close-workshop-form {
+  position: absolute;
+  left: calc(100% - 40px);
+  top: 5px;
+  display: flex;
+}
+
+.centered-header .ag-header-cell-label {
+  justify-content: center;
+}
+
+.ag-cell.centered-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}

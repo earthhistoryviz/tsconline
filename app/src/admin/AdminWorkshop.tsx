@@ -14,13 +14,14 @@ import { displayServerError } from "../state/actions/util-actions";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloseSharpIcon from "@mui/icons-material/CloseSharp";
 import "./AdminWorkshop.css";
 
-const checkboxRenderer = (params: { value: boolean }) => {
-  if (params.value === true) {
-    return <span className="ag-icon-tick" />;
+const checkboxRenderer = (params: { value: string }) => {
+  if (params.value === "active") {
+    return <span className="ag-icon-tick active-icon" />;
   } else {
-    return <span className="ag-icon-cross" />;
+    return <span className="ag-icon-cross inactive-icon" />;
   }
 };
 
@@ -91,13 +92,21 @@ const workshopColDefs: ColDef[] = [
     flex: 1,
     valueFormatter: (params) => dayjs(params.value).format("MMMM D, YYYY [at] h:mm A")
   },
-  { headerName: "Active", field: "active", flex: 0.2, cellRenderer: checkboxRenderer },
+  {
+    headerName: "Active",
+    field: "status",
+    flex: 0.2,
+    cellRenderer: checkboxRenderer,
+    cellClass: "centered-cell",
+    headerClass: "centered-header"
+  },
   {
     headerName: "Actions",
     cellRenderer: ActionsCellRenderer,
-    flex: 0.2,
+    flex: 0.3,
     minWidth: 110,
-    cellStyle: { border: "none" }
+    cellClass: "centered-cell",
+    headerClass: "centered-header"
   }
 ];
 
@@ -290,7 +299,12 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         />
         <Dialog open={createWorkshopFormOpen || editWorkshopFormOpen} onClose={handleDialogClose}>
           <Box textAlign="center" padding="10px">
-            <Typography variant="h5" mb="5px">
+            <div className="close-workshop-form">
+              <IconButton className="icon" onClick={handleDialogClose} size="large">
+                <CloseSharpIcon className="close-icon" />
+              </IconButton>
+            </div>
+            <Typography variant="h5" mb="10px" mt="10px">
               {createWorkshopFormOpen ? "Create Workshop" : "Edit Workshop"}
             </Typography>
             <Box
@@ -328,6 +342,9 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                       sx: {
                         "& .MuiPaper-root": {
                           backgroundColor: theme.palette.secondaryBackground.main
+                        },
+                        "& .MuiButton-colorPrimary": {
+                          color: theme.palette.mode === "dark" ? "white" : "black"
                         }
                       }
                     }
@@ -440,7 +457,11 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
           setStartDate,
           setEndDate
         }}
-        rowSelection="single"
+        suppressRowClickSelection={true}
+        suppressCellFocus={true}
+        rowClassRules={{
+          "expired-workshop": (params) => params.data.status === "expired"
+        }}
       />
     </Box>
   );
