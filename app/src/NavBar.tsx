@@ -69,7 +69,7 @@ export const NavBar = observer(function Navbar() {
             <Tabs
               value={state.tab !== 0 ? state.tab : false}
               onChange={(_e, value) => {
-                if (value === 2) settingsMenuToggle(false);
+                if (value === 3) settingsMenuToggle(false);
                 actions.setTab(value);
               }}
               //override the TSCTabs since it has the dark navbar
@@ -87,8 +87,9 @@ export const NavBar = observer(function Navbar() {
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
               <Tab value={1} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
+              <Tab value={2} disableRipple label={t("navBar.datapacks")} to="/datapack" component={Link}/>
               <Tab
-                value={2}
+                value={3}
                 disableRipple
                 label={t("navBar.settings")}
                 to="/settings"
@@ -96,8 +97,8 @@ export const NavBar = observer(function Navbar() {
                 ref={settingsRef}
                 {...anchorProps}
               />
-              <Tab value={3} disableRipple label={t("navBar.help")} to="/help" component={Link} />
-              <Tab value={4} disableRipple label={t("navBar.about")} to="/about" component={Link} />
+              <Tab value={4} disableRipple label={t("navBar.help")} to="/help" component={Link} />
+              <Tab value={5} disableRipple label={t("navBar.about")} to="/about" component={Link} />
               <PopupState variant="popover" popupId="demo-popup-menu">
                 {(popupState) => (
                   <React.Fragment>
@@ -166,7 +167,7 @@ export const NavBar = observer(function Navbar() {
         ) : (
           <Tab
             className="login-tab"
-            value={5}
+            value={6}
             label={t("login.signin")}
             icon={<AccountCircleIcon />}
             to="/login"
