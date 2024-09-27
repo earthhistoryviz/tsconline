@@ -3,6 +3,7 @@ import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
+import { Datapacks } from "./Datapacks";
 import { Settings } from "./Settings";
 import { Chart } from "./Chart";
 import { Help } from "./Help";
@@ -72,6 +73,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/datapack"element={<Datapacks/>}/>
           </Routes>
           {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
             <TSCError

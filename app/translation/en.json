@@ -49,6 +49,7 @@
         },
         "navBar": {
             "chart": "Chart",
+            "Datapacks": "Datapacks",
             "settings": "Settings",
             "help": "Help",
             "about": "About"

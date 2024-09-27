@@ -49,6 +49,7 @@
         },
         "navBar": {
             "chart": "图表",
+            "Datapacks": "选择数据包",
             "settings": "设置",
             "help": "帮助",
             "about": "关于"
