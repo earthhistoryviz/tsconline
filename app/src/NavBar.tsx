@@ -87,7 +87,7 @@ export const NavBar = observer(function Navbar() {
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
               <Tab value={1} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
-              <Tab value={2} disableRipple label={t("navBar.datapacks")} to="/datapack" component={Link}/>
+              <Tab value={2} disableRipple label={t("datapacks")} to="/datapack" component={Link}/>
               <Tab
                 value={3}
                 disableRipple
@@ -167,7 +167,7 @@ export const NavBar = observer(function Navbar() {
         ) : (
           <Tab
             className="login-tab"
-            value={6}
+            value={5}
             label={t("login.signin")}
             icon={<AccountCircleIcon />}
             to="/login"

@@ -3,7 +3,6 @@ import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
-import { Datapacks } from "./Datapacks";
 import { Settings } from "./Settings";
 import { Chart } from "./Chart";
 import { Help } from "./Help";
@@ -14,6 +13,7 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
+import { Datapacks } from "./settings_tabs/Datapack"
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
@@ -73,7 +73,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/datapack"element={<Datapacks/>}/>
+            <Route path="/datapacks"element={<Datapacks/>}/>
           </Routes>
           {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
             <TSCError
