@@ -87,8 +87,11 @@ export type BaseDatapackProps = {
   mapPack: MapPack; // this can be empty
 };
 
-type ServerDatapack = {
-  type: "server";
+type PublicServerDatapack = {
+  type: "public_server";
+};
+type PrivateServerDatapack = {
+  type: "private_server";
 };
 type WorkshopDatapack = {
   type: "workshop";
@@ -101,11 +104,12 @@ type PublicUserDatapack = {
   type: "public_user";
   uuid: string;
 };
-export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
+export type ServerDatapack = PrivateServerDatapack | PublicServerDatapack;
+export type DatapackType = PrivateServerDatapack | PublicServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
 export type Datapack = DatapackType & BaseDatapackProps;
 
-export type ServerDatapackIndex = {
-  [name: string]: ServerDatapack & BaseDatapackProps;
+export type PublicServerDatapackIndex = {
+  [name: string]: PublicServerDatapack & BaseDatapackProps;
 };
 export type WorkshopDatapackIndex = {
   [name: string]: WorkshopDatapack & BaseDatapackProps;
@@ -1098,7 +1102,7 @@ export function assertDatapack(o: any): asserts o is Datapack {
   assertDatapackType(o);
   assertBaseDatapackProps(o);
 }
-export function isServerDatapack(o: any): o is ServerDatapack {
+export function isPublicServerDatapack(o: any): o is PublicServerDatapack {
   return o.type === "server";
 }
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
@@ -1113,8 +1117,13 @@ export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDat
 export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
   return o.type === "private_user" && typeof o.uuid === "string";
 }
-export function assertServerDatapackWithBaseProps(o: any): asserts o is ServerDatapack & BaseDatapackProps {
-  assertServerDatapack(o);
+export function assertServerDatapack(o: any): asserts o is  ServerDatapack {
+  if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
+  if (o.type !== "public_server" && o.type !== "private_server") throwError("ServerDatapack", "type", "public_server | private_server", o.type);
+}
+export function assertPublicServerDatapackWithBaseProps(o: any): asserts o is PublicServerDatapack & BaseDatapackProps {
+  assertPublicServerDatapack(o);
   assertBaseDatapackProps(o);
 }
 export function assertWorkshopDatapackWithBaseProps(o: any): asserts o is WorkshopDatapack & BaseDatapackProps {
@@ -1129,10 +1138,10 @@ export function assertPrivateUserDatapackWithBaseProps(o: any): asserts o is Pri
   assertPrivateUserDatapack(o);
   assertBaseDatapackProps(o);
 }
-export function assertServerDatapackIndex(o: any): asserts o is ServerDatapackIndex {
-  if (!o || typeof o !== "object") throw new Error("ServerDatapackIndex must be a non-null object");
+export function assertPublicServerDatapackIndex(o: any): asserts o is PublicServerDatapackIndex {
+  if (!o || typeof o !== "object") throw new Error("PublicServerDatapackIndex must be a non-null object");
   for (const key in o) {
-    assertServerDatapackWithBaseProps(o[key]);
+    assertPublicServerDatapackWithBaseProps(o[key]);
   }
 }
 export function assertWorkshopDatapackIndex(o: any): asserts o is WorkshopDatapackIndex {
@@ -1162,20 +1171,28 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "public_user":
       assertPublicUserDatapack(o);
       break;
-    case "server":
-      assertServerDatapack(o);
+    case "public_server":
+      assertPublicServerDatapack(o);
+      break;
+    case "private_server":
+      assertPrivateServerDatapack(o);
       break;
     case "workshop":
       assertWorkshopDatapack(o);
       break;
     default:
-      throwError("Datapack", "type", "private_user | public_user | server | workshop", o.type);
+      throwError("Datapack", "type", "private_user | public_user | private_server | public_server | workshop", o.type);
   }
 }
-export function assertServerDatapack(o: any): asserts o is ServerDatapack {
-  if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
-  if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
-  if (o.type !== "server") throwError("ServerDatapack", "type", "server", o.type);
+export function assertPrivateServerDatapack(o: any): asserts o is PrivateServerDatapack {
+  if (!o || typeof o !== "object") throw new Error("PrivateServerDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("PrivateServerDatapack", "type", "string", o.type);
+  if (o.type !== "private_server") throwError("PrivateServerDatapack", "type", "private_server", o.type);
+}
+export function assertPublicServerDatapack(o: any): asserts o is PublicServerDatapack {
+  if (!o || typeof o !== "object") throw new Error("PublicServerDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("PublicServerDatapack", "type", "string", o.type);
+  if (o.type !== "public_server") throwError("PublicServerDatapack", "type", "public_server", o.type);
 }
 export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
   if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");

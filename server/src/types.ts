@@ -1,4 +1,4 @@
-import { throwError, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+import { throwError, DatapackMetadata, assertDatapackMetadata, ServerDatapack } from "@tsconline/shared";
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
@@ -87,8 +87,10 @@ export type AssetConfig = {
 };
 
 export type AdminConfigType = {
-  datapacks: DatapackMetadata[];
+  datapacks: AdminConfigCachedDatapackMetadata[];
 };
+
+export type AdminConfigCachedDatapackMetadata = DatapackMetadata & ServerDatapack
 
 export type Colors = {
   [color: string]: string;
