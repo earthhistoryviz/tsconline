@@ -198,7 +198,11 @@ export const adminChangeAccountType = async function adminChangeAccountType(
     email: string;
     accountType: string;
   };
-  if (!email || !validator.isEmail(email) || !accountType) {
+  if (!email || !validator.isEmail(email) || !accountType || !username) {
+    reply.status(400).send({ error: "Missing/invalid required fields" });
+    return;
+  }
+  if (username == "" || accountType == "") {
     reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }
