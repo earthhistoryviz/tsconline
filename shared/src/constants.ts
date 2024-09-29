@@ -21,6 +21,11 @@ import {
   ZoneSettings
 } from "./index";
 
+export const MAX_DATAPACK_TAG_LENGTH = 20;
+export const MAX_DATAPACK_TITLE_LENGTH = 100;
+export const MAX_AUTHORED_BY_LENGTH = 200;
+export const MAX_DATAPACK_TAGS_ALLOWED = 30;
+
 export const allColumnTypes = [
   "Block",
   "Facies",

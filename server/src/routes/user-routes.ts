@@ -90,6 +90,45 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   reply.send({ message: `Successfully updated ${datapack}` });
 };
 
+export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
+  request: FastifyRequest<{ Params: { datapack: string } }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Database error" });
+    return;
+  }
+  try {
+    const userDir = await getUserDirectory(uuid).catch(() => {
+      reply.status(500).send({ error: "Failed to get user directory" });
+    });
+    if (!userDir) {
+      return;
+    }
+    const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
+      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
+    });
+    if (!metadata) {
+      return;
+    }
+    reply.send(metadata);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to fetch datapacks" });
+  }
+};
+
 export const requestDownload = async function requestDownload(
   request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,
   reply: FastifyReply

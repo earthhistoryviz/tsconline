@@ -1844,7 +1844,8 @@ describe("login-routes tests", () => {
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
-        isAdmin: false
+        isAdmin: false,
+        uuid: testUser.uuid
       });
     });
 
@@ -1870,7 +1871,8 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopTitle: "test"
+        workshopTitle: "test",
+        uuid: testUser.uuid
       });
     });
 
@@ -1894,7 +1896,8 @@ describe("login-routes tests", () => {
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
-        isAdmin: false
+        isAdmin: false,
+        uuid: testUser.uuid
       });
     });
   });

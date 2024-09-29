@@ -220,7 +220,8 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       pictureUrl,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
-      ...(workshopTitle && { workshopTitle })
+      ...(workshopTitle && { workshopTitle }),
+      uuid
     };
     assertSharedUser(sharedUser);
     reply.send({ authenticated: true, user: sharedUser });

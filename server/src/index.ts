@@ -189,7 +189,7 @@ server.register(fastifyStatic, {
 // Helpful for testing locally:
 server.register(cors, {
   origin: process.env.APP_ORIGIN || "http://localhost:5173",
-  methods: ["GET", "POST", "DELETE"],
+  methods: ["GET", "POST", "DELETE", "PATCH"],
   credentials: true
 });
 
