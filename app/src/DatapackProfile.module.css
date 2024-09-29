@@ -9,6 +9,13 @@
   align-items: flex-start;
   width: 90%;
 }
+.formContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
 .header {
   display: flex;
   flex-direction: row;
@@ -17,6 +24,42 @@
   justify-content: space-between;
   padding: 16px;
   gap: 20px;
+}
+.addTagButton {
+  width: 20px;
+  height: 20px;
+}
+.editButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.6rem;
+}
+.editButtonContainer {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+}
+.pencilIconContainer {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+.pencilIcon {
+  width: 20px;
+  height: 20px;
 }
 .tabs {
   margin-left: 2vw;
@@ -63,14 +106,17 @@
 }
 
 .ah {
-  flex: 3 1 0;
+  position: relative;
+  flex: 1 1 0;
+  min-width: 300px;
 }
 
 .additional {
-  flex: 1 1 0;
+  flex: 3 1 0;
   flex-shrink: 0;
   border-left: 1px solid #e0e0e0;
   padding: 16px;
+  padding-top: 0px;
 }
 .ai {
   display: flex;
@@ -102,7 +148,6 @@
   flex-direction: row;
   gap: 10px;
   flex-wrap: wrap;
-  max-width: 170px;
 }
 
 .dwc {

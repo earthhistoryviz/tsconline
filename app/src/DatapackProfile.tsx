@@ -1,29 +1,42 @@
 import { observer } from "mobx-react-lite";
-import { useLocation, useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import { useContext, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { devSafeUrl } from "./util";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
-import { CustomDivider, TagButton } from "./components";
+import { devSafeUrl, loadRecaptcha } from "./util";
+import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
+import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
-import { BaseDatapackProps, Datapack, DatapackWarning } from "@tsconline/shared";
+import {
+  BaseDatapackProps,
+  Datapack,
+  DatapackWarning,
+  MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_TAGS_ALLOWED,
+  MAX_DATAPACK_TAG_LENGTH,
+  MAX_DATAPACK_TITLE_LENGTH,
+  isUserDatapack
+} from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
+import CreateIcon from "@mui/icons-material/Create";
+import { DatePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { ErrorCodes } from "./util/error-codes";
 
 export const DatapackProfile = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const { id } = useParams();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
-  if (!id) return <PageNotFound />;
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
+    if (!id) return;
     let datapack: Datapack | undefined;
     switch (query.get("index")) {
       case "server":
@@ -50,7 +63,14 @@ export const DatapackProfile = observer(() => {
     return datapack;
   };
   const datapack = fetchDatapack();
-  if (!datapack) return <PageNotFound />;
+  useEffect(() => {
+    if (datapack) actions.setEditableDatapackMetadata(datapack);
+    return () => {
+      actions.setDatapackProfilePageEditMode(false);
+    };
+  }, [datapack]);
+  if (!datapack || !id) return <PageNotFound />;
+  if (state.datapackProfilePage.editMode) loadRecaptcha();
   const tabs = [
     {
       id: "About",
@@ -66,28 +86,68 @@ export const DatapackProfile = observer(() => {
     },
     {
       id: "Warnings",
-      tab: <WarningsTab count={datapack.warnings ? datapack.warnings.length : 0} />
+      tab: <WarningsTab count={datapack?.warnings ? datapack.warnings.length : 0} />
     }
   ];
+  const Content: React.FC = observer(() => (
+    <>
+      <div className={styles.header}>
+        <IconButton className={styles.back} onClick={() => navigate("/settings")}>
+          <ArrowBackIcon className={styles.icon} />
+        </IconButton>
+        {state.datapackProfilePage.editMode ? (
+          <TextField
+            value={state.datapackProfilePage.editableDatapackMetadata?.title}
+            required
+            fullWidth
+            size="medium"
+            multiline
+            maxRows={2}
+            inputProps={{ maxLength: MAX_DATAPACK_TITLE_LENGTH }}
+            sx={{
+              "& .MuiInputBase-root": {
+                fontSize: "1.7rem",
+                fontWeight: 600
+              }
+            }}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ title: e.target.value })}
+          />
+        ) : (
+          <Typography className={styles.ht}>{datapack.title}</Typography>
+        )}
+        <img className={styles.di} src={datapack.image || defaultImageUrl} />
+      </div>
+      <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
+      <CustomDivider className={styles.divider} />
+      <DatapackProfileContent index={tabIndex} datapack={datapack} />
+    </>
+  ));
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (state.datapackProfilePage.editableDatapackMetadata) {
+      await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      if (state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
+        navigate(`/datapack/${state.datapackProfilePage.editableDatapackMetadata.title}?index=${query.get("index")}`);
+      }
+    }
+  };
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
-        <div className={styles.header}>
-          <IconButton className={styles.back} onClick={() => navigate("/settings")}>
-            <ArrowBackIcon className={styles.icon} />
-          </IconButton>
-          <Typography className={styles.ht}>{datapack.title}</Typography>
-          <img className={styles.di} src={datapack.image || defaultImageUrl} />
-        </div>
-        <CustomTabs
-          className={styles.tabs}
-          centered
-          value={tabIndex}
-          onChange={(val) => setTabIndex(val)}
-          tabs={tabs}
-        />
-        <CustomDivider className={styles.divider} />
-        <DatapackProfileContent index={tabIndex} datapack={datapack} />
+        {/* Conditionally render in a form to handle edit submissions */}
+        {state.datapackProfilePage.editMode ? (
+          <form onSubmit={handleSubmit} className={styles.formContainer}>
+            <Content />
+          </form>
+        ) : (
+          <Content />
+        )}
       </div>
     </div>
   );
@@ -136,33 +196,53 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
 type AboutProps = {
   datapack: BaseDatapackProps;
 };
-const About: React.FC<AboutProps> = ({ datapack }) => {
+const About: React.FC<AboutProps> = observer(({ datapack }) => {
+  const { state, actions } = useContext(context);
+  const { t } = useTranslation();
+  // TODO used to prevent a warning with the useBlocker hook (will need to revisit later to see whether this is still necessary)
+  const isMountedRef = useRef<boolean>();
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+  // for when user tries to navigate away with unsaved changes
+  useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      isMountedRef &&
+      state.datapackProfilePage.unsavedChanges &&
+      currentLocation.pathname !== nextLocation.pathname &&
+      !window.confirm(t("dialogs.confirm-changes.message"))
+  );
+  // for when user tries to leave page with unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (state.datapackProfilePage.unsavedChanges) {
+        event.preventDefault();
+        event.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [state.datapackProfilePage.unsavedChanges]);
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        <Typography className={styles.dt}>Description</Typography>
-        <Typography className={styles.description}>{datapack.description}</Typography>
-        {datapack.notes && (
-          <>
-            <Typography className={styles.dt}>Notes</Typography>
-            <Typography className={styles.description}>{datapack.notes}</Typography>
-          </>
+        {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
+          <EditButtons
+            unsavedChanges={state.datapackProfilePage.unsavedChanges}
+            resetForm={() => actions.setEditableDatapackMetadata(datapack)}
+          />
         )}
-        {datapack.contact && (
-          <>
-            <Typography className={styles.dt}>Contact</Typography>
-            <Typography className={styles.description}>{datapack.contact}</Typography>
-          </>
-        )}
-      </div>
-      <div className={styles.additional}>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>Authored By</Typography>
-          <Typography>{datapack.authoredBy}</Typography>
+          <AuthoredBy authoredBy={datapack.authoredBy} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Created</Typography>
-          <Typography>{datapack.date || "Unknown"}</Typography>
+          <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -177,21 +257,255 @@ const About: React.FC<AboutProps> = ({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>Tags</Typography>
+          <Tags tags={datapack.tags} />
+        </div>
+      </div>
+      <div className={styles.additional}>
+        <Typography className={styles.dt}>Description</Typography>
+        <Description description={datapack.description} />
+        <Notes notes={datapack.notes} />
+        <Contact contact={datapack.contact} />
+      </div>
+    </Box>
+  );
+});
+
+type TagsProps = {
+  tags: string[];
+};
+
+const Tags: React.FC<TagsProps> = observer(({ tags }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      <Typography className={styles.aih}>Tags</Typography>
+      {state.datapackProfilePage.editMode ? (
+        <Autocomplete
+          multiple
+          value={state.datapackProfilePage.editableDatapackMetadata?.tags}
+          onChange={(_, values) => {
+            actions.updateEditableDatapackMetadata({ tags: values });
+          }}
+          fullWidth
+          options={[]}
+          freeSolo
+          limitTags={MAX_DATAPACK_TAGS_ALLOWED}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              inputProps={{ ...params.inputProps, maxLength: MAX_DATAPACK_TAG_LENGTH }}
+              placeholder="Add tags"
+            />
+          )}
+        />
+      ) : (
+        <>
           <div className={styles.tags}>
-            {datapack.tags[0]
-              ? datapack.tags.map((tag) => (
+            {tags[0]
+              ? tags.map((tag) => (
                   <TagButton key={tag}>
                     <Typography fontSize="0.9rem">{tag}</Typography>
                   </TagButton>
                 ))
               : "No tags"}
           </div>
-        </div>
-      </div>
-    </Box>
+        </>
+      )}
+    </>
   );
+});
+
+type AuthoredByProps = {
+  authoredBy: string;
 };
+const AuthoredBy: React.FC<AuthoredByProps> = observer(({ authoredBy }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      <Typography className={styles.aih}>Authored By</Typography>
+      {state.datapackProfilePage.editMode ? (
+        <TextField
+          fullWidth
+          required
+          onChange={(e) => actions.updateEditableDatapackMetadata({ authoredBy: e.target.value })}
+          placeholder="Creator of the data pack"
+          inputProps={{ maxLength: MAX_AUTHORED_BY_LENGTH }}
+          value={state.datapackProfilePage.editableDatapackMetadata?.authoredBy}
+        />
+      ) : (
+        <Typography>{authoredBy}</Typography>
+      )}
+    </>
+  );
+});
+type DescriptionProps = {
+  description: string | undefined;
+};
+const Description: React.FC<DescriptionProps> = observer(({ description }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <TextField
+          value={state.datapackProfilePage.editableDatapackMetadata?.description}
+          onChange={(e) => actions.updateEditableDatapackMetadata({ description: e.target.value })}
+          fullWidth
+          required
+          multiline
+          placeholder="A brief description of the data"
+          minRows={7}
+        />
+      ) : (
+        <Typography className={styles.description}>{description}</Typography>
+      )}
+    </>
+  );
+});
+type ContactProps = {
+  contact: string | undefined;
+};
+const Contact: React.FC<ContactProps> = observer(({ contact }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <>
+          <Typography className={styles.dt}>Contact</Typography>
+          <TextField
+            value={state.datapackProfilePage.editableDatapackMetadata?.contact}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ contact: e.target.value })}
+            fullWidth
+            multiline
+            placeholder="Who can be contacted for more information"
+            minRows={3}
+          />
+        </>
+      ) : (
+        contact && (
+          <>
+            <Typography className={styles.dt}>Contact</Typography>
+            <Typography className={styles.description}>{contact}</Typography>
+          </>
+        )
+      )}
+    </>
+  );
+});
+type NotesProps = {
+  notes: string | undefined;
+};
+const Notes: React.FC<NotesProps> = observer(({ notes }) => {
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <>
+          <Typography className={styles.dt}>Notes</Typography>
+          <TextField
+            value={state.datapackProfilePage.editableDatapackMetadata?.notes}
+            onChange={(e) => actions.updateEditableDatapackMetadata({ notes: e.target.value })}
+            fullWidth
+            placeholder="Any additional notes for use of generating charts for this datapack"
+            multiline
+            minRows={3}
+          />
+        </>
+      ) : (
+        notes && (
+          <>
+            <Typography className={styles.dt}>Notes</Typography>
+            <Typography className={styles.description}>{notes}</Typography>
+          </>
+        )
+      )}
+    </>
+  );
+});
+type EditButtonsProps = {
+  unsavedChanges: boolean;
+  resetForm: () => void;
+};
+
+const EditButtons: React.FC<EditButtonsProps> = observer(({ unsavedChanges, resetForm }: EditButtonsProps) => {
+  const { t } = useTranslation();
+  const { state, actions } = useContext(context);
+  return (
+    <>
+      {!state.datapackProfilePage.editMode ? (
+        <Box className={styles.pencilIconContainer} onClick={() => actions.setDatapackProfilePageEditMode(true)}>
+          <SvgIcon className={styles.pencilIcon}>
+            <CreateIcon />
+          </SvgIcon>
+        </Box>
+      ) : (
+        <Box className={styles.editButtonContainer}>
+          <Button
+            variant="outlined"
+            sx={{
+              borderColor: "error.main",
+              color: "error.main",
+              ":hover": {
+                borderColor: "error.light",
+                backgroundColor: "transparent"
+              }
+            }}
+            className={styles.editButton}
+            onClick={() => {
+              if (!unsavedChanges || window.confirm(t("dialogs.confirm-changes.message"))) {
+                actions.setDatapackProfilePageEditMode(false);
+                // reset the metadata if the user cancels
+                if (unsavedChanges) {
+                  resetForm();
+                }
+              }
+            }}>
+            Cancel
+          </Button>
+          <TSCButton className={styles.editButton} type="submit">
+            Save
+          </TSCButton>
+        </Box>
+      )}
+    </>
+  );
+});
+
+type DateFieldProps = {
+  datapackDate: string | undefined;
+};
+const DateField: React.FC<DateFieldProps> = observer(({ datapackDate }) => {
+  const { state, actions } = useContext(context);
+  return state.datapackProfilePage.editMode ? (
+    <DatePicker
+      value={
+        state.datapackProfilePage.editableDatapackMetadata?.date
+          ? dayjs(state.datapackProfilePage.editableDatapackMetadata.date)
+          : null
+      }
+      maxDate={dayjs()}
+      slotProps={{
+        field: {
+          clearable: true,
+          onClear: () => actions.updateEditableDatapackMetadata({ date: undefined })
+        },
+        textField: { helperText: null },
+        popper: {
+          sx: {
+            "& .MuiPickersYear-yearButton": {
+              fontSize: "1rem"
+            },
+            "& .MuiPaper-root": {
+              backgroundColor: "secondaryBackground.main"
+            }
+          }
+        }
+      }}
+      onChange={(val) => actions.updateEditableDatapackMetadata({ date: val?.format("YYYY-MM-DD") })}
+    />
+  ) : (
+    <Typography>{datapackDate || "Unknown"}</Typography>
+  );
+});
 
 type DatapackWarningProps = {
   warning: DatapackWarning;

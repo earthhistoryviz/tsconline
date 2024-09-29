@@ -264,6 +264,9 @@
             },
             "default-age": {
                 "title": "Use default age range?"
+            },
+            "confirm-changes": {
+                "message": "Are you sure you want to discard your changes?"
             }
         },
         "errors": {
@@ -346,7 +349,9 @@
             "ADMIN_CREATE_WORKSHOP_FAILED": "Unable to create workshop. Please try again later.",
             "ADMIN_WORKSHOP_ALREADY_EXISTS": "Workshop with that title and dates already exists. Please try again.",
             "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
-            "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted."
+            "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted.",
+            "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
+            "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later."
         },
         "button": {
             "generate": "Generate",

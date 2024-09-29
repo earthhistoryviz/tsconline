@@ -17,7 +17,8 @@ import {
   isUserDatapack,
   assertServerDatapackWithBaseProps,
   assertPrivateUserDatapackIndex,
-  ServerDatapackIndex
+  ServerDatapackIndex,
+  PrivateUserDatapackIndex
 } from "@tsconline/shared";
 
 import {
@@ -45,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SettingsTabs,
@@ -259,6 +261,15 @@ export const addDatapackToServerDatapackIndex = action(
   "addDatapackToServerDatapackIndex",
   (datapack: string, info: ServerDatapackIndex[string]) => {
     state.datapackCollection.serverDatapackIndex[datapack] = info;
+  }
+);
+export const removeDatapackFromUserDatapackIndex = action("removeDatapackFromUserDatapackIndex", (datapack: string) => {
+  delete state.datapackCollection.privateUserDatapackIndex[datapack];
+});
+export const addDatapackToUserDatapackIndex = action(
+  "addDatapackToUserDatapackIndex",
+  (datapack: string, info: PrivateUserDatapackIndex[string]) => {
+    state.datapackCollection.privateUserDatapackIndex[datapack] = info;
   }
 );
 export const setLargeDataIndex = action(
@@ -926,6 +937,7 @@ export const setDefaultUserState = action(() => {
     pictureUrl: "",
     isAdmin: false,
     isGoogleUser: false,
+    uuid: "",
     settings: {
       darkMode: false,
       language: "en"
@@ -1068,6 +1080,9 @@ export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHiera
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
+export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
+  state.datapackProfilePage.editMode = editMode;
+});
 export const setTopStageAge = action("setTopStageAge", (age: number, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
@@ -1178,4 +1193,22 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 });
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
+});
+export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+  setUnsavedChanges(false);
+  state.datapackProfilePage.editableDatapackMetadata = metadata;
+});
+export const setUnsavedChanges = action((unsavedChanges: boolean) => {
+  state.datapackProfilePage.unsavedChanges = unsavedChanges;
+});
+export const updateEditableDatapackMetadata = action((metadata: Partial<EditableDatapackMetadata>) => {
+  if (!state.datapackProfilePage.editableDatapackMetadata) {
+    console.error("Editable datapack metadata is not initialized");
+    return;
+  }
+  setUnsavedChanges(true);
+  state.datapackProfilePage.editableDatapackMetadata = {
+    ...state.datapackProfilePage.editableDatapackMetadata,
+    ...metadata
+  };
 });
