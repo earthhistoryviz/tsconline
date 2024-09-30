@@ -12,8 +12,8 @@ import {
   adminCreateWorkshop,
   adminGetWorkshops,
   adminEditWorkshop,
-  adminDeleteWorkshop
-  adminChangeAccountType
+  adminDeleteWorkshop,
+  adminModifyUser
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -129,14 +129,16 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     required: ["workshopId"]
   };
 
-  const adminChangeAccountTypeBody = {
+  const adminModifyUserBody = {
     type: "object",
     properties: {
       username: { type: "string" },
       email: { type: "string" },
-      accountType: { type: "string" }
+      accountType: { type: "string" },
+      isAdmin: { type: "number" }
     },
-    required: ["username", "email", "accountType"]
+    required: ["username", "email"],
+    anyOf: [{ required: ["accountType"] }, { required: ["isAdmin"] }]
   };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
@@ -211,9 +213,10 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop",
     { schema: { body: adminDeleteWorkshopBody }, config: { rateLimit: moderateRateLimit } },
     adminDeleteWorkshop
-  fastify.post(
-    "/user/account-type",
-    { schema: { body: adminChangeAccountTypeBody }, config: { rateLimit: moderateRateLimit } },
-    adminChangeAccountType
+  );
+  fastify.patch(
+    "/user",
+    { schema: { body: adminModifyUserBody }, config: { rateLimit: moderateRateLimit } },
+    adminModifyUser
   );
 };

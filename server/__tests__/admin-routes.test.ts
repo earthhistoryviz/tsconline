@@ -301,7 +301,16 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     url: "/admin/workshop",
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
-  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } }
+  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  {
+    method: "PATCH",
+    url: "/admin/user",
+    body: {
+      username: "username",
+      email: "email@email.com",
+      accountType: "pro"
+    }
+  }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -2360,6 +2369,46 @@ describe("adminModifyUser tests", () => {
       { email: body.email },
       { accountType: body.accountType, isAdmin: body.isAdmin }
     );
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just accountType", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        accountType: "pro"
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { accountType: body.accountType });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just isAdmin", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        isAdmin: 1
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { isAdmin: body.isAdmin });
     expect(updateUser).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "User modified." });
     expect(response.statusCode).toBe(200);
