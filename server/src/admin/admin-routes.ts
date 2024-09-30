@@ -7,12 +7,13 @@ import {
   updateUser,
   createWorkshop,
   findWorkshop,
-  getAndHandleWorkshopEnd
+  getAndHandleWorkshopEnd,
+  updateWorkshop
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath, formatDate } from "../util.js";
+import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -541,8 +542,8 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
       const end = new Date(workshop.end);
       return {
         title: workshop.title,
-        start: formatDate(start),
-        end: formatDate(end),
+        start: start.toISOString(),
+        end: end.toISOString(),
         workshopId: workshop.workshopId,
         active: start <= now && now <= end
       };
@@ -597,10 +598,74 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     }
     const workshop: SharedWorkshop = {
       title,
-      start: formatDate(startDate),
-      end: formatDate(endDate),
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
       workshopId,
       active: false
+    };
+    assertSharedWorkshop(workshop);
+    reply.send({ workshop });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  }
+};
+
+/**
+ * Edit a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminEditWorkshop = async function adminEditWorkshop(
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string; workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { title, start, end, workshopId } = request.body;
+  if (!workshopId || (!title && !start && !end)) {
+    reply.status(400).send({ error: "Missing required fields" });
+    return;
+  }
+  try {
+    const existingWorkshops = await findWorkshop({ workshopId });
+    if (existingWorkshops.length !== 1) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    const fieldsToUpdate: { [key: string]: string } = {};
+    if (title) {
+      fieldsToUpdate.title = title;
+    }
+    if (start) {
+      const startDate = new Date(start);
+      if (isNaN(startDate.getTime())) {
+        reply.status(400).send({ error: "Invalid start date" });
+        return;
+      }
+      fieldsToUpdate.start = startDate.toISOString();
+    }
+    if (end) {
+      const endDate = new Date(end);
+      if (isNaN(endDate.getTime())) {
+        reply.status(400).send({ error: "Invalid end date" });
+        return;
+      }
+      fieldsToUpdate.end = endDate.toISOString();
+    }
+    await updateWorkshop({ workshopId }, fieldsToUpdate);
+    const updatedWorkshop = (await findWorkshop({ workshopId }))[0];
+    if (!updatedWorkshop) {
+      throw new Error("Could not find updated workshop");
+    }
+    const now = new Date();
+    const sharedStart = new Date(updatedWorkshop.start);
+    const sharedEnd = new Date(updatedWorkshop.end);
+    const workshop = {
+      title: updatedWorkshop.title,
+      start: sharedStart.toISOString(),
+      end: sharedEnd.toISOString(),
+      workshopId: updatedWorkshop.workshopId,
+      active: sharedStart <= now && now <= sharedEnd
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
