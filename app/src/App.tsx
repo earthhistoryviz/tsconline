@@ -13,7 +13,7 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
-import { Datapacks } from "./settings_tabs/Datapack"
+import { Datapacks } from "./settings_tabs/Datapack";
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
@@ -73,7 +73,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/datapacks"element={<Datapacks/>}/>
+            <Route path="/datapacks" element={<Datapacks />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
             <TSCError
