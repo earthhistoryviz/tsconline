@@ -184,41 +184,40 @@ export const adminDeleteUser = async function adminDeleteUser(
 };
 
 /**
- * Admin sends a request to change a user's account type
+ * Admin sends a request to modify a user
  * @param request
  * @param reply
  * @returns
  */
-export const adminChangeAccountType = async function adminChangeAccountType(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  const { username, email, accountType } = request.body as {
+export const adminModifyUser = async function adminModifyUser(request: FastifyRequest, reply: FastifyReply) {
+  const { username, email, accountType, isAdmin } = request.body as {
     username: string;
     email: string;
-    accountType: string;
+    accountType?: string;
+    isAdmin?: number;
   };
-  if (!email || !validator.isEmail(email) || !accountType || !username) {
+
+  if (!email || !validator.isEmail(email) || (!accountType && isAdmin === undefined) || !username) {
     reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }
-  if (username == "" || accountType == "") {
-    reply.status(400).send({ error: "Missing/invalid required fields" });
-    return;
-  }
+
   try {
-    const user = await checkForUsersWithUsernameOrEmail(username || email, email);
-    if (user.length == 0) {
+    const user = await checkForUsersWithUsernameOrEmail(username, email);
+    if (user.length === 0) {
       reply.status(409).send({ error: "User does not exist." });
       return;
     }
-    await updateUser({ email }, { accountType });
-    reply.send({ message: "User account type changed." });
+
+    const updateData: { accountType?: string; isAdmin?: number } = {};
+    if (accountType) updateData.accountType = accountType;
+    if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
+
+    await updateUser({ email }, updateData);
+    reply.send({ message: "User modified." });
   } catch (error) {
     reply.status(500).send({ error: "Database error" });
-    return;
   }
-  reply.send({ message: "User account type changed" });
 };
 
 export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
