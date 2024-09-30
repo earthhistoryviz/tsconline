@@ -15,12 +15,18 @@ import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { useTranslation } from "react-i18next";
+import { toJS } from "mobx";
+import { TSCButton } from "./components";
+import { useNavigate, useLocation } from "react-router-dom";
+import "./NavBar.css";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
   const SettingsHeader = () => {
-    const { t } = useTranslation();
     return (
       <div className="settings-header">
         <LoadSettings />
@@ -47,6 +53,21 @@ export const Settings = observer(function Settings() {
         className="main-settings-tabs"
       />
       <SettingsTab tab={state.settingsTabs.selected} />
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "10px" }}>
+        <TSCButton
+          buttonType="gradient"
+          style={{
+            width: "auto",
+            height: "auto",
+            fontSize: "0.85rem"
+          }}
+          onClick={async () => {
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            actions.initiateChartGeneration(navigate, location.pathname);
+          }}>
+          {t("button.generate")}
+        </TSCButton>
+      </div>
     </div>
   );
 });
