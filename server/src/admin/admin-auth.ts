@@ -118,8 +118,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       end: { type: "string" },
       workshopId: { type: "number" }
     },
-    required: ["workshopId"],
-    anyOf: [{ required: ["title"] }, { required: ["start"] }, { required: ["end"] }]
+    required: ["workshopId"]
   };
   const adminDeleteWorkshopBody = {
     type: "object",
