@@ -81,7 +81,6 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         setEventColumnSettings(column.columnSpecificSettings, {
           type: settings.type,
           rangeSort: settings.rangeSort,
-          isDualColCompColumn: settings.isDualColCompColumn,
           drawDualColCompColumn: settings.drawDualColCompColumn
         });
       break;
@@ -108,7 +107,6 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         lowerRange: settings.minWindow,
         upperRange: settings.maxWindow,
         isDataMiningColumn: settings.isDataMiningColumn,
-        isDualColCompColumn: settings.isDualColCompColumn,
         drawDualColCompColumn: settings.drawDualColCompColumn
       });
       break;
@@ -147,7 +145,7 @@ export function addColumnToDualColCompCache(settings: ColumnInfoTSC) {
       }
       break;
     case "EventColumn":
-      assertPointColumnInfoTSC(settings);
+      assertEventColumnInfoTSC(settings);
       if (settings.isDualColCompColumn) {
         dualColCompFoundCache.set(columnName, settings);
       }
@@ -180,7 +178,7 @@ export function handleDualColCompColumns() {
         refCol.columnSpecificSettings.drawDualColCompColumn = refInfo;
         break;
       case "Point":
-        assertEventSettings(refCol.columnSpecificSettings);
+        assertPointSettings(refCol.columnSpecificSettings);
         refCol.columnSpecificSettings.drawDualColCompColumn = refInfo;
         break;
       default:
@@ -664,13 +662,13 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     dualColCompColumn.columnDisplayType = "Event";
     dualColCompColumn.columnSpecificSettings = {
       ...cloneDeep(defaultEventSettings),
-      isDualColCompColumn: true
+      dualColCompColumnRef: column.name
     };
   } else if (column.columnDisplayType === "Point") {
     dualColCompColumn.columnDisplayType = "Point";
     dualColCompColumn.columnSpecificSettings = {
       ...cloneDeep(defaultPointSettings),
-      isDualColCompColumn: true
+      dualColCompColumnRef: column.name
     };
   }
   parent.children.splice(index + 1, 0, dualColCompColumn);
