@@ -374,7 +374,7 @@ export type PointSettings = {
   maxX: number;
   dataMiningPointDataType: DataMiningPointDataType | null;
   isDataMiningColumn: boolean;
-  isDualColCompColumn: boolean;
+  dualColCompColumnRef: string | null;
   drawDualColCompColumn: string | null;
 } & DataMiningSettings;
 
@@ -414,7 +414,7 @@ export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
   frequency: EventFrequency | null;
-  isDualColCompColumn: boolean;
+  dualColCompColumnRef: string | null;
   drawDualColCompColumn: string | null;
 } & DataMiningSettings;
 
