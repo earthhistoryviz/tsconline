@@ -8,7 +8,8 @@ import {
   createWorkshop,
   findWorkshop,
   getAndHandleWorkshopEnd,
-  updateWorkshop
+  updateWorkshop,
+  deleteWorkshop
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -673,4 +674,33 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
+};
+
+/**
+ * Delete a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminDeleteWorkshop = async function adminDeleteWorkshop(
+  request: FastifyRequest<{ Body: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { workshopId } = request.body;
+  if (!workshopId) {
+    reply.status(400).send({ error: "Missing workshop id" });
+    return;
+  }
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (workshop.length !== 1) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    await deleteWorkshop({ workshopId });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  }
+  reply.send({ message: "Workshop deleted" });
 };

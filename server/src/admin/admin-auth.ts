@@ -11,7 +11,8 @@ import {
   adminAddUsersToWorkshop,
   adminCreateWorkshop,
   adminGetWorkshops,
-  adminEditWorkshop
+  adminEditWorkshop,
+  adminDeleteWorkshop
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -120,6 +121,14 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     required: ["workshopId"],
     anyOf: [{ required: ["title"] }, { required: ["start"] }, { required: ["end"] }]
   };
+  const adminDeleteWorkshopBody = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
+
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
@@ -188,5 +197,10 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop",
     { schema: { body: adminEditWorkshopBody }, config: { rateLimit: moderateRateLimit } },
     adminEditWorkshop
+  );
+  fastify.delete(
+    "/workshop",
+    { schema: { body: adminDeleteWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminDeleteWorkshop
   );
 };

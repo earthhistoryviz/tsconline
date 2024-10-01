@@ -4,15 +4,16 @@ import { AgGridReact } from "ag-grid-react";
 import React, { useContext, useState, useEffect } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
-import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup, Lottie } from "../components";
+import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup, Lottie, TSCYesNoPopup } from "../components";
 import loader from "../assets/icons/loading.json";
 import { ErrorCodes } from "../util/error-codes";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
 import { SharedWorkshop } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import EditIcon from "@mui/icons-material/Edit";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
 
 const checkboxRenderer = (params: { value: boolean }) => {
@@ -26,23 +27,35 @@ const checkboxRenderer = (params: { value: boolean }) => {
 type ActionsCellRendererProps = {
   context: {
     setEditWorkshopFormOpen: (open: boolean) => void;
+    setDeleteWorkshopFormOpen: (open: boolean) => void;
     setWorkshop: (workshop: SharedWorkshop) => void;
   };
   data: SharedWorkshop;
 };
 const ActionsCellRenderer: React.FC<ActionsCellRendererProps> = (props) => {
-  const { setEditWorkshopFormOpen, setWorkshop } = props.context;
+  const { setEditWorkshopFormOpen, setDeleteWorkshopFormOpen, setWorkshop } = props.context;
   const { data } = props;
-  const handleClick = () => {
+  const handleEditClick = () => {
     setWorkshop(data);
     setEditWorkshopFormOpen(true);
   };
+  const handleDeleteClick = () => {
+    setWorkshop(data);
+    setDeleteWorkshopFormOpen(true);
+  };
   return (
-    <CustomTooltip title="Edit Workshop" enterDelay={800}>
-      <IconButton onClick={handleClick}>
-        <EditIcon />
-      </IconButton>
-    </CustomTooltip>
+    <>
+      <CustomTooltip title="Edit Workshop">
+        <IconButton onClick={handleEditClick}>
+          <EditIcon />
+        </IconButton>
+      </CustomTooltip>
+      <CustomTooltip title="Delete Workshop">
+        <IconButton onClick={handleDeleteClick}>
+          <DeleteForeverIcon />
+        </IconButton>
+      </CustomTooltip>
+    </>
   );
 };
 
@@ -70,7 +83,8 @@ const workshopColDefs: ColDef[] = [
     headerName: "Actions",
     cellRenderer: ActionsCellRenderer,
     flex: 0.2,
-    cellStyle: { textAlign: "center", border: "none" }
+    minWidth: 110,
+    cellStyle: { border: "none" }
   }
 ];
 
@@ -79,6 +93,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
   const { state, actions } = useContext(context);
   const [createWorkshopFormOpen, setCreateWorkshopFormOpen] = useState(false);
   const [editWorkshopFormOpen, setEditWorkshopFormOpen] = useState(false);
+  const [deleteWorkshopFormOpen, setDeleteWorkshopFormOpen] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -193,9 +208,27 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
     setFile(file);
   };
 
+  const handleDeleteWorkshop = async () => {
+    try {
+      if (!workshop) {
+        actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
+        return;
+      }
+      await actions.adminDeleteWorkshop(workshop.workshopId);
+      handleDialogClose();
+    } catch (error) {
+      displayServerError(
+        error,
+        ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED,
+        ErrorCodes[ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED]
+      );
+    }
+  };
+
   const handleDialogClose = () => {
     setCreateWorkshopFormOpen(false);
     setEditWorkshopFormOpen(false);
+    setDeleteWorkshopFormOpen(false);
     setWorkshopTitle("");
     setStartDate(null);
     setEndDate(null);
@@ -204,6 +237,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
     setInvalidEmails("");
     setWorkshop(null);
   };
+
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box display="flex" m="10px" gap="20px">
@@ -219,6 +253,13 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
           message={invalidEmails}
           onClose={() => setInvalidEmails("")}
           maxWidth="xs"
+        />
+        <TSCYesNoPopup
+          open={deleteWorkshopFormOpen}
+          title="Are you sure you want to delete this workshop?"
+          onYes={handleDeleteWorkshop}
+          onNo={handleDialogClose}
+          onClose={handleDialogClose}
         />
         <Dialog open={createWorkshopFormOpen || editWorkshopFormOpen} onClose={handleDialogClose}>
           <Box textAlign="center" padding="10px">
@@ -319,7 +360,25 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                     />
                     <Typography ml="10px">{file?.name || "No file selected"}</Typography>
                   </Box>
-                  <TSCButton type="submit">{createWorkshopFormOpen ? "Create Workshop" : "Confirm Selection"}</TSCButton>
+                  <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
+                    {editWorkshopFormOpen && (
+                      <>
+                        <TSCButton
+                          onClick={() => {
+                            setWorkshopTitle(workshop?.title || "");
+                            setStartDate(dayjs(workshop?.start));
+                            setEndDate(dayjs(workshop?.end));
+                            setEmails("");
+                            setFile(null);
+                          }}>
+                          Reset Form
+                        </TSCButton>
+                      </>
+                    )}
+                    <TSCButton type="submit">
+                      {createWorkshopFormOpen ? "Create Workshop" : "Confirm Selection"}
+                    </TSCButton>
+                  </Box>
                 </Box>
                 {loading && (
                   <Box
@@ -345,7 +404,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         columnDefs={workshopColDefs}
         rowData={Array.from(state.admin.workshops.values())}
         components={{ ActionsCellRenderer }}
-        context={{ setEditWorkshopFormOpen, setWorkshop }}
+        context={{ setEditWorkshopFormOpen, setDeleteWorkshopFormOpen, setWorkshop }}
         rowSelection="single"
       />
     </Box>
