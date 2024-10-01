@@ -56,7 +56,7 @@ export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
   frequency: null,
-  isDualColCompColumn: false,
+  dualColCompColumnRef: null,
   drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
@@ -440,7 +440,7 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   dataMiningPointDataType: null,
   isDataMiningColumn: false,
-  isDualColCompColumn: false,
+  dualColCompColumnRef: null,
   drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
