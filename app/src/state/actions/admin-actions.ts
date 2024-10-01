@@ -474,7 +474,6 @@ export const adminEditWorkshop = action(
       if (start) body.start = start;
       if (end) body.end = end;
       body.workshopId = workshopId.toString();
-
       const response = await fetcher(`/admin/workshop`, {
         method: "PATCH",
         headers: {
@@ -503,6 +502,45 @@ export const adminEditWorkshop = action(
     return false;
   }
 );
+
+/**
+ * Deletes a workshop
+ * @param workshopId The ID of the workshop to delete
+ */
+export const adminDeleteWorkshop = action(async (workshopId: number) => {
+  const index = state.admin.workshops.findIndex((w) => w.workshopId === workshopId);
+  if (index === -1) {
+    pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
+    return;
+  }
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminDeleteWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ workshopId }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      runInAction(() => state.admin.workshops.splice(index, 1));
+      pushSnackbar("Workshop deleted successfully", "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+  return;
+});
 
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
   state.admin.workshops = workshop;
