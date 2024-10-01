@@ -628,8 +628,8 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     return;
   }
   try {
-    const existingWorkshops = await findWorkshop({ workshopId });
-    if (existingWorkshops.length !== 1) {
+    const existingWorkshop = (await findWorkshop({ workshopId }))[0];
+    if (!existingWorkshop) {
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
@@ -637,8 +637,9 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     if (title) {
       fieldsToUpdate.title = title;
     }
+    let startDate = new Date(existingWorkshop.start);
     if (start) {
-      const startDate = new Date(start);
+      startDate = new Date(start);
       if (isNaN(startDate.getTime())) {
         reply.status(400).send({ error: "Invalid start date" });
         return;
@@ -647,26 +648,32 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     }
     if (end) {
       const endDate = new Date(end);
-      if (isNaN(endDate.getTime())) {
+      if (isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime()) {
         reply.status(400).send({ error: "Invalid end date" });
         return;
       }
       fieldsToUpdate.end = endDate.toISOString();
     }
-    await updateWorkshop({ workshopId }, fieldsToUpdate);
-    const updatedWorkshop = (await findWorkshop({ workshopId }))[0];
-    if (!updatedWorkshop) {
-      throw new Error("Could not find updated workshop");
+    const newWorkshop = {
+      title: fieldsToUpdate.title ?? existingWorkshop.title,
+      start: fieldsToUpdate.start ?? existingWorkshop.start,
+      end: fieldsToUpdate.end ?? existingWorkshop.end
+    };
+    const identicalWorkshops = await findWorkshop(newWorkshop);
+    if (identicalWorkshops.length > 0) {
+      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
+      return;
     }
+    await updateWorkshop({ workshopId }, fieldsToUpdate);
     const now = new Date();
-    const sharedStart = new Date(updatedWorkshop.start);
-    const sharedEnd = new Date(updatedWorkshop.end);
+    const newStart = new Date(newWorkshop.start);
+    const newEnd = new Date(newWorkshop.end);
     const workshop = {
-      title: updatedWorkshop.title,
-      start: sharedStart.toISOString(),
-      end: sharedEnd.toISOString(),
-      workshopId: updatedWorkshop.workshopId,
-      active: sharedStart <= now && now <= sharedEnd
+      title: newWorkshop.title,
+      start: newWorkshop.start,
+      end: newWorkshop.end,
+      workshopId: workshopId,
+      active: newStart <= now && now <= newEnd
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
@@ -688,7 +695,7 @@ export const adminDeleteWorkshop = async function adminDeleteWorkshop(
 ) {
   const { workshopId } = request.body;
   if (!workshopId) {
-    reply.status(400).send({ error: "Missing workshop id" });
+    reply.status(400).send({ error: "Missing workshopId" });
     return;
   }
   try {

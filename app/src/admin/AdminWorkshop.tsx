@@ -1,7 +1,7 @@
 import { Box, Dialog, useTheme, TextField, Typography, IconButton } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { ColDef } from "ag-grid-community";
 import { TSCButton, InputFileUpload, CustomTooltip, TSCPopup, Lottie, TSCYesNoPopup } from "../components";
@@ -29,14 +29,27 @@ type ActionsCellRendererProps = {
     setEditWorkshopFormOpen: (open: boolean) => void;
     setDeleteWorkshopFormOpen: (open: boolean) => void;
     setWorkshop: (workshop: SharedWorkshop) => void;
+    setWorkshopTitle: (title: string) => void;
+    setStartDate: (date: Dayjs | null) => void;
+    setEndDate: (date: Dayjs | null) => void;
   };
   data: SharedWorkshop;
 };
 const ActionsCellRenderer: React.FC<ActionsCellRendererProps> = (props) => {
-  const { setEditWorkshopFormOpen, setDeleteWorkshopFormOpen, setWorkshop } = props.context;
+  const {
+    setEditWorkshopFormOpen,
+    setDeleteWorkshopFormOpen,
+    setWorkshop,
+    setWorkshopTitle,
+    setStartDate,
+    setEndDate
+  } = props.context;
   const { data } = props;
   const handleEditClick = () => {
     setWorkshop(data);
+    setWorkshopTitle(data.title);
+    setStartDate(dayjs(data.start));
+    setEndDate(dayjs(data.end));
     setEditWorkshopFormOpen(true);
   };
   const handleDeleteClick = () => {
@@ -103,14 +116,6 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [emails, setEmails] = useState<string>("");
 
-  useEffect(() => {
-    if (editWorkshopFormOpen && workshop) {
-      setWorkshopTitle(workshop.title || "");
-      setStartDate(dayjs(workshop.start));
-      setEndDate(dayjs(workshop.end));
-    }
-  }, [editWorkshopFormOpen, workshop]);
-
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       setLoading(true);
@@ -129,7 +134,11 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
         return;
       }
+
       let workshopId: number;
+      let edited = false;
+      let created = false;
+
       if (createWorkshopFormOpen) {
         const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end);
         if (!createdWorkshopId) {
@@ -137,6 +146,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
           return;
         }
         workshopId = createdWorkshopId;
+        created = true;
       } else {
         if (!workshop) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
@@ -144,19 +154,26 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         }
         workshopId = workshop.workshopId;
         const { title: oldTitle, start: oldStart, end: oldEnd } = workshop;
-        const isWorkshopUnchanged = oldTitle === workshopTitle && oldStart === start && oldEnd === end;
+        const updatedFields = {} as Partial<SharedWorkshop>;
+        if (oldTitle !== workshopTitle) updatedFields.title = workshopTitle;
+        if (oldStart !== start) updatedFields.start = start;
+        if (oldEnd !== end) updatedFields.end = end;
+        updatedFields.workshopId = workshopId;
+        const isWorkshopUnchanged = Object.keys(updatedFields).length === 1;
         if (!isWorkshopUnchanged) {
-          const editSuccess = await actions.adminEditWorkshop(workshop.workshopId, workshopTitle, start, end);
-          if (!editSuccess) {
+          const newWorkshop = await actions.adminEditWorkshop(updatedFields);
+          if (!newWorkshop) {
             return;
           }
+          edited = true;
+          setWorkshop(newWorkshop);
         }
         if (isWorkshopUnchanged && !file && !emails) {
           actions.pushSnackbar("No changes made", "info");
           return;
         }
       }
-      const verb = createWorkshopFormOpen ? "created" : "edited";
+
       if (file || emails) {
         const form = new FormData();
         if (emails) form.append("emails", emails);
@@ -164,16 +181,27 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         form.append("workshopId", workshopId.toString());
         const response = await actions.adminAddUsersToWorkshop(form);
         if (!response.success) {
-          actions.pushSnackbar(`Workshop ${verb} successfully but users could not be added`, "warning");
+          if (created || edited)
+            actions.pushSnackbar(
+              `Workshop ${created ? "created" : "edited"} successfully but users could not be added`,
+              "warning"
+            );
           setInvalidEmails(response.invalidEmails);
+          if (created) handleDialogClose();
           return;
         } else {
           actions.removeAllErrors();
-          actions.pushSnackbar(`Workshop ${verb} successfully and users added succesfully`, "success");
+          let message = "";
+          if (created || edited) {
+            message = `Workshop ${created ? "created" : "edited"} successfully and users added`;
+          } else {
+            message = "Users added successfully";
+          }
+          actions.pushSnackbar(message, "success");
         }
       } else {
         actions.removeAllErrors();
-        actions.pushSnackbar(`Workshop ${verb} successfully`, "success");
+        actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
       handleDialogClose();
     } catch (error) {
@@ -234,7 +262,6 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
     setEndDate(null);
     setEmails("");
     setFile(null);
-    setInvalidEmails("");
     setWorkshop(null);
   };
 
@@ -350,6 +377,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
                     size="small"
                     fullWidth
                     onChange={(event) => setEmails(event.target.value)}
+                    value={emails}
                   />
                   <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
                     <InputFileUpload
@@ -404,7 +432,14 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         columnDefs={workshopColDefs}
         rowData={Array.from(state.admin.workshops.values())}
         components={{ ActionsCellRenderer }}
-        context={{ setEditWorkshopFormOpen, setDeleteWorkshopFormOpen, setWorkshop }}
+        context={{
+          setEditWorkshopFormOpen,
+          setDeleteWorkshopFormOpen,
+          setWorkshop,
+          setWorkshopTitle,
+          setStartDate,
+          setEndDate
+        }}
         rowSelection="single"
       />
     </Box>

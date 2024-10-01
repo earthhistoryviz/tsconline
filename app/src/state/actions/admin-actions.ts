@@ -452,54 +452,49 @@ export const adminCreateWorkshop = action(
 
 /**
  * Edits a workshop
- * @param workshopId The ID of the workshop to edit
- * @param title The new title of the workshop (optional)
- * @param start The new start date of the workshop (optional)
- * @param end The new end date of the workshop (optional)
- * @param workshop The workshop to edit
- * @returns Whether the operation was successful
+ * @param updatedFields The fields to update
+ * @returns The updated workshop if successful, null otherwise
  */
 export const adminEditWorkshop = action(
-  async (workshopId: number, title?: string, start?: string, end?: string): Promise<boolean> => {
-    const index = state.admin.workshops.findIndex((w) => w.workshopId === workshopId);
+  async (updatedFields: Partial<SharedWorkshop>): Promise<SharedWorkshop | null> => {
+    if (!updatedFields.workshopId) {
+      pushError(ErrorCodes.INVALID_FORM);
+      return null;
+    }
+    const index = state.admin.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
     if (index === -1) {
       pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
-      return false;
+      return null;
     }
     try {
       const recaptchaToken = await getRecaptchaToken("adminEditWorkshop");
-      if (!recaptchaToken) return false;
-      const body: Record<string, string> = {};
-      if (title) body.title = title;
-      if (start) body.start = start;
-      if (end) body.end = end;
-      body.workshopId = workshopId.toString();
+      if (!recaptchaToken) return null;
       const response = await fetcher(`/admin/workshop`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "recaptcha-token": recaptchaToken
         },
-        body: JSON.stringify(body),
+        body: JSON.stringify(updatedFields),
         credentials: "include"
       });
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertSharedWorkshop(workshop);
         runInAction(() => (state.admin.workshops[index] = workshop));
-        return true;
+        return workshop;
       } else {
-        displayServerError(
-          await response.json(),
-          ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED,
-          ErrorMessages[ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED]
-        );
+        let errorCode = ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED;
+        if (response.status === 409) {
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS;
+        }
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
       }
     } catch (error) {
       console.error(error);
       pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
-    return false;
+    return null;
   }
 );
 
