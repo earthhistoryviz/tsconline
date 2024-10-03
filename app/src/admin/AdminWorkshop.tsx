@@ -130,7 +130,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       }
       const start = dayjs(startDate).toISOString();
       const end = dayjs(endDate).toISOString();
-      if (dayjs(start).isAfter(dayjs(end))) {
+      if (dayjs(start).isAfter(dayjs(end)) || dayjs(start).isSame(dayjs(end))) {
         actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
         return;
       }
