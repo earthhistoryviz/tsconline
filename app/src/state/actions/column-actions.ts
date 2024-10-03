@@ -195,7 +195,7 @@ export function handleDualColCompColumns() {
       console.error("while handling dual col comp columns, failed to access created dual col comp column from state");
       continue;
     }
-    const foundDualColumn = dataminingFoundCache.get(dualColumnName);
+    const foundDualColumn = dualColCompFoundCache.get(dualColumnName);
     if (!foundDualColumn) {
       console.error(
         "While handling dual col comp columns, name of created dcc column does not match any dcc columns in loaded settings"
@@ -214,7 +214,6 @@ export function handleDualColCompColumns() {
         checkDualCol = true;
       }
     });
-
     setColumnProperties(createdDualColumn, foundDualColumn);
   }
   //reset cache
@@ -390,12 +389,6 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol) {
     setColumnProperties(curcol, settings);
-  }
-  if (
-    curcol?.name.includes("Tropical (red) and Global Average (black)") ||
-    curcol?.name.includes("Miocene-Paleocene Oxy-18 events")
-  ) {
-    console.log(JSON.parse(JSON.stringify(curcol)));
   }
 
   addColumnToDataMiningCache(settings);
