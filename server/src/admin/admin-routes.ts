@@ -7,12 +7,14 @@ import {
   updateUser,
   createWorkshop,
   findWorkshop,
-  getAndHandleWorkshopEnd
+  getAndHandleWorkshopEnd,
+  updateWorkshop,
+  deleteWorkshop
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath, formatDate } from "../util.js";
+import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
 import { createWriteStream } from "fs";
 import { readFile, realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -541,8 +543,8 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
       const end = new Date(workshop.end);
       return {
         title: workshop.title,
-        start: formatDate(start),
-        end: formatDate(end),
+        start: start.toISOString(),
+        end: end.toISOString(),
         workshopId: workshop.workshopId,
         active: start <= now && now <= end
       };
@@ -597,8 +599,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     }
     const workshop: SharedWorkshop = {
       title,
-      start: formatDate(startDate),
-      end: formatDate(endDate),
+      start: startDate.toISOString(),
+      end: endDate.toISOString(),
       workshopId,
       active: false
     };
@@ -608,4 +610,104 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
+};
+
+/**
+ * Edit a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminEditWorkshop = async function adminEditWorkshop(
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string; workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { title, start, end, workshopId } = request.body;
+  if (!workshopId || (!title && !start && !end)) {
+    reply.status(400).send({ error: "Missing required fields" });
+    return;
+  }
+  try {
+    const fieldsToUpdate: Partial<SharedWorkshop> = {};
+    if (title) {
+      fieldsToUpdate.title = title;
+    }
+    if (start) {
+      const startDate = new Date(start);
+      if (isNaN(startDate.getTime())) {
+        reply.status(400).send({ error: "Invalid start date" });
+        return;
+      }
+      fieldsToUpdate.start = startDate.toISOString();
+    }
+    const existingWorkshop = (await findWorkshop({ workshopId }))[0];
+    if (!existingWorkshop) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    if (end) {
+      const startDate = new Date(fieldsToUpdate.start ?? existingWorkshop.start);
+      const endDate = new Date(end);
+      if (isNaN(endDate.getTime()) || startDate.getTime() >= endDate.getTime()) {
+        reply.status(400).send({ error: "Invalid end date" });
+        return;
+      }
+      fieldsToUpdate.end = endDate.toISOString();
+    }
+    const newWorkshop = {
+      title: fieldsToUpdate.title ?? existingWorkshop.title,
+      start: fieldsToUpdate.start ?? existingWorkshop.start,
+      end: fieldsToUpdate.end ?? existingWorkshop.end
+    };
+    const identicalWorkshops = await findWorkshop(newWorkshop);
+    if (identicalWorkshops.length > 0) {
+      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
+      return;
+    }
+    await updateWorkshop({ workshopId }, fieldsToUpdate);
+    const now = new Date();
+    const newStart = new Date(newWorkshop.start);
+    const newEnd = new Date(newWorkshop.end);
+    const workshop = {
+      title: newWorkshop.title,
+      start: newWorkshop.start,
+      end: newWorkshop.end,
+      workshopId: workshopId,
+      active: newStart <= now && now <= newEnd
+    };
+    assertSharedWorkshop(workshop);
+    reply.send({ workshop });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  }
+};
+
+/**
+ * Delete a workshop
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminDeleteWorkshop = async function adminDeleteWorkshop(
+  request: FastifyRequest<{ Body: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { workshopId } = request.body;
+  if (!workshopId) {
+    reply.status(400).send({ error: "Missing workshopId" });
+    return;
+  }
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (workshop.length !== 1) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    await deleteWorkshop({ workshopId });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+  }
+  reply.send({ message: "Workshop deleted" });
 };
