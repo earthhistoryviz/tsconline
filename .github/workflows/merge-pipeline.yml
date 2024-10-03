@@ -265,6 +265,7 @@ jobs:
 
   setup-preview:
     needs: wait-for-checks
+    if: github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout CODEOWNERS file from main branch
@@ -274,6 +275,7 @@ jobs:
           branch: main
 
       - name: Check if PR author is a code owner
+        if: github.event.pull_request.merged == false
         id: check_codeowner
         run: |
           PR_AUTHOR=${{ github.event.pull_request.user.login }}
@@ -288,25 +290,30 @@ jobs:
           fi
 
       - name: Checkout
+        if: github.event.pull_request.merged == false
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up SSH key
+        if: github.event.pull_request.merged == false
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
       - name: Add known hosts
+        if: github.event.pull_request.merged == false
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
       - name: Transfer files
+        if: github.event.pull_request.merged == false
         run: |
           rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
 
       - name: Setup files for deployment preview
+        if: github.event.pull_request.merged == false
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: dev.geolex.org
