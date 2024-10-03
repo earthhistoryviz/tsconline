@@ -2,7 +2,7 @@ version: "3"
 services:
   tsconline:
     build: .
-    restart: unless-stopped
+    restart: on-failure
     #image: tscreator/tscreator_online:v2
     env_file:
       - secrets.env
