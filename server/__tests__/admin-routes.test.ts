@@ -2078,6 +2078,17 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Missing required fields" });
     expect(response.statusCode).toBe(400);
   });
+  it("should return 400 if start is an invalid date", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...body, start: "invalid" },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid start date" });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return 404 if workshop does not exist", async () => {
     findWorkshop.mockResolvedValueOnce([]);
     const response = await app.inject({
@@ -2089,18 +2100,6 @@ describe("adminEditWorkshop", () => {
     expect(updateWorkshop).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Workshop not found" });
     expect(response.statusCode).toBe(404);
-  });
-  it("should return 400 if start is an invalid date", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshop]);
-    const response = await app.inject({
-      method: "PATCH",
-      url: "/admin/workshop",
-      payload: { ...body, start: "invalid" },
-      headers
-    });
-    expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Invalid start date" });
-    expect(response.statusCode).toBe(400);
   });
   it("should return 400 if end is an invalid date", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshop]);

@@ -628,27 +628,27 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     return;
   }
   try {
-    const existingWorkshop = (await findWorkshop({ workshopId }))[0];
-    if (!existingWorkshop) {
-      reply.status(404).send({ error: "Workshop not found" });
-      return;
-    }
-    const fieldsToUpdate: { [key: string]: string } = {};
+    const fieldsToUpdate: Partial<SharedWorkshop> = {};
     if (title) {
       fieldsToUpdate.title = title;
     }
-    let startDate = new Date(existingWorkshop.start);
     if (start) {
-      startDate = new Date(start);
+      const startDate = new Date(start);
       if (isNaN(startDate.getTime())) {
         reply.status(400).send({ error: "Invalid start date" });
         return;
       }
       fieldsToUpdate.start = startDate.toISOString();
     }
+    const existingWorkshop = (await findWorkshop({ workshopId }))[0];
+    if (!existingWorkshop) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
     if (end) {
+      const startDate = new Date(fieldsToUpdate.start ?? existingWorkshop.start);
       const endDate = new Date(end);
-      if (isNaN(endDate.getTime()) || startDate.getTime() > endDate.getTime()) {
+      if (isNaN(endDate.getTime()) || startDate.getTime() >= endDate.getTime()) {
         reply.status(400).send({ error: "Invalid end date" });
         return;
       }
