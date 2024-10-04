@@ -223,6 +223,13 @@ jobs:
               ELAPSED=$((ELAPSED + INTERVAL))
             done
 
+      - name: Comment preview link
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            🚀 Preview deployed! You can access it [here](https://pr-preview.geolex.org).
+            To bring down the preview close the PR.
+
       - name: Fetch previous PR number
         id: fetch_previous_pr
         run: |
@@ -231,6 +238,7 @@ jobs:
           echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Comment on previous PR
+        if: ${{ steps.fetch_previous_pr.outputs.previous_pr_number != '' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -242,10 +250,3 @@ jobs:
               issue_number: previousPRNumber,
               body: comment
             });
-
-      - name: Comment preview link
-        uses: thollander/actions-comment-pull-request@v2
-        with:
-          message: |
-            🚀 Preview deployed! You can access it [here](https://pr-preview.geolex.org).
-            To bring down the preview close the PR.

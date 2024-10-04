@@ -7,11 +7,12 @@ export * from "./constants.js";
 export * from "./util.js";
 export * from "./settings-types.js";
 
-export type Workshop = {
+export type SharedWorkshop = {
   title: string;
   start: string;
   end: string;
   workshopId: number;
+  active: boolean;
 };
 
 export type SharedUser = {
@@ -21,6 +22,7 @@ export type SharedUser = {
   isGoogleUser: boolean;
   isAdmin: boolean;
   workshopTitle?: string;
+  uuid: string;
 };
 
 export type DatapackMetadata = {
@@ -609,18 +611,19 @@ export type TimescaleItem = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
-export function assertWorkshop(o: any): asserts o is Workshop {
+export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
   if (typeof o.title !== "string") throwError("Workshop", "title", "string", o.title);
   if (typeof o.start !== "string") throwError("Workshop", "start", "string", o.start);
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
+  if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
 }
 
-export function assertWorkshopArray(o: any): asserts o is Workshop[] {
+export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
   if (!Array.isArray(o)) throw new Error("Workshop must be an array");
   for (const workshop of o) {
-    assertWorkshop(workshop);
+    assertSharedWorkshop(workshop);
   }
 }
 
@@ -678,6 +681,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
   if (o.workshopTitle != null && typeof o.workshopTitle !== "string")
     throwError("User", "workshopTitle", "number", o.workshopTitle);
 }
@@ -993,6 +997,39 @@ export function assertPatterns(o: any): asserts o is Patterns {
   }
 }
 
+export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
+  if (!o || typeof o !== "object") return false;
+  const validKeys = [
+    "description",
+    "title",
+    "originalFileName",
+    "storedFileName",
+    "size",
+    "authoredBy",
+    "tags",
+    "date",
+    "references",
+    "contact",
+    "notes"
+  ];
+  for (const key in o) {
+    if (!validKeys.includes(key)) {
+      return false;
+    }
+  }
+  if ("description" in o && typeof o.description !== "string") return false;
+  if ("title" in o && typeof o.title !== "string") return false;
+  if ("originalFileName" in o && typeof o.originalFileName !== "string") return false;
+  if ("storedFileName" in o && typeof o.storedFileName !== "string") return false;
+  if ("size" in o && typeof o.size !== "string") return false;
+  if ("authoredBy" in o && typeof o.authoredBy !== "string") return false;
+  if ("tags" in o && !Array.isArray(o.tags)) return false;
+  if ("date" in o && typeof o.date !== "string") return false;
+  if ("references" in o && !Array.isArray(o.references)) return false;
+  if ("contact" in o && typeof o.contact !== "string") return false;
+  if ("notes" in o && typeof o.notes !== "string") return false;
+  return true;
+}
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
   if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");

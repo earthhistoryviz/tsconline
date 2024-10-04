@@ -2,6 +2,7 @@ import {
   ColumnInfo,
   DataMiningPointDataType,
   DatapackConfigForChartRequest,
+  DatapackMetadata,
   MapHierarchy,
   MapInfo,
   SharedUser,
@@ -12,6 +13,8 @@ import {
   throwError
 } from "@tsconline/shared";
 import { State } from "./state";
+
+export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
 
 export type User = SharedUser & {
   settings: {

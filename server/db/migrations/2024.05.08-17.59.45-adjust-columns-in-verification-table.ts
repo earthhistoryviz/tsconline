@@ -1,6 +1,5 @@
 import { type Kysely } from "kysely";
 
-// I need userId to not be unique, but I can't alter that since it's a primary key. So I need to create a new table and copy over all the data.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function up(db: Kysely<any>): Promise<void> {
   await db.schema
@@ -12,6 +11,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("verifyOrReset", "text", (col) => col.notNull())
     .execute();
   const oldData = await db.selectFrom("verification").selectAll().execute();
+  // This is actually wrong, you can't bulk insert data with Kysely
   if (oldData.length != 0) await db.insertInto("verification_new").values(oldData).execute();
   await db.schema.dropTable("verification").execute();
   await db.schema.alterTable("verification_new").renameTo("verification").execute();
@@ -29,6 +29,7 @@ export async function down(db: Kysely<any>): Promise<void> {
     .addColumn("reason", "text", (col) => col.notNull())
     .execute();
   const oldData = await db.selectFrom("verification").selectAll().execute();
+  // Also wrong
   if (oldData.length != 0) await db.insertInto("verification_old").values(oldData).execute();
   await db.schema.dropTable("verification").execute();
   await db.schema.alterTable("verification_old").renameTo("verification").execute();
