@@ -15,6 +15,7 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
     );
     const data = await response.json();
     if (!data.success) {
+      console.error("Recaptcha failed:", data);
       throw new Error("Recaptcha failed");
     }
     return data.score;
