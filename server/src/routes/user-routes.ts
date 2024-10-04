@@ -15,9 +15,9 @@ import { findUser } from "../database.js";
 import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
 import {
-  getUserDirectory,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
+  fetchUserDatapackFilepath,
   getDirectories,
   renameUserDatapack,
   writeUserDatapack
@@ -50,18 +50,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const userDir = await getUserDirectory(uuid).catch(() => {
-    reply.status(500).send({ error: "Failed to get user directory" });
-  });
-  if (!userDir) {
-    return;
-  }
-  const datapackTitles = await getDirectories(userDir);
-  if (body.title && datapackTitles.includes(body.title)) {
-    reply.status(400).send({ error: "Title already exists" });
-    return;
-  }
-  const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
+  const metadata = await fetchUserDatapack(uuid, datapack).catch(() => {
     reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
   });
   if (!metadata) {
@@ -73,7 +62,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   // check if title is being changed so that we can rename the directory
   if (body.title && metadata.title !== datapack) {
     try {
-      await renameUserDatapack(userDir, datapack, metadata);
+      await renameUserDatapack(uuid, datapack, metadata);
     } catch (e) {
       console.error(e);
       reply.status(500).send({ error: "Failed to change datapack title." });
@@ -81,7 +70,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     }
   } else {
     try {
-      await writeUserDatapack(userDir, metadata);
+      await writeUserDatapack(uuid, metadata);
     } catch (e) {
       reply.status(500).send({ error: "Failed to write datapack information to file system" });
       return;
@@ -111,13 +100,7 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
     return;
   }
   try {
-    const userDir = await getUserDirectory(uuid).catch(() => {
-      reply.status(500).send({ error: "Failed to get user directory" });
-    });
-    if (!userDir) {
-      return;
-    }
-    const metadata = await fetchUserDatapack(userDir, datapack).catch(() => {
+    const metadata = await fetchUserDatapack(uuid, datapack).catch(() => {
       reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
     });
     if (!metadata) {
@@ -141,29 +124,23 @@ export const requestDownload = async function requestDownload(
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { datapack } = request.params;
-  const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-  const datapackDir = path.join(userDir, datapack);
-  const encryptedFilepathDir = path.join(datapackDir, "encrypted-datapacks");
+  let datapackDir = "";
+  let userDir = "";
   let filepath = "";
   let filename = "";
+  let encryptedFilepathDir = "";
   // get valid filepath/filename from cache
   try {
-    if (!(await verifyFilepath(datapackDir))) {
-      reply.status(403).send({ error: "Invalid file path" });
+    const metadata = await fetchUserDatapack(uuid, datapack);
+    if (!metadata) {
+      reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
       return;
     }
-    const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
-    if (!(await verifyFilepath(cachedDatapackFilepath))) {
-      reply.status(403).send({ error: "Invalid file path" });
-      return;
-    }
-    filename = await getFileNameFromCachedDatapack(cachedDatapackFilepath);
+    filename = metadata.storedFileName;
+    datapackDir = await fetchUserDatapackFilepath(uuid, datapack);
+    userDir = path.dirname(filepath);
     filepath = path.join(datapackDir, filename);
-    // check and sanitize filepath
-    if (!(await verifyFilepath(filepath))) {
-      reply.status(403).send({ error: "Invalid file path" });
-      return;
-    }
+    encryptedFilepathDir = path.join(datapackDir, "encrypted");
   } catch (e) {
     reply.status(500).send({ error: "Failed to load cached datapack" });
     return;

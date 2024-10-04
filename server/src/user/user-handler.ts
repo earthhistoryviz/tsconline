@@ -1,4 +1,4 @@
-import { mkdir, readFile, readdir, rename, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
@@ -10,76 +10,142 @@ export async function getDirectories(source: string): Promise<string[]> {
   const entries = await readdir(source, { withFileTypes: true });
   return entries.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
 }
-export async function fetchAllUsersDatapacks(userDirectory: string): Promise<DatapackIndex> {
-  await mkdir(userDirectory, { recursive: true });
-  const datapacks = await getDirectories(userDirectory);
+export async function fetchAllUsersDatapacks(uuid: string): Promise<DatapackIndex> {
+  const directories = await getAllUserDatapackDirectories(uuid);
   const datapackIndex: DatapackIndex = {};
-  for (const datapack of datapacks) {
-    const cachedDatapack = path.join(userDirectory, datapack, CACHED_USER_DATAPACK_FILENAME);
-    if (!(await checkFileExists(cachedDatapack))) {
-      throw new Error(`File ${datapack} doesn't exist`);
+  for (const directory of directories) {
+    const datapacks = await getDirectories(directory);
+    for (const datapack of datapacks) {
+      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+      const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
+      if (await verifyFilepath(cachedDatapack)) {
+        if (datapackIndex[datapack]) {
+          logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
+          throw new Error(`Datapack ${datapack} already exists in the index`);
+        }
+        assertDatapack(parsedCachedDatapack);
+        datapackIndex[datapack] = parsedCachedDatapack;
+      }
     }
-    const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
-    assertPrivateUserDatapack(parsedCachedDatapack);
-    assertDatapack(parsedCachedDatapack);
-    if (datapackIndex[datapack]) {
-      logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
-      throw new Error(`Datapack ${datapack} already exists in the index`);
-    }
-    datapackIndex[datapack] = parsedCachedDatapack;
   }
   return datapackIndex;
 }
+async function getAllDatapacksInUserDirectory(userDirectory: string): Promise<string[]> {
+  return await getDirectories(userDirectory);
+}
 
-export async function getUserDirectory(uuid: string): Promise<string> {
-  const userDirectory = path.join(assetconfigs.uploadDirectory, uuid);
+export async function getPrivateUserDatapackDirectory(uuid: string): Promise<string> {
+  const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
+  if (!(await verifyFilepath(userDirectory))) {
+    throw new Error("Invalid filepath");
+  }
+  return userDirectory;
+}
+export async function getPublicUserDatapackDirectory(uuid: string): Promise<string> {
+  const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
   }
   return userDirectory;
 }
 
-export async function fetchUserDatapack(userDirectory: string, datapack: string): Promise<Datapack> {
-  const cachedDatapack = path.join(userDirectory, datapack, CACHED_USER_DATAPACK_FILENAME);
-  if (!(await verifyFilepath(cachedDatapack)) || !(await checkFileExists(cachedDatapack))) {
+/**
+ * get all the uuid directories, not the datapacks themselves
+ * @param uuid
+ * @returns
+ */
+async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
+  return [
+    await getPrivateUserDatapackDirectory(uuid).catch(() => ""),
+    await getPublicUserDatapackDirectory(uuid).catch(() => "")
+  ].filter(Boolean);
+}
+export async function fetchUserDatapackFilepath(uuid: string, datapack: string): Promise<string> {
+  // check both public and private directories
+  const directoriesToCheck: string[] = await getAllUserDatapackDirectories(uuid);
+  for (const directory of directoriesToCheck) {
+    if (directory) {
+      try {
+        const datapacks = await getDirectories(directory);
+        if (datapacks.includes(datapack)) {
+          return path.join(directory, datapack);
+        }
+      } catch (e) {
+        // eslint-disable-next-line
+      }
+    }
+  }
+  throw new Error(`File ${datapack} doesn't exist`);
+}
+
+export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
+  const directories = await getAllUserDatapackDirectories(uuid);
+  for (const directory of directories) {
+    if (directory) {
+      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+      if (await verifyFilepath(cachedDatapack)) {
+        const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
+        assertDatapack(parsedCachedDatapack);
+        return parsedCachedDatapack;
+      }
+    }
+  }
+  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
+  const cachedDatapack = path.join(datapackPath, CACHED_USER_DATAPACK_FILENAME);
+  if (!cachedDatapack || !(await verifyFilepath(cachedDatapack))) {
     throw new Error(`File ${datapack} doesn't exist`);
   }
   const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
-  assertPrivateUserDatapack(parsedCachedDatapack);
   assertDatapack(parsedCachedDatapack);
   return parsedCachedDatapack;
 }
 
 // here we rename a user datapack title which means we have to rename the folder and the file metadata (the key only)
-export async function renameUserDatapack(
-  userDirectory: string,
-  oldDatapack: string,
-  datapack: Datapack
-): Promise<void> {
-  const oldDatapackPath = path.join(userDirectory, oldDatapack);
-  const newDatapackPath = path.join(userDirectory, datapack.title);
-  const oldDatapackMetadata = await fetchUserDatapack(userDirectory, oldDatapack);
-  if (!(await verifyFilepath(oldDatapackPath))) {
+export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
+  const oldDatapackPath = await fetchUserDatapackFilepath(uuid, oldDatapack);
+  const oldDatapackMetadata = await fetchUserDatapack(uuid, oldDatapack);
+  const newDatapackPath = path.join(path.dirname(oldDatapackPath), datapack.title);
+  if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
     throw new Error("Invalid filepath");
   }
-  if (!path.resolve(newDatapackPath).startsWith(path.resolve(userDirectory))) {
-    throw new Error("Invalid filepath");
+  try {
+    await fetchUserDatapack(uuid, datapack.title);
+    throw new Error("Datapack with that title already exists");
+  } catch (e) {
+    // eslint-disable-next-line
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await writeUserDatapack(userDirectory, datapack).catch(async (e) => {
+  await writeUserDatapack(uuid, datapack).catch(async (e) => {
     await rename(newDatapackPath, oldDatapackPath);
     throw e;
   });
   await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
     await rename(newDatapackPath, oldDatapackPath);
     // revert the write if the metadata change fails
-    await writeUserDatapack(userDirectory, oldDatapackMetadata);
+    await writeUserDatapack(uuid, oldDatapackMetadata);
     throw e;
   });
 }
+export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
+  const directories = await getAllUserDatapackDirectories(uuid);
+  for (const directory of directories) {
+    // just to make sure it's not falsy ie ""
+    if (directory) {
+      await rm(directory, { recursive: true, force: true });
+    }
+  }
+}
 
-export async function writeUserDatapack(userDirectory: string, datapack: Datapack): Promise<void> {
-  const datapackPath = path.join(userDirectory, datapack.title, CACHED_USER_DATAPACK_FILENAME);
+export async function deleteUserDatapack(uuid: string, datapack: string): Promise<void> {
+  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
+  if (!(await verifyFilepath(datapackPath))) {
+    throw new Error("Invalid filepath");
+  }
+  await rm(datapackPath, { recursive: true, force: true });
+}
+
+export async function writeUserDatapack(uuid: string, datapack: Datapack): Promise<void> {
+  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack.title);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
