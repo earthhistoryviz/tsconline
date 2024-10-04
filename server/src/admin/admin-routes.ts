@@ -38,6 +38,7 @@ import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
+import { deleteAllUserDatapacks, deleteUserDatapack, fetchUserDatapackFilepath } from "../user/user-handler.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -160,21 +161,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    try {
-      let userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
-      if (!userDirectory.startsWith(resolve(assetconfigs.uploadDirectory))) {
-        reply.status(403).send({ error: "Directory traversal detected" });
-        return;
-      }
-      userDirectory = await realpath(userDirectory);
-      try {
-        await rm(userDirectory, { recursive: true, force: true });
-      } catch {
-        // eslint-disable-next-line no-empty
-      }
-    } catch {
-      // eslint-disable-next-line no-empty
-    }
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -236,13 +223,8 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const uploadDirectory = await realpath(resolve(assetconfigs.uploadDirectory));
-    const userDirectory = await realpath(resolve(assetconfigs.uploadDirectory, uuid));
-    const datapackDirectory = await realpath(resolve(userDirectory, "datapacks", datapack));
-    if (!userDirectory.startsWith(uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
-      reply.status(403).send({ error: "Directory traversal detected" });
-      return;
-    }
+    await deleteUserDatapack(uuid, datapack);
+    const datapackDirectory = await fetchUserDatapackFilepath(uuid, datapack);
     await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, relative(process.cwd(), datapackDirectory));
   } catch (error) {
     console.error(error);
