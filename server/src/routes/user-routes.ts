@@ -9,7 +9,7 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
-import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack, fetchUserDatapackFilepath } from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
