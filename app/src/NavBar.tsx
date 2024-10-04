@@ -87,7 +87,7 @@ export const NavBar = observer(function Navbar() {
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
               <Tab value={1} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
-              <Tab value={2} disableRipple label={t("navBar.datapacks")} to="/datapack" component={Link}/>
+              <Tab value={2} disableRipple label={t("navBar.datapacks")} to="/datapacks" component={Link}/>
               <Tab
                 value={3}
                 disableRipple
@@ -98,7 +98,7 @@ export const NavBar = observer(function Navbar() {
                 {...anchorProps}
               />
               <Tab value={4} disableRipple label={t("navBar.help")} to="/help" component={Link} />
-              <Tab value={5} disableRipple label={t("navBar.about")} to="/about" component={Link} />
+              <Tab value={6} disableRipple label={t("navBar.about")} to="/about" component={Link} />
               <PopupState variant="popover" popupId="demo-popup-menu">
                 {(popupState) => (
                   <React.Fragment>
@@ -167,7 +167,7 @@ export const NavBar = observer(function Navbar() {
         ) : (
           <Tab
             className="login-tab"
-            value={5}
+            value={7}
             label={t("login.signin")}
             icon={<AccountCircleIcon />}
             to="/login"
