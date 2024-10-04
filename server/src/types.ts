@@ -86,6 +86,7 @@ export type AssetConfig = {
   datapackImagesDirectory: string;
   adminConfigPath: string;
   privateDatapacksDirectory: string;
+  uploadDirectory: string;
   publicDatapacksDirectory: string;
 };
 

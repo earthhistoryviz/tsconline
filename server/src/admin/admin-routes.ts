@@ -14,9 +14,9 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { makeTempFilename, assetconfigs, checkFileExists } from "../util.js";
 import { createWriteStream } from "fs";
-import { readFile, realpath, rm } from "fs/promises";
+import { realpath, rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { serverDatapackIndex } from "../index.js";
@@ -28,7 +28,6 @@ import { promisify } from "util";
 import {
   SharedWorkshop,
   assertAdminSharedUser,
-  assertDatapackIndex,
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
@@ -38,7 +37,12 @@ import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
-import { deleteAllUserDatapacks, deleteUserDatapack, fetchUserDatapackFilepath } from "../user/user-handler.js";
+import {
+  deleteAllUserDatapacks,
+  deleteUserDatapack,
+  fetchAllUsersDatapacks,
+  fetchUserDatapackFilepath
+} from "../user/user-handler.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -416,19 +420,13 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
     reply.status(400).send({ error: "Missing uuid in body" });
     return;
   }
-  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "DatapackIndex.json");
-  if (!(await verifyFilepath(datapackIndexFilepath))) {
-    reply.send({});
+  try {
+    const datapackIndex = await fetchAllUsersDatapacks(uuid);
+    reply.send(datapackIndex);
+  } catch (e) {
+    reply.status(500).send({ error: "Unknown error fetching user datapacks" });
     return;
   }
-  let userDatapackIndex;
-  try {
-    userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-    assertDatapackIndex(userDatapackIndex);
-  } catch (e) {
-    reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
-  }
-  reply.send(userDatapackIndex);
 };
 
 /**
