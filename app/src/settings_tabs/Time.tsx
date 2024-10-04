@@ -8,6 +8,9 @@ import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
 import { useTranslation } from "react-i18next";
+import { toJS } from "mobx";
+import { TSCButton } from "../components";
+import { useNavigate, useLocation } from "react-router-dom";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -21,6 +24,8 @@ export const Time = observer(function Time() {
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
+  const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
   return (
     <div>
@@ -241,6 +246,17 @@ export const Time = observer(function Time() {
           </FormGroup>
         </div>
       </Box>
+      <div className="generate-button-container">
+        <TSCButton
+          buttonType="gradient"
+          className="generate-button"
+          onClick={async () => {
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            actions.initiateChartGeneration(navigate, location.pathname);
+          }}>
+          {t("button.generate")}
+        </TSCButton>
+      </div>
     </div>
   );
 });
