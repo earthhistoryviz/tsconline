@@ -11,8 +11,6 @@
   "fileMetadata": "assets/file-metadata.json",
   "datapackImagesDirectory": "assets/datapack_images",
   "adminConfigPath": "assets/admin-config.json",
-  // "publicDirectory": "assets/uploads/public",
-  // "publicUserDatapacksDirectory": "assets/uploads/public/datapacks",
   "uploadDirectory": "assets/uploads",
   "privateDatapacksDirectory": "assets/uploads/private",
   "publicDatapacksDirectory": "assets/uploads/public"

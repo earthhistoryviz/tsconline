@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, verifyFilepath, makeTempFilename } from "../util.js";
+import { assetconfigs, checkFileExists, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackIndex, DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
 import { exec } from "child_process";
@@ -10,15 +10,16 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
 import { loadDatapackIntoIndex } from "../load-packs.js";
-import { getFileNameFromCachedDatapack, uploadUserDatapackHandler } from "../upload-handlers.js";
+import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
-import { addPublicUserDatapack, loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { CACHED_USER_DATAPACK_FILENAME, PUBLIC_DATAPACK_INDEX_FILENAME } from "../constants.js";
+import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
+import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import {
+  deleteUserDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   fetchUserDatapackFilepath,
-  getDirectories,
+  getUserDatapackDirectory,
   renameUserDatapack,
   writeUserDatapack
 } from "../user/user-handler.js";
@@ -125,7 +126,6 @@ export const requestDownload = async function requestDownload(
   const { needEncryption } = request.query;
   const { datapack } = request.params;
   let datapackDir = "";
-  let userDir = "";
   let filepath = "";
   let filename = "";
   let encryptedFilepathDir = "";
@@ -138,7 +138,6 @@ export const requestDownload = async function requestDownload(
     }
     filename = metadata.storedFileName;
     datapackDir = await fetchUserDatapackFilepath(uuid, datapack);
-    userDir = path.dirname(filepath);
     filepath = path.join(datapackDir, filename);
     encryptedFilepathDir = path.join(datapackDir, "encrypted");
   } catch (e) {
@@ -276,8 +275,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
   }
 
   try {
-    const userDir = path.join(assetconfigs.uploadDirectory, uuid);
-    const datapackIndex = await fetchAllUsersDatapacks(userDir);
+    const datapackIndex = await fetchAllUsersDatapacks(uuid);
     reply.send(datapackIndex);
   } catch (e) {
     console.error(e);
@@ -381,7 +379,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   try {
-    datapackDir = path.join(userDir, datapackMetadata.title);
+    datapackDir = await getUserDatapackDirectory(uuid, isPublic);
     await mkdir(datapackDir, { recursive: true });
     await rename(filepath, path.join(datapackDir, datapackMetadata.storedFileName));
     filepath = path.join(datapackDir, datapackMetadata.storedFileName);
@@ -439,21 +437,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     await errorHandler("Failed to load decrypted datapack", 500);
     return;
   }
-  if (isPublic) {
-    try {
-      const publicDatapackPath = path.join(assetconfigs.publicDirectory, PUBLIC_DATAPACK_INDEX_FILENAME);
-      await mkdir(assetconfigs.publicDirectory, { recursive: true });
-      await addPublicUserDatapack(
-        datapackIndex[datapackMetadata.title]!,
-        publicDatapackPath,
-        filepath,
-        assetconfigs.publicUserDatapacksDirectory
-      );
-    } catch (e) {
-      await errorHandler("Could not write to public datapacks, please try again later", 500, e);
-      return;
-    }
-  }
   try {
     const datapack = datapackIndex[datapackMetadata.title];
     await writeFile(cachedDatapackFilepath, JSON.stringify(datapack, null, 2));
@@ -484,18 +467,14 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack);
   try {
-    if (!(await verifyFilepath(filepath))) {
-      reply.status(403).send({ error: "Invalid datapack/File doesn't exist" });
-      return;
-    }
+    await deleteUserDatapack(uuid, datapack);
   } catch (e) {
-    reply.status(500).send({ error: "Failed to verify file path" });
+    reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
   }
   try {
-    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, filepath);
+    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, await fetchUserDatapackFilepath(uuid, datapack));
   } catch (e) {
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;

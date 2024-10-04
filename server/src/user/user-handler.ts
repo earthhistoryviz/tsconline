@@ -1,15 +1,25 @@
-import { mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
+import { readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
-import { Datapack, DatapackIndex, assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
+import { assetconfigs, verifyFilepath } from "../util.js";
+import { Datapack, DatapackIndex, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey } from "../file-metadata-handler.js";
 
+/**
+ * get the directories at a source
+ * @param source
+ * @returns
+ */
 export async function getDirectories(source: string): Promise<string[]> {
   const entries = await readdir(source, { withFileTypes: true });
   return entries.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
 }
+/**
+ * fetch all datapacks a user has
+ * @param uuid
+ * @returns
+ */
 export async function fetchAllUsersDatapacks(uuid: string): Promise<DatapackIndex> {
   const directories = await getAllUserDatapackDirectories(uuid);
   const datapackIndex: DatapackIndex = {};
@@ -30,10 +40,12 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<DatapackInde
   }
   return datapackIndex;
 }
-async function getAllDatapacksInUserDirectory(userDirectory: string): Promise<string[]> {
-  return await getDirectories(userDirectory);
-}
 
+/**
+ * get the private and public user datapack directories
+ * @param uuid
+ * @returns
+ */
 export async function getPrivateUserDatapackDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
   if (!(await verifyFilepath(userDirectory))) {
@@ -41,6 +53,11 @@ export async function getPrivateUserDatapackDirectory(uuid: string): Promise<str
   }
   return userDirectory;
 }
+/**
+ * get the public user datapack directory
+ * @param uuid
+ * @returns
+ */
 export async function getPublicUserDatapackDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
   if (!(await verifyFilepath(userDirectory))) {
@@ -78,6 +95,22 @@ export async function fetchUserDatapackFilepath(uuid: string, datapack: string):
   throw new Error(`File ${datapack} doesn't exist`);
 }
 
+/**
+ * gets the user datapack directory, public or private
+ * @param uuid
+ * @param isPublic
+ * @returns
+ */
+export async function getUserDatapackDirectory(uuid: string, isPublic: boolean): Promise<string> {
+  return isPublic ? getPublicUserDatapackDirectory(uuid) : getPrivateUserDatapackDirectory(uuid);
+}
+
+/**
+ * fetches the user datapack, public or private
+ * @param uuid
+ * @param datapack
+ * @returns
+ */
 export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
   const directories = await getAllUserDatapackDirectories(uuid);
   for (const directory of directories) {
@@ -100,7 +133,12 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
   return parsedCachedDatapack;
 }
 
-// here we rename a user datapack title which means we have to rename the folder and the file metadata (the key only)
+/**
+ * rename a user datapack which means we have to rename the folder and the file metadata (the key only)
+ * @param uuid
+ * @param oldDatapack
+ * @param datapack
+ */
 export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackFilepath(uuid, oldDatapack);
   const oldDatapackMetadata = await fetchUserDatapack(uuid, oldDatapack);
@@ -126,6 +164,11 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, data
     throw e;
   });
 }
+
+/**
+ * deletes all the user datapacks, public and private
+ * @param uuid
+ */
 export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
   const directories = await getAllUserDatapackDirectories(uuid);
   for (const directory of directories) {
@@ -136,6 +179,11 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
   }
 }
 
+/**
+ * deletes a single user datapack
+ * @param uuid
+ * @param datapack
+ */
 export async function deleteUserDatapack(uuid: string, datapack: string): Promise<void> {
   const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
   if (!(await verifyFilepath(datapackPath))) {
@@ -144,6 +192,11 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   await rm(datapackPath, { recursive: true, force: true });
 }
 
+/**
+ * writes a user datapack to the file system
+ * @param uuid
+ * @param datapack
+ */
 export async function writeUserDatapack(uuid: string, datapack: Datapack): Promise<void> {
   const datapackPath = await fetchUserDatapackFilepath(uuid, datapack.title);
   if (!(await verifyFilepath(datapackPath))) {
