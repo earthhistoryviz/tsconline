@@ -9,7 +9,8 @@ import {
   Config,
   SettingsTabs,
   User,
-  GroupedEventSearchInfo
+  GroupedEventSearchInfo,
+  EditableDatapackMetadata
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -22,7 +23,7 @@ import type {
   Patterns,
   AdminSharedUser,
   DatapackConfigForChartRequest,
-  Workshop,
+  SharedWorkshop,
   ServerDatapackIndex,
   PrivateUserDatapackIndex,
   PublicUserDatapackIndex,
@@ -78,7 +79,12 @@ export type State = {
   admin: {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
-    workshops: Map<string, Workshop>;
+    workshops: SharedWorkshop[];
+  };
+  datapackProfilePage: {
+    editMode: boolean;
+    editableDatapackMetadata: EditableDatapackMetadata | null;
+    unsavedChanges: boolean;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -148,6 +154,7 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    uuid: "",
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"
@@ -156,7 +163,12 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: new Map<string, Workshop>()
+    workshops: []
+  },
+  datapackProfilePage: {
+    editMode: false,
+    editableDatapackMetadata: null,
+    unsavedChanges: false
   },
   chartLoading: false,
   madeChart: false,

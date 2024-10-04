@@ -22,7 +22,6 @@ export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(({ button
       ref={ref}
       disableRipple
       sx={{
-        ...props.sx,
         background: color["main"],
         color: color["contrastText"],
         ":hover": {
@@ -30,7 +29,8 @@ export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(({ button
         },
         ":active": {
           background: color["dark"]
-        }
+        },
+        ...props.sx
       }}
       variant="contained">
       {props.children}

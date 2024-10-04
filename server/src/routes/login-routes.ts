@@ -8,7 +8,8 @@ import {
   createVerification,
   deleteVerification,
   deleteUser,
-  checkForUsersWithUsernameOrEmail
+  checkForUsersWithUsernameOrEmail,
+  getAndHandleWorkshopEnd
 } from "../database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -205,13 +206,22 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword, isAdmin } = user;
+    const { email, username, pictureUrl, hashedPassword, isAdmin, workshopId } = user;
+    let workshopTitle = "";
+    if (workshopId) {
+      const workshop = await getAndHandleWorkshopEnd(workshopId);
+      if (workshop && new Date(workshop.start) <= new Date()) {
+        workshopTitle = workshop.title;
+      }
+    }
     const sharedUser: SharedUser = {
       email,
       username,
       pictureUrl,
       isGoogleUser: !hashedPassword,
-      isAdmin: Boolean(isAdmin)
+      isAdmin: Boolean(isAdmin),
+      ...(workshopTitle && { workshopTitle }),
+      uuid
     };
     assertSharedUser(sharedUser);
     reply.send({ authenticated: true, user: sharedUser });

@@ -1,4 +1,4 @@
-import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
+import { test, vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
@@ -11,6 +11,9 @@ import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
 import path from "path";
 import * as pathModule from "path";
+import * as userHandler from "../src/user/user-handler";
+import { Datapack } from "@tsconline/shared";
+import { User } from "../src/types";
 
 vi.mock("../src/upload-handlers", async () => {
   return {
@@ -80,6 +83,16 @@ vi.mock("../src/util", async (importOriginal) => {
     deleteDirectory: vi.fn().mockImplementation(() => {}),
     resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
+  };
+});
+
+vi.mock("../src/user/user-handler", () => {
+  return {
+    getUserDirectory: vi.fn().mockResolvedValue("userDirectory"),
+    getDirectories: vi.fn().mockResolvedValue([]),
+    fetchUserDatapack: vi.fn().mockResolvedValue({}),
+    renameUserDatapack: vi.fn().mockResolvedValue({}),
+    writeUserDatapack: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -170,10 +183,78 @@ const testUser = {
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: `/user/datapack/${filename}` },
+  { method: "GET", url: `/user/datapack/download/${filename}`, body: { title: "title" } },
   { method: "POST", url: "/user/datapack" },
-  { method: "DELETE", url: `/user/datapack/${filename}` }
+  { method: "DELETE", url: `/user/datapack/${filename}` },
+  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
+  { method: "GET", url: `/user/datapack/${filename}` }
 ];
+
+describe("get a single user datapack", () => {
+  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const findUser = vi.spyOn(database, "findUser");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 the user is not find", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(401);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+  });
+  it("should reply 500 if an error occurred in findUser", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]).mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Database error" });
+  });
+  it("should reply 500 if an error occurred in getUserDirectory", async () => {
+    getUserDirectory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Failed to get user directory" });
+  });
+  it("should reply 500 if an error occurred in fetchUserDatapack", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
+  });
+  it("should reply 200 if the datapack is successfully retrieved", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ title: "test" });
+  });
+});
 
 describe("verifySession tests", () => {
   describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
@@ -260,6 +341,173 @@ describe("verifyRecaptcha tests", () => {
   });
 });
 
+describe("edit datapack tests", () => {
+  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
+  const getDirectories = vi.spyOn(userHandler, "getDirectories");
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const renameUserDatapack = vi.spyOn(userHandler, "renameUserDatapack");
+  const writeUserDatapack = vi.spyOn(userHandler, "writeUserDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 400 if no datapack is provided", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/",
+      headers
+    });
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Missing datapack");
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if no body is provided", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers
+    });
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Missing body");
+    expect(response.statusCode).toBe(400);
+  });
+  test.each([{ storedFileName: "new_title" }, { originalFileName: "new_title" }, { size: 100 }])(
+    `should reply 400 if bad body (DatapackMetadata props)`,
+    async (body) => {
+      const response = await app.inject({
+        method: "PATCH",
+        url: "/user/datapack/test",
+        headers,
+        body
+      });
+      expect(getUserDirectory).not.toHaveBeenCalled();
+      expect(renameUserDatapack).not.toHaveBeenCalled();
+      expect(response.json().error).toBe("Cannot edit originalFileName, storedFileName, or size");
+    }
+  );
+  it("should reply 400 if body is not partial datapack metadata", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { wrong_key: "new_title" }
+    });
+    expect(response.json().error).toBe("Invalid body");
+    expect(getUserDirectory).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in getUserDirectory", async () => {
+    getUserDirectory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Failed to get user directory");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 400 if the datapack already exists", async () => {
+    getDirectories.mockResolvedValueOnce(["new_title"]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.json().error).toBe("Title already exists");
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in fetchUserDatapack", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Datapack does not exist or cannot be found");
+    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if an error occurred in renameUserDatapack", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    renameUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Failed to change datapack title.");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if an error occurred in writeUserDatapack", async () => {
+    writeUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { authoredBy: "author" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
+    expect(response.json().error).toBe("Failed to write datapack information to file system");
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if the datapack is successfully edited (no title)", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { authoredBy: "new_author" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ message: "Successfully updated test" });
+  });
+  it("should return 200 if the datapack is successfully edited (with title)", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({
+      title: "test",
+      authoredBy: "author"
+    } as Datapack);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/test",
+      headers,
+      body: { title: "new_title" }
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ message: "Successfully updated test" });
+  });
+});
+
 describe("requestDownload", () => {
   const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
   beforeEach(() => {
@@ -269,7 +517,7 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).not.toHaveBeenCalled();
@@ -282,7 +530,7 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).not.toHaveBeenCalled();
@@ -296,20 +544,20 @@ describe("requestDownload", () => {
     verifyFilepathSpy.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
+    expect(response.json().error).toBe("Invalid file path");
     expect(accessSpy).not.toHaveBeenCalled();
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(checkHeaderSpy).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(403);
-    expect(response.json().error).toBe("Invalid file path");
   });
   it("should reply 403 when encrypted filepath given is malicious", async () => {
     const resolveSpy = vi.spyOn(path, "resolve").mockReturnValueOnce("bad/file/path");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(resolveSpy).toHaveBeenCalledTimes(2);
@@ -334,7 +582,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(2);
@@ -352,7 +600,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(1);
@@ -366,7 +614,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(1);
@@ -388,7 +636,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -414,7 +662,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -442,7 +690,7 @@ describe("requestDownload", () => {
     });
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
 
@@ -465,7 +713,7 @@ describe("requestDownload", () => {
       });
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -478,7 +726,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
 
@@ -509,7 +757,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -531,7 +779,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
@@ -557,7 +805,7 @@ describe("requestDownload", () => {
     readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
@@ -582,7 +830,7 @@ describe("requestDownload", () => {
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
 
@@ -605,7 +853,7 @@ describe("requestDownload", () => {
     accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: `/user/datapack/download/${filename}`,
       headers
     });
     expect(readFileSpy).not.toHaveBeenCalled();
@@ -618,7 +866,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(readFileSpy).not.toHaveBeenCalled();
@@ -638,7 +886,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(accessSpy).toHaveBeenCalledTimes(2);
@@ -668,7 +916,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(response.statusCode).toBe(404);
@@ -697,7 +945,7 @@ describe("requestDownload", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}?needEncryption=true`,
+      url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(response.json().error).toBe("An error occurred: Error: Unknown Error");

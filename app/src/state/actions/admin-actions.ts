@@ -5,11 +5,11 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
   DatapackMetadata,
-  Workshop,
+  SharedWorkshop,
   assertAdminSharedUserArray,
   assertDatapackIndex,
-  assertWorkshop,
-  assertWorkshopArray,
+  assertSharedWorkshop,
+  assertSharedWorkshopArray,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -385,9 +385,8 @@ export const adminFetchWorkshops = action(async () => {
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
-      assertWorkshopArray(workshops);
-      adminDeleteWorkshops();
-      workshops.forEach((workshop) => adminUpdateWorkshop(workshop));
+      assertSharedWorkshopArray(workshops);
+      adminSetWorkshop(workshops);
     } else {
       displayServerError(
         await response.json(),
@@ -426,8 +425,8 @@ export const adminCreateWorkshop = action(
       });
       if (response.ok) {
         const workshop = (await response.json()).workshop;
-        assertWorkshop(workshop);
-        adminUpdateWorkshop(workshop);
+        assertSharedWorkshop(workshop);
+        runInAction(() => state.admin.workshops.push(workshop));
         return workshop.workshopId;
       } else {
         let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
@@ -451,12 +450,95 @@ export const adminCreateWorkshop = action(
   }
 );
 
-export const adminDeleteWorkshops = action(() => {
-  state.admin.workshops.clear();
+/**
+ * Edits a workshop
+ * @param updatedFields The fields to update
+ * @returns The updated workshop if successful, null otherwise
+ */
+export const adminEditWorkshop = action(
+  async (updatedFields: Partial<SharedWorkshop>): Promise<SharedWorkshop | null> => {
+    if (!updatedFields.workshopId) {
+      pushError(ErrorCodes.INVALID_FORM);
+      return null;
+    }
+    const index = state.admin.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
+    if (index === -1) {
+      pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
+      return null;
+    }
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminEditWorkshop");
+      if (!recaptchaToken) return null;
+      const response = await fetcher(`/admin/workshop`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify(updatedFields),
+        credentials: "include"
+      });
+      if (response.ok) {
+        const workshop = (await response.json()).workshop;
+        assertSharedWorkshop(workshop);
+        runInAction(() => (state.admin.workshops[index] = workshop));
+        return workshop;
+      } else {
+        let errorCode = ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED;
+        if (response.status === 409) {
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_ALREADY_EXISTS;
+        }
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+    return null;
+  }
+);
+
+/**
+ * Deletes a workshop
+ * @param workshopId The ID of the workshop to delete
+ */
+export const adminDeleteWorkshop = action(async (workshopId: number) => {
+  const index = state.admin.workshops.findIndex((w) => w.workshopId === workshopId);
+  if (index === -1) {
+    pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
+    return;
+  }
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminDeleteWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop`, {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ workshopId }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      runInAction(() => state.admin.workshops.splice(index, 1));
+      pushSnackbar("Workshop deleted successfully", "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_DELETE_WORKSHOP_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+  return;
 });
 
-export const adminUpdateWorkshop = action((workshop: Workshop) => {
-  state.admin.workshops.set(workshop.title, workshop);
+export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
+  state.admin.workshops = workshop;
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
