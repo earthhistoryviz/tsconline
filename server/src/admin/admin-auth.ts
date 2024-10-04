@@ -10,7 +10,9 @@ import {
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
   adminCreateWorkshop,
-  adminGetWorkshops
+  adminGetWorkshops,
+  adminEditWorkshop,
+  adminDeleteWorkshop
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -108,6 +110,24 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["title", "start", "end"]
   };
+  const adminEditWorkshopBody = {
+    type: "object",
+    properties: {
+      title: { type: "string" },
+      start: { type: "string" },
+      end: { type: "string" },
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
+  const adminDeleteWorkshopBody = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
+
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
@@ -171,5 +191,15 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop",
     { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit } },
     adminCreateWorkshop
+  );
+  fastify.patch(
+    "/workshop",
+    { schema: { body: adminEditWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminEditWorkshop
+  );
+  fastify.delete(
+    "/workshop",
+    { schema: { body: adminDeleteWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminDeleteWorkshop
   );
 };

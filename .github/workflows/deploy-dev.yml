@@ -58,18 +58,25 @@ jobs:
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            if [ ! -f "docker-compose.yml" ]; then
-              echo "Error: docker-compose.yml not found"
-              exit 1
-            fi
             if [ ! -f "docker-compose-server.yml" ]; then
               echo "Error: docker-compose-server.yml not found"
               exit 1
             fi
-            docker-compose -f docker-compose-server.yml restart
+
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Container is not running. Bringing up the container..."
+              docker-compose -f docker-compose-server.yml up -d
+              if [ $? -ne 0 ]; then
+                echo "Error: Failed to bring up the container."
+                exit 1
+              fi
+            else
+              echo "Container is already running. Restarting..."
+              docker-compose -f docker-compose-server.yml restart
+            fi
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
-
             sleep 5
 
             CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
@@ -78,7 +85,7 @@ jobs:
               exit 1
             fi
 
-            MAX_WAIT=240
+            MAX_WAIT=480
             INTERVAL=5
             ELAPSED=0
 
@@ -87,7 +94,7 @@ jobs:
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"
                 docker-compose -f docker-compose-server.yml logs --tail=200
-                docker-compose -f docker-compose-server.yml down
+                docker-compose -f docker-compose-server.yml stop
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"

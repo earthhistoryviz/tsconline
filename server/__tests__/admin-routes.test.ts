@@ -163,7 +163,8 @@ vi.mock("../src/database", async (importOriginal) => {
     findWorkshop: vi.fn().mockResolvedValue([]),
     updateUser: vi.fn().mockResolvedValue({}),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop))
+    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop)),
+    updateWorkshop: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -292,7 +293,13 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     method: "POST",
     url: "/admin/workshop",
     body: { title: "test", start: "2024-08-29T04:00:00.000Z", end: "2024-08-30T04:00:00.000Z" }
-  }
+  },
+  {
+    method: "PATCH",
+    url: "/admin/workshop",
+    body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
+  },
+  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1876,31 +1883,21 @@ describe("adminGetWorkshops", () => {
   });
   it("should return 200 if successful and workshop active as false", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshop]);
-    const formatDate = vi.spyOn(util, "formatDate");
-    formatDate.mockReturnValueOnce(testWorkshop.start).mockReturnValueOnce(testWorkshop.end);
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(formatDate).toHaveBeenCalledTimes(2);
-    expect(formatDate).toHaveBeenNthCalledWith(1, new Date(testWorkshop.start));
-    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(testWorkshop.end));
     expect(await response.json()).toEqual({ workshops: [{ ...testWorkshop, active: false }] });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and workshop active as true", async () => {
     findWorkshop.mockResolvedValueOnce([{ ...testWorkshop, start: mockDate.toISOString() }]);
-    const formatDate = vi.spyOn(util, "formatDate");
-    formatDate.mockReturnValueOnce(mockDate.toISOString()).mockReturnValueOnce(testWorkshop.end);
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(formatDate).toHaveBeenCalledTimes(2);
-    expect(formatDate).toHaveBeenNthCalledWith(1, mockDate);
-    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(testWorkshop.end));
     expect(await response.json()).toEqual({
       workshops: [{ ...testWorkshop, start: mockDate.toISOString(), active: true }]
     });
@@ -2019,8 +2016,6 @@ describe("adminCreateWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful", async () => {
-    const formatDate = vi.spyOn(util, "formatDate");
-    formatDate.mockReturnValueOnce(body.start).mockReturnValueOnce(body.end);
     createWorkshop.mockResolvedValueOnce(1);
     const response = await app.inject({
       method: "POST",
@@ -2030,9 +2025,219 @@ describe("adminCreateWorkshop", () => {
     });
     expect(createWorkshop).toHaveBeenCalledTimes(1);
     expect(createWorkshop).toHaveBeenCalledWith(body);
-    expect(formatDate).toHaveBeenNthCalledWith(1, new Date(body.start));
-    expect(formatDate).toHaveBeenNthCalledWith(2, new Date(body.end));
     expect(await response.json()).toEqual({ workshop: { ...testWorkshop, active: false } });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminEditWorkshop", () => {
+  const updateWorkshop = vi.spyOn(database, "updateWorkshop");
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const body = {
+    workshopId: testWorkshop.workshopId,
+    title: "new-title",
+    start: testWorkshop.start
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if incorrect body", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: {},
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'workshopId'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is empty", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...body, workshopId: null },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if title, start, and end are empty", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { workshopId: body.workshopId },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is an invalid date", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...body, start: "invalid" },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid start date" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 404 if workshop does not exist", async () => {
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Workshop not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 400 if end is an invalid date", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...body, end: "invalid" },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid end date" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is after end", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...body, start: testWorkshop.end, end: testWorkshop.start },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid end date" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 409 if workshop with title and dates already exists", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([{ ...body, end: testWorkshop.end }]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledTimes(2);
+    expect(findWorkshop).toHaveBeenNthCalledWith(2, { title: body.title, start: body.start, end: testWorkshop.end });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Workshop with same title and dates already exists" });
+    expect(response.statusCode).toBe(409);
+  });
+  it("should return 500 if findWorkshop throws an error", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]).mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful and update workshop", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(updateWorkshop).toHaveBeenCalledOnce();
+    expect(updateWorkshop).toHaveBeenCalledWith({ workshopId: body.workshopId }, { ...body, workshopId: undefined });
+    expect(await response.json()).toEqual({ workshop: { ...body, end: testWorkshop.end, active: false } });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminDeleteWorkshop", () => {
+  const deleteWorkshop = vi.spyOn(database, "deleteWorkshop");
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const body = {
+    workshopId: testWorkshop.workshopId
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if incorrect body", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/workshop",
+      payload: {},
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'workshopId'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is empty", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/workshop",
+      payload: { workshopId: null },
+      headers
+    });
+    expect(deleteWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing workshopId" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 404 if workshop does not exist", async () => {
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(deleteWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Workshop not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 500 if deleteWorkshop fails", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    deleteWorkshop.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(deleteWorkshop).toHaveBeenCalledTimes(1);
+    expect(deleteWorkshop).toHaveBeenCalledWith(body);
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(deleteWorkshop).toHaveBeenCalledTimes(1);
+    expect(deleteWorkshop).toHaveBeenCalledWith(body);
+    expect(await response.json()).toEqual({ message: "Workshop deleted" });
     expect(response.statusCode).toBe(200);
   });
 });
