@@ -1,4 +1,4 @@
-import { assertDatapack, assertPrivateUserDatapack, isDateValid } from "@tsconline/shared";
+import { assertDatapack, assertUserDatapack, isDatapackTypeString, isDateValid } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
 import { readFile, rm } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
@@ -16,7 +16,7 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   if (!datapack) {
     throw new Error("File is empty");
   }
-  assertPrivateUserDatapack(datapack);
+  assertUserDatapack(datapack);
   assertDatapack(datapack);
   return datapack.storedFileName;
 }
@@ -26,7 +26,20 @@ export async function uploadUserDatapackHandler(
   fields: Record<string, string>,
   bytes: number
 ): Promise<DatapackMetadata | void> {
-  const { title, description, authoredBy, contact, notes, date, filepath, originalFileName, storedFileName } = fields;
+  const {
+    title,
+    description,
+    authoredBy,
+    contact,
+    notes,
+    date,
+    filepath,
+    originalFileName,
+    storedFileName,
+    isPublic,
+    type,
+    uuid
+  } = fields;
   let { references, tags } = fields;
   if (
     !tags ||
@@ -36,12 +49,15 @@ export async function uploadUserDatapackHandler(
     !description ||
     !filepath ||
     !originalFileName ||
-    !storedFileName
+    !storedFileName ||
+    !isPublic ||
+    !type ||
+    !uuid
   ) {
     await userUploadHandler(
       reply,
       400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]",
+      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]",
       filepath
     );
     return;
@@ -52,6 +68,10 @@ export async function uploadUserDatapackHandler(
   }
   if (!bytes) {
     await userUploadHandler(reply, 400, "File is empty", filepath);
+    return;
+  }
+  if (!isDatapackTypeString(type)) {
+    await userUploadHandler(reply, 400, "Invalid type", filepath);
     return;
   }
   try {
@@ -81,6 +101,9 @@ export async function uploadUserDatapackHandler(
     authoredBy,
     references,
     tags,
+    type,
+    uuid,
+    isPublic: isPublic === "true",
     size: getBytes(bytes),
     ...(contact && { contact }),
     ...(notes && { notes }),

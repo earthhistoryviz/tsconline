@@ -423,10 +423,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   const datapackIndex: DatapackIndex = {};
   // check for if this user has a datapack index already
-  const success = await loadDatapackIntoIndex(datapackIndex, decryptedDir.replaceAll("\\", "/"), datapackMetadata, {
-    type: "private_user",
-    uuid
-  });
+  const success = await loadDatapackIntoIndex(datapackIndex, decryptedDir.replaceAll("\\", "/"), datapackMetadata);
   if (!datapackIndex[datapackMetadata.title] || !success) {
     await errorHandler("Failed to load decrypted datapack", 500);
     return;

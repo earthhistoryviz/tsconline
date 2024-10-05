@@ -90,9 +90,7 @@ export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
 try {
   for (const datapack of getAdminConfigDatapacks()) {
-    await loadDatapackIntoIndex(serverDatapackIndex, assetconfigs.decryptionDirectory, datapack, {
-      type: "server"
-    });
+    await loadDatapackIntoIndex(serverDatapackIndex, assetconfigs.decryptionDirectory, datapack);
   }
 } catch (e) {
   console.error("Error loading indexes: ", e);
