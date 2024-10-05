@@ -190,10 +190,11 @@ export const adminDeleteUser = async function adminDeleteUser(
  * @returns
  */
 export const adminModifyUser = async function adminModifyUser(request: FastifyRequest, reply: FastifyReply) {
+  type accountTypes = "pro" | "default";
   const { username, email, accountType, isAdmin } = request.body as {
     username: string;
     email: string;
-    accountType?: string;
+    accountType?: accountTypes;
     isAdmin?: number;
   };
 
@@ -209,7 +210,7 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
       return;
     }
 
-    const updateData: { accountType?: string; isAdmin?: number } = {};
+    const updateData: { accountType?: accountTypes; isAdmin?: number } = {};
     if (accountType) updateData.accountType = accountType;
     if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
 
