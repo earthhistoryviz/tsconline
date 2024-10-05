@@ -353,10 +353,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   const successful = await loadDatapackIntoIndex(
     serverDatapackIndex,
     assetconfigs.decryptionDirectory,
-    datapackMetadata,
-    {
-      type: "server"
-    }
+    datapackMetadata
   );
   if (!successful) {
     await errorHandler("Error parsing the datapack for chart generation");

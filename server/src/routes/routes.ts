@@ -15,11 +15,10 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { publicDatapackIndex, serverDatapackIndex } from "../index.js";
+import { serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { getDirectories } from "../user/user-handler.js";
-import { getAdminConfigDatapacks } from "../admin/admin-config.js";
+import { fetchUserDatapackFilepath } from "../user/user-handler.js";
 import { findUser } from "../database.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
@@ -214,57 +213,25 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const chartFilePath = chartUrlPath.slice(1);
   const settingsFilePath = chartDirFilePath + "/settings.tsc";
 
-  const userDatapacks = uuid ? await getDirectories(path.join(assetconfigs.uploadDirectory, uuid)) : [];
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
-  const adminConfigDatapacks = getAdminConfigDatapacks();
-  const serverDatapacks = adminConfigDatapacks.map((datapackInfo) => datapackInfo.title);
 
   for (const datapack of chartrequest.datapacks) {
+    let uuidFolder = uuid;
     switch (datapack.type) {
-      case "server":
-        if (serverDatapacks.includes(datapack.title)) {
-          datapacksToSendToCommandLine.push(`${assetconfigs.datapacksDirectory}/${datapack.storedFileName}`);
-        } else {
-          console.log("ERROR: datapack: ", datapack, " is not included in the server configuration");
-          console.log("adminconfig.datapacks: ", adminConfigDatapacks);
-          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-          reply.send({ error: "ERROR: failed to load datapacks" });
-          return;
-        }
-        break;
-      case "private_user":
-        if (uuid && userDatapacks.includes(datapack.title)) {
-          const filepath = path.join(assetconfigs.uploadDirectory, uuid, datapack.title, datapack.storedFileName);
-          const datapackDirectory = path.dirname(filepath);
-          datapacksToSendToCommandLine.push(filepath);
-          usedUserDatapackFilepaths.push(datapackDirectory);
-        } else {
-          console.log("ERROR: datapack: ", datapack, " is not included in the user configuration");
-          console.log("Available user datapacks: ", userDatapacks);
-          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-          reply.send({ error: "ERROR: failed to load datapacks" });
-          return;
-        }
-        break;
-      case "public_user":
-        if (publicDatapackIndex[datapack.title]) {
-          const datapackInfo = publicDatapackIndex[datapack.title]!;
-          datapacksToSendToCommandLine.push(
-            path.join(assetconfigs.publicDatapacksDirectory, datapackInfo.storedFileName)
-          );
-        } else {
-          console.log("ERROR: datapack: ", datapack, " is not included in the public user configuration");
-          console.log("Available user datapacks: ", userDatapacks);
-          console.log("chartrequest.datapacks: ", chartrequest.datapacks);
-          reply.send({ error: "ERROR: failed to load datapacks" });
-          return;
-        }
-        break;
       case "workshop":
-        reply.send({ error: "ERROR: failed to load datapacks, workshop datapacks do not exist." });
+        uuidFolder = "workshop";
+        break;
+      case "server":
+        uuidFolder = "server";
         break;
     }
+    if (!uuidFolder) {
+      reply.send({ error: "ERROR: unknown user associated with datapack" });
+      return;
+    }
+    const filepath = await fetchUserDatapackFilepath(uuidFolder, datapack.title);
+    datapacksToSendToCommandLine.push(filepath);
   }
   try {
     // update file metadata for all used datapacks (recently used datapacks will be updated)
