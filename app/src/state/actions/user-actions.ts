@@ -27,11 +27,11 @@ export const handleDatapackEdit = action(
     if (Object.keys(body).length === 0) {
       pushSnackbar("No changes made", "info");
       setDatapackProfilePageEditMode(false);
-      return;
+      return false;
     }
     try {
       const recaptcha = await getRecaptchaToken("handleDatapackEdit");
-      if (!recaptcha) return;
+      if (!recaptcha) return false;
       const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
         method: "PATCH",
         body: JSON.stringify(body),
@@ -46,17 +46,19 @@ export const handleDatapackEdit = action(
         setEditableDatapackMetadata(editedDatapack);
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
-        if (!datapack) return;
+        if (!datapack) return false;
         addDatapackToUserDatapackIndex(editedDatapack.title, datapack);
         if (originalDatapack.title !== editedDatapack.title) {
           removeDatapackFromUserDatapackIndex(originalDatapack.title);
         }
+        return true;
       } else {
         displayServerError(
           response,
           ErrorCodes.USER_EDIT_DATAPACK_FAILED,
           ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
         );
+        return false;
       }
     } catch (e) {
       pushError(ErrorCodes.SERVER_RESPONSE_ERROR);

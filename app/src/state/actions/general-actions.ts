@@ -18,7 +18,9 @@ import {
   assertServerDatapackWithBaseProps,
   assertPrivateUserDatapackIndex,
   ServerDatapackIndex,
-  PrivateUserDatapackIndex
+  PrivateUserDatapackIndex,
+  isServerDatapack,
+  isPublicUserDatapack
 } from "@tsconline/shared";
 
 import {
@@ -792,7 +794,8 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      ...(isUserDatapack(datapack) ? { uuid: datapack.uuid } : {})
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      isPublic: isPublicUserDatapack(datapack)
     })
   });
   if (!response.ok) {
