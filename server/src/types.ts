@@ -8,6 +8,8 @@ export interface Database {
   workshop: WorkshopTable;
 }
 
+export type accountTypes = "pro" | "default";
+
 export interface UserTable {
   userId: Generated<number>;
   username: string;
@@ -19,7 +21,7 @@ export interface UserTable {
   invalidateSession: number;
   isAdmin: number;
   workshopId: number;
-  accountType: string;
+  accountType: accountTypes;
 }
 
 export interface VerificationTable {

@@ -32,7 +32,7 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { NewUser } from "../types.js";
+import { accountTypes, NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
@@ -190,7 +190,6 @@ export const adminDeleteUser = async function adminDeleteUser(
  * @returns
  */
 export const adminModifyUser = async function adminModifyUser(request: FastifyRequest, reply: FastifyReply) {
-  type accountTypes = "pro" | "default";
   const { username, email, accountType, isAdmin } = request.body as {
     username: string;
     email: string;
