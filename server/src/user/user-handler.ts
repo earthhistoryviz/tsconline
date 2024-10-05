@@ -1,10 +1,10 @@
-import { readFile, readdir, rename, rm, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { assetconfigs, verifyFilepath } from "../util.js";
+import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { Datapack, DatapackIndex, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
-import { changeFileMetadataKey } from "../file-metadata-handler.js";
+import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 
 /**
  * get the directories at a source
@@ -46,8 +46,11 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<DatapackInde
  * @param uuid
  * @returns
  */
-export async function getPrivateUserDatapackDirectory(uuid: string): Promise<string> {
+export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
+  if (!(await verifyNonExistentFilepath(userDirectory))) {
+    mkdir(userDirectory, { recursive: true });
+  }
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
   }
@@ -58,8 +61,11 @@ export async function getPrivateUserDatapackDirectory(uuid: string): Promise<str
  * @param uuid
  * @returns
  */
-export async function getPublicUserDatapackDirectory(uuid: string): Promise<string> {
+export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
+  if (!(await verifyNonExistentFilepath(userDirectory))) {
+    mkdir(userDirectory, { recursive: true });
+  }
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
   }
@@ -73,8 +79,8 @@ export async function getPublicUserDatapackDirectory(uuid: string): Promise<stri
  */
 async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
   return [
-    await getPrivateUserDatapackDirectory(uuid).catch(() => ""),
-    await getPublicUserDatapackDirectory(uuid).catch(() => "")
+    await getPrivateUserUUIDDirectory(uuid).catch(() => ""),
+    await getPublicUserUUIDDirectory(uuid).catch(() => "")
   ].filter(Boolean);
 }
 export async function fetchUserDatapackFilepath(uuid: string, datapack: string): Promise<string> {
@@ -96,13 +102,13 @@ export async function fetchUserDatapackFilepath(uuid: string, datapack: string):
 }
 
 /**
- * gets the user datapack directory, public or private
+ * gets the user uuid directory, public or private
  * @param uuid
  * @param isPublic
  * @returns
  */
-export async function getUserDatapackDirectory(uuid: string, isPublic: boolean): Promise<string> {
-  return isPublic ? getPublicUserDatapackDirectory(uuid) : getPrivateUserDatapackDirectory(uuid);
+export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Promise<string> {
+  return isPublic ? getPublicUserUUIDDirectory(uuid) : getPrivateUserUUIDDirectory(uuid);
 }
 
 /**
@@ -175,6 +181,7 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
     // just to make sure it's not falsy ie ""
     if (directory) {
       await rm(directory, { recursive: true, force: true });
+      await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, directory);
     }
   }
 }
@@ -190,6 +197,7 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
     throw new Error("Invalid filepath");
   }
   await rm(datapackPath, { recursive: true, force: true });
+  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
 }
 
 /**
@@ -198,7 +206,7 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
  * @param datapack
  */
 export async function writeUserDatapack(uuid: string, datapack: Datapack): Promise<void> {
-  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack.title);
+  const datapackPath = path.join(await fetchUserDatapackFilepath(uuid, datapack.title), CACHED_USER_DATAPACK_FILENAME);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }

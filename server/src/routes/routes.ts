@@ -88,34 +88,26 @@ export const fetchImage = async function (request: FastifyRequest, reply: Fastif
     }
   };
   try {
-    const { datapackTitle, datapackFilename, imageName, uuid } = request.body as {
+    const { isPublic, datapackTitle, datapackFilename, imageName, uuid } = request.body as {
       datapackTitle: string;
       datapackFilename: string;
       imageName: string;
-      uuid?: string;
+      uuid: string;
+      isPublic: boolean;
     };
-    if (!datapackTitle || !imageName || !datapackFilename) {
+    if (!datapackTitle || !imageName || !datapackFilename || !uuid || !isPublic) {
       reply.status(400).send({ error: "Invalid request" });
     }
-    let imagePath = "";
-    if (uuid) {
-      imagePath = path.join(
-        assetconfigs.uploadDirectory,
-        uuid,
-        datapackTitle,
-        "decrypted",
-        path.parse(datapackFilename).name,
-        "datapack-images",
-        imageName
-      );
-    } else {
-      imagePath = path.join(
-        assetconfigs.decryptionDirectory,
-        path.parse(datapackFilename).name,
-        "datapack-images",
-        imageName
-      );
-    }
+    // uuid can be server or workshop
+    const imagePath = path.join(
+      assetconfigs.uploadDirectory,
+      uuid,
+      datapackTitle,
+      "decrypted",
+      path.parse(datapackFilename).name,
+      "datapack-images",
+      imageName
+    );
     const image = await tryReadFile(imagePath);
     if (!image) {
       reply.status(404).send({ error: "Image not found" });
@@ -259,7 +251,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         if (publicDatapackIndex[datapack.title]) {
           const datapackInfo = publicDatapackIndex[datapack.title]!;
           datapacksToSendToCommandLine.push(
-            path.join(assetconfigs.publicUserDatapacksDirectory, datapackInfo.storedFileName)
+            path.join(assetconfigs.publicDatapacksDirectory, datapackInfo.storedFileName)
           );
         } else {
           console.log("ERROR: datapack: ", datapack, " is not included in the public user configuration");

@@ -307,9 +307,10 @@ server.post(
           datapackTitle: { type: "string" },
           datapackFilename: { type: "string" },
           uuid: { type: "string" },
-          imageName: { type: "string" }
+          imageName: { type: "string" },
+          isPublic: { type: "boolean" }
         },
-        required: ["datapackTitle", "imageName", "datapackFilename"]
+        required: ["datapackTitle", "imageName", "datapackFilename", "isPublic", "uuid"]
       }
     }
   },

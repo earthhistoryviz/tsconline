@@ -8,7 +8,7 @@ import { DatapackIndex, DatapackMetadata, isPartialDatapackMetadata } from "@tsc
 import { exec } from "child_process";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { deleteDatapackFoundInMetadata, writeFileMetadata } from "../file-metadata-handler.js";
+import { writeFileMetadata } from "../file-metadata-handler.js";
 import { loadDatapackIntoIndex } from "../load-packs.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
@@ -19,7 +19,8 @@ import {
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   fetchUserDatapackFilepath,
-  getUserDatapackDirectory,
+  getPrivateUserUUIDDirectory,
+  getUserUUIDDirectory,
   renameUserDatapack,
   writeUserDatapack
 } from "../user/user-handler.js";
@@ -300,17 +301,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
-  let userDir: string;
+  const userDir = await getPrivateUserUUIDDirectory(uuid);
   let datapackDir: string = "";
   let filepath: string = "";
   let originalFilename: string = "";
-  try {
-    userDir = path.join(assetconfigs.uploadDirectory, uuid);
-    await mkdir(userDir, { recursive: true });
-  } catch (e) {
-    reply.status(500).send({ error: "Failed to create user directory with error " + e });
-    return;
-  }
   try {
     for await (const part of parts) {
       if (part.type === "file") {
@@ -379,7 +373,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   try {
-    datapackDir = await getUserDatapackDirectory(uuid, isPublic);
+    datapackDir = path.join(await getUserUUIDDirectory(uuid, isPublic), datapackMetadata.title);
     await mkdir(datapackDir, { recursive: true });
     await rename(filepath, path.join(datapackDir, datapackMetadata.storedFileName));
     filepath = path.join(datapackDir, datapackMetadata.storedFileName);
@@ -469,12 +463,6 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   }
   try {
     await deleteUserDatapack(uuid, datapack);
-  } catch (e) {
-    reply.status(500).send({ error: "There was an error deleting the datapack" });
-    return;
-  }
-  try {
-    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, await fetchUserDatapackFilepath(uuid, datapack));
   } catch (e) {
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;

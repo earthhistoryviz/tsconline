@@ -131,8 +131,8 @@ export const DatapackProfile = observer(() => {
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {
-      await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
-      if (state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
+      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
         navigate(`/datapack/${state.datapackProfilePage.editableDatapackMetadata.title}?index=${query.get("index")}`);
       }
     }

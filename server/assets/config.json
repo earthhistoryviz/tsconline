@@ -12,6 +12,7 @@
   "datapackImagesDirectory": "assets/datapack_images",
   "adminConfigPath": "assets/admin-config.json",
   "uploadDirectory": "assets/uploads",
+  "publicDirectory": "public",
   "privateDatapacksDirectory": "assets/uploads/private",
   "publicDatapacksDirectory": "assets/uploads/public"
 }
