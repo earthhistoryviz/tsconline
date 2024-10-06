@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 import { context } from "../state";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { Avatar, Box, Button, Dialog, Divider, IconButton, List, ListItem, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import {
   AdminSharedUser,
@@ -14,12 +14,10 @@ import {
   assertAdminSharedUser,
   isUserDatapack
 } from "@tsconline/shared";
-import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
+import { TSCButton, } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
-import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
-import { Close, Edit, FileUpload, PersonRemove, School, } from "@mui/icons-material";
-import { ShowWorkshopTitleRenderer } from "./AdminEditUserForm";
+import { ShowUserStatsRenderer } from "./AdminEditUserForm";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -81,7 +79,7 @@ const userColDefs: ColDef[] = [
     autoHeaderHeight: true,
     wrapHeaderText: true,
     flex: 1,
-    cellRenderer: ShowWorkshopTitleRenderer
+    cellRenderer: ShowUserStatsRenderer
   }
 ];
 const userDefaultColDefs = {
@@ -125,7 +123,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
-        components={{ ShowWorkshopTitleRenderer }}
+        components={{ ShowUserStatsRenderer }}
         onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
