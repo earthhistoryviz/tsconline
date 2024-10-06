@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
-import { Avatar, Box, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Divider, IconButton, List, ListItem, ListItemIcon, ListItemText, Menu, MenuItem, Select, Switch, TextField, Typography, useTheme } from "@mui/material";
+import { Avatar, Box, Button, Dialog, Divider, IconButton, List, ListItem, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
 import {
   AdminSharedUser,
@@ -14,13 +14,12 @@ import {
   assertAdminSharedUser,
   isUserDatapack
 } from "@tsconline/shared";
-import { CustomTooltip, TSCButton } from "../components";
+import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
-import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import MoreVertOutlinedIcon from '@mui/icons-material/MoreVertOutlined';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { Close, Delete, Edit, ExitToApp, FileUpload, FileUploadOutlined, PersonRemove, School, UploadFile } from "@mui/icons-material";
+import { Close, Edit, FileUpload, PersonRemove, School, } from "@mui/icons-material";
+import { ShowWorkshopTitleRenderer } from "./AdminEditUserForm";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -30,270 +29,6 @@ const checkboxRenderer = (params: { value: boolean }) => {
   }
 };
 
-
-type MoreCellRendererProps = {
-
-  data: AdminSharedUser;
-};
-
-const ShowWorkshopTitleRenderer: React.FC<MoreCellRendererProps> = (props) => {
-
-  const { data } = props;
-  const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    username: data.username,
-    email: data.email,
-    isAdmin: data.isAdmin,
-    pictureUrl: data.pictureUrl || null
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
-  const theme = useTheme();
-  const workshops = data.workshopTitle ? data.workshopTitle : ["No workshops enrolled"];
-  const [currentWorkshops, setCurrentWorkshops] = useState(workshops);
-  const worshopsList = () => {
-    return ((currentWorkshops[0] === "No workshops enrolled" && workshops.length === 1) || currentWorkshops.length == 0) ? <Typography ml={1}>No workshops enrolled</Typography> : (<List dense={true}>
-      {currentWorkshops.map((value, index) => (
-        <ListItem key={index}>
-          <School />
-          <Typography ml={1}>{value}</Typography>
-          {/* Quit/Leave Icon */}
-          <CustomTooltip title="Remove user from this workshop">
-            <IconButton onClick={() => handleRemoveWorkshop(value)} edge="end" aria-label="leave">
-              <PersonRemove />
-            </IconButton>
-          </CustomTooltip>
-        </ListItem>
-      ))}
-    </List>)
-  }
-
-  // Function to remove a workshop
-  const handleRemoveWorkshop = (title: string) => {
-    const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== title); // Remove the workshop at the given index
-    setCurrentWorkshops(updatedWorkshops); // Update the state
-  };
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    setOriginalUserInfo(userInfo);
-  };
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInfo({
-      ...userInfo,
-      [e.target.name]: e.target.value,
-    });
-  };
-  const handleSaveChanges = () => {
-    if (selectedFile) {
-      const newAvatarUrl = URL.createObjectURL(selectedFile); // Preview URL for the uploaded image
-      console.log(newAvatarUrl);
-      setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
-    }
-    setIsEditing(false); // Quit edit mode
-  };
-  const handleDiscardChanges = () => {
-    setUserInfo(originalUserInfo); // Reset to original data
-    setSelectedFile(null); // Clear any selected file
-    setIsEditing(false); // Quit edit mode
-  };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]); // Store the selected file
-    }
-  };
-  const handleOpen = () => {
-    setMoreUsersInfoFormOpen(true);
-  };
-  const handleClose = () => {
-    setMoreUsersInfoFormOpen(false);
-  }
-  return (
-    <><CustomTooltip title="Check Enrolled Workshop">
-      <IconButton onClick={handleOpen}>
-        <MoreVertOutlinedIcon />
-      </IconButton>
-    </CustomTooltip>
-      <Dialog
-        open={moreUsersInfoFormOpen}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <IconButton
-          onClick={handleClose}
-          sx={{ position: 'absolute', top: 8, right: 8 }}
-        >
-          <Close />
-        </IconButton>
-
-        {/* Overall Header */}
-        <Box textAlign={"center"} width="100%" pt={3} pr={3} pb={0} pl={3}>
-          <Typography variant="h5" mb={2} sx={{ fontWeight: 'bold' }}>
-            Stats of {data.username}
-          </Typography>
-        </Box>
-        {/* Basic Information Title */}
-        <Box textAlign="left" width="100%" pt={0} pr={3} pb={3} pl={3}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box display="flex" alignItems="center">
-              <Typography variant="h6">
-                Basic Information
-              </Typography>
-              <IconButton onClick={handleEditToggle} sx={{ ml: 1 }}>
-                <Edit />
-              </IconButton>
-            </Box>
-          </Box>
-
-          {/* Basic Information Section */}
-          <Box border={1} borderRadius={5} p={2} mb={2} borderColor="grey.400">
-            {/* User Avatar */}
-            <Box display="flex" alignItems="center" mb={2}>
-              <Box display="flex" alignItems="center" mb={2} position="relative">
-                <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {userInfo.pictureUrl ? <img src={userInfo.pictureUrl} alt={userInfo.username} /> : userInfo.username[0].toUpperCase()}
-                </Avatar>
-                {isEditing && (
-                  <Box position="absolute" bottom={-3} right={12} zIndex={1}>
-                    <CustomTooltip title="Upload avatar">
-                      <IconButton component="label" sx={{ padding: 0, backgroundColor: 'transparent', borderRadius: '50%' }}>
-                        <FileUpload fontSize="small" />
-                        <input type="file" hidden onChange={handleFileChange} accept="image/*" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                )}
-              </Box>
-
-              {isEditing ? (
-                <TextField
-                  label="Username"
-                  name="username"
-                  value={userInfo.username}
-                  onChange={handleInputChange}
-                />
-              ) : (
-                <Typography variant="h6">{userInfo.username}</Typography>
-              )}
-            </Box>
-
-            {/* User Email */}
-            <Box mb={1}>
-              {isEditing ? (
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={userInfo.email}
-                  onChange={handleInputChange}
-                  fullWidth
-                />
-              ) : (
-                <Typography variant="body1">
-                  <strong>Email:</strong> {userInfo.email}
-                </Typography>
-              )}
-            </Box>
-
-            {/* Admin Status */}
-            <Box display="flex" alignItems="center">
-              <Typography variant="body1" mr={1}>
-                <strong>Admin:</strong>
-              </Typography>
-              {isEditing ? (
-                <Select
-                  value={userInfo.isAdmin ? "Yes" : "No"}
-                  onChange={(e) => setUserInfo({ ...userInfo, isAdmin: e.target.value === "Yes" })}
-                >
-                  <MenuItem value="Yes">Yes</MenuItem>
-                  <MenuItem value="No">No</MenuItem>
-                </Select>
-              ) : (
-                <Typography variant="body1">
-                  {userInfo.isAdmin ? "Yes" : "No"}
-                </Typography>
-              )}
-            </Box></Box>
-          {isEditing && (
-            <Box display="flex" justifyContent="flex-end" mb={2}>
-              <Button variant="outlined" color="secondary" onClick={handleDiscardChanges} sx={{ mr: 1 }}>
-                Discard
-              </Button>
-              <Button variant="contained" color="primary" onClick={handleSaveChanges}>
-                Save Changes
-              </Button>
-            </Box>
-          )}
-
-          {/* Workshop Enrolled Title */}
-          <Typography variant="h6" mb={2}>
-            Workshop Enrolled
-          </Typography>
-
-          {/* Workshop Enrolled Section */}
-          <Box border={1} borderRadius={5} p={2} borderColor="grey.400">
-            {worshopsList()}
-          </Box>
-        </Box >
-      </Dialog >
-
-      {/*  <Dialog
-        open={moreUsersInfoFormOpen}
-        onClose={handleClose}
-        aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description"
-      >
-        <Box textAlign="center" width="100%">
-          <Typography variant="h5" mb="5px">
-            Stats of {data.username}
-          </Typography>
-        </Box >
-        <div>
-          <Typography variant="h5" mb="5px">
-            Basic Information
-          </Typography>
-        </div>
-        <div>
-          <Typography variant="h5" mb="5px">
-            Workshop Enrolled
-          </Typography>
-          <List dense={true}>
-            {workshops.map((value, index) => (
-              <ListItem key={index}>
-                <School />
-                <Typography>{value}</Typography>
-              </ListItem>
-            ))}
-          </List></div>
-
-      </Dialog > */}</>
-  );
-
-  /* return (
-    <PopupState variant="popover" popupId="demo-popup-menu">
-      {(popupState) => (
-        <React.Fragment>
-          <Button variant="text" {...bindTrigger(popupState)}>
-            <CustomTooltip title="Check Enrolled Workshop">
-              {/* <MoreVertIcon />
-              <MoreVertOutlinedIcon />
-            </CustomTooltip>
-          </Button>
-          <Menu {...bindMenu(popupState)}>
-            {workshops.map((value, index) => (
-              <MenuItem
-                key={index}
-                className="settings-sub-menu-item"
-              >
-                <Typography>{value}</Typography>
-              </MenuItem>
-            ))}
-          </Menu>
-        </React.Fragment>
-      )}
-    </PopupState>
-  ); */
-};
 
 const userColDefs: ColDef[] = [
   {
