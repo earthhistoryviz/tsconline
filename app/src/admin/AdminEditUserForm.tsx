@@ -10,7 +10,7 @@ type MoreCellRendererProps = {
     data: AdminSharedUser;
 };
 
-export const ShowWorkshopTitleRenderer: React.FC<MoreCellRendererProps> = (props) => {
+export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) => {
 
     const { data } = props;
     const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
@@ -25,17 +25,16 @@ export const ShowWorkshopTitleRenderer: React.FC<MoreCellRendererProps> = (props
     });
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
-    const workshops = data.workshopTitle ? data.workshopTitle : ["No workshops enrolled"];
+    const workshops = data.workshopTitle ? data.workshopTitle : ["No registered workshop"];
     const [currentWorkshops, setCurrentWorkshops] = useState(workshops);
     const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null); // Store the workshop title to confirm
     const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
     const worshopsList = () => {
-        return ((currentWorkshops[0] === "No workshops enrolled" && workshops.length === 1) || currentWorkshops.length == 0) ? <Typography ml={1}>No workshops enrolled</Typography> : (<List dense={true}>
+        return ((currentWorkshops[0] === "No registered workshop" && workshops.length === 1) || currentWorkshops.length == 0) ? <Typography ml={1}>No registered workshop</Typography> : (<List dense={true}>
             {currentWorkshops.map((value, index) => (
                 <ListItem key={index}>
                     <School />
                     <Typography ml={1}>{value}</Typography>
-                    {/* Quit/Leave Icon */}
                     <CustomTooltip title="Remove user from this workshop">
                         <IconButton onClick={() => handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
                             <PersonRemove />
@@ -259,7 +258,7 @@ export const ShowWorkshopTitleRenderer: React.FC<MoreCellRendererProps> = (props
 
                     {/* Workshop Enrolled Title */}
                     <Typography variant="h6" mb={2}>
-                        Workshop Enrolled
+                        Registered Workshops
                     </Typography>
 
                     {/* Workshop Enrolled Section */}
