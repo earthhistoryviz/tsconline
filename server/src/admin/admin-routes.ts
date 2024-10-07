@@ -506,7 +506,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           const { userId } = eachUser;
           const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (existingRelationship.length == 0) {
-            createUsersWorkshops({ userId: userId, workshopId: workshopId });
+            createUsersWorkshops({ userId: userId, workshopId: workshopId, workshopHasEnded: 0 });
             const newRelationship = await checkWorkshopHasUser(userId, workshopId);
             if (newRelationship.length !== 1) {
               reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
@@ -536,7 +536,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         }
         for (const eachUser of user) {
           const { userId } = eachUser;
-          createUsersWorkshops({ userId: userId, workshopId: workshopId });
+          createUsersWorkshops({ userId: userId, workshopId: workshopId, workshopHasEnded: 0 });
           const newRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (newRelationship.length !== 1) {
             reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
