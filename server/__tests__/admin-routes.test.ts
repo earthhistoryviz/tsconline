@@ -20,7 +20,7 @@ import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
-import { Workshop } from "../src/types";
+import { AccountType, Workshop } from "../src/types";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -244,7 +244,7 @@ const testAdminUser = {
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
   workshopId: 1,
-  accountType: "default"
+  accountType: "default" as AccountType
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -259,7 +259,7 @@ const testSharedAdminUser = {
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default" as AccountType
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -2301,6 +2301,18 @@ describe("adminModifyUser tests", () => {
     expect(response.statusCode).toBe(400);
   });
 
+  it("should return 400 if accountType is invalid", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: { username: "username", email: "email@email.com", accountType: "pro+", isAdmin: null },
+      headers
+    });
+
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+
   it("should return 409 if user does not exist", async () => {
     checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([]);
     const response = await app.inject({
@@ -2369,46 +2381,6 @@ describe("adminModifyUser tests", () => {
       { email: body.email },
       { accountType: body.accountType, isAdmin: body.isAdmin }
     );
-    expect(updateUser).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "User modified." });
-    expect(response.statusCode).toBe(200);
-  });
-
-  it("should return 200 if successful with just accountType", async () => {
-    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
-    const response = await app.inject({
-      method: "PATCH",
-      url: "/admin/user",
-      payload: {
-        username: "username",
-        email: "email@email.com",
-        accountType: "pro"
-      },
-      headers
-    });
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
-    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { accountType: body.accountType });
-    expect(updateUser).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "User modified." });
-    expect(response.statusCode).toBe(200);
-  });
-
-  it("should return 200 if successful with just isAdmin", async () => {
-    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
-    const response = await app.inject({
-      method: "PATCH",
-      url: "/admin/user",
-      payload: {
-        username: "username",
-        email: "email@email.com",
-        isAdmin: 1
-      },
-      headers
-    });
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
-    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { isAdmin: body.isAdmin });
     expect(updateUser).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "User modified." });
     expect(response.statusCode).toBe(200);

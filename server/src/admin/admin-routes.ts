@@ -32,7 +32,7 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { accountTypes, NewUser } from "../types.js";
+import { AccountType, isAccountType, NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
@@ -193,11 +193,17 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
   const { username, email, accountType, isAdmin } = request.body as {
     username: string;
     email: string;
-    accountType?: accountTypes;
+    accountType?: AccountType;
     isAdmin?: number;
   };
 
-  if (!email || !validator.isEmail(email) || (!accountType && isAdmin === undefined) || !username) {
+  if (
+    !email ||
+    !validator.isEmail(email) ||
+    (!accountType && isAdmin === undefined) ||
+    !username ||
+    (accountType && !isAccountType(accountType))
+  ) {
     reply.status(400).send({ error: "Missing/invalid required fields" });
     return;
   }
@@ -209,7 +215,7 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
       return;
     }
 
-    const updateData: { accountType?: accountTypes; isAdmin?: number } = {};
+    const updateData: { accountType?: AccountType; isAdmin?: number } = {};
     if (accountType) updateData.accountType = accountType;
     if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
 
