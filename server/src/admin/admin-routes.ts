@@ -70,6 +70,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
 
         return {
           ...displayedUser,
+          userId: userId,
           username: displayedUser.username,
           isGoogleUser: hashedPassword === null,
           isAdmin: user.isAdmin === 1,
@@ -480,7 +481,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        //await updateUser({ email }, { workshopId });
         for (const eachUser of user) {
           const { userId } = eachUser;
           const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
@@ -492,6 +492,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
               return;
             }
           } else if (existingRelationship.length > 1) {
+            //TODO: add test
             reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
             return;
           }
