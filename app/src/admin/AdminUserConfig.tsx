@@ -14,7 +14,7 @@ import {
   assertAdminSharedUser,
   isUserDatapack
 } from "@tsconline/shared";
-import { TSCButton, } from "../components";
+import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
 import { ShowUserStatsRenderer } from "./AdminEditUserForm";
@@ -26,7 +26,6 @@ const checkboxRenderer = (params: { value: boolean }) => {
     return <span className="ag-icon-cross" />;
   }
 };
-
 
 const userColDefs: ColDef[] = [
   {

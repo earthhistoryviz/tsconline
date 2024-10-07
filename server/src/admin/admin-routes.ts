@@ -4,7 +4,6 @@ import {
   createUser,
   findUser,
   deleteUser,
-  updateUser,
   createWorkshop,
   findWorkshop,
   getAndHandleWorkshopEnd,
@@ -13,7 +12,6 @@ import {
   checkWorkshopHasUser,
   createUsersWorkshops,
   findUserInUsersWorkshops,
-  deleteWorkshopInUsersWorkshops,
   deleteUserInUsersWorkshops
 } from "../database.js";
 import { randomUUID } from "node:crypto";
@@ -63,24 +61,15 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const users = await findUser({});
     const displayedUsers = await Promise.all(
       users.map(async (user) => {
-        //const { hashedPassword, workshopId, ...displayedUser } = user;
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUserInUsersWorkshops(userId);
-        //let workshopTitle = "";
-        let workshopTitle: string[] = [];
-        // if (workshopId) {
-        //   const workshop = await findWorkshop({ workshopId });
-        //   if (workshop && workshop.length === 1) {
-        //     workshopTitle = workshop[0]?.title ?? "";
-        //   }
-        // }
-
+        const workshopTitle: string[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
           if (workshop && workshop.length === 1) {
             if (workshop[0]?.title) {
-              workshopTitle.push(workshop[0].title)
+              workshopTitle.push(workshop[0].title);
             }
           }
         }
@@ -524,11 +513,9 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
               return;
             }
           } else if (existingRelationship.length > 1) {
-
             reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
             return;
           }
-
         }
       } else {
         await createUser({
