@@ -44,7 +44,14 @@ vi.mock("../src/database", async (importOriginal) => {
     deleteUser: vi.fn().mockResolvedValue({}),
     findWorkshop: vi.fn().mockResolvedValue([]),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null)
+    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null),
+    deleteUserInUsersWorkshops: vi.fn().mockResolvedValue({}),
+    deleteWorkshopInUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findWorkshopInUsersWorkshops: vi.fn().mockResolvedValue([]),
+    findUserInUsersWorkshops: vi.fn().mockResolvedValue([]),
+    handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -158,6 +165,11 @@ const workshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString()
+};
+const testUserWorkshop = {
+  userId: 123,
+  workshopId: 1,
+  workshopHasEnded: 0
 };
 
 beforeAll(async () => {
@@ -1856,10 +1868,10 @@ describe("login-routes tests", () => {
     });
 
     it("should return 200 and workshop title if user is in workshop and workshop is active", async () => {
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
-
+      vi.mocked(databaseModule.findUserInUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
       const response = await app.inject({
         method: "POST",
         url: "/session-check",
@@ -1877,13 +1889,13 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopTitle: "test",
+        workshopTitle: ["test"],
         uuid: testUser.uuid
       });
     });
 
     it("should return 200 and without workshop title if no workshop is provided", async () => {
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(null);
 
