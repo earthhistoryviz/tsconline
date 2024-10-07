@@ -8,7 +8,7 @@ export interface Database {
   workshop: WorkshopTable;
 }
 
-export type accountTypes = "pro" | "default";
+export type AccountType = "pro" | "default";
 
 export interface UserTable {
   userId: Generated<number>;
@@ -21,7 +21,7 @@ export interface UserTable {
   invalidateSession: number;
   isAdmin: number;
   workshopId: number;
-  accountType: accountTypes;
+  accountType: AccountType;
 }
 
 export interface VerificationTable {
@@ -167,4 +167,8 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.publicDirectory !== "string") throw 'AssetConfig must have a "publicDirectory" string';
   if (typeof o.publicUserDatapacksDirectory !== "string")
     throw 'AssetConfig must have a "publicUserDatapacksDirectory" string';
+}
+
+export function isAccountType(o: any): o is AccountType {
+  return o === "pro" || o === "default";
 }
