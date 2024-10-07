@@ -240,7 +240,7 @@ export async function checkWorkshopHasUser(userId: number, workshopId: number) {
   return await db
     .selectFrom("usersWorkshops")
     .selectAll()
-    .where((eb) => eb('userId', '=', userId).and('workshopId', '=', workshopId))
+    .where((eb) => eb("userId", "=", userId).and("workshopId", "=", workshopId))
     .execute();
 }
 
@@ -248,7 +248,7 @@ export async function findWorkshopInUsersWorkshops(workshopId: number) {
   return await db
     .selectFrom("usersWorkshops")
     .selectAll()
-    .where((eb) => eb('workshopId', '=', workshopId))
+    .where((eb) => eb("workshopId", "=", workshopId))
     .execute();
 }
 
@@ -256,7 +256,7 @@ export async function findUserInUsersWorkshops(userId: number) {
   return await db
     .selectFrom("usersWorkshops")
     .selectAll()
-    .where((eb) => eb('userId', '=', userId))
+    .where((eb) => eb("userId", "=", userId))
     .execute();
 }
 
