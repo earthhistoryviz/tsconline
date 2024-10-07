@@ -21,6 +21,7 @@ type MoreCellRendererProps = {
   data: AdminSharedUser;
 };
 
+//TODO: Need to implement backend
 export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) => {
   const { data } = props;
   const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
@@ -37,7 +38,7 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
   const workshops = data.workshopTitle ? data.workshopTitle : ["No registered workshop"];
   const [currentWorkshops, setCurrentWorkshops] = useState(workshops);
-  const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null); // Store the workshop title to confirm
+  const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const worshopsList = () => {
     return (currentWorkshops[0] === "No registered workshop" && workshops.length === 1) ||
@@ -63,8 +64,8 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
   // Function to remove a workshop
   const handleRemoveWorkshop = () => {
     if (selectedWorkshop) {
-      const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop); // Remove the workshop at the given index
-      setCurrentWorkshops(updatedWorkshops); // Update the state
+      const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop);
+      setCurrentWorkshops(updatedWorkshops);
     }
     handleCloseConfirmDialog();
   };

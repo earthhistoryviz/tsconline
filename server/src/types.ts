@@ -47,6 +47,7 @@ export interface WorkshopTable {
 export interface UsersWorkshopsTable {
   workshopId: number;
   userId: number;
+  workshopHasEnded: number;
 }
 
 export type User = Selectable<UserTable>;
