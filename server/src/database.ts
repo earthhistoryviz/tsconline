@@ -5,7 +5,8 @@ import {
   UpdatedUser,
   Verification,
   NewVerification,
-  NewWorkshop, newUsersWorkshops,
+  NewWorkshop,
+  newUsersWorkshops,
   Workshop,
   UpdatedWorkshop
 } from "./types.js";
@@ -54,6 +55,7 @@ Database Schema Details (Post-Migration):
 - usersWorkshops Table:
   - workshopId (integer): Non-nullable, links to the workshop table.
   - userId (integer): Non-nullable, links to the users table.
+  - workshopHasEnded (integer): Non-nullable, default is 0, indicates if the workshop has ended
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -260,6 +262,14 @@ export async function findUserInUsersWorkshops(userId: number) {
     .execute();
 }
 
+export async function handleEndedWorkshop(workshopId: number) {
+  return await db
+    .updateTable("usersWorkshops")
+    .set({ workshopHasEnded: 1 })
+    .where((eb) => eb("workshopId", "=", workshopId))
+    .execute();
+}
+
 export async function deleteWorkshopInUsersWorkshops(workshopId: number) {
   return await db.deleteFrom("usersWorkshops").where("workshopId", "=", workshopId).execute();
 }
@@ -304,7 +314,6 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
   return await query.execute();
 }
 
-//TODO: The functionality of this function needs to be changed in Jacqui's PR
 /**
  * Checks if a workshop has ended and performs necessary cleanup.
  * @param workshopId The workshop ID to check if it has ended
@@ -313,12 +322,12 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
 export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Workshop | null> {
   const workshop = (await findWorkshop({ workshopId }))[0];
   if (!workshop) {
-    await updateUser({ workshopId }, { workshopId: 0 });
+    await deleteWorkshopInUsersWorkshops(workshopId);
     return null;
   }
   const end = new Date(workshop.end);
   if (end < new Date()) {
-    await updateUser({ workshopId }, { workshopId: 0 });
+    await handleEndedWorkshop(workshopId);
     return null;
   }
   return workshop;

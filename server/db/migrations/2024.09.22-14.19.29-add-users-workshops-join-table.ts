@@ -6,6 +6,7 @@ export async function up(db: Kysely<any>): Promise<void> {
     .createTable("usersWorkshops")
     .addColumn("workshopId", "integer", (col) => col.notNull())
     .addColumn("userId", "integer", (col) => col.notNull())
+    .addColumn("workshopHasEnded", "integer", (col) => col.notNull().defaultTo(0))
     .execute();
   await db.schema.alterTable("users").dropColumn("workshopId").execute();
 }
