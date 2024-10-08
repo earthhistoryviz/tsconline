@@ -33,25 +33,25 @@ export async function getDirectories(source: string): Promise<string[]> {
  * @param uuid
  * @returns
  */
-export async function fetchAllUsersDatapacks(uuid: string): Promise<DatapackIndex> {
+export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> {
   const directories = await getAllUserDatapackDirectories(uuid);
-  const datapackIndex: DatapackIndex = {};
+  const datapacksArray: Datapack[] = [];
   for (const directory of directories) {
     const datapacks = await getDirectories(directory);
     for (const datapack of datapacks) {
       const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
       const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
       if (await verifyFilepath(cachedDatapack)) {
-        if (datapackIndex[datapack]) {
+        if (datapacksArray.find( (datapack) => datapack === parsedCachedDatapack.title)) {
           logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
           throw new Error(`Datapack ${datapack} already exists in the index`);
         }
         assertDatapack(parsedCachedDatapack);
-        datapackIndex[datapack] = parsedCachedDatapack;
+        datapacksArray.push(parsedCachedDatapack);
       }
     }
   }
-  return datapackIndex;
+  return datapacksArray;
 }
 
 /**

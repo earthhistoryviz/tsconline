@@ -19,8 +19,9 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import {
-  DatapackIndex,
+  Datapack,
   DatapackMetadata,
+  DatapackType,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
@@ -36,11 +37,10 @@ import { useTranslation } from "react-i18next";
 type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
-  index: DatapackIndex; // the index of datapacks to check duplicates
-  type?: "user" | "server";
+  type: DatapackType;
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, index, type = "user" }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, index });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
   const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
@@ -143,7 +143,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               />
             )}
           />
-          {type === "user" && (
+          {type.type === "user" && (
             <FormControlLabel
               name="public-datapack"
               control={

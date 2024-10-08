@@ -2,6 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
+  Datapack,
   DatapackIndex,
   DatapackInfoChunk,
   TimescaleItem,
@@ -54,19 +55,19 @@ export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
     incrementValue = allDatapackKeys.length - startIndex;
   }
   const keys = allDatapackKeys.slice(startIndex, startIndex + incrementValue);
-  const chunk: DatapackIndex = {};
+  const chunk: Datapack[] = [];
   for (const key of keys) {
     if (!serverDatapackIndex[key]) {
       reply.status(500).send({ error: "Failed to load datapack" });
       return;
     }
-    chunk[key] = serverDatapackIndex[key]!;
+    chunk.push(serverDatapackIndex[key]!);
   }
   if (Object.keys(chunk).length === 0) {
     reply.send({ datapackIndex: {}, totalChunks: 0 });
     return;
   }
-  const datapackInfoChunk: DatapackInfoChunk = { datapackIndex: chunk!, totalChunks: allDatapackKeys.length };
+  const datapackInfoChunk: DatapackInfoChunk = { datapacks: chunk!, totalChunks: allDatapackKeys.length };
   reply.status(200).send(datapackInfoChunk);
 };
 

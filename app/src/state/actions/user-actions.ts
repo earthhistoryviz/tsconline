@@ -1,11 +1,11 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
 import {
-  addDatapackToUserDatapackIndex,
+  addDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
-  removeDatapackFromUserDatapackIndex,
+  removeDatapack,
   setDatapackProfilePageEditMode,
   setEditableDatapackMetadata
 } from "./general-actions";
@@ -13,7 +13,7 @@ import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { state } from "../state";
 import { EditableDatapackMetadata } from "../../types";
-import { assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
+import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
 
 export const handleDatapackEdit = action(
   async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
@@ -47,9 +47,9 @@ export const handleDatapackEdit = action(
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
         if (!datapack) return false;
-        addDatapackToUserDatapackIndex(editedDatapack.title, datapack);
+        addDatapack(datapack);
         if (originalDatapack.title !== editedDatapack.title) {
-          removeDatapackFromUserDatapackIndex(originalDatapack.title);
+          removeDatapack(originalDatapack);
         }
         return true;
       } else {
@@ -78,7 +78,7 @@ export const fetchUserDatapack = action(async (datapack: string) => {
     });
     if (response.ok) {
       const data = await response.json();
-      assertPrivateUserDatapack(data);
+      assertUserDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -106,7 +106,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
     });
     if (response.ok) {
       runInAction(() => {
-        delete state.datapackCollection.privateUserDatapackIndex[datapack];
+        state.datapacks.filter((d) => d.title !== datapack);
       });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
