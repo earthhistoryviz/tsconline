@@ -91,11 +91,10 @@ export const fetchImage = async function (request: FastifyRequest, reply: Fastif
     if (!datapackTitle || !imageName || !datapackFilename || !uuid || !isPublic) {
       reply.status(400).send({ error: "Invalid request" });
     }
+    const datapackDir = await fetchUserDatapackFilepath(uuid, datapackTitle);
     // uuid can be server or workshop
     const imagePath = path.join(
-      assetconfigs.uploadDirectory,
-      uuid,
-      datapackTitle,
+      datapackDir,
       "decrypted",
       path.parse(datapackFilename).name,
       "datapack-images",
