@@ -9,6 +9,18 @@ import { spawn } from "child_process";
 import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
 import _ from "lodash";
 
+export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, datapack: string): Promise<boolean> {
+  const directories = await getAllUserDatapackDirectories(uuid);
+  for (const directory of directories) {
+    if (directory) {
+      const datapacks = await getDirectories(directory);
+      if (datapacks.includes(datapack)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 /**
  * TODO: WRITE TESTS
  * looks for a specific datapack in all the user directories
