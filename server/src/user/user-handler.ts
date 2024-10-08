@@ -1,11 +1,24 @@
-import { mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
+import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { Datapack, DatapackIndex, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
+import { spawn } from "child_process";
 
+export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, datapack: string): Promise<boolean> {
+  const directories = await getAllUserDatapackDirectories(uuid);
+  for (const directory of directories) {
+    if (directory) {
+      const datapacks = await getDirectories(directory);
+      if (datapacks.includes(datapack)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
 /**
  * get the directories at a source
  * @param source
@@ -211,4 +224,42 @@ export async function writeUserDatapack(uuid: string, datapack: Datapack): Promi
     throw new Error("Invalid filepath");
   }
   await writeFile(datapackPath, JSON.stringify(datapack, null, 2));
+}
+export async function decryptDatapack(filepath: string, outputDirectory: string): Promise<void> {
+  const filenameWithoutExtension = path.parse(filepath).name;
+  const args = [
+    "-jar",
+    assetconfigs.decryptionJar,
+    "-d",
+    filepath.replaceAll("\\", "/"),
+    "-dest",
+    outputDirectory.replaceAll("\\", "/")
+  ];
+  await new Promise<void>((resolve, reject) => {
+    const cmd = "java";
+    const javaProcess = spawn(cmd, args, { timeout: 1000 * 60 * 5, killSignal: "SIGKILL" });
+    let stdout = "";
+    let stderr = "";
+    javaProcess.stdout.on("data", (data) => {
+      stdout += data;
+    });
+    javaProcess.stderr.on("data", (data) => {
+      stderr += data;
+    });
+    javaProcess.on("error", (error) => {
+      reject(error);
+    });
+    javaProcess.on("close", (code, signal) => {
+      if (signal == "SIGKILL") {
+        reject(new Error("Process timed out"));
+        return;
+      }
+      console.log("Java process finished");
+      console.log("Java stdout: " + stdout);
+      console.log("Java stderr: " + stderr);
+      resolve();
+    });
+  });
+  await access(path.join(outputDirectory, filenameWithoutExtension));
+  await access(path.join(outputDirectory, filenameWithoutExtension, "datapacks"));
 }
