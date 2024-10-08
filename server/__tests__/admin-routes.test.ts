@@ -816,24 +816,20 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
-    expect(deleteUserDatapack).toBeCalledTimes(1);
-    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackDirectory).not.toBeCalled();
-    expect(await response.json()).toEqual({ error: "Unknown error" });
-    expect(response.statusCode).toEqual(500);
+    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
+    expect(response.statusCode).toEqual(403);
   });
-  it("should return 500 if fetchUserDatapackFilepath throws error", async () => {
-    fetchUserDatapackDirectory.mockRejectedValueOnce(new Error());
+  it("should return 500 if directory doesn't exist", async () => {
+    realpath.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
-    expect(deleteUserDatapack).toHaveBeenCalledTimes(1);
-    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
-    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
-    expect(deleteDatapackFoundInMetadata).not.toBeCalled();
+    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
+    expect(realpath).toBeCalledTimes(1);
+    expect(realpath).toBeCalledWith(resolve("testdir/uploadDirectory"));
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
@@ -846,10 +842,6 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
-    expect(deleteUserDatapack).toBeCalledTimes(1);
-    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
-    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
     expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ error: "Unknown error" });
@@ -863,10 +855,6 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
-    expect(deleteUserDatapack).toBeCalledTimes(1);
-    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
-    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
     expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ message: "Datapack deleted" });
@@ -892,15 +880,11 @@ describe("adminUploadServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author",
-    type: "user",
-    uuid: "test-uuid",
-    isPublic: false
+    authoredBy: "test-author"
   };
-  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
-    userHandlers,
-    "doesDatapackFolderExistInAllUUIDDirectories"
-  );
+  const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
+  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
+  const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
   const uploadUserDatapackHandler = vi
     .spyOn(uploadHandlers, "uploadUserDatapackHandler")
     .mockResolvedValue(testDatapackDescription);
@@ -1269,6 +1253,20 @@ describe("getUsers", () => {
 });
 
 describe("adminDeleteServerDatapack", () => {
+  const rm = vi.spyOn(fsPromises, "rm");
+  const testDatapackDescription: DatapackMetadata = {
+    title: "test-title",
+    description: "test-description",
+    originalFileName: "active-datapack.dpk",
+    storedFileName: "tempFilename",
+    size: "30MB",
+    date: "2021-01-01",
+    tags: ["test-tag"],
+    references: ["test-reference"],
+    contact: "test-contact",
+    notes: "test-notes",
+    authoredBy: "test-author"
+  };
   const removeAdminConfigDatapack = vi.spyOn(adminConfig, "removeAdminConfigDatapack");
   const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
   const datapackTitle = "test-datapack";
