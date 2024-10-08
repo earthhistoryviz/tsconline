@@ -3,7 +3,7 @@ import { getDirectories } from "./user/user-handler.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
 import { readdir, readFile, writeFile } from "fs/promises";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
-import { DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+import { DatapackIndex, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import chalk from "chalk";
 
@@ -34,19 +34,20 @@ try {
             const metadata = extraMetadataFromUnknown(cachedDatapack, {
               title: datapack,
               storedFileName: file,
-              ...(user === "user" ? { uuid: user } : {})
+              isPublic: directory.includes("public"),
+              ...(!/workshop|server/.test(user) ? { uuid: user, type: "user" } : {})
             });
-            const datapackIndex = {};
+            const datapackIndex: DatapackIndex = {};
             const successful = await loadDatapackIntoIndex(
               datapackIndex,
               path.join(datapackDir, "decrypted"),
               metadata
             );
-            if (!successful) {
+            if (!successful || !datapackIndex[metadata.title]) {
               console.error(`Failed to load datapack ${metadata.title}`);
               continue;
             }
-            await writeFile(cachedFilepath, JSON.stringify(metadata, null, 2));
+            await writeFile(cachedFilepath, JSON.stringify(datapackIndex[metadata.title]!, null, 2));
           } catch (e) {
             console.log(chalk.red(`Failed to load datapack ${datapack}`));
             console.error(e);
