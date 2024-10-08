@@ -131,17 +131,6 @@ export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Pro
  * @returns
  */
 export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
-  const directories = await getAllUserDatapackDirectories(uuid);
-  for (const directory of directories) {
-    if (directory) {
-      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
-      if (await verifyFilepath(cachedDatapack)) {
-        const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
-        assertDatapack(parsedCachedDatapack);
-        return parsedCachedDatapack;
-      }
-    }
-  }
   const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
   const cachedDatapack = path.join(datapackPath, CACHED_USER_DATAPACK_FILENAME);
   if (!cachedDatapack || !(await verifyFilepath(cachedDatapack))) {
@@ -165,11 +154,8 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, data
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
     throw new Error("Invalid filepath");
   }
-  try {
-    await fetchUserDatapack(uuid, datapack.title);
+  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, datapack.title)) {
     throw new Error("Datapack with that title already exists");
-  } catch (e) {
-    // eslint-disable-next-line
   }
   await rename(oldDatapackPath, newDatapackPath);
   await writeUserDatapack(uuid, datapack).catch(async (e) => {

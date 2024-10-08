@@ -64,7 +64,7 @@ try {
 function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetadata> = {}): DatapackMetadata {
   const metadata: DatapackMetadata = {
     title: "title" in datapack ? datapack.title : "",
-    authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "",
+    authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "Unknwon",
     contact: "contact" in datapack ? datapack.contact : "",
     notes: "notes" in datapack ? datapack.notes : "",
     date: "date" in datapack ? datapack.date : "",

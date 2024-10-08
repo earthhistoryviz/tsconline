@@ -42,7 +42,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
               : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
         }
       }}
-      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack))}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
         borderRight="1px solid"

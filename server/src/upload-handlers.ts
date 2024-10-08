@@ -158,11 +158,14 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
   const successful = await loadDatapackIntoIndex(datapackIndex, decryptDestination, metadata);
-  if (!successful) {
+  if (!successful || !datapackIndex[metadata.title]) {
     await rm(datapackFolder, { force: true });
     throw new Error("Failed to load datapack into index");
   }
-  await writeFile(path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME), JSON.stringify(metadata, null, 2));
+  await writeFile(
+    path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
+    JSON.stringify(datapackIndex[metadata.title]!, null, 2)
+  );
   if (isUserDatapack(metadata)) {
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   } else if (isServerDatapack(metadata) && !manual) {
