@@ -1,4 +1,4 @@
-import { action, runInAction, toJS } from "mobx";
+import { action, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -57,6 +57,7 @@ import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
+import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
 
@@ -104,14 +105,15 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action(
-  "removeDatapack",
-  async (datapack: DatapackMetadata | EditableDatapackMetadata) => {
-    state.datapacks = state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type);
-  }
-);
+export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
+  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+});
+export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
+  state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
+  fetchPublicDatapacks();
+});
 export const addDatapack = action("addDatapack", (datapack: Datapack) => {
-  state.datapacks.push(datapack);
+  state.datapacks.push(observable(datapack));
 });
 /**
  * Resets any user defined settings
@@ -230,6 +232,9 @@ export const uploadUserDatapack = action(
     formData.append("references", JSON.stringify(references));
     formData.append("tags", JSON.stringify(tags));
     formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(metadata.isPublic));
+    formData.append("type", metadata.type);
+    if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
     options?.isPublic && formData.append("isPublic", String(options.isPublic));
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -246,8 +251,15 @@ export const uploadUserDatapack = action(
       const data = await response.json();
 
       if (response.ok) {
-        fetchUserDatapacks();
-        if (options?.isPublic) fetchPublicDatapacks();
+        const datapack = await fetchUserDatapack(metadata.title);
+        if (!datapack) {
+          pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+          return;
+        }
+        addDatapack(datapack);
+        if (options?.isPublic) {
+          refreshPublicDatapacks();
+        }
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);

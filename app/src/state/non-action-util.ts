@@ -3,6 +3,9 @@ import { Datapack, DatapackConfigForChartRequest, isServerDatapack, isUserDatapa
 export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
+export function doesDatapackAlreadyExist(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+  return !!getDatapackFromArray(datapack, datapacks);
+}
 export function compareExistingDatapacks(a: DatapackConfigForChartRequest, b: DatapackConfigForChartRequest) {
   return (
     a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
@@ -20,6 +23,6 @@ export function getServerDatapacks(datapacks: Datapack[]) {
 export function isOwnedByUser(datapack: Datapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
-export function getNavigationRouteForDatapackProfile(datapack: Datapack) {
-  return `/datapack/${encodeURIComponent(datapack.title)}/?type=${datapack.type}`;
+export function getNavigationRouteForDatapackProfile(title: string, type: string) {
+  return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
 }

@@ -1,17 +1,17 @@
-import { action, runInAction } from "mobx";
+import { action } from "mobx";
 import { fetcher } from "../../util";
 import {
   addDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
+  removeAllErrors,
   removeDatapack,
   setDatapackProfilePageEditMode,
   setEditableDatapackMetadata
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { state } from "../state";
 import { EditableDatapackMetadata } from "../../types";
 import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
 
@@ -51,6 +51,7 @@ export const handleDatapackEdit = action(
         if (originalDatapack.title !== editedDatapack.title) {
           removeDatapack(originalDatapack);
         }
+        removeAllErrors();
         return true;
       } else {
         displayServerError(
@@ -105,9 +106,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       }
     });
     if (response.ok) {
-      runInAction(() => {
-        state.datapacks.filter((d) => d.title !== datapack);
-      });
+      removeDatapack({ title: datapack, type: "user" });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(

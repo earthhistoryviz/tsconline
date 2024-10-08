@@ -13,6 +13,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
   BaseDatapackProps,
+  DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
@@ -26,6 +27,7 @@ import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes } from "./util/error-codes";
+import { doesDatapackAlreadyExist, getNavigationRouteForDatapackProfile } from "./state/non-action-util";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -108,9 +110,26 @@ export const DatapackProfile = observer(() => {
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {
+      // types are really odd so I have decided to cast here, any other opinions are welcome
+      const tempDatapackConfig = {
+        ...state.datapackProfilePage.editableDatapackMetadata,
+        storedFileName: ""
+      } as DatapackConfigForChartRequest;
+      if (
+        state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title &&
+        doesDatapackAlreadyExist(tempDatapackConfig, state.datapacks)
+      ) {
+        actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+        return;
+      }
       const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
-      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
-        navigate(`/datapack/${state.datapackProfilePage.editableDatapackMetadata.title}?index=${query.get("index")}`);
+      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
+        navigate(
+          getNavigationRouteForDatapackProfile(
+            state.datapackProfilePage.editableDatapackMetadata.title,
+            query.get("type")!
+          )
+        );
       }
     }
   };

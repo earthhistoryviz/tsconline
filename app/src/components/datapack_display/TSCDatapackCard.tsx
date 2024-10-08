@@ -23,7 +23,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
     <Card
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
-      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack))}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>
