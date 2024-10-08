@@ -13,7 +13,6 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
   BaseDatapackProps,
-  Datapack,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
@@ -37,8 +36,7 @@ export const DatapackProfile = observer(() => {
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
     if (!id) return;
-    let datapack: Datapack | undefined;
-    datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
+    const datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
     return datapack;
   };
   const datapack = fetchDatapack();

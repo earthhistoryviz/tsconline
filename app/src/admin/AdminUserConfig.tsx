@@ -174,7 +174,8 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        if (!node.data?.storedFileName || !isOwnedByUser(node.data, state.user?.uuid)) throw new Error("Invalid datapack");
+        if (!node.data?.storedFileName || !isOwnedByUser(node.data, state.user?.uuid))
+          throw new Error("Invalid datapack");
         return { uuid: isUserDatapack(node.data) ? node.data.uuid : "", datapack: node.data.storedFileName };
       });
       const uuids = new Set<string>(datapacks.map((dp) => dp.uuid).filter((uuid) => !!uuid));

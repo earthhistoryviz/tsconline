@@ -20,7 +20,13 @@ import { toJS } from "mobx";
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { Work, Storage, Lock, Public } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { compareExistingDatapacks, getCurrentUserDatapacks, getPublicDatapacksWithoutCurrentUser, getServerDatapacks, isOwnedByUser } from "../state/non-action-util";
+import {
+  compareExistingDatapacks,
+  getCurrentUserDatapacks,
+  getPublicDatapacksWithoutCurrentUser,
+  getServerDatapacks,
+  isOwnedByUser
+} from "../state/non-action-util";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -77,13 +83,13 @@ export const Datapacks = observer(function Datapacks() {
         </ToggleButtonGroup>
       </div>
       <DatapackGroupDisplay
-      datapacks={getServerDatapacks(state.datapacks)}
+        datapacks={getServerDatapacks(state.datapacks)}
         header={t("settings.datapacks.title.server")}
         HeaderIcon={Storage}
       />
       {state.isLoggedIn && state.user && (
         <DatapackGroupDisplay
-        datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
+          datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
           header={t("settings.datapacks.title.your")}
           HeaderIcon={Lock}
         />
@@ -93,11 +99,7 @@ export const Datapacks = observer(function Datapacks() {
         header={t("settings.datapacks.title.public-user")}
         HeaderIcon={Public}
       />
-      <DatapackGroupDisplay
-        datapacks={[]}
-        header={t("settings.datapacks.title.workshop")}
-        HeaderIcon={Work}
-      />
+      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={Work} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
@@ -191,26 +193,13 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
       </Box>
       <CustomDivider className={styles.divider} />
       {datapacks.map((datapack) => {
-        const value = state.unsavedDatapackConfig.some(
-          (dp) => compareExistingDatapacks(dp, datapack))
+        const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
         return state.settingsTabs.datapackDisplayType === "rows" ? (
-          <TSCDatapackRow key={datapack.title} name={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+          <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-          <TSCCompactDatapackRow
-            key={datapack.title}
-            name={datapack.title}
-            datapack={datapack}
-            value={value}
-            onChange={onChange}
-          />
+          <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         ) : (
-          <TSCDatapackCard
-            key={datapack.title}
-            name={datapack.title}
-            datapack={datapack}
-            value={value}
-            onChange={onChange}
-          />
+          <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         );
       })}
       {numberOfDatapacks === 0 && (

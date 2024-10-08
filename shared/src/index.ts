@@ -811,7 +811,7 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
 export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
   if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
   if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackArray(o.datapacks)
+  assertDatapackArray(o.datapacks);
 }
 export function assertDatapackArray(o: any): asserts o is Datapack[] {
   if (!Array.isArray(o)) throw new Error("Datapack must be an array");

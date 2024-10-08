@@ -2,7 +2,7 @@ import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/prom
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
-import { Datapack, DatapackIndex, assertDatapack } from "@tsconline/shared";
+import { Datapack, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -42,7 +42,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
       const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
       const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
       if (await verifyFilepath(cachedDatapack)) {
-        if (datapacksArray.find( (datapack) => datapack === parsedCachedDatapack.title)) {
+        if (datapacksArray.find((datapack) => datapack === parsedCachedDatapack.title)) {
           logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
           throw new Error(`Datapack ${datapack} already exists in the index`);
         }
@@ -62,7 +62,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
   if (!(await verifyNonExistentFilepath(userDirectory))) {
-    mkdir(userDirectory, { recursive: true });
+    await mkdir(userDirectory, { recursive: true });
   }
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
@@ -77,7 +77,7 @@ export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string>
 export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
   if (!(await verifyNonExistentFilepath(userDirectory))) {
-    mkdir(userDirectory, { recursive: true });
+    await mkdir(userDirectory, { recursive: true });
   }
   if (!(await verifyFilepath(userDirectory))) {
     throw new Error("Invalid filepath");
@@ -211,6 +211,14 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   }
   await rm(datapackPath, { recursive: true, force: true });
   await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
+}
+
+export async function deleteServerDatapack(datapack: string): Promise<void> {
+  const datapackPath = await fetchUserDatapackFilepath("server", datapack);
+  if (!(await verifyFilepath(datapackPath))) {
+    throw new Error("Invalid filepath");
+  }
+  await rm(datapackPath, { recursive: true, force: true });
 }
 
 /**

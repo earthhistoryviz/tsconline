@@ -66,9 +66,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         rowSelection="multiple"
         rowDragManaged
         rowMultiSelectWithClick
-        rowData={Object.values(state.datapacks).filter(
-          (datapack) => datapack.type === "server"
-        )}
+        rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "server")}
       />
     </Box>
   );

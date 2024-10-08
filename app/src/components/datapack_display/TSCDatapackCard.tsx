@@ -9,12 +9,11 @@ import { DatapackMenu } from "../../settings_tabs/Datapack";
 import { getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
-export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
+export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);

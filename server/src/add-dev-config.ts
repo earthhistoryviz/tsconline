@@ -1,9 +1,11 @@
 import path from "path";
 import { AdminConfigType, assertAdminConfig } from "./types.js";
 import { readFile, rm, writeFile } from "fs/promises";
-import { checkFileExists } from "./util.js";
+import { assetconfigs, checkFileExists, loadAssetConfigs } from "./util.js";
 import { assertDatapackMetadataArray } from "@tsconline/shared";
 import chalk from "chalk";
+import { setupNewDatapackDirectoryInUUIDDirectory } from "./upload-handlers.js";
+import { deleteServerDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
 
 const adminConfigPath = path.resolve(process.cwd(), "assets", "admin-config.json");
 const devConfigPath = path.resolve(process.cwd(), "assets", "dev-config.json");
@@ -61,6 +63,43 @@ try {
     datapacks: adminConfig.datapacks.concat(unaddedDatapacks)
   };
   await writeFile(adminConfigPath, JSON.stringify(newAdminConfig, null, 2));
+  await loadAssetConfigs();
+  for (const datapack of newAdminConfig.datapacks) {
+    console.log("\n======================================================================\n");
+    try {
+      if (!(await checkFileExists(path.join(assetconfigs.datapacksDirectory, datapack.storedFileName)))) {
+        console.log(chalk.red(`Datapack ${datapack.title} does not exist in the datapacks directory`));
+        continue;
+      }
+      // Check if the datapack already exists in all UUID directories, only overwrite if the --overwrite flag is present
+      if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapack.title)) {
+        if (args.includes("--overwrite")) {
+          await deleteServerDatapack(datapack.title);
+        } else {
+          console.log(chalk.yellow("Datapack already exists in all UUID directories, skipping..."));
+          continue;
+        }
+      }
+      await setupNewDatapackDirectoryInUUIDDirectory(
+        "server",
+        path.join(assetconfigs.datapacksDirectory, datapack.storedFileName),
+        datapack,
+        true
+      );
+      console.log(
+        chalk.blueBright(
+          `Added ${datapack.title} to the server's ${datapack.isPublic ? "public" : "private "} directory`
+        )
+      );
+    } catch (e) {
+      console.error(e);
+      console.log(
+        chalk.red(
+          `Error adding ${datapack.title} to the server's ${datapack.isPublic ? "public" : "private "} directory`
+        )
+      );
+    }
+  }
 } catch (e) {
   console.error("Error adding dev config to admin config", e);
   console.error("Exiting...");
