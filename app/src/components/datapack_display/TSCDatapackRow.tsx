@@ -15,13 +15,12 @@ import { context } from "../../state";
 import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 
-export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
+export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();

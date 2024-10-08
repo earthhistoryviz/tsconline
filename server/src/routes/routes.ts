@@ -1,14 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
-import {
-  Datapack,
-  DatapackIndex,
-  DatapackInfoChunk,
-  TimescaleItem,
-  assertChartRequest,
-  assertTimescale
-} from "@tsconline/shared";
+import { Datapack, DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";

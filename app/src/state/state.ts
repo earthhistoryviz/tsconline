@@ -24,10 +24,6 @@ import type {
   AdminSharedUser,
   DatapackConfigForChartRequest,
   SharedWorkshop,
-  ServerDatapackIndex,
-  PrivateUserDatapackIndex,
-  PublicUserDatapackIndex,
-  WorkshopDatapackIndex,
   Datapack
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";

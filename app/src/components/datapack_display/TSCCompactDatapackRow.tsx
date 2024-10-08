@@ -14,13 +14,11 @@ import { context } from "../../state";
 import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
 
 type TSCCompactDatapackRowProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
-  name,
   datapack,
   value,
   onChange

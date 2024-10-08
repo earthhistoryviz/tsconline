@@ -19,7 +19,6 @@ import CloseIcon from "@mui/icons-material/Close";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import {
-  Datapack,
   DatapackMetadata,
   DatapackType,
   MAX_DATAPACK_TAGS_ALLOWED,

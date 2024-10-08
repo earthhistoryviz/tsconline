@@ -1,10 +1,12 @@
-import { Datapack, DatapackConfigForChartRequest, DatapackMetadata, isServerDatapack, isUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isServerDatapack, isUserDatapack } from "@tsconline/shared";
 
 export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
 export function compareExistingDatapacks(a: DatapackConfigForChartRequest, b: DatapackConfigForChartRequest) {
-  return a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true);
+  return (
+    a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
+  );
 }
 export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid === uuid);

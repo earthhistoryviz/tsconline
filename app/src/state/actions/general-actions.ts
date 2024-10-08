@@ -3,7 +3,6 @@ import {
   SharedUser,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  DatapackIndex,
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
@@ -15,13 +14,10 @@ import {
   assertDatapackIndex,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  assertPrivateUserDatapackIndex,
-  ServerDatapackIndex,
-  PrivateUserDatapackIndex,
   isServerDatapack,
   assertServerDatapack,
   assertDatapack,
-  assertDatapackArray,
+  assertDatapackArray
 } from "@tsconline/shared";
 
 import {
@@ -71,7 +67,7 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapack(data)
+      assertServerDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -108,9 +104,12 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action("removeDatapack", async (datapack: DatapackMetadata | EditableDatapackMetadata) => {
-  state.datapacks = state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type);
-});
+export const removeDatapack = action(
+  "removeDatapack",
+  async (datapack: DatapackMetadata | EditableDatapackMetadata) => {
+    state.datapacks = state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type);
+  }
+);
 export const addDatapack = action("addDatapack", (datapack: Datapack) => {
   state.datapacks.push(datapack);
 });
@@ -937,7 +936,6 @@ export const setDefaultUserState = action(() => {
 export const removeUserDatapacks = action((uuid: string) => {
   state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
 });
-
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
 export const getInitialDarkMode = () => {

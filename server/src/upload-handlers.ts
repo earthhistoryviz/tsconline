@@ -8,7 +8,7 @@ import {
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { copyFile, readFile, rm, writeFile } from "fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
@@ -140,7 +140,8 @@ export async function uploadUserDatapackHandler(
 export async function setupNewDatapackDirectoryInUUIDDirectory(
   uuid: string,
   sourceFilePath: string,
-  metadata: DatapackMetadata
+  metadata: DatapackMetadata,
+  manual?: boolean // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
 ) {
   if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
     throw new Error("Datapack already exists");
@@ -148,20 +149,23 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const datapackIndex: DatapackIndex = {};
   const directory = await getUserUUIDDirectory(uuid, metadata.isPublic);
   const datapackFolder = path.join(directory, metadata.title);
+  await mkdir(datapackFolder, { recursive: true });
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
-  const decryptDestination = path.join(sourceFileDestination, "decrypted");
+  const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
-  await rm(sourceFilePath, { force: true });
+  if (!manual) {
+    await rm(sourceFilePath, { force: true });
+  }
   await decryptDatapack(sourceFileDestination, decryptDestination);
   const successful = await loadDatapackIntoIndex(datapackIndex, decryptDestination, metadata);
   if (!successful) {
-    await rm(sourceFileDestination, { force: true });
+    await rm(datapackFolder, { force: true });
     throw new Error("Failed to load datapack into index");
   }
+  await writeFile(path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME), JSON.stringify(metadata, null, 2));
   if (isUserDatapack(metadata)) {
-    await writeFile(path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME), JSON.stringify(metadata, null, 2));
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
-  } else if (isServerDatapack(metadata)) {
+  } else if (isServerDatapack(metadata) && !manual) {
     await addAdminConfigDatapack(metadata);
   }
   return datapackIndex;
