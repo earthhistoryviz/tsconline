@@ -1,26 +1,21 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { access, rm, mkdir, readFile, writeFile, rename } from "fs/promises";
+import { access, rm, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackIndex, DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
-import { exec } from "child_process";
+import { DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
-import { writeFileMetadata } from "../file-metadata-handler.js";
-import { loadDatapackIntoIndex } from "../load-packs.js";
-import { uploadUserDatapackHandler } from "../upload-handlers.js";
+import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import {
   deleteUserDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   fetchUserDatapackFilepath,
   getPrivateUserUUIDDirectory,
-  getUserUUIDDirectory,
   renameUserDatapack,
   writeUserDatapack
 } from "../user/user-handler.js";
@@ -295,14 +290,12 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
 
   async function errorHandler(message: string, errorStatus: number, e?: unknown) {
     e && console.error(e);
-    await rm(datapackDir, { recursive: true, force: true });
     reply.status(errorStatus).send({ error: message });
   }
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
   const userDir = await getPrivateUserUUIDDirectory(uuid);
-  let datapackDir: string = "";
   let filepath: string = "";
   let originalFilename: string = "";
   try {
@@ -352,7 +345,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  const isPublic = fields.isPublic === "true";
   const filename = uploadedFile.filename;
   fields.storedFileName = filename;
   fields.originalFileName = originalFilename;
@@ -373,70 +365,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   try {
-    datapackDir = path.join(await getUserUUIDDirectory(uuid, isPublic), datapackMetadata.title);
-    await mkdir(datapackDir, { recursive: true });
-    await rename(filepath, path.join(datapackDir, datapackMetadata.storedFileName));
-    filepath = path.join(datapackDir, datapackMetadata.storedFileName);
-  } catch (e) {
-    filepath && (await rm(filepath, { force: true }));
-    await rm(datapackDir, { recursive: true, force: true });
-    reply.status(500).send({ error: "Failed to create and move the datapack to the correct directory." });
-    return;
-  }
-  const decryptedDir = path.join(datapackDir, "decrypted");
-  const decryptedFilepathDir = path.join(decryptedDir, path.parse(filename).name);
-  const cachedDatapackFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
-
-  try {
-    await new Promise<void>((resolve, reject) => {
-      const cmd =
-        `java -jar ${assetconfigs.decryptionJar} ` +
-        // Decrypting these datapacks:
-        `-d "${filepath.replaceAll("\\", "/")}" ` +
-        // Tell it where to send the datapacks
-        `-dest "${decryptedDir.replaceAll("\\", "/")}" `;
-      console.log("Calling Java decrypt.jar: ", cmd);
-      exec(cmd, function (error, stdout, stderror) {
-        console.log("Java decrypt.jar finished, sending reply to browser");
-        if (error) {
-          console.error("Java error param: " + error);
-          console.error("Java stderr: " + stderror);
-          reject(error);
-        } else {
-          console.log("Java stdout: " + stdout);
-          resolve();
-        }
-      });
-    });
-  } catch (e) {
-    await errorHandler("Failed to decrypt datapacks with error " + e, 500, e);
-    return;
-  }
-  //verify decrypted directory
-  try {
-    await access(decryptedFilepathDir);
-    await access(path.join(decryptedFilepathDir, "datapacks"));
-  } catch (e) {
-    await errorHandler("Failed to decrypt file", 500);
-    return;
-  }
-
-  const datapackIndex: DatapackIndex = {};
-  // check for if this user has a datapack index already
-  const success = await loadDatapackIntoIndex(datapackIndex, decryptedDir.replaceAll("\\", "/"), datapackMetadata);
-  if (!datapackIndex[datapackMetadata.title] || !success) {
-    await errorHandler("Failed to load decrypted datapack", 500);
-    return;
-  }
-  try {
-    const datapack = datapackIndex[datapackMetadata.title];
-    await writeFile(cachedDatapackFilepath, JSON.stringify(datapack, null, 2));
-  } catch (e) {
-    await errorHandler("Failed to save index", 500, e);
-    return;
-  }
-  try {
-    await writeFileMetadata(assetconfigs.fileMetadata, filename, datapackDir, uuid);
+    await setupNewDatapackDirectoryInUUIDDirectory(uuid, filepath, datapackMetadata);
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;

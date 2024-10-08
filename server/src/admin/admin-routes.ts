@@ -14,25 +14,22 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists } from "../util.js";
+import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
-import { realpath, rm } from "fs/promises";
+import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { serverDatapackIndex } from "../index.js";
-import { loadDatapackIntoIndex } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
-import { execFile } from "node:child_process";
-import { promisify } from "util";
 import {
   SharedWorkshop,
   assertAdminSharedUser,
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
+import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
-import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
@@ -40,6 +37,7 @@ import "dotenv/config";
 import {
   deleteAllUserDatapacks,
   deleteUserDatapack,
+  doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks,
   fetchUserDatapackFilepath
 } from "../user/user-handler.js";
@@ -249,7 +247,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let decryptedFilepath: string | undefined;
   let originalFileName: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  const datapacks = getAdminConfigDatapacks();
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -259,11 +256,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
       filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(storedFileName).name);
-      if (
-        !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
-        !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
-      ) {
+      if (!filepath.startsWith(resolve(assetconfigs.datapacksDirectory))) {
         reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
@@ -308,55 +301,27 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   if (!datapackMetadata) {
     return;
   }
-  if (
-    (await checkFileExists(filepath)) &&
-    (await checkFileExists(decryptedFilepath)) &&
-    datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
-    serverDatapackIndex[datapackMetadata.title]
-  ) {
+  if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
     reply.status(409).send({ error: "Datapack already exists" });
     return;
   }
   const errorHandler = async (error: string) => {
-    if (!filepath || !decryptedFilepath || !storedFileName || !datapackMetadata)
+    if (!filepath || !storedFileName || !datapackMetadata)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
-    await rm(decryptedFilepath, { force: true, recursive: true });
     if (serverDatapackIndex[datapackMetadata.title]) {
       delete serverDatapackIndex[datapackMetadata.title];
     }
     reply.status(500).send({ error });
   };
   try {
-    const { stdout, stderr } = await promisify(execFile)("java", [
-      "-jar",
-      assetconfigs.decryptionJar,
-      "-d",
-      filepath!.replaceAll("\\", "/"),
-      "-dest",
-      assetconfigs.decryptionDirectory.replaceAll("\\", "/")
-    ]);
-    if (stdout) console.log(stdout);
-    if (stderr) {
-      throw new Error(stderr);
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory("server", filepath, datapackMetadata);
+    if (!datapackIndex[datapackMetadata.title]) {
+      throw new Error("Datapack not found in index");
     }
+    serverDatapackIndex[datapackMetadata.title] = datapackIndex[datapackMetadata.title]!;
   } catch (error) {
-    await errorHandler("Error decrypting file");
-    return;
-  }
-  try {
-    await realpath(decryptedFilepath);
-  } catch (e) {
-    await errorHandler("File was not decrypted properly");
-    return;
-  }
-  const successful = await loadDatapackIntoIndex(
-    serverDatapackIndex,
-    assetconfigs.decryptionDirectory,
-    datapackMetadata
-  );
-  if (!successful) {
-    await errorHandler("Error parsing the datapack for chart generation");
+    await errorHandler("Error seting up UUID Directory");
     return;
   }
   try {
