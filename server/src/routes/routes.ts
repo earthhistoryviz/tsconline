@@ -224,8 +224,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.send({ error: "ERROR: unknown user associated with datapack" });
       return;
     }
-    const filepath = await fetchUserDatapackFilepath(uuidFolder, datapack.title);
-    datapacksToSendToCommandLine.push(filepath);
+    const datapackDir = await fetchUserDatapackFilepath(uuidFolder, datapack.title);
+    datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
   }
   try {
     // update file metadata for all used datapacks (recently used datapacks will be updated)

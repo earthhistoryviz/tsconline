@@ -7,9 +7,9 @@ import chalk from "chalk";
 import { setupNewDatapackDirectoryInUUIDDirectory } from "./upload-handlers.js";
 import { deleteServerDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
 
-const adminConfigPath = path.resolve(process.cwd(), "assets", "admin-config.json");
+export const adminConfigPath = path.resolve(process.cwd(), "assets", "admin-config.json");
 const devConfigPath = path.resolve(process.cwd(), "assets", "dev-config.json");
-async function readAdminConfig() {
+export async function readAdminConfig() {
   let adminConfig: AdminConfigType = { datapacks: [] };
   if (await checkFileExists(adminConfigPath)) {
     adminConfig = JSON.parse(await readFile(adminConfigPath, "utf8"));
@@ -18,7 +18,7 @@ async function readAdminConfig() {
   return adminConfig;
 }
 
-async function readDevConfig() {
+export async function readDevConfig() {
   if (!(await checkFileExists(devConfigPath))) {
     throw new Error("Dev config file does not exist");
   }
