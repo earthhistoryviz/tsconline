@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { devSafeUrl } from "../../util";
@@ -12,6 +12,7 @@ import Color from "color";
 import Lottie from "../TSCLottie";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import { context } from "../../state";
+import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
   name: string;
@@ -24,7 +25,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
 
@@ -42,7 +43,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
               : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
         }
       }}
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack))}>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
         borderRight="1px solid"
@@ -74,7 +75,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
-      {isPrivateUserDatapack(datapack) && (
+      {isOwnedByUser(datapack, state.user?.uuid) && (
         <div
           className={styles.right}
           onClick={(e) => {

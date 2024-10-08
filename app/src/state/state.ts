@@ -27,7 +27,8 @@ import type {
   ServerDatapackIndex,
   PrivateUserDatapackIndex,
   PublicUserDatapackIndex,
-  WorkshopDatapackIndex
+  WorkshopDatapackIndex,
+  Datapack
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -103,12 +104,7 @@ export type State = {
   config: Config;
   prevConfig: Config;
   presets: Presets;
-  datapackCollection: {
-    serverDatapackIndex: ServerDatapackIndex;
-    privateUserDatapackIndex: PrivateUserDatapackIndex;
-    publicUserDatapackIndex: PublicUserDatapackIndex;
-    workshopDatapackIndex: WorkshopDatapackIndex;
-  };
+  datapacks: Datapack[];
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -222,12 +218,7 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
-  datapackCollection: {
-    serverDatapackIndex: {},
-    privateUserDatapackIndex: {},
-    publicUserDatapackIndex: {},
-    workshopDatapackIndex: {}
-  },
+  datapacks: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []

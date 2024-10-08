@@ -14,14 +14,17 @@ import {
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import {
-  addDatapackToServerDatapackIndex,
+  addDatapack,
   fetchServerDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
-  removeAllErrors
+  removeAllErrors,
+  removeDatapack
 } from "./general-actions";
 import { State } from "../state";
+import { getDatapackFromArray } from "../non-action-util";
+import { EditableDatapackMetadata } from "../../types";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -219,7 +222,7 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
   }
 });
 
-export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => {
+export const adminDeleteServerDatapacks = action(async (datapacks: DatapackMetadata[] | EditableDatapackMetadata[]) => {
   const recaptchaToken = await getRecaptchaToken("adminDeleteServerDatapacks");
   if (!recaptchaToken) return;
   let deletedAllDatapacks = true;
@@ -254,7 +257,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
       } else {
         deletedNoDatapacks = false;
         runInAction(() => {
-          delete state.datapackCollection.serverDatapackIndex[datapack];
+          removeDatapack(datapack);
         });
       }
     } catch (error) {
@@ -276,7 +279,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
 export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
   const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
   if (!recaptchaToken) return;
-  if (state.datapackCollection.serverDatapackIndex[metadata.title]) {
+  if (getDatapackFromArray(metadata, state.datapacks)) {
     pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
     return;
   }
@@ -307,7 +310,7 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
       if (!pack) {
         return;
       }
-      addDatapackToServerDatapackIndex(title, pack);
+      addDatapack(pack);
       pushSnackbar("Successfully uploaded " + title + " datapack", "success");
     } else {
       displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);

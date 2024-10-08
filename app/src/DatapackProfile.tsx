@@ -38,28 +38,7 @@ export const DatapackProfile = observer(() => {
   const fetchDatapack = () => {
     if (!id) return;
     let datapack: Datapack | undefined;
-    switch (query.get("index")) {
-      case "server":
-        datapack = state.datapackCollection.serverDatapackIndex[id];
-        break;
-      case "public_user":
-        datapack = state.datapackCollection.publicUserDatapackIndex[id];
-        break;
-      case "private_user":
-        datapack = state.datapackCollection.privateUserDatapackIndex[id];
-        break;
-      case "workshop":
-        datapack = state.datapackCollection.workshopDatapackIndex[id];
-        break;
-      default:
-        datapack =
-          state.datapackCollection.serverDatapackIndex[id] ||
-          state.datapackCollection.publicUserDatapackIndex[id] ||
-          state.datapackCollection.privateUserDatapackIndex[id] ||
-          state.datapackCollection.workshopDatapackIndex[id] ||
-          null;
-        break;
-    }
+    datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
     return datapack;
   };
   const datapack = fetchDatapack();

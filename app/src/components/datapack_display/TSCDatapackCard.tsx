@@ -6,6 +6,7 @@ import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
+import { getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
   name: string;
@@ -23,7 +24,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
     <Card
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack))}>
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>

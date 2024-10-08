@@ -52,7 +52,7 @@ export type SuccessfulServerResponse = {
 };
 
 export type DatapackInfoChunk = {
-  datapackIndex: DatapackIndex;
+  datapacks: Datapack[];
   totalChunks: number;
 };
 export type MapPackInfoChunk = {
@@ -90,7 +90,7 @@ type UserDatapack = {
 };
 export type DatapackType = ServerDatapack | WorkshopDatapack | UserDatapack;
 export type DatapackTypeString = DatapackType["type"];
-export type Datapack = DatapackType & BaseDatapackProps;
+export type Datapack = BaseDatapackProps;
 
 export type ServerDatapackIndex = {
   [name: string]: BaseDatapackProps;
@@ -221,6 +221,7 @@ export type SubBlockInfo = {
 export type DatapackConfigForChartRequest = {
   storedFileName: string;
   title: string;
+  isPublic: boolean;
 } & DatapackType;
 
 export type ChartRequest = {
@@ -619,6 +620,7 @@ export function assertDatapackConfigForChartRequest(o: any): asserts o is Datapa
   if (typeof o.storedFileName !== "string")
     throwError("DatapackConfigForChartRequest", "storedFileName", "string", o.storedFileName);
   if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
+  if (typeof o.isPublic !== "boolean") throwError("DatapackConfigForChartRequest", "isPublic", "boolean", o.isPublic);
   assertDatapackType(o);
 }
 
@@ -809,7 +811,13 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
 export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
   if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
   if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackIndex(o.datapackIndex);
+  assertDatapackArray(o.datapacks)
+}
+export function assertDatapackArray(o: any): asserts o is Datapack[] {
+  if (!Array.isArray(o)) throw new Error("Datapack must be an array");
+  for (const datapack of o) {
+    assertDatapack(datapack);
+  }
 }
 
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
