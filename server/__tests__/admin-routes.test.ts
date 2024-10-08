@@ -20,6 +20,7 @@ import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
+import * as userHandlers from "../src/user/user-handler";
 import { User, Workshop } from "../src/types";
 
 vi.mock("node:child_process", async () => {
@@ -39,6 +40,15 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     assertDatapackIndex: vi.fn().mockReturnValue(true),
     assertSharedWorkshop: vi.fn().mockImplementation(actual.assertSharedWorkshop),
     assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray)
+  };
+});
+
+vi.mock("../src/user/user-handler", async () => {
+  return {
+    deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
+    fetchUserDatapackFilepath: vi.fn().mockResolvedValue(""),
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    deleteAllUserDatapacks: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -73,7 +83,8 @@ vi.mock("path", async (importOriginal) => {
   return {
     ...actual,
     resolve: vi.fn().mockImplementation(actual.resolve),
-    join: vi.fn().mockImplementation((...args) => args.join("/"))
+    join: vi.fn().mockImplementation((...args) => args.join("/")),
+    relative: vi.fn().mockImplementation(actual.relative)
   };
 });
 
@@ -589,9 +600,8 @@ describe("adminCreateUser tests", () => {
 describe("adminDeleteUser tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const deleteUser = vi.spyOn(database, "deleteUser");
-  const realpath = vi.spyOn(fsPromises, "realpath");
   const deleteAllUserMetadata = vi.spyOn(fileMetadataHandler, "deleteAllUserMetadata");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const deleteAllUserDatapacks = vi.spyOn(userHandlers, "deleteAllUserDatapacks");
   const body = { uuid: "test" };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -620,22 +630,6 @@ describe("adminDeleteUser tests", () => {
     });
     expect(await response.json()).toEqual({ error: "Missing uuid" });
     expect(response.statusCode).toBe(400);
-  });
-  it("should return 403 if uuid attempts a directory traversal", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: { uuid: "../" },
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: "../" });
-    expect(deleteUser).toHaveBeenCalledOnce();
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: "../" });
-    expect(realpath).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toBe(403);
   });
   it("should return 404 if user not found", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
@@ -726,9 +720,24 @@ describe("adminDeleteUser tests", () => {
     });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 even if deleteAllUserDatapacks throws error", async () => {
+    deleteAllUserDatapacks.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(deleteAllUserDatapacks).toHaveBeenCalledTimes(1);
+    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User deleted" });
+    expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful", async () => {
     const response = await app.inject({
@@ -737,54 +746,10 @@ describe("adminDeleteUser tests", () => {
       payload: body,
       headers
     });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
+    expect(deleteAllUserDatapacks).toHaveBeenCalledTimes(1);
     expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true });
-    expect(await response.json()).toEqual({ message: "User deleted" });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 even if no upload directory is found", async () => {
-    realpath.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: body,
-      headers
-    });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
-    expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "User deleted" });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 if removing user directory throws error", async () => {
-    rm.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: body,
-      headers
-    });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
-    expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true });
     expect(await response.json()).toEqual({ message: "User deleted" });
     expect(response.statusCode).toBe(200);
   });
@@ -795,13 +760,17 @@ describe("adminDeleteUserDatapack", () => {
     uuid: "test-uuid",
     datapack: "test-datapack"
   };
-  const realpath = vi.spyOn(fsPromises, "realpath");
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
-  const relativeDatapackDirectory = normalize(
-    join("testdir", "uploadDirectory", body.uuid, "datapacks", body.datapack)
-  );
+  const deleteUserDatapack = vi.spyOn(userHandlers, "deleteUserDatapack");
+  const fetchUserDatapackFilepath = vi.spyOn(userHandlers, "fetchUserDatapackFilepath");
+  const relative = vi.spyOn(path, "relative");
+  const originalEnv = { ...process.env };
+  process.cwd = () => "testdir";
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  afterAll(() => {
+    process.env = originalEnv;
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -832,31 +801,37 @@ describe("adminDeleteUserDatapack", () => {
     expect(await response.json()).toEqual({ error: "Missing uuid or datapack id" });
     expect(response.statusCode).toEqual(400);
   });
-  it("should return 403 if uuid attempts a traversal of directories", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user/datapack",
-      payload: { ...body, uuid: "../" },
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toEqual(403);
-  });
-  it("should return 500 if directory doesn't exist", async () => {
-    realpath.mockRejectedValueOnce(new Error());
+  it("should return 500 if delete user datapack throws error", async () => {
+    deleteUserDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
-    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
-    expect(realpath).toBeCalledTimes(1);
-    expect(realpath).toBeCalledWith(resolve("testdir/uploadDirectory"));
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackFilepath).not.toBeCalled();
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
-  it("should return 500 if delete datapack throws error", async () => {
+  it("should return 500 if fetchUserDatapackFilepath throws error", async () => {
+    fetchUserDatapackFilepath.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(deleteUserDatapack).toHaveBeenCalledTimes(1);
+    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
+    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
+    expect(deleteDatapackFoundInMetadata).not.toBeCalled();
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toEqual(500);
+  });
+  it("should return 500 if deleteDatapackFoundInMetadata throws error", async () => {
+    relative.mockReturnValueOnce("test-datapack");
     deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
@@ -864,20 +839,29 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
+    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
-    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", relativeDatapackDirectory);
+    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
   it("should return 200 if successful", async () => {
+    relative.mockReturnValueOnce("test-datapack");
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
+    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
-    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", relativeDatapackDirectory);
+    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ message: "Datapack deleted" });
     expect(response.statusCode).toEqual(200);
   });
@@ -902,7 +886,10 @@ describe("adminUploadServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author"
+    authoredBy: "test-author",
+    type: "user",
+    uuid: "test-uuid",
+    isPublic: false
   };
   const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
   const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
@@ -1357,7 +1344,10 @@ describe("adminDeleteServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author"
+    authoredBy: "test-author",
+    type: "user",
+    uuid: "test-uuid",
+    isPublic: false
   };
   const removeAdminConfigDatapack = vi.spyOn(adminConfig, "removeAdminConfigDatapack");
   const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");

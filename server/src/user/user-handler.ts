@@ -179,8 +179,12 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
   for (const directory of directories) {
     // just to make sure it's not falsy ie ""
     if (directory) {
-      await rm(directory, { recursive: true, force: true });
-      await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, directory);
+      try {
+        await rm(directory, { recursive: true, force: true });
+        await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, directory);
+      } catch (e) {
+        logger.error(`Error deleting user datapack directory: ${directory}`);
+      }
     }
   }
 }
