@@ -106,7 +106,8 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    editDatapack: vi.fn().mockResolvedValue({})
+    editDatapack: vi.fn().mockResolvedValue({}),
+    deleteUserDatapack: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -585,7 +586,7 @@ describe("requestDownload", () => {
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
     expect(rmSpy).toHaveBeenCalledWith(
-      path.join(uploadDirectory, uuid, path.parse(filename).name, "encrypted-datapacks", filename),
+      "encryptedFilepath",
       { force: true }
     );
     expect(accessSpy).toBeCalledTimes(3);
@@ -875,10 +876,7 @@ describe("requestDownload", () => {
 });
 
 describe("userDeleteDatapack tests", () => {
-  const rmSpy = vi.spyOn(fspModule, "rm");
-  const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
-  const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
-  const loggerSpy = vi.spyOn(logger, "error");
+  const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -890,35 +888,10 @@ describe("userDeleteDatapack tests", () => {
     });
     expect(await response.json()).toEqual({ error: "Missing datapack" });
     expect(response.statusCode).toBe(400);
-    expect(rmSpy).not.toHaveBeenCalled();
-    expect(verifyFilepathSpy).not.toHaveBeenCalled();
+    expect(deleteUserDatapack).not.toHaveBeenCalled();
   });
-  it("should reply 403 when file path is invalid", async () => {
-    verifyFilepathSpy.mockResolvedValueOnce(false);
-    const response = await app.inject({
-      method: "DELETE",
-      url: `/user/datapack/${filename}`,
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "Invalid datapack/File doesn't exist" });
-    expect(response.statusCode).toBe(403);
-    expect(rmSpy).not.toHaveBeenCalled();
-    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-  });
-  it("should reply 500 when an error occurred in verifyFilepath", async () => {
-    verifyFilepathSpy.mockRejectedValueOnce(new Error("Unknown Error"));
-    const response = await app.inject({
-      method: "DELETE",
-      url: `/user/datapack/${filename}`,
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "Failed to verify file path" });
-    expect(response.statusCode).toBe(500);
-    expect(rmSpy).not.toHaveBeenCalled();
-    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-  });
-  it("should reply 500 when an error occurs in deleting the metadata", async () => {
-    deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("Unknown Error"));
+  it("should reply 500 when an error occurred in deleteUserDatapack", async () => {
+    deleteUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "DELETE",
       url: `/user/datapack/${filename}`,
@@ -926,20 +899,16 @@ describe("userDeleteDatapack tests", () => {
     });
     expect(await response.json()).toEqual({ error: "There was an error deleting the datapack" });
     expect(response.statusCode).toBe(500);
-    expect(rmSpy).not.toHaveBeenCalled();
-    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
+    expect(deleteUserDatapack).toHaveBeenCalledOnce();
   });
-  it("should reply 200 when the file exists and has metadata", async () => {
+  it("should reply 200 when the datapack is successfully deleted", async () => {
     const response = await app.inject({
       method: "DELETE",
       url: `/user/datapack/${filename}`,
       headers
     });
-    expect(await response.json()).toEqual({ message: "File deleted" });
+    expect(await response.json()).toEqual({ message: `Datapack deleted` });
     expect(response.statusCode).toBe(200);
-    expect(verifyFilepathSpy).toHaveBeenCalledOnce();
-    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
-    expect(loggerSpy).not.toHaveBeenCalled();
+    expect(deleteUserDatapack).toHaveBeenCalledOnce();
   });
 });
