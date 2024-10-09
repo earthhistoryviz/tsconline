@@ -10,7 +10,7 @@ import * as streamPromises from "stream/promises";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { join, normalize, resolve } from "path";
+import { normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
 import { DatapackMetadata } from "@tsconline/shared";
@@ -1343,13 +1343,11 @@ describe("getAllUserDatapacks", () => {
   const payload = {
     uuid: "test-uuid"
   };
-  const testDatapackArray = 
-[
+  const testDatapackArray = [
     {
       mock: "test-datapack"
     } as unknown as shared.Datapack
-]
-  ;
+  ];
   beforeEach(() => {
     vi.clearAllMocks();
   });
