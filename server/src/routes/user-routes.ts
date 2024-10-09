@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { access, rm, mkdir, readFile } from "fs/promises";
 import path from "path";
-import { runJavaEncrypt } from "../encryption.js";
+import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
@@ -15,7 +15,6 @@ import {
   editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
-  fetchUserDatapackFilepath,
   getPrivateUserUUIDDirectory} from "../user/user-handler.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
@@ -100,29 +99,33 @@ export const requestDownload = async function requestDownload(
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { datapack } = request.params;
-  let datapackDir = "";
-  let filepath = "";
-  let filename = "";
-  let encryptedFilepathDir = "";
-  // get valid filepath/filename from cache
-  try {
-    const metadata = await fetchUserDatapack(uuid, datapack);
-    if (!metadata) {
-      reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
-      return;
-    }
-    filename = metadata.storedFileName;
-    datapackDir = await fetchUserDatapackFilepath(uuid, datapack);
-    filepath = path.join(datapackDir, filename);
-    encryptedFilepathDir = path.join(datapackDir, "encrypted");
-  } catch (e) {
-    reply.status(500).send({ error: "Failed to load cached datapack" });
+  if (!datapack) {
+    reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  // sanitize this differently since this might not exist
-  const maybeEncryptedFilepath = path.resolve(path.join(encryptedFilepathDir, filename));
-  if (!maybeEncryptedFilepath.startsWith(path.resolve(encryptedFilepathDir))) {
-    reply.status(403).send({ error: "Invalid file path" });
+  let filepath = "";
+  let filename = "";
+  let encryptedDir = "";
+  let encryptedFilepath = ""; // this could not exist
+  // get valid filepath/filename from cache
+  try {
+    const {
+      filepath: f,
+      filename: fn,
+      encryptedDir: ed,
+      encryptedFilepath: ef
+    } = await getEncryptionDatapackFileSystemDetails(uuid, datapack);
+    filepath = f;
+    filename = fn;
+    encryptedDir = ed;
+    encryptedFilepath = ef;
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to load/fetch datapack information in filesystem" });
+    return;
+  }
+  if (!filepath || !filename || !encryptedDir || !encryptedFilepath) {
+    reply.status(500).send({ error: "Unknown error occurred" });
     return;
   }
   // user did not ask for an encryption, so send original file
@@ -145,17 +148,19 @@ export const requestDownload = async function requestDownload(
   }
   // see if we have already encrypted the file
   try {
-    await access(maybeEncryptedFilepath);
-    const file = await readFile(maybeEncryptedFilepath);
-    if (await checkHeader(maybeEncryptedFilepath)) {
+    await access(encryptedFilepath);
+    const file = await readFile(encryptedFilepath);
+    if (await checkHeader(encryptedFilepath)) {
+      console.log("here 1");
       reply.send(file);
       return;
     } else {
-      await rm(maybeEncryptedFilepath, { force: true });
+      await rm(encryptedFilepath, { force: true });
     }
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code !== "ENOENT") {
+      console.error(e);
       reply.status(500).send({ error: "An error occurred: " + e });
       return;
     }
@@ -164,6 +169,7 @@ export const requestDownload = async function requestDownload(
     await access(filepath);
     const file = await readFile(filepath);
     if (await checkHeader(filepath)) {
+      console.log("here 2");
       reply.send(file);
       return;
     }
@@ -179,14 +185,14 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    await mkdir(encryptedFilepathDir, { recursive: true });
+    await mkdir(encryptedDir, { recursive: true });
   } catch (e) {
     reply.status(500).send({ error: "Failed to create encrypted directory with error " + e });
     return;
   }
 
   try {
-    await runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedFilepathDir);
+    await runJavaEncrypt(assetconfigs.activeJar, filepath, encryptedDir);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to encrypt datapacks with error " + e });
@@ -194,14 +200,15 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    await access(maybeEncryptedFilepath);
-    const file = await readFile(maybeEncryptedFilepath);
+    await access(encryptedFilepath);
+    const file = await readFile(encryptedFilepath);
 
-    if (await checkHeader(maybeEncryptedFilepath)) {
+    if (await checkHeader(encryptedFilepath)) {
+      console.log("here 3");
       reply.send(file);
       return;
     } else {
-      await rm(maybeEncryptedFilepath, { force: true });
+      await rm(encryptedFilepath, { force: true });
       const errormsg =
         "Java file was unable to encrypt the file " + datapack + ", resulting in an incorrect encryption header.";
       reply.status(422).send({

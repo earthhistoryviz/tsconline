@@ -43,7 +43,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
 vi.mock("../src/user/user-handler", async () => {
   return {
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
-    fetchUserDatapackFilepath: vi.fn().mockResolvedValue(""),
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
     doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
@@ -763,7 +763,7 @@ describe("adminDeleteUserDatapack", () => {
   };
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
   const deleteUserDatapack = vi.spyOn(userHandlers, "deleteUserDatapack");
-  const fetchUserDatapackFilepath = vi.spyOn(userHandlers, "fetchUserDatapackFilepath");
+  const fetchUserDatapackFilepath = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
   const relative = vi.spyOn(path, "relative");
   const originalEnv = { ...process.env };
   process.cwd = () => "testdir";

@@ -12,7 +12,7 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { fetchUserDatapackFilepath } from "../user/user-handler.js";
+import { fetchUserDatapackDirectory } from "../user/user-handler.js";
 import { findUser } from "../database.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
@@ -91,7 +91,7 @@ export const fetchImage = async function (request: FastifyRequest, reply: Fastif
     if (!datapackTitle || !imageName || !datapackFilename || !uuid || !isPublic) {
       reply.status(400).send({ error: "Invalid request" });
     }
-    const datapackDir = await fetchUserDatapackFilepath(uuid, datapackTitle);
+    const datapackDir = await fetchUserDatapackDirectory(uuid, datapackTitle);
     // uuid can be server or workshop
     const imagePath = path.join(
       datapackDir,
@@ -223,7 +223,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.send({ error: "ERROR: unknown user associated with datapack" });
       return;
     }
-    const datapackDir = await fetchUserDatapackFilepath(uuidFolder, datapack.title);
+    const datapackDir = await fetchUserDatapackDirectory(uuidFolder, datapack.title);
     datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
   }
   try {

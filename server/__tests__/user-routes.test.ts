@@ -70,6 +70,12 @@ vi.mock("../src/encryption", async (importOriginal) => {
   const actual = await importOriginal<typeof runJavaEncryptModule>();
   return {
     ...actual,
+    getEncryptionDatapackFileSystemDetails: vi.fn().mockResolvedValue({
+      filepath: "filepath",
+      filename: "filename",
+      encryptedDir: "encryptedDir",
+      encryptedFilepath: "encryptedFilepath"
+    }),
     runJavaEncrypt: vi.fn().mockResolvedValue(undefined)
   };
 });
@@ -128,12 +134,6 @@ vi.mock("path", async (importOriginal) => {
 });
 
 /*----------------------TEST---------------------*/
-const readFileSpy = vi.spyOn(fspModule, "readFile");
-const checkHeaderSpy = vi.spyOn(utilModule, "checkHeader");
-const accessSpy = vi.spyOn(fspModule, "access");
-const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
-const rmSpy = vi.spyOn(fspModule, "rm");
-const mkdirSpy = vi.spyOn(fspModule, "mkdir");
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
@@ -434,65 +434,55 @@ describe("edit datapack tests", () => {
 });
 
 describe("requestDownload", () => {
-  const verifyFilepathSpy = vi.spyOn(utilModule, "verifyFilepath");
+  const readFileSpy = vi.spyOn(fspModule, "readFile");
+  const checkHeaderSpy = vi.spyOn(utilModule, "checkHeader");
+  const accessSpy = vi.spyOn(fspModule, "access");
+  const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
+  const rmSpy = vi.spyOn(fspModule, "rm");
+  const mkdirSpy = vi.spyOn(fspModule, "mkdir");
+  const getEncryptionDatapackFileSystemDetails = vi.spyOn(
+    runJavaEncryptModule,
+    "getEncryptionDatapackFileSystemDetails"
+  );
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 403 when cached datapack is invalid", async () => {
-    verifyFilepathSpy.mockResolvedValueOnce(false);
+  it("should return 400 if no datapack is provided", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/${filename}`,
+      url: "/user/datapack/download/",
       headers
     });
-    expect(accessSpy).not.toHaveBeenCalled();
-    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(403);
-    expect(response.json().error).toBe("Invalid file path");
+    expect(response.statusCode).toBe(400);
+    expect(await response.json().error).toBe("Missing datapack");
   });
-  it("should reply 500 when verifyFilepath throws an error", async () => {
-    verifyFilepathSpy.mockRejectedValueOnce(new Error());
+  it("should return 500 if an error occurred in getEncryptionDatapackFileSystemDetails", async () => {
+    getEncryptionDatapackFileSystemDetails.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/${filename}`,
+      url: "/user/datapack/download/test",
       headers
     });
-    expect(accessSpy).not.toHaveBeenCalled();
-    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
+    expect(getEncryptionDatapackFileSystemDetails).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
-    expect(response.json().error).toBe("Failed to load cached datapack");
+    expect(await response.json().error).toBe("Failed to load/fetch datapack information in filesystem");
   });
-
-  it("should reply 403 when file path is invalid from loaded cache", async () => {
-    verifyFilepathSpy.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+  it("should return 500 if certain required fields don't exist when getEncryptionDatapackFileSystemDetails returns ", async () => {
+    getEncryptionDatapackFileSystemDetails.mockResolvedValueOnce({
+      filepath: "filepath",
+      filename: "filename",
+      encryptedDir: "encryptedDir",
+      encryptedFilepath: ""
+    });
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/${filename}`,
+      url: "/user/datapack/download/test",
       headers
     });
-    expect(response.json().error).toBe("Invalid file path");
-    expect(accessSpy).not.toHaveBeenCalled();
-    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(403);
+    expect(getEncryptionDatapackFileSystemDetails).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json().error).toBe("Unknown error occurred");
   });
-  it("should reply 403 when encrypted filepath given is malicious", async () => {
-    const resolveSpy = vi.spyOn(path, "resolve").mockReturnValueOnce("bad/file/path");
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/${filename}`,
-      headers
-    });
-    expect(resolveSpy).toHaveBeenCalledTimes(2);
-    expect(accessSpy).not.toHaveBeenCalled();
-    expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(response.json().error).toBe("Invalid file path");
-    expect(response.statusCode).toBe(403);
-  });
-
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
     checkHeaderSpy.mockResolvedValueOnce(false);
     accessSpy
@@ -510,12 +500,12 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
+    expect(response.json().error).toBe("Failed to create encrypted directory with error Error: Unknown Error");
     expect(accessSpy).toHaveBeenCalledTimes(2);
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
     expect(response.statusCode).toBe(500);
-    expect(response.json().error).toBe("Failed to create encrypted directory with error Error: Unknown Error");
     expect(rmSpy).not.toHaveBeenCalled();
   });
 
