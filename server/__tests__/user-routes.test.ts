@@ -12,7 +12,7 @@ import { userRoutes } from "../src/routes/user-auth";
 import path from "path";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
-import { Datapack } from "@tsconline/shared";
+import { Datapack, BaseDatapackProps } from "@tsconline/shared";
 import { User } from "../src/types";
 
 vi.mock("../src/upload-handlers", async () => {
@@ -88,9 +88,9 @@ vi.mock("../src/util", async (importOriginal) => {
 
 vi.mock("../src/user/user-handler", () => {
   return {
-    getUserDirectory: vi.fn().mockResolvedValue("userDirectory"),
-    getDirectories: vi.fn().mockResolvedValue([]),
+    getUserUUIDDirectory: vi.fn().mockResolvedValue("userDirectory"),
     fetchUserDatapack: vi.fn().mockResolvedValue({}),
+    getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({})
   };
@@ -191,13 +191,12 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
 ];
 
 describe("get a single user datapack", () => {
-  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
   const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
   const findUser = vi.spyOn(database, "findUser");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 the user is not find", async () => {
+  it("should reply 401 the user is not found", async () => {
     findUser.mockResolvedValueOnce([testUser as User]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "GET",
@@ -206,6 +205,7 @@ describe("get a single user datapack", () => {
     });
     expect(response.statusCode).toBe(401);
     expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(await response.json()).toEqual({ error: "Unauthorized access" });
   });
   it("should reply 500 if an error occurred in findUser", async () => {
@@ -216,19 +216,9 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Database error" });
-  });
-  it("should reply 500 if an error occurred in getUserDirectory", async () => {
-    getUserDirectory.mockRejectedValueOnce(new Error("Unknown error"));
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/${filename}`,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(fetchUserDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Failed to get user directory" });
   });
   it("should reply 500 if an error occurred in fetchUserDatapack", async () => {
     fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
@@ -238,7 +228,19 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
-    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
+  });
+  it("should reply 500 if no metadata is found", async () => {
+    fetchUserDatapack.mockResolvedValueOnce("" as unknown as BaseDatapackProps);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/${filename}`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
@@ -250,7 +252,7 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(200);
-    expect(getUserDirectory).toHaveBeenCalledOnce();
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ title: "test" });
   });
@@ -342,7 +344,6 @@ describe("verifyRecaptcha tests", () => {
 });
 
 describe("edit datapack tests", () => {
-  const getUserDirectory = vi.spyOn(userHandler, "getUserDirectory");
   const getDirectories = vi.spyOn(userHandler, "getDirectories");
   const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
   const renameUserDatapack = vi.spyOn(userHandler, "renameUserDatapack");
