@@ -7,14 +7,13 @@ import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as path from "path";
 import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
-import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
 import { join, normalize, resolve } from "path";
 import fastifyMultipart from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
-import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
+import { DatapackMetadata } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
@@ -47,7 +46,8 @@ vi.mock("../src/user/user-handler", async () => {
     fetchUserDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
-    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
+    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
+    deleteServerDatapack: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -890,7 +890,6 @@ describe("adminUploadServerDatapack", () => {
     uuid: "test-uuid",
     isPublic: false
   };
-  const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
   const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
     userHandlers,
     "doesDatapackFolderExistInAllUUIDDirectories"
@@ -1263,35 +1262,12 @@ describe("getUsers", () => {
 });
 
 describe("adminDeleteServerDatapack", () => {
-  const rm = vi.spyOn(fsPromises, "rm");
-  const testDatapackDescription: DatapackMetadata = {
-    title: "test-title",
-    description: "test-description",
-    originalFileName: "active-datapack.dpk",
-    storedFileName: "tempFilename",
-    size: "30MB",
-    date: "2021-01-01",
-    tags: ["test-tag"],
-    references: ["test-reference"],
-    contact: "test-contact",
-    notes: "test-notes",
-    authoredBy: "test-author",
-    type: "user",
-    uuid: "test-uuid",
-    isPublic: false
-  };
   const removeAdminConfigDatapack = vi.spyOn(adminConfig, "removeAdminConfigDatapack");
-  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
-  const body = {
-    datapack: testDatapackDescription.title
-  };
-  const filepath = join("testdir", "datapacksDirectory", testDatapackDescription.storedFileName);
-  const decryptedFilepath = join("testdir", "decryptionDirectory", testDatapackDescription.storedFileName);
-  beforeEach(async () => {
+  const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
+  const datapackTitle = "test-datapack";
+  const body = { datapack: datapackTitle };
+  beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValue({
-      [body.datapack]: {} as ServerDatapackIndex[string]
-    });
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -1306,8 +1282,6 @@ describe("adminDeleteServerDatapack", () => {
       message: "body must have required property 'datapack'",
       statusCode: 400
     });
-    expect(getAdminConfigDatapacks).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if datapack is empty", async () => {
@@ -1317,80 +1291,49 @@ describe("adminDeleteServerDatapack", () => {
       payload: { datapack: "" },
       headers
     });
-    expect(getAdminConfigDatapacks).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing datapack id" });
+    expect(await response.json()).toEqual({ error: "Missing datapack title" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 404 if not in adminconfig", async () => {
-    getAdminConfigDatapacks.mockReturnValueOnce([]);
+  it("should return 500 if deleteServerDatapack throws error", async () => {
+    deleteServerDatapack.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/server/datapack",
+      payload: { datapack: "test-datapack" },
+      headers
+    });
+    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
+    expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Error deleting server datapack" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if removeAdminConfigDatapack throws error", async () => {
+    removeAdminConfigDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/server/datapack",
       payload: body,
       headers
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(rm).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Datapack not found" });
-    expect(response.statusCode).toBe(404);
+    expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
+    expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      error:
+        "Deleted datapack in filesystem, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
+    });
+    expect(response.statusCode).toBe(500);
   });
-  describe("admin datapack deletion where datapack is in adminconfig", async () => {
-    it("should return 500 if remove filepaths fail", async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      rm.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(await response.json()).toEqual({ error: "Deleted from indexes, but was not able to delete files" });
-      expect(response.statusCode).toBe(500);
+  it("should return 200 if successful", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/server/datapack",
+      payload: body,
+      headers
     });
-    it(`should return 500 on partial success when admin datapacks contains the datapack to be deleted but removeAdminConfigDatapack fails`, async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      removeAdminConfigDatapack.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
-      expect(removeAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-      expect(index.serverDatapackIndex).toEqual({});
-      expect(rm).toHaveBeenCalledTimes(2);
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
-      expect(await response.json()).toEqual({
-        error: `Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable`
-      });
-      expect(response.statusCode).toBe(500);
-    });
-    it(`should return 200 on success when admin datapacks contains ${body.datapack}`, async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(await response.json()).toEqual({
-        message: `Datapack ${body.datapack} deleted`
-      });
-      expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
-      expect(removeAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-      expect(index.serverDatapackIndex).toEqual({});
-      expect(rm).toHaveBeenCalledTimes(2);
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
-      expect(response.statusCode).toBe(200);
-    });
+    expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
+    expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: `Datapack ${datapackTitle} deleted` });
+    expect(response.statusCode).toBe(200);
   });
 });
 

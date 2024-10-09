@@ -192,7 +192,7 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
 /**
  * deletes a single user datapack
  * @param uuid
- * @param datapack
+ * @param datapack the title of the datapack
  */
 export async function deleteUserDatapack(uuid: string, datapack: string): Promise<void> {
   const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
@@ -203,6 +203,10 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
 }
 
+/**
+ * Deletes a server datapack
+ * @param datapack the title of the datapack
+ */
 export async function deleteServerDatapack(datapack: string): Promise<void> {
   const datapackPath = await fetchUserDatapackFilepath("server", datapack);
   if (!(await verifyFilepath(datapackPath))) {
