@@ -47,7 +47,8 @@ vi.mock("../src/user/user-handler", async () => {
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
     doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
-    deleteServerDatapack: vi.fn().mockResolvedValue({})
+    deleteServerDatapack: vi.fn().mockResolvedValue({}),
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -1338,31 +1339,19 @@ describe("adminDeleteServerDatapack", () => {
 });
 
 describe("getAllUserDatapacks", () => {
-  const readFile = vi.spyOn(fsPromises, "readFile");
-  const assertDatapackIndex = vi.spyOn(shared, "assertDatapackIndex");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const fetchAllUsersDatapacks = vi.spyOn(userHandlers, "fetchAllUsersDatapacks");
   const payload = {
     uuid: "test-uuid"
   };
-  const testParsingPack = {
-    "test-datapack.dpk": {
+  const testDatapackArray = 
+[
+    {
       mock: "test-datapack"
-    }
-  };
+    } as unknown as shared.Datapack
+]
+  ;
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should return 200 and all datapacks for a user", async () => {
-    readFile.mockResolvedValueOnce(JSON.stringify(testParsingPack));
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/user/datapacks",
-      payload,
-      headers
-    });
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual(testParsingPack);
-    expect(response.statusCode).toBe(200);
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -1371,6 +1360,7 @@ describe("getAllUserDatapacks", () => {
       payload: {},
       headers
     });
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
@@ -1386,34 +1376,32 @@ describe("getAllUserDatapacks", () => {
       payload: { uuid: "" },
       headers
     });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Missing uuid in body" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 500 when readFile fails", async () => {
-    readFile.mockRejectedValueOnce(new Error());
+  it("should return 500 if fetchAllUsersDatapacks throws error", async () => {
+    fetchAllUsersDatapacks.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
       payload,
       headers
     });
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ error: "Error reading user datapack index, possible corruption of file" });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Unknown error fetching user datapacks" });
     expect(response.statusCode).toBe(500);
   });
-  it("should return 200 if the filepath is bad/doesn't exist", async () => {
-    verifyFilepath.mockResolvedValueOnce(false);
+  it("should return 200 if successful", async () => {
+    fetchAllUsersDatapacks.mockResolvedValueOnce(testDatapackArray);
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
       payload,
       headers
     });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({});
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual(testDatapackArray);
     expect(response.statusCode).toBe(200);
   });
 });

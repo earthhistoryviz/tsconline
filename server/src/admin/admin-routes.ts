@@ -377,8 +377,8 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
     return;
   }
   try {
-    const datapackIndex = await fetchAllUsersDatapacks(uuid);
-    reply.send(datapackIndex);
+    const datapacksArray = await fetchAllUsersDatapacks(uuid);
+    reply.send(datapacksArray);
   } catch (e) {
     reply.status(500).send({ error: "Unknown error fetching user datapacks" });
     return;
