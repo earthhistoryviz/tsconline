@@ -13,7 +13,7 @@ import {
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, join, relative, parse } from "path";
+import { resolve, extname, relative } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -32,10 +32,11 @@ import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } f
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
+import { addAdminConfigDatapack, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
 import {
   deleteAllUserDatapacks,
+  deleteServerDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks,
@@ -349,32 +350,21 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
 ) {
   const { datapack } = request.body;
   if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack id" });
+    reply.status(400).send({ error: "Missing datapack title" });
     return;
-  }
-  const datapackMetadata = getAdminConfigDatapacks().find((dp) => dp.title === datapack);
-  if (!datapackMetadata) {
-    reply.status(404).send({ error: "Datapack not found" });
-    return;
-  }
-  if (serverDatapackIndex[datapack]) {
-    delete serverDatapackIndex[datapack];
   }
   try {
-    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.storedFileName);
-    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.storedFileName).name);
-    await rm(filepath, { force: true });
-    await rm(decryptedFilepath, { force: true, recursive: true });
+    await deleteServerDatapack(datapack);
   } catch (e) {
-    reply.status(500).send({ error: "Deleted from indexes, but was not able to delete files" });
+    reply.status(500).send({ error: "Error deleting server datapack" });
     return;
   }
   try {
-    await removeAdminConfigDatapack(datapackMetadata);
+    await removeAdminConfigDatapack({ title: datapack });
   } catch (e) {
     reply.status(500).send({
       error:
-        "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
+        "Deleted datapack in filesystem, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
     });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
