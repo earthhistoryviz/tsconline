@@ -89,7 +89,7 @@ export async function uploadUserDatapackHandler(
     return;
   }
   if (!isDatapackTypeString(type)) {
-    await userUploadHandler(reply, 400, "Invalid type", filepath);
+    await userUploadHandler(reply, 400, "Invalid datapack type", filepath);
     return;
   }
   try {
@@ -131,6 +131,7 @@ export async function uploadUserDatapackHandler(
 
 /**
  * THIS DOES NOT SETUP METADATA OR ADD TO ANY EXISTING INDEXES
+ * TODO: WRITE TESTS
  * @param uuid
  * @param isPublic
  * @param sourceFilePath
