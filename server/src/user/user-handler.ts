@@ -2,7 +2,7 @@ import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/prom
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
-import { Datapack, assertDatapack } from "@tsconline/shared";
+import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -143,9 +143,10 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
 
 /**
  * rename a user datapack which means we have to rename the folder and the file metadata (the key only)
- * @param uuid
- * @param oldDatapack
- * @param datapack
+ * also updates the datapack with a new datapack object
+ * @param uuid the uuid of the user
+ * @param oldDatapack the old datapack title
+ * @param datapack the new datapack object
  */
 export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackFilepath(uuid, oldDatapack);
@@ -168,6 +169,21 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, data
     await writeUserDatapack(uuid, oldDatapackMetadata);
     throw e;
   });
+}
+
+export async function editDatapack(
+  uuid: string,
+  oldDatapackTitle: string,
+  newDatapack: Partial<DatapackMetadata>
+): Promise<void> {
+  const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
+  const originalTitle = JSON.stringify(metadata.title);
+  Object.assign(metadata, newDatapack);
+  if (originalTitle !== newDatapack.title) {
+    await renameUserDatapack(uuid, originalTitle, metadata);
+  } else {
+    await writeUserDatapack(uuid, metadata);
+  }
 }
 
 /**

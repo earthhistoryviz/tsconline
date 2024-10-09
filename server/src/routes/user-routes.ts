@@ -12,13 +12,11 @@ import { findUser } from "../database.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import {
   deleteUserDatapack,
+  editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   fetchUserDatapackFilepath,
-  getPrivateUserUUIDDirectory,
-  renameUserDatapack,
-  writeUserDatapack
-} from "../user/user-handler.js";
+  getPrivateUserUUIDDirectory} from "../user/user-handler.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
@@ -47,31 +45,11 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const metadata = await fetchUserDatapack(uuid, datapack).catch(() => {
-    reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
-  });
-  if (!metadata) {
+  try {
+    await editDatapack(uuid, datapack, body);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to edit metadata" });
     return;
-  }
-  // edit metadata
-  Object.assign(metadata, body);
-
-  // check if title is being changed so that we can rename the directory
-  if (body.title && metadata.title !== datapack) {
-    try {
-      await renameUserDatapack(uuid, datapack, metadata);
-    } catch (e) {
-      console.error(e);
-      reply.status(500).send({ error: "Failed to change datapack title." });
-      return;
-    }
-  } else {
-    try {
-      await writeUserDatapack(uuid, metadata);
-    } catch (e) {
-      reply.status(500).send({ error: "Failed to write datapack information to file system" });
-      return;
-    }
   }
   reply.send({ message: `Successfully updated ${datapack}` });
 };
