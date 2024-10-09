@@ -883,8 +883,10 @@ describe("adminUploadServerDatapack", () => {
     authoredBy: "test-author"
   };
   const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
-  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
-  const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
+    userHandlers,
+    "doesDatapackFolderExistInAllUUIDDirectories"
+  );
   const uploadUserDatapackHandler = vi
     .spyOn(uploadHandlers, "uploadUserDatapackHandler")
     .mockResolvedValue(testDatapackDescription);
