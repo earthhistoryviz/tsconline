@@ -825,9 +825,9 @@ export async function getRecaptchaToken(token: string) {
 export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/user/datapack/${datapack.title}`;
+    route = `/user/datapack/download/${datapack.title}`;
   } else {
-    route = `/user/datapack/${datapack.title}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/download/${datapack.title}?needEncryption=${needEncryption}`;
   }
   const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
   if (!recaptchaToken) return null;

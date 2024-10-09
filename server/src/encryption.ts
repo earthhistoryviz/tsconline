@@ -1,4 +1,6 @@
 import { spawn } from "child_process";
+import { getEncryptedDatapackDirectory, getUploadedDatapackFilepath } from "./user/user-handler.js";
+import path from "path";
 
 export async function runJavaEncrypt(activeJar: string, filepath: string, encryptedFilepathDir: string) {
   const cmdArgs = [
@@ -36,4 +38,11 @@ export async function runJavaEncrypt(activeJar: string, filepath: string, encryp
       resolve();
     });
   });
+}
+
+export async function getEncryptionDatapackFileSystemDetails(uuid: string, datapackTitle: string) {
+  const filepath = await getUploadedDatapackFilepath(uuid, datapackTitle);
+  const filename = path.parse(filepath).base;
+  const { encryptedDir, encryptedFilepath } = await getEncryptedDatapackDirectory(uuid, datapackTitle);
+  return { filepath, filename, encryptedDir, encryptedFilepath };
 }

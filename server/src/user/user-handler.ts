@@ -55,6 +55,22 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 }
 
 /**
+ * GET the uploaded datapack filepath NOT the directory it lives in
+ * @param uuid
+ * @param datapack
+ * @returns
+ */
+export async function getUploadedDatapackFilepath(uuid: string, datapack: string): Promise<string> {
+  const directory = await fetchUserDatapackDirectory(uuid, datapack);
+  const metadata = await fetchUserDatapack(uuid, datapack);
+  const uploadedFilepath = path.join(directory, metadata.originalFileName);
+  if (!(await verifyFilepath(uploadedFilepath))) {
+    throw new Error("Invalid filepath");
+  }
+  return uploadedFilepath;
+}
+
+/**
  * get the private and public user datapack directories
  * @param uuid
  * @returns
@@ -96,7 +112,7 @@ async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
     await getPublicUserUUIDDirectory(uuid).catch(() => "")
   ].filter(Boolean);
 }
-export async function fetchUserDatapackFilepath(uuid: string, datapack: string): Promise<string> {
+export async function fetchUserDatapackDirectory(uuid: string, datapack: string): Promise<string> {
   // check both public and private directories
   const directoriesToCheck: string[] = await getAllUserDatapackDirectories(uuid);
   for (const directory of directoriesToCheck) {
@@ -131,7 +147,7 @@ export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Pro
  * @returns
  */
 export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
-  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
+  const datapackPath = await fetchUserDatapackDirectory(uuid, datapack);
   const cachedDatapack = path.join(datapackPath, CACHED_USER_DATAPACK_FILENAME);
   if (!cachedDatapack || !(await verifyFilepath(cachedDatapack))) {
     throw new Error(`File ${datapack} doesn't exist`);
@@ -149,7 +165,7 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
  * @param datapack the new datapack object
  */
 export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
-  const oldDatapackPath = await fetchUserDatapackFilepath(uuid, oldDatapack);
+  const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
   const oldDatapackMetadata = await fetchUserDatapack(uuid, oldDatapack);
   const newDatapackPath = path.join(path.dirname(oldDatapackPath), datapack.title);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
@@ -211,7 +227,7 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
  * @param datapack the title of the datapack
  */
 export async function deleteUserDatapack(uuid: string, datapack: string): Promise<void> {
-  const datapackPath = await fetchUserDatapackFilepath(uuid, datapack);
+  const datapackPath = await fetchUserDatapackDirectory(uuid, datapack);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
@@ -224,7 +240,7 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
  * @param datapack the title of the datapack
  */
 export async function deleteServerDatapack(datapack: string): Promise<void> {
-  const datapackPath = await fetchUserDatapackFilepath("server", datapack);
+  const datapackPath = await fetchUserDatapackDirectory("server", datapack);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
@@ -237,7 +253,7 @@ export async function deleteServerDatapack(datapack: string): Promise<void> {
  * @param datapack
  */
 export async function writeUserDatapack(uuid: string, datapack: Datapack): Promise<void> {
-  const datapackPath = path.join(await fetchUserDatapackFilepath(uuid, datapack.title), CACHED_USER_DATAPACK_FILENAME);
+  const datapackPath = path.join(await fetchUserDatapackDirectory(uuid, datapack.title), CACHED_USER_DATAPACK_FILENAME);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
@@ -280,4 +296,16 @@ export async function decryptDatapack(filepath: string, outputDirectory: string)
   });
   await access(path.join(outputDirectory, filenameWithoutExtension));
   await access(path.join(outputDirectory, filenameWithoutExtension, "datapacks"));
+}
+export async function getEncryptedDatapackDirectory(uuid: string, datapackTitle: string) {
+  console.log("Getting encrypted datapack directory");
+  console.log(datapackTitle);
+  const datapackDir = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  console.log("Datapack directory: ", datapackDir);
+  const metadata = await fetchUserDatapack(uuid, datapackTitle);
+  const encryptedDir = path.join(datapackDir, "encrypted");
+  const encryptedFilepath = path.join(encryptedDir, metadata.originalFileName);
+  console.log("Encrypted directory: ", encryptedDir);
+  console.log("Encrypted filepath: ", encryptedFilepath);
+  return { encryptedDir, encryptedFilepath };
 }

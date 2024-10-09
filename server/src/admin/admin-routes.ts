@@ -40,7 +40,7 @@ import {
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks,
-  fetchUserDatapackFilepath
+  fetchUserDatapackDirectory
 } from "../user/user-handler.js";
 
 /**
@@ -227,7 +227,7 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   }
   try {
     await deleteUserDatapack(uuid, datapack);
-    const datapackDirectory = await fetchUserDatapackFilepath(uuid, datapack);
+    const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
     await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, relative(process.cwd(), datapackDirectory));
   } catch (error) {
     console.error(error);
