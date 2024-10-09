@@ -379,5 +379,5 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
   }
-  reply.status(200).send({ message: "File deleted" });
+  reply.status(200).send({ message: "Datapack deleted" });
 };
