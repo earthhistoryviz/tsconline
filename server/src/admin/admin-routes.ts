@@ -244,7 +244,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let file: MultipartFile | undefined;
   let storedFileName: string | undefined;
   let filepath: string | undefined;
-  let decryptedFilepath: string | undefined;
   let originalFileName: string | undefined;
   const fields: { [fieldname: string]: string } = {};
   for await (const part of parts) {
@@ -286,7 +285,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  if (!file || !filepath || !storedFileName || !decryptedFilepath || !originalFileName) {
+  if (!file || !filepath || !storedFileName || !originalFileName) {
     reply.status(400).send({ error: "Missing file" });
     return;
   }
@@ -294,26 +293,31 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
-    filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });
   });
-  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
   if (!datapackMetadata) {
+    filepath && (await rm(filepath, { force: true }));
     return;
   }
-  if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
-    reply.status(409).send({ error: "Datapack already exists" });
-    return;
-  }
-  const errorHandler = async (error: string) => {
+  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
+  const errorHandler = async (error: string, errorCode: number = 500) => {
     if (!filepath || !storedFileName || !datapackMetadata)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
     if (serverDatapackIndex[datapackMetadata.title]) {
       delete serverDatapackIndex[datapackMetadata.title];
     }
-    reply.status(500).send({ error });
+    reply.status(errorCode).send({ error });
   };
+  try {
+    if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
+      await errorHandler("Datapack already exists", 409);
+      return;
+    }
+  } catch (e) {
+    await errorHandler("Error checking if datapack exists");
+    return;
+  }
   try {
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory("server", filepath, datapackMetadata);
     if (!datapackIndex[datapackMetadata.title]) {
@@ -321,7 +325,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
     serverDatapackIndex[datapackMetadata.title] = datapackIndex[datapackMetadata.title]!;
   } catch (error) {
-    await errorHandler("Error seting up UUID Directory");
+    await errorHandler("Error setting up UUID Directory");
     return;
   }
   try {
