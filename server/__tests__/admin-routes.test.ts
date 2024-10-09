@@ -52,9 +52,7 @@ vi.mock("../src/user/user-handler", async () => {
     getUploadedDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
-    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
-    deleteServerDatapack: vi.fn().mockResolvedValue({}),
-    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
+    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
   };
 });
 
@@ -882,7 +880,6 @@ describe("adminUploadServerDatapack", () => {
     notes: "test-notes",
     authoredBy: "test-author"
   };
-  const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
   const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
     userHandlers,
     "doesDatapackFolderExistInAllUUIDDirectories"
@@ -1267,7 +1264,10 @@ describe("adminDeleteServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author"
+    authoredBy: "test-author",
+    type: "user",
+    uuid: "test-uuid",
+    isPublic: false
   };
   const removeAdminConfigDatapack = vi.spyOn(adminConfig, "removeAdminConfigDatapack");
   const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
