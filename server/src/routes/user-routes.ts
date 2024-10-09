@@ -98,9 +98,10 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
   }
   try {
     const metadata = await fetchUserDatapack(uuid, datapack).catch(() => {
-      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     });
     if (!metadata) {
+      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
       return;
     }
     reply.send(metadata);
