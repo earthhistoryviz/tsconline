@@ -5,8 +5,6 @@ import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as path from "path";
-import * as childProcess from "node:child_process";
-import * as loadPacks from "../src/load-packs";
 import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
 import * as index from "../src/index";
@@ -48,13 +46,15 @@ vi.mock("../src/user/user-handler", async () => {
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
     fetchUserDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
-    deleteAllUserDatapacks: vi.fn().mockResolvedValue({})
+    deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
+    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
   };
 });
 
 vi.mock("../src/upload-handlers", async () => {
   return {
-    uploadUserDatapackHandler: vi.fn().mockResolvedValue({})
+    uploadUserDatapackHandler: vi.fn().mockResolvedValue({}),
+    setupNewDatapackDirectoryInUUIDDirectory: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/util", async (importOriginal) => {
@@ -869,12 +869,11 @@ describe("adminDeleteUserDatapack", () => {
 
 describe("adminUploadServerDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const execFile = vi.spyOn(childProcess, "execFile");
   const rm = vi.spyOn(fsPromises, "rm");
-  const realpath = vi.spyOn(fsPromises, "realpath");
-  const loadIndexes = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const makeTempFilename = vi.spyOn(util, "makeTempFilename");
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
+  const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
   const testDatapackDescription: DatapackMetadata = {
     originalFileName: "test.dpk",
     storedFileName: "",
@@ -892,20 +891,18 @@ describe("adminUploadServerDatapack", () => {
     isPublic: false
   };
   const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
-  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
-  const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
+    userHandlers,
+    "doesDatapackFolderExistInAllUUIDDirectories"
+  );
   const uploadUserDatapackHandler = vi
     .spyOn(uploadHandlers, "uploadUserDatapackHandler")
     .mockResolvedValue(testDatapackDescription);
-  const checkErrorHandler = (statusCode: number) => {
+  const checkErrorHandler = (statusCode: number, actual: number = 500) => {
     expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), {
       force: true
     });
-    expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining(normalize("testdir/decryptionDirectory")), {
-      recursive: true,
-      force: true
-    });
-    expect(statusCode).toBe(500);
+    expect(statusCode).toBe(actual);
   };
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
@@ -936,9 +933,8 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Missing file" });
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
   });
   it("should return 403 if file attempts directory traversal", async () => {
@@ -960,9 +956,6 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).not.toHaveBeenCalled();
     expect(pipeline).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Directory traversal detected" });
     expect(response.statusCode).toBe(403);
@@ -985,78 +978,27 @@ describe("adminUploadServerDatapack", () => {
         payload: formData.body,
         headers: formHeaders
       });
-      expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-      expect(addAdminConfigDatapack).not.toHaveBeenCalled();
       expect(pipeline).not.toHaveBeenCalled();
-      expect(execFile).not.toHaveBeenCalled();
       expect(await response.json()).toEqual({ error: "Invalid file type" });
       expect(response.statusCode).toBe(400);
     }
   );
-  it("should return 409 if file already exists and admin config states it exists", async () => {
-    const adminConfig = {
-      ...testDatapackDescription,
-      title: "admin-datapack"
-    };
-    getAdminConfigDatapacks.mockReturnValueOnce([adminConfig]);
-    uploadUserDatapackHandler.mockResolvedValueOnce(adminConfig);
-    createForm({
-      file: {
-        value: Buffer.from("test"),
-        options: {
-          filename: "admin-datapack.dpk", // only in adminconfigs import
-          contentType: "application/zip"
-        }
-      }
-    });
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
-    expect(getAdminConfigDatapacks).toHaveBeenCalledWith();
-    expect(await response.json()).toEqual({ error: "Datapack already exists" });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(checkFileExists).toHaveBeenCalledTimes(2);
-    expect(execFile).not.toHaveBeenCalled();
-    expect(pipeline).toHaveBeenCalledOnce();
-    expect(uploadUserDatapackHandler).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(409);
-  });
   it("should return 500 if pipeline throws error", async () => {
     pipeline.mockRejectedValueOnce(new Error());
-    createForm();
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
+    expect(makeTempFilename).toHaveBeenCalledTimes(1);
     expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).not.toHaveBeenCalled();
     expect(rm).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
     expect(await response.json()).toEqual({ error: "Error saving file" });
     expect(response.statusCode).toBe(500);
-  });
-  it("should return 500 if execFile throws error", async () => {
-    execFile.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).not.toHaveBeenCalled();
-    checkErrorHandler(response.statusCode);
-    expect(await response.json()).toEqual({ error: "Error decrypting file" });
   });
   it("should return 400 if file is too big", async () => {
     createForm({
@@ -1074,8 +1016,6 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).not.toHaveBeenCalled();
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
@@ -1083,52 +1023,6 @@ describe("adminUploadServerDatapack", () => {
     });
     expect(await response.json()).toEqual({ error: "File too large" });
     expect(response.statusCode).toBe(400);
-  });
-  it("should return 500 if uploadUserDatapackHandler throws error", async () => {
-    uploadUserDatapackHandler.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
-      force: true
-    });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
-  });
-  it("should just return if uploadUserDataPackHandler returns void", async () => {
-    uploadUserDatapackHandler.mockResolvedValueOnce();
-    await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
-    expect(loadIndexes).not.toHaveBeenCalled();
-  });
-  it("should return 500 if realpath doesn't find a real path for the decrypted file", async () => {
-    realpath.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "File was not decrypted properly" });
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    checkErrorHandler(response.statusCode);
   });
   it("should return 400 if bytesRead is 0", async () => {
     createForm({
@@ -1146,32 +1040,104 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
+    expect(pipeline).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
       force: true
     });
-    expect(execFile).not.toHaveBeenCalled();
-    expect(realpath).not.toHaveBeenCalled();
-    expect(loadIndexes).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
   });
-  it("should return 500 if loadIndexes fails", async () => {
-    loadIndexes.mockResolvedValueOnce(false);
+  it("should return 500 if uploadUserDatapackHandler throws error", async () => {
+    uploadUserDatapackHandler.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
-    checkErrorHandler(response.statusCode);
-    expect(await response.json()).toEqual({ error: "Error parsing the datapack for chart generation" });
+    expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
+      force: true
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
   });
-  it("should return 500 if adding admin config fails", async () => {
+  it("should just return if uploadUserDataPackHandler returns void", async () => {
+    uploadUserDatapackHandler.mockResolvedValueOnce();
+    await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
+      force: true
+    });
+  });
+  it("should return 409 if doesDatapackFolderExistInAllUUIDDirectories returns true", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    checkErrorHandler(response.statusCode, 409);
+    expect(await response.json()).toEqual({ error: "Datapack already exists" });
+  });
+  it("should return 500 if doesDatapackFolderExistInAllUUIDDirectories throws error", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    checkErrorHandler(response.statusCode);
+    expect(await response.json()).toEqual({ error: "Error checking if datapack exists" });
+  });
+  it("should return 500 if setupNewDatapackDirecotryInUUIDDirectory throws error", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    checkErrorHandler(response.statusCode);
+    expect(await response.json()).toEqual({ error: "Error setting up UUID Directory" });
+  });
+  it("should return 500 if datapackIndex with correct datapack is not created", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({});
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    checkErrorHandler(response.statusCode);
+    expect(await response.json()).toEqual({ error: "Error setting up UUID Directory" });
+  });
+  it("should return 500 if adminConfig cannot be updated", async () => {
+    uploadUserDatapackHandler.mockResolvedValueOnce(testDatapackDescription);
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({
+      [testDatapackDescription.title]: {} as shared.Datapack
+    });
     addAdminConfigDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
@@ -1179,64 +1145,29 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
     expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ error: "Error updating admin config" });
-    expect(response.statusCode).toBe(500);
-  });
-  it("should return 200 if successful and add to adminconfig", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledWith("java", [
-      "-jar",
-      "testdir/decryptionJar.jar",
-      "-d",
-      filepath.replace(/\\/g, "/"),
-      "-dest",
-      "testdir/decryptionDirectory"
-    ]);
-    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 if successful where datapack is already a part of adminconfigs but isn't in serverDatapackIndex", async () => {
-    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValueOnce({});
-    getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledWith("java", [
-      "-jar",
-      "testdir/decryptionJar.jar",
-      "-d",
-      filepath.replace(/\\/g, "/"),
-      "-dest",
-      "testdir/decryptionDirectory"
-    ]);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    checkErrorHandler(response.statusCode);
+    expect(await response.json()).toEqual({ error: "Error updating admin config" });
+  });
+  it("should return 200 if successful", async () => {
+    uploadUserDatapackHandler.mockResolvedValueOnce(testDatapackDescription);
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({
+      [testDatapackDescription.title]: {} as shared.Datapack
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/server/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
   });
 });
