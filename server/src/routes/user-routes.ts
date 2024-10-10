@@ -15,7 +15,8 @@ import {
   editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
-  getPrivateUserUUIDDirectory} from "../user/user-handler.js";
+  getPrivateUserUUIDDirectory
+} from "../user/user-handler.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,

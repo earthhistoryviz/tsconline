@@ -6,10 +6,7 @@ import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
-import logger from "../src/error-logger";
-import * as fileMetadataHandler from "../src/file-metadata-handler";
 import { userRoutes } from "../src/routes/user-auth";
-import path from "path";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as shared from "@tsconline/shared";
@@ -585,10 +582,7 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveReturnedWith(undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
-    expect(rmSpy).toHaveBeenCalledWith(
-      "encryptedFilepath",
-      { force: true }
-    );
+    expect(rmSpy).toHaveBeenCalledWith("encryptedFilepath", { force: true });
     expect(accessSpy).toBeCalledTimes(3);
     expect(response.statusCode).toBe(422);
     expect(response.json().error).toBe(

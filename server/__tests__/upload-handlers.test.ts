@@ -5,7 +5,7 @@ import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
-  isDatapackTypeString: vi.fn().mockReturnValue(true),
+  isDatapackTypeString: vi.fn().mockReturnValue(true)
 }));
 vi.mock("fs/promises", () => ({
   rm: vi.fn().mockResolvedValue(undefined)

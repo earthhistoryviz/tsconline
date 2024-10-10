@@ -2,8 +2,6 @@ import { describe, it, vi, expect, beforeEach } from "vitest";
 import {
   fetchAllUsersDatapacks,
   fetchUserDatapack,
-  getDirectories,
-  getUserDirectory,
   renameUserDatapack,
   writeUserDatapack
 } from "../src/user/user-handler";
@@ -13,7 +11,7 @@ import * as shared from "@tsconline/shared";
 import * as logger from "../src/error-logger";
 import path from "path";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
-import { Dirent } from "fs";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
 
 vi.mock("../src/file-metadata-handler", () => {
   return {
@@ -53,103 +51,86 @@ vi.mock("../src/error-logger", () => {
 
 vi.mock("fs/promises", () => {
   return {
-    readdir: vi.fn(async () => {
-      return [
-        { isDirectory: () => true, name: "test1" },
-        { isDirectory: () => false, name: "test2" },
-        { isDirectory: () => true, name: "test3" }
-      ];
-    }),
     rename: vi.fn(async () => {}),
-    mkdir: vi.fn(async () => {}),
     writeFile: vi.fn(async () => {}),
     readFile: vi.fn(async () => JSON.stringify({ title: "test" }))
   };
 });
 vi.mock("../src/util", () => {
   return {
-    checkFileExists: vi.fn(async () => true),
     verifyFilepath: vi.fn(async () => true),
     assetconfigs: {
-      uploadDirectory: "test"
+      uploadDirectory: "test",
+      privateDatapacksDirectory: "private",
+      publicDatapacksDirectory: "public"
     }
   };
 });
-describe("getDirectories test", () => {
-  const readdir = vi.spyOn(fsPromises, "readdir");
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-  it("should return an array of directories", async () => {
-    expect(await getDirectories("test")).toEqual(["test1", "test3"]);
-  });
-  it("should throw an error if readdir fails", async () => {
-    readdir.mockRejectedValueOnce(new Error("readdir error"));
-    await expect(getDirectories("test")).rejects.toThrow("readdir error");
-    expect(readdir).toHaveBeenCalledOnce();
-  });
+vi.mock("../src/user/fetch-user-files", () => {
+  return {
+    getAllUserDatapackDirectories: vi.fn(async () => ["test1/test"]),
+    getDirectories: vi.fn(async () => ["test"])
+  };
 });
 
 describe("fetchAllUsersDatapacks test", () => {
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
   const readFile = vi.spyOn(fsPromises, "readFile");
-  const assertPrivateUserDatapack = vi.spyOn(shared, "assertPrivateUserDatapack");
-  const readdir = vi.spyOn(fsPromises, "readdir");
-  const assertDatapack = vi.spyOn(shared, "assertDatapack");
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should throw an error if mkdir fails", async () => {
-    const mkdir = vi.spyOn(fsPromises, "mkdir");
-    mkdir.mockRejectedValueOnce(new Error("mkdir error"));
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("mkdir error");
-    expect(mkdir).toHaveBeenCalledOnce();
+  it("should throw an error if fetchAllUsersDatapacks fails", async () => {
+    getAllUserDatapackDirectories.mockRejectedValueOnce(new Error("fetchAllUsersDatapacks error"));
+    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("fetchAllUsersDatapacks error");
+    expect(getAllUserDatapackDirectories).toHaveBeenCalledOnce();
   });
-  it("should thow an error if readdir fails", async () => {
-    readdir.mockRejectedValueOnce(new Error("readdir error"));
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("readdir error");
-    expect(readdir).toHaveBeenCalledOnce();
+  it("should throw an error if getDirectories fails", async () => {
+    getDirectories.mockRejectedValueOnce(new Error("getDirectories error"));
+    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("getDirectories error");
+    expect(getDirectories).toHaveBeenCalledOnce();
   });
-  it("should throw an error if checkFileExists fails for a datapack", async () => {
-    checkFileExists.mockRejectedValueOnce(new Error("checkFileExists error"));
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("checkFileExists error");
-    expect(checkFileExists).toHaveBeenCalledOnce();
+  it("should return an array of user datapacks", async () => {
+    const array = [{ title: "test1" }, { title: "test2" }, { title: "test3" }, { title: "test4" }];
+    getDirectories.mockResolvedValueOnce(array.map((datapack) => datapack.title));
+    for (const datapack of array) {
+      readFile.mockResolvedValueOnce(JSON.stringify(datapack));
+    }
+    expect(await fetchAllUsersDatapacks("test")).toEqual(array);
   });
-  it("should throw an error if readFile fails for a datapack", async () => {
+  it("should log an error if the datapack is invalid", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
     readFile.mockRejectedValueOnce(new Error("readFile error"));
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("readFile error");
-    expect(readFile).toHaveBeenCalledOnce();
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(logger.default.error).toHaveBeenCalledOnce();
   });
-  it("should throw an error if the datapack does not pass the private user datapack assertion", async () => {
-    assertPrivateUserDatapack.mockImplementationOnce(() => {
-      throw new Error("assertPrivateUserDatapack error");
-    });
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("assertPrivateUserDatapack error");
-    expect(assertPrivateUserDatapack).toHaveBeenCalledOnce();
+  it("should log an error if verifyFilepath fails", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    verifyFilepath.mockResolvedValueOnce(false);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(logger.default.error).toHaveBeenCalledOnce();
   });
-  it("should throw an error if the datapack does not pass the datapack assertion", async () => {
-    assertDatapack.mockImplementationOnce(() => {
-      throw new Error("assertDatapack error");
-    });
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("assertDatapack error");
-    expect(assertDatapack).toHaveBeenCalledOnce();
-    expect(assertPrivateUserDatapack).toHaveBeenCalledOnce();
+  it("should log an error if the datapack already exists in the array", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test"]);
+    readFile
+      .mockResolvedValueOnce(JSON.stringify({ title: "test" }))
+      .mockResolvedValueOnce(JSON.stringify({ title: "test" }));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([{ title: "test" }]);
+    expect(logger.default.error).toHaveBeenCalledOnce();
   });
-  it("should log an error if multiple datapacks exist in the same directory", async () => {
-    const error = vi.spyOn(logger.default, "error");
-    readdir.mockResolvedValueOnce([
-      { isDirectory: () => true, name: "test1" } as Dirent,
-      { isDirectory: () => true, name: "test1" } as Dirent
-    ]);
-    checkFileExists.mockResolvedValueOnce(true).mockResolvedValueOnce(true);
-    await expect(fetchAllUsersDatapacks("test")).rejects.toThrow("Datapack test1 already exists in the index");
-    expect(error).toHaveBeenCalledOnce();
+  it("should log an error verifyFilepath returns false", async () => {
+    verifyFilepath.mockResolvedValueOnce(false);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(logger.default.error).toHaveBeenCalledOnce();
   });
-  it("should return a datapack index", async () => {
-    expect(await fetchAllUsersDatapacks("test")).toEqual({
-      test1: { title: "test" },
-      test3: { title: "test" }
-    });
+  it("should still return one datapack if the verifyFilepath fails for only one of the two datapacks", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test2"]);
+    readFile
+      .mockResolvedValueOnce(JSON.stringify({ title: "test" }))
+      .mockRejectedValueOnce(new Error("readFile error"));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([{ title: "test" }]);
+    expect(logger.default.error).toHaveBeenCalledOnce();
   });
 });
 
@@ -167,7 +148,6 @@ describe("getUserDirectory test", () => {
 
 describe("fetchUserDatapack test", () => {
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
   const readFile = vi.spyOn(fsPromises, "readFile");
   const assertPrivateUserDatapack = vi.spyOn(shared, "assertPrivateUserDatapack");
   const assertDatapack = vi.spyOn(shared, "assertDatapack");
@@ -180,9 +160,7 @@ describe("fetchUserDatapack test", () => {
     expect(verifyFilepath).toHaveBeenCalledOnce();
   });
   it("should throw an error if the file does not exist", async () => {
-    checkFileExists.mockResolvedValueOnce(false);
     await expect(fetchUserDatapack("test", "test")).rejects.toThrow("File test doesn't exist");
-    expect(checkFileExists).toHaveBeenCalledOnce();
   });
   it("should throw an error if readFile fails", async () => {
     readFile.mockRejectedValueOnce(new Error("readFile error"));
