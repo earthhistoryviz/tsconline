@@ -1,11 +1,12 @@
-import { access, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
+import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
+import { assetconfigs, verifyFilepath } from "../util.js";
 import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
+import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
 
 export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, datapack: string): Promise<boolean> {
   const directories = await getAllUserDatapackDirectories(uuid);
@@ -20,15 +21,6 @@ export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, 
   return false;
 }
 /**
- * get the directories at a source
- * @param source
- * @returns
- */
-export async function getDirectories(source: string): Promise<string[]> {
-  const entries = await readdir(source, { withFileTypes: true });
-  return entries.filter((dirent) => dirent.isDirectory()).map((dirent) => dirent.name);
-}
-/**
  * fetch all datapacks a user has
  * @param uuid
  * @returns
@@ -39,15 +31,20 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
   for (const directory of directories) {
     const datapacks = await getDirectories(directory);
     for (const datapack of datapacks) {
-      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
-      const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
-      if (await verifyFilepath(cachedDatapack)) {
-        if (datapacksArray.find((datapack) => datapack === parsedCachedDatapack.title)) {
-          logger.error(`File system is corrupted, multiple datapacks with the same name: ${datapack}`);
-          throw new Error(`Datapack ${datapack} already exists in the index`);
+      try {
+        const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+        const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
+        if (await verifyFilepath(cachedDatapack)) {
+          if (datapacksArray.find((datapack) => datapack.title === parsedCachedDatapack.title)) {
+            throw new Error(`Datapack ${datapack} already exists in the array`);
+          }
+          assertDatapack(parsedCachedDatapack);
+          datapacksArray.push(parsedCachedDatapack);
+        } else {
+          throw new Error(`File ${datapack} doesn't exist`);
         }
-        assertDatapack(parsedCachedDatapack);
-        datapacksArray.push(parsedCachedDatapack);
+      } catch (e) {
+        logger.error(`Error reading datapack ${datapack} for user ${uuid} with error ${e}`);
       }
     }
   }
@@ -68,76 +65,6 @@ export async function getUploadedDatapackFilepath(uuid: string, datapack: string
     throw new Error("Invalid filepath");
   }
   return uploadedFilepath;
-}
-
-/**
- * get the private and public user datapack directories
- * @param uuid
- * @returns
- */
-export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string> {
-  const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
-  if (!(await verifyNonExistentFilepath(userDirectory))) {
-    await mkdir(userDirectory, { recursive: true });
-  }
-  if (!(await verifyFilepath(userDirectory))) {
-    throw new Error("Invalid filepath");
-  }
-  return userDirectory;
-}
-/**
- * get the public user datapack directory
- * @param uuid
- * @returns
- */
-export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> {
-  const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
-  if (!(await verifyNonExistentFilepath(userDirectory))) {
-    await mkdir(userDirectory, { recursive: true });
-  }
-  if (!(await verifyFilepath(userDirectory))) {
-    throw new Error("Invalid filepath");
-  }
-  return userDirectory;
-}
-
-/**
- * get all the uuid directories, not the datapacks themselves
- * @param uuid
- * @returns
- */
-async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
-  return [
-    await getPrivateUserUUIDDirectory(uuid).catch(() => ""),
-    await getPublicUserUUIDDirectory(uuid).catch(() => "")
-  ].filter(Boolean);
-}
-export async function fetchUserDatapackDirectory(uuid: string, datapack: string): Promise<string> {
-  // check both public and private directories
-  const directoriesToCheck: string[] = await getAllUserDatapackDirectories(uuid);
-  for (const directory of directoriesToCheck) {
-    if (directory) {
-      try {
-        const datapacks = await getDirectories(directory);
-        if (datapacks.includes(datapack)) {
-          return path.join(directory, datapack);
-        }
-      } catch (e) {
-        // eslint-disable-next-line
-      }
-    }
-  }
-  throw new Error(`File ${datapack} doesn't exist`);
-}
-
-/**
- * gets the user uuid directory, public or private
- * @param uuid
- * @param isPublic
- * @returns
- */
-export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Promise<string> {
-  return isPublic ? getPublicUserUUIDDirectory(uuid) : getPrivateUserUUIDDirectory(uuid);
 }
 
 /**
