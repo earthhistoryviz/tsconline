@@ -2041,7 +2041,7 @@ describe("login-routes tests", () => {
         url: "/upload-profile-picture",
         ...formWithCookieHeader
       });
-      const profilePath = normalize("successfulPrivateUserUUIDDirectory");
+      const profilePath = normalize("private");
       const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
       const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
