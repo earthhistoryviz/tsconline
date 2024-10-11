@@ -292,6 +292,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
+  fields.uuid = "server";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     reply.status(500).send({ error: "Unexpected error with request fields." });
   });
