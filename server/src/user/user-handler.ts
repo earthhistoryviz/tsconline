@@ -137,7 +137,7 @@ export async function editDatapack(
   const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
   const originalTitle = _.clone(metadata.title);
   Object.assign(metadata, newDatapack);
-  if (originalTitle !== newDatapack.title) {
+  if ("title" in newDatapack && originalTitle !== newDatapack.title) {
     await renameUserDatapack(uuid, originalTitle, metadata);
   } else {
     await writeUserDatapack(uuid, metadata);
