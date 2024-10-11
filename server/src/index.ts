@@ -2,13 +2,11 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { execSync } from "child_process";
 import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
-import { ServerDatapackIndex } from "@tsconline/shared";
 import fastifyCompress from "@fastify/compress";
-import { loadFaciesPatterns, loadDatapackIntoIndex } from "./load-packs.js";
+import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
@@ -19,13 +17,12 @@ import "dotenv/config";
 import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
-import path, { join } from "path";
+import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchUserDatapacks, fetchPublicDatapacks } from "./routes/user-routes.js";
-import { loadPublicUserDatapacks } from "./public-datapack-handler.js";
-import { getAdminConfigDatapacks, loadAdminConfig } from "./admin/admin-config.js";
+import { fetchUserDatapacks } from "./routes/user-routes.js";
+import { loadAdminConfig } from "./admin/admin-config.js";
 import logger from "./error-logger.js";
 
 const maxConcurrencySize = 2;
@@ -67,38 +64,7 @@ if (!(await checkFileExists(decryptionJarPath))) {
   console.error("ERROR: Required decryption JAR file does not exist:", decryptionJarPath);
   process.exit(1);
 }
-
-try {
-  const datapackPaths = getAdminConfigDatapacks().map(
-    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.storedFileName + '"'
-  );
-  const cmd =
-    `java -jar ${assetconfigs.decryptionJar} ` +
-    // Decrypting these datapacks:
-    `-d ${datapackPaths.join(" ")} ` +
-    // Tell it where to send the datapacks
-    `-dest ${assetconfigs.decryptionDirectory} `;
-  console.log("Calling Java decrypt.jar: ", cmd);
-  execSync(cmd, { stdio: "inherit" });
-  console.log("Finished decryption");
-} catch (e) {
-  console.log("ERROR: Failed to decrypt adminconfig datapacks with error: ", e);
-  process.exit(1);
-}
-
-export const serverDatapackIndex: ServerDatapackIndex = {};
 const patterns = await loadFaciesPatterns();
-try {
-  for (const datapack of getAdminConfigDatapacks()) {
-    await loadDatapackIntoIndex(serverDatapackIndex, assetconfigs.decryptionDirectory, datapack);
-  }
-} catch (e) {
-  console.error("Error loading indexes: ", e);
-  process.exit(1);
-}
-export const { datapackIndex: publicDatapackIndex } = await loadPublicUserDatapacks(
-  join(assetconfigs.publicDirectory, "DatapackIndex.json")
-);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
@@ -214,7 +180,7 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/server/datapack/:name", routes.fetchServerDatapack);
 
-server.get("/datapack-index", routes.fetchServerDatapackInfo);
+server.get("/public/datapacks", routes.fetchPublicDatapackChunk);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -249,7 +215,6 @@ const looseRateLimit = {
     }
   }
 };
-server.get("/public/datapacks", moderateRateLimit, fetchPublicDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 

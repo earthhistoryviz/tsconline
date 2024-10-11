@@ -11,7 +11,6 @@ import {
   defaultColumnRoot,
   FontsInfo,
   Datapack,
-  assertDatapackIndex,
   DatapackConfigForChartRequest,
   isUserDatapack,
   isServerDatapack,
@@ -56,7 +55,7 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { getDatapackFromArray } from "../non-action-util";
+import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
@@ -110,10 +109,13 @@ export const removeDatapack = action("removeDatapack", async (datapack: { title:
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
-  fetchPublicDatapacks();
+  fetchAllPublicDatapacks();
 });
 export const addDatapack = action("addDatapack", (datapack: Datapack) => {
-  state.datapacks.push(observable(datapack));
+  // we don't log since fetching datapacks could produce duplicates
+  if (!doesDatapackAlreadyExist(datapack, state.datapacks)) {
+    state.datapacks.push(observable(datapack));
+  }
 });
 /**
  * Resets any user defined settings
@@ -122,12 +124,12 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () => {
+export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async () => {
   let start = 0;
   let total = -1;
   try {
     while (total == -1 || start < total) {
-      const response = await fetcher(`/datapack-index?start=${start}&increment=${increment}`, {
+      const response = await fetcher(`/public/datapacks?start=${start}&increment=${increment}`, {
         method: "GET"
       });
       const index = await response.json();
@@ -174,12 +176,13 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertDatapackIndex(data);
-      for (const dp in data) {
-        addDatapack(data[dp]);
+      assertDatapackArray(data);
+      for (const dp of data) {
+        addDatapack(dp);
       }
       console.log("Public Datapacks loaded");
     } catch (e) {
+      console.error(e);
       displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
     }
   } catch (e) {

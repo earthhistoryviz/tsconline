@@ -9,7 +9,6 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
-import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
@@ -148,7 +147,6 @@ export const requestDownload = async function requestDownload(
     await access(encryptedFilepath);
     const file = await readFile(encryptedFilepath);
     if (await checkHeader(encryptedFilepath)) {
-      console.log("here 1");
       reply.send(file);
       return;
     } else {
@@ -166,7 +164,6 @@ export const requestDownload = async function requestDownload(
     await access(filepath);
     const file = await readFile(filepath);
     if (await checkHeader(filepath)) {
-      console.log("here 2");
       reply.send(file);
       return;
     }
@@ -221,16 +218,6 @@ export const requestDownload = async function requestDownload(
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
     }
-  }
-};
-
-export const fetchPublicDatapacks = async function fetchPublicDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  try {
-    const publicDatapackIndexFilepath = path.join(assetconfigs.publicDirectory, "DatapackIndex.json");
-    const { datapackIndex } = await loadPublicUserDatapacks(publicDatapackIndexFilepath);
-    reply.send(datapackIndex);
-  } catch (e) {
-    reply.status(500).send({ error: "Failed to load public datapacks" });
   }
 };
 

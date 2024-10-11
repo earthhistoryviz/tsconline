@@ -19,7 +19,6 @@ import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import { serverDatapackIndex } from "../index.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
@@ -305,9 +304,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (!filepath || !storedFileName || !datapackMetadata)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
-    if (serverDatapackIndex[datapackMetadata.title]) {
-      delete serverDatapackIndex[datapackMetadata.title];
-    }
     reply.status(errorCode).send({ error });
   };
   try {
@@ -324,7 +320,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (!datapackIndex[datapackMetadata.title]) {
       throw new Error("Datapack not found in index");
     }
-    serverDatapackIndex[datapackMetadata.title] = datapackIndex[datapackMetadata.title]!;
   } catch (error) {
     await errorHandler("Error setting up UUID Directory");
     return;
