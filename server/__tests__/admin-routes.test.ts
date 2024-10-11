@@ -20,7 +20,7 @@ import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
-import { AccountType, Workshop } from "../src/types";
+import { User, Workshop } from "../src/types";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -233,7 +233,7 @@ beforeEach(() => {
   process.env.NODE_ENV = "test";
 });
 
-const testAdminUser = {
+const testAdminUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -244,7 +244,7 @@ const testAdminUser = {
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
   workshopId: 1,
-  accountType: "default" as AccountType
+  accountType: "default"
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -259,7 +259,7 @@ const testSharedAdminUser = {
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default" as AccountType
+  accountType: "default"
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
