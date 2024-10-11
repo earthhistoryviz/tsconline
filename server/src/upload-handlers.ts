@@ -12,11 +12,8 @@ import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
-import {
-  decryptDatapack,
-  doesDatapackFolderExistInAllUUIDDirectories,
-  getUserUUIDDirectory
-} from "./user/user-handler.js";
+import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import { getUserUUIDDirectory } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import { addAdminConfigDatapack } from "./admin/admin-config.js";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";

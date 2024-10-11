@@ -26,7 +26,7 @@ import { readdir, rm, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
 import validator from "validator";
 import logger from "../error-logger.js";
-import { getPrivateUserUUIDDirectory } from "../user/user-handler.js";
+import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const googleRecaptchaBotThreshold = 0.5;
 
