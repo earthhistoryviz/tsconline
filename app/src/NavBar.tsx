@@ -39,6 +39,9 @@ import MenuItem from "@mui/material/MenuItem";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
+import Switch from "@mui/material/Switch";
+import { CustomFormControlLabel } from "/home/sbal/tsconline/app/src/components/TSCComponents";
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -152,6 +155,7 @@ export const NavBar = observer(function Navbar() {
                   <Typography>{t(`settingsTabs.${label}`)}</Typography>
                 </TSCMenuItem>
               ))}
+              
             </ControlledMenu>
           </>
         )}
@@ -222,6 +226,54 @@ export const NavBar = observer(function Navbar() {
             }}
           />
         )}
+
+<PopupState variant="popover" popupId="demo-popup-menu">
+                {(popupState) => (
+                  <React.Fragment>
+                    <Button variant="text" {...bindTrigger(popupState)}>
+                      <SettingsIcon/>
+                      <Typography>{t(`Preferences`)}</Typography>
+                    </Button>
+                    <Menu {...bindMenu(popupState)}>
+                      {Object.entries(languageList).map(([key, value]) => (
+                        <MenuItem
+                          key={key}
+                          className="settings-sub-menu-item"
+                          onClick={() => {
+                            i18next.changeLanguage(value);
+                          }}>
+                          <Typography>{t(`language-names.${value}`)}</Typography>
+                        </MenuItem>
+                        
+                      ))}
+
+                        <MenuItem
+                          className="settings-sub-menu-item"
+                          onClick={() => {
+                          }}>
+                          <Typography>{t(``)}</Typography>
+
+                          <CustomFormControlLabel
+                            width={120}
+                            control={
+                              <Switch
+                                checked={state.user.settings.darkMode}
+                                size="medium"
+                                color="default"
+                                onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
+                              />
+                            }
+                            label={t("login.dark-mode")}
+                          />
+
+                        </MenuItem>
+                        
+                      
+                    </Menu>
+                  </React.Fragment>
+                )}
+              </PopupState>
+
       </Toolbar>
     </StyledAppBar>
   );
