@@ -15,13 +15,36 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import CloseSharpIcon from "@mui/icons-material/CloseSharp";
+import ScheduleIcon from "@mui/icons-material/Schedule";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import EventBusyIcon from "@mui/icons-material/EventBusy";
 import "./AdminWorkshop.css";
 
-const checkboxRenderer = (params: { value: string }) => {
+const StatusCellRenderer = (params: { value: string }) => {
   if (params.value === "active") {
-    return <span className="ag-icon-tick active-icon" />;
+    return (
+      <CustomTooltip title="Active">
+        <IconButton>
+          <EventAvailableIcon className="active-icon" />
+        </IconButton>
+      </CustomTooltip>
+    );
+  } else if (params.value === "inactive") {
+    return (
+      <CustomTooltip title="Inactive">
+        <IconButton>
+          <ScheduleIcon className="inactive-icon" />
+        </IconButton>
+      </CustomTooltip>
+    );
   } else {
-    return <span className="ag-icon-cross inactive-icon" />;
+    return (
+      <CustomTooltip title="Expired">
+        <IconButton>
+          <EventBusyIcon className="expired-icon" />
+        </IconButton>
+      </CustomTooltip>
+    );
   }
 };
 
@@ -93,10 +116,10 @@ const workshopColDefs: ColDef[] = [
     valueFormatter: (params) => dayjs(params.value).format("MMMM D, YYYY [at] h:mm A")
   },
   {
-    headerName: "Active",
+    headerName: "Status",
     field: "status",
     flex: 0.2,
-    cellRenderer: checkboxRenderer,
+    cellRenderer: StatusCellRenderer,
     cellClass: "centered-cell",
     headerClass: "centered-header"
   },
@@ -124,6 +147,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
   const [startDate, setStartDate] = useState<Dayjs | null>(null);
   const [endDate, setEndDate] = useState<Dayjs | null>(null);
   const [emails, setEmails] = useState<string>("");
+  const [showAllWorkshops, setShowAllWorkshops] = useState(false);
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
@@ -282,6 +306,12 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
             setCreateWorkshopFormOpen(true);
           }}>
           Create Workshop
+        </TSCButton>
+        <TSCButton
+          onClick={() => {
+            setShowAllWorkshops(!showAllWorkshops);
+          }}>
+          {showAllWorkshops ? "Hide Expired Workshops" : "Show Expired Workshops"}
         </TSCButton>
         <TSCPopup
           open={!!invalidEmails}
@@ -447,7 +477,9 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       </Box>
       <AgGridReact
         columnDefs={workshopColDefs}
-        rowData={Array.from(state.admin.workshops.values())}
+        rowData={Array.from(state.admin.workshops.values())
+          .filter((workshop) => showAllWorkshops || workshop.status !== "expired")
+          .sort((workshop) => (workshop.status === "expired" ? 1 : -1))}
         components={{ ActionsCellRenderer }}
         context={{
           setEditWorkshopFormOpen,

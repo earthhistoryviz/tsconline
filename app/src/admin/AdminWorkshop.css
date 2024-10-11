@@ -12,6 +12,10 @@
 }
 
 .inactive-icon {
+  color: darkorange;
+}
+
+.expired-icon {
   color: red;
 }
 

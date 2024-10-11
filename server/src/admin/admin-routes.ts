@@ -668,12 +668,12 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     const now = new Date();
     const newStart = new Date(newWorkshop.start);
     const newEnd = new Date(newWorkshop.end);
-    const workshop = {
+    const workshop: SharedWorkshop = {
       title: newWorkshop.title,
       start: newWorkshop.start,
       end: newWorkshop.end,
       workshopId: workshopId,
-      active: newStart <= now && now <= newEnd
+      status: newStart <= now ? (now <= newEnd ? "active" : "expired") : "inactive"
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
