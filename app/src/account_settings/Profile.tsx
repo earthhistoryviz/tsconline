@@ -430,34 +430,6 @@ export const Profile = observer(() => {
         </Grid>
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
-            <Typography variant="h5" component="h2" gutterBottom>
-              {t("login.settings")}
-            </Typography>
-            <CustomFormControlLabel
-              width={120}
-              control={
-                <Switch
-                  checked={state.user.settings.darkMode}
-                  size="medium"
-                  color="default"
-                  onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
-                />
-              }
-              label={t("login.dark-mode")}
-            />
-            <FormControl fullWidth variant="outlined" margin="normal">
-              <InputLabel>Language</InputLabel>
-              <Select
-                value={state.user.settings.language}
-                onChange={(e) => actions.setLanguage(e.target.value)}
-                label="Language"
-                name="language">
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Spanish">Spanish</MenuItem>
-                <MenuItem value="French">French</MenuItem>
-                <MenuItem value="German">German</MenuItem>
-              </Select>
-            </FormControl>
             <Box mt={2}>
               <Button variant="contained" color="error" fullWidth onClick={() => setPopupOpen(true)}>
                 {t("login.delete")}
