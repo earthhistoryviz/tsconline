@@ -2,6 +2,7 @@ import { mkdir, readdir } from "fs/promises";
 import path from "path";
 import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util";
 
+// TODO WRITE TESTS FOR WHOLE FILE
 /**
  * get the private and public user datapack directories
  * @param uuid
