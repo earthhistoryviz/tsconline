@@ -17,7 +17,6 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
-import LanguageIcon from "@mui/icons-material/Language";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import Button from "@mui/material/Button";
@@ -46,7 +45,6 @@ export const NavBar = observer(function Navbar() {
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const { t } = useTranslation();
-  const currentLanguage = i18next.language;
   const location = useLocation();
   return (
     <StyledAppBar position="fixed">
