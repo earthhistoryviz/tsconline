@@ -39,7 +39,7 @@ import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
 import Switch from "@mui/material/Switch";
-import { CustomFormControlLabel } from "/home/sbal/tsconline/app/src/components/TSCComponents";
+import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
