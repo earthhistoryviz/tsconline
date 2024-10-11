@@ -30,12 +30,11 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
 import { TSCCheckbox } from "../TSCCheckbox";
-import { UploadOptions } from "../../types";
 import { useTranslation } from "react-i18next";
 
 type DatapackUploadFormProps = {
   close: () => void;
-  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
+  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
   type: DatapackType;
 };
 export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
@@ -142,15 +141,13 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               />
             )}
           />
-          {type.type === "user" && (
-            <FormControlLabel
-              name="public-datapack"
-              control={
-                <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
-              }
-              label={t("settings.datapacks.upload-form.make-public")}
-            />
-          )}
+          <FormControlLabel
+            name="public-datapack"
+            control={
+              <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+            }
+            label={t("settings.datapacks.upload-form.make-public")}
+          />
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">

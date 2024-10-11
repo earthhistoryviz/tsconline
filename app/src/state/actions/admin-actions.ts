@@ -284,13 +284,15 @@ export const adminUploadServerDatapack = action(async (file: File, metadata: Dat
     return;
   }
   const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+  const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
   formData.append("file", file);
   formData.append("title", title);
   formData.append("description", description);
   formData.append("references", JSON.stringify(references));
   formData.append("tags", JSON.stringify(tags));
   formData.append("authoredBy", authoredBy);
+  formData.append("isPublic", String(isPublic));
+  formData.append("type", metadata.type);
   if (notes) formData.append("notes", notes);
   if (date) formData.append("date", date);
   if (contact) formData.append("contact", contact);
