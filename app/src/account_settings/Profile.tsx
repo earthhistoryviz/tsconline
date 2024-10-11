@@ -1,6 +1,5 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
 import {
-  Switch,
   Typography,
   Grid,
   Container,
@@ -8,10 +7,6 @@ import {
   Box,
   TextField,
   Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Button,
   Badge
 } from "@mui/material";
