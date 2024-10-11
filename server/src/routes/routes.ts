@@ -1,7 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
-import { Datapack, DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
+import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -9,11 +9,12 @@ import fs, { realpathSync } from "fs";
 import { parseExcelFile } from "../parse-excel-file.js";
 import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
-import { serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
 import { findUser } from "../database.js";
+import { fetchUserDatapack } from "../user/user-handler.js";
+import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -24,7 +25,7 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const serverDatapack = serverDatapackIndex[decodeURIComponent(name)];
+  const serverDatapack = await fetchUserDatapack("server", name);
   if (!serverDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
@@ -32,35 +33,34 @@ export const fetchServerDatapack = async function fetchServerDatapack(
   reply.send(serverDatapack);
 };
 
-export const fetchServerDatapackInfo = async function fetchServerDatapackInfo(
+export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
   request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
   reply: FastifyReply
 ) {
-  const { start = 0, increment = 1 } = request.query;
-  const startIndex = Number(start);
-  let incrementValue = Number(increment);
-  const allDatapackKeys = Object.keys(serverDatapackIndex);
-  if (isNaN(Number(startIndex)) || isNaN(Number(incrementValue)) || startIndex < 0 || incrementValue <= 0) {
+  const { start, increment } = request.query;
+  const startIndex = start === undefined ? 0 : Number(start);
+  let incrementValue = increment === undefined ? 1 : Number(increment);
+  if (
+    (start !== undefined && isNaN(startIndex)) ||
+    (increment !== undefined && isNaN(incrementValue)) ||
+    startIndex < 0 ||
+    incrementValue <= 0
+  ) {
     reply.status(400).send({ error: "Invalid range" });
     return;
   }
-  if (startIndex + incrementValue > allDatapackKeys.length) {
-    incrementValue = allDatapackKeys.length - startIndex;
+  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
+  if (startIndex + incrementValue > uuids.length) {
+    incrementValue = uuids.length - startIndex;
   }
-  const keys = allDatapackKeys.slice(startIndex, startIndex + incrementValue);
-  const chunk: Datapack[] = [];
-  for (const key of keys) {
-    if (!serverDatapackIndex[key]) {
-      reply.status(500).send({ error: "Failed to load datapack" });
-      return;
-    }
-    chunk.push(serverDatapackIndex[key]!);
-  }
-  if (Object.keys(chunk).length === 0) {
-    reply.send({ datapackIndex: {}, totalChunks: 0 });
+  const undefinedIndexes = start === undefined && increment === undefined;
+  const chunk = undefinedIndexes ? uuids : uuids.slice(startIndex, startIndex + incrementValue);
+  const datapackArray = await loadPublicUserDatapacks(chunk);
+  if (datapackArray.length === 0) {
+    reply.send({ datapacks: datapackArray, totalChunks: 0 });
     return;
   }
-  const datapackInfoChunk: DatapackInfoChunk = { datapacks: chunk!, totalChunks: allDatapackKeys.length };
+  const datapackInfoChunk: DatapackInfoChunk = { datapacks: datapackArray, totalChunks: uuids.length };
   reply.status(200).send(datapackInfoChunk);
 };
 
