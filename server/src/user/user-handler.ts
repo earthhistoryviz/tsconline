@@ -8,6 +8,13 @@ import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-me
 import { spawn } from "child_process";
 import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
 
+/**
+ * TODO: WRITE TESTS
+ * looks for a specific datapack in all the user directories
+ * @param uuid
+ * @param datapack
+ * @returns
+ */
 export async function doesDatapackFolderExistInAllUUIDDirectories(uuid: string, datapack: string): Promise<boolean> {
   const directories = await getAllUserDatapackDirectories(uuid);
   for (const directory of directories) {
@@ -53,6 +60,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 
 /**
  * GET the uploaded datapack filepath NOT the directory it lives in
+ * TODO: WRITE TESTS
  * @param uuid
  * @param datapack
  * @returns
@@ -114,6 +122,12 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, data
   });
 }
 
+/**
+ * TODO: write tests
+ * @param uuid
+ * @param oldDatapackTitle
+ * @param newDatapack
+ */
 export async function editDatapack(
   uuid: string,
   oldDatapackTitle: string,
@@ -131,6 +145,7 @@ export async function editDatapack(
 
 /**
  * deletes all the user datapacks, public and private
+ * TODO: write tests
  * @param uuid
  */
 export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
@@ -150,6 +165,7 @@ export async function deleteAllUserDatapacks(uuid: string): Promise<void> {
 
 /**
  * deletes a single user datapack
+ * TODO: write tests
  * @param uuid
  * @param datapack the title of the datapack
  */
@@ -165,6 +181,7 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
 /**
  * Deletes a server datapack
  * @param datapack the title of the datapack
+ * TODO: write tests
  */
 export async function deleteServerDatapack(datapack: string): Promise<void> {
   const datapackPath = await fetchUserDatapackDirectory("server", datapack);
@@ -186,6 +203,11 @@ export async function writeUserDatapack(uuid: string, datapack: Datapack): Promi
   }
   await writeFile(datapackPath, JSON.stringify(datapack, null, 2));
 }
+/**
+ * TODO: write tests
+ * @param filepath
+ * @param outputDirectory
+ */
 export async function decryptDatapack(filepath: string, outputDirectory: string): Promise<void> {
   const filenameWithoutExtension = path.parse(filepath).name;
   const args = [
@@ -224,15 +246,16 @@ export async function decryptDatapack(filepath: string, outputDirectory: string)
   await access(path.join(outputDirectory, filenameWithoutExtension));
   await access(path.join(outputDirectory, filenameWithoutExtension, "datapacks"));
 }
+/**
+ * get the encrypted datapack directory given uuid and datapack title
+ * @param uuid
+ * @param datapackTitle
+ * @returns
+ */
 export async function getEncryptedDatapackDirectory(uuid: string, datapackTitle: string) {
-  console.log("Getting encrypted datapack directory");
-  console.log(datapackTitle);
   const datapackDir = await fetchUserDatapackDirectory(uuid, datapackTitle);
-  console.log("Datapack directory: ", datapackDir);
   const metadata = await fetchUserDatapack(uuid, datapackTitle);
   const encryptedDir = path.join(datapackDir, "encrypted");
   const encryptedFilepath = path.join(encryptedDir, metadata.originalFileName);
-  console.log("Encrypted directory: ", encryptedDir);
-  console.log("Encrypted filepath: ", encryptedFilepath);
   return { encryptedDir, encryptedFilepath };
 }
