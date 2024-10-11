@@ -1,21 +1,11 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import {
-  Typography,
-  Grid,
-  Container,
-  Paper,
-  Box,
-  TextField,
-  Avatar,
-  Button,
-  Badge
-} from "@mui/material";
+import { Typography, Grid, Container, Paper, Box, TextField, Avatar, Button, Badge } from "@mui/material";
 import { context } from "../state";
 import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "../util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "../util";
 import { displayServerError } from "../state/actions/util-actions";
-import { Lottie, TSCButton, TSCYesNoPopup, CustomFormControlLabel } from "../components";
+import { Lottie, TSCButton, TSCYesNoPopup } from "../components";
 import loader from "../assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import { observer } from "mobx-react-lite";
