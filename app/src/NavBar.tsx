@@ -86,8 +86,8 @@ export const NavBar = observer(function Navbar() {
                 }
               }}
               TabIndicatorProps={{ sx: { bgcolor: "button.light" } }}>
-              <Tab value={1} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
-              <Tab value={2} disableRipple label={t("navBar.datapacks")} to="/datapacks" component={Link} />
+              <Tab value={1} disableRipple label={t("navBar.datapacks")} to="/datapacks" component={Link} />
+              <Tab value={2} disableRipple label={t("navBar.chart")} to="/chart" component={Link} />
               <Tab
                 value={3}
                 disableRipple
