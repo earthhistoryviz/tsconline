@@ -1,5 +1,5 @@
 import path from "path";
-import { getDirectories } from "./user/user-handler.js";
+import { getDirectories } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
 import { readdir, readFile, writeFile } from "fs/promises";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";

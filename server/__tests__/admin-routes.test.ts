@@ -18,6 +18,7 @@ import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
 import * as userHandlers from "../src/user/user-handler";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
 import { User, Workshop } from "../src/types";
 
 vi.mock("node:child_process", async () => {
@@ -37,6 +38,11 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     assertDatapackIndex: vi.fn().mockReturnValue(true),
     assertSharedWorkshop: vi.fn().mockImplementation(actual.assertSharedWorkshop),
     assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray)
+  };
+});
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    fetchUserDatapackDirectory: vi.fn().mockResolvedValue("test-user")
   };
 });
 
@@ -763,7 +769,7 @@ describe("adminDeleteUserDatapack", () => {
   };
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
   const deleteUserDatapack = vi.spyOn(userHandlers, "deleteUserDatapack");
-  const fetchUserDatapackFilepath = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const relative = vi.spyOn(path, "relative");
   const originalEnv = { ...process.env };
   process.cwd = () => "testdir";
@@ -812,12 +818,12 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(deleteUserDatapack).toBeCalledTimes(1);
     expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackFilepath).not.toBeCalled();
+    expect(fetchUserDatapackDirectory).not.toBeCalled();
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
   it("should return 500 if fetchUserDatapackFilepath throws error", async () => {
-    fetchUserDatapackFilepath.mockRejectedValueOnce(new Error());
+    fetchUserDatapackDirectory.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
@@ -825,8 +831,8 @@ describe("adminDeleteUserDatapack", () => {
       headers
     });
     expect(deleteUserDatapack).toHaveBeenCalledTimes(1);
-    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
-    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).not.toBeCalled();
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
@@ -842,8 +848,8 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(deleteUserDatapack).toBeCalledTimes(1);
     expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
-    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
     expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ error: "Unknown error" });
@@ -859,8 +865,8 @@ describe("adminDeleteUserDatapack", () => {
     });
     expect(deleteUserDatapack).toBeCalledTimes(1);
     expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
-    expect(fetchUserDatapackFilepath).toBeCalledTimes(1);
-    expect(fetchUserDatapackFilepath).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
     expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ message: "Datapack deleted" });

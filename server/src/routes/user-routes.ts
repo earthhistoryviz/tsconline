@@ -10,13 +10,8 @@ import { pipeline } from "stream/promises";
 import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import {
-  deleteUserDatapack,
-  editDatapack,
-  fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  getPrivateUserUUIDDirectory
-} from "../user/user-handler.js";
+import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,

@@ -12,7 +12,7 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { serverDatapackIndex } from "../index.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { fetchUserDatapackDirectory } from "../user/user-handler.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser } from "../database.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(

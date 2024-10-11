@@ -39,9 +39,9 @@ import {
   deleteServerDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
-  fetchAllUsersDatapacks,
-  fetchUserDatapackDirectory
+  fetchAllUsersDatapacks
 } from "../user/user-handler.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 
 /**
  * Get all users for admin to configure on frontend

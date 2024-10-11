@@ -19,6 +19,11 @@ import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
 import logger from "../src/error-logger";
 import { normalize } from "path";
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    getPrivateUserUUIDDirectory: vi.fn().mockResolvedValue("private")
+  };
+});
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -2031,14 +2036,12 @@ describe("login-routes tests", () => {
       const rmSpy = vi.spyOn(fsPromisesModule, "rm");
       const createWriteStreamSpy = vi.spyOn(fsModule, "createWriteStream");
       const pipelineSpy = vi.spyOn(streamPromisesModule, "pipeline");
-
       const response = await app.inject({
         method: "POST",
         url: "/upload-profile-picture",
         ...formWithCookieHeader
       });
-
-      const profilePath = normalize(`uploads/${testUser.uuid}/profile`);
+      const profilePath = normalize("successfulPrivateUserUUIDDirectory");
       const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
       const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
