@@ -7,6 +7,7 @@ import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
 import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
+import _ from "lodash";
 
 /**
  * TODO: WRITE TESTS
@@ -134,7 +135,7 @@ export async function editDatapack(
   newDatapack: Partial<DatapackMetadata>
 ): Promise<void> {
   const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
-  const originalTitle = JSON.stringify(metadata.title);
+  const originalTitle = _.clone(metadata.title);
   Object.assign(metadata, newDatapack);
   if (originalTitle !== newDatapack.title) {
     await renameUserDatapack(uuid, originalTitle, metadata);

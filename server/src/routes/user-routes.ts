@@ -43,6 +43,7 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   try {
     await editDatapack(uuid, datapack, body);
   } catch (e) {
+    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
     return;
   }

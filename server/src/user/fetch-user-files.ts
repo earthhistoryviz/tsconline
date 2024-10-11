@@ -1,6 +1,6 @@
 import { mkdir, readdir } from "fs/promises";
 import path from "path";
-import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util";
+import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util.js";
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**
