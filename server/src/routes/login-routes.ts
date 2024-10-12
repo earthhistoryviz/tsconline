@@ -209,13 +209,13 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       return;
     }
     const { email, username, pictureUrl, hashedPassword, isAdmin, userId } = user;
-    const workshopTitle = [];
+    const workshopEnrolled = [];
     const userWorkshops = await findUserInUsersWorkshops(userId);
     for (const userWorkshop of userWorkshops) {
       const workshopId = userWorkshop.workshopId;
       const workshop = await getAndHandleWorkshopEnd(workshopId);
       if (workshop && new Date(workshop.start) <= new Date()) {
-        workshopTitle.push(workshop.title);
+        workshopEnrolled.push(workshop.title);
       }
     }
     const sharedUser: SharedUser = {
@@ -224,7 +224,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       pictureUrl,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
-      ...(workshopTitle.length > 0 && { workshopTitle }),
+      ...(workshopEnrolled.length > 0 && { workshopEnrolled }),
       uuid
     };
     assertSharedUser(sharedUser);

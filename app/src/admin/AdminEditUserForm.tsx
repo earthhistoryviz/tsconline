@@ -6,16 +6,15 @@ import {
   IconButton,
   Dialog,
   Box,
-  Button,
   Avatar,
   TextField,
   Select,
   MenuItem
 } from "@mui/material";
 import { AdminSharedUser } from "@tsconline/shared";
-import { useState, useEffect } from "react";
-import { CustomTooltip, TSCYesNoPopup } from "../components";
+import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
+import useEditUser from "../components/edit-user-stats-hook";
 
 type MoreCellRendererProps = {
   data: AdminSharedUser;
@@ -23,35 +22,20 @@ type MoreCellRendererProps = {
 
 //TODO: Need to implement backend
 export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) => {
-  const { data } = props;
-  const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [unsavedChanges, setUnsavedChanges] = useState(false);
-  const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [userInfo, setUserInfo] = useState({
-    username: data.username,
-    email: data.email,
-    isAdmin: data.isAdmin,
-    pictureUrl: data.pictureUrl || null
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
-  const workshops = data.workshopTitle ? data.workshopTitle : ["No registered workshop"];
-  const [currentWorkshops, setCurrentWorkshops] = useState(workshops);
-  const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
-  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const { state, setters, handlers } = useEditUser({ data: props.data });
+
   const worshopsList = () => {
-    return (currentWorkshops[0] === "No registered workshop" && workshops.length === 1) ||
-      currentWorkshops.length == 0 ? (
+    return (state.currentWorkshops[0] === "No registered workshop" && state.currentWorkshops.length === 1) ||
+      state.currentWorkshops.length === 0 ? (
       <Typography ml={1}>No registered workshop</Typography>
     ) : (
       <List dense={true}>
-        {currentWorkshops.map((value, index) => (
+        {state.currentWorkshops.map((value, index) => (
           <ListItem key={index}>
             <School />
             <Typography ml={1}>{value}</Typography>
             <CustomTooltip title="Remove user from this workshop">
-              <IconButton onClick={() => handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+              <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
                 <PersonRemove />
               </IconButton>
             </CustomTooltip>
@@ -61,117 +45,31 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
     );
   };
 
-  // Function to remove a workshop
-  const handleRemoveWorkshop = () => {
-    if (selectedWorkshop) {
-      const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop);
-      setCurrentWorkshops(updatedWorkshops);
-    }
-    handleCloseConfirmDialog();
-  };
-  const handleEditToggle = () => {
-    setIsEditing(!isEditing);
-    setOriginalUserInfo(userInfo);
-  };
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUnsavedChanges(true);
-    setUserInfo({
-      ...userInfo,
-      [e.target.name]: e.target.value
-    });
-  };
-  const handleSaveChanges = () => {
-    if (selectedFile) {
-      const newAvatarUrl = URL.createObjectURL(selectedFile); // Preview URL for the uploaded image
-      setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
-    }
-    setUnsavedChanges(false);
-    setIsEditing(false); // Quit edit mode
-  };
-  const handleDiscardChanges = (closeDialog: boolean) => {
-    setUserInfo(originalUserInfo); // Reset to original data
-    setSelectedFile(null); // Clear any selected file
-    setIsEditing(false); // Quit edit mode
-    setUnsavedChanges(false);
-    setShowDiscardDialog(false);
-    if (closeDialog) {
-      setMoreUsersInfoFormOpen(false);
-    }
-  };
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]); // Store the selected file
-    }
-  };
-  // Function to handle opening the confirmation dialog
-  const handleOpenConfirmDialog = (title: string) => {
-    setSelectedWorkshop(title);
-    setOpenConfirmDialog(true);
-  };
-
-  // Function to handle closing the confirmation dialog
-  const handleCloseConfirmDialog = () => {
-    setOpenConfirmDialog(false);
-    setSelectedWorkshop(null); // Clear the selected workshop
-  };
-
-  const handleCloseDiscardDialog = () => {
-    setShowDiscardDialog(false); // Close discard confirmation dialog
-  };
-
-  // Function to intercept dialog closure
-  const handleCloseDialog = () => {
-    if (unsavedChanges) {
-      setShowDiscardDialog(true); // Show confirmation dialog if there are unsaved changes
-    } else {
-      handleDiscardChanges(true);
-      setMoreUsersInfoFormOpen(false); // Close the main dialog
-    }
-  };
-
-  const handleOpen = () => {
-    setMoreUsersInfoFormOpen(true);
-  };
-  const handleClose = (event: React.MouseEvent<HTMLElement>, reason: string) => {
-    if (reason !== "backdropClick") {
-      handleDiscardChanges(true);
-      setMoreUsersInfoFormOpen(false);
-    }
-  };
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (unsavedChanges) {
-        event.preventDefault();
-        event.returnValue = ""; // Shows the browser's default warning for unsaved changes
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [unsavedChanges]);
-
   return (
     <>
       <CustomTooltip title="Show user stats">
-        <IconButton onClick={handleOpen}>
+        <IconButton onClick={() => setters.setMoreUsersInfoFormOpen(true)}>
           <MoreVertOutlinedIcon />
         </IconButton>
       </CustomTooltip>
       <Dialog
-        open={moreUsersInfoFormOpen}
-        onClose={handleClose}
+        open={state.moreUsersInfoFormOpen}
+        onClose={(event, reason) => {
+          if (reason !== "backdropClick") {
+            handlers.handleCloseDialog();
+          }
+        }}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
-        <IconButton onClick={() => handleCloseDialog()} sx={{ position: "absolute", top: 8, right: 8 }}>
+        <IconButton onClick={handlers.handleCloseDialog} sx={{ position: "absolute", top: 8, right: 8 }}>
           <Close />
         </IconButton>
 
         {/* Overall Header */}
         <Box textAlign={"center"} width="100%" pt={3} pr={3} pb={0} pl={3}>
           <Typography variant="h5" mb={2} sx={{ fontWeight: "bold" }}>
-            Stats of {data.username}
+            Stats of {state.userInfo.username}
           </Typography>
         </Box>
         {/* Basic Information Title */}
@@ -179,7 +77,7 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Box display="flex" alignItems="center">
               <Typography variant="h6">Basic Information</Typography>
-              <IconButton onClick={handleEditToggle} sx={{ ml: 1 }}>
+              <IconButton onClick={handlers.handleEditToggle} sx={{ ml: 1 }}>
                 <Edit />
               </IconButton>
             </Box>
@@ -191,40 +89,51 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
             <Box display="flex" alignItems="center" mb={2}>
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {userInfo.pictureUrl ? (
-                    <img src={userInfo.pictureUrl} alt={userInfo.username} />
+                  {state.userInfo.pictureUrl ? (
+                    <img src={state.userInfo.pictureUrl} alt={state.userInfo.username} />
                   ) : (
-                    userInfo.username[0].toUpperCase()
+                    state.userInfo.username[0].toUpperCase()
                   )}
                 </Avatar>
-                {isEditing && (
+                {state.isEditing && (
                   <Box position="absolute" bottom={-3} right={12} zIndex={1}>
                     <CustomTooltip title="Upload avatar">
                       <IconButton
                         component="label"
                         sx={{ padding: 0, backgroundColor: "transparent", borderRadius: "50%" }}>
                         <FileUpload fontSize="small" />
-                        <input type="file" hidden onChange={handleFileChange} accept="image/*" />
+                        <input type="file" hidden onChange={handlers.handleFileChange} accept="image/*" />
                       </IconButton>
                     </CustomTooltip>
                   </Box>
                 )}
               </Box>
 
-              {isEditing ? (
-                <TextField label="Username" name="username" value={userInfo.username} onChange={handleInputChange} />
+              {state.isEditing ? (
+                <TextField
+                  label="Username"
+                  name="username"
+                  value={state.userInfo.username}
+                  onChange={handlers.handleInputChange}
+                />
               ) : (
-                <Typography variant="h6">{userInfo.username}</Typography>
+                <Typography variant="h6">{state.userInfo.username}</Typography>
               )}
             </Box>
 
             {/* User Email */}
             <Box mb={1}>
-              {isEditing ? (
-                <TextField label="Email" name="email" value={userInfo.email} onChange={handleInputChange} fullWidth />
+              {state.isEditing ? (
+                <TextField
+                  label="Email"
+                  name="email"
+                  value={state.userInfo.email}
+                  onChange={handlers.handleInputChange}
+                  fullWidth
+                />
               ) : (
                 <Typography variant="body1">
-                  <strong>Email:</strong> {userInfo.email}
+                  <strong>Email:</strong> {state.userInfo.email}
                 </Typography>
               )}
             </Box>
@@ -234,29 +143,33 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
               <Typography variant="body1" mr={1}>
                 <strong>Admin:</strong>
               </Typography>
-              {isEditing ? (
+              {state.isEditing ? (
                 <Select
-                  value={userInfo.isAdmin ? "Yes" : "No"}
+                  value={state.userInfo.isAdmin ? "Yes" : "No"}
                   onChange={(e) => {
-                    setUserInfo({ ...userInfo, isAdmin: e.target.value === "Yes" });
-                    setUnsavedChanges(true);
+                    setters.setUserInfo({ ...state.userInfo, isAdmin: e.target.value === "Yes" });
+                    setters.setUnsavedChanges(true);
                   }}>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
                 </Select>
               ) : (
-                <Typography variant="body1">{userInfo.isAdmin ? "Yes" : "No"}</Typography>
+                <Typography variant="body1">{state.userInfo.isAdmin ? "Yes" : "No"}</Typography>
               )}
             </Box>
           </Box>
-          {isEditing && (
+          {state.isEditing && (
             <Box display="flex" justifyContent="flex-end" mb={2}>
-              <Button variant="outlined" color="secondary" onClick={() => handleDiscardChanges(false)} sx={{ mr: 1 }}>
+              <TSCButton
+                variant="outlined"
+                buttonType="secondary"
+                onClick={() => handlers.handleDiscardChanges(false)}
+                sx={{ mr: 1 }}>
                 Discard
-              </Button>
-              <Button variant="contained" color="primary" onClick={handleSaveChanges}>
+              </TSCButton>
+              <TSCButton variant="contained" buttonType="primary" onClick={handlers.handleSaveChanges}>
                 Save Changes
-              </Button>
+              </TSCButton>
             </Box>
           )}
 
@@ -272,18 +185,18 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
         </Box>
       </Dialog>
       <TSCYesNoPopup
-        open={openConfirmDialog}
-        title={"Are you sure you want to remove the user from the workshop?"}
-        onYes={handleRemoveWorkshop}
-        onNo={handleCloseConfirmDialog}
-        onClose={handleCloseConfirmDialog}
+        open={state.openConfirmDialog}
+        title="Are you sure you want to remove the user from the workshop?"
+        onYes={handlers.handleRemoveWorkshop}
+        onNo={handlers.handleCloseConfirmDialog}
+        onClose={handlers.handleCloseConfirmDialog}
       />
       <TSCYesNoPopup
-        open={showDiscardDialog}
-        title={" You have unsaved changes. Are you sure you want to discard them?"}
-        onYes={() => handleDiscardChanges(true)}
-        onNo={handleCloseDiscardDialog}
-        onClose={handleCloseDiscardDialog}
+        open={state.showDiscardDialog}
+        title="You have unsaved changes. Are you sure you want to discard them?"
+        onYes={() => handlers.handleDiscardChanges(true)}
+        onNo={handlers.handleCloseDiscardDialog}
+        onClose={handlers.handleCloseDiscardDialog}
       />
     </>
   );

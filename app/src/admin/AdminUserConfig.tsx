@@ -71,7 +71,7 @@ const userColDefs: ColDef[] = [
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
     headerName: "More",
-    field: "workshopTitle",
+    field: "workshopEnrolled",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,

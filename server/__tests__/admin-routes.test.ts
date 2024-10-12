@@ -99,7 +99,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -246,7 +246,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -270,7 +270,7 @@ const testUserWorkshop2 = {
   workshopHasEnded: 0
 };
 
-const testAdminUser2 = {
+const testAdminUser2: User = {
   userId: 321,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -281,30 +281,6 @@ const testAdminUser2 = {
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
   accountType: "default"
-};
-
-const testUserWorkshop = {
-  workshopId: 1,
-  userId: 123,
-  workshopHasEnded: 0
-};
-
-const testUserWorkshop2 = {
-  workshopId: 1,
-  userId: 321,
-  workshopHasEnded: 0
-};
-
-const testAdminUser2: User = {
-  userId: 321,
-  uuid: "123e4567-e89b-12d3-a456-426614174000",
-  email: "test@example.com",
-  emailVerified: 1,
-  invalidateSession: 0,
-  username: "testuser",
-  hashedPassword: "password123",
-  pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 1
 };
 
 const testAdminUser: User = {
@@ -1279,7 +1255,7 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopTitle: [testWorkshop.title]
+          workshopEnrolled: [testWorkshop.title]
         },
         {
           ...testNonSharedAdminUser,
@@ -1777,8 +1753,8 @@ describe("adminAddUsersToWorkshop", () => {
     expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
     expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(3, 321, 1);
     expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(4, 321, 1);
-    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1, workshopHasEnded: 0 });
-    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1, workshopHasEnded: 0 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
