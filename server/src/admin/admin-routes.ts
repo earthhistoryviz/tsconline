@@ -12,7 +12,7 @@ import {
   checkWorkshopHasUser,
   createUsersWorkshops,
   findUserInUsersWorkshops,
-  deleteUserInUsersWorkshops
+  updateUser
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -26,6 +26,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
   SharedWorkshop,
+  WorkshopsEnrolled,
   assertAdminSharedUser,
   assertSharedWorkshop,
   assertSharedWorkshopArray
@@ -63,14 +64,18 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUserInUsersWorkshops(userId);
-        const workshopTitle: string[] = [];
+        const workshopsEnrolled: WorkshopsEnrolled[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
-          if (workshop && workshop.length === 1) {
-            if (workshop[0]?.title) {
-              workshopTitle.push(workshop[0].title);
-            }
+          if (workshop && workshop.length === 1 && workshop[0]?.title) {
+            const workshopEnrolled = {
+              workshopId: workshopId,
+              workshopTitle: workshop[0].title,
+              start: workshop[0].start,
+              end: workshop[0].end
+            };
+            workshopsEnrolled.push(workshopEnrolled);
           }
         }
 
@@ -82,7 +87,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopTitle.length > 0 && { workshopTitle })
+          ...(workshopsEnrolled.length > 0 && { workshopsEnrolled })
         };
       })
     );
@@ -177,7 +182,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => { });
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -506,14 +511,13 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           const { userId } = eachUser;
           const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (existingRelationship.length == 0) {
-            createUsersWorkshops({ userId: userId, workshopId: workshopId, workshopHasEnded: 0 });
+            await createUsersWorkshops({ userId: userId, workshopId: workshopId });
             const newRelationship = await checkWorkshopHasUser(userId, workshopId);
             if (newRelationship.length !== 1) {
               reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
               return;
             }
-          } else if (existingRelationship.length > 1) {
-            //TODO: add test
+          } else {
             reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
             return;
           }
@@ -535,9 +539,9 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           reply.status(500).send({ error: "Error creating user", invalidEmails: email });
           return;
         }
-        for (const eachUser of user) {
+        for (const eachUser of newUser) {
           const { userId } = eachUser;
-          createUsersWorkshops({ userId: userId, workshopId: workshopId, workshopHasEnded: 0 });
+          await createUsersWorkshops({ userId: userId, workshopId: workshopId });
           const newRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (newRelationship.length !== 1) {
             reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });

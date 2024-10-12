@@ -31,7 +31,6 @@ Database Schema Details (Post-Migration):
   - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
   - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
   - isAdmin (integer): Non-nullable, default is 0, indicates if the user is an admin.
-  - workshopId (integer): Non-nullable, default is 0. Links to the workshop table. If this field is not 0, the user is associated with a workshop.
   - accountType (text): Non-nullable, default is "default", indicates user account type.
 
 - verification Table:
@@ -55,7 +54,6 @@ Database Schema Details (Post-Migration):
 - usersWorkshops Table:
   - workshopId (integer): Non-nullable, links to the workshop table.
   - userId (integer): Non-nullable, links to the users table.
-  - workshopHasEnded (integer): Non-nullable, default is 0, indicates if the workshop has ended
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -262,14 +260,6 @@ export async function findUserInUsersWorkshops(userId: number) {
     .execute();
 }
 
-export async function handleEndedWorkshop(workshopId: number) {
-  return await db
-    .updateTable("usersWorkshops")
-    .set({ workshopHasEnded: 1 })
-    .where((eb) => eb("workshopId", "=", workshopId))
-    .execute();
-}
-
 export async function deleteWorkshopInUsersWorkshops(workshopId: number) {
   return await db.deleteFrom("usersWorkshops").where("workshopId", "=", workshopId).execute();
 }
@@ -327,7 +317,6 @@ export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Works
   }
   const end = new Date(workshop.end);
   if (end < new Date()) {
-    await handleEndedWorkshop(workshopId);
     return null;
   }
   return workshop;
