@@ -18,6 +18,9 @@ import { loadDatapackIntoIndex } from "./load-packs.js";
 import { addAdminConfigDatapack } from "./admin/admin-config.js";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
+import { MultipartFile } from "@fastify/multipart";
+import { createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -53,7 +56,8 @@ export async function uploadUserDatapackHandler(
     storedFileName,
     isPublic,
     type,
-    uuid
+    uuid,
+    profilePicture
   } = fields;
   let { references, tags } = fields;
   if (
@@ -120,6 +124,7 @@ export async function uploadUserDatapackHandler(
     uuid,
     isPublic: isPublic === "true",
     size: getBytes(bytes),
+    ...(profilePicture && { profilePicture }),
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date })
@@ -170,4 +175,24 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     await addAdminConfigDatapack(metadata);
   }
   return datapackIndex;
+}
+
+export async function uploadFileToFileSystem(
+  file: MultipartFile,
+  filepath: string
+): Promise<{ code: number; message: string }> {
+  try {
+    await pipeline(file.file, createWriteStream(filepath));
+  } catch (e) {
+    return { code: 500, message: "Failed to save file" };
+  }
+  if (file.file.truncated) {
+    await rm(filepath, { force: true });
+    return { code: 400, message: "File is too large" };
+  }
+  if (file.file.bytesRead === 0) {
+    await rm(filepath, { force: true });
+    return { code: 400, message: "Empty file" };
+  }
+  return { code: 200, message: "File uploaded" };
 }
