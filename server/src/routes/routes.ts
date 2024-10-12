@@ -56,10 +56,6 @@ export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
   const undefinedIndexes = start === undefined && increment === undefined;
   const chunk = undefinedIndexes ? uuids : uuids.slice(startIndex, startIndex + incrementValue);
   const datapackArray = await loadPublicUserDatapacks(chunk);
-  if (datapackArray.length === 0) {
-    reply.send({ datapacks: datapackArray, totalChunks: 0 });
-    return;
-  }
   const datapackInfoChunk: DatapackInfoChunk = { datapacks: datapackArray, totalChunks: uuids.length };
   reply.status(200).send(datapackInfoChunk);
 };
