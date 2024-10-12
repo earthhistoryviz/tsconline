@@ -1,6 +1,6 @@
 import { DatapackMetadata, DatapackType } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
-import { useContext, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { context } from "../../state";
 import { Reference } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
@@ -26,6 +26,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [profileImage, setProfileImage] = useState<File | null>(null);
+  const profileImageRef = useRef<HTMLInputElement>(null);
   const filename = file?.name || "";
   const metadata: DatapackMetadata = {
     storedFileName: "", // don't write storedFileName to the metadata (need this to be set for types)
@@ -109,6 +111,14 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     actions.removeAllErrors();
     setFile(file);
   };
+  const handleProfileImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files![0];
+    if (!file) {
+      return;
+    }
+    actions.removeAllErrors();
+    setProfileImage(file);
+  };
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -122,7 +132,21 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setFile(null);
   };
   return {
-    state: { title, description, isPublic, authoredBy, notes, contact, tags, references, date, dateError, file },
+    state: {
+      profileImage,
+      title,
+      description,
+      isPublic,
+      authoredBy,
+      notes,
+      contact,
+      tags,
+      references,
+      date,
+      dateError,
+      file,
+      profileImageRef
+    },
     setters: {
       setTitle,
       setDescription,
@@ -135,7 +159,15 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setDate,
       setFile
     },
-    handlers: { resetForm, handleFileUpload, handleSubmit, addReference, changeReference, handleDateChange }
+    handlers: {
+      resetForm,
+      handleFileUpload,
+      handleSubmit,
+      addReference,
+      changeReference,
+      handleDateChange,
+      handleProfileImageChange
+    }
   };
 };
 

@@ -226,7 +226,7 @@ export const uploadUserDatapack = action("uploadUserDatapack", async (file: File
   if (!recaptcha) return;
   const formData = new FormData();
   const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
-  formData.append("file", file);
+  formData.append("datapack", file);
   formData.append("title", title);
   formData.append("description", description);
   formData.append("references", JSON.stringify(references));
