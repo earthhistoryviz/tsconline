@@ -20,7 +20,7 @@ import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as adminConfig from "../src/admin/admin-config";
-import { Workshop } from "../src/types";
+import { User, Workshop } from "../src/types";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -233,7 +233,7 @@ beforeEach(() => {
   process.env.NODE_ENV = "test";
 });
 
-const testAdminUser = {
+const testAdminUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -243,7 +243,8 @@ const testAdminUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 1
+  workshopId: 1,
+  accountType: "default"
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -257,7 +258,8 @@ const testSharedAdminUser = {
   invalidateSession: 0,
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 1
+  isAdmin: 1,
+  accountType: "default"
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -299,7 +301,16 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     url: "/admin/workshop",
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
-  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } }
+  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  {
+    method: "PATCH",
+    url: "/admin/user",
+    body: {
+      username: "username",
+      email: "email@email.com",
+      accountType: "pro"
+    }
+  }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -423,7 +434,8 @@ describe("adminCreateUser tests", () => {
     uuid: "random-uuid",
     emailVerified: 1,
     invalidateSession: 0,
-    workshopId: 0
+    workshopId: 0,
+    accountType: "default"
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
@@ -1202,7 +1214,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      filepath,
+      filepath.replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1232,7 +1244,7 @@ describe("adminUploadServerDatapack", () => {
       "-jar",
       "testdir/decryptionJar.jar",
       "-d",
-      filepath,
+      filepath.replace(/\\/g, "/"),
       "-dest",
       "testdir/decryptionDirectory"
     ]);
@@ -1811,7 +1823,8 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      workshopId: 1,
+      accountType: "default"
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
       email: "test2@gmail.com",
@@ -1822,7 +1835,8 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test2@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      workshopId: 1,
+      accountType: "default"
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
     expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
@@ -2238,6 +2252,177 @@ describe("adminDeleteWorkshop", () => {
     expect(deleteWorkshop).toHaveBeenCalledTimes(1);
     expect(deleteWorkshop).toHaveBeenCalledWith(body);
     expect(await response.json()).toEqual({ message: "Workshop deleted" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminModifyUser tests", () => {
+  const body = {
+    username: "username",
+    email: "email@email.com",
+    accountType: "pro",
+    isAdmin: 1
+  };
+
+  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
+  const updateUser = vi.spyOn(database, "updateUser");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 400 if fields are missing", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {},
+      headers
+    });
+
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message:
+        "body must have required property 'accountType', body must have required property 'isAdmin', body must match a schema in anyOf",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if fields are empty", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: { username: "", email: "", accountType: "", isAdmin: null },
+      headers
+    });
+
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if accountType is invalid", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: { username: "username", email: "email@email.com", accountType: "pro+", isAdmin: null },
+      headers
+    });
+
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 409 if user does not exist", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "User does not exist." });
+    expect(response.statusCode).toBe(409);
+  });
+
+  it("should return 500 if checkForUsersWithUsernameOrEmail throws error", async () => {
+    checkForUsersWithUsernameOrEmail.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Database error" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 500 if updateUser throws error", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    updateUser.mockRejectedValueOnce(new Error("Database error"));
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith(
+      { email: body.email },
+      { accountType: body.accountType, isAdmin: body.isAdmin }
+    );
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Database error" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 200 if successful", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith(
+      { email: body.email },
+      { accountType: body.accountType, isAdmin: body.isAdmin }
+    );
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just accountType", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        accountType: "pro"
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { accountType: body.accountType });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just isAdmin", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        isAdmin: 1
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { isAdmin: body.isAdmin });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
     expect(response.statusCode).toBe(200);
   });
 });
