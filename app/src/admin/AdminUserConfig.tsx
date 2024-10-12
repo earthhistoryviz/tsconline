@@ -17,7 +17,7 @@ import {
 import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
-import { ShowUserStatsRenderer } from "./AdminEditUserForm";
+import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -71,12 +71,12 @@ const userColDefs: ColDef[] = [
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
     headerName: "More",
-    field: "workshopTitle",
+    field: "workshopsEnrolled",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,
     flex: 1,
-    cellRenderer: ShowUserStatsRenderer
+    cellRenderer: ShowAdditionalUserInfo
   }
 ];
 const userDefaultColDefs = {
@@ -120,7 +120,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
-        components={{ ShowUserStatsRenderer }}
+        components={{ ShowAdditionalUserInfo }}
         onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {

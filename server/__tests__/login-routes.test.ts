@@ -4,7 +4,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyMultipart from "@fastify/multipart";
 import { OAuth2Client } from "google-auth-library";
 import { compare } from "bcrypt-ts";
-import { Verification, Workshop } from "../src/types";
+import { User, Verification, Workshop } from "../src/types";
 import formAutoContent from "form-auto-content";
 import * as cryptoModule from "crypto";
 import * as loginRoutes from "../src/routes/login-routes";
@@ -135,7 +135,7 @@ vi.mock("../src/file-metadata-handler", async () => {
 });
 
 let app: FastifyInstance;
-const testUser = {
+const testUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -145,7 +145,6 @@ const testUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 0,
-  workshopId: 0,
   accountType: "default"
 };
 const mockDate = new Date("2022-01-01T00:00:00Z");
@@ -168,8 +167,7 @@ const workshop: Workshop = {
 };
 const testUserWorkshop = {
   userId: 123,
-  workshopId: 1,
-  workshopHasEnded: 0
+  workshopId: 1
 };
 
 beforeAll(async () => {
@@ -1889,7 +1887,9 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopTitle: ["test"],
+        workshopsEnrolled: [
+          { workshopId: workshop.workshopId, workshopTitle: workshop.title, start: workshop.start, end: workshop.end }
+        ], //
         uuid: testUser.uuid
       });
     });
