@@ -1,8 +1,23 @@
-import { assertDatapack, assertPrivateUserDatapack, isDateValid } from "@tsconline/shared";
+import {
+  DatapackIndex,
+  assertDatapack,
+  assertUserDatapack,
+  isDatapackTypeString,
+  isDateValid,
+  isServerDatapack,
+  isUserDatapack
+} from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { readFile, rm } from "fs/promises";
+import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { checkFileExists, getBytes } from "./util.js";
+import { assetconfigs, checkFileExists, getBytes } from "./util.js";
+import path from "path";
+import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import { getUserUUIDDirectory } from "./user/fetch-user-files.js";
+import { loadDatapackIntoIndex } from "./load-packs.js";
+import { addAdminConfigDatapack } from "./admin/admin-config.js";
+import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
+import { writeFileMetadata } from "./file-metadata-handler.js";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -16,7 +31,7 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   if (!datapack) {
     throw new Error("File is empty");
   }
-  assertPrivateUserDatapack(datapack);
+  assertUserDatapack(datapack);
   assertDatapack(datapack);
   return datapack.storedFileName;
 }
@@ -26,7 +41,20 @@ export async function uploadUserDatapackHandler(
   fields: Record<string, string>,
   bytes: number
 ): Promise<DatapackMetadata | void> {
-  const { title, description, authoredBy, contact, notes, date, filepath, originalFileName, storedFileName } = fields;
+  const {
+    title,
+    description,
+    authoredBy,
+    contact,
+    notes,
+    date,
+    filepath,
+    originalFileName,
+    storedFileName,
+    isPublic,
+    type,
+    uuid
+  } = fields;
   let { references, tags } = fields;
   if (
     !tags ||
@@ -36,12 +64,15 @@ export async function uploadUserDatapackHandler(
     !description ||
     !filepath ||
     !originalFileName ||
-    !storedFileName
+    !storedFileName ||
+    !isPublic ||
+    !type ||
+    !uuid
   ) {
     await userUploadHandler(
       reply,
       400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]",
+      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]",
       filepath
     );
     return;
@@ -52,6 +83,10 @@ export async function uploadUserDatapackHandler(
   }
   if (!bytes) {
     await userUploadHandler(reply, 400, "File is empty", filepath);
+    return;
+  }
+  if (!isDatapackTypeString(type)) {
+    await userUploadHandler(reply, 400, "Invalid datapack type", filepath);
     return;
   }
   try {
@@ -81,9 +116,58 @@ export async function uploadUserDatapackHandler(
     authoredBy,
     references,
     tags,
+    type,
+    uuid,
+    isPublic: isPublic === "true",
     size: getBytes(bytes),
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date })
   };
+}
+
+/**
+ * THIS DOES NOT SETUP METADATA OR ADD TO ANY EXISTING INDEXES
+ * TODO: WRITE TESTS
+ * @param uuid
+ * @param isPublic
+ * @param sourceFilePath
+ * @param metadata
+ * @returns
+ */
+export async function setupNewDatapackDirectoryInUUIDDirectory(
+  uuid: string,
+  sourceFilePath: string,
+  metadata: DatapackMetadata,
+  manual?: boolean // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
+) {
+  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
+    throw new Error("Datapack already exists");
+  }
+  const datapackIndex: DatapackIndex = {};
+  const directory = await getUserUUIDDirectory(uuid, metadata.isPublic);
+  const datapackFolder = path.join(directory, metadata.title);
+  await mkdir(datapackFolder, { recursive: true });
+  const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
+  const decryptDestination = path.join(datapackFolder, "decrypted");
+  await copyFile(sourceFilePath, sourceFileDestination);
+  if (!manual) {
+    await rm(sourceFilePath, { force: true });
+  }
+  await decryptDatapack(sourceFileDestination, decryptDestination);
+  const successful = await loadDatapackIntoIndex(datapackIndex, decryptDestination, metadata);
+  if (!successful || !datapackIndex[metadata.title]) {
+    await rm(datapackFolder, { force: true });
+    throw new Error("Failed to load datapack into index");
+  }
+  await writeFile(
+    path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
+    JSON.stringify(datapackIndex[metadata.title]!, null, 2)
+  );
+  if (isUserDatapack(metadata)) {
+    await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
+  } else if (isServerDatapack(metadata) && !manual) {
+    await addAdminConfigDatapack(metadata);
+  }
+  return datapackIndex;
 }

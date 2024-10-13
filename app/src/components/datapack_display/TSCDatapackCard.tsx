@@ -6,14 +6,14 @@ import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
+import { getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
-export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
+export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, value, onChange }) => {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
     <Card
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
       <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>

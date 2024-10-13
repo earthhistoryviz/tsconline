@@ -82,11 +82,12 @@ export type AssetConfig = {
   patternsDirectory: string;
   colors: string;
   fileMetadata: string;
-  uploadDirectory: string;
   publicDirectory: string;
   datapackImagesDirectory: string;
   adminConfigPath: string;
-  publicUserDatapacksDirectory: string;
+  privateDatapacksDirectory: string;
+  uploadDirectory: string;
+  publicDatapacksDirectory: string;
 };
 
 export type AdminConfigType = {
@@ -165,8 +166,9 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
   if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';
   if (typeof o.publicDirectory !== "string") throw 'AssetConfig must have a "publicDirectory" string';
-  if (typeof o.publicUserDatapacksDirectory !== "string")
-    throw 'AssetConfig must have a "publicUserDatapacksDirectory" string';
+  if (typeof o.privateDatapacksDirectory !== "string")
+    throw 'AssetConfig must have a "privateDatapacksDirectory" string';
+  if (typeof o.publicDatapacksDirectory !== "string") throw 'AssetConfig must have a "publicDatapacksDirectory" string';
 }
 
 export function isAccountType(o: any): o is AccountType {
