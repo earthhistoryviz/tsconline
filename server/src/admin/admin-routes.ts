@@ -32,7 +32,7 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { NewUser } from "../types.js";
+import { AccountType, isAccountType, NewUser } from "../types.js";
 import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
@@ -111,7 +111,8 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0,
-      workshopId: 0
+      workshopId: 0,
+      accountType: "default"
     };
     await createUser(customUser);
     const newUser = await findUser({ email });
@@ -180,6 +181,49 @@ export const adminDeleteUser = async function adminDeleteUser(
     return;
   }
   reply.send({ message: "User deleted" });
+};
+
+/**
+ * Admin sends a request to modify a user
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminModifyUser = async function adminModifyUser(request: FastifyRequest, reply: FastifyReply) {
+  const { username, email, accountType, isAdmin } = request.body as {
+    username: string;
+    email: string;
+    accountType?: AccountType;
+    isAdmin?: number;
+  };
+
+  if (
+    !email ||
+    !validator.isEmail(email) ||
+    (!accountType && isAdmin === undefined) ||
+    !username ||
+    (accountType && !isAccountType(accountType))
+  ) {
+    reply.status(400).send({ error: "Missing/invalid required fields" });
+    return;
+  }
+
+  try {
+    const user = await checkForUsersWithUsernameOrEmail(username, email);
+    if (user.length === 0) {
+      reply.status(409).send({ error: "User does not exist." });
+      return;
+    }
+
+    const updateData: { accountType?: AccountType; isAdmin?: number } = {};
+    if (accountType) updateData.accountType = accountType;
+    if (isAdmin !== undefined) updateData.isAdmin = isAdmin;
+
+    await updateUser({ email }, updateData);
+    reply.send({ message: "User modified." });
+  } catch (error) {
+    reply.status(500).send({ error: "Database error" });
+  }
 };
 
 export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
@@ -507,7 +551,8 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           pictureUrl: null,
           username: email,
           uuid: randomUUID(),
-          workshopId: workshopId
+          workshopId: workshopId,
+          accountType: "default"
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
