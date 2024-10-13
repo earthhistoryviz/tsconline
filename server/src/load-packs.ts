@@ -1,11 +1,4 @@
-import {
-  DatapackIndex,
-  Patterns,
-  assertPatterns,
-  DatapackMetadata,
-  assertDatapack,
-  DatapackType
-} from "@tsconline/shared";
+import { DatapackIndex, Patterns, assertPatterns, DatapackMetadata } from "@tsconline/shared";
 import pmap from "p-map";
 import fs from "fs/promises";
 import fsSync from "fs";
@@ -33,8 +26,7 @@ import { getAdminConfigDatapacks } from "./admin/admin-config.js";
 export async function loadDatapackIntoIndex(
   datapackIndex: DatapackIndex,
   decryptionDirectory: string,
-  datapack: DatapackMetadata,
-  type: DatapackType
+  datapack: DatapackMetadata
 ) {
   let successful = true;
   console.log(`\nParsing datapack ${datapack.title} \n`);
@@ -46,9 +38,7 @@ export async function loadDatapackIntoIndex(
       if (datapackIndex[datapack.title]) {
         throw new Error(`Datapack ${datapack.title} already exists`);
       }
-      const finalDatapack = { ...baseDatapackProps, ...type };
-      assertDatapack(finalDatapack);
-      datapackIndex[datapack.title] = finalDatapack;
+      datapackIndex[datapack.title] = baseDatapackProps;
       console.log(chalk.green(`Successfully parsed ${datapack.originalFileName}`));
     })
     .catch((e) => {

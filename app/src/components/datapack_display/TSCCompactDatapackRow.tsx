@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -11,22 +11,21 @@ import { useNavigate } from "react-router";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import Lottie from "../TSCLottie";
 import { context } from "../../state";
+import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
 
 type TSCCompactDatapackRowProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
-  name,
   datapack,
   value,
   onChange
 }) {
   const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
   const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
@@ -34,7 +33,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
     <Box
       className={styles.rc}
       bgcolor="secondaryBackground.main"
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}
       sx={{
         "&:hover": {
           bgcolor:
@@ -64,7 +63,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
           {datapack.title}
         </Typography>
       </div>
-      {isPrivateUserDatapack(datapack) && (
+      {isOwnedByUser(datapack, state.user?.uuid) && (
         <Box
           onClick={async (e) => {
             e.stopPropagation();

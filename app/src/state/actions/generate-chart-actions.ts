@@ -10,7 +10,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
-import { getDatapackFromIndex } from "../non-action-util";
+import { getDatapackFromArray } from "../non-action-util";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -32,7 +32,7 @@ function setDatapackTimeDefaults() {
   // combine the datapacks and the min and max ages for their respective units
   // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
   for (const datapack of state.config.datapacks) {
-    const pack = getDatapackFromIndex(datapack, state);
+    const pack = getDatapackFromArray(datapack, state.datapacks);
     if (!pack) continue;
     const timeSettings = state.settings.timeSettings[pack.ageUnits];
     if (!timeSettings) continue;

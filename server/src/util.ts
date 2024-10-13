@@ -256,6 +256,18 @@ export async function verifyFilepath(filepath: string) {
   return true;
 }
 
+export async function verifyNonExistentFilepath(filepath: string) {
+  try {
+    filepath = path.resolve(filepath);
+    if (!filepath.startsWith(process.cwd())) {
+      return false;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
 export async function countFiles(filepath: string): Promise<number> {
   try {
     if (!(await checkFileExists(filepath))) return 0;

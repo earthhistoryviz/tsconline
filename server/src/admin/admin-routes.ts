@@ -13,31 +13,34 @@ import {
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, join, relative, parse } from "path";
-import { makeTempFilename, assetconfigs, checkFileExists, verifyFilepath } from "../util.js";
+import { resolve, extname, relative } from "path";
+import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
-import { readFile, realpath, rm } from "fs/promises";
+import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
-import { serverDatapackIndex } from "../index.js";
-import { loadDatapackIntoIndex } from "../load-packs.js";
 import validator from "validator";
 import { pipeline } from "stream/promises";
-import { execFile } from "node:child_process";
-import { promisify } from "util";
 import {
   SharedWorkshop,
   assertAdminSharedUser,
-  assertDatapackIndex,
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
+import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
-import { uploadUserDatapackHandler } from "../upload-handlers.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { addAdminConfigDatapack, getAdminConfigDatapacks, removeAdminConfigDatapack } from "./admin-config.js";
+import { addAdminConfigDatapack, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
+import {
+  deleteAllUserDatapacks,
+  deleteServerDatapack,
+  deleteUserDatapack,
+  doesDatapackFolderExistInAllUUIDDirectories,
+  fetchAllUsersDatapacks
+} from "../user/user-handler.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -160,21 +163,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    try {
-      let userDirectory = resolve(assetconfigs.uploadDirectory, uuid);
-      if (!userDirectory.startsWith(resolve(assetconfigs.uploadDirectory))) {
-        reply.status(403).send({ error: "Directory traversal detected" });
-        return;
-      }
-      userDirectory = await realpath(userDirectory);
-      try {
-        await rm(userDirectory, { recursive: true, force: true });
-      } catch {
-        // eslint-disable-next-line no-empty
-      }
-    } catch {
-      // eslint-disable-next-line no-empty
-    }
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -236,13 +225,8 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
     return;
   }
   try {
-    const uploadDirectory = await realpath(resolve(assetconfigs.uploadDirectory));
-    const userDirectory = await realpath(resolve(assetconfigs.uploadDirectory, uuid));
-    const datapackDirectory = await realpath(resolve(userDirectory, "datapacks", datapack));
-    if (!userDirectory.startsWith(uploadDirectory) || !datapackDirectory.startsWith(userDirectory)) {
-      reply.status(403).send({ error: "Directory traversal detected" });
-      return;
-    }
+    await deleteUserDatapack(uuid, datapack);
+    const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
     await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, relative(process.cwd(), datapackDirectory));
   } catch (error) {
     console.error(error);
@@ -260,10 +244,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let file: MultipartFile | undefined;
   let storedFileName: string | undefined;
   let filepath: string | undefined;
-  let decryptedFilepath: string | undefined;
   let originalFileName: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  const datapacks = getAdminConfigDatapacks();
   for await (const part of parts) {
     if (part.type === "file") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -273,11 +255,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
       filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
-      decryptedFilepath = resolve(assetconfigs.decryptionDirectory, parse(storedFileName).name);
-      if (
-        !filepath.startsWith(resolve(assetconfigs.datapacksDirectory)) ||
-        !decryptedFilepath.startsWith(resolve(assetconfigs.decryptionDirectory))
-      ) {
+      if (!filepath.startsWith(resolve(assetconfigs.datapacksDirectory))) {
         reply.status(403).send({ error: "Directory traversal detected" });
         return;
       }
@@ -307,73 +285,44 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       fields[part.fieldname] = part.value;
     }
   }
-  if (!file || !filepath || !storedFileName || !decryptedFilepath || !originalFileName) {
+  if (!file || !filepath || !storedFileName || !originalFileName) {
     reply.status(400).send({ error: "Missing file" });
     return;
   }
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
+  fields.uuid = "server";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
-    filepath && (await rm(filepath, { force: true }));
     reply.status(500).send({ error: "Unexpected error with request fields." });
   });
-  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
   if (!datapackMetadata) {
+    filepath && (await rm(filepath, { force: true }));
     return;
   }
-  if (
-    (await checkFileExists(filepath)) &&
-    (await checkFileExists(decryptedFilepath)) &&
-    datapacks.some((datapack) => datapack.title === datapackMetadata.title) &&
-    serverDatapackIndex[datapackMetadata.title]
-  ) {
-    reply.status(409).send({ error: "Datapack already exists" });
-    return;
-  }
-  const errorHandler = async (error: string) => {
-    if (!filepath || !decryptedFilepath || !storedFileName || !datapackMetadata)
+  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
+  const errorHandler = async (error: string, errorCode: number = 500) => {
+    if (!filepath || !storedFileName || !datapackMetadata)
       throw new Error("Missing required variables for file deletion and error handling");
     await rm(filepath, { force: true });
-    await rm(decryptedFilepath, { force: true, recursive: true });
-    if (serverDatapackIndex[datapackMetadata.title]) {
-      delete serverDatapackIndex[datapackMetadata.title];
-    }
-    reply.status(500).send({ error });
+    reply.status(errorCode).send({ error });
   };
   try {
-    const { stdout, stderr } = await promisify(execFile)("java", [
-      "-jar",
-      assetconfigs.decryptionJar,
-      "-d",
-      filepath!.replaceAll("\\", "/"),
-      "-dest",
-      assetconfigs.decryptionDirectory.replaceAll("\\", "/")
-    ]);
-    if (stdout) console.log(stdout);
-    if (stderr) {
-      throw new Error(stderr);
+    if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
+      await errorHandler("Datapack already exists", 409);
+      return;
     }
-  } catch (error) {
-    await errorHandler("Error decrypting file");
+  } catch (e) {
+    await errorHandler("Error checking if datapack exists");
     return;
   }
   try {
-    await realpath(decryptedFilepath);
-  } catch (e) {
-    await errorHandler("File was not decrypted properly");
-    return;
-  }
-  const successful = await loadDatapackIntoIndex(
-    serverDatapackIndex,
-    assetconfigs.decryptionDirectory,
-    datapackMetadata,
-    {
-      type: "server"
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory("server", filepath, datapackMetadata);
+    if (!datapackIndex[datapackMetadata.title]) {
+      throw new Error("Datapack not found in index");
     }
-  );
-  if (!successful) {
-    await errorHandler("Error parsing the datapack for chart generation");
+  } catch (error) {
+    await errorHandler("Error setting up UUID Directory");
     return;
   }
   try {
@@ -397,32 +346,21 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
 ) {
   const { datapack } = request.body;
   if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack id" });
+    reply.status(400).send({ error: "Missing datapack title" });
     return;
-  }
-  const datapackMetadata = getAdminConfigDatapacks().find((dp) => dp.title === datapack);
-  if (!datapackMetadata) {
-    reply.status(404).send({ error: "Datapack not found" });
-    return;
-  }
-  if (serverDatapackIndex[datapack]) {
-    delete serverDatapackIndex[datapack];
   }
   try {
-    const filepath = join(assetconfigs.datapacksDirectory, datapackMetadata.storedFileName);
-    const decryptedFilepath = join(assetconfigs.decryptionDirectory, parse(datapackMetadata.storedFileName).name);
-    await rm(filepath, { force: true });
-    await rm(decryptedFilepath, { force: true, recursive: true });
+    await deleteServerDatapack(datapack);
   } catch (e) {
-    reply.status(500).send({ error: "Deleted from indexes, but was not able to delete files" });
+    reply.status(500).send({ error: "Error deleting server datapack" });
     return;
   }
   try {
-    await removeAdminConfigDatapack(datapackMetadata);
+    await removeAdminConfigDatapack({ title: datapack });
   } catch (e) {
     reply.status(500).send({
       error:
-        "Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
+        "Deleted datapack in filesystem, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
     });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
@@ -434,19 +372,13 @@ export const getAllUserDatapacks = async function getAllUserDatapacks(request: F
     reply.status(400).send({ error: "Missing uuid in body" });
     return;
   }
-  const datapackIndexFilepath = join(assetconfigs.uploadDirectory, uuid, "DatapackIndex.json");
-  if (!(await verifyFilepath(datapackIndexFilepath))) {
-    reply.send({});
+  try {
+    const datapacksArray = await fetchAllUsersDatapacks(uuid);
+    reply.send(datapacksArray);
+  } catch (e) {
+    reply.status(500).send({ error: "Unknown error fetching user datapacks" });
     return;
   }
-  let userDatapackIndex;
-  try {
-    userDatapackIndex = JSON.parse(await readFile(datapackIndexFilepath, "utf-8"));
-    assertDatapackIndex(userDatapackIndex);
-  } catch (e) {
-    reply.status(500).send({ error: "Error reading user datapack index, possible corruption of file" });
-  }
-  reply.send(userDatapackIndex);
 };
 
 /**

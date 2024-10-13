@@ -1,18 +1,18 @@
-import { DatapackIndex, DatapackMetadata } from "@tsconline/shared";
+import { DatapackMetadata, DatapackType } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useContext, useState } from "react";
 import { context } from "../../state";
-import { Reference, UploadOptions } from "../../types";
+import { Reference } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
+import { getDatapackFromArray } from "../../state/non-action-util";
 
 type DatapackUploadFormProps = {
-  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
-  type: "user" | "server";
-  index: DatapackIndex;
+  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  type: DatapackType;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload, type, index } = props;
+  const { upload, type } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -27,7 +27,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const filename = file?.name || "";
-  const metadata = {
+  const metadata: DatapackMetadata = {
     storedFileName: "", // don't write storedFileName to the metadata (need this to be set for types)
     originalFileName: filename,
     description,
@@ -37,6 +37,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     references: references.map((reference) => reference.reference),
     tags,
     size: "0", // placeholder, this will get set after the file is uploaded
+    ...type,
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date: date.format("YYYY-MM-DD") })
@@ -56,14 +57,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
-    const doesServerDatapackExist = type === "server" && index[title];
-    const doesPublicDatapackExistIfPublic =
-      type === "user" && isPublic && state.datapackCollection.publicUserDatapackIndex[title];
-    if (doesServerDatapackExist || doesPublicDatapackExistIfPublic) {
-      actions.pushError(ErrorCodes.SERVER_DATAPACK_ALREADY_EXISTS);
-      return;
-    }
-    if (index[title]) {
+    if (getDatapackFromArray(metadata, state.datapacks)) {
       actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -71,10 +65,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    const uploadOptions = {
-      isPublic
-    };
-    upload(file, metadata, type === "user" ? uploadOptions : undefined);
+    upload(file, metadata);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {

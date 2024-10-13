@@ -60,7 +60,7 @@ function setAdminConfig(newAdminConfig: AdminConfigType) {
  * remove a datapack from the admin config
  * @param datapack the datapack to remove
  */
-export async function removeAdminConfigDatapack(datapack: DatapackMetadata) {
+export async function removeAdminConfigDatapack(datapack: DatapackMetadata | { title: string }) {
   if (!adminConfig.datapacks) {
     throw new Error("adminConfig has not been loaded/set");
   }

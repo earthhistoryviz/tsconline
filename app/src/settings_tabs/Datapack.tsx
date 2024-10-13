@@ -17,9 +17,16 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest, DatapackIndex, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { Work, Storage, Lock, Public } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import {
+  compareExistingDatapacks,
+  getCurrentUserDatapacks,
+  getPublicDatapacksWithoutCurrentUser,
+  getServerDatapacks,
+  isOwnedByUser
+} from "../state/non-action-util";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -75,28 +82,24 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      <DatapackIndexDisplay
-        index={state.datapackCollection.serverDatapackIndex}
+      <DatapackGroupDisplay
+        datapacks={getServerDatapacks(state.datapacks)}
         header={t("settings.datapacks.title.server")}
         HeaderIcon={Storage}
       />
-      {state.isLoggedIn && (
-        <DatapackIndexDisplay
-          index={state.datapackCollection.privateUserDatapackIndex}
+      {state.isLoggedIn && state.user && (
+        <DatapackGroupDisplay
+          datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
           header={t("settings.datapacks.title.your")}
           HeaderIcon={Lock}
         />
       )}
-      <DatapackIndexDisplay
-        index={state.datapackCollection.publicUserDatapackIndex}
+      <DatapackGroupDisplay
+        datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
         header={t("settings.datapacks.title.public-user")}
         HeaderIcon={Public}
       />
-      <DatapackIndexDisplay
-        index={state.datapackCollection.workshopDatapackIndex}
-        header={t("settings.datapacks.title.workshop")}
-        HeaderIcon={Work}
-      />
+      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={Work} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
@@ -119,7 +122,10 @@ export const Datapacks = observer(function Datapacks() {
         <DatapackUploadForm
           close={() => setFormOpen(false)}
           upload={actions.uploadUserDatapack}
-          index={state.datapackCollection.privateUserDatapackIndex}
+          type={{
+            type: "user",
+            uuid: state.user?.uuid
+          }}
         />
       </Dialog>
     </div>
@@ -130,7 +136,7 @@ type DatapackMenuProps = {
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   return (
     <Menu
       direction="bottom"
@@ -145,7 +151,7 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
       <MenuItem onClick={async () => await actions.requestDownload(datapack, false)}>
         <Typography>Retrieve Original File</Typography>
       </MenuItem>
-      {isPrivateUserDatapack(datapack) && (
+      {isOwnedByUser(datapack, state.user?.uuid) && (
         <MenuItem onClick={async () => await actions.userDeleteDatapack(datapack.title)}>
           <Typography>Delete Datapack</Typography>
         </MenuItem>
@@ -154,12 +160,12 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
   );
 };
 
-type DatapackIndexDisplayProps = {
-  index: DatapackIndex;
+type DatapackGroupDisplayProps = {
+  datapacks: Datapack[];
   header: string;
   HeaderIcon: React.ElementType;
 };
-const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ index, header, HeaderIcon }) => {
+const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ datapacks, header, HeaderIcon }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
@@ -171,7 +177,7 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
       actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
     }
   };
-  const numberOfDatapacks = Object.keys(index).length;
+  const numberOfDatapacks = datapacks.length;
 
   return (
     <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
@@ -186,28 +192,14 @@ const DatapackIndexDisplay: React.FC<DatapackIndexDisplayProps> = observer(({ in
           className={styles.idh}>{`${header} (${numberOfDatapacks})`}</Typography>
       </Box>
       <CustomDivider className={styles.divider} />
-      {Object.keys(index).map((datapack) => {
-        const value = state.unsavedDatapackConfig.some(
-          (dp) => dp.title === datapack && dp.type === index[datapack].type
-        );
+      {datapacks.map((datapack) => {
+        const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
         return state.settingsTabs.datapackDisplayType === "rows" ? (
-          <TSCDatapackRow key={datapack} name={datapack} datapack={index[datapack]} value={value} onChange={onChange} />
+          <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-          <TSCCompactDatapackRow
-            key={datapack}
-            name={datapack}
-            datapack={index[datapack]}
-            value={value}
-            onChange={onChange}
-          />
+          <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         ) : (
-          <TSCDatapackCard
-            key={datapack}
-            name={datapack}
-            datapack={index[datapack]}
-            value={value}
-            onChange={onChange}
-          />
+          <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
         );
       })}
       {numberOfDatapacks === 0 && (
