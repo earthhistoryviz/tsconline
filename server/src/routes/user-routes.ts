@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { access, rm, mkdir, readFile } from "fs/promises";
+import { rm, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkFileExists, checkHeader, makeTempFilename } from "../util.js";
@@ -127,7 +127,6 @@ export const requestDownload = async function requestDownload(
   // user did not ask for an encryption, so send original file
   if (needEncryption === undefined) {
     try {
-      await access(filepath);
       const file = await readFile(filepath);
       reply.send(file);
       return;
@@ -144,7 +143,6 @@ export const requestDownload = async function requestDownload(
   }
   // see if we have already encrypted the file
   try {
-    await access(encryptedFilepath);
     const file = await readFile(encryptedFilepath);
     if (await checkHeader(encryptedFilepath)) {
       reply.send(file);
@@ -161,7 +159,6 @@ export const requestDownload = async function requestDownload(
     }
   }
   try {
-    await access(filepath);
     const file = await readFile(filepath);
     if (await checkHeader(filepath)) {
       reply.send(file);
@@ -194,11 +191,9 @@ export const requestDownload = async function requestDownload(
   }
 
   try {
-    await access(encryptedFilepath);
     const file = await readFile(encryptedFilepath);
 
     if (await checkHeader(encryptedFilepath)) {
-      console.log("here 3");
       reply.send(file);
       return;
     } else {

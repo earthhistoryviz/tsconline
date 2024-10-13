@@ -433,7 +433,6 @@ describe("edit datapack tests", () => {
 describe("requestDownload", () => {
   const readFileSpy = vi.spyOn(fspModule, "readFile");
   const checkHeaderSpy = vi.spyOn(utilModule, "checkHeader");
-  const accessSpy = vi.spyOn(fspModule, "access");
   const runJavaEncryptSpy = vi.spyOn(runJavaEncryptModule, "runJavaEncrypt");
   const rmSpy = vi.spyOn(fspModule, "rm");
   const mkdirSpy = vi.spyOn(fspModule, "mkdir");
@@ -482,14 +481,13 @@ describe("requestDownload", () => {
   });
   it("should reply with 500 when fail to create encrypted directory for the user", async () => {
     checkHeaderSpy.mockResolvedValueOnce(false);
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined);
-    readFileSpy.mockResolvedValueOnce("default content");
+      .mockResolvedValueOnce("default error");
     mkdirSpy.mockRejectedValueOnce(new Error("Unknown Error"));
 
     const response = await app.inject({
@@ -498,16 +496,14 @@ describe("requestDownload", () => {
       headers
     });
     expect(response.json().error).toBe("Failed to create encrypted directory with error Error: Unknown Error");
-    expect(accessSpy).toHaveBeenCalledTimes(2);
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
+    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
     expect(response.statusCode).toBe(500);
     expect(rmSpy).not.toHaveBeenCalled();
   });
 
   it("should reply 500 when an unknown error occurred in readFile when retrieved original", async () => {
-    accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
     const response = await app.inject({
@@ -515,13 +511,12 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}`,
       headers
     });
-    expect(accessSpy).toHaveBeenCalledTimes(1);
+    expect(readFileSpy).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
   });
 
   it("should reply 500 when an unknown error occurred in readFile when need encryption", async () => {
-    accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockRejectedValueOnce(new Error("Unknown error"));
 
     const response = await app.inject({
@@ -529,7 +524,7 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
-    expect(accessSpy).toHaveBeenCalledTimes(1);
+    expect(readFileSpy).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
   });
@@ -537,14 +532,13 @@ describe("requestDownload", () => {
   it("should reply with 500 when the java program failed to encrypt the file (i.e. runJavaEncrypt failed)", async () => {
     runJavaEncryptSpy.mockRejectedValueOnce(new Error("Unknown error"));
     checkHeaderSpy.mockResolvedValueOnce(false);
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined);
-    readFileSpy.mockResolvedValueOnce("default content");
+      .mockResolvedValueOnce("default content");
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
@@ -553,7 +547,7 @@ describe("requestDownload", () => {
     });
 
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
+    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(mkdirSpy).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("Failed to encrypt datapacks with error Error: Unknown error");
@@ -561,16 +555,15 @@ describe("requestDownload", () => {
 
   it("should remove the newly generated file and reply with 422 when runJavaEncrypt did not properly encrypt the file (i.e. the result file did not pass the header check)", async () => {
     runJavaEncryptSpy.mockResolvedValue(undefined);
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce("")
+      .mockResolvedValueOnce("");
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false);
-    readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("not properly encrypted");
     mkdirSpy.mockResolvedValueOnce(undefined);
     const response = await app.inject({
       method: "GET",
@@ -582,7 +575,7 @@ describe("requestDownload", () => {
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
     expect(rmSpy).toHaveBeenCalledWith("encryptedFilepath", { force: true });
-    expect(accessSpy).toBeCalledTimes(3);
+    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(response.statusCode).toBe(422);
     expect(response.json().error).toBe(
       `Java file was unable to encrypt the file ${filename}, resulting in an incorrect encryption header.`
@@ -592,7 +585,7 @@ describe("requestDownload", () => {
   it("should reply 404 if the file does not exist when request retrieve original", async () => {
     //retrieve original
 
-    accessSpy.mockImplementationOnce(() => {
+    readFileSpy.mockImplementationOnce(() => {
       const error: NodeJS.ErrnoException = new Error("File not found");
       error.code = "ENOENT";
       throw error;
@@ -602,14 +595,14 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}`,
       headers
     });
-
+    expect(readFileSpy).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(404);
     expect(response.json().error).toBe(`The file requested ${filename} does not exist within user's upload directory`);
   });
   it("should reply 404 if the file does not exist when request encrypted download", async () => {
     //need encryption
 
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
@@ -626,11 +619,11 @@ describe("requestDownload", () => {
       headers
     });
 
+    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(response.statusCode).toBe(404);
     expect(response.json().error).toBe(`The file requested ${filename} does not exist within user's upload directory`);
   });
   it("should return the original file when request retrieve original file", async () => {
-    accessSpy.mockResolvedValueOnce(undefined);
     readFileSpy.mockResolvedValueOnce("original file");
 
     const response = await app.inject({
@@ -638,7 +631,7 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}`,
       headers
     });
-
+    expect(readFileSpy).toHaveBeenCalledTimes(1);
     expect(checkHeaderSpy).not.toHaveBeenCalled();
     expect(readFileSpy).toHaveNthReturnedWith(1, "original file");
     expect(response.statusCode).toBe(200);
@@ -649,21 +642,21 @@ describe("requestDownload", () => {
   });
 
   it("should return a newly encrypted file when request encrypted download an unencrypted file which has not been encrypted before", async () => {
-    accessSpy
+    const dataFile = "TSCreator Encrypted Datafile";
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined)
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce("")
+      .mockResolvedValueOnce(dataFile);
 
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
     mkdirSpy.mockResolvedValueOnce(undefined);
 
     runJavaEncryptSpy.mockResolvedValue(undefined);
-    readFileSpy.mockResolvedValueOnce("default content").mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/download/${filename}?needEncryption=true`,
@@ -671,29 +664,26 @@ describe("requestDownload", () => {
     });
 
     expect(runJavaEncryptSpy).toHaveBeenCalledOnce();
-    expect(accessSpy).toHaveBeenCalledTimes(3);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
-    expect(readFileSpy).toHaveNthReturnedWith(2, "TSCreator Encrypted Datafile");
+    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
-    const fileContent = Buffer.from("TSCreator Encrypted Datafile");
+    const fileContent = Buffer.from(dataFile);
     expect(isBuffer).toBe(true);
     expect(response.rawPayload).toEqual(fileContent);
   });
   it("should return the old encrypted file when request encrypted download an unencrypted file which has been encrypted before", async () => {
-    accessSpy.mockResolvedValueOnce(undefined);
+    const dataFile = "TSCreator Encrypted Datafile";
     checkHeaderSpy.mockResolvedValueOnce(true);
-    readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
+    readFileSpy.mockResolvedValueOnce(dataFile);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(accessSpy).toHaveBeenCalledTimes(1);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "TSCreator Encrypted Datafile");
+    expect(readFileSpy).toHaveNthReturnedWith(1, dataFile);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
@@ -703,24 +693,23 @@ describe("requestDownload", () => {
   });
 
   it("should return the original encrypted file when request encrypted download an encrypted file", async () => {
-    accessSpy
+    const dataFile = "TSCreator Encrypted Datafile";
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined);
+      .mockResolvedValueOnce(dataFile);
     checkHeaderSpy.mockResolvedValueOnce(true);
-    readFileSpy.mockResolvedValueOnce("TSCreator Encrypted Datafile");
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
     expect(runJavaEncryptSpy).not.toHaveBeenCalled();
-    expect(accessSpy).toHaveBeenCalledTimes(2);
-    expect(accessSpy).not.toHaveNthReturnedWith(1, undefined);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "TSCreator Encrypted Datafile");
+    expect(readFileSpy).toHaveNthReturnedWith(2, dataFile);
+    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, true);
     expect(response.statusCode).toBe(200);
     const isBuffer = Buffer.isBuffer(response.rawPayload);
@@ -730,7 +719,6 @@ describe("requestDownload", () => {
   });
   it("should remove the old encrypted file and encrypt again when the old file was not properly encrypted", async () => {
     runJavaEncryptSpy.mockResolvedValueOnce(undefined);
-    accessSpy.mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined);
     checkHeaderSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(true);
     readFileSpy
       .mockResolvedValueOnce("not properly encrypted")
@@ -747,6 +735,7 @@ describe("requestDownload", () => {
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(2, false);
     expect(checkHeaderSpy).toHaveNthReturnedWith(3, true);
+    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(readFileSpy).toHaveNthReturnedWith(1, "not properly encrypted");
     expect(readFileSpy).toHaveNthReturnedWith(2, "default content");
     expect(readFileSpy).toHaveNthReturnedWith(3, "TSCreator Encrypted Datafile");
@@ -758,34 +747,8 @@ describe("requestDownload", () => {
     expect(response.rawPayload).toEqual(fileContent);
   });
 
-  it("should reply 500 when an unknown error occured when try to access file when retreive original", async () => {
-    accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/${filename}`,
-      headers
-    });
-    expect(readFileSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(500);
-    expect(response.json().error).toBe("An error occurred: Error: Unknown error");
-  });
-  it("should reply 500 when an unknown error occured when try to access file when need encryption", async () => {
-    accessSpy.mockRejectedValueOnce(new Error("Unknown error"));
-
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/${filename}?needEncryption=true`,
-      headers
-    });
-    expect(readFileSpy).not.toHaveBeenCalled();
-    expect(checkHeaderSpy).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(500);
-    expect(response.json().error).toBe("An error occurred: Error: Unknown error");
-  });
-
   it("should reply 500 when an unknown error occured when try to access the original file when need encryption (regular datapack file check)", async () => {
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
@@ -798,8 +761,7 @@ describe("requestDownload", () => {
       url: `/user/datapack/download/${filename}?needEncryption=true`,
       headers
     });
-    expect(accessSpy).toHaveBeenCalledTimes(2);
-    expect(readFileSpy).not.toHaveBeenCalled();
+    expect(readFileSpy).toHaveBeenCalledTimes(2);
     expect(checkHeaderSpy).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(500);
     expect(response.json().error).toBe("An error occurred: Error: Unknown error");
@@ -808,20 +770,19 @@ describe("requestDownload", () => {
   it("should reply 404 when failed to process the file after successfully encrypted it", async () => {
     runJavaEncryptSpy.mockResolvedValueOnce(undefined);
     mkdirSpy.mockResolvedValueOnce(undefined);
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce("")
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       });
     checkHeaderSpy.mockResolvedValueOnce(false);
-    readFileSpy.mockResolvedValueOnce("default content");
 
     const response = await app.inject({
       method: "GET",
@@ -832,8 +793,7 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveNthReturnedWith(1, undefined);
     expect(mkdirSpy).toHaveNthReturnedWith(1, undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
-    expect(accessSpy).toHaveBeenCalledTimes(3);
+    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
     expect(response.json().error).toBe(`Java file did not successfully process the file ${filename}`);
   });
@@ -841,16 +801,15 @@ describe("requestDownload", () => {
   it("should reply 500 when when an error occured when try to access the file after successfully encrypted it", async () => {
     runJavaEncryptSpy.mockResolvedValueOnce(undefined);
     mkdirSpy.mockResolvedValueOnce(undefined);
-    accessSpy
+    readFileSpy
       .mockImplementationOnce(() => {
         const error: NodeJS.ErrnoException = new Error("File not found");
         error.code = "ENOENT";
         throw error;
       })
-      .mockResolvedValueOnce(undefined)
+      .mockResolvedValueOnce("default content")
       .mockRejectedValueOnce(new Error("Unknown Error"));
     checkHeaderSpy.mockResolvedValueOnce(false);
-    readFileSpy.mockResolvedValueOnce("default content");
 
     const response = await app.inject({
       method: "GET",
@@ -862,8 +821,8 @@ describe("requestDownload", () => {
     expect(runJavaEncryptSpy).toHaveNthReturnedWith(1, undefined);
     expect(mkdirSpy).toHaveNthReturnedWith(1, undefined);
     expect(checkHeaderSpy).toHaveNthReturnedWith(1, false);
-    expect(readFileSpy).toHaveNthReturnedWith(1, "default content");
-    expect(accessSpy).toHaveBeenCalledTimes(3);
+    expect(readFileSpy).toHaveNthReturnedWith(2, "default content");
+    expect(readFileSpy).toHaveBeenCalledTimes(3);
     expect(rmSpy).not.toHaveBeenCalled();
   });
 });
