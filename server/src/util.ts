@@ -78,7 +78,7 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
         const escapedFilename = filename.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-        return path.join(topDirectory, escapedFilename, botDirectory, ".*");
+        return [topDirectory, escapedFilename, botDirectory, ".*"].join("/");
       })
       .join("|")
   );
