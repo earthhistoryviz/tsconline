@@ -1,7 +1,7 @@
 import path from "path";
 import { getDirectories } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
-import { readdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
 import { DatapackIndex, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
@@ -10,10 +10,11 @@ import chalk from "chalk";
 const allowedExtensions = [".dpk", ".mdpk", ".txt", ".map"];
 try {
   await loadAssetConfigs();
-  const directories = [
-    path.join(assetconfigs.uploadDirectory, "public"),
-    path.join(assetconfigs.uploadDirectory, "private")
-  ];
+  const publicDir = path.join(assetconfigs.uploadDirectory, "public");
+  const privateDir = path.join(assetconfigs.uploadDirectory, "private");
+  await mkdir(publicDir, { recursive: true });
+  await mkdir(privateDir, { recursive: true });
+  const directories = [publicDir, privateDir];
   for (const directory of directories) {
     const users = await getDirectories(directory);
     for (const user of users) {
