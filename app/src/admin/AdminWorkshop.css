@@ -9,14 +9,17 @@
 
 .active-icon {
   color: green;
+  opacity: 0.75;
 }
 
 .inactive-icon {
   color: darkorange;
+  opacity: 0.75;
 }
 
 .expired-icon {
   color: red;
+  opacity: 0.75;
 }
 
 .expired-workshop {
@@ -39,4 +42,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.trash-icon {
+  color: red;
+  opacity: 0.75;
+}
+
+.pencil-icon {
+  color: #188de6;
 }

@@ -23,27 +23,24 @@ import "./AdminWorkshop.css";
 const StatusCellRenderer = (params: { value: string }) => {
   if (params.value === "active") {
     return (
-      <CustomTooltip title="Active">
         <IconButton>
           <EventAvailableIcon className="active-icon" />
+          <Typography>Ongoing</Typography>
         </IconButton>
-      </CustomTooltip>
     );
   } else if (params.value === "inactive") {
     return (
-      <CustomTooltip title="Inactive">
         <IconButton>
           <ScheduleIcon className="inactive-icon" />
+          <Typography>Scheduled</Typography>
         </IconButton>
-      </CustomTooltip>
     );
   } else {
     return (
-      <CustomTooltip title="Expired">
         <IconButton>
           <EventBusyIcon className="expired-icon" />
+          <Typography>Concluded</Typography>
         </IconButton>
-      </CustomTooltip>
     );
   }
 };
@@ -84,12 +81,12 @@ const ActionsCellRenderer: React.FC<ActionsCellRendererProps> = (props) => {
     <>
       <CustomTooltip title="Edit Workshop">
         <IconButton onClick={handleEditClick}>
-          <EditIcon />
+          <EditIcon sx={{ color: "button.main" }}/>
         </IconButton>
       </CustomTooltip>
       <CustomTooltip title="Delete Workshop">
         <IconButton onClick={handleDeleteClick}>
-          <DeleteForeverIcon />
+          <DeleteForeverIcon className="trash-icon"/>
         </IconButton>
       </CustomTooltip>
     </>
@@ -97,6 +94,14 @@ const ActionsCellRenderer: React.FC<ActionsCellRendererProps> = (props) => {
 };
 
 const workshopColDefs: ColDef[] = [
+  {
+    headerName: "Status",
+    field: "status",
+    flex: 0.3,
+    cellRenderer: StatusCellRenderer,
+    cellClass: "centered-cell",
+    headerClass: "centered-header"
+  },
   {
     headerName: "Workshop Title",
     field: "title",
@@ -114,14 +119,6 @@ const workshopColDefs: ColDef[] = [
     field: "end",
     flex: 1,
     valueFormatter: (params) => dayjs(params.value).format("MMMM D, YYYY [at] h:mm A")
-  },
-  {
-    headerName: "Status",
-    field: "status",
-    flex: 0.2,
-    cellRenderer: StatusCellRenderer,
-    cellClass: "centered-cell",
-    headerClass: "centered-header"
   },
   {
     headerName: "Actions",
