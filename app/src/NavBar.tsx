@@ -17,7 +17,6 @@ import { SettingsMenuOptionLabels, assertSettingsTabs } from "./types";
 import Color from "color";
 import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
-import LanguageIcon from "@mui/icons-material/Language";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import Button from "@mui/material/Button";
@@ -26,6 +25,9 @@ import MenuItem from "@mui/material/MenuItem";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
+import Switch from "@mui/material/Switch";
+import { CustomFormControlLabel } from "./components/TSCComponents";
+import SettingsIcon from "@mui/icons-material/Settings";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -43,7 +45,6 @@ export const NavBar = observer(function Navbar() {
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const { t } = useTranslation();
-  const currentLanguage = i18next.language;
   const location = useLocation();
   return (
     <StyledAppBar position="fixed">
@@ -98,28 +99,6 @@ export const NavBar = observer(function Navbar() {
               />
               <Tab value={3} disableRipple label={t("navBar.help")} to="/help" component={Link} />
               <Tab value={4} disableRipple label={t("navBar.about")} to="/about" component={Link} />
-              <PopupState variant="popover" popupId="demo-popup-menu">
-                {(popupState) => (
-                  <React.Fragment>
-                    <Button variant="text" {...bindTrigger(popupState)}>
-                      <LanguageIcon />
-                      <Typography>{t(`language-names.${currentLanguage}`)}</Typography>
-                    </Button>
-                    <Menu {...bindMenu(popupState)}>
-                      {Object.entries(languageList).map(([key, value]) => (
-                        <MenuItem
-                          key={key}
-                          className="settings-sub-menu-item"
-                          onClick={() => {
-                            i18next.changeLanguage(value);
-                          }}>
-                          <Typography>{t(`language-names.${value}`)}</Typography>
-                        </MenuItem>
-                      ))}
-                    </Menu>
-                  </React.Fragment>
-                )}
-              </PopupState>
             </Tabs>
             <ControlledMenu
               {...hoverProps}
@@ -179,6 +158,46 @@ export const NavBar = observer(function Navbar() {
             }}
           />
         )}
+
+        <PopupState variant="popover" popupId="demo-popup-menu">
+          {(popupState) => (
+            <React.Fragment>
+              <Button variant="text" {...bindTrigger(popupState)}>
+                <SettingsIcon />
+                <Typography>{t(`Preferences`)}</Typography>
+              </Button>
+              <Menu {...bindMenu(popupState)}>
+                {Object.entries(languageList).map(([key, value]) => (
+                  <MenuItem
+                    key={key}
+                    className="settings-sub-menu-item"
+                    onClick={() => {
+                      i18next.changeLanguage(value);
+                    }}>
+                    <Typography>{t(`language-names.${value}`)}</Typography>
+                  </MenuItem>
+                ))}
+
+                <MenuItem className="settings-sub-menu-item" onClick={() => {}}>
+                  <Typography>{t(``)}</Typography>
+
+                  <CustomFormControlLabel
+                    width={120}
+                    control={
+                      <Switch
+                        checked={state.user.settings.darkMode}
+                        size="medium"
+                        color="default"
+                        onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
+                      />
+                    }
+                    label={t("login.dark-mode")}
+                  />
+                </MenuItem>
+              </Menu>
+            </React.Fragment>
+          )}
+        </PopupState>
       </Toolbar>
     </StyledAppBar>
   );
