@@ -11,7 +11,13 @@ import {
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
 import { findUser } from "../database.js";
-import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack, fetchUserDatapackFilepath } from "../user/user-handler.js";
+import {
+  deleteUserDatapack,
+  doesDatapackFolderExistInAllUUIDDirectories,
+  editDatapack,
+  fetchAllUsersDatapacks,
+  fetchUserDatapack
+} from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 
