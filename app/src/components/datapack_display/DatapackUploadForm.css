@@ -87,6 +87,7 @@
 .datapack-editable-profile-icon-background:hover .editable-datapack-empty-icon {
   transition: color 0.1s;
   color: rgb(255, 255, 255, 0.3);
+  opacity: 0.6;
 }
 .datapack-editable-profile-icon-background {
   width: 300px;
@@ -95,7 +96,9 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  border: 1px solid rgb(255, 255, 255);
 }
 .datapack-editable-profile-icon-background:hover {
-  background-color: rgba(0, 0, 0, 0.3);
+  transition: color 0.1s;
+  opacity: 0.6;
 }
