@@ -12,6 +12,8 @@ import {
 } from "../upload-handlers.js";
 import { findUser } from "../database.js";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsProfileImage,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
@@ -270,9 +272,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
   const userDir = await getPrivateUserUUIDDirectory(uuid);
-  let filepath: string = "";
-  let originalFilename: string = "";
-  let tempProfilePictureFilepath: string = "";
+  let filepath: string | undefined;
+  let originalFilename: string | undefined;
+  let storedFilename: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
   const cleanupTempFiles = async () => {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
@@ -282,14 +285,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       if (part.type === "file") {
         if (part.fieldname === "datapack") {
           uploadedFile = part;
-          filepath = path.join(userDir, makeTempFilename(originalFilename));
+          storedFilename = makeTempFilename(uploadedFile.filename);
+          filepath = path.join(userDir, storedFilename);
           originalFilename = uploadedFile.filename;
-          if (
-            (uploadedFile.mimetype !== "application/octet-stream" &&
-              uploadedFile.mimetype !== "text/plain" &&
-              uploadedFile.mimetype !== "application/zip") ||
-            !/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(uploadedFile.filename))
-          ) {
+          if (checkFileTypeIsDatapack(uploadedFile)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
@@ -300,7 +299,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             return;
           }
         } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (part.mimetype !== "image/png" && part.mimetype !== "image/jpeg" && part.mimetype !== "image/jpg") {
+          if (checkFileTypeIsProfileImage(part)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
@@ -323,13 +322,12 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath || !originalFilename) {
+  if (!uploadedFile || !filepath || !originalFilename || !storedFilename) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  const filename = uploadedFile.filename;
-  fields.storedFileName = filename;
+  fields.storedFileName = storedFilename;
   fields.originalFileName = originalFilename;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
