@@ -27,11 +27,14 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { setupNewDatapackDirectoryInUUIDDirectory, uploadFileToFileSystem, uploadUserDatapackHandler } from "../upload-handlers.js";
+import {
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadFileToFileSystem,
+  uploadUserDatapackHandler
+} from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { addAdminConfigDatapack, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
 import {
   checkFileTypeIsDatapack,
@@ -258,39 +261,39 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (tempProfilePictureFilepath) {
       await rm(tempProfilePictureFilepath, { force: true });
     }
-  }
+  };
   try {
-  for await (const part of parts) {
-    if (part.type === "file") {
-      if (part.fieldname === "datapack") {
-      // DOWNLOAD FILE HERE AND SAVE TO FILE
-      file = part;
-      originalFileName = file.filename;
-      storedFileName = makeTempFilename(originalFileName);
-      filepath = join(serverDir, storedFileName);
-      // store it temporarily in the upload directory
-      // this is because we can't check if the file should overwrite the existing file until we verify it
-      if (checkFileTypeIsDatapack(file)) {
-        reply.status(415).send({ error: "Invalid file type" });
-        return;
+    for await (const part of parts) {
+      if (part.type === "file") {
+        if (part.fieldname === "datapack") {
+          // DOWNLOAD FILE HERE AND SAVE TO FILE
+          file = part;
+          originalFileName = file.filename;
+          storedFileName = makeTempFilename(originalFileName);
+          filepath = join(serverDir, storedFileName);
+          // store it temporarily in the upload directory
+          // this is because we can't check if the file should overwrite the existing file until we verify it
+          if (checkFileTypeIsDatapack(file)) {
+            reply.status(415).send({ error: "Invalid file type" });
+            return;
+          }
+          const { code, message } = await uploadFileToFileSystem(file, filepath);
+          if (code !== 200) {
+            reply.status(code).send({ error: message });
+            return;
+          }
+        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+          if (checkFileTypeIsProfileImage(part)) {
+            reply.status(415).send({ error: "Invalid file type" });
+            return;
+          }
+          fields.profilePicture = part.filename;
+          tempProfilePictureFilepath = join(serverDir, makeTempFilename(part.filename));
+        }
+      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+        fields[part.fieldname] = part.value;
       }
-      const { code, message } = await uploadFileToFileSystem(file, filepath);
-      if (code !== 200) {
-        reply.status(code).send({ error: message });
-        return;
-      }
-    } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-      if (checkFileTypeIsProfileImage(part)) {
-        reply.status(415).send({ error: "Invalid file type" });
-        return;
-      }
-      fields.profilePicture = part.filename;
-      tempProfilePictureFilepath = join(serverDir, makeTempFilename(part.filename));
     }
-    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-      fields[part.fieldname] = part.value;
-    }
-  }
   } catch (error) {
     await cleanupTempFiles();
     reply.status(500).send({ error: "Unknown error" });
@@ -335,12 +338,6 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     await errorHandler("Error setting up UUID Directory");
     return;
   }
-  try {
-    await addAdminConfigDatapack(datapackMetadata);
-  } catch (e) {
-    await errorHandler("Error updating admin config");
-    return;
-  }
   reply.send({ message: "Datapack uploaded" });
 };
 
@@ -364,14 +361,6 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
   } catch (e) {
     reply.status(500).send({ error: "Error deleting server datapack" });
     return;
-  }
-  try {
-    await removeAdminConfigDatapack({ title: datapack });
-  } catch (e) {
-    reply.status(500).send({
-      error:
-        "Deleted datapack in filesystem, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
-    });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
