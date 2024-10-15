@@ -11,6 +11,7 @@ import {
   assertChartInfoTSC,
   assertChartSettingsInfoTSC,
   assertChronSettings,
+  assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
@@ -244,6 +245,16 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
             assertPointColumnInfoTSC(childColumn);
             childColumn.isDataMiningColumn = true;
           }
+          if (child.getAttribute("isDualColCompColumn") === "true" && childName) {
+            if (extractColumnType(childName) === "EventColumn") {
+              assertEventColumnInfoTSC(childColumn);
+              childColumn.isDualColCompColumn = true;
+            }
+            if (extractColumnType(childName) === "PointColumn") {
+              assertPointColumnInfoTSC(childColumn);
+              childColumn.isDualColCompColumn = true;
+            }
+          }
           column.children.push(childColumn);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
@@ -403,7 +414,9 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         rangeSort: state.columnSpecificSettings.rangeSort,
         drawExtraColumn: state.columnSpecificSettings.frequency,
         windowSize: state.columnSpecificSettings.windowSize,
-        stepSize: state.columnSpecificSettings.stepSize
+        stepSize: state.columnSpecificSettings.stepSize,
+        isDualColCompColumn: state.columnSpecificSettings.dualColCompColumnRef ? true : false,
+        drawDualColCompColumn: state.columnSpecificSettings.drawDualColCompColumn
       };
       break;
     case "Zone":
@@ -471,7 +484,9 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
         drawExtraColumn: state.columnSpecificSettings.dataMiningPointDataType,
         windowSize: state.columnSpecificSettings.windowSize,
         stepSize: state.columnSpecificSettings.stepSize,
-        isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn
+        isDataMiningColumn: state.columnSpecificSettings.isDataMiningColumn,
+        isDualColCompColumn: state.columnSpecificSettings.dualColCompColumnRef ? true : false,
+        drawDualColCompColumn: state.columnSpecificSettings.drawDualColCompColumn
       };
       break;
     case "Chron":
@@ -639,7 +654,9 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       for (const child of column.children) {
         const isDataMiningColumn =
           "isDataMiningColumn" in child ? `isDataMiningColumn="${child.isDataMiningColumn}"` : "";
-        xml += `${indent}<column id="${escapeHtmlChars(child._id, "attribute")}" ${isDataMiningColumn}>\n`;
+        const isDualColCompColumn =
+          "isDualColCompColumn" in child ? `isDualColCompColumn="${child.isDualColCompColumn}"` : "";
+        xml += `${indent}<column id="${escapeHtmlChars(child._id, "attribute")}" ${isDataMiningColumn} ${isDualColCompColumn}>\n`;
         xml += columnInfoTSCToXml(child, `${indent}    `);
         xml += `${indent}</column>\n`;
       }
@@ -659,6 +676,9 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       xml += `${indent}<setting name="type" type="${column.type}"/>\n`;
     } else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
+    } else if (key === "drawDualColCompColumn") {
+      if (typeof keyValue !== "string") continue;
+      xml += `${indent}<setting name="${key}">${escapeHtmlChars(keyValue, "attribute")}</setting>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;
     }

@@ -51,6 +51,8 @@ export const defaultEventSettings: EventSettings = {
   type: "events",
   rangeSort: "first occurrence",
   frequency: null,
+  dualColCompColumnRef: null,
+  drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
 export const defaultChronSettings: ChronSettings = {
@@ -291,7 +293,9 @@ export const defaultEventColumnInfoTSC: EventColumnInfoTSC = {
   rangeSort: "first occurrence",
   drawExtraColumn: null,
   windowSize: 2,
-  stepSize: 1
+  stepSize: 1,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null
 };
 
 export const defaultChronColumnInfoTSC: ChronColumnInfoTSC = {
@@ -379,7 +383,9 @@ export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
   pointType: "rect",
   drawExtraColumn: null,
   windowSize: 2,
-  stepSize: 1
+  stepSize: 1,
+  isDualColCompColumn: false,
+  drawDualColCompColumn: null
 };
 
 export const defaultPointSettings: PointSettings = {
@@ -429,6 +435,8 @@ export const defaultPointSettings: PointSettings = {
   maxX: Number.MIN_SAFE_INTEGER,
   dataMiningPointDataType: null,
   isDataMiningColumn: false,
+  dualColCompColumnRef: null,
+  drawDualColCompColumn: null,
   ...defaultDataMiningSettings
 };
 
