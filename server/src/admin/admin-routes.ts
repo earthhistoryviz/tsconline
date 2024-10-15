@@ -13,7 +13,7 @@ import {
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, relative } from "path";
+import { resolve, extname, relative, join } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -27,20 +27,23 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
+import { setupNewDatapackDirectoryInUUIDDirectory, uploadFileToFileSystem, uploadUserDatapackHandler } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import { addAdminConfigDatapack, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsProfileImage,
   deleteAllUserDatapacks,
   deleteServerDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks
 } from "../user/user-handler.js";
-import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 
 /**
  * Get all users for admin to configure on frontend
@@ -242,50 +245,59 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
 ) {
   const parts = request.parts();
   let file: MultipartFile | undefined;
-  let storedFileName: string | undefined;
   let filepath: string | undefined;
   let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
+  const serverDir = await getPrivateUserUUIDDirectory("server");
+  const cleanupTempFiles = async () => {
+    if (filepath) {
+      await rm(filepath, { force: true });
+    }
+    if (tempProfilePictureFilepath) {
+      await rm(tempProfilePictureFilepath, { force: true });
+    }
+  }
+  try {
   for await (const part of parts) {
     if (part.type === "file") {
+      if (part.fieldname === "datapack") {
       // DOWNLOAD FILE HERE AND SAVE TO FILE
       file = part;
       originalFileName = file.filename;
       storedFileName = makeTempFilename(originalFileName);
+      filepath = join(serverDir, storedFileName);
       // store it temporarily in the upload directory
       // this is because we can't check if the file should overwrite the existing file until we verify it
-      filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
-      if (!filepath.startsWith(resolve(assetconfigs.datapacksDirectory))) {
-        reply.status(403).send({ error: "Directory traversal detected" });
+      if (checkFileTypeIsDatapack(file)) {
+        reply.status(415).send({ error: "Invalid file type" });
         return;
       }
-      if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(file.filename))) {
-        reply.status(400).send({ error: "Invalid file type" });
+      const { code, message } = await uploadFileToFileSystem(file, filepath);
+      if (code !== 200) {
+        reply.status(code).send({ error: message });
         return;
       }
-      try {
-        await pipeline(file.file, createWriteStream(filepath));
-      } catch (error) {
-        console.error(error);
-        await rm(filepath, { force: true });
-        reply.status(500).send({ error: "Error saving file" });
+    } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+      if (checkFileTypeIsProfileImage(part)) {
+        reply.status(415).send({ error: "Invalid file type" });
         return;
       }
-      if (file.file.truncated) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: "File too large" });
-        return;
-      }
-      if (file.file.bytesRead === 0) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: `Empty file cannot be uploaded` });
-        return;
-      }
+      fields.profilePicture = part.filename;
+      tempProfilePictureFilepath = join(serverDir, makeTempFilename(part.filename));
+    }
     } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
       fields[part.fieldname] = part.value;
     }
   }
-  if (!file || !filepath || !storedFileName || !originalFileName) {
+  } catch (error) {
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Unknown error" });
+    return;
+  }
+  if (!file || !filepath || !originalFileName || !storedFileName) {
+    await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
   }
@@ -294,17 +306,15 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.originalFileName = originalFileName;
   fields.uuid = "server";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
+    await cleanupTempFiles();
     reply.status(500).send({ error: "Unexpected error with request fields." });
   });
   if (!datapackMetadata) {
-    filepath && (await rm(filepath, { force: true }));
     return;
   }
   // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
   const errorHandler = async (error: string, errorCode: number = 500) => {
-    if (!filepath || !storedFileName || !datapackMetadata)
-      throw new Error("Missing required variables for file deletion and error handling");
-    await rm(filepath, { force: true });
+    await cleanupTempFiles();
     reply.status(errorCode).send({ error });
   };
   try {

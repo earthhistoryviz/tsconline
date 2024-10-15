@@ -54,32 +54,11 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
       <form onSubmit={handlers.handleSubmit}>
         <StyledScrollbar className="datapack-upload-form-container">
           <Box display="flex" flexDirection="row" justifyContent="flex-start" gap="100px" margin="10px">
-            <Box
-              className="datapack-editable-profile-icon-background"
-              sx={{ backgroundColor: "secondaryBackground.main" }}>
-              <Badge
-                overlap="rectangular"
-                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-                className="editable-datapack-profile-icon-badge"
-                onClick={() => {
-                  if (state.profileImageRef.current) state.profileImageRef.current.click();
-                }}>
-                {state.profileImage ? (
-                  <img src={URL.createObjectURL(state.profileImage)} className="editable-datapack-profile-icon" />
-                ) : (
-                  <SvgIcon className="editable-datapack-empty-icon">
-                    <AddPhotoAlternate />
-                  </SvgIcon>
-                )}
-              </Badge>
-              <input
-                type="file"
-                accept="image/*"
-                ref={state.profileImageRef}
-                style={{ display: "none" }}
-                onChange={handlers.handleProfileImageChange}
-              />
-            </Box>
+            <UploadProfilePicture
+              profileImageRef={state.profileImageRef}
+              profileImage={state.profileImage}
+              handleProfileImageChange={handlers.handleProfileImageChange}
+            />
             <Box className="file-upload">
               <InputFileUpload
                 startIcon={<CloudUploadIcon />}
@@ -236,6 +215,44 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           <TSCButton type="submit">{t("settings.datapacks.upload-form.button.finish")}</TSCButton>
         </Box>
       </form>
+    </Box>
+  );
+};
+
+type UploadProfilePictureProps = {
+  profileImageRef: React.RefObject<HTMLInputElement>;
+  profileImage: File | null;
+  handleProfileImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
+const UploadProfilePicture: React.FC<UploadProfilePictureProps> = ({
+  profileImageRef,
+  profileImage,
+  handleProfileImageChange
+}) => {
+  return (
+    <Box className="datapack-editable-profile-icon-background" sx={{ backgroundColor: "secondaryBackground.dark" }}>
+      <Badge
+        overlap="rectangular"
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        className="editable-datapack-profile-icon-badge"
+        onClick={() => {
+          if (profileImageRef.current) profileImageRef.current.click();
+        }}>
+        {profileImage ? (
+          <img src={URL.createObjectURL(profileImage)} className="editable-datapack-profile-icon" />
+        ) : (
+          <SvgIcon className="editable-datapack-empty-icon">
+            <AddPhotoAlternate />
+          </SvgIcon>
+        )}
+      </Badge>
+      <input
+        type="file"
+        accept="image/*"
+        ref={profileImageRef}
+        style={{ display: "none" }}
+        onChange={handleProfileImageChange}
+      />
     </Box>
   );
 };
