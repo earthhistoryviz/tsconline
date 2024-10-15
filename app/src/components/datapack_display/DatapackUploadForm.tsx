@@ -25,13 +25,7 @@ import {
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
 } from "@tsconline/shared";
-import {
-  AddCircleOutline,
-  ExpandMore,
-  Close,
-  DeleteOutline,
-  AddPhotoAlternate
-} from "@mui/icons-material";
+import { AddCircleOutline, ExpandMore, Close, DeleteOutline, AddPhotoAlternate } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
