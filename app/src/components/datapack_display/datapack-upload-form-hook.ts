@@ -2,13 +2,13 @@ import { DatapackMetadata, DatapackType } from "@tsconline/shared";
 import { Dayjs } from "dayjs";
 import { useContext, useRef, useState } from "react";
 import { context } from "../../state";
-import { Reference } from "../../types";
+import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
 import { getDatapackFromArray } from "../../state/non-action-util";
 
 type DatapackUploadFormProps = {
-  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  upload: UploadDatapackMethodType;
   type: DatapackType;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
@@ -67,7 +67,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    upload(file, metadata);
+    upload(file, metadata, profileImage || undefined);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {

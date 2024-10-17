@@ -261,6 +261,9 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     if (tempProfilePictureFilepath) {
       await rm(tempProfilePictureFilepath, { force: true });
     }
+    if (fields.title) {
+      await deleteServerDatapack(fields.title);
+    }
   };
   try {
     for await (const part of parts) {
@@ -287,8 +290,14 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
-          fields.profilePicture = part.filename;
-          tempProfilePictureFilepath = join(serverDir, makeTempFilename(part.filename));
+          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
+          tempProfilePictureFilepath = join(serverDir, fields.datapackImage);
+          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+          if (code !== 200) {
+            await cleanupTempFiles();
+            reply.status(code).send({ error: message });
+            return;
+          }
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
@@ -330,7 +339,13 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory("server", filepath, datapackMetadata);
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
+      "server",
+      filepath,
+      datapackMetadata,
+      false,
+      tempProfilePictureFilepath
+    );
     if (!datapackIndex[datapackMetadata.title]) {
       throw new Error("Datapack not found in index");
     }

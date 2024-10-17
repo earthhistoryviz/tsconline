@@ -72,7 +72,6 @@ export type BaseDatapackProps = {
   baseAge?: number;
   verticalScale?: number;
   warnings?: DatapackWarning[];
-  image: string;
   totalColumns: number;
   columnTypeCount: ColumnTypeCounter;
   datapackImageCount: number;
@@ -1186,7 +1185,6 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
       assertDatapackWarning(warning);
     }
   }
-  if (typeof o.image !== "string") throwError("BaseDatapackProps", "image", "string", o.image);
   assertsColumnTypeCounter(o.columnTypeCount);
   if (typeof o.totalColumns !== "number") throwError("BaseDatapackProps", "totalColumns", "number", o.totalColumns);
   if (typeof o.datapackImageCount !== "number")
