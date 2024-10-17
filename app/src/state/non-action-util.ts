@@ -1,4 +1,5 @@
 import { Datapack, DatapackConfigForChartRequest, isServerDatapack, isUserDatapack } from "@tsconline/shared";
+import { devSafeUrl } from "../util";
 
 export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
@@ -25,4 +26,12 @@ export function isOwnedByUser(datapack: Datapack, uuid: string) {
 }
 export function getNavigationRouteForDatapackProfile(title: string, type: string) {
   return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
+}
+export function getDatapackProfileImageUrl(datapack: Datapack) {
+  const uuid = isUserDatapack(datapack) ? datapack.uuid : datapack.type;
+  if (datapack.datapackImage) {
+    return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);
+  } else {
+    return devSafeUrl(`/datapack-images/default/${uuid}`);
+  }
 }

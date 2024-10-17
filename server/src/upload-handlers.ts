@@ -12,9 +12,9 @@ import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
 import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
-import { getUserUUIDDirectory } from "./user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
+import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -55,7 +55,7 @@ export async function uploadUserDatapackHandler(
     isPublic,
     type,
     uuid,
-    profilePicture
+    datapackImage
   } = fields;
   let { references, tags } = fields;
   if (
@@ -122,7 +122,7 @@ export async function uploadUserDatapackHandler(
     uuid,
     isPublic: isPublic === "true",
     size: getBytes(bytes),
-    ...(profilePicture && { profilePicture }),
+    ...(datapackImage && { datapackImage }),
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date })
@@ -142,7 +142,8 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   uuid: string,
   sourceFilePath: string,
   metadata: DatapackMetadata,
-  manual?: boolean // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
+  manual: boolean, // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
+  datapackImageFilepath?: string
 ) {
   if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
     throw new Error("Datapack already exists");
@@ -162,6 +163,15 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   if (!successful || !datapackIndex[metadata.title]) {
     await rm(datapackFolder, { force: true });
     throw new Error("Failed to load datapack into index");
+  }
+  if (datapackImageFilepath) {
+    const datapackImageFilepathDest = path.join(
+      datapackFolder,
+      DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
+    );
+    console.log("Copying profile picture to", datapackImageFilepathDest);
+    await copyFile(datapackImageFilepath, datapackImageFilepathDest);
+    await rm(datapackImageFilepath, { force: true });
   }
   await writeFile(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
@@ -191,4 +201,18 @@ export async function uploadFileToFileSystem(
     return { code: 400, message: "Empty file" };
   }
   return { code: 200, message: "File uploaded" };
+}
+
+export async function fetchDatapackProfilePictureFilepath(uuid: string, datapackTitle: string) {
+  const directory = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  const possibleExtensions = [".png", ".jpeg", ".jpg"];
+
+  // Loop through possible extensions and check if the file exists
+  for (const ext of possibleExtensions) {
+    const profilePicturePath = path.join(directory, DATAPACK_PROFILE_PICTURE_FILENAME + ext);
+    if (await checkFileExists(profilePicturePath)) {
+      return profilePicturePath;
+    }
+  }
+  throw new Error("Profile picture does not exist");
 }
