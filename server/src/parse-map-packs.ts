@@ -113,7 +113,11 @@ export function processLine(
         );
       }
       map.name = formatColumnName(String(info[1]));
-      map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`;
+      console.log(map.name);
+      map.img = `/${assetconfigs.decryptionDirectory}/${String(info[2])}`;
+      // map.img = `/${assetconfigs.decryptionDirectory}/AfricaBight/MapImages/${String(info[2])}`;
+      // map.img = `/public/mapimages/${String(info[2])}`;
+      // map.img = `/assets/decrypted/AfricaBight/MapImages/AfricaBight.png`;
       map.note = String(info[3]);
       break;
     case "HEADER-COORD":
