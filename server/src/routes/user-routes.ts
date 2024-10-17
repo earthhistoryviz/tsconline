@@ -279,6 +279,9 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const cleanupTempFiles = async () => {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
+    if (fields.title) {
+      await deleteUserDatapack(uuid, fields.title);
+    }
   };
   try {
     for await (const part of parts) {
@@ -303,15 +306,14 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
-          const tempProfilePictureFilename = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
-          const { code, message } = await uploadFileToFileSystem(part, path.join(userDir, tempProfilePictureFilename));
+          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
+          tempProfilePictureFilepath = path.join(userDir, fields.datapackImage);
+          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
           if (code !== 200) {
             reply.status(code).send({ error: message });
             await cleanupTempFiles();
             return;
           }
-          fields.profilePicture = tempProfilePictureFilename;
-          tempProfilePictureFilepath = path.join(userDir, DATAPACK_PROFILE_PICTURE_FILENAME);
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
@@ -346,7 +348,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     return;
   }
   try {
-    await setupNewDatapackDirectoryInUUIDDirectory(uuid, filepath, datapackMetadata);
+    await setupNewDatapackDirectoryInUUIDDirectory(uuid, filepath, datapackMetadata, false, tempProfilePictureFilepath);
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;

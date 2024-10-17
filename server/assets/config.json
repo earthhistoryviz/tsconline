@@ -9,7 +9,7 @@
   "colors": "assets/colors.json",
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file-metadata.json",
-  "datapackImagesDirectory": "assets/datapack_images",
+  "datapackImagesDirectory": "assets/images",
   "uploadDirectory": "assets/uploads",
   "publicDirectory": "public",
   "privateDatapacksDirectory": "assets/uploads/private",
