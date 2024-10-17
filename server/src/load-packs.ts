@@ -1,14 +1,11 @@
 import { DatapackIndex, Patterns, assertPatterns, DatapackMetadata } from "@tsconline/shared";
-import pmap from "p-map";
-import fs from "fs/promises";
-import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
+import { rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
@@ -46,7 +43,6 @@ export async function loadDatapackIntoIndex(
         chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.originalFileName} and error: ${e}`)
       );
     });
-  successful = (await grabMapImages([datapack.storedFileName], decryptionDirectory)).successful && successful;
   return successful;
 }
 /**
