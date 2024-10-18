@@ -122,11 +122,18 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-// Serve the about picture images from server/public/aboutPictures/
+// Serve the mappoint images from server/assets/uploads]
 server.register(fastifyStatic, {
-  root: process.cwd() + "/public/aboutPictures",
-  prefix: "/public/aboutPictures/",
-  decorateReply: false // first registration above already added the decorator
+  root: process.cwd() + "/assets/uploads",
+  prefix: "/assets/uploads",
+  decorateReply: false
+});
+
+// Serve the mappoint images from server/assets/uploads]
+server.register(fastifyStatic, {
+  root: process.cwd() + "/assets/decrypted",
+  prefix: "/assets/decrypted",
+  decorateReply: false
 });
 
 server.register(fastifyStatic, {
