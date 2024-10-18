@@ -286,7 +286,7 @@ export const adminUploadServerDatapack: UploadDatapackMethodType = action(
     }
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
-    formData.append("file", file);
+    formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
     formData.append("references", JSON.stringify(references));
