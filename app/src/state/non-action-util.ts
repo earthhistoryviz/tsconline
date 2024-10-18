@@ -18,8 +18,11 @@ export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
 export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid?: string) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
-export function getServerDatapacks(datapacks: Datapack[]) {
-  return datapacks.filter((d) => isServerDatapack(d));
+export function getPublicServerDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isServerDatapack(d) && d.isPublic);
+}
+export function getPrivateServerDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isServerDatapack(d) && !d.isPublic);
 }
 export function isOwnedByUser(datapack: Datapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
