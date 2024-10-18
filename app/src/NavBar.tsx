@@ -41,6 +41,7 @@ import languageList from "../translation/avaliable-language.json";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
+import Divider from "@mui/material/Divider";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -72,6 +73,7 @@ export const NavBar = observer(function Navbar() {
     navigate(path);
     setMenuDrawerOpen(false);
   };
+  const dropRef = useRef(null);
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
@@ -230,20 +232,9 @@ export const NavBar = observer(function Navbar() {
             <React.Fragment>
               <Button variant="text" {...bindTrigger(popupState)}>
                 <SettingsIcon />
-                <Typography>{t(`Preferences`)}</Typography>
+                <Typography>{t(``)}</Typography>
               </Button>
               <Menu {...bindMenu(popupState)}>
-                {Object.entries(languageList).map(([key, value]) => (
-                  <MenuItem
-                    key={key}
-                    className="settings-sub-menu-item"
-                    onClick={() => {
-                      i18next.changeLanguage(value);
-                    }}>
-                    <Typography>{t(`language-names.${value}`)}</Typography>
-                  </MenuItem>
-                ))}
-
                 <MenuItem className="settings-sub-menu-item" onClick={() => {}}>
                   <Typography>{t(``)}</Typography>
 
@@ -260,6 +251,34 @@ export const NavBar = observer(function Navbar() {
                     label={t("login.dark-mode")}
                   />
                 </MenuItem>
+                <Divider
+                  sx={{
+                    borderBottomWidth: 1,
+                    borderColor: "white",
+                    my: 1
+                  }}
+                />
+                <MenuItem>
+                  <Typography sx={{ textAlign: "center", width: "100%" }}>{t(`LANGUAGES`)}</Typography>
+                </MenuItem>
+                {Object.entries(languageList).map(([key, value]) => (
+                  <MenuItem
+                    ref={dropRef}
+                    key={key}
+                    className="settings-sub-menu-item"
+                    onClick={() => {
+                      i18next.changeLanguage(value);
+                    }}
+                    sx={{
+                      "&:hover": {
+                        backgroundColor: "rgba(0, 0, 0, 0.08)",
+                        color: "primary.main"
+                      },
+                      transition: "background-color 0.2s ease"
+                    }}>
+                    <Typography>{t(`language-names.${value}`)}</Typography>
+                  </MenuItem>
+                ))}
               </Menu>
             </React.Fragment>
           )}
