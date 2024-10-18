@@ -126,10 +126,6 @@ server.register(fastifyStatic, {
   prefix: "/public/aboutPictures/",
   decorateReply: false // first registration above already added the decorator
 });
-server.get<{ Params: { title: string; uuid: string } }>(
-  "/datapack-images/:title/:uuid",
-  routes.fetchDatapackCoverImage
-);
 
 server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),
@@ -222,6 +218,19 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
+
+server.get<{ Params: { title: string; uuid: string } }>(
+  "/datapack-images/:title/:uuid",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  routes.fetchDatapackCoverImage
+);
 
 server.register(adminRoutes, { prefix: "/admin" });
 
