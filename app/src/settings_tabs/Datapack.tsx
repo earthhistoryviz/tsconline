@@ -8,6 +8,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
+import { VpnLock } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -23,8 +24,9 @@ import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
   getCurrentUserDatapacks,
+  getPrivateServerDatapacks,
   getPublicDatapacksWithoutCurrentUser,
-  getServerDatapacks,
+  getPublicServerDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -87,10 +89,17 @@ export const Datapacks = observer(function Datapacks() {
         </ToggleButtonGroup>
       </div>
       <DatapackGroupDisplay
-        datapacks={getServerDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.server")}
+        datapacks={getPublicServerDatapacks(state.datapacks)}
+        header={t("settings.datapacks.title.public-server")}
         HeaderIcon={Storage}
       />
+      {state.user.isAdmin && (
+        <DatapackGroupDisplay
+          datapacks={getPrivateServerDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.private-server")}
+          HeaderIcon={VpnLock}
+        />
+      )}
       {state.isLoggedIn && state.user && (
         <DatapackGroupDisplay
           datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
