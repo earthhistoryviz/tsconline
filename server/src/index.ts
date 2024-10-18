@@ -23,8 +23,6 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
-import { fetchDatapackProfilePictureFilepath } from "./upload-handlers.js";
-import { readFile } from "fs/promises";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -128,33 +126,10 @@ server.register(fastifyStatic, {
   prefix: "/public/aboutPictures/",
   decorateReply: false // first registration above already added the decorator
 });
-server.get<{ Params: { title: string; uuid: string } }>("/datapack-images/:title/:uuid", async (request, reply) => {
-  const { title, uuid } = request.params;
-  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "default.png");
-  try {
-    if (title === "default") {
-      if (!(await checkFileExists(defaultFilepath))) {
-        reply.send({ error: "Default image not found" });
-        return;
-      }
-      reply.send(await readFile(defaultFilepath));
-      return;
-    }
-    const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
-    if (!(await checkFileExists(uniqueImageFilepath))) {
-      if (!(await checkFileExists(defaultFilepath))) {
-        reply.send({ error: "Default image not found" });
-        return;
-      }
-      reply.send(await readFile(defaultFilepath));
-      return;
-    }
-    reply.send(await readFile(uniqueImageFilepath));
-  } catch (e) {
-    console.error("Error fetching image: ", e);
-    reply.send({ error: "Error fetching image" });
-  }
-});
+server.get<{ Params: { title: string; uuid: string } }>(
+  "/datapack-images/:title/:uuid",
+  routes.fetchDatapackCoverImage
+);
 
 server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),
