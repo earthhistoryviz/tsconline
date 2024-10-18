@@ -276,17 +276,18 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
           filepath = join(serverDir, storedFileName);
           // store it temporarily in the upload directory
           // this is because we can't check if the file should overwrite the existing file until we verify it
-          if (checkFileTypeIsDatapack(file)) {
+          if (!checkFileTypeIsDatapack(file)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
           const { code, message } = await uploadFileToFileSystem(file, filepath);
           if (code !== 200) {
+            await cleanupTempFiles();
             reply.status(code).send({ error: message });
             return;
           }
         } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (checkFileTypeIsProfileImage(part)) {
+          if (!checkFileTypeIsProfileImage(part)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
@@ -305,6 +306,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     }
   } catch (error) {
     await cleanupTempFiles();
+    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
@@ -318,24 +320,22 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.originalFileName = originalFileName;
   fields.uuid = "server";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
-    await cleanupTempFiles();
-    reply.status(500).send({ error: "Unexpected error with request fields." });
+    // @eslint-disable-next-line
   });
   if (!datapackMetadata) {
+    reply.status(500).send({ error: "Unexpected error with request fields." });
+    await cleanupTempFiles();
     return;
   }
-  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
-  const errorHandler = async (error: string, errorCode: number = 500) => {
-    await cleanupTempFiles();
-    reply.status(errorCode).send({ error });
-  };
   try {
     if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
-      await errorHandler("Datapack already exists", 409);
+      await cleanupTempFiles();
+      reply.status(409).send({ error: "Datapack already exists" });
       return;
     }
   } catch (e) {
-    await errorHandler("Error checking if datapack exists");
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error checking if datapack exists" });
     return;
   }
   try {
@@ -350,7 +350,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       throw new Error("Datapack not found in index");
     }
   } catch (error) {
-    await errorHandler("Error setting up UUID Directory");
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error setting up datapack directory" });
     return;
   }
   reply.send({ message: "Datapack uploaded" });
