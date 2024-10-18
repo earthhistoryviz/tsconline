@@ -155,7 +155,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
   const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
-  if (!manual) {
+  if (!manual && sourceFilePath !== sourceFileDestination) {
     await rm(sourceFilePath, { force: true });
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
