@@ -58,7 +58,7 @@ vi.mock("../src/user/user-handler", async () => {
     deleteServerDatapack: vi.fn().mockResolvedValue({}),
     fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
     checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
-    checkFileTypeIsProfileImage: vi.fn().mockReturnValue(true)
+    checkFileTypeIsDatapackImage: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -884,7 +884,7 @@ describe("adminUploadServerDatapack", () => {
   const rm = vi.spyOn(fsPromises, "rm");
   const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
   const uploadFileToFileSystem = vi.spyOn(uploadHandlers, "uploadFileToFileSystem");
-  const checkFileTypeIsProfileImage = vi.spyOn(userHandlers, "checkFileTypeIsProfileImage");
+  const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
   const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
   const getPrivateUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getPrivateUserUUIDDirectory");
   const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
@@ -985,21 +985,21 @@ describe("adminUploadServerDatapack", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ error: "Invalid file type" });
+    expect(await response.json()).toEqual({ error: "Invalid file type for datapack file" });
     expect(uploadFileToFileSystem).not.toHaveBeenCalled();
     expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(415);
   });
-  it("should return 415 if profile picture is not an image", async () => {
+  it("should return 415 if datapack image is not an image", async () => {
     createForm({ datapack: "" });
-    checkFileTypeIsProfileImage.mockReturnValueOnce(false);
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "POST",
       url: "/admin/server/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ error: "Invalid file type" });
+    expect(await response.json()).toEqual({ error: "Invalid file type for datapack image" });
     expect(uploadFileToFileSystem).not.toHaveBeenCalled();
     expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(415);

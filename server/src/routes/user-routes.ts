@@ -13,7 +13,7 @@ import {
 import { findUser } from "../database.js";
 import {
   checkFileTypeIsDatapack,
-  checkFileTypeIsProfileImage,
+  checkFileTypeIsDatapackImage,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
@@ -291,7 +291,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           storedFilename = makeTempFilename(uploadedFile.filename);
           filepath = path.join(userDir, storedFilename);
           originalFilename = uploadedFile.filename;
-          if (checkFileTypeIsDatapack(uploadedFile)) {
+          if (!checkFileTypeIsDatapack(uploadedFile)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }
@@ -302,7 +302,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             return;
           }
         } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (checkFileTypeIsProfileImage(part)) {
+          if (!checkFileTypeIsDatapackImage(part)) {
             reply.status(415).send({ error: "Invalid file type" });
             return;
           }

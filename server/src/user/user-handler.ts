@@ -264,16 +264,16 @@ export async function getEncryptedDatapackDirectory(uuid: string, datapackTitle:
 
 export function checkFileTypeIsDatapack(file: MultipartFile): boolean {
   return (
-    (file.mimetype !== "application/octet-stream" &&
-      file.mimetype !== "text/plain" &&
-      file.mimetype !== "application/zip") ||
-    !/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))
+    (file.mimetype === "application/octet-stream" ||
+      file.mimetype === "text/plain" ||
+      file.mimetype === "application/zip") &&
+    /^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))
   );
 }
 
-export function checkFileTypeIsProfileImage(file: MultipartFile): boolean {
+export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
   return (
-    (file.mimetype !== "image/png" && file.mimetype !== "image/jpeg") ||
-    !/^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
+    (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") &&
+    /^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
   );
 }

@@ -248,7 +248,7 @@ const UploadProfilePicture: React.FC<UploadProfilePictureProps> = ({
       </Badge>
       <input
         type="file"
-        accept="image/*"
+        accept=".png, .jpg, .jpeg"
         ref={profileImageRef}
         style={{ display: "none" }}
         onChange={handleProfileImageChange}
