@@ -122,7 +122,14 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-// Serve the mappoint images from server/assets/decrypted
+// Serve the mappoint images from server/assets/uploads]
+server.register(fastifyStatic, {
+  root: process.cwd() + "/assets/uploads",
+  prefix: "/assets/uploads",
+  decorateReply: false
+});
+
+// Serve the mappoint images from server/assets/uploads]
 server.register(fastifyStatic, {
   root: process.cwd() + "/assets/decrypted",
   prefix: "/assets/decrypted",

@@ -1,7 +1,4 @@
 import { DatapackIndex, Patterns, assertPatterns, DatapackMetadata } from "@tsconline/shared";
-import pmap from "p-map";
-import fs from "fs/promises";
-import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";

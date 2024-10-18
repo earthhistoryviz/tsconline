@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { formatColumnName, grabFilepaths, trimQuotes, assetconfigs } from "./util.js";
+import { formatColumnName, grabFilepaths, trimQuotes } from "./util.js";
 import pmap from "p-map";
 import {
   InfoPoints,
@@ -113,11 +113,8 @@ export function processLine(
         );
       }
       map.name = formatColumnName(String(info[1]));
-      console.log(map.name);
-      map.img = `/${assetconfigs.decryptionDirectory}/${String(info[2])}`;
-      // map.img = `/${assetconfigs.decryptionDirectory}/AfricaBight/MapImages/${String(info[2])}`;
-      // map.img = `/public/mapimages/${String(info[2])}`;
-      // map.img = `/assets/decrypted/AfricaBight/MapImages/AfricaBight.png`;
+      const trimmedPath = map_info.replace(/\/map-packs\/.*$/, "");
+      map.img = `/${trimmedPath}/MapImages/${String(info[2])}`;
       map.note = String(info[3]);
       break;
     case "HEADER-COORD":
