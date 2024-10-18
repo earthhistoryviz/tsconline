@@ -507,7 +507,6 @@
     "ageUnits": "Ma",
     "defaultChronostrat": "UNESCO",
     "formatVersion": 1.5,
-    "image": "",
     "originalFileName": "AfricaBight.map",
     "storedFileName": "tempFileName",
     "description": "Africa Bight Map",
@@ -532,7 +531,10 @@
     },
     "authoredBy": "authoredBy",
     "datapackImageCount": 0,
-    "totalColumns": 8
+    "totalColumns": 8,
+    "datapackImage": "image",
+    "isPublic": true,
+    "type": "server"
   },
   "general-parse-datapacks-test-2-key": {
     "columnInfo": {
@@ -1427,7 +1429,6 @@
     "ageUnits": "Ma",
     "defaultChronostrat": "USGS",
     "formatVersion": 1,
-    "image": "",
     "verticalScale": 6,
     "date": "2015-03-15",
     "originalFileName": "file.dpk",
@@ -1454,7 +1455,10 @@
     "totalColumns": 14,
     "tags": [],
     "references": [],
-    "authoredBy": "authoredBy"
+    "authoredBy": "authoredBy",
+    "datapackImage": "image",
+    "isPublic": true,
+    "type": "server"
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -2757,7 +2761,6 @@
     "ageUnits": "Ma",
     "defaultChronostrat": "UNESCO",
     "formatVersion": 1.5,
-    "image": "",
     "originalFileName": "file.dpk",
     "storedFileName": "tempFileName",
     "description": "description",
@@ -2780,8 +2783,11 @@
     },
     "datapackImageCount": 0,
     "totalColumns": 0,
-    "authoredBy": "authoredBy",
     "references": [],
-    "tags": []
+    "tags": [],
+    "authoredBy": "authoredBy",
+    "datapackImage": "image",
+    "isPublic": true,
+    "type": "server"
   }
 }

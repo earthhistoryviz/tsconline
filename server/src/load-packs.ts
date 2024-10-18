@@ -12,7 +12,6 @@ import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
-import { getAdminConfigDatapacks } from "./admin/admin-config.js";
 
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
@@ -123,7 +122,7 @@ async function getDominantRGB(filepath: string) {
  * For access from fastify server servicing
  */
 export async function grabMapImages(
-  datapacks: string[] = getAdminConfigDatapacks().map((datapack) => datapack.storedFileName),
+  datapacks: string[],
   decryptionDirectory: string = assetconfigs.decryptionDirectory
 ): Promise<{ images: string[]; successful: boolean }> {
   if (datapacks.length === 0) return { images: [], successful: true };

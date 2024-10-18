@@ -2,15 +2,26 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkFileExists, checkHeader, makeTempFilename } from "../util.js";
+import { assetconfigs, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import { DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
-import { createWriteStream } from "fs";
-import { pipeline } from "stream/promises";
-import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
+import {
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadFileToFileSystem,
+  uploadUserDatapackHandler
+} from "../upload-handlers.js";
 import { findUser } from "../database.js";
-import { deleteUserDatapack, editDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsDatapackImage,
+  deleteUserDatapack,
+  doesDatapackFolderExistInAllUUIDDirectories,
+  editDatapack,
+  fetchAllUsersDatapacks,
+  fetchUserDatapack
+} from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
@@ -261,62 +272,69 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
   const userDir = await getPrivateUserUUIDDirectory(uuid);
-  let filepath: string = "";
-  let originalFilename: string = "";
+  let filepath: string | undefined;
+  let originalFilename: string | undefined;
+  let storedFilename: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
+  const cleanupTempFiles = async () => {
+    filepath && (await rm(filepath, { force: true }));
+    tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
+    if (fields.title) {
+      await deleteUserDatapack(uuid, fields.title);
+    }
+  };
   try {
     for await (const part of parts) {
       if (part.type === "file") {
-        uploadedFile = part;
-        // only accept a binary file (encoded) or an unecnrypted text file or a zip file
-        if (
-          (uploadedFile.mimetype !== "application/octet-stream" &&
-            uploadedFile.mimetype !== "text/plain" &&
-            uploadedFile.mimetype !== "application/zip") ||
-          !/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(uploadedFile.filename))
-        ) {
-          reply.status(415).send({ error: "Invalid file type" });
-          return;
-        }
-        originalFilename = uploadedFile.filename;
-        // store it in a temp file since we need to know title before we effectively save the file
-        filepath = path.join(userDir, makeTempFilename(originalFilename));
-        try {
-          await pipeline(uploadedFile.file, createWriteStream(filepath));
-        } catch (e) {
-          reply.status(500).send({ error: "Failed to save file with error " + e });
-          return;
-        }
-        if (uploadedFile.file.truncated) {
-          await rm(filepath, { force: true });
-          reply.status(400).send({ error: "File is too large" });
-          return;
-        }
-        if (uploadedFile.file.bytesRead === 0) {
-          await rm(filepath, { force: true });
-          reply.status(400).send({ error: `Empty file cannot be uploaded` });
-          return;
+        if (part.fieldname === "datapack") {
+          uploadedFile = part;
+          storedFilename = makeTempFilename(uploadedFile.filename);
+          filepath = path.join(userDir, storedFilename);
+          originalFilename = uploadedFile.filename;
+          if (!checkFileTypeIsDatapack(uploadedFile)) {
+            reply.status(415).send({ error: "Invalid file type" });
+            return;
+          }
+          const { code, message } = await uploadFileToFileSystem(uploadedFile, filepath);
+          if (code !== 200) {
+            reply.status(code).send({ error: message });
+            await cleanupTempFiles();
+            return;
+          }
+        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+          if (!checkFileTypeIsDatapackImage(part)) {
+            reply.status(415).send({ error: "Invalid file type" });
+            return;
+          }
+          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
+          tempProfilePictureFilepath = path.join(userDir, fields.datapackImage);
+          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+          if (code !== 200) {
+            reply.status(code).send({ error: message });
+            await cleanupTempFiles();
+            return;
+          }
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
       }
     }
   } catch (e) {
-    filepath && (await rm(filepath, { force: true }));
+    await cleanupTempFiles();
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath || !originalFilename) {
-    filepath && (await rm(filepath, { force: true }));
+  if (!uploadedFile || !filepath || !originalFilename || !storedFilename) {
+    await cleanupTempFiles();
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  const filename = uploadedFile.filename;
-  fields.storedFileName = filename;
+  fields.storedFileName = storedFilename;
   fields.originalFileName = originalFilename;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
     async (e) => {
-      filepath && (await rm(filepath, { force: true }));
+      await cleanupTempFiles();
       reply.status(500).send({ error: "Failed to upload datapack with error " + e });
     }
   );
@@ -324,13 +342,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   if (!datapackMetadata) {
     return;
   }
-  if (await checkFileExists(path.join(userDir, datapackMetadata.title))) {
-    filepath && (await rm(filepath, { force: true }));
+  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, datapackMetadata.title)) {
+    await cleanupTempFiles();
     reply.status(500).send({ error: "Datapack with the same title already exists" });
     return;
   }
   try {
-    await setupNewDatapackDirectoryInUUIDDirectory(uuid, filepath, datapackMetadata);
+    await setupNewDatapackDirectoryInUUIDDirectory(uuid, filepath, datapackMetadata, false, tempProfilePictureFilepath);
   } catch (e) {
     await errorHandler("Failed to load and write metadata for file", 500, e);
     return;

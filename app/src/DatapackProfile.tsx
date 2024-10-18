@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { devSafeUrl, loadRecaptcha } from "./util";
+import { loadRecaptcha } from "./util";
 import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
@@ -27,12 +27,15 @@ import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes } from "./util/error-codes";
-import { doesDatapackAlreadyExist, getNavigationRouteForDatapackProfile } from "./state/non-action-util";
+import {
+  doesDatapackAlreadyExist,
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile
+} from "./state/non-action-util";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   const query = new URLSearchParams(useLocation().search);
@@ -50,6 +53,7 @@ export const DatapackProfile = observer(() => {
   }, [datapack]);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
+  const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {
       id: "About",
@@ -94,7 +98,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <img className={styles.di} src={datapack.image || defaultImageUrl} />
+        <img className={styles.di} src={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />

@@ -64,7 +64,10 @@ describe("general parse-datapacks tests", () => {
     size: "size",
     tags: [],
     authoredBy: "authoredBy",
-    references: []
+    references: [],
+    datapackImage: "image",
+    isPublic: true,
+    type: "server"
   };
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks(
