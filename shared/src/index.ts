@@ -21,8 +21,15 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
-  workshopTitle?: string;
+  workshopsEnrolled?: WorkshopEnrolled[];
   uuid: string;
+};
+
+export type WorkshopEnrolled = {
+  workshopId: number;
+  workshopTitle: string;
+  start: string;
+  end: string;
 };
 
 export type DatapackMetadata = {
@@ -671,8 +678,19 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
-  if (o.workshopTitle != null && typeof o.workshopTitle !== "string")
-    throwError("User", "workshopTitle", "number", o.workshopTitle);
+  if (o.workshopsEnrolled != null) {
+    for (const workshopEnrolled of o.workshopsEnrolled) {
+      assertWorkshopEnrolled(workshopEnrolled);
+    }
+  }
+}
+
+export function assertWorkshopEnrolled(o: any): asserts o is WorkshopEnrolled {
+  if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
+  if (typeof o.workshopTitle !== "string") throwError("WorkshopEnrolled", "workshopTitle", "string", o.workshopTitle);
+  if (typeof o.workshopId !== "number") throwError("WorkshopEnrolled", "workshopId", "number", o.workshopId);
+  if (typeof o.start !== "string") throwError("WorkshopEnrolled", "start", "string", o.start);
+  if (typeof o.end !== "string") throwError("WorkshopEnrolled", "end", "string", o.end);
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {
