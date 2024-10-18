@@ -12,7 +12,6 @@ import {
   checkWorkshopHasUser,
   createUsersWorkshops,
   findUserInUsersWorkshops,
-  deleteUserInUsersWorkshops,
   updateUser
 } from "../database.js";
 import { randomUUID } from "node:crypto";
@@ -179,7 +178,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => { });
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
