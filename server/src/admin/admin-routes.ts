@@ -38,7 +38,7 @@ import logger from "../error-logger.js";
 import "dotenv/config";
 import {
   checkFileTypeIsDatapack,
-  checkFileTypeIsProfileImage,
+  checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,
   deleteServerDatapack,
   deleteUserDatapack,
@@ -256,13 +256,19 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   const serverDir = await getPrivateUserUUIDDirectory("server");
   const cleanupTempFiles = async () => {
     if (filepath) {
-      await rm(filepath, { force: true });
+      await rm(filepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
     }
     if (tempProfilePictureFilepath) {
-      await rm(tempProfilePictureFilepath, { force: true });
+      await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
     }
     if (fields.title) {
-      await deleteServerDatapack(fields.title);
+      await deleteServerDatapack(fields.title).catch((e) => {
+        console.error(e);
+      });
     }
   };
   try {
@@ -277,7 +283,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
           // store it temporarily in the upload directory
           // this is because we can't check if the file should overwrite the existing file until we verify it
           if (!checkFileTypeIsDatapack(file)) {
-            reply.status(415).send({ error: "Invalid file type" });
+            reply.status(415).send({ error: "Invalid file type for datapack file" });
             return;
           }
           const { code, message } = await uploadFileToFileSystem(file, filepath);
@@ -287,8 +293,8 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
             return;
           }
         } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (!checkFileTypeIsProfileImage(part)) {
-            reply.status(415).send({ error: "Invalid file type" });
+          if (!checkFileTypeIsDatapackImage(part)) {
+            reply.status(415).send({ error: "Invalid file type for datapack image" });
             return;
           }
           fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
