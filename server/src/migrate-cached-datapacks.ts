@@ -63,6 +63,7 @@ try {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetadata> = {}): DatapackMetadata {
+  migrateImageToDatapackImage(datapack);
   const metadata: DatapackMetadata = {
     title: "title" in datapack ? datapack.title : "",
     authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "Unknwon",
@@ -77,8 +78,18 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     size: "size" in datapack ? datapack.size : 0,
     originalFileName: "originalFileName" in datapack ? datapack.originalFileName : "",
     storedFileName: "storedFileName" in datapack ? datapack.storedFileName : "",
+    datapackImage: "datapackImage" in datapack ? datapack.datapackImage : "",
     ...partial
   };
   assertDatapackMetadata(metadata);
   return metadata;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrateImageToDatapackImage(datapack: any) {
+  if ("image" in datapack) {
+    datapack.datapackImage = datapack.image;
+    delete datapack.image;
+  }
+  return datapack;
 }
