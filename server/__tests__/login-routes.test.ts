@@ -1887,7 +1887,9 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopEnrolled: ["test"],
+        workshopsEnrolled: [
+          { workshopId: workshop.workshopId, workshopTitle: workshop.title, start: workshop.start, end: workshop.end }
+        ], //
         uuid: testUser.uuid
       });
     });

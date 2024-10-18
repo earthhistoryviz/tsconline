@@ -1,5 +1,6 @@
-import { AdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, WorkshopEnrolled } from "@tsconline/shared";
 import { useState, useEffect } from "react";
+import { EditableUserProperties } from "../types";
 
 type UseUserStatsProps = {
   data: AdminSharedUser;
@@ -10,26 +11,30 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
-  const [userInfo, setUserInfo] = useState({
+  const [userInfo, setUserInfo] = useState<EditableUserProperties>({
     username: data.username,
     email: data.email,
     isAdmin: data.isAdmin,
-    pictureUrl: data.pictureUrl || null
+    pictureUrl: data.pictureUrl || undefined
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
-  const workshops = data.workshopEnrolled ? data.workshopEnrolled : ["No registered workshop"];
-  const [currentWorkshops, setCurrentWorkshops] = useState(workshops);
-  const [selectedWorkshop, setSelectedWorkshop] = useState<string | null>(null);
+  const workshops = data.workshopsEnrolled ? data.workshopsEnrolled : null;
+  const [currentWorkshops, setCurrentWorkshops] = useState<WorkshopEnrolled[] | null>(workshops);
+  const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopEnrolled | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   // Function to remove a workshop
   const handleRemoveWorkshop = () => {
-    if (selectedWorkshop) {
-      const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop);
-      setCurrentWorkshops(updatedWorkshops);
+    if (currentWorkshops) {
+      if (selectedWorkshop) {
+        const updatedWorkshops = currentWorkshops.filter(
+          (workshop) => workshop.workshopId !== selectedWorkshop.workshopId
+        );
+        setCurrentWorkshops(updatedWorkshops);
+      }
+      handleCloseConfirmDialog();
     }
-    handleCloseConfirmDialog();
   };
 
   const handleEditToggle = () => {
@@ -39,6 +44,11 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUnsavedChanges(true);
+    if (!(e.target.name in userInfo)) {
+      console.error("wrong input type.");
+      handleDiscardChanges(false);
+      return;
+    }
     setUserInfo({
       ...userInfo,
       [e.target.name]: e.target.value
@@ -69,9 +79,10 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
     }
+    setUnsavedChanges(true);
   };
 
-  const handleOpenConfirmDialog = (title: string) => {
+  const handleOpenConfirmDialog = (title: WorkshopEnrolled) => {
     setSelectedWorkshop(title);
     setOpenConfirmDialog(true);
   };

@@ -27,6 +27,7 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
   SharedWorkshop,
+  WorkshopEnrolled,
   assertAdminSharedUser,
   assertSharedWorkshop,
   assertSharedWorkshopArray
@@ -58,13 +59,19 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUserInUsersWorkshops(userId);
-        const workshopEnrolled: string[] = [];
+        const workshopsEnrolled: WorkshopEnrolled[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
           if (workshop && workshop.length === 1) {
             if (workshop[0]?.title) {
-              workshopEnrolled.push(workshop[0].title);
+              const workshopEnrolled = {
+                workshopId: workshopId,
+                workshopTitle: workshop[0].title,
+                start: workshop[0].start,
+                end: workshop[0].end
+              };
+              workshopsEnrolled.push(workshopEnrolled);
             }
           }
         }
@@ -77,7 +84,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopEnrolled.length > 0 && { workshopEnrolled })
+          ...(workshopsEnrolled.length > 0 && { workshopsEnrolled })
         };
       })
     );
@@ -486,7 +493,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           const { userId } = eachUser;
           const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (existingRelationship.length == 0) {
-            createUsersWorkshops({ userId: userId, workshopId: workshopId });
+            await createUsersWorkshops({ userId: userId, workshopId: workshopId });
             const newRelationship = await checkWorkshopHasUser(userId, workshopId);
             if (newRelationship.length !== 1) {
               reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });

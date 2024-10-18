@@ -1,15 +1,20 @@
 import { School, PersonRemove, Close, Edit, FileUpload } from "@mui/icons-material";
 import {
   Typography,
-  List,
-  ListItem,
   IconButton,
   Dialog,
   Box,
   Avatar,
   TextField,
   Select,
-  MenuItem
+  MenuItem,
+  TableRow,
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead
 } from "@mui/material";
 import { AdminSharedUser } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
@@ -23,25 +28,56 @@ type MoreCellRendererProps = {
 //TODO: Need to implement backend
 export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) => {
   const { state, setters, handlers } = useEditUser({ data: props.data });
-
+  const formatDate = (dateString: string) => {
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    };
+    return new Date(dateString).toLocaleString(undefined, options);
+  };
   const worshopsList = () => {
-    return (state.currentWorkshops[0] === "No registered workshop" && state.currentWorkshops.length === 1) ||
-      state.currentWorkshops.length === 0 ? (
-      <Typography ml={1}>No registered workshop</Typography>
-    ) : (
-      <List dense={true}>
-        {state.currentWorkshops.map((value, index) => (
-          <ListItem key={index}>
-            <School />
-            <Typography ml={1}>{value}</Typography>
-            <CustomTooltip title="Remove user from this workshop">
-              <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
-                <PersonRemove />
-              </IconButton>
-            </CustomTooltip>
-          </ListItem>
-        ))}
-      </List>
+    return (
+      <TableContainer component={Paper} style={{ maxWidth: "100%" }}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>Title</TableCell>
+              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>Start Date</TableCell>
+              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>End Date</TableCell>
+              <TableCell style={{ width: "10%" }}>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {!state.currentWorkshops || state.currentWorkshops.length === 0 ? (
+              <TableRow>
+                <TableCell align="center" colSpan={4} style={{ padding: "13px" }}>
+                  <Typography ml={1} fontWeight={"bold"}>
+                    No registered workshop
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              state.currentWorkshops.map((value, index) => (
+                <TableRow key={index}>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>{value.workshopTitle}</TableCell>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(value.start)}</TableCell>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(value.end)}</TableCell>
+                  <TableCell>
+                    <CustomTooltip title="Remove user from this workshop">
+                      <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+                        <PersonRemove />
+                      </IconButton>
+                    </CustomTooltip>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
     );
   };
 
@@ -61,7 +97,9 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
         }}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
-        aria-describedby="alert-dialog-description">
+        aria-describedby="alert-dialog-description"
+        maxWidth="md"
+        fullWidth={true}>
         <IconButton onClick={handlers.handleCloseDialog} sx={{ position: "absolute", top: 8, right: 8 }}>
           <Close />
         </IconButton>
@@ -84,12 +122,14 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
           </Box>
 
           {/* Basic Information Section */}
-          <Box border={1} borderRadius={5} p={2} mb={2} borderColor="grey.400">
+          <Box border={1} borderRadius={4} p={2} mb={2} borderColor="grey.400">
             {/* User Avatar */}
             <Box display="flex" alignItems="center" mb={2}>
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {state.userInfo.pictureUrl ? (
+                  {state.selectedFile ? (
+                    <img src={URL.createObjectURL(state.selectedFile)} alt={state.userInfo.username} />
+                  ) : state.userInfo.pictureUrl ? (
                     <img src={state.userInfo.pictureUrl} alt={state.userInfo.username} />
                   ) : (
                     state.userInfo.username[0].toUpperCase()
@@ -174,14 +214,15 @@ export const ShowUserStatsRenderer: React.FC<MoreCellRendererProps> = (props) =>
           )}
 
           {/* Workshop Enrolled Title */}
-          <Typography variant="h6" mb={2}>
-            Registered Workshops
-          </Typography>
+          <Box display="flex">
+            <School sx={{ mt: 0.5, mr: 0.5 }} />
+            <Typography variant="h6" mb={2}>
+              Registered Workshops
+            </Typography>
+          </Box>
 
           {/* Workshop Enrolled Section */}
-          <Box border={1} borderRadius={5} p={2} borderColor="grey.400">
-            {worshopsList()}
-          </Box>
+          <Box>{worshopsList()}</Box>
         </Box>
       </Dialog>
       <TSCYesNoPopup

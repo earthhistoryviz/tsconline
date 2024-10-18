@@ -260,14 +260,12 @@ beforeEach(() => {
 
 const testUserWorkshop = {
   workshopId: 1,
-  userId: 123,
-  workshopHasEnded: 0
+  userId: 123
 };
 
 const testUserWorkshop2 = {
   workshopId: 1,
-  userId: 321,
-  workshopHasEnded: 0
+  userId: 321
 };
 
 const testAdminUser2: User = {
@@ -1255,7 +1253,14 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopEnrolled: [testWorkshop.title]
+          workshopsEnrolled: [
+            {
+              workshopId: testWorkshop.workshopId,
+              workshopTitle: testWorkshop.title,
+              start: testWorkshop.start,
+              end: testWorkshop.end
+            }
+          ] //
         },
         {
           ...testNonSharedAdminUser,
