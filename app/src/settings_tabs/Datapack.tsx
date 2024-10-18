@@ -35,7 +35,11 @@ export const Datapacks = observer(function Datapacks() {
 
   useEffect(() => {
     if (state.isLoggedIn) {
-      loadRecaptcha();
+      loadRecaptcha().then(async () => {
+        if (state.user.isAdmin) {
+          await actions.adminFetchPrivateServerDatapacks();
+        }
+      });
     }
     return () => {
       if (state.isLoggedIn) {

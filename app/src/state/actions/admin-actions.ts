@@ -4,9 +4,11 @@ import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
+  Datapack,
   DatapackMetadata,
   SharedWorkshop,
   assertAdminSharedUserArray,
+  assertDatapackArray,
   assertDatapackIndex,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
@@ -274,6 +276,41 @@ export const adminDeleteServerDatapacks = action(async (datapacks: DatapackMetad
   }
   // this will return if any datapacks were deleted
   return !deletedNoDatapacks;
+});
+
+export const adminFetchPrivateServerDatapacks = action(async () => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateServerDatapacks");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/server/datapacks/private", {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+    if (response.ok) {
+      const array = await response.json();
+      if (!array) {
+        pushError(ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED);
+        return;
+      }
+      assertDatapackArray(array);
+      array.forEach((datapack: Datapack) => {
+        addDatapack(datapack);
+      });
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
+  }
 });
 
 export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {

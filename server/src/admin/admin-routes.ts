@@ -38,9 +38,24 @@ import {
   deleteServerDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
+  fetchAllPrivateServerDatapacks,
   fetchAllUsersDatapacks
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+
+export const getPrivateServerDatapacks = async function getPrivateServerDatapacks(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const datapacks = await fetchAllPrivateServerDatapacks();
+    reply.send(datapacks);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown error fetching user datapacks" });
+    return;
+  }
+};
 
 /**
  * Get all users for admin to configure on frontend
