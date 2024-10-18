@@ -17,6 +17,7 @@ import {
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
+import { fetchAllPrivateServerDatapacks } from "../user/user-handler.js";
 
 async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -143,6 +144,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
+  fastify.get("/server/datapacks/private", { config: { rateLimit: looseRateLimit } }, fetchAllPrivateServerDatapacks);
   fastify.post(
     "/user",
     {
