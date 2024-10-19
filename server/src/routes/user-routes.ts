@@ -283,6 +283,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       await deleteUserDatapack(uuid, fields.title);
     }
   };
+  const user = await findUser({ uuid });
+  const isProOrAdmin = user.length > 0 && (user[0]?.accountType === "pro" || user[0]?.isAdmin);
   try {
     for await (const part of parts) {
       if (part.type === "file") {
@@ -314,6 +316,11 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             await cleanupTempFiles();
             return;
           }
+        }
+        if (uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
+          await rm(filepath, { force: true });
+          reply.status(400).send({ error: `Regular users cannot upload datapacks over 3000 characters.` });
+          return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
