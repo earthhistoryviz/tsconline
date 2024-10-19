@@ -71,6 +71,7 @@ export async function copyDirectory(src: string, destination: string): Promise<v
  * @returns
  */
 export async function grabFilepaths(files: string[], topDirectory: string, botDirectory: string): Promise<string[]> {
+  topDirectory = topDirectory.replace("/", "").replaceAll("\\", "/");
   // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
   const pattern = new RegExp(
     files
