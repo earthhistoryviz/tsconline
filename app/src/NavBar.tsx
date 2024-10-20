@@ -261,6 +261,13 @@ export const NavBar = observer(function Navbar() {
                 <MenuItem>
                   <Typography sx={{ textAlign: "center", width: "100%" }}>{t(`LANGUAGES`)}</Typography>
                 </MenuItem>
+                <Divider
+                  sx={{
+                    borderBottomWidth: 0.75,
+                    borderColor: "gray",
+                    my: 1
+                  }}
+                />
                 {Object.entries(languageList).map(([key, value]) => (
                   <MenuItem
                     ref={dropRef}
