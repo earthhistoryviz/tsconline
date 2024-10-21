@@ -169,7 +169,6 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       datapackFolder,
       DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
     );
-    console.log("Copying profile picture to", datapackImageFilepathDest);
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
     await rm(datapackImageFilepath, { force: true });
   }
