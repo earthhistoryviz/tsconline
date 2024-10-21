@@ -22,7 +22,6 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchUserDatapacks } from "./routes/user-routes.js";
-import { loadAdminConfig } from "./admin/admin-config.js";
 import logger from "./error-logger.js";
 
 const maxConcurrencySize = 2;
@@ -47,7 +46,6 @@ const presets = await loadPresets();
 try {
   // Load the current asset config:
   await loadAssetConfigs();
-  await loadAdminConfig(assetconfigs.adminConfigPath);
 } catch (e) {
   console.error("Error loading configs: ", e);
   process.exit(1);
@@ -220,6 +218,19 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
+
+server.get<{ Params: { title: string; uuid: string } }>(
+  "/datapack-images/:title/:uuid",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  routes.fetchDatapackCoverImage
+);
 
 server.register(adminRoutes, { prefix: "/admin" });
 

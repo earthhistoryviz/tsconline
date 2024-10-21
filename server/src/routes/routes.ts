@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath } from "../util.js";
+import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -15,6 +15,7 @@ import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-f
 import { findUser } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
+import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
 
 export const fetchServerDatapack = async function fetchServerDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
@@ -434,6 +435,37 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
     reply.send({ timescaleData });
   } catch (error) {
     console.error("Error reading Excel file:", error);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+export const fetchDatapackCoverImage = async function (
+  request: FastifyRequest<{ Params: { title: string; uuid: string } }>,
+  reply: FastifyReply
+) {
+  const { title, uuid } = request.params;
+  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "default.png");
+  try {
+    if (title === "default") {
+      if (!(await checkFileExists(defaultFilepath))) {
+        reply.status(404).send({ error: "Default image not found" });
+        return;
+      }
+      reply.send(await readFile(defaultFilepath));
+      return;
+    }
+    const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
+    if (!(await checkFileExists(uniqueImageFilepath))) {
+      if (!(await checkFileExists(defaultFilepath))) {
+        reply.status(404).send({ error: "Default image not found" });
+        return;
+      }
+      reply.send(await readFile(defaultFilepath));
+      return;
+    }
+    reply.send(await readFile(uniqueImageFilepath));
+  } catch (e) {
+    console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };

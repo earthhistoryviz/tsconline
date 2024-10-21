@@ -1,7 +1,6 @@
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
-import { devSafeUrl } from "../../util";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
@@ -12,7 +11,11 @@ import Color from "color";
 import Lottie from "../TSCLottie";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import { context } from "../../state";
-import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
+import {
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile,
+  isOwnedByUser
+} from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
   datapack: Datapack;
@@ -21,13 +24,10 @@ type TSCDatapackRowProps = {
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value, onChange }) => {
-  const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { actions, state } = useContext(context);
   const theme = useTheme();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
-
   return (
     <Box
       className={styles.rc}
@@ -61,7 +61,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
-      <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
+      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
       <div className={styles.middle}>
         <Typography className={styles.header} color="textSecondary">
           {datapack.title}

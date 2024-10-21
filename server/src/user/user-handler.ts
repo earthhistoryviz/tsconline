@@ -8,6 +8,7 @@ import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-me
 import { spawn } from "child_process";
 import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
 import _ from "lodash";
+import { MultipartFile } from "@fastify/multipart";
 
 /**
  * TODO: WRITE TESTS
@@ -259,4 +260,20 @@ export async function getEncryptedDatapackDirectory(uuid: string, datapackTitle:
   const encryptedDir = path.join(datapackDir, "encrypted");
   const encryptedFilepath = path.join(encryptedDir, metadata.originalFileName);
   return { encryptedDir, encryptedFilepath };
+}
+
+export function checkFileTypeIsDatapack(file: MultipartFile): boolean {
+  return (
+    (file.mimetype === "application/octet-stream" ||
+      file.mimetype === "text/plain" ||
+      file.mimetype === "application/zip") &&
+    /^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))
+  );
+}
+
+export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
+  return (
+    (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") &&
+    /^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
+  );
 }

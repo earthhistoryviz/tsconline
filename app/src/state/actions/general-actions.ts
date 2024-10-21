@@ -217,58 +217,62 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   }
 });
 
-export const uploadUserDatapack = action("uploadUserDatapack", async (file: File, metadata: DatapackMetadata) => {
-  if (getDatapackFromArray(metadata, state.datapacks)) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const recaptcha = await getRecaptchaToken("uploadUserDatapack");
-  if (!recaptcha) return;
-  const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
-  formData.append("file", file);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("references", JSON.stringify(references));
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("authoredBy", authoredBy);
-  formData.append("isPublic", String(metadata.isPublic));
-  formData.append("type", metadata.type);
-  if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
-  formData.append("isPublic", String(metadata.isPublic));
-  if (notes) formData.append("notes", notes);
-  if (date) formData.append("date", date);
-  if (contact) formData.append("contact", contact);
-  try {
-    const response = await fetcher(`/user/datapack`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptcha
-      }
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      const datapack = await fetchUserDatapack(metadata.title);
-      if (!datapack) {
-        pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
-        return;
-      }
-      addDatapack(datapack);
-      if (metadata.isPublic) {
-        refreshPublicDatapacks();
-      }
-      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const uploadUserDatapack = action(
+  "uploadUserDatapack",
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    if (getDatapackFromArray(metadata, state.datapacks)) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+    const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    formData.append("isPublic", String(metadata.isPublic));
+    formData.append("type", metadata.type);
+    if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
+    formData.append("isPublic", String(metadata.isPublic));
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/user/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptcha
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const datapack = await fetchUserDatapack(metadata.title);
+        if (!datapack) {
+          pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+          return;
+        }
+        addDatapack(datapack);
+        if (metadata.isPublic) {
+          refreshPublicDatapacks();
+        }
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
   }
-});
+);
 
 export const setLargeDataIndex = action(
   "setLargeDataIndex",
