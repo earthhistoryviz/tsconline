@@ -448,7 +448,7 @@ export const fetchDatapackCoverImage = async function (
   try {
     if (title === "default") {
       if (!(await checkFileExists(defaultFilepath))) {
-        reply.send({ error: "Default image not found" });
+        reply.status(404).send({ error: "Default image not found" });
         return;
       }
       reply.send(await readFile(defaultFilepath));
@@ -457,7 +457,7 @@ export const fetchDatapackCoverImage = async function (
     const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
     if (!(await checkFileExists(uniqueImageFilepath))) {
       if (!(await checkFileExists(defaultFilepath))) {
-        reply.send({ error: "Default image not found" });
+        reply.status(404).send({ error: "Default image not found" });
         return;
       }
       reply.send(await readFile(defaultFilepath));
@@ -466,6 +466,6 @@ export const fetchDatapackCoverImage = async function (
     reply.send(await readFile(uniqueImageFilepath));
   } catch (e) {
     console.error("Error fetching image: ", e);
-    reply.send({ error: "Error fetching image" });
+    reply.status(500).send({ error: "Internal Server Error" });
   }
 };
