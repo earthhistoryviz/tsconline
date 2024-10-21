@@ -887,7 +887,9 @@
                 "rangeSort": "first occurrence",
                 "frequency": null,
                 "stepSize": 1,
-                "windowSize": 2
+                "windowSize": 2,
+                "dualColCompColumnRef": null,
+                "drawDualColCompColumn": null
               },
               "fontOptions": [
                 "Column Header",
@@ -1216,7 +1218,9 @@
                 "dataMiningPointDataType": null,
                 "windowSize": 2,
                 "stepSize": 1,
-                "isDataMiningColumn": false
+                "isDataMiningColumn": false,
+                "dualColCompColumnRef": null,
+                "drawDualColCompColumn": null
               }
             },
             {
@@ -1984,7 +1988,9 @@
         "rangeSort": "first occurrence",
         "frequency": null,
         "stepSize": 1,
-        "windowSize": 2
+        "windowSize": 2,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "units": "Ma",
       "subInfo": [
@@ -2031,7 +2037,9 @@
         "rangeSort": "first occurrence",
         "frequency": null,
         "stepSize": 1,
-        "windowSize": 2
+        "windowSize": 2,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "fontOptions": [
         "Column Header",
@@ -2315,7 +2323,9 @@
         "stepSize": 1,
         "windowSize": 2,
         "isDataMiningColumn": false,
-        "dataMiningPointDataType": null
+        "dataMiningPointDataType": null,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "minAge": 7,
       "maxAge": 8,
@@ -2405,7 +2415,9 @@
         "stepSize": 1,
         "windowSize": 2,
         "isDataMiningColumn": false,
-        "dataMiningPointDataType": null
+        "dataMiningPointDataType": null,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "minAge": 1,
       "maxAge": 1000,
