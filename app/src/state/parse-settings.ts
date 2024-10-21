@@ -653,10 +653,10 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
     } else if (key === "children") {
       for (const child of column.children) {
         const isDataMiningColumn =
-          "isDataMiningColumn" in child ? `isDataMiningColumn="${child.isDataMiningColumn}"` : "";
+          "isDataMiningColumn" in child && child.isDataMiningColumn === true ? ` isDataMiningColumn="${child.isDataMiningColumn}"` : "";
         const isDualColCompColumn =
-          "isDualColCompColumn" in child ? `isDualColCompColumn="${child.isDualColCompColumn}"` : "";
-        xml += `${indent}<column id="${escapeHtmlChars(child._id, "attribute")}" ${isDataMiningColumn} ${isDualColCompColumn}>\n`;
+          "isDualColCompColumn" in child && child.isDualColCompColumn === true ? ` isDualColCompColumn="${child.isDualColCompColumn}"` : "";
+        xml += `${indent}<column id="${escapeHtmlChars(child._id, "attribute")}"${isDataMiningColumn}${isDualColCompColumn}>\n`;
         xml += columnInfoTSCToXml(child, `${indent}    `);
         xml += `${indent}</column>\n`;
       }
@@ -669,7 +669,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
     } else if (key === "pointType") {
       assertPointColumnInfoTSC(column);
       xml += `${indent}<setting name="pointType" pointType="${column.pointType}"/>\n`;
-    } else if ((key === "drawExtraColumn" && !keyValue) || key === "isDataMiningColumn") {
+    } else if ((key === "drawExtraColumn" && !keyValue) || key === "isDataMiningColumn" || key === "isDualColCompColumn") {
       continue;
     } else if (key === "type" && extractColumnType(column._id) === "SequenceColumn") {
       assertSequenceColumnInfoTSC(column);
