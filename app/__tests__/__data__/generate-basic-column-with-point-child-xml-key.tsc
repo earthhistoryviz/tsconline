@@ -11,7 +11,7 @@
     <setting name="customColor" useNamed="false">rgb(255,255,255)</setting>
     <fonts>
     </fonts>
-    <column id="class datastore.PointColumn:Long-Term Phanerozoic" isDataMiningColumn="false">
+    <column id="class datastore.PointColumn:Long-Term Phanerozoic">
         <setting name="title">Long-Term Phanerozoic</setting>
         <setting name="useNamedColor">false</setting>
         <setting name="placeHolder">false</setting>
