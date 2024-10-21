@@ -122,7 +122,9 @@
       "rangeSort": "first occurrence",
       "drawExtraColumn": null,
       "windowSize": 2,
-      "stepSize": 1
+      "stepSize": 1,
+      "isDualColCompColumn": false,
+      "drawDualColCompColumn": null
     },
     "translate-point-column-key": {
       "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
@@ -199,7 +201,9 @@
       "pointType": "rect",
       "drawExtraColumn": null,
       "windowSize": 2,
-      "stepSize": 1
+      "stepSize": 1,
+      "isDualColCompColumn": false,
+      "drawDualColCompColumn": null
     },
     "translate-sequence-column-key": {
       "_id": "class datastore.SequenceColumn:Sequence",
