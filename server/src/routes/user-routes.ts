@@ -22,6 +22,7 @@ import {
 } from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { User } from "../types";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
@@ -271,7 +272,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
-  const userDir = await getPrivateUserUUIDDirectory(uuid);
   let filepath: string | undefined;
   let originalFilename: string | undefined;
   let storedFilename: string | undefined;
@@ -283,7 +283,18 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       await deleteUserDatapack(uuid, fields.title);
     }
   };
-  const user = await findUser({ uuid });
+  let userDir: string = "";
+  let user: User[] = [];
+  try {
+    user = await findUser({ uuid });
+    if (user.length == 0 || !user) {
+      reply.status(401).send({ error: "Could not find user." });
+      return;
+    }
+    userDir = await getPrivateUserUUIDDirectory(uuid);
+  } catch (e) {
+    reply.status(401).send({ error: "Could not find private user directory or user with error " + e });
+  }
   const isProOrAdmin = user.length > 0 && (user[0]?.accountType === "pro" || user[0]?.isAdmin);
   try {
     for await (const part of parts) {
@@ -317,8 +328,10 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             return;
           }
         }
-        if (uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
-          await rm(filepath, { force: true });
+        if (uploadedFile && uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
+          if (filepath) {
+            await rm(filepath, { force: true });
+          }
           reply.status(400).send({ error: `Regular users cannot upload datapacks over 3000 characters.` });
           return;
         }
