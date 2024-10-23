@@ -21,16 +21,16 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
-  workshopsEnrolled?: WorkshopsEnrolled[];
+  workshopsId?: number[];
   uuid: string;
 };
 
-export type WorkshopsEnrolled = {
-  workshopId: number;
-  workshopTitle: string;
-  start: string;
-  end: string;
-};
+// export type WorkshopsEnrolled = {
+//   workshopId: number;
+//   // workshopTitle: string;
+//   // start: string;
+//   // end: string;
+// };
 
 export type DatapackMetadata = {
   description: string;
@@ -665,20 +665,20 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
-  if (o.workshopsEnrolled != null) {
-    for (const workshopEnrolled of o.workshopsEnrolled) {
-      assertWorkshopsEnrolled(workshopEnrolled);
+  if (o.workshopsId != null) {
+    for (const workshopId of o.workshopsId) {
+      if (typeof workshopId !== "number") throwError("User", "workshopsId", "number", workshopId);
     }
   }
 }
 
-export function assertWorkshopsEnrolled(o: any): asserts o is WorkshopsEnrolled {
-  if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
-  if (typeof o.workshopTitle !== "string") throwError("WorkshopsEnrolled", "workshopTitle", "string", o.workshopTitle);
-  if (typeof o.workshopId !== "number") throwError("WorkshopsEnrolled", "workshopId", "number", o.workshopId);
-  if (typeof o.start !== "string") throwError("WorkshopsEnrolled", "start", "string", o.start);
-  if (typeof o.end !== "string") throwError("WorkshopsEnrolled", "end", "string", o.end);
-}
+// export function assertWorkshopsEnrolled(o: any): asserts o is WorkshopsEnrolled {
+//   if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
+//   // if (typeof o.workshopTitle !== "string") throwError("WorkshopsEnrolled", "workshopTitle", "string", o.workshopTitle);
+//   if (typeof o.workshopId !== "number") throwError("WorkshopsEnrolled", "workshopId", "number", o.workshopId);
+//   // if (typeof o.start !== "string") throwError("WorkshopsEnrolled", "start", "string", o.start);
+//   // if (typeof o.end !== "string") throwError("WorkshopsEnrolled", "end", "string", o.end);
+// }
 
 export function assertFreehand(o: any): asserts o is Freehand {
   if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
@@ -1461,8 +1461,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }

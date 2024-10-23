@@ -1,3 +1,4 @@
+import { loadRecaptcha, removeRecaptcha } from "../util";
 import { actions } from "./index";
 
 export async function initialize() {
@@ -9,4 +10,14 @@ export async function initialize() {
   await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
+  // @jacqui: I move the fetchworkshops() along with the recaptcha in here
+  //          because otherwise the workshop in the More Infomation won't 
+  //          show up without clicking another tab in the admin settings
+  // loadRecaptcha().then(async () => {
+  //   await actions.adminFetchWorkshops();
+  // });
+  // return () => {
+  //   removeRecaptcha();
+  // };
+
 }

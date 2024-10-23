@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 import { context } from "../state";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -18,6 +18,7 @@ import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
 import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
+import { loadRecaptcha, removeRecaptcha } from "../util";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -71,7 +72,7 @@ const userColDefs: ColDef[] = [
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
     headerName: "More",
-    field: "workshopsEnrolled",
+    field: "workshopsId",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,
@@ -106,6 +107,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       console.error(e);
     }
   };
+
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box className="admin-user-config-buttons">

@@ -1,13 +1,22 @@
-import { AdminSharedUser, WorkshopsEnrolled } from "@tsconline/shared";
-import { useState, useEffect } from "react";
+import { AdminSharedUser, SharedWorkshop } from "@tsconline/shared";
+import { useState, useEffect, useContext } from "react";
 import { EditableUserProperties } from "../types";
 import { SelectChangeEvent } from "@mui/material/Select";
+import { actions, context } from "../state";
+import { loadRecaptcha, removeRecaptcha } from "../util";
 
 type UseUserStatsProps = {
   data: AdminSharedUser;
+  // workshops: SharedWorkshop[];
 };
 
 const useEditUser = ({ data }: UseUserStatsProps) => {
+  //const { state } = useContext(context);
+
+  const workshops = data.workshopsId;
+
+  console.log(JSON.stringify(workshops));
+  //console.log(workshops);
   const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
@@ -20,9 +29,8 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
-  const workshops = data.workshopsEnrolled ? data.workshopsEnrolled : null;
-  const [currentWorkshops, setCurrentWorkshops] = useState<WorkshopsEnrolled[] | null>(workshops);
-  const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopsEnrolled | null>(null);
+  const [currentWorkshops, setCurrentWorkshops] = useState<number[] | undefined>(workshops);
+  const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [closeDialog, setCloseDialog] = useState(false);
   // Function to remove a workshop
@@ -30,7 +38,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     if (currentWorkshops) {
       if (selectedWorkshop) {
         const updatedWorkshops = currentWorkshops.filter(
-          (workshop) => workshop.workshopId !== selectedWorkshop.workshopId
+          (workshop) => workshop !== selectedWorkshop
         );
         setCurrentWorkshops(updatedWorkshops);
       }
@@ -100,8 +108,8 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setUnsavedChanges(true);
   };
 
-  const handleOpenConfirmDialog = (title: WorkshopsEnrolled) => {
-    setSelectedWorkshop(title);
+  const handleOpenConfirmDialog = (id: number) => {
+    setSelectedWorkshop(id);
     setOpenConfirmDialog(true);
   };
 
@@ -138,7 +146,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   }, [unsavedChanges]);
 
   return {
-    state: {
+    editState: {
       moreUsersInfoFormOpen,
       isEditing,
       unsavedChanges,

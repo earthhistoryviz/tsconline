@@ -21,7 +21,7 @@ import { assetconfigs } from "../util.js";
 import path from "path";
 import { pipeline } from "stream/promises";
 import { createWriteStream } from "fs";
-import { SharedUser, WorkshopsEnrolled, assertSharedUser } from "@tsconline/shared";
+import { SharedUser, assertSharedUser } from "@tsconline/shared";
 import { deleteAllUserMetadata } from "../file-metadata-handler.js";
 import { readdir, rm, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
@@ -209,19 +209,19 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       return;
     }
     const { email, username, pictureUrl, hashedPassword, isAdmin, userId } = user;
-    const workshopsEnrolled: WorkshopsEnrolled[] = [];
+    const workshopsId: number[] = [];
     const userWorkshops = await findUserInUsersWorkshops(userId);
     for (const userWorkshop of userWorkshops) {
       const workshopId = userWorkshop.workshopId;
       const workshop = await getAndHandleWorkshopEnd(workshopId);
       if (workshop && new Date(workshop.start) <= new Date()) {
-        const workshopEnrolled: WorkshopsEnrolled = {
-          workshopId: workshopId,
-          workshopTitle: workshop.title,
-          start: workshop.start,
-          end: workshop.end
-        };
-        workshopsEnrolled.push(workshopEnrolled);
+        // const workshopEnrolled: WorkshopsEnrolled = {
+        //   workshopId: workshopId,
+        //   // workshopTitle: workshop.title,
+        //   // start: workshop.start,
+        //   // end: workshop.end
+        // };
+        workshopsId.push(workshopId);
       }
     }
     const sharedUser: SharedUser = {
@@ -230,7 +230,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       pictureUrl,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
-      ...(workshopsEnrolled.length > 0 && { workshopsEnrolled }),
+      ...(workshopsId.length > 0 && { workshopsId }),
       uuid
     };
     assertSharedUser(sharedUser);
