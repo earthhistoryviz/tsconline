@@ -349,6 +349,8 @@ export type PointSettings = {
   maxX: number;
   dataMiningPointDataType: DataMiningPointDataType | null;
   isDataMiningColumn: boolean;
+  dualColCompColumnRef: string | null;
+  drawDualColCompColumn: string | null;
 } & DataMiningSettings;
 
 export type DataMiningSettings = {
@@ -387,6 +389,8 @@ export type EventSettings = {
   type: EventType;
   rangeSort: RangeSort;
   frequency: EventFrequency | null;
+  dualColCompColumnRef: string | null;
+  drawDualColCompColumn: string | null;
 } & DataMiningSettings;
 
 export type Range = ColumnHeaderProps & {
@@ -709,6 +713,7 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
       "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
       o.dataMiningPointDataType
     );
+  if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
   assertDataMiningSettings(o);
 }
 

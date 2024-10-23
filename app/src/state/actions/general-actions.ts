@@ -35,6 +35,7 @@ import {
   applyChartColumnSettings,
   applyRowOrder,
   handleDataMiningColumns,
+  handleDualColCompColumns,
   initializeColumnHashMap,
   searchColumns,
   searchEvents
@@ -319,6 +320,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
+  handleDualColCompColumns();
   await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
