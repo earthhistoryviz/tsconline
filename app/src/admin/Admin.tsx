@@ -11,6 +11,7 @@ import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 import { AdminWorkshop } from "./AdminWorkshop";
 import { loadRecaptcha, removeRecaptcha } from "../util";
+import { action } from "mobx";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
