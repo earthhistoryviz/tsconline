@@ -1,4 +1,3 @@
-import { loadRecaptcha, removeRecaptcha } from "../util";
 import { actions } from "./index";
 
 export async function initialize() {
@@ -10,5 +9,4 @@ export async function initialize() {
   await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
-
 }

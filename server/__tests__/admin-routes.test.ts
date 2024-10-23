@@ -104,7 +104,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -250,7 +250,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -1231,10 +1231,7 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopsId: [
-            testWorkshop.workshopId
-
-          ]
+          workshopsId: [testWorkshop.workshopId]
         },
         {
           ...testNonSharedAdminUser,

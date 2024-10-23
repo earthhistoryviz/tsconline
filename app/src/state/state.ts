@@ -155,7 +155,7 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: [],
+    workshops: []
   },
   datapackProfilePage: {
     editMode: false,

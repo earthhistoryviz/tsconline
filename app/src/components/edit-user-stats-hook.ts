@@ -1,22 +1,14 @@
-import { AdminSharedUser, SharedWorkshop } from "@tsconline/shared";
-import { useState, useEffect, useContext } from "react";
+import { AdminSharedUser } from "@tsconline/shared";
+import { useState, useEffect } from "react";
 import { EditableUserProperties } from "../types";
 import { SelectChangeEvent } from "@mui/material/Select";
-import { actions, context } from "../state";
-import { loadRecaptcha, removeRecaptcha } from "../util";
 
 type UseUserStatsProps = {
   data: AdminSharedUser;
-  // workshops: SharedWorkshop[];
 };
 
 const useEditUser = ({ data }: UseUserStatsProps) => {
-  //const { state } = useContext(context);
-
   const workshops = data.workshopsId;
-
-  console.log(JSON.stringify(workshops));
-  //console.log(workshops);
   const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
@@ -37,9 +29,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const handleRemoveWorkshop = () => {
     if (currentWorkshops) {
       if (selectedWorkshop) {
-        const updatedWorkshops = currentWorkshops.filter(
-          (workshop) => workshop !== selectedWorkshop
-        );
+        const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop);
         setCurrentWorkshops(updatedWorkshops);
       }
       handleCloseConfirmDialog();

@@ -672,7 +672,6 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   }
 }
 
-
 export function assertFreehand(o: any): asserts o is Freehand {
   if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");
   if (!Array.isArray(o.subFreehandInfo)) throwError("Freehand", "subFreehandInfo", "array", o.subFreehandInfo);
@@ -1454,8 +1453,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-        type +
-        " which is not a valid column type"
+          type +
+          " which is not a valid column type"
       );
   }
 }
