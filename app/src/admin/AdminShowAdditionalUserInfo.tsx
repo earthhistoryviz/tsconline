@@ -16,7 +16,7 @@ import {
   TableContainer,
   TableHead
 } from "@mui/material";
-import { AdminSharedUser, SharedWorkshop } from "@tsconline/shared";
+import { AdminSharedUser } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "../components/edit-user-stats-hook";
@@ -55,33 +55,36 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
             </TableRow>
           </TableHead>
           <TableBody>
-            {!editState.currentWorkshops || editState.currentWorkshops.length === 0 || allWorkshops.length === 0
-              ? (
-
-                <TableRow>
-                  <TableCell align="center" colSpan={4} style={{ padding: "13px" }}>
-                    <Typography ml={1} fontWeight={"bold"}>
-                      No registered workshop
-                    </Typography>
+            {!editState.currentWorkshops || editState.currentWorkshops.length === 0 || allWorkshops.length === 0 ? (
+              <TableRow>
+                <TableCell align="center" colSpan={4} style={{ padding: "13px" }}>
+                  <Typography ml={1} fontWeight={"bold"}>
+                    No registered workshop
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              editState.currentWorkshops.map((value, index) => (
+                <TableRow key={index}>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>
+                    {allWorkshops.filter((workshop) => workshop.workshopId === value)[0].title}
+                  </TableCell>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>
+                    {formatDate(allWorkshops.filter((workshop) => workshop.workshopId === value)[0].start)}
+                  </TableCell>
+                  <TableCell style={{ whiteSpace: "nowrap" }}>
+                    {formatDate(allWorkshops.filter((workshop) => workshop.workshopId === value)[0].end)}
+                  </TableCell>
+                  <TableCell>
+                    <CustomTooltip title="Remove user from this workshop">
+                      <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+                        <PersonRemove />
+                      </IconButton>
+                    </CustomTooltip>
                   </TableCell>
                 </TableRow>
-
-              ) : (
-                editState.currentWorkshops.map((value, index) => (
-                  <TableRow key={index}>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>{(allWorkshops.filter(workshop => workshop.workshopId === value))[0].title}</TableCell>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate((allWorkshops.filter(workshop => workshop.workshopId === value))[0].start)}</TableCell>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate((allWorkshops.filter(workshop => workshop.workshopId === value))[0].end)}</TableCell>
-                    <TableCell>
-                      <CustomTooltip title="Remove user from this workshop">
-                        <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
-                          <PersonRemove />
-                        </IconButton>
-                      </CustomTooltip>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+              ))
+            )}
           </TableBody>
         </Table>
       </TableContainer>

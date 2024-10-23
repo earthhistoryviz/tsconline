@@ -1865,7 +1865,7 @@ describe("login-routes tests", () => {
       });
     });
 
-    it("should return 200 and workshop title if user is in workshop and workshop is active", async () => {
+    it("should return 200 and workshop id if user is in workshop and workshop is active", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
@@ -1887,9 +1887,7 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopsEnrolled: [
-          { workshopId: workshop.workshopId, workshopTitle: workshop.title, start: workshop.start, end: workshop.end }
-        ], //
+        workshopsId: [workshop.workshopId],
         uuid: testUser.uuid
       });
     });
