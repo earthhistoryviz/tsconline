@@ -99,7 +99,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -246,7 +246,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -1236,7 +1236,7 @@ describe("getUsers", () => {
     });
     expect(response.statusCode).toBe(200);
   });
-  it("should return user with workshopsEnrolled and one without", async () => {
+  it("should return user with workshopsId and one without", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
     findUserInUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
@@ -1253,13 +1253,9 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopsEnrolled: [
-            {
-              workshopId: testWorkshop.workshopId,
-              workshopTitle: testWorkshop.title,
-              start: testWorkshop.start,
-              end: testWorkshop.end
-            }
+          workshopsId: [
+            testWorkshop.workshopId
+
           ]
         },
         {

@@ -16,18 +16,23 @@ import {
   TableContainer,
   TableHead
 } from "@mui/material";
-import { AdminSharedUser } from "@tsconline/shared";
+import { AdminSharedUser, SharedWorkshop } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "../components/edit-user-stats-hook";
+import { useContext } from "react";
+import { context } from "../state";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
+  //workshops: SharedWorkshop[];
 };
 
 //TODO: Need to implement backend
 export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (props) => {
-  const { state, setters, handlers } = useEditUser({ data: props.data });
+  const { state } = useContext(context);
+  const { editState, setters, handlers } = useEditUser({ data: props.data });
+  const allWorkshops = state.admin.workshops;
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
       year: "numeric",
@@ -45,36 +50,39 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
           <TableHead>
             <TableRow>
               <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>Title</TableCell>
-              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>Start Date</TableCell>
-              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>End Date</TableCell>
+              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>Start</TableCell>
+              <TableCell style={{ whiteSpace: "nowrap", width: "30%" }}>End</TableCell>
               <TableCell style={{ width: "10%" }}>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {!state.currentWorkshops || state.currentWorkshops.length === 0 ? (
-              <TableRow>
-                <TableCell align="center" colSpan={4} style={{ padding: "13px" }}>
-                  <Typography ml={1} fontWeight={"bold"}>
-                    No registered workshop
-                  </Typography>
-                </TableCell>
-              </TableRow>
-            ) : (
-              state.currentWorkshops.map((value, index) => (
-                <TableRow key={index}>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>{value.workshopTitle}</TableCell>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(value.start)}</TableCell>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(value.end)}</TableCell>
-                  <TableCell>
-                    <CustomTooltip title="Remove user from this workshop">
-                      <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
-                        <PersonRemove />
-                      </IconButton>
-                    </CustomTooltip>
+            {!editState.currentWorkshops || editState.currentWorkshops.length === 0
+              ? (
+
+                <TableRow>
+                  <TableCell align="center" colSpan={4} style={{ padding: "13px" }}>
+                    <Typography ml={1} fontWeight={"bold"}>
+                      No registered workshop
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))
-            )}
+
+              ) : (
+                editState.currentWorkshops.map((value, index) => (
+                  <TableRow key={index}>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{(allWorkshops.filter(workshop => workshop.workshopId === value))[0].title}</TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate((allWorkshops.filter(workshop => workshop.workshopId === value))[0].start)}</TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate((allWorkshops.filter(workshop => workshop.workshopId === value))[0].end)}</TableCell>
+                    <TableCell>
+                      <CustomTooltip title="Remove user from this workshop">
+                        <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+                          <PersonRemove />
+                        </IconButton>
+                      </CustomTooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
           </TableBody>
         </Table>
       </TableContainer>
@@ -89,7 +97,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         </IconButton>
       </CustomTooltip>
       <Dialog
-        open={state.moreUsersInfoFormOpen}
+        open={editState.moreUsersInfoFormOpen}
         onClose={(event, reason) => {
           if (reason !== "backdropClick") {
             handlers.handleCloseDialog();
@@ -107,7 +115,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         {/* Overall Header */}
         <Box textAlign={"center"} width="100%" pt={3} pr={3} pb={0} pl={3}>
           <Typography variant="h5" mb={2} sx={{ fontWeight: "bold" }}>
-            Additional Information about {state.userInfo.username}
+            Additional Information about {editState.userInfo.username}
           </Typography>
         </Box>
         {/* Basic Information Title */}
@@ -127,15 +135,15 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
             <Box display="flex" alignItems="center" mb={2}>
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {state.selectedFile ? (
-                    <img src={URL.createObjectURL(state.selectedFile)} alt={state.userInfo.username} />
-                  ) : state.userInfo.pictureUrl ? (
-                    <img src={state.userInfo.pictureUrl} alt={state.userInfo.username} />
+                  {editState.selectedFile ? (
+                    <img src={URL.createObjectURL(editState.selectedFile)} alt={editState.userInfo.username} />
+                  ) : editState.userInfo.pictureUrl ? (
+                    <img src={editState.userInfo.pictureUrl} alt={editState.userInfo.username} />
                   ) : (
-                    state.userInfo.username[0].toUpperCase()
+                    editState.userInfo.username[0].toUpperCase()
                   )}
                 </Avatar>
-                {state.isEditing && (
+                {editState.isEditing && (
                   <Box position="absolute" bottom={-3} right={12} zIndex={1}>
                     <CustomTooltip title="Upload avatar">
                       <IconButton
@@ -149,31 +157,31 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 )}
               </Box>
 
-              {state.isEditing ? (
+              {editState.isEditing ? (
                 <TextField
                   label="Username"
                   name="username"
-                  value={state.userInfo.username}
+                  value={editState.userInfo.username}
                   onChange={handlers.handleInputChange}
                 />
               ) : (
-                <Typography variant="h6">{state.userInfo.username}</Typography>
+                <Typography variant="h6">{editState.userInfo.username}</Typography>
               )}
             </Box>
 
             {/* User Email */}
             <Box mb={1}>
-              {state.isEditing ? (
+              {editState.isEditing ? (
                 <TextField
                   label="Email"
                   name="email"
-                  value={state.userInfo.email}
+                  value={editState.userInfo.email}
                   onChange={handlers.handleInputChange}
                   fullWidth
                 />
               ) : (
                 <Typography variant="body1">
-                  <strong>Email:</strong> {state.userInfo.email}
+                  <strong>Email:</strong> {editState.userInfo.email}
                 </Typography>
               )}
             </Box>
@@ -183,17 +191,17 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <Typography variant="body1" mr={1}>
                 <strong>Admin:</strong>
               </Typography>
-              {state.isEditing ? (
-                <Select value={state.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
+              {editState.isEditing ? (
+                <Select value={editState.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
                 </Select>
               ) : (
-                <Typography variant="body1">{state.userInfo.isAdmin ? "Yes" : "No"}</Typography>
+                <Typography variant="body1">{editState.userInfo.isAdmin ? "Yes" : "No"}</Typography>
               )}
             </Box>
           </Box>
-          {state.isEditing && (
+          {editState.isEditing && (
             <Box display="flex" justifyContent="flex-end" mb={2}>
               <TSCButton
                 variant="outlined"
@@ -224,14 +232,14 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         </Box>
       </Dialog>
       <TSCYesNoPopup
-        open={state.openConfirmDialog}
+        open={editState.openConfirmDialog}
         title="Are you sure you want to remove the user from the workshop?"
         onYes={handlers.handleRemoveWorkshop}
         onNo={handlers.handleCloseConfirmDialog}
         onClose={handlers.handleCloseConfirmDialog}
       />
       <TSCYesNoPopup
-        open={state.showDiscardDialog}
+        open={editState.showDiscardDialog}
         title="You have unsaved changes. Are you sure you want to discard them?"
         onYes={() => handlers.handleDiscardChanges(true)}
         onNo={handlers.handleCloseDiscardDialog}

@@ -26,7 +26,6 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
   SharedWorkshop,
-  WorkshopsEnrolled,
   assertAdminSharedUser,
   assertSharedWorkshop,
   assertSharedWorkshopArray
@@ -58,18 +57,18 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUserInUsersWorkshops(userId);
-        const workshopsEnrolled: WorkshopsEnrolled[] = [];
+        const workshopsId: number[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
           if (workshop && workshop.length === 1 && workshop[0]?.title) {
-            const workshopEnrolled = {
-              workshopId: workshopId,
-              workshopTitle: workshop[0].title,
-              start: workshop[0].start,
-              end: workshop[0].end
-            };
-            workshopsEnrolled.push(workshopEnrolled);
+            // const workshopEnrolled = {
+            //   workshopId: workshopId,
+            //   // workshopTitle: workshop[0].title,
+            //   // start: workshop[0].start,
+            //   // end: workshop[0].end
+            // };
+            workshopsId.push(workshopId);
           }
         }
 
@@ -81,7 +80,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopsEnrolled.length > 0 && { workshopsEnrolled })
+          ...(workshopsId.length > 0 && { workshopsId })
         };
       })
     );
@@ -176,7 +175,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
