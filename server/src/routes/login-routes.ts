@@ -9,7 +9,8 @@ import {
   deleteVerification,
   deleteUser,
   checkForUsersWithUsernameOrEmail,
-  getAndHandleWorkshopEnd
+  getAndHandleWorkshopEnd,
+  findUserInUsersWorkshops
 } from "../database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -207,12 +208,20 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword, isAdmin, workshopId } = user;
-    let workshopTitle = "";
-    if (workshopId) {
+    const { email, username, pictureUrl, hashedPassword, isAdmin, userId } = user;
+    const workshopsId: number[] = [];
+    const userWorkshops = await findUserInUsersWorkshops(userId);
+    for (const userWorkshop of userWorkshops) {
+      const workshopId = userWorkshop.workshopId;
       const workshop = await getAndHandleWorkshopEnd(workshopId);
       if (workshop && new Date(workshop.start) <= new Date()) {
-        workshopTitle = workshop.title;
+        // const workshopEnrolled: WorkshopsEnrolled = {
+        //   workshopId: workshopId,
+        //   // workshopTitle: workshop.title,
+        //   // start: workshop.start,
+        //   // end: workshop.end
+        // };
+        workshopsId.push(workshopId);
       }
     }
     const sharedUser: SharedUser = {
@@ -221,7 +230,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       pictureUrl,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
-      ...(workshopTitle && { workshopTitle }),
+      ...(workshopsId.length > 0 && { workshopsId }),
       uuid
     };
     assertSharedUser(sharedUser);
@@ -677,7 +686,6 @@ export const signup = async function signup(
       emailVerified: 0,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(newUser);
@@ -803,7 +811,6 @@ export const googleLogin = async function googleLogin(
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(user);

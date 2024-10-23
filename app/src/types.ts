@@ -164,6 +164,13 @@ export type ChartSettings = {
   useDatapackSuggestedAge: boolean;
 };
 
+export type EditableUserProperties = {
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  pictureUrl: string | undefined;
+};
+
 export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {
   if (!o || typeof o !== "object") throw new Error("SetDatapackConfigReturnValue must be a non-null object");
   if (!o.datapacks || !Array.isArray(o.datapacks))

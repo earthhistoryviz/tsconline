@@ -177,7 +177,14 @@ vi.mock("../src/database", async (importOriginal) => {
     updateUser: vi.fn().mockResolvedValue({}),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
     getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop)),
-    updateWorkshop: vi.fn().mockResolvedValue({})
+    updateWorkshop: vi.fn().mockResolvedValue({}),
+    deleteUserInUsersWorkshops: vi.fn().mockResolvedValue({}),
+    deleteWorkshopInUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findWorkshopInUsersWorkshops: vi.fn().mockResolvedValue([]),
+    findUserInUsersWorkshops: vi.fn().mockResolvedValue([]),
+    handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -255,6 +262,29 @@ beforeEach(() => {
   process.env.NODE_ENV = "test";
 });
 
+const testUserWorkshop = {
+  workshopId: 1,
+  userId: 123
+};
+
+const testUserWorkshop2 = {
+  workshopId: 1,
+  userId: 321
+};
+
+const testAdminUser2: User = {
+  userId: 321,
+  uuid: "123e4567-e89b-12d3-a456-426614174000",
+  email: "test@example.com",
+  emailVerified: 1,
+  invalidateSession: 0,
+  username: "testuser",
+  hashedPassword: "password123",
+  pictureUrl: "https://example.com/picture.jpg",
+  isAdmin: 1,
+  accountType: "default"
+};
+
 const testAdminUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
@@ -265,7 +295,6 @@ const testAdminUser: User = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 1,
   accountType: "default"
 };
 const testNonAdminUser = {
@@ -456,7 +485,6 @@ describe("adminCreateUser tests", () => {
     uuid: "random-uuid",
     emailVerified: 1,
     invalidateSession: 0,
-    workshopId: 0,
     accountType: "default"
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
@@ -1158,6 +1186,7 @@ describe("adminUploadServerDatapack", () => {
 describe("getUsers", () => {
   const findUser = vi.spyOn(database, "findUser");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const findUserInUsersWorkshops = vi.spyOn(database, "findUserInUsersWorkshops");
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
@@ -1185,9 +1214,10 @@ describe("getUsers", () => {
     });
     expect(response.statusCode).toBe(200);
   });
-  it("should return user with workshopTitle and one without", async () => {
+  it("should return user with workshopsId and one without", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
+    findUserInUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/users",
@@ -1201,7 +1231,7 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopTitle: testWorkshop.title
+          workshopsId: [testWorkshop.workshopId]
         },
         {
           ...testNonSharedAdminUser,
@@ -1236,6 +1266,7 @@ describe("getUsers", () => {
     expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
     expect(assertAdminSharedUser).toHaveBeenCalledWith({
       ...testSharedAdminUser,
+      userId: 123,
       isAdmin: true,
       isGoogleUser: false,
       invalidateSession: false,
@@ -1379,6 +1410,8 @@ describe("adminAddUsersToWorkshop", () => {
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const updateUser = vi.spyOn(database, "updateUser");
   const getAndHandleWorkshopEnd = vi.spyOn(database, "getAndHandleWorkshopEnd");
+  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
+  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1617,6 +1650,11 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and add new users", async () => {
+    findUser
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([testUserWorkshop2]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1628,6 +1666,8 @@ describe("adminAddUsersToWorkshop", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
     expect(createUser).toHaveBeenCalledTimes(2);
     expect(createUser).toHaveBeenNthCalledWith(1, {
       email: "test@gmail.com",
@@ -1638,7 +1678,6 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1,
       accountType: "default"
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
@@ -1650,18 +1689,24 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test2@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1,
       accountType: "default"
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
     expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
     expect(findUser).toHaveBeenNthCalledWith(3, { email: "test2@gmail.com" });
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 321, 1);
     expect(updateUser).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and update old users", async () => {
-    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop2]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1670,28 +1715,94 @@ describe("adminAddUsersToWorkshop", () => {
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
     expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(3, 321, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(4, 321, 1);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
-    expect(updateUser).toHaveBeenCalledTimes(2);
-    expect(updateUser).toHaveBeenNthCalledWith(
-      1,
-      {
-        email: "test@gmail.com"
-      },
-      { workshopId: 1 }
-    );
-    expect(updateUser).toHaveBeenNthCalledWith(
-      2,
-      {
-        email: "test2@gmail.com"
-      },
-      { workshopId: 1 }
-    );
     expect(createUser).not.toHaveBeenCalled();
     expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
+  });
+  it("should return 500 if the user is already added to the workshop", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    checkWorkshopHasUser.mockResolvedValueOnce([testUserWorkshop]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      error: "Duplicated user-workshop relationship",
+      invalidEmails: "test@gmail.com"
+    });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if unable to update old user)", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    checkWorkshopHasUser.mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Error adding user to workshop", invalidEmails: "test@gmail.com" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if unable to add new user to the workshop)", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
+    checkWorkshopHasUser.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(createUser).toHaveBeenNthCalledWith(1, {
+      email: "test@gmail.com",
+      hashedPassword: "hashedPassword",
+      isAdmin: 0,
+      emailVerified: 1,
+      invalidateSession: 0,
+      pictureUrl: null,
+      username: "test@gmail.com",
+      uuid: "random-uuid",
+      accountType: "default"
+    });
+
+    expect(findUser).toHaveBeenCalledTimes(2); // 1st call is from the prehandler verifyAdmin
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
+    expect(checkWorkshopHasUser).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(await response.json()).toEqual({ error: "Error adding user to workshop", invalidEmails: "test@gmail.com" });
+    expect(response.statusCode).toBe(500);
   });
 });
 

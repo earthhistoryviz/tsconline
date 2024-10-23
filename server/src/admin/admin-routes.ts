@@ -4,12 +4,15 @@ import {
   createUser,
   findUser,
   deleteUser,
-  updateUser,
   createWorkshop,
   findWorkshop,
   getAndHandleWorkshopEnd,
   updateWorkshop,
-  deleteWorkshop
+  deleteWorkshop,
+  checkWorkshopHasUser,
+  createUsersWorkshops,
+  findUserInUsersWorkshops,
+  updateUser
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -58,22 +61,32 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const users = await findUser({});
     const displayedUsers = await Promise.all(
       users.map(async (user) => {
-        const { hashedPassword, workshopId, ...displayedUser } = user;
-        let workshopTitle = "";
-        if (workshopId) {
+        const { hashedPassword, userId, ...displayedUser } = user;
+        const userWorkshops = await findUserInUsersWorkshops(userId);
+        const workshopsId: number[] = [];
+        for (const userWorkshop of userWorkshops) {
+          const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
-          if (workshop && workshop.length === 1) {
-            workshopTitle = workshop[0]?.title ?? "";
+          if (workshop && workshop.length === 1 && workshop[0]?.title) {
+            // const workshopEnrolled = {
+            //   workshopId: workshopId,
+            //   // workshopTitle: workshop[0].title,
+            //   // start: workshop[0].start,
+            //   // end: workshop[0].end
+            // };
+            workshopsId.push(workshopId);
           }
         }
+
         return {
           ...displayedUser,
+          userId: userId,
           username: displayedUser.username,
           isGoogleUser: hashedPassword === null,
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopTitle && { workshopTitle })
+          ...(workshopsId.length > 0 && { workshopsId })
         };
       })
     );
@@ -120,7 +133,6 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(customUser);
@@ -469,6 +481,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
+
     let emailList: string[] = [];
     let invalidEmails: string[] = [];
     if (file && filepath) {
@@ -493,7 +506,21 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        await updateUser({ email }, { workshopId });
+        for (const eachUser of user) {
+          const { userId } = eachUser;
+          const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
+          if (existingRelationship.length == 0) {
+            await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+            const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+            if (newRelationship.length !== 1) {
+              reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
+              return;
+            }
+          } else {
+            reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
+            return;
+          }
+        }
       } else {
         await createUser({
           email,
@@ -504,13 +531,21 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           pictureUrl: null,
           username: email,
           uuid: randomUUID(),
-          workshopId: workshopId,
           accountType: "default"
         });
         const newUser = await findUser({ email });
         if (newUser.length !== 1) {
           reply.status(500).send({ error: "Error creating user", invalidEmails: email });
           return;
+        }
+        for (const eachUser of newUser) {
+          const { userId } = eachUser;
+          await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+          const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+          if (newRelationship.length !== 1) {
+            reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
+            return;
+          }
         }
       }
     }
