@@ -25,7 +25,6 @@ import { context } from "../state";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
-  //workshops: SharedWorkshop[];
 };
 
 //TODO: Need to implement backend
@@ -56,7 +55,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
             </TableRow>
           </TableHead>
           <TableBody>
-            {!editState.currentWorkshops || editState.currentWorkshops.length === 0
+            {!editState.currentWorkshops || editState.currentWorkshops.length === 0 || allWorkshops.length === 0
               ? (
 
                 <TableRow>
