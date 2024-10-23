@@ -672,13 +672,6 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   }
 }
 
-// export function assertWorkshopsEnrolled(o: any): asserts o is WorkshopsEnrolled {
-//   if (!o || typeof o !== "object") throw new Error("User must be a non-null object");
-//   // if (typeof o.workshopTitle !== "string") throwError("WorkshopsEnrolled", "workshopTitle", "string", o.workshopTitle);
-//   if (typeof o.workshopId !== "number") throwError("WorkshopsEnrolled", "workshopId", "number", o.workshopId);
-//   // if (typeof o.start !== "string") throwError("WorkshopsEnrolled", "start", "string", o.start);
-//   // if (typeof o.end !== "string") throwError("WorkshopsEnrolled", "end", "string", o.end);
-// }
 
 export function assertFreehand(o: any): asserts o is Freehand {
   if (!o || typeof o !== "object") throw new Error("Freehand must be a non-null object");

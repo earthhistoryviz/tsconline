@@ -18,7 +18,6 @@ import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
 import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
-import { loadRecaptcha, removeRecaptcha } from "../util";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
