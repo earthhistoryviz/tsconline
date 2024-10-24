@@ -131,7 +131,7 @@ server.register(fastifyStatic, {
 
 // Serve the mappoint images from server/assets/uploads/private
 server.register(fastifyStatic, {
-  root: path.join(process.cwd(), 'assets/uploads/private'),
+  root: path.join(process.cwd(), "assets/uploads/private"),
   prefix: "/assets/uploads/private/",
   allowedPath: (pathName, _root, req) => {
     const uuid = req.session.get("uuid");
@@ -142,7 +142,7 @@ server.register(fastifyStatic, {
     const uuidFolder = pathName.split("/")[1];
     return uuidFolder === uuid;
   },
-  decorateReply: false,
+  decorateReply: false
 });
 
 server.register(fastifyStatic, {
