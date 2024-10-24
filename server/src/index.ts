@@ -122,18 +122,27 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-// Serve the mappoint images from server/assets/uploads]
+// Serve the mappoint images from server/assets/uploads/public
 server.register(fastifyStatic, {
-  root: process.cwd() + "/assets/uploads",
-  prefix: "/assets/uploads",
+  root: process.cwd() + "/assets/uploads/public",
+  prefix: "/assets/uploads/public",
   decorateReply: false
 });
 
-// Serve the mappoint images from server/assets/uploads]
+// Serve the mappoint images from server/assets/uploads/private
 server.register(fastifyStatic, {
-  root: process.cwd() + "/assets/decrypted",
-  prefix: "/assets/decrypted",
-  decorateReply: false
+  root: path.join(process.cwd(), 'assets/uploads/private'),
+  prefix: "/assets/uploads/private/",
+  allowedPath: (pathName, _root, req) => {
+    const uuid = req.session.get("uuid");
+    if (!uuid) {
+      return false;
+    }
+
+    const uuidFolder = pathName.split("/")[1];
+    return uuidFolder === uuid;
+  },
+  decorateReply: false,
 });
 
 server.register(fastifyStatic, {
