@@ -18,6 +18,7 @@ import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.j
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
+import fs from "fs";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
@@ -120,27 +121,44 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-// Serve the mappoint images from server/assets/uploads/public
-server.register(fastifyStatic, {
-  root: process.cwd() + "/assets/uploads/public",
-  prefix: "/assets/uploads/public",
-  decorateReply: false
-});
+interface Request {
+  session: {
+    get: (key: string) => string | undefined;
+  };
+}
 
-// Serve the mappoint images from server/assets/uploads/private
-server.register(fastifyStatic, {
-  root: path.join(process.cwd(), "assets/uploads/private"),
-  prefix: "/assets/uploads/private/",
-  allowedPath: (pathName, _root, req) => {
-    const uuid = req.session.get("uuid");
-    if (!uuid) {
-      return false;
+/* Utility to validate the path of mappoint images for public and private
+ * Path must contain 'MapImages' and end with an image extension */
+const isValidMapImagePath = (pathName: string): boolean => {
+  const pathSegments = pathName.split("/");
+  const mapImagesIndex = pathSegments.indexOf("MapImages");
+  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
+  return mapImagesIndex !== -1 && isImage;
+};
+
+// Utility to validate private access based on UUID
+const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: Request }): boolean => {
+  const uuid = req.session.get("uuid");
+  if (!uuid) return false;
+  const pathSegments = pathName.split("/");
+  const [uuidFolder] = pathSegments.slice(1); // Extract UUID folder
+  // Ensure UUID matches and path is valid
+  return uuidFolder === uuid && isValidMapImagePath(pathName);
+};
+
+const assetPaths = ["public", "private"];
+assetPaths.forEach((type) => {
+  server.register(fastifyStatic, {
+    root: path.join(process.cwd(), `assets/uploads/${type}`),
+    prefix: `/assets/uploads/${type}`,
+    decorateReply: false,
+    allowedPath: (pathName, _root, req: Request) => {
+      const fullPath = path.join(_root, pathName);
+      // Validate path based on route type | Private: Check UUID and path | Public: Only check path
+      const isAllowed = type === "private" ? isAllowedPrivatePath({ pathName, req }) : isValidMapImagePath(pathName);
+      return isAllowed && fs.existsSync(fullPath);
     }
-
-    const uuidFolder = pathName.split("/")[1];
-    return uuidFolder === uuid;
-  },
-  decorateReply: false
+  });
 });
 
 server.register(fastifyStatic, {
