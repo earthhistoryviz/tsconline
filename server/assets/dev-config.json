@@ -9,7 +9,9 @@
         "authoredBy": "Gradstein, Ogg, Schmitz, & Ogg, 2020, Elsevier",
         "references": [],
         "tags": [],
-        "notes": "This is the internal datapack for TimeScale Creator 2020"
+        "notes": "This is the internal datapack for TimeScale Creator 2020",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Human Evolution",
@@ -23,7 +25,9 @@
         "references": [
             "American Museum of History and Smithsonian, Mar2021."
         ],
-        "notes": "Suggest beginning with 0.05 to 2 Ma with vertical scale of 8"
+        "notes": "Suggest beginning with 0.05 to 2 Ma with vertical scale of 8",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Australia",
@@ -38,7 +42,9 @@
         "references": [
             "Kelman, A., 2016, Australian biostratigraphy and basin lithostratigraphy with map interface and reconstructions: Geoscience Australia, Canberra, Australia, 15 Mb, ca. 500 columns, includes 125 reconstructions and facies maps."
         ],
-        "notes": "Contact Andrew Kelman for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite."
+        "notes": "Contact Andrew Kelman for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite.",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Belgium",
@@ -52,7 +58,9 @@
         "references": [
             "Bultynck, P., and Dejonghe, L., (editors), 2001, Guide to a revised lithostratigraphic scale of Belgium: Geologica Belgica, v. 4",
             "Dejonghe, L. (editor), 2006. Currentstatus of Chronostatigraphic Units Named from Belgium and Adjacent Areas. Geologica Belgica, volume 9."
-        ]
+        ],
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "South American Basins",
@@ -94,7 +102,9 @@
             "Milani, E. J., Melo, J. H. G., Souza, P. A., Fernandes, L. A., Franca, A. B. 2007. Bacia do Parana. Boletim de Geociencias da Petrobras, v. 15, n. 2, p. 265-287",
             "Wise, S. W., 2007. Mesozoic and Cenozoic Calcareous Nannofossils recovered by Deep sea Drilling Project LEG 71 in the Falkland Plateau Region, Southwest Atlantic Ocean. In: Deep Sea Drilling Project Initial Reports, v. 71, p. 481-550",
             "Galeazzi, J. S., 1998. Structural and Stratigraphic Evolution of the Western Malvinas Basin, Argentina. AAPG Bulletin, v. 82, n. 4, p. 596-636"
-        ]
+        ],
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Africa Bight",
@@ -104,7 +114,9 @@
         "size": "0.2 MB",
         "authoredBy": "James Ogg",
         "tags": [],
-        "references": []
+        "references": [],
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "British Isles",
@@ -119,7 +131,9 @@
         "references": [
             "Waters, C.N., Waters, R.A., Barclay, W.J., and Davies, J.R., 2009, A lithostratigraphical framework for the Carboniferous successions of southern Great Britain (onshore): British Geological Survey Research Report, RR/09/01, 58 p."
         ],
-        "notes": "Each set of columns is separated by a strip \"color of time\" of the international-stage divisions to clarify the temporal correlations"
+        "notes": "Each set of columns is separated by a strip \"color of time\" of the international-stage divisions to clarify the temporal correlations",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Evolution of Modern Life",
@@ -134,7 +148,9 @@
             "The TimeTree of Life, Hedges, S.B., and Kumar, S., eds, Oxford Univ. Press, 2009"
         ],
         "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.",
-        "contact": "James Ogg: jogg@purdue.edu"
+        "contact": "James Ogg: jogg@purdue.edu",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Vertebrate Evolution",
@@ -148,7 +164,9 @@
         "references": [
             " Dixon, Dougal, et al. (1988) The Macmillan illustrated encyclopedia of dinosaurs and prehistoric animals. Macmillan New York: 312pp"
         ],
-        "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less. Ranges of different selected fossil vertebrates are defaulted OFF (turn on from within each directory). "
+        "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less. Ranges of different selected fossil vertebrates are defaulted OFF (turn on from within each directory). ",
+        "type": "server",
+        "isPublic": true
     },
     {
         "title": "Human Culture",
@@ -160,6 +178,8 @@
         "size": "0.5 MB",
         "authoredBy": "Gabi Ogg",
         "references": [],
-        "tags": []
+        "tags": [],
+        "type": "server",
+        "isPublic": true
     }
 ]

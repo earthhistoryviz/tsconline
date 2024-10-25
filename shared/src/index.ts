@@ -35,9 +35,11 @@ export type DatapackMetadata = {
   authoredBy: string;
   tags: string[];
   references: string[];
+  isPublic: boolean;
   contact?: string;
   notes?: string;
-};
+  datapackImage?: string;
+} & DatapackType;
 
 export type AdminSharedUser = {
   userId: number;
@@ -51,7 +53,7 @@ export type SuccessfulServerResponse = {
 };
 
 export type DatapackInfoChunk = {
-  datapackIndex: DatapackIndex;
+  datapacks: Datapack[];
   totalChunks: number;
 };
 export type MapPackInfoChunk = {
@@ -68,25 +70,13 @@ export type BaseDatapackProps = {
   formatVersion: number;
   topAge?: number;
   baseAge?: number;
-  date?: string;
   verticalScale?: number;
-  description: string;
-  title: string;
-  storedFileName: string;
-  originalFileName: string;
-  size: string;
   warnings?: DatapackWarning[];
-  image: string;
   totalColumns: number;
   columnTypeCount: ColumnTypeCounter;
-  authoredBy: string;
-  tags: string[];
-  references: string[];
-  contact?: string;
-  notes?: string;
   datapackImageCount: number;
   mapPack: MapPack; // this can be empty
-};
+} & DatapackMetadata;
 
 type ServerDatapack = {
   type: "server";
@@ -94,29 +84,13 @@ type ServerDatapack = {
 type WorkshopDatapack = {
   type: "workshop";
 };
-type PrivateUserDatapack = {
-  type: "private_user";
+type UserDatapack = {
+  type: "user";
   uuid: string;
 };
-type PublicUserDatapack = {
-  type: "public_user";
-  uuid: string;
-};
-export type DatapackType = ServerDatapack | WorkshopDatapack | PrivateUserDatapack | PublicUserDatapack;
-export type Datapack = DatapackType & BaseDatapackProps;
-
-export type ServerDatapackIndex = {
-  [name: string]: ServerDatapack & BaseDatapackProps;
-};
-export type WorkshopDatapackIndex = {
-  [name: string]: WorkshopDatapack & BaseDatapackProps;
-};
-export type PrivateUserDatapackIndex = {
-  [name: string]: PrivateUserDatapack & BaseDatapackProps;
-};
-export type PublicUserDatapackIndex = {
-  [name: string]: PublicUserDatapack & BaseDatapackProps;
-};
+export type DatapackType = ServerDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackTypeString = DatapackType["type"];
+export type Datapack = BaseDatapackProps;
 
 export type PresetDatapack = {
   file: string;
@@ -234,6 +208,7 @@ export type SubBlockInfo = {
 export type DatapackConfigForChartRequest = {
   storedFileName: string;
   title: string;
+  isPublic: boolean;
 } & DatapackType;
 
 export type ChartRequest = {
@@ -632,6 +607,7 @@ export function assertDatapackConfigForChartRequest(o: any): asserts o is Datapa
   if (typeof o.storedFileName !== "string")
     throwError("DatapackConfigForChartRequest", "storedFileName", "string", o.storedFileName);
   if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
+  if (typeof o.isPublic !== "boolean") throwError("DatapackConfigForChartRequest", "isPublic", "boolean", o.isPublic);
   assertDatapackType(o);
 }
 
@@ -822,7 +798,13 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
 export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
   if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
   if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackIndex(o.datapackIndex);
+  assertDatapackArray(o.datapacks);
+}
+export function assertDatapackArray(o: any): asserts o is Datapack[] {
+  if (!Array.isArray(o)) throw new Error("Datapack must be an array");
+  for (const datapack of o) {
+    assertDatapack(datapack);
+  }
 }
 
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
@@ -1028,28 +1010,33 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("references" in o && !Array.isArray(o.references)) return false;
   if ("contact" in o && typeof o.contact !== "string") return false;
   if ("notes" in o && typeof o.notes !== "string") return false;
+  if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
-  if (typeof o.description !== "string") throw new Error("DatapackMetadata description must be of type string");
-  if (typeof o.title !== "string") throw new Error("DatapackMetadata title must be of type string");
+  if (typeof o.description !== "string") throwError("DatapackMetadata", "description", "string", o.description);
+  if (typeof o.title !== "string") throwError("DatapackMetadata", "title", "string", o.title);
   if (typeof o.originalFileName !== "string")
-    throw new Error("DatapackMetadata originalFileName must be of type string");
-  if (typeof o.storedFileName !== "string") throw new Error("DatapackMetadata storedFileName must be of type string");
-  if (typeof o.size !== "string") throw new Error("DatapackMetadata size must be of type string");
-  if (typeof o.authoredBy !== "string") throw new Error("DatapackMetadata authoredBy must be of type string");
-  if (!Array.isArray(o.tags)) throw new Error("DatapackMetadata tags must be an array");
+    throwError("DatapackMetadata", "originalFileName", "string", o.originalFileName);
+  if (typeof o.storedFileName !== "string")
+    throwError("DatapackMetadata", "storedFileName", "string", o.storedFileName);
+  if (typeof o.size !== "string") throwError("DatapackMetadata", "size", "string", o.size);
+  if (typeof o.authoredBy !== "string") throwError("DatapackMetadata", "authoredBy", "string", o.authoredBy);
+  if (!Array.isArray(o.tags)) throwError("DatapackMetadata", "tags", "array", o.tags);
   for (const tag of o.tags) {
-    if (typeof tag !== "string") throw new Error("DatapackMetadata tags must be an array of strings");
+    if (typeof tag !== "string") throwError("DatapackMetadata", "tags", "array of strings", o.tags);
   }
-  if (o.date && typeof o.date !== "string") throw new Error("DatapackMetadata date must be of type string");
-  if (!Array.isArray(o.references)) throw new Error("DatapackMetadata references must be an array");
+  if (o.date && typeof o.date !== "string") throwError("DatapackMetadata", "date", "string", o.date);
+  if (!Array.isArray(o.references)) throwError("DatapackMetadata", "references", "array", o.references);
   for (const reference of o.references) {
-    if (typeof reference !== "string") throw new Error("DatapackMetadata references must be an array of strings");
+    if (typeof reference !== "string") throwError("DatapackMetadata", "references", "array of strings", o.references);
   }
-  if ("contact" in o && typeof o.contact !== "string") throw new Error("DatapackMetadata contact must be a string");
-  if ("notes" in o && typeof o.notes !== "string") throw new Error("DatapackMetadata notes must be a string");
+  if ("contact" in o && typeof o.contact !== "string") throwError("DatapackMetadata", "contact", "string", o.contact);
+  if ("notes" in o && typeof o.notes !== "string") throwError("DatapackMetadata", "notes", "string", o.notes);
+  if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
+  if ("datapackImage" in o && typeof o.datapackImage !== "string")
+    throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
@@ -1082,6 +1069,13 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if (typeof o.endMapPoint !== "string") throwError("MapTransect", "endMapPoint", "string", o.endMapPoint);
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
+export function isDatapackTypeString(o: any): o is DatapackTypeString {
+  return /^(user|server|workshop)$/.test(o);
+}
+export function assertDatapackTypeString(o: any): asserts o is DatapackType {
+  if (typeof o !== "string" || !/^(user|server|workshop)$/.test(o))
+    throwError("DatapackType", "type", "string and user | server | workshop", o);
+}
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
   for (const key in o) {
@@ -1106,63 +1100,14 @@ export function isServerDatapack(o: any): o is ServerDatapack {
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
   return o.type === "workshop";
 }
-export function isPublicUserDatapack(o: any): o is PublicUserDatapack {
-  return o.type === "public_user" && typeof o.uuid === "string";
-}
-export function isUserDatapack(o: any): o is PublicUserDatapack | PrivateUserDatapack {
-  return isPublicUserDatapack(o) || isPrivateUserDatapack(o);
-}
-export function isPrivateUserDatapack(o: any): o is PrivateUserDatapack {
-  return o.type === "private_user" && typeof o.uuid === "string";
-}
-export function assertServerDatapackWithBaseProps(o: any): asserts o is ServerDatapack & BaseDatapackProps {
-  assertServerDatapack(o);
-  assertBaseDatapackProps(o);
-}
-export function assertWorkshopDatapackWithBaseProps(o: any): asserts o is WorkshopDatapack & BaseDatapackProps {
-  assertWorkshopDatapack(o);
-  assertBaseDatapackProps(o);
-}
-export function assertPublicUserDatapackWithBaseProps(o: any): asserts o is PublicUserDatapack & BaseDatapackProps {
-  assertPublicUserDatapack(o);
-  assertBaseDatapackProps(o);
-}
-export function assertPrivateUserDatapackWithBaseProps(o: any): asserts o is PrivateUserDatapack & BaseDatapackProps {
-  assertPrivateUserDatapack(o);
-  assertBaseDatapackProps(o);
-}
-export function assertServerDatapackIndex(o: any): asserts o is ServerDatapackIndex {
-  if (!o || typeof o !== "object") throw new Error("ServerDatapackIndex must be a non-null object");
-  for (const key in o) {
-    assertServerDatapackWithBaseProps(o[key]);
-  }
-}
-export function assertWorkshopDatapackIndex(o: any): asserts o is WorkshopDatapackIndex {
-  if (!o || typeof o !== "object") throw new Error("WorkshopDatapackIndex must be a non-null object");
-  for (const key in o) {
-    assertWorkshopDatapackWithBaseProps(o[key]);
-  }
-}
-export function assertPublicUserDatapackIndex(o: any): asserts o is PublicUserDatapackIndex {
-  if (!o || typeof o !== "object") throw new Error("PublicUserDatapackIndex must be a non-null object");
-  for (const key in o) {
-    assertPublicUserDatapackWithBaseProps(o[key]);
-  }
-}
-export function assertPrivateUserDatapackIndex(o: any): asserts o is PrivateUserDatapackIndex {
-  if (!o || typeof o !== "object") throw new Error("PrivateUserDatapackIndex must be a non-null object");
-  for (const key in o) {
-    assertPrivateUserDatapackWithBaseProps(o[key]);
-  }
+export function isUserDatapack(o: any): o is UserDatapack {
+  return o.type === "user" && typeof o.uuid === "string";
 }
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
   switch (o.type) {
-    case "private_user":
-      assertPrivateUserDatapack(o);
-      break;
-    case "public_user":
-      assertPublicUserDatapack(o);
+    case "user":
+      assertUserDatapack(o);
       break;
     case "server":
       assertServerDatapack(o);
@@ -1184,14 +1129,10 @@ export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
   if (typeof o.type !== "string") throwError("WorkshopDatapack", "type", "string", o.type);
   if (o.type !== "workshop") throwError("WorkshopDatapack", "type", "workshop", o.type);
 }
-export function assertPrivateUserDatapack(o: any): asserts o is PrivateUserDatapack {
-  if (!o || typeof o !== "object") throw new Error("PrivateUserDatapack must be a non-null object");
-  if (o.type !== "private_user") throwError("PrivateUserDatapack", "type", "private_user", o.type);
-  if (typeof o.uuid !== "string") throwError("PrivateUserDatapack", "uuid", "string", o.uuid);
-}
-export function assertPublicUserDatapack(o: any): asserts o is PublicUserDatapack {
-  if (!o || typeof o !== "object") throw new Error("PublicUserDatapack must be a non-null object");
-  if (o.type !== "public_user") throwError("PublicUserDatapack", "type", "public_user", o.type);
+export function assertUserDatapack(o: any): asserts o is UserDatapack {
+  if (!o || typeof o !== "object") throw new Error("UserDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("UserDatapack", "type", "string", o.type);
+  if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
   if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
 
@@ -1236,39 +1177,21 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if (typeof o.formatVersion !== "number") throwError("BaseDatapackProps", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
     throwError("BaseDatapackProps", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && (typeof o.date !== "string" || !isDateValid(o.date)))
-    throwError("BaseDatapackProps", "date", "string", o.date);
   if ("topAge" in o && typeof o.topAge !== "number") throwError("BaseDatapackProps", "topAge", "number", o.topAge);
   if ("baseAge" in o && typeof o.baseAge !== "number") throwError("BaseDatapackProps", "baseAge", "number", o.baseAge);
-  if ("uuid" in o && typeof o.uuid !== "string") throwError("BaseDatapackProps", "uuid", "string", o.uuid);
-  if (typeof o.description !== "string") throwError("BaseDatapackProps", "description", "string", o.description);
-  if (typeof o.title !== "string") throwError("BaseDatapackProps", "title", "string", o.title);
-  if (typeof o.storedFileName !== "string") throwError("BaseDatapackProps", "storedFileName", "string", o.file);
-  if (typeof o.originalFileName !== "string") throwError("BaseDatapackProps", "originalFileName", "string", o.file);
-  if (typeof o.size !== "string") throwError("BaseDatapackProps", "size", "string", o.size);
   if ("warnings" in o) {
     if (!Array.isArray(o.warnings)) throwError("BaseDatapackProps", "warnings", "array", o.warnings);
     for (const warning of o.warnings) {
       assertDatapackWarning(warning);
     }
   }
-  if (typeof o.image !== "string") throwError("BaseDatapackProps", "image", "string", o.image);
   assertsColumnTypeCounter(o.columnTypeCount);
   if (typeof o.totalColumns !== "number") throwError("BaseDatapackProps", "totalColumns", "number", o.totalColumns);
-  if (typeof o.authoredBy !== "string") throwError("BaseDatapackProps", "authoredBy", "string", o.author);
-  if (!Array.isArray(o.tags)) throwError("BaseDatapackProps", "tags", "array", o.tags);
-  for (const tag of o.tags) {
-    if (typeof tag !== "string") throwError("BaseDatapackProps", "tag", "string", tag);
-  }
-  if (!Array.isArray(o.references)) throwError("BaseDatapackProps", "references", "array", o.references);
-  for (const reference of o.references) {
-    if (typeof reference !== "string") throwError("BaseDatapackProps", "reference", "string", reference);
-  }
-  if ("contact" in o && typeof o.contact !== "string") throwError("BaseDatapackProps", "contact", "string", o.contact);
-  if ("notes" in o && typeof o.notes !== "string") throwError("BaseDatapackProps", "notes", "string", o.notes);
   if (typeof o.datapackImageCount !== "number")
     throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
+  assertDatapackMetadata(o);
+  assertDatapackType(o);
 }
 
 export function assertPresetDatapack(o: any): asserts o is PresetDatapack {

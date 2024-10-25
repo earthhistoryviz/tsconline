@@ -1,9 +1,8 @@
-import { action, runInAction, toJS } from "mobx";
+import { action, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  DatapackIndex,
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
@@ -12,13 +11,12 @@ import {
   defaultColumnRoot,
   FontsInfo,
   Datapack,
-  assertDatapackIndex,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  assertServerDatapackWithBaseProps,
-  assertPrivateUserDatapackIndex,
-  ServerDatapackIndex,
-  PrivateUserDatapackIndex
+  isServerDatapack,
+  assertServerDatapack,
+  assertDatapack,
+  assertDatapackArray
 } from "@tsconline/shared";
 
 import {
@@ -50,13 +48,14 @@ import {
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SettingsTabs,
-  UploadOptions,
   equalChartSettings,
   equalConfig
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
+import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
+import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
 
@@ -67,7 +66,8 @@ export const fetchServerDatapack = action("fetchServerDatapack", async (datapack
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapackWithBaseProps(data);
+      assertServerDatapack(data);
+      assertDatapack(data);
       return data;
     } else {
       displayServerError(
@@ -103,6 +103,19 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
+export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
+  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+});
+export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
+  state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
+  fetchAllPublicDatapacks();
+});
+export const addDatapack = action("addDatapack", (datapack: Datapack) => {
+  // we don't log since fetching datapacks could produce duplicates
+  if (!doesDatapackAlreadyExist(datapack, state.datapacks)) {
+    state.datapacks.push(observable(datapack));
+  }
+});
 /**
  * Resets any user defined settings
  */
@@ -110,19 +123,20 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () => {
+export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async () => {
   let start = 0;
   let total = -1;
-  const datapackIndex: DatapackIndex = {};
   try {
     while (total == -1 || start < total) {
-      const response = await fetcher(`/datapack-index?start=${start}&increment=${increment}`, {
+      const response = await fetcher(`/public/datapacks?start=${start}&increment=${increment}`, {
         method: "GET"
       });
       const index = await response.json();
       try {
         assertDatapackInfoChunk(index);
-        Object.assign(datapackIndex, index.datapackIndex);
+        for (const dp of index.datapacks) {
+          addDatapack(dp);
+        }
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
@@ -131,13 +145,6 @@ export const fetchServerDatapackIndex = action("fetchDatapackIndex", async () =>
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    // we keep all the previous datapacks (careful as we do not delete old entries if they are removed on the server)
-    // ^ this is to accomodate for the user datapacks and any other way to add datapacks
-    // TODO: potentially check for staleness sometime
-    setLargeDataIndex(state.datapackCollection.serverDatapackIndex, {
-      ...state.datapackCollection.serverDatapackIndex,
-      ...datapackIndex
-    });
     console.log("Datapacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -168,13 +175,13 @@ export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      assertDatapackIndex(data);
-      setLargeDataIndex(state.datapackCollection.publicUserDatapackIndex, {
-        ...state.datapackCollection.publicUserDatapackIndex,
-        ...data
-      });
+      assertDatapackArray(data);
+      for (const dp of data) {
+        addDatapack(dp);
+      }
       console.log("Public Datapacks loaded");
     } catch (e) {
+      console.error(e);
       displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
     }
   } catch (e) {
@@ -194,12 +201,11 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
     });
     const data = await response.json();
     try {
-      // this does not check for duplicated keys! will overwrite old keys!
-      assertPrivateUserDatapackIndex(data);
-      setLargeDataIndex(state.datapackCollection.privateUserDatapackIndex, {
-        ...state.datapackCollection.privateUserDatapackIndex,
-        ...data
-      });
+      assertDatapackArray(data);
+      // this does not check for duplicate keys
+      for (const dp in data) {
+        addDatapack(data[dp]);
+      }
       console.log("User Datapacks loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
@@ -213,8 +219,8 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
-  async (file: File, metadata: DatapackMetadata, options?: UploadOptions) => {
-    if (state.datapackCollection.privateUserDatapackIndex[metadata.title]) {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    if (getDatapackFromArray(metadata, state.datapacks)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -222,13 +228,17 @@ export const uploadUserDatapack = action(
     if (!recaptcha) return;
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
-    formData.append("file", file);
+    formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
     formData.append("references", JSON.stringify(references));
     formData.append("tags", JSON.stringify(tags));
     formData.append("authoredBy", authoredBy);
-    options?.isPublic && formData.append("isPublic", String(options.isPublic));
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    formData.append("isPublic", String(metadata.isPublic));
+    formData.append("type", metadata.type);
+    if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
+    formData.append("isPublic", String(metadata.isPublic));
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
@@ -244,8 +254,15 @@ export const uploadUserDatapack = action(
       const data = await response.json();
 
       if (response.ok) {
-        fetchUserDatapacks();
-        if (options?.isPublic) fetchPublicDatapacks();
+        const datapack = await fetchUserDatapack(metadata.title);
+        if (!datapack) {
+          pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+          return;
+        }
+        addDatapack(datapack);
+        if (metadata.isPublic) {
+          refreshPublicDatapacks();
+        }
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
@@ -257,21 +274,6 @@ export const uploadUserDatapack = action(
   }
 );
 
-export const addDatapackToServerDatapackIndex = action(
-  "addDatapackToServerDatapackIndex",
-  (datapack: string, info: ServerDatapackIndex[string]) => {
-    state.datapackCollection.serverDatapackIndex[datapack] = info;
-  }
-);
-export const removeDatapackFromUserDatapackIndex = action("removeDatapackFromUserDatapackIndex", (datapack: string) => {
-  delete state.datapackCollection.privateUserDatapackIndex[datapack];
-});
-export const addDatapackToUserDatapackIndex = action(
-  "addDatapackToUserDatapackIndex",
-  (datapack: string, info: PrivateUserDatapackIndex[string]) => {
-    state.datapackCollection.privateUserDatapackIndex[datapack] = info;
-  }
-);
 export const setLargeDataIndex = action(
   "setLargeDataIndex",
   async <T>(target: Record<string, T>, index: Record<string, T>) => {
@@ -792,7 +794,8 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      ...(isUserDatapack(datapack) ? { uuid: datapack.uuid } : {})
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      isPublic: datapack.isPublic
     })
   });
   if (!response.ok) {
@@ -825,9 +828,9 @@ export async function getRecaptchaToken(token: string) {
 export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/user/datapack/${datapack.title}`;
+    route = `/user/datapack/download/${datapack.title}`;
   } else {
-    route = `/user/datapack/${datapack.title}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/download/${datapack.title}?needEncryption=${needEncryption}`;
   }
   const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
   if (!recaptchaToken) return null;
@@ -931,6 +934,7 @@ export const sessionCheck = action("sessionCheck", async () => {
 });
 
 export const setDefaultUserState = action(() => {
+  removeUserDatapacks(state.user.uuid);
   state.user = {
     username: "",
     email: "",
@@ -943,10 +947,9 @@ export const setDefaultUserState = action(() => {
       language: "en"
     }
   };
-  // Take out all the user datapacks
-  runInAction(() => {
-    state.datapackCollection.privateUserDatapackIndex = {};
-  });
+});
+export const removeUserDatapacks = action((uuid: string) => {
+  state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)

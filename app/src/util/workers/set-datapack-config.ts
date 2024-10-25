@@ -14,7 +14,7 @@ import {
 } from "../../types";
 import { cloneDeep } from "lodash";
 import { State } from "../../state";
-import { getDatapackFromIndex } from "../../state/non-action-util";
+import { getDatapackFromArray } from "../../state/non-action-util";
 
 /**
  * sets chart to newval and requests info on the datapacks from the server
@@ -59,7 +59,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
   // add everything together
   // uses preparsed data on server start and appends items together
   for (const datapackConfigForChartRequest of datapacks) {
-    const datapack = getDatapackFromIndex(datapackConfigForChartRequest, stateCopy);
+    const datapack = getDatapackFromArray(datapackConfigForChartRequest, stateCopy.datapacks);
     if (!datapack) throw new Error(`File requested doesn't exist on server: ${datapack}`);
     const baseDatapackProps = datapack;
     if (

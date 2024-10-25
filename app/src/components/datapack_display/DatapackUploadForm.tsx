@@ -9,44 +9,42 @@ import {
   Stack,
   TextField,
   Typography,
-  FormControlLabel
+  FormControlLabel,
+  Badge,
+  SvgIcon
 } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { InputFileUpload } from "../TSCFileUpload";
 import "./DatapackUploadForm.css";
 import { TSCButton } from "../TSCButton";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import {
-  DatapackIndex,
   DatapackMetadata,
+  DatapackType,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
 } from "@tsconline/shared";
-import { AddCircleOutline, ExpandMore } from "@mui/icons-material";
+import { AddCircleOutline, ExpandMore, Close, DeleteOutline, AddPhotoAlternate } from "@mui/icons-material";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import useDatapackUploadForm from "./datapack-upload-form-hook";
 import { TSCCheckbox } from "../TSCCheckbox";
-import { UploadOptions } from "../../types";
 import { useTranslation } from "react-i18next";
 
 type DatapackUploadFormProps = {
   close: () => void;
-  upload: (file: File, metadata: DatapackMetadata, options?: UploadOptions) => Promise<void>;
-  index: DatapackIndex; // the index of datapacks to check duplicates
-  type?: "user" | "server";
+  upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
+  type: DatapackType;
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, index, type = "user" }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, index });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
   const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
       <div className="close-upload-form">
         <IconButton className="icon" onClick={close} size="large">
-          <CloseIcon className="close-icon" />
+          <Close className="close-icon" />
         </IconButton>
       </div>
       <Typography className="upload-datapack-header" variant="h4">
@@ -55,21 +53,28 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
       <CustomDivider />
       <form onSubmit={handlers.handleSubmit}>
         <StyledScrollbar className="datapack-upload-form-container">
-          <Box className="file-upload">
-            <InputFileUpload
-              startIcon={<CloudUploadIcon />}
-              text={t("settings.datapacks.upload")}
-              variant="contained"
-              onChange={handlers.handleFileUpload}
+          <Box display="flex" flexDirection="row" justifyContent="flex-start" gap="100px" margin="10px">
+            <UploadProfilePicture
+              profileImageRef={state.profileImageRef}
+              profileImage={state.profileImage}
+              handleProfileImageChange={handlers.handleProfileImageChange}
             />
-            <Typography className="file-upload-text" variant="body2">
-              {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
-            </Typography>
-            {state.file && (
-              <IconButton className="icon" onClick={() => setters.setFile(null)}>
-                <DeleteOutlineIcon className="close-icon" />
-              </IconButton>
-            )}
+            <Box className="file-upload">
+              <InputFileUpload
+                startIcon={<CloudUploadIcon />}
+                text={t("settings.datapacks.upload")}
+                variant="contained"
+                onChange={handlers.handleFileUpload}
+              />
+              <Typography className="file-upload-text" variant="body2">
+                {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
+              </Typography>
+              {state.file && (
+                <IconButton className="icon" onClick={() => setters.setFile(null)}>
+                  <DeleteOutline className="close-icon" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
           <Box gap="10px" display="flex">
             <TextField
@@ -143,15 +148,13 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               />
             )}
           />
-          {type === "user" && (
-            <FormControlLabel
-              name="public-datapack"
-              control={
-                <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
-              }
-              label={t("settings.datapacks.upload-form.make-public")}
-            />
-          )}
+          <FormControlLabel
+            name="public-datapack"
+            control={
+              <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+            }
+            label={t("settings.datapacks.upload-form.make-public")}
+          />
           <Stack spacing={2} flexShrink={0} alignSelf="center" width="100%">
             {state.references.map((reference, index) => (
               <Box key={reference.id} display="flex" alignItems="center">
@@ -164,7 +167,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                 />
                 <IconButton
                   onClick={() => setters.setReferences(state.references.filter((ref) => ref.id !== reference.id))}>
-                  <DeleteOutlineIcon />
+                  <DeleteOutline />
                 </IconButton>
               </Box>
             ))}
@@ -212,6 +215,44 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           <TSCButton type="submit">{t("settings.datapacks.upload-form.button.finish")}</TSCButton>
         </Box>
       </form>
+    </Box>
+  );
+};
+
+type UploadProfilePictureProps = {
+  profileImageRef: React.RefObject<HTMLInputElement>;
+  profileImage: File | null;
+  handleProfileImageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
+const UploadProfilePicture: React.FC<UploadProfilePictureProps> = ({
+  profileImageRef,
+  profileImage,
+  handleProfileImageChange
+}) => {
+  return (
+    <Box className="datapack-editable-profile-icon-background" sx={{ backgroundColor: "secondaryBackground.dark" }}>
+      <Badge
+        overlap="rectangular"
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        className="editable-datapack-profile-icon-badge"
+        onClick={() => {
+          if (profileImageRef.current) profileImageRef.current.click();
+        }}>
+        {profileImage ? (
+          <img src={URL.createObjectURL(profileImage)} className="editable-datapack-profile-icon" />
+        ) : (
+          <SvgIcon className="editable-datapack-empty-icon">
+            <AddPhotoAlternate />
+          </SvgIcon>
+        )}
+      </Badge>
+      <input
+        type="file"
+        accept=".png, .jpg, .jpeg"
+        ref={profileImageRef}
+        style={{ display: "none" }}
+        onChange={handleProfileImageChange}
+      />
     </Box>
   );
 };

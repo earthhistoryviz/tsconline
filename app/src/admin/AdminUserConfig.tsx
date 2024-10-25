@@ -12,9 +12,10 @@ import {
   DatapackIndex,
   BaseDatapackProps,
   assertAdminSharedUser,
-  isPrivateUserDatapack
+  isUserDatapack
 } from "@tsconline/shared";
 import { TSCButton } from "../components";
+import { isOwnedByUser } from "../state/non-action-util";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -162,7 +163,7 @@ type AdminDatapackDetailsProps = {
 };
 const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
   /**
    * delete selected datapacks then refetch the user's datapacks
@@ -173,10 +174,11 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        if (!node.data?.storedFileName || !isPrivateUserDatapack(node.data)) throw new Error("Invalid datapack");
-        return { uuid: node.data.uuid, datapack: node.data.storedFileName };
+        if (!node.data?.storedFileName || !isOwnedByUser(node.data, state.user?.uuid))
+          throw new Error("Invalid datapack");
+        return { uuid: isUserDatapack(node.data) ? node.data.uuid : "", datapack: node.data.storedFileName };
       });
-      const uuids = new Set<string>(datapacks.map((dp) => dp.uuid));
+      const uuids = new Set<string>(datapacks.map((dp) => dp.uuid).filter((uuid) => !!uuid));
       await actions.adminDeleteUserDatapacks(datapacks);
       actions.updateAdminUserDatapacks([...uuids]);
     } catch (e) {
