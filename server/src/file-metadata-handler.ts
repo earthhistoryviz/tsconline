@@ -103,7 +103,6 @@ export async function deleteDatapackFoundInMetadata(fileMetadataFilepath: string
   try {
     const metadata = await loadFileMetadata(fileMetadataFilepath);
     if (!metadata[filePath]) throw new Error(`File ${filePath} not found in metadata`);
-    await rm(filePath, { recursive: true, force: true });
     delete metadata[filePath];
     await writeFile(fileMetadataFilepath, JSON.stringify(metadata, null, 2));
   } finally {

@@ -22,7 +22,9 @@ XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
 yarn && yarn build
 if [ "$NODE_ENV" == "production" ]; then
-  yarn production
+  xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
+      yarn production || \
+      cat $XERR
 else
   yarn dev:config
   echo "-----------------------------------------------------------------------------------------------"

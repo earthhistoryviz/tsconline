@@ -26,6 +26,7 @@ import { readdir, rm, mkdir } from "fs/promises";
 import { checkRecaptchaToken, generateToken } from "../verify.js";
 import validator from "validator";
 import logger from "../error-logger.js";
+import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const googleRecaptchaBotThreshold = 0.5;
 
@@ -169,7 +170,7 @@ export const uploadProfilePicture = async function uploadProfilePicture(request:
       return;
     }
     const pictureName = `profile-${uuid}.${ext}`;
-    const userDirectory = path.join(assetconfigs.uploadDirectory, uuid, "profile");
+    const userDirectory = await getPrivateUserUUIDDirectory(uuid);
     const filePath = path.join(userDirectory, pictureName);
     await mkdir(userDirectory, { recursive: true });
     const existingFiles = await readdir(userDirectory, { withFileTypes: false });

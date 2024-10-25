@@ -9,9 +9,9 @@
   "colors": "assets/colors.json",
   "timescaleFilepath": "assets/default_timescale.xlsx",
   "fileMetadata": "assets/file-metadata.json",
+  "datapackImagesDirectory": "assets/images",
   "uploadDirectory": "assets/uploads",
-  "datapackImagesDirectory": "assets/datapack_images",
-  "adminConfigPath": "assets/admin-config.json",
-  "publicDirectory": "assets/uploads/public",
-  "publicUserDatapacksDirectory": "assets/uploads/public/datapacks"
+  "publicDirectory": "public",
+  "privateDatapacksDirectory": "assets/uploads/private",
+  "publicDatapacksDirectory": "assets/uploads/public"
 }

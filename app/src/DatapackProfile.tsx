@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { devSafeUrl, loadRecaptcha } from "./util";
+import { loadRecaptcha } from "./util";
 import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
@@ -13,7 +13,7 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
   BaseDatapackProps,
-  Datapack,
+  DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
@@ -27,39 +27,21 @@ import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes } from "./util/error-codes";
+import {
+  doesDatapackAlreadyExist,
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile
+} from "./state/non-action-util";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
     if (!id) return;
-    let datapack: Datapack | undefined;
-    switch (query.get("index")) {
-      case "server":
-        datapack = state.datapackCollection.serverDatapackIndex[id];
-        break;
-      case "public_user":
-        datapack = state.datapackCollection.publicUserDatapackIndex[id];
-        break;
-      case "private_user":
-        datapack = state.datapackCollection.privateUserDatapackIndex[id];
-        break;
-      case "workshop":
-        datapack = state.datapackCollection.workshopDatapackIndex[id];
-        break;
-      default:
-        datapack =
-          state.datapackCollection.serverDatapackIndex[id] ||
-          state.datapackCollection.publicUserDatapackIndex[id] ||
-          state.datapackCollection.privateUserDatapackIndex[id] ||
-          state.datapackCollection.workshopDatapackIndex[id] ||
-          null;
-        break;
-    }
+    const datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
     return datapack;
   };
   const datapack = fetchDatapack();
@@ -71,6 +53,7 @@ export const DatapackProfile = observer(() => {
   }, [datapack]);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
+  const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {
       id: "About",
@@ -115,7 +98,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <img className={styles.di} src={datapack.image || defaultImageUrl} />
+        <img className={styles.di} src={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
@@ -131,9 +114,26 @@ export const DatapackProfile = observer(() => {
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {
-      await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
-      if (state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title) {
-        navigate(`/datapack/${state.datapackProfilePage.editableDatapackMetadata.title}?index=${query.get("index")}`);
+      // types are really odd so I have decided to cast here, any other opinions are welcome
+      const tempDatapackConfig = {
+        ...state.datapackProfilePage.editableDatapackMetadata,
+        storedFileName: ""
+      } as DatapackConfigForChartRequest;
+      if (
+        state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title &&
+        doesDatapackAlreadyExist(tempDatapackConfig, state.datapacks)
+      ) {
+        actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+        return;
+      }
+      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
+        navigate(
+          getNavigationRouteForDatapackProfile(
+            state.datapackProfilePage.editableDatapackMetadata.title,
+            query.get("type")!
+          )
+        );
       }
     }
   };

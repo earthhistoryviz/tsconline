@@ -14,14 +14,17 @@ import {
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import {
-  addDatapackToServerDatapackIndex,
+  addDatapack,
   fetchServerDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
-  removeAllErrors
+  removeAllErrors,
+  removeDatapack
 } from "./general-actions";
 import { State } from "../state";
+import { getDatapackFromArray } from "../non-action-util";
+import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -219,7 +222,7 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
   }
 });
 
-export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => {
+export const adminDeleteServerDatapacks = action(async (datapacks: DatapackMetadata[] | EditableDatapackMetadata[]) => {
   const recaptchaToken = await getRecaptchaToken("adminDeleteServerDatapacks");
   if (!recaptchaToken) return;
   let deletedAllDatapacks = true;
@@ -254,7 +257,7 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
       } else {
         deletedNoDatapacks = false;
         runInAction(() => {
-          delete state.datapackCollection.serverDatapackIndex[datapack];
+          removeDatapack(datapack);
         });
       }
     } catch (error) {
@@ -273,50 +276,55 @@ export const adminDeleteServerDatapacks = action(async (datapacks: string[]) => 
   return !deletedNoDatapacks;
 });
 
-export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
-  const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
-  if (!recaptchaToken) return;
-  if (state.datapackCollection.serverDatapackIndex[metadata.title]) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
-  formData.append("file", file);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("references", JSON.stringify(references));
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("authoredBy", authoredBy);
-  if (notes) formData.append("notes", notes);
-  if (date) formData.append("date", date);
-  if (contact) formData.append("contact", contact);
-  try {
-    const response = await fetcher(`/admin/server/datapack`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      }
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      const pack = await fetchServerDatapack(metadata.title);
-      if (!pack) {
-        return;
-      }
-      addDatapackToServerDatapackIndex(title, pack);
-      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const adminUploadServerDatapack: UploadDatapackMethodType = action(
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
+    if (!recaptchaToken) return;
+    if (getDatapackFromArray(metadata, state.datapacks)) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(isPublic));
+    formData.append("type", metadata.type);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/admin/server/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const pack = await fetchServerDatapack(metadata.title);
+        if (!pack) {
+          return;
+        }
+        addDatapack(pack);
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
   }
-});
+);
 
 /**
  * Adds users to a workshop

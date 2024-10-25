@@ -37,7 +37,7 @@
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
     "setup": "yarn && yarn build",
     "start": "yarn workspace @tsconline/server start",
-    "dev": "concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
+    "dev": "yarn dev:config --overwrite && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
