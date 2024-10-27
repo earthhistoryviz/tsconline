@@ -77,7 +77,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   };
 
   const handleDiscardChanges = () => {
-
     setUserInfo(originalUserInfo); // Reset to original data
     setSelectedFile(null); // Clear any selected file
     setIsEditing(false);
@@ -93,8 +92,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setshowDiscardDialogAndCloseForm(false);
     setMoreUsersInfoFormOpen(false);
     //setCloseDialog(false);
-
-
   };
 
   // const handleConfirmDiscard = (closeTheForm: boolean) => {
@@ -105,7 +102,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   //   }
 
   // }
-
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -140,8 +136,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   };
   const handleShowDiscardDialog = () => {
     setShowDiscardDialog(true);
-
-  }
+  };
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -178,8 +173,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       setOpenConfirmDialog,
       setOriginalUserInfo,
       setSelectedFile,
-      setShowDiscardDialog,
-      setSelectedWorkshop,
+      setSelectedWorkshop
     },
     handlers: {
       handleEditToggle,
@@ -194,8 +188,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleCloseForm,
       handleRemoveWorkshop,
       handleDiscardChangesAndCloseTheForm,
-      handleShowDiscardDialog,
-
+      handleShowDiscardDialog
     }
   };
 };
