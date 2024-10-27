@@ -8,11 +8,12 @@ type UseUserStatsProps = {
 };
 
 const useEditUser = ({ data }: UseUserStatsProps) => {
-  const workshops = data.workshopsId;
+  const workshops = data.workshopIds;
   const [moreUsersInfoFormOpen, setMoreUsersInfoFormOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [showDiscardDialog, setShowDiscardDialog] = useState(false);
+  const [showDiscardDialogAndCloseForm, setshowDiscardDialogAndCloseForm] = useState(false);
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
     username: data.username,
     email: data.email,
@@ -24,7 +25,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [currentWorkshops, setCurrentWorkshops] = useState<number[] | undefined>(workshops);
   const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [closeDialog, setCloseDialog] = useState(false);
+  //const [closeDialog, setCloseDialog] = useState(false);
   // Function to remove a workshop
   const handleRemoveWorkshop = () => {
     if (currentWorkshops) {
@@ -46,7 +47,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     const { name } = e.target;
     if (!(name in userInfo)) {
       console.error("Requested input change while editing UserInfo for field " + name + "doesn't exist");
-      handleDiscardChanges(true);
+      handleDiscardChanges();
       return;
     }
     setUserInfo({
@@ -75,21 +76,36 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setIsEditing(false);
   };
 
-  const handleDiscardChanges = (discardConfirmed: boolean) => {
-    if (unsavedChanges && !discardConfirmed) {
-      setShowDiscardDialog(true);
-    } else {
-      setUserInfo(originalUserInfo); // Reset to original data
-      setSelectedFile(null); // Clear any selected file
-      setIsEditing(false);
-      setUnsavedChanges(false);
-      setShowDiscardDialog(false);
-      if (closeDialog) {
-        setMoreUsersInfoFormOpen(false);
-        setCloseDialog(false);
-      }
-    }
+  const handleDiscardChanges = () => {
+
+    setUserInfo(originalUserInfo); // Reset to original data
+    setSelectedFile(null); // Clear any selected file
+    setIsEditing(false);
+    setUnsavedChanges(false);
+    setShowDiscardDialog(false);
   };
+
+  const handleDiscardChangesAndCloseTheForm = () => {
+    setUserInfo(originalUserInfo); // Reset to original data
+    setSelectedFile(null); // Clear any selected file
+    setIsEditing(false);
+    setUnsavedChanges(false);
+    setshowDiscardDialogAndCloseForm(false);
+    setMoreUsersInfoFormOpen(false);
+    //setCloseDialog(false);
+
+
+  };
+
+  // const handleConfirmDiscard = (closeTheForm: boolean) => {
+  //   if (closeTheForm) {
+  //     handleDiscardChangesAndCloseTheForm();
+  //   } else {
+  //     handleDiscardChanges();
+  //   }
+
+  // }
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -110,17 +126,22 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
 
   const handleCloseDiscardDialog = () => {
     setShowDiscardDialog(false);
+    setshowDiscardDialogAndCloseForm(false);
   };
 
-  const handleCloseDialog = () => {
+  const handleCloseForm = () => {
     if (unsavedChanges) {
-      setCloseDialog(true);
-      setShowDiscardDialog(true);
+      //setCloseDialog(true);
+      //setShowDiscardDialog(true);
+      setshowDiscardDialogAndCloseForm(true);
     } else {
-      handleDiscardChanges(true);
-      setMoreUsersInfoFormOpen(false);
+      handleDiscardChangesAndCloseTheForm();
     }
   };
+  const handleShowDiscardDialog = () => {
+    setShowDiscardDialog(true);
+
+  }
 
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -146,7 +167,8 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       originalUserInfo,
       currentWorkshops,
       selectedWorkshop,
-      openConfirmDialog
+      openConfirmDialog,
+      showDiscardDialogAndCloseForm
     },
 
     setters: {
@@ -158,7 +180,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       setSelectedFile,
       setShowDiscardDialog,
       setSelectedWorkshop,
-      setCloseDialog
     },
     handlers: {
       handleEditToggle,
@@ -170,8 +191,11 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleOpenConfirmDialog,
       handleCloseConfirmDialog,
       handleCloseDiscardDialog,
-      handleCloseDialog,
-      handleRemoveWorkshop
+      handleCloseForm,
+      handleRemoveWorkshop,
+      handleDiscardChangesAndCloseTheForm,
+      handleShowDiscardDialog,
+
     }
   };
 };

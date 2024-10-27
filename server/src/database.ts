@@ -6,9 +6,10 @@ import {
   Verification,
   NewVerification,
   NewWorkshop,
-  newUsersWorkshops,
+  NewUsersWorkshops,
   Workshop,
-  UpdatedWorkshop
+  UpdatedWorkshop,
+  UsersWorkshops
 } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
@@ -244,31 +245,30 @@ export async function checkWorkshopHasUser(userId: number, workshopId: number) {
     .execute();
 }
 
-export async function findWorkshopInUsersWorkshops(workshopId: number) {
-  return await db
-    .selectFrom("usersWorkshops")
-    .selectAll()
-    .where((eb) => eb("workshopId", "=", workshopId))
-    .execute();
+export async function findUsersWorkshops(criteria: Partial<UsersWorkshops>) {
+  let query = db.selectFrom("usersWorkshops").selectAll();
+
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.userId) query = query.where("userId", "=", criteria.userId);
+
+  return await query.execute();
 }
 
-export async function findUserInUsersWorkshops(userId: number) {
-  return await db
-    .selectFrom("usersWorkshops")
-    .selectAll()
-    .where((eb) => eb("userId", "=", userId))
-    .execute();
+export async function deleteFromUsersWorkshops(criteria: Partial<UsersWorkshops>) {
+  let query = db.deleteFrom("usersWorkshops");
+
+  if (criteria.workshopId) {
+    query = query.where("workshopId", "=", criteria.workshopId);
+  }
+
+  if (criteria.userId) {
+    query = query.where("userId", "=", criteria.userId);
+  }
+
+  return await query.execute();
 }
 
-export async function deleteWorkshopInUsersWorkshops(workshopId: number) {
-  return await db.deleteFrom("usersWorkshops").where("workshopId", "=", workshopId).execute();
-}
-
-export async function deleteUserInUsersWorkshops(userId: number) {
-  return await db.deleteFrom("usersWorkshops").where("userId", "=", userId).execute();
-}
-
-export async function createUsersWorkshops(newUsersWorkshops: newUsersWorkshops) {
+export async function createUsersWorkshops(newUsersWorkshops: NewUsersWorkshops) {
   return await db.insertInto("usersWorkshops").values(newUsersWorkshops).execute();
 }
 
@@ -312,7 +312,7 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
 export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Workshop | null> {
   const workshop = (await findWorkshop({ workshopId }))[0];
   if (!workshop) {
-    await deleteWorkshopInUsersWorkshops(workshopId);
+    await deleteFromUsersWorkshops({ workshopId });
     return null;
   }
   const end = new Date(workshop.end);

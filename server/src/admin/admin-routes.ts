@@ -11,7 +11,7 @@ import {
   deleteWorkshop,
   checkWorkshopHasUser,
   createUsersWorkshops,
-  findUserInUsersWorkshops,
+  findUsersWorkshops,
   updateUser
 } from "../database.js";
 import { randomUUID } from "node:crypto";
@@ -62,19 +62,13 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const displayedUsers = await Promise.all(
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
-        const userWorkshops = await findUserInUsersWorkshops(userId);
-        const workshopsId: number[] = [];
+        const userWorkshops = await findUsersWorkshops({ userId });
+        const workshopIds: number[] = [];
         for (const userWorkshop of userWorkshops) {
           const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
           if (workshop && workshop.length === 1 && workshop[0]?.title) {
-            // const workshopEnrolled = {
-            //   workshopId: workshopId,
-            //   // workshopTitle: workshop[0].title,
-            //   // start: workshop[0].start,
-            //   // end: workshop[0].end
-            // };
-            workshopsId.push(workshopId);
+            workshopIds.push(workshopId);
           }
         }
 
@@ -86,7 +80,7 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopsId.length > 0 && { workshopsId })
+          ...(workshopIds.length > 0 && { workshopIds })
         };
       })
     );
@@ -181,7 +175,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -503,24 +497,23 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
+    let duplicatedEmails: string[] = [];
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        for (const eachUser of user) {
-          const { userId } = eachUser;
-          const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
-          if (existingRelationship.length == 0) {
-            await createUsersWorkshops({ userId: userId, workshopId: workshopId });
-            const newRelationship = await checkWorkshopHasUser(userId, workshopId);
-            if (newRelationship.length !== 1) {
-              reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
-              return;
-            }
-          } else {
-            reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: email });
-            return;
+
+        const { userId } = user[0]!;
+        const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
+        if (existingRelationship.length == 0) {
+          await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+          const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+          if (newRelationship.length !== 1) {
+            invalidEmails.push(email);
           }
+        } else {
+          duplicatedEmails.push(email);
         }
+
       } else {
         await createUser({
           email,
@@ -543,11 +536,19 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           await createUsersWorkshops({ userId: userId, workshopId: workshopId });
           const newRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (newRelationship.length !== 1) {
-            reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: email });
-            return;
+            invalidEmails.push(email);
           }
         }
       }
+    }
+    if (invalidEmails.length > 0) {
+      reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: invalidEmails });
+      return;
+    }
+    if (duplicatedEmails.length > 0) {
+      reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: duplicatedEmails });
+      return;
+
     }
     reply.send({ message: "Users added" });
   } catch (error) {

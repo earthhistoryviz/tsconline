@@ -57,7 +57,7 @@ export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
 
 export type UsersWorkshops = Selectable<UsersWorkshopsTable>;
-export type newUsersWorkshops = Insertable<UsersWorkshopsTable>;
+export type NewUsersWorkshops = Insertable<UsersWorkshopsTable>;
 
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;

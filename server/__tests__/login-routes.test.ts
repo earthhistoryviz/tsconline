@@ -1869,7 +1869,7 @@ describe("login-routes tests", () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
-      vi.mocked(databaseModule.findUserInUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
+      vi.mocked(databaseModule.findUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
       const response = await app.inject({
         method: "POST",
         url: "/session-check",
@@ -1887,7 +1887,7 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopsId: [workshop.workshopId],
+        workshopIds: [workshop.workshopId],
         uuid: testUser.uuid
       });
     });
