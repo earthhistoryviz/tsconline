@@ -104,7 +104,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -250,7 +250,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -1186,7 +1186,7 @@ describe("adminUploadServerDatapack", () => {
 describe("getUsers", () => {
   const findUser = vi.spyOn(database, "findUser");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const findUserInUsersWorkshops = vi.spyOn(database, "findUserInUsersWorkshops");
+  const findUsersWorkshops = vi.spyOn(database, "findUsersWorkshops");
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
@@ -1214,10 +1214,10 @@ describe("getUsers", () => {
     });
     expect(response.statusCode).toBe(200);
   });
-  it("should return user with workshopsId and one without", async () => {
+  it("should return user with workshopIds and one without", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
-    findUserInUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
+    findUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/users",
@@ -1231,7 +1231,7 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopsId: [testWorkshop.workshopId]
+          workshopIds: [testWorkshop.workshopId]
         },
         {
           ...testNonSharedAdminUser,

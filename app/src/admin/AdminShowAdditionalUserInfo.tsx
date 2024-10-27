@@ -33,16 +33,29 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
   const { editState, setters, handlers } = useEditUser({ data: props.data });
   const allWorkshops = state.admin.workshops;
   const formatDate = (dateString: string) => {
-    const options: Intl.DateTimeFormatOptions = {
+    const date = new Date(dateString);
+
+    const datePart = date.toLocaleDateString(undefined, {
       year: "numeric",
-      month: "short",
+      month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit"
-    };
-    return new Date(dateString).toLocaleString(undefined, options);
+    });
+
+    const timePart = date.toLocaleTimeString(undefined, {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+
+    return `${datePart} at ${timePart}`;
   };
-  const workshopsList = () => {
+
+  const WorkshopsList: React.FC = () => {
+    // Create a lookup map for allWorkshops
+    const workshopMap = Object.fromEntries(
+      allWorkshops.map(workshop => [workshop.workshopId, workshop])
+    );
+
     return (
       <TableContainer component={Paper} style={{ maxWidth: "100%" }}>
         <Table>
@@ -64,26 +77,29 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 </TableCell>
               </TableRow>
             ) : (
-              editState.currentWorkshops.map((value, index) => (
-                <TableRow key={index}>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>
-                    {allWorkshops.filter((workshop) => workshop.workshopId === value)[0].title}
-                  </TableCell>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>
-                    {formatDate(allWorkshops.filter((workshop) => workshop.workshopId === value)[0].start)}
-                  </TableCell>
-                  <TableCell style={{ whiteSpace: "nowrap" }}>
-                    {formatDate(allWorkshops.filter((workshop) => workshop.workshopId === value)[0].end)}
-                  </TableCell>
-                  <TableCell>
-                    <CustomTooltip title="Remove user from this workshop">
-                      <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
-                        <PersonRemove />
-                      </IconButton>
-                    </CustomTooltip>
-                  </TableCell>
-                </TableRow>
-              ))
+              editState.currentWorkshops.map((value, index) => {
+                const workshop = workshopMap[value]; // Access the workshop directly from the map
+                return (
+                  <TableRow key={index}>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>
+                      {workshop.title}
+                    </TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>
+                      {formatDate(workshop.start)}
+                    </TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>
+                      {formatDate(workshop.end)}
+                    </TableCell>
+                    <TableCell>
+                      <CustomTooltip title="Remove user from this workshop">
+                        <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+                          <PersonRemove />
+                        </IconButton>
+                      </CustomTooltip>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
@@ -100,17 +116,18 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
       </CustomTooltip>
       <Dialog
         open={editState.moreUsersInfoFormOpen}
-        onClose={(event, reason) => {
-          if (reason !== "backdropClick") {
-            handlers.handleCloseDialog();
-          }
-        }}
+        // onClose={(event, reason) => {
+        //   if (reason !== "backdropClick") {
+        //     handlers.handleCloseForm();
+        //   }
+        // }}
+        onClose={handlers.handleCloseForm}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         maxWidth="md"
         fullWidth={true}>
-        <IconButton onClick={handlers.handleCloseDialog} sx={{ position: "absolute", top: 8, right: 8 }}>
+        <IconButton onClick={handlers.handleCloseForm} sx={{ position: "absolute", top: 8, right: 8 }}>
           <Close />
         </IconButton>
 
@@ -190,8 +207,8 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
 
             {/* Admin Status */}
             <Box display="flex" alignItems="center">
-              <Typography variant="body1" mr={1}>
-                <strong>Admin:</strong>
+              <Typography variant="body1" mr={1} fontWeight={"bold"}>
+                Admin:
               </Typography>
               {editState.isEditing ? (
                 <Select value={editState.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
@@ -208,10 +225,9 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <TSCButton
                 variant="outlined"
                 buttonType="secondary"
-                onClick={() => {
-                  setters.setCloseDialog(false);
-                  handlers.handleDiscardChanges(false);
-                }}
+                onClick={
+                  handlers.handleShowDiscardDialog
+                }
                 sx={{ mr: 1 }}>
                 Discard
               </TSCButton>
@@ -230,7 +246,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
           </Box>
 
           {/* Workshop Enrolled Section */}
-          <Box>{workshopsList()}</Box>
+          <Box><WorkshopsList /></Box>
         </Box>
       </Dialog>
       <TSCYesNoPopup
@@ -241,9 +257,16 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         onClose={handlers.handleCloseConfirmDialog}
       />
       <TSCYesNoPopup
+        open={editState.showDiscardDialogAndCloseForm}
+        title="You have unsaved changes. Are you sure you want to discard them?"
+        onYes={handlers.handleDiscardChangesAndCloseTheForm}
+        onNo={handlers.handleCloseDiscardDialog}
+        onClose={handlers.handleCloseDiscardDialog}
+      />
+      <TSCYesNoPopup
         open={editState.showDiscardDialog}
         title="You have unsaved changes. Are you sure you want to discard them?"
-        onYes={() => handlers.handleDiscardChanges(true)}
+        onYes={handlers.handleDiscardChanges}
         onNo={handlers.handleCloseDiscardDialog}
         onClose={handlers.handleCloseDiscardDialog}
       />

@@ -21,16 +21,9 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
-  workshopsId?: number[];
+  workshopIds?: number[];
   uuid: string;
 };
-
-// export type WorkshopsEnrolled = {
-//   workshopId: number;
-//   // workshopTitle: string;
-//   // start: string;
-//   // end: string;
-// };
 
 export type DatapackMetadata = {
   description: string;
@@ -665,9 +658,9 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
-  if (o.workshopsId != null) {
-    for (const workshopId of o.workshopsId) {
-      if (typeof workshopId !== "number") throwError("User", "workshopsId", "number", workshopId);
+  if (o.workshopIds != null) {
+    for (const workshopId of o.workshopIds) {
+      if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
     }
   }
 }
@@ -1453,8 +1446,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }

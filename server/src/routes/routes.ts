@@ -12,7 +12,7 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
-import { findUser, findUserInUsersWorkshops } from "../database.js";
+import { findUser, findUsersWorkshops } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
@@ -193,7 +193,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
   const userId = (await findUser({ uuid }))[0]?.userId;
-  const userInWorkshops = userId ? (await findUserInUsersWorkshops(userId)).length : 0;
+  const userInWorkshops = userId ? (await findUsersWorkshops({ userId })).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
