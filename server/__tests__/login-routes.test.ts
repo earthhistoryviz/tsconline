@@ -45,10 +45,8 @@ vi.mock("../src/database", async (importOriginal) => {
     findWorkshop: vi.fn().mockResolvedValue([]),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
     getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null),
-    deleteUserInUsersWorkshops: vi.fn().mockResolvedValue({}),
-    deleteWorkshopInUsersWorkshops: vi.fn().mockResolvedValue({}),
-    findWorkshopInUsersWorkshops: vi.fn().mockResolvedValue([]),
-    findUserInUsersWorkshops: vi.fn().mockResolvedValue([]),
+    deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findUsersWorkshops: vi.fn().mockResolvedValue([]),
     handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
     checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
     createUsersWorkshops: vi.fn().mockResolvedValue({})

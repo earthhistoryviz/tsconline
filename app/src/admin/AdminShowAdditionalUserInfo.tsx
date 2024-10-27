@@ -38,13 +38,13 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
     const datePart = date.toLocaleDateString(undefined, {
       year: "numeric",
       month: "long",
-      day: "numeric",
+      day: "numeric"
     });
 
     const timePart = date.toLocaleTimeString(undefined, {
       hour: "numeric",
       minute: "2-digit",
-      hour12: true,
+      hour12: true
     });
 
     return `${datePart} at ${timePart}`;
@@ -52,9 +52,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
 
   const WorkshopsList: React.FC = () => {
     // Create a lookup map for allWorkshops
-    const workshopMap = Object.fromEntries(
-      allWorkshops.map(workshop => [workshop.workshopId, workshop])
-    );
+    const workshopMap = Object.fromEntries(allWorkshops.map((workshop) => [workshop.workshopId, workshop]));
 
     return (
       <TableContainer component={Paper} style={{ maxWidth: "100%" }}>
@@ -81,18 +79,15 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 const workshop = workshopMap[value]; // Access the workshop directly from the map
                 return (
                   <TableRow key={index}>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>
-                      {workshop.title}
-                    </TableCell>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>
-                      {formatDate(workshop.start)}
-                    </TableCell>
-                    <TableCell style={{ whiteSpace: "nowrap" }}>
-                      {formatDate(workshop.end)}
-                    </TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{workshop.title}</TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(workshop.start)}</TableCell>
+                    <TableCell style={{ whiteSpace: "nowrap" }}>{formatDate(workshop.end)}</TableCell>
                     <TableCell>
                       <CustomTooltip title="Remove user from this workshop">
-                        <IconButton onClick={() => handlers.handleOpenConfirmDialog(value)} edge="end" aria-label="leave">
+                        <IconButton
+                          onClick={() => handlers.handleOpenConfirmDialog(value)}
+                          edge="end"
+                          aria-label="leave">
                           <PersonRemove />
                         </IconButton>
                       </CustomTooltip>
@@ -116,11 +111,6 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
       </CustomTooltip>
       <Dialog
         open={editState.moreUsersInfoFormOpen}
-        // onClose={(event, reason) => {
-        //   if (reason !== "backdropClick") {
-        //     handlers.handleCloseForm();
-        //   }
-        // }}
         onClose={handlers.handleCloseForm}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
@@ -225,9 +215,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <TSCButton
                 variant="outlined"
                 buttonType="secondary"
-                onClick={
-                  handlers.handleShowDiscardDialog
-                }
+                onClick={handlers.handleShowDiscardDialog}
                 sx={{ mr: 1 }}>
                 Discard
               </TSCButton>
@@ -246,7 +234,9 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
           </Box>
 
           {/* Workshop Enrolled Section */}
-          <Box><WorkshopsList /></Box>
+          <Box>
+            <WorkshopsList />
+          </Box>
         </Box>
       </Dialog>
       <TSCYesNoPopup

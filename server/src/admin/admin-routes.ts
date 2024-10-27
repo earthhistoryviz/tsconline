@@ -175,7 +175,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => { });
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -497,11 +497,10 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
-    let duplicatedEmails: string[] = [];
+    const duplicatedEmails: string[] = [];
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-
         const { userId } = user[0]!;
         const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
         if (existingRelationship.length == 0) {
@@ -509,11 +508,12 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           const newRelationship = await checkWorkshopHasUser(userId, workshopId);
           if (newRelationship.length !== 1) {
             invalidEmails.push(email);
+            continue;
           }
         } else {
           duplicatedEmails.push(email);
+          continue;
         }
-
       } else {
         await createUser({
           email,
@@ -531,13 +531,12 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           reply.status(500).send({ error: "Error creating user", invalidEmails: email });
           return;
         }
-        for (const eachUser of newUser) {
-          const { userId } = eachUser;
-          await createUsersWorkshops({ userId: userId, workshopId: workshopId });
-          const newRelationship = await checkWorkshopHasUser(userId, workshopId);
-          if (newRelationship.length !== 1) {
-            invalidEmails.push(email);
-          }
+
+        const { userId } = newUser[0]!;
+        await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+        const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+        if (newRelationship.length !== 1) {
+          invalidEmails.push(email);
         }
       }
     }
@@ -548,7 +547,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     if (duplicatedEmails.length > 0) {
       reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: duplicatedEmails });
       return;
-
     }
     reply.send({ message: "Users added" });
   } catch (error) {
