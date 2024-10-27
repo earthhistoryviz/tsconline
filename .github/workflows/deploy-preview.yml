@@ -208,7 +208,7 @@ jobs:
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
-            MAX_WAIT=180
+            MAX_WAIT=480
             INTERVAL=5
             ELAPSED=0
 
