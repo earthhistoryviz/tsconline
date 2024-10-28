@@ -310,7 +310,7 @@ jobs:
       - name: Transfer files
         if: github.event.pull_request.merged == false
         run: |
-          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
+          rsync -avz --exclude --delete '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
 
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
