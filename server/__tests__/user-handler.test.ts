@@ -81,7 +81,8 @@ vi.mock("../src/user/fetch-user-files", () => {
   return {
     getAllUserDatapackDirectories: vi.fn(async () => ["test1/test"]),
     getDirectories: vi.fn(async () => ["test"]),
-    fetchUserDatapackDirectory: vi.fn(async () => "test/test")
+    fetchUserDatapackDirectory: vi.fn(async () => "test/test"),
+    getPrivateUserUUIDDirectory: vi.fn(async () => "test")
   };
 });
 const readFileMockReturn = { title: "test" };
@@ -289,5 +290,60 @@ describe("doesDatapackFolderExistInAllUUIDDirectories test", () => {
     await expect(doesDatapackFolderExistInAllUUIDDirectories("test", "test-datapack-one")).rejects.toThrow(
       "getDirectories error"
     );
+  });
+});
+
+describe("fetchAllPrivateOfficialDatapacks test", () => {
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const loggerError = vi.spyOn(logger.default, "error");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return no datapacks if no datapacks are found", async () => {
+    getDirectories.mockResolvedValueOnce([]);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(loggerError).not.toHaveBeenCalled();
+  });
+  it("should return no datapacks if the datapack is invalid", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    readFile.mockRejectedValueOnce(new Error("readFile error"));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return no datapacks and log if a dupe datapack is found", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test"]);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([readFileMockReturn]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return no datapacks and log if verifyFilepath fails", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    verifyFilepath.mockResolvedValueOnce(false);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return one datapack successfully", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([readFileMockReturn]);
+  });
+  it("should return multiple datapacks successfully", async () => {
+    const array = [{ title: "test1" }, { title: "test2" }, { title: "test3" }, { title: "test4" }];
+    getDirectories.mockResolvedValueOnce(array.map((datapack) => datapack.title));
+    for (const datapack of array) {
+      readFile.mockResolvedValueOnce(JSON.stringify(datapack));
+    }
+    expect(await fetchAllUsersDatapacks("test")).toEqual(array);
+  });
+  it("should return one datapack if other datapacks fail", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test2"]);
+    readFile
+      .mockResolvedValueOnce(JSON.stringify({ title: "test" }))
+      .mockRejectedValueOnce(new Error("readFile error"));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([{ title: "test" }]);
+    expect(loggerError).toHaveBeenCalledOnce();
   });
 });

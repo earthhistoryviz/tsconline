@@ -1116,7 +1116,7 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
       assertWorkshopDatapack(o);
       break;
     default:
-      throwError("Datapack", "type", "private_user | public_user | server | workshop", o.type);
+      throwError("Datapack", "type", "user | official | workshop", o.type);
   }
 }
 export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
