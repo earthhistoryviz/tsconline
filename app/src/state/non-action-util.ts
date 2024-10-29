@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, isServerDatapack, isUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 
 export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
@@ -18,11 +18,11 @@ export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
 export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid?: string) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
-export function getPublicServerDatapacks(datapacks: Datapack[]) {
-  return datapacks.filter((d) => isServerDatapack(d) && d.isPublic);
+export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic);
 }
-export function getPrivateServerDatapacks(datapacks: Datapack[]) {
-  return datapacks.filter((d) => isServerDatapack(d) && !d.isPublic);
+export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
 export function isOwnedByUser(datapack: Datapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;

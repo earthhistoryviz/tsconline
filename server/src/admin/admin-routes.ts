@@ -40,21 +40,21 @@ import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,
-  deleteServerDatapack,
+  deleteOfficialDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
-  fetchAllPrivateServerDatapacks,
+  fetchAllPrivateOfficialDatapacks,
   fetchAllUsersDatapacks
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 
-export const getPrivateServerDatapacks = async function getPrivateServerDatapacks(
+export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
-    const datapacks = await fetchAllPrivateServerDatapacks();
+    const datapacks = await fetchAllPrivateOfficialDatapacks();
     reply.send(datapacks);
   } catch (e) {
     console.error(e);
@@ -257,7 +257,7 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   reply.send({ message: "Datapack deleted" });
 };
 
-export const adminUploadServerDatapack = async function adminUploadServerDatapack(
+export const adminUploadOfficialDatapack = async function adminUploadOfficialDatapack(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -268,7 +268,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   let storedFileName: string | undefined;
   let tempProfilePictureFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  const serverDir = await getPrivateUserUUIDDirectory("server");
+  const serverDir = await getPrivateUserUUIDDirectory("official");
   const cleanupTempFiles = async () => {
     if (filepath) {
       await rm(filepath, { force: true }).catch((e) => {
@@ -281,7 +281,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
       });
     }
     if (fields.title) {
-      await deleteServerDatapack(fields.title).catch((e) => {
+      await deleteOfficialDatapack(fields.title).catch((e) => {
         console.error(e);
       });
     }
@@ -339,7 +339,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
-  fields.uuid = "server";
+  fields.uuid = "official";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
@@ -349,7 +349,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
     return;
   }
   try {
-    if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
+    if (await doesDatapackFolderExistInAllUUIDDirectories("official", datapackMetadata.title)) {
       await cleanupTempFiles();
       reply.status(409).send({ error: "Datapack already exists" });
       return;
@@ -361,7 +361,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
   }
   try {
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
-      "server",
+      "official",
       filepath,
       datapackMetadata,
       false,
@@ -384,7 +384,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
  * @param reply
  * @returns
  */
-export const adminDeleteServerDatapack = async function adminDeleteServerDatapack(
+export const adminDeleteOfficialDatapack = async function adminDeleteOfficialDatapack(
   request: FastifyRequest<{ Body: { datapack: string } }>,
   reply: FastifyReply
 ) {
@@ -394,7 +394,7 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     return;
   }
   try {
-    await deleteServerDatapack(datapack);
+    await deleteOfficialDatapack(datapack);
   } catch (e) {
     reply.status(500).send({ error: "Error deleting server datapack" });
     return;

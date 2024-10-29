@@ -290,25 +290,4 @@ describe("doesDatapackFolderExistInAllUUIDDirectories test", () => {
       "getDirectories error"
     );
   });
-})
-
-// describe("fetchAllPrivateServerDatapacks test", () => {
-//   const fetchAllUsersDatapacks = vi.spyOn(fetchAllUsersDatapacks);
-//   const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
-//   beforeEach(() => {
-//     vi.clearAllMocks();
-//   });
-//   it("should return an array of all private server datapacks", async () => {
-//     getAllUserDatapackDirectories.mockResolvedValueOnce(["test", "test2"]);
-//     fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" }, { title: "test2" }]);
-//     expect(await fetchAllUsersDatapacks("private")).toEqual([{ title: "test" }, { title: "test2" }]);
-//   });
-//   it("should throw an error if getAllUserDatapackDirectories fails", async () => {
-//     getAllUserDatapackDirectories.mockRejectedValueOnce(new Error("getAllUserDatapackDirectories error"));
-//     await expect(fetchAllUsersDatapacks("private")).rejects.toThrow("getAllUserDatapackDirectories error");
-//   });
-//   it("should return an empty array if there are no private server datapacks", async () => {
-//     getAllUserDatapackDirectories.mockResolvedValueOnce([]);
-//     expect(await fetchAllUsersDatapacks("private")).toEqual([]);
-//   });
-// });
+});
