@@ -5,8 +5,8 @@ import {
   adminDeleteUserDatapack,
   adminDeleteUser,
   getUsers,
-  adminUploadServerDatapack,
-  adminDeleteServerDatapack,
+  adminUploadOfficialDatapack,
+  adminDeleteOfficialDatapack,
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
   adminCreateWorkshop,
@@ -17,7 +17,7 @@ import {
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
-import { fetchAllPrivateServerDatapacks } from "../user/user-handler.js";
+import { fetchAllPrivateOfficialDatapacks } from "../user/user-handler.js";
 
 async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -96,7 +96,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["uuid", "datapack"]
   };
-  const adminDeleteServerDatapackBody = {
+  const adminDeleteOfficialDatapackBody = {
     type: "object",
     properties: {
       datapack: { type: "string" }
@@ -144,7 +144,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
-  fastify.get("/server/datapacks/private", { config: { rateLimit: looseRateLimit } }, fetchAllPrivateServerDatapacks);
+  fastify.get("/server/datapacks/private", { config: { rateLimit: looseRateLimit } }, fetchAllPrivateOfficialDatapacks);
   fastify.post(
     "/user",
     {
@@ -181,18 +181,18 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteUserDatapack
   );
-  fastify.post("/server/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadServerDatapack);
+  fastify.post("/server/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadOfficialDatapack);
   fastify.delete(
     "/server/datapack",
     {
       schema: {
-        body: adminDeleteServerDatapackBody
+        body: adminDeleteOfficialDatapackBody
       },
       config: {
         rateLimit: moderateRateLimit
       }
     },
-    adminDeleteServerDatapack
+    adminDeleteOfficialDatapack
   );
   fastify.post(
     "/user/datapacks",

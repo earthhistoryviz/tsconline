@@ -13,8 +13,8 @@ import {
   Datapack,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  isServerDatapack,
-  assertServerDatapack,
+  isOfficialDatapack,
+  assertOfficialDatapack,
   assertDatapack,
   assertDatapackArray
 } from "@tsconline/shared";
@@ -59,14 +59,14 @@ import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
 
-export const fetchServerDatapack = action("fetchServerDatapack", async (datapack: string) => {
+export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
     const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET"
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapack(data);
+      assertOfficialDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -794,7 +794,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isOfficialDatapack(datapack) ? "official" : "",
       isPublic: datapack.isPublic
     })
   });

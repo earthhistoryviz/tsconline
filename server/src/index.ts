@@ -176,7 +176,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
-server.get("/server/datapack/:name", routes.fetchServerDatapack);
+server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
 
 server.get("/public/datapacks", routes.fetchPublicDatapackChunk);
 

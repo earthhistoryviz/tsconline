@@ -24,9 +24,9 @@ import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
   getCurrentUserDatapacks,
-  getPrivateServerDatapacks,
+  getPrivateOfficialDatapacks,
   getPublicDatapacksWithoutCurrentUser,
-  getPublicServerDatapacks,
+  getPublicOfficialDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -38,7 +38,7 @@ export const Datapacks = observer(function Datapacks() {
   useEffect(() => {
     if (state.isLoggedIn && state.user.isAdmin) {
       loadRecaptcha().then(async () => {
-        await actions.adminFetchPrivateServerDatapacks();
+        await actions.adminFetchPrivateOfficialDatapacks();
       });
     }
     return () => {
@@ -88,13 +88,13 @@ export const Datapacks = observer(function Datapacks() {
       </div>
       <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
       <DatapackGroupDisplay
-        datapacks={getPublicServerDatapacks(state.datapacks)}
+        datapacks={getPublicOfficialDatapacks(state.datapacks)}
         header={t("settings.datapacks.title.public-official")}
         HeaderIcon={Verified}
       />
       {state.user.isAdmin && (
         <DatapackGroupDisplay
-          datapacks={getPrivateServerDatapacks(state.datapacks)}
+          datapacks={getPrivateOfficialDatapacks(state.datapacks)}
           header={t("settings.datapacks.title.private-official")}
           HeaderIcon={Security}
         />

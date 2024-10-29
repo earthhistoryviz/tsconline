@@ -65,8 +65,8 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
   return datapacksArray;
 }
 
-export async function fetchAllPrivateServerDatapacks(): Promise<Datapack[]> {
-  const directory = await getPrivateUserUUIDDirectory("server");
+export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
+  const directory = await getPrivateUserUUIDDirectory("official");
   const datapacksArray: Datapack[] = [];
   const datapacks = await getDirectories(directory);
   for (const datapack of datapacks) {
@@ -214,8 +214,8 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
  * @param datapack the title of the datapack
  * TODO: write tests
  */
-export async function deleteServerDatapack(datapack: string): Promise<void> {
-  const datapackPath = await fetchUserDatapackDirectory("server", datapack);
+export async function deleteOfficialDatapack(datapack: string): Promise<void> {
+  const datapackPath = await fetchUserDatapackDirectory("official", datapack);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
