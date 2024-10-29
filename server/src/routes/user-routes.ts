@@ -271,7 +271,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const parts = request.parts();
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
-  const userDir = await getPrivateUserUUIDDirectory(uuid);
   let filepath: string | undefined;
   let originalFilename: string | undefined;
   let storedFilename: string | undefined;
@@ -283,6 +282,20 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
       await deleteUserDatapack(uuid, fields.title);
     }
   };
+  let userDir: string = "";
+  let user;
+  try {
+    user = await findUser({ uuid });
+    if (user.length == 0 || !user) {
+      reply.status(401).send({ error: "Could not find user." });
+      return;
+    }
+    userDir = await getPrivateUserUUIDDirectory(uuid);
+  } catch (e) {
+    reply.status(401).send({ error: "Could not find private user directory or user with error " + e });
+    return;
+  }
+  const isProOrAdmin = user[0] && (user[0].accountType === "pro" || user[0].isAdmin);
   try {
     for await (const part of parts) {
       if (part.type === "file") {
@@ -314,6 +327,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             await cleanupTempFiles();
             return;
           }
+        }
+        if (uploadedFile && uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
+          if (filepath) {
+            await rm(filepath, { force: true });
+          }
+          reply.status(400).send({ error: `Regular users cannot upload datapacks over 3000 characters.` });
+          return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
