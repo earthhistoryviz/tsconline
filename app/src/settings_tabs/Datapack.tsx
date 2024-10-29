@@ -8,7 +8,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
-import { VpnLock } from "@mui/icons-material";
+import { People, School, Security, Verified } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -19,7 +19,7 @@ import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompact
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
-import { Work, Storage, Lock, Public } from "@mui/icons-material";
+import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
@@ -86,16 +86,17 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
+      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
       <DatapackGroupDisplay
         datapacks={getPublicServerDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.public-server")}
-        HeaderIcon={Storage}
+        header={t("settings.datapacks.title.public-official")}
+        HeaderIcon={Verified}
       />
       {state.user.isAdmin && (
         <DatapackGroupDisplay
           datapacks={getPrivateServerDatapacks(state.datapacks)}
-          header={t("settings.datapacks.title.private-server")}
-          HeaderIcon={VpnLock}
+          header={t("settings.datapacks.title.private-official")}
+          HeaderIcon={Security}
         />
       )}
       {state.isLoggedIn && state.user && (
@@ -107,10 +108,9 @@ export const Datapacks = observer(function Datapacks() {
       )}
       <DatapackGroupDisplay
         datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
-        header={t("settings.datapacks.title.public-user")}
-        HeaderIcon={Public}
+        header={t("settings.datapacks.title.contributed")}
+        HeaderIcon={People}
       />
-      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={Work} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
