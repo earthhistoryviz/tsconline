@@ -36,15 +36,13 @@ export const Datapacks = observer(function Datapacks() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (state.isLoggedIn) {
+    if (state.isLoggedIn && state.user.isAdmin) {
       loadRecaptcha().then(async () => {
-        if (state.user.isAdmin) {
-          await actions.adminFetchPrivateServerDatapacks();
-        }
+        await actions.adminFetchPrivateServerDatapacks();
       });
     }
     return () => {
-      if (state.isLoggedIn) {
+      if (state.isLoggedIn && state.user.isAdmin) {
         removeRecaptcha();
       }
     };
