@@ -50,6 +50,7 @@ vi.mock("../src/user/fetch-user-files", async () => {
 
 vi.mock("../src/user/user-handler", async () => {
   return {
+    fetchAllPrivateServerDatapacks: vi.fn().mockResolvedValue([]),
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
     getUploadedDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),

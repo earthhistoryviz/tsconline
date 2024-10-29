@@ -1,5 +1,6 @@
 import { describe, it, vi, expect, beforeEach } from "vitest";
 import {
+  doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   renameUserDatapack,
@@ -264,3 +265,50 @@ describe("writeUserDatapack test", () => {
     expect(writeFile).toHaveBeenCalledWith("test/test/test", JSON.stringify(datapack, null, 2));
   });
 });
+
+describe("doesDatapackFolderExistInAllUUIDDirectories test", () => {
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return true if the datapack exists in all UUID directories", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test", "test2"]);
+    getDirectories.mockResolvedValueOnce(["test-datapack-one", "test-datapack-two"]);
+    expect(await doesDatapackFolderExistInAllUUIDDirectories("test", "test-datapack-one")).toBe(true);
+    expect(getAllUserDatapackDirectories).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+  });
+  it("should return false if the datapack doesn't exist in all UUID directories", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test2"]);
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test"]);
+    expect(await doesDatapackFolderExistInAllUUIDDirectories("test", "invalid-datapack")).toBe(false);
+  });
+  it("should throw error if getDirectories fails", async () => {
+    getDirectories.mockRejectedValueOnce(new Error("getDirectories error"));
+    await expect(doesDatapackFolderExistInAllUUIDDirectories("test", "test-datapack-one")).rejects.toThrow(
+      "getDirectories error"
+    );
+  });
+})
+
+// describe("fetchAllPrivateServerDatapacks test", () => {
+//   const fetchAllUsersDatapacks = vi.spyOn(fetchAllUsersDatapacks);
+//   const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
+//   beforeEach(() => {
+//     vi.clearAllMocks();
+//   });
+//   it("should return an array of all private server datapacks", async () => {
+//     getAllUserDatapackDirectories.mockResolvedValueOnce(["test", "test2"]);
+//     fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" }, { title: "test2" }]);
+//     expect(await fetchAllUsersDatapacks("private")).toEqual([{ title: "test" }, { title: "test2" }]);
+//   });
+//   it("should throw an error if getAllUserDatapackDirectories fails", async () => {
+//     getAllUserDatapackDirectories.mockRejectedValueOnce(new Error("getAllUserDatapackDirectories error"));
+//     await expect(fetchAllUsersDatapacks("private")).rejects.toThrow("getAllUserDatapackDirectories error");
+//   });
+//   it("should return an empty array if there are no private server datapacks", async () => {
+//     getAllUserDatapackDirectories.mockResolvedValueOnce([]);
+//     expect(await fetchAllUsersDatapacks("private")).toEqual([]);
+//   });
+// });
