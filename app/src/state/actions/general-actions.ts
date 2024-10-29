@@ -54,7 +54,7 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
+import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
@@ -934,7 +934,6 @@ export const sessionCheck = action("sessionCheck", async () => {
 });
 
 export const setDefaultUserState = action(() => {
-  removeUserDatapacks(state.user.uuid);
   state.user = {
     username: "",
     email: "",
@@ -947,9 +946,10 @@ export const setDefaultUserState = action(() => {
       language: "en"
     }
   };
+  removeUnauthorizedDatapacks();
 });
-export const removeUserDatapacks = action((uuid: string) => {
-  state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
+export const removeUnauthorizedDatapacks = action(() => {
+  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
