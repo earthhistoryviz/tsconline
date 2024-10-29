@@ -943,7 +943,7 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "en"
+      language: "English"
     }
   };
   removeUnauthorizedDatapacks();

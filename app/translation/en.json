@@ -216,9 +216,9 @@
                 "see-info-guidance": "Click a datapack to see more information!",
                 "add-datapack-guidance": "Add a datapack by clicking the checkbox",
                 "title": {
-                    "private-server": "Private Server Datapacks",
-                    "public-server": "Public Server Datapacks",
-                    "public-user": "Public User Datapacks",
+                    "private-official": "Private Official Datapacks",
+                    "public-official": "Official Datapacks",
+                    "contributed": "User Contributed Datapacks",
                     "workshop": "Workshop Datapacks",
                     "your": "Your Datapacks"
                 },
