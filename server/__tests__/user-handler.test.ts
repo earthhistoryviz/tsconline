@@ -3,6 +3,7 @@ import {
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
+  getUploadedDatapackFilepath,
   renameUserDatapack,
   writeUserDatapack
 } from "../src/user/user-handler";
@@ -345,5 +346,33 @@ describe("fetchAllPrivateOfficialDatapacks test", () => {
       .mockRejectedValueOnce(new Error("readFile error"));
     expect(await fetchAllUsersDatapacks("test")).toEqual([{ title: "test" }]);
     expect(loggerError).toHaveBeenCalledOnce();
+  });
+});
+
+describe("getUploadedDatapackFilepath test", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const readFileMockReturn = { originalFileName: "test" };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw an error if verifyFilepath returns false", async () => {
+    verifyFilepath.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("Invalid filepath");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+    expect(verifyFilepath).toHaveBeenCalledTimes(2)
+  });
+  it("should throw an error if verifyFilepath throws an error", async () => {
+    verifyFilepath.mockRejectedValueOnce(new Error("verifyFilepath error"));
+    await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("verifyFilepath error");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2)
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+  });
+  it("should return the filepath", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await getUploadedDatapackFilepath("test", "test")).toBe("test/test/test");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2)
   });
 });
