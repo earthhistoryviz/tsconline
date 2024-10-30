@@ -1,6 +1,7 @@
-import { describe, it, vi, expect, beforeEach } from "vitest";
+import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
 import {
   doesDatapackFolderExistInAllUUIDDirectories,
+  editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   getUploadedDatapackFilepath,
@@ -362,17 +363,48 @@ describe("getUploadedDatapackFilepath test", () => {
     readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
     await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("Invalid filepath");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
-    expect(verifyFilepath).toHaveBeenCalledTimes(2)
+    expect(verifyFilepath).toHaveBeenCalledTimes(2);
   });
   it("should throw an error if verifyFilepath throws an error", async () => {
     verifyFilepath.mockRejectedValueOnce(new Error("verifyFilepath error"));
     await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("verifyFilepath error");
-    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2)
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
     expect(verifyFilepath).toHaveBeenCalledOnce();
   });
   it("should return the filepath", async () => {
     readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
     expect(await getUploadedDatapackFilepath("test", "test")).toBe("test/test/test");
-    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2)
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("editDatapack tests", async () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const rename = vi.spyOn(fsPromises, "rename");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  beforeEach(() => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("test");
+    verifyFilepath.mockResolvedValueOnce(true);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    vi.clearAllMocks();
+  });
+  afterEach(() => {
+    expect(fetchUserDatapackDirectory).toHaveNthReturnedWith(1, "test");
+    expect(verifyFilepath).toHaveNthReturnedWith(1, true);
+    expect(readFile).toHaveNthReturnedWith(1, JSON.stringify(readFileMockReturn));
+  });
+  it("should call renameUserDatapack if the newDatapack has a title", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { title: "new-title" };
+    await editDatapack("test", "old-title", newDatapack);
+    expect(rename).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledOnce();
+  });
+  it("should call writeUserDatapack if the newDatapack doesn't have a title", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { description: "new-title" };
+    await editDatapack("test", "old-title", newDatapack);
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(rename).not.toHaveBeenCalled();
   });
 });
