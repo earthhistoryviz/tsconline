@@ -387,6 +387,7 @@ describe("editDatapack tests", async () => {
   const readFile = vi.spyOn(fsPromises, "readFile");
   const rename = vi.spyOn(fsPromises, "rename");
   const writeFile = vi.spyOn(fsPromises, "writeFile");
+  // TODO: make these into method mocks where it mocks and expects for other methods that use fetchUserDatapackFilepath or fetchUserDatapack
   beforeEach(() => {
     fetchUserDatapackDirectory.mockResolvedValueOnce("test");
     verifyFilepath.mockResolvedValueOnce(true);
