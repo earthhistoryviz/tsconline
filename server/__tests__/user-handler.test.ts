@@ -1,5 +1,6 @@
-import { describe, it, vi, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, vi, expect, beforeEach, afterEach, test } from "vitest";
 import {
+  checkFileTypeIsDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
   fetchAllUsersDatapacks,
@@ -15,6 +16,7 @@ import * as logger from "../src/error-logger";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import path from "path";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
+import { MultipartFile } from "@fastify/multipart";
 
 vi.mock("../src/file-metadata-handler", () => {
   return {
@@ -408,3 +410,34 @@ describe("editDatapack tests", async () => {
     expect(rename).not.toHaveBeenCalled();
   });
 });
+
+describe("checkFileTypeIsDatapack test", () => {
+  const multipartFile = {
+    mimetype: "application/zip",
+    filename: "test.dpk"
+  } as MultipartFile;
+  beforeEach(() => {
+    vi.clearAllMocks();
+  })
+  it("should return true if the file is a datapack", () => {
+    expect(checkFileTypeIsDatapack(multipartFile)).toBe(true);
+  });
+  test.each([
+    ["application/zip", "test.dpk"],
+    ["application/octet-stream", "test.map"],
+    ["text/plain", "test.mdpk"],
+    ["text/plain", "test.dpk"],
+    ["text/plain", "test.txt"]
+  ])("should return true if the file is a datapack", async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(true);
+  });
+test.each([
+  ["application/json", "test.json"],
+  ["application/zip", "test.zip"],
+  ["text/plain", "test"],
+  ["application/octet-stream", "test"]
+])(`should return false if the file is not a datapack for %s and %s`, async (mimetype, filename) => {
+  expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(false);
+});
+})
+
