@@ -416,7 +416,7 @@ describe("editDatapack tests", async () => {
 describe("checkFileTypeIsDatapack test", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  })
+  });
   test.each([
     ["application/zip", "test.dpk"],
     ["application/octet-stream", "test.map"],
@@ -426,23 +426,23 @@ describe("checkFileTypeIsDatapack test", () => {
   ])("should return true if the file is a datapack", async (mimetype, filename) => {
     expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(true);
   });
-test.each([
-  ["application/json", "test.json"],
-  ["application/zip", "test.zip"],
-  ["text/plain", "test"],
-  ["application/octet-stream", "test"]
-])(`should return false if the file is not a datapack for %s and %s`, async (mimetype, filename) => {
-  expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(false);
+  test.each([
+    ["application/json", "test.json"],
+    ["application/zip", "test.zip"],
+    ["text/plain", "test"],
+    ["application/octet-stream", "test"]
+  ])(`should return false if the file is not a datapack for %s and %s`, async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(false);
+  });
 });
-})
 describe("checkFileTypeIsDatapackImage test", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-  })
+  });
   test.each([
     ["image/png", "test.png"],
     ["image/jpeg", "test.jpg"],
-    ["image/jpg", "test.jpeg"],
+    ["image/jpg", "test.jpeg"]
   ])("should return true if the file is a datapack image for %s and %s", async (mimetype, filename) => {
     expect(checkFileTypeIsDatapackImage({ mimetype, filename } as MultipartFile)).toBe(true);
   });
@@ -456,5 +456,4 @@ describe("checkFileTypeIsDatapackImage test", () => {
   ])(`should return false if the file is not a datapack image for %s and %s`, async (mimetype, filename) => {
     expect(checkFileTypeIsDatapackImage({ mimetype, filename } as MultipartFile)).toBe(false);
   });
-})
-
+});
