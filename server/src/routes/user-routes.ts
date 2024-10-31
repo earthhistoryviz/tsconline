@@ -22,6 +22,7 @@ import {
 } from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { User } from "../types.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
@@ -272,8 +273,8 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   const fields: Record<string, string> = {};
   let uploadedFile: MultipartFile | undefined;
   let filepath: string | undefined;
-  let originalFilename: string | undefined;
-  let storedFilename: string | undefined;
+  let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
   let tempProfilePictureFilepath: string | undefined;
   const cleanupTempFiles = async () => {
     filepath && (await rm(filepath, { force: true }));
@@ -283,29 +284,34 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     }
   };
   let userDir: string = "";
-  let user;
+  let user: User;
   try {
-    user = await findUser({ uuid });
-    if (user.length == 0 || !user) {
+    const userArray = await findUser({ uuid });
+    if (userArray.length == 0 || !userArray) {
       reply.status(401).send({ error: "Could not find user." });
       return;
     }
     userDir = await getPrivateUserUUIDDirectory(uuid);
+    user = userArray[0]!;
   } catch (e) {
     reply.status(401).send({ error: "Could not find private user directory or user with error " + e });
     return;
   }
-  const isProOrAdmin = user[0] && (user[0].accountType === "pro" || user[0].isAdmin);
+  const isProOrAdmin = user && (user.accountType === "pro" || user.isAdmin);
   try {
     for await (const part of parts) {
       if (part.type === "file") {
         if (part.fieldname === "datapack") {
           uploadedFile = part;
-          storedFilename = makeTempFilename(uploadedFile.filename);
-          filepath = path.join(userDir, storedFilename);
-          originalFilename = uploadedFile.filename;
+          storedFileName = makeTempFilename(uploadedFile.filename);
+          filepath = path.join(userDir, storedFileName);
+          originalFileName = uploadedFile.filename;
           if (!checkFileTypeIsDatapack(uploadedFile)) {
             reply.status(415).send({ error: "Invalid file type" });
+            return;
+          }
+          if (uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
+            reply.status(400).send({ error: `Regular users cannot upload datapacks over 3000 characters.` });
             return;
           }
           const { code, message } = await uploadFileToFileSystem(uploadedFile, filepath);
@@ -328,13 +334,6 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
             return;
           }
         }
-        if (uploadedFile && uploadedFile.file.bytesRead > 3000 && !isProOrAdmin) {
-          if (filepath) {
-            await rm(filepath, { force: true });
-          }
-          reply.status(403).send({ error: "Regular users cannot upload datapacks over 3000 characters." });
-          return;
-        }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         fields[part.fieldname] = part.value;
       }
@@ -344,13 +343,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(500).send({ error: "Failed to upload file with error " + e });
     return;
   }
-  if (!uploadedFile || !filepath || !originalFilename || !storedFilename) {
+  if (!uploadedFile || !filepath || !originalFileName || !storedFileName) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "No file uploaded" });
     return;
   }
-  fields.storedFileName = storedFilename;
-  fields.originalFileName = originalFilename;
+  fields.storedFileName = storedFileName;
+  fields.originalFileName = originalFileName;
   fields.filepath = filepath;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
     async (e) => {
