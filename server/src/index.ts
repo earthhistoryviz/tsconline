@@ -2,7 +2,7 @@ import fastify, { FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, verifyFilepathSync } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
