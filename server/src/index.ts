@@ -2,7 +2,7 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, verifyFilepathSync } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
@@ -128,12 +128,12 @@ interface Request {
 }
 
 /* Utility to validate the path of mappoint images for public and private
- * Path must contain 'MapImages' and end with an image extension */
+ * Path must have 'MapImages' as second to last string in path and end with an image extension */
 const isValidMapImagePath = (pathName: string): boolean => {
   const pathSegments = pathName.split("/");
-  const mapImagesIndex = pathSegments.indexOf("MapImages");
   const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
-  return mapImagesIndex !== -1 && isImage;
+  const isSecondToLastSegment = pathSegments[pathSegments.length - 2] === "MapImages";
+  return isSecondToLastSegment && isImage;
 };
 
 // Utility to validate private access based on UUID
@@ -154,6 +154,11 @@ assetPaths.forEach((type) => {
     decorateReply: false,
     allowedPath: (pathName, _root, req: Request) => {
       const fullPath = path.join(_root, pathName);
+      // Verify the full path to prevent path traversal.
+      const isVerified = verifyFilepathSync(fullPath);
+      if (!isVerified) {
+        return false;
+      }
       // Validate path based on route type | Private: Check UUID and path | Public: Only check path
       const isAllowed = type === "private" ? isAllowedPrivatePath({ pathName, req }) : isValidMapImagePath(pathName);
       return isAllowed && fs.existsSync(fullPath);
