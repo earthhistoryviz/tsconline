@@ -153,13 +153,6 @@ vi.mock("../src/verify", async () => {
   };
 });
 
-vi.mock("../src/index", async () => {
-  return {
-    OfficialDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
-    mapPackIndex: {}
-  };
-});
-
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof database>();
   return {

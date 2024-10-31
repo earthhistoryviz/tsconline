@@ -26,12 +26,12 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const OfficialDatapack = await fetchUserDatapack("official", name);
-  if (!OfficialDatapack) {
+  const officialDatapack = await fetchUserDatapack("official", name);
+  if (!officialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(OfficialDatapack);
+  reply.send(officialDatapack);
 };
 
 export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
