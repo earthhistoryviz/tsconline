@@ -216,8 +216,6 @@
                 "see-info-guidance": "点击数据包以查看更多信息！",
                 "add-datapack-guidance": "点击加号添加数据包",
                 "title": {
-                    "server": "服务器数据包",
-                    "public-user": "公共用户数据包",
                     "workshop": "工作坊数据包",
                     "your": "你的数据包"
                 },

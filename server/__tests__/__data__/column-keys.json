@@ -534,7 +534,7 @@
     "totalColumns": 8,
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   },
   "general-parse-datapacks-test-2-key": {
     "columnInfo": {
@@ -1458,7 +1458,7 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -2788,6 +2788,6 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   }
 }
