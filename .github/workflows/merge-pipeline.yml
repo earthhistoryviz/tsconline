@@ -183,7 +183,7 @@ jobs:
           java-package: "jdk"
 
       - name: Build and compile TSCreator Jar for tests
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor == 'dependabot[bot]'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
@@ -197,7 +197,7 @@ jobs:
           fi
       - name: Run Tests
         id: run_tests
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor == 'dependabot[bot]'
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
@@ -206,7 +206,7 @@ jobs:
 
       - name: Run Tests and Coverage (Exclude Encryption)
         id: run_tests_exclude_encryption
-        if: github.actor == 'dependabot[bot]'
+        if: github.actor != 'dependabot[bot]'
         run: | 
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
