@@ -196,8 +196,8 @@ jobs:
             exit 1
           fi
       - name: Run Tests
-        if: github.actor != 'dependabot[bot]'
         id: run_tests
+        if: github.actor != 'dependabot[bot]'
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
@@ -205,8 +205,8 @@ jobs:
         continue-on-error: true
 
       - name: Run Tests and Coverage (Exclude Encryption)
-        if: github.actor == 'dependabot[bot]'
         id: run_tests_exclude_encryption
+        if: github.actor == 'dependabot[bot]'
         run: | 
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
