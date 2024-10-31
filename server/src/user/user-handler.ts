@@ -17,6 +17,7 @@ import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
 import {
+  changeProfilePicture,
   getTemporaryFilepath,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem
@@ -188,8 +189,12 @@ export async function editDatapack(
   } else {
     await writeUserDatapack(uuid, metadata);
   }
+  // if the user already changed the file, we already updated the profile picture
+  if (!("originalFileName" in newDatapack) && "datapackImage" in newDatapack) {
+    await changeProfilePicture(uuid, metadata.title, await getTemporaryFilepath(uuid, metadata.datapackImage!));
+  }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic)
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
   }
 }
 
@@ -342,7 +347,6 @@ export async function processEditDatapackRequest(
   if (!user) {
     return { code: 401, message: "User not found" };
   }
-  const userDir = await getPrivateUserUUIDDirectory(uuid);
   const fields: Record<string, string> = {};
   let datapackImageFilepath: string | undefined;
   const cleanupTempFiles = async () => {

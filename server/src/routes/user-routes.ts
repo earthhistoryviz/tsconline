@@ -30,7 +30,6 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  const body = request.body;
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });

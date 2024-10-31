@@ -16,7 +16,7 @@ import {
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
@@ -231,6 +231,13 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
 export async function getTemporaryFilepath(uuid: string, filename: string) {
   const directory = await getUserUUIDDirectory(uuid, false);
   return path.join(directory, filename);
+}
+
+export async function changeProfilePicture(uuid: string, datapack: string, sourceFile: string) {
+  const origFilepath = await fetchDatapackProfilePictureFilepath(uuid, datapack);
+  const dir = path.dirname(origFilepath);
+  await rm(origFilepath, { force: true });
+  await rename(sourceFile, path.join(dir, DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(sourceFile)));
 }
 
 export async function uploadFileToFileSystem(
