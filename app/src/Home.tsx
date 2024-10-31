@@ -107,7 +107,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       try {
                         datapacks = preset.datapacks.map((dp) => {
                           const datapack = _.cloneDeep(
-                            state.datapacks.find((d) => d.title === dp.name && d.type == "server")
+                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
                           );
                           assertDatapackConfigForChartRequest(datapack);
                           return datapack;

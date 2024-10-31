@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -15,6 +15,7 @@ import {
   getNavigationRouteForDatapackProfile,
   isOwnedByUser
 } from "../../state/non-action-util";
+import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
   datapack: Datapack;
@@ -60,9 +61,12 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
       </Box>
       <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
       <div className={styles.title}>
-        <Typography className={styles.header} color="textSecondary">
-          {datapack.title}
-        </Typography>
+        <Box className={styles.titleHeader}>
+          <Typography className={styles.header} color="textSecondary">
+            {datapack.title}
+          </Typography>
+          {isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+        </Box>
       </div>
       {isOwnedByUser(datapack, state.user?.uuid) && (
         <Box
