@@ -171,10 +171,12 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
+        if: github.actor != 'dependabot[bot]'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
       - name: Set up jdk
+        if: github.actor != 'dependabot[bot]'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -182,6 +184,7 @@ jobs:
           java-package: "jdk"
 
       - name: Build and compile TSCreator Jar for tests
+        if: github.actor != 'dependabot[bot]'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
@@ -195,11 +198,21 @@ jobs:
           fi
 
       - name: Run Tests
+        if: github.actor != 'dependabot[bot]'
         id: run_tests
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Run Tests and Coverage (Exclude Encryption)
+        if: github.actor == 'dependabot[bot]'
+        id: run_tests_exclude_encryption
+        run: | 
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Post Coverage Comment
