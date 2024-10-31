@@ -1,6 +1,11 @@
 import { Datapack } from "@tsconline/shared";
 import { Mutex } from "async-mutex";
-import { fetchUserDatapackDirectory, getDirectories, getPrivateUserUUIDDirectory, getPublicUserUUIDDirectory } from "./user/fetch-user-files.js";
+import {
+  fetchUserDatapackDirectory,
+  getDirectories,
+  getPrivateUserUUIDDirectory,
+  getPublicUserUUIDDirectory
+} from "./user/fetch-user-files.js";
 import { fetchUserDatapack } from "./user/user-handler.js";
 import logger from "./error-logger.js";
 import { assetconfigs } from "./util.js";
@@ -34,13 +39,18 @@ export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
   }
 }
 
-export async function switchPrivacySettingsOfDatapack(uuid: string, datapack: string, formerIsPublic: boolean, newIsPublic: boolean) {
+export async function switchPrivacySettingsOfDatapack(
+  uuid: string,
+  datapack: string,
+  formerIsPublic: boolean,
+  newIsPublic: boolean
+) {
   if (formerIsPublic === newIsPublic) {
     return;
   }
   const release = await mutex.acquire();
   try {
-    const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack)
+    const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
     if (newIsPublic) {
       await rename(datapackDirectory, await getPublicUserUUIDDirectory(uuid));
     } else {
