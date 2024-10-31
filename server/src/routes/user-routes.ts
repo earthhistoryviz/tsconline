@@ -4,7 +4,6 @@ import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { isPartialDatapackMetadata } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
@@ -14,6 +13,7 @@ import { findUser } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
+  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
@@ -39,17 +39,20 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const response = await processEditDatapackRequest(request.parts(), uuid);
+  const response = await processEditDatapackRequest(request.parts(), uuid).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!response) {
+    reply.status(500).send({ error: "Failed to process request" });
+    return;
+  }
   if (isOperationResult(response)) {
     reply.status(response.code).send({ error: response.message });
     return;
   }
-  if (!isPartialDatapackMetadata(response)) {
-    reply.status(400).send({ error: "Invalid request body" });
-    return;
-  }
   try {
-    await editDatapack(uuid, datapack, response);
+    const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
+    await editDatapack(uuid, datapack, partial);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });

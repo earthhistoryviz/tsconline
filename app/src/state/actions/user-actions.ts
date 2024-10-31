@@ -17,14 +17,18 @@ import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
 
 export const handleDatapackEdit = action(
   async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
-    const body = {} as Partial<EditableDatapackMetadata>;
+    const formData = new FormData();
     for (const key in editedDatapack) {
       const castedKey = key as keyof EditableDatapackMetadata;
       if (editedDatapack[castedKey] !== originalDatapack[castedKey]) {
-        Object.assign(body, { [castedKey]: editedDatapack[castedKey] });
+        if (castedKey === "tags" || castedKey === "references") {
+          formData.append(castedKey, JSON.stringify(editedDatapack[castedKey]));
+          continue;
+        }
+        formData.append(castedKey, editedDatapack[castedKey] as string);
       }
     }
-    if (Object.keys(body).length === 0) {
+    if(Array.from(formData.keys()).length === 0) {
       pushSnackbar("No changes made", "info");
       setDatapackProfilePageEditMode(false);
       return false;
@@ -34,10 +38,9 @@ export const handleDatapackEdit = action(
       if (!recaptcha) return false;
       const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
         method: "PATCH",
-        body: JSON.stringify(body),
+        body: formData,
         credentials: "include",
         headers: {
-          "Content-Type": "application/json",
           "recaptcha-token": recaptcha
         }
       });
