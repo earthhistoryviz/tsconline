@@ -171,11 +171,11 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor == 'dependabot[bot]'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
       - name: Set up jdk
-        if: github.actor != 'dependabot[bot]'
+        if: github.actor == 'dependabot[bot]'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
