@@ -2,7 +2,7 @@ import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
-import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
+import { Datapack, DatapackMetadata, assertDatapack, isDateValid } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -390,7 +390,48 @@ export async function processEditDatapackRequest(
           return { code, message };
         }
       }
-    }
+      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+        fields[part.fieldname] = part.value;
+      }
   }
   return { code: 200, fields };
 }
+
+/**
+ * Since the fields are strings that we receive from a request, we need to convert them to the correct types (arrays)
+ */
+export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fields: Record<string, string>) {
+  const partial: Partial<DatapackMetadata> = {};
+
+  for (const key in fields) {
+    const value = fields[key]!
+    switch (key) {
+      case "isPublic":
+        partial.isPublic = fields[key] === "true";
+        break;
+      case "date":
+        if (!isDateValid(value)) {
+          throw new Error("Invalid date");
+        }
+      case "title":
+      case "description":
+      case "authoredBy":
+      case "contact":
+      case "notes":
+      case "originalFileName":
+      case "storedFileName":
+        partial[key] = value;
+        break;
+      case "references":
+      case "tags":
+        partial[key] = JSON.parse(value);
+        const array = partial[key];
+        if (!array || !Array.isArray(array) || !array.every((ref) => typeof ref === "string")) {
+          throw new Error("References and tags must be valid arrays");
+        }
+        break;
+  }
+}
+return partial;
+}
+
