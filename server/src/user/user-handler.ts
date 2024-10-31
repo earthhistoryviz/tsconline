@@ -1,7 +1,7 @@
 import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { assetconfigs, verifyFilepath } from "../util.js";
+import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { assetconfigs, makeTempFilename, verifyFilepath } from "../util.js";
 import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -13,7 +13,10 @@ import {
   getPrivateUserUUIDDirectory
 } from "./fetch-user-files.js";
 import _ from "lodash";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
+import { findUser } from "../database.js";
+import { User } from "../types.js";
+import { uploadFileToFileSystem } from "../upload-handlers.js";
 
 /**
  * TODO: WRITE TESTS
@@ -222,6 +225,13 @@ export async function deleteOfficialDatapack(datapack: string): Promise<void> {
   await rm(datapackPath, { recursive: true, force: true });
 }
 
+export async function canUploadLargeFiles(user: User, file: MultipartFile) {
+  if (user.isAdmin || user.accountType === "pro") {
+    return true;
+  }
+  return file.file.bytesRead <= 3000;
+}
+
 /**
  * writes a user datapack to the file system
  * @param uuid
@@ -305,4 +315,56 @@ export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
     (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") &&
     /^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
   );
+}
+
+export async function processEditDatapackRequest(formData: AsyncIterableIterator<Multipart>, uuid: string) {
+  const users = await findUser({ uuid });
+  const user = users[0];
+  if (!user) {
+    return { code: 401, message: "User not found" };
+  }
+  const userDir = await getPrivateUserUUIDDirectory(uuid);
+  const fields: Record<string, string> = {};
+  const cleanupTempFiles = async () => {
+    if (fields.datapackImageFilepath) {
+      await rm(fields.datapackImageFilepath, { force: true });
+    }
+    if (fields.filepath) {
+      await rm(fields.filepath, { force: true });
+    }
+  };
+  for await (const part of formData) {
+    if (part.type === "file") {
+      if (part.fieldname === "datapack") {
+        if (!checkFileTypeIsDatapack(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack" };
+        }
+        if (!canUploadLargeFiles(user, part)) {
+          await cleanupTempFiles();
+          return { code: 413, message: "File too large" };
+        }
+        fields.storedFileName = makeTempFilename(part.filename);
+        fields.originalFileName = part.filename;
+        fields.filepath = path.join(userDir, fields.storedFileName);
+        const { code, message } = await uploadFileToFileSystem(part, fields.filepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+        if (!checkFileTypeIsDatapackImage(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack image" };
+        }
+        fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
+        fields.datapackImageFilepath = path.join(userDir, fields.datapackImage);
+        const { code, message } = await uploadFileToFileSystem(part, fields.datapackImageFilepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    }
+  }
 }
