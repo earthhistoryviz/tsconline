@@ -191,7 +191,7 @@ export async function editDatapack(
   }
   // if the user already changed the file, we already updated the profile picture
   if (!("originalFileName" in newDatapack) && "datapackImage" in newDatapack) {
-    await changeProfilePicture(uuid, metadata.title, await getTemporaryFilepath(uuid, metadata.datapackImage!));
+    await changeProfilePicture(uuid, metadata.title, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
