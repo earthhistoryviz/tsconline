@@ -1,7 +1,7 @@
 import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
 import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
-import { assetconfigs, makeTempFilename, verifyFilepath } from "../util.js";
+import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
 import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -15,8 +15,13 @@ import {
 import _ from "lodash";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
-import { User } from "../types.js";
-import { uploadFileToFileSystem } from "../upload-handlers.js";
+import { OperationResult, User } from "../types.js";
+import {
+  getTemporaryFilepath,
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadFileToFileSystem
+} from "../upload-handlers.js";
+import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
 
 /**
  * TODO: WRITE TESTS
@@ -170,10 +175,21 @@ export async function editDatapack(
   const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
   const originalTitle = _.clone(metadata.title);
   Object.assign(metadata, newDatapack);
-  if ("title" in newDatapack && originalTitle !== newDatapack.title) {
+  if ("originalFileName" in newDatapack) {
+    await setupNewDatapackDirectoryInUUIDDirectory(
+      uuid,
+      await getTemporaryFilepath(uuid, metadata.storedFileName),
+      metadata,
+      false,
+      metadata.datapackImage ? await getTemporaryFilepath(uuid, metadata.datapackImage) : undefined
+    );
+  } else if ("title" in newDatapack && originalTitle !== newDatapack.title) {
     await renameUserDatapack(uuid, originalTitle, metadata);
   } else {
     await writeUserDatapack(uuid, metadata);
+  }
+  if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic)
   }
 }
 
@@ -317,7 +333,10 @@ export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
   );
 }
 
-export async function processEditDatapackRequest(formData: AsyncIterableIterator<Multipart>, uuid: string) {
+export async function processEditDatapackRequest(
+  formData: AsyncIterableIterator<Multipart>,
+  uuid: string
+): Promise<OperationResult | { code: number; fields: Record<string, string> }> {
   const users = await findUser({ uuid });
   const user = users[0];
   if (!user) {
@@ -325,9 +344,10 @@ export async function processEditDatapackRequest(formData: AsyncIterableIterator
   }
   const userDir = await getPrivateUserUUIDDirectory(uuid);
   const fields: Record<string, string> = {};
+  let datapackImageFilepath: string | undefined;
   const cleanupTempFiles = async () => {
-    if (fields.datapackImageFilepath) {
-      await rm(fields.datapackImageFilepath, { force: true });
+    if (datapackImageFilepath) {
+      await rm(datapackImageFilepath, { force: true });
     }
     if (fields.filepath) {
       await rm(fields.filepath, { force: true });
@@ -346,7 +366,8 @@ export async function processEditDatapackRequest(formData: AsyncIterableIterator
         }
         fields.storedFileName = makeTempFilename(part.filename);
         fields.originalFileName = part.filename;
-        fields.filepath = path.join(userDir, fields.storedFileName);
+        fields.filepath = await getTemporaryFilepath(uuid, fields.storedFileName);
+        fields.size = getBytes(part.file.bytesRead);
         const { code, message } = await uploadFileToFileSystem(part, fields.filepath);
         if (code !== 200) {
           await cleanupTempFiles();
@@ -358,8 +379,8 @@ export async function processEditDatapackRequest(formData: AsyncIterableIterator
           return { code: 415, message: "Invalid file type for datapack image" };
         }
         fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
-        fields.datapackImageFilepath = path.join(userDir, fields.datapackImage);
-        const { code, message } = await uploadFileToFileSystem(part, fields.datapackImageFilepath);
+        datapackImageFilepath = await getTemporaryFilepath(uuid, fields.datapackImage);
+        const { code, message } = await uploadFileToFileSystem(part, datapackImageFilepath);
         if (code !== 200) {
           await cleanupTempFiles();
           return { code, message };
@@ -367,4 +388,5 @@ export async function processEditDatapackRequest(formData: AsyncIterableIterator
       }
     }
   }
+  return { code: 200, fields };
 }

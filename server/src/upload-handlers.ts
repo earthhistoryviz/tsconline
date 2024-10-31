@@ -215,7 +215,9 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
     );
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
-    await rm(datapackImageFilepath, { force: true });
+    if (datapackImageFilepath !== datapackImageFilepathDest) {
+      await rm(datapackImageFilepath, { force: true });
+    }
   }
   await writeFile(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
@@ -225,6 +227,10 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   }
   return datapackIndex;
+}
+export async function getTemporaryFilepath(uuid: string, filename: string) {
+  const directory = await getUserUUIDDirectory(uuid, false);
+  return path.join(directory, filename);
 }
 
 export async function uploadFileToFileSystem(

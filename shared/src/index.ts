@@ -995,7 +995,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "date",
     "references",
     "contact",
-    "notes"
+    "notes",
+    "isPublic"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1014,6 +1015,7 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("contact" in o && typeof o.contact !== "string") return false;
   if ("notes" in o && typeof o.notes !== "string") return false;
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
+  if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
