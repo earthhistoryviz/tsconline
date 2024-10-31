@@ -4,7 +4,7 @@ import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
-import { DatapackMetadata, isPartialDatapackMetadata } from "@tsconline/shared";
+import { isPartialDatapackMetadata } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
@@ -18,41 +18,39 @@ import {
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
   fetchAllUsersDatapacks,
-  fetchUserDatapack
+  fetchUserDatapack,
+  processEditDatapackRequest
 } from "../user/user-handler.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
-import { User } from "../types.js";
+import { User, isOperationResult } from "../types.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
-  request: FastifyRequest<{ Params: { datapack: string }; Body: Partial<DatapackMetadata> }>,
+  request: FastifyRequest<{ Params: { datapack: string } }>,
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
   const body = request.body;
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
-  if (!body) {
-    reply.status(400).send({ error: "Missing body" });
-    return;
-  }
-  if (body.originalFileName || body.storedFileName || body.size) {
-    reply.status(400).send({ error: "Cannot edit originalFileName, storedFileName, or size" });
-    return;
-  }
-  if (!isPartialDatapackMetadata(body)) {
-    reply.status(400).send({ error: "Invalid body" });
-    return;
-  }
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
+  if (!datapack) {
+    reply.status(400).send({ error: "Missing datapack" });
+    return;
+  }
+  const response = await processEditDatapackRequest(request.parts(), uuid);
+  if (isOperationResult(response)) {
+    reply.status(response.code).send({ error: response.message });
+    return;
+  }
+  if (!isPartialDatapackMetadata(response)) {
+    reply.status(400).send({ error: "Invalid request body" });
+    return;
+  }
   try {
-    await editDatapack(uuid, datapack, body);
+    await editDatapack(uuid, datapack, response);
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
