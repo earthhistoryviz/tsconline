@@ -246,7 +246,7 @@ export async function deleteOfficialDatapack(datapack: string): Promise<void> {
   await rm(datapackPath, { recursive: true, force: true });
 }
 
-export async function canUploadLargeFiles(user: User, file: MultipartFile) {
+export async function canUserUploadThisFile(user: User, file: MultipartFile) {
   if (user.isAdmin || user.accountType === "pro") {
     return true;
   }
@@ -364,7 +364,7 @@ export async function processEditDatapackRequest(
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack" };
         }
-        if (!canUploadLargeFiles(user, part)) {
+        if (!canUserUploadThisFile(user, part)) {
           await cleanupTempFiles();
           return { code: 413, message: "File too large" };
         }
@@ -390,9 +390,9 @@ export async function processEditDatapackRequest(
           return { code, message };
         }
       }
-      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        fields[part.fieldname] = part.value;
-      }
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
+    }
   }
   return { code: 200, fields };
 }
@@ -404,7 +404,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
   const partial: Partial<DatapackMetadata> = {};
 
   for (const key in fields) {
-    const value = fields[key]!
+    const value = fields[key]!;
     switch (key) {
       case "isPublic":
         partial.isPublic = fields[key] === "true";
@@ -413,6 +413,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
         if (!isDateValid(value)) {
           throw new Error("Invalid date");
         }
+      // eslint-disable-next-line no-fallthrough
       case "title":
       case "description":
       case "authoredBy":
@@ -425,13 +426,13 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "references":
       case "tags":
         partial[key] = JSON.parse(value);
+        // eslint-disable-next-line no-case-declarations
         const array = partial[key];
         if (!array || !Array.isArray(array) || !array.every((ref) => typeof ref === "string")) {
           throw new Error("References and tags must be valid arrays");
         }
         break;
+    }
   }
+  return partial;
 }
-return partial;
-}
-

@@ -28,7 +28,7 @@ export const handleDatapackEdit = action(
         formData.append(castedKey, editedDatapack[castedKey] as string);
       }
     }
-    if(Array.from(formData.keys()).length === 0) {
+    if (Array.from(formData.keys()).length === 0) {
       pushSnackbar("No changes made", "info");
       setDatapackProfilePageEditMode(false);
       return false;
@@ -50,10 +50,8 @@ export const handleDatapackEdit = action(
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
         if (!datapack) return false;
+        removeDatapack(originalDatapack);
         addDatapack(datapack);
-        if (originalDatapack.title !== editedDatapack.title) {
-          removeDatapack(originalDatapack);
-        }
         removeAllErrors();
         return true;
       } else {
