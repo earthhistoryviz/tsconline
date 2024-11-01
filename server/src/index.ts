@@ -150,10 +150,11 @@ const assetPaths = ["public", "private"];
 assetPaths.forEach((type) => {
   server.register(fastifyStatic, {
     root: path.join(process.cwd(), `assets/uploads/${type}`),
-    prefix: `/assets/uploads/${type}`,
+    prefix: `/getMapImages/${type}`,
     decorateReply: false,
     allowedPath: (pathName, _root, req: Request) => {
-      const fullPath = path.join(_root, pathName);
+      const relativePath = pathName.replace(`/getMapImages`, "");
+      const fullPath = path.join(_root, relativePath);
       // Verify the full path to prevent path traversal.
       const isVerified = verifyFilepathSync(fullPath);
       if (!isVerified) {
