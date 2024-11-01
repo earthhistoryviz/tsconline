@@ -1234,3 +1234,7 @@ export const setDatapackProfilePageTempEditableDatapackImage = action((file: Fil
   setUnsavedChanges(true);
   state.datapackProfilePage.tempEditableDatapackImage = file;
 });
+
+export const setDatapackImageVersion = action((version: number) => {
+  state.datapackProfilePage.datapackImageVersion = version;
+});

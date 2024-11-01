@@ -4,7 +4,18 @@ import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
-import { Autocomplete, Avatar, Badge, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
+import {
+  Autocomplete,
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  IconButton,
+  SvgIcon,
+  TextField,
+  Typography,
+  useTheme
+} from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -35,7 +46,7 @@ import {
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile
 } from "./state/non-action-util";
-import { AddPhotoAlternate, Edit, FileUpload } from "@mui/icons-material";
+import { FileUpload } from "@mui/icons-material";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -165,14 +176,20 @@ export const DatapackProfile = observer(() => {
 type DatapackImageProps = {
   image: string;
 };
-const DatapackImage: React.FC<DatapackImageProps> = ({ image }) => {
+const DatapackImage: React.FC<DatapackImageProps> = observer(({ image }) => {
   const { state, actions } = useContext(context);
   const profileImageRef = useRef<HTMLInputElement>(null);
+  const [tempImage, setTempImage] = useState<string>(image);
   const handleDatapackFileChange = () => {
     if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
-      actions.setDatapackProfilePageTempEditableDatapackImage(profileImageRef.current.files[0]);
+      const file = profileImageRef.current.files[0];
+      actions.setDatapackProfilePageTempEditableDatapackImage(file);
+      const newImageUrl = URL.createObjectURL(file);
+      setTempImage(newImageUrl);
+      return () => URL.revokeObjectURL(newImageUrl);
     }
-  }
+  };
+  const imageUrl = `${image}?ver=${state.datapackProfilePage.datapackImageVersion}`;
   return (
     <>
       {state.datapackProfilePage.editMode ? (
@@ -180,18 +197,18 @@ const DatapackImage: React.FC<DatapackImageProps> = ({ image }) => {
           <Badge
             overlap="rectangular"
             anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-              badgeContent={
-                <Avatar className={styles.profilePencilEdit} sx={{ backgroundColor: "button.main"}}>
-                  <FileUpload fontSize="small" />
-                </Avatar>
-              }
+            badgeContent={
+              <Avatar className={styles.profilePencilEdit} sx={{ backgroundColor: "button.main" }}>
+                <FileUpload fontSize="small" />
+              </Avatar>
+            }
             onClick={() => {
               if (profileImageRef.current) profileImageRef.current.click();
             }}>
             {state.datapackProfilePage.tempEditableDatapackImage ? (
-              <img src={URL.createObjectURL(state.datapackProfilePage.tempEditableDatapackImage)} className={styles.di}/>
+              <img src={tempImage} className={styles.di} />
             ) : (
-              <img src={image} className={styles.di}/>
+              <img src={imageUrl} className={styles.di} />
             )}
           </Badge>
           <input
@@ -203,11 +220,11 @@ const DatapackImage: React.FC<DatapackImageProps> = ({ image }) => {
           />
         </Box>
       ) : (
-        <img className={styles.di} src={image} />
+        <img className={styles.di} src={imageUrl} />
       )}
     </>
   );
-};
+});
 
 type WarningTabProps = {
   count: number;

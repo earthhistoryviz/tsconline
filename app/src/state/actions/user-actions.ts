@@ -8,12 +8,14 @@ import {
   removeAllErrors,
   removeDatapack,
   setDatapackProfilePageEditMode,
-  resetEditableDatapackMetadata
+  resetEditableDatapackMetadata,
+  setDatapackImageVersion
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { EditableDatapackMetadata } from "../../types";
 import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
+import { state } from "../state";
 
 export const handleDatapackEdit = action(
   async (
@@ -60,6 +62,7 @@ export const handleDatapackEdit = action(
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
         if (!datapack) return false;
+        if (newDatapackImage) setDatapackImageVersion(state.datapackProfilePage.datapackImageVersion + 1);
         removeDatapack(originalDatapack);
         addDatapack(datapack);
         resetEditableDatapackMetadata(datapack);

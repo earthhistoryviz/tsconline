@@ -201,6 +201,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
   if (!manual && sourceFilePath !== sourceFileDestination) {
+    // remove the original file if it was copied from a temp file
     await rm(sourceFilePath, { force: true });
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
@@ -215,6 +216,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
     );
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
+    // remove the original file if it was copied from a temp file
     if (datapackImageFilepath !== datapackImageFilepathDest) {
       await rm(datapackImageFilepath, { force: true });
     }
