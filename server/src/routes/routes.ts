@@ -456,7 +456,7 @@ export const fetchDatapackCoverImage = async function (
       return;
     }
     const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
-    if (!(await checkFileExists(uniqueImageFilepath))) {
+    if (!uniqueImageFilepath || !(await checkFileExists(uniqueImageFilepath))) {
       if (!(await checkFileExists(defaultFilepath))) {
         reply.status(404).send({ error: "Default image not found" });
         return;
