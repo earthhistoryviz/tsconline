@@ -16,7 +16,6 @@ import {
   getDirectories,
   getPrivateUserUUIDDirectory
 } from "./fetch-user-files.js";
-import _ from "lodash";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
@@ -170,16 +169,20 @@ export async function editDatapack(
   newDatapack: Partial<DatapackMetadata>
 ): Promise<void> {
   const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
-  const originalTitle = _.clone(metadata.title);
   Object.assign(metadata, newDatapack);
   if ("originalFileName" in newDatapack) {
-    await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
+    await replaceDatapackFile(
+      uuid,
+      await getTemporaryFilepath(uuid, metadata.storedFileName),
+      oldDatapackTitle,
+      metadata
+    );
   }
-  if ("title" in newDatapack && originalTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, originalTitle, metadata);
+  if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
+    await renameUserDatapack(uuid, oldDatapackTitle, metadata);
   }
   if ("datapackImage" in newDatapack) {
-    await changeProfilePicture(uuid, metadata.title, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
+    await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
@@ -421,6 +424,10 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
         }
       // eslint-disable-next-line no-fallthrough
       case "title":
+        if (value.trim() !== value) {
+          throw new Error("Invalid title");
+        }
+      // eslint-disable-next-line no-fallthrough
       case "description":
       case "authoredBy":
       case "contact":

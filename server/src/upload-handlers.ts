@@ -1,4 +1,5 @@
 import {
+  Datapack,
   DatapackIndex,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_CONTACT_LENGTH,
@@ -96,7 +97,7 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
-  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+  if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
     await userUploadHandler(reply, 400, "Invalid title", filepath);
     return;
   }
@@ -188,11 +189,12 @@ export async function uploadUserDatapackHandler(
  * @param sourceFilePath
  * @param metadata
  */
-export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: DatapackMetadata) {
-  await deleteDatapackFileAndDecryptedCounterpart(uuid, metadata.title);
-  const datapackDirectory = await fetchUserDatapackDirectory(uuid, metadata.title);
+export async function replaceDatapackFile(uuid: string, sourceFilePath: string, datapack: string, metadata: Datapack) {
+  await deleteDatapackFileAndDecryptedCounterpart(uuid, datapack);
+  const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
+  const filename = path.basename(sourceFilePath);
   const decryptionFilepath = path.join(datapackDirectory, DECRYPTED_DIRECTORY_NAME);
-  const datapackFilepath = path.join(datapackDirectory, metadata.storedFileName);
+  const datapackFilepath = path.join(datapackDirectory, filename);
   await copyFile(sourceFilePath, datapackFilepath);
   if (sourceFilePath !== datapackFilepath) {
     await rm(sourceFilePath, { force: true });
@@ -201,18 +203,11 @@ export async function replaceDatapackFile(uuid: string, sourceFilePath: string, 
   const datapackIndex: DatapackIndex = {};
   const success = await loadDatapackIntoIndex(datapackIndex, decryptionFilepath, metadata);
   // will delete the whole directory if the file.
-  // otherwise we would have a directory with no valid file
-  if (!success || !datapackIndex[metadata.title]) {
+  // otherwise we would have a directory with no valid file, this makes it easier to manage (no dangling directories)
+  if (!success || !datapackIndex[datapack]) {
     await rm(datapackDirectory, { force: true });
     throw new Error("Failed to load datapack into index, please reupload the file");
   }
-}
-
-export async function replaceProfilePicture(uuid: string, datapack: string, sourceFile: string) {
-  const origFilepath = await fetchDatapackProfilePictureFilepath(uuid, datapack);
-  const dir = path.dirname(origFilepath);
-  await rm(origFilepath, { force: true });
-  await rename(sourceFile, path.join(dir, DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(sourceFile)));
 }
 
 /**
@@ -284,11 +279,16 @@ export async function getTemporaryFilepath(uuid: string, filename: string) {
  */
 export async function changeProfilePicture(uuid: string, datapack: string, sourceFile: string) {
   const origFilepath = await fetchDatapackProfilePictureFilepath(uuid, datapack);
-  const dir = path.dirname(origFilepath);
   const imageName = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(sourceFile);
-  const imagePath = path.join(dir, imageName);
-  await rm(origFilepath, { force: true });
-  await rename(sourceFile, imagePath);
+  if (!origFilepath) {
+    const directory = await fetchUserDatapackDirectory(uuid, datapack);
+    await rename(sourceFile, path.join(directory, imageName));
+  } else {
+    const dir = path.dirname(origFilepath);
+    const imagePath = path.join(dir, imageName);
+    await rm(origFilepath, { force: true });
+    await rename(sourceFile, imagePath);
+  }
 }
 
 export async function uploadFileToFileSystem(
@@ -322,5 +322,5 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
       return profilePicturePath;
     }
   }
-  throw new Error("Profile picture does not exist");
+  return null;
 }
