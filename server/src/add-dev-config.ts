@@ -4,7 +4,7 @@ import { assetconfigs, checkFileExists, loadAssetConfigs } from "./util.js";
 import { assertDatapackMetadataArray } from "@tsconline/shared";
 import chalk from "chalk";
 import { setupNewDatapackDirectoryInUUIDDirectory } from "./upload-handlers.js";
-import { deleteServerDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import { deleteOfficialDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
 
 const devConfigPath = path.resolve(process.cwd(), "assets", "dev-config.json");
 
@@ -35,16 +35,16 @@ try {
         continue;
       }
       // Check if the datapack already exists in all UUID directories, only overwrite if the --overwrite flag is present
-      if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapack.title)) {
+      if (await doesDatapackFolderExistInAllUUIDDirectories("official", datapack.title)) {
         if (args.includes("--overwrite")) {
-          await deleteServerDatapack(datapack.title);
+          await deleteOfficialDatapack(datapack.title);
         } else {
           console.log(chalk.yellow("Datapack already exists in all UUID directories, skipping..."));
           continue;
         }
       }
       await setupNewDatapackDirectoryInUUIDDirectory(
-        "server",
+        "official",
         path.join(assetconfigs.datapacksDirectory, datapack.storedFileName),
         datapack,
         true

@@ -13,8 +13,8 @@ import {
   Datapack,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  isServerDatapack,
-  assertServerDatapack,
+  isOfficialDatapack,
+  assertOfficialDatapack,
   assertDatapack,
   assertDatapackArray
 } from "@tsconline/shared";
@@ -54,19 +54,19 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
+import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
 
-export const fetchServerDatapack = action("fetchServerDatapack", async (datapack: string) => {
+export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
     const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET"
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapack(data);
+      assertOfficialDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -794,7 +794,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isOfficialDatapack(datapack) ? "official" : "",
       isPublic: datapack.isPublic
     })
   });
@@ -934,7 +934,6 @@ export const sessionCheck = action("sessionCheck", async () => {
 });
 
 export const setDefaultUserState = action(() => {
-  removeUserDatapacks(state.user.uuid);
   state.user = {
     username: "",
     email: "",
@@ -944,12 +943,13 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "en"
+      language: "English"
     }
   };
+  removeUnauthorizedDatapacks();
 });
-export const removeUserDatapacks = action((uuid: string) => {
-  state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
+export const removeUnauthorizedDatapacks = action(() => {
+  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)

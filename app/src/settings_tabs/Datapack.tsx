@@ -8,6 +8,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
+import { People, School, Security, Verified } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -18,13 +19,14 @@ import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompact
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
-import { Work, Storage, Lock, Public } from "@mui/icons-material";
+import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
   getCurrentUserDatapacks,
+  getPrivateOfficialDatapacks,
   getPublicDatapacksWithoutCurrentUser,
-  getServerDatapacks,
+  getPublicOfficialDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -34,11 +36,13 @@ export const Datapacks = observer(function Datapacks() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (state.isLoggedIn) {
-      loadRecaptcha();
+    if (state.isLoggedIn && state.user.isAdmin) {
+      loadRecaptcha().then(async () => {
+        await actions.adminFetchPrivateOfficialDatapacks();
+      });
     }
     return () => {
-      if (state.isLoggedIn) {
+      if (state.isLoggedIn && state.user.isAdmin) {
         removeRecaptcha();
       }
     };
@@ -82,11 +86,19 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
+      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
       <DatapackGroupDisplay
-        datapacks={getServerDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.server")}
-        HeaderIcon={Storage}
+        datapacks={getPublicOfficialDatapacks(state.datapacks)}
+        header={t("settings.datapacks.title.public-official")}
+        HeaderIcon={Verified}
       />
+      {state.user.isAdmin && (
+        <DatapackGroupDisplay
+          datapacks={getPrivateOfficialDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.private-official")}
+          HeaderIcon={Security}
+        />
+      )}
       {state.isLoggedIn && state.user && (
         <DatapackGroupDisplay
           datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
@@ -96,10 +108,9 @@ export const Datapacks = observer(function Datapacks() {
       )}
       <DatapackGroupDisplay
         datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
-        header={t("settings.datapacks.title.public-user")}
-        HeaderIcon={Public}
+        header={t("settings.datapacks.title.contributed")}
+        HeaderIcon={People}
       />
-      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={Work} />
       <Box className={styles.container}>
         {state.isLoggedIn && (
           <TSCButton
