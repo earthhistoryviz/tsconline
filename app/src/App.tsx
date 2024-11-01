@@ -47,11 +47,15 @@ export default observer(function App() {
   }, []);
 
   // on theme change, update the background color
-  const checkOpen =
-    location.pathname === "/settings" &&
-    state.settingsTabs.selected !== "datapacks" &&
-    JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
-
+  const checkUnsavedChanges = () => {
+    const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
+    const isOnDatapackPath = location.pathname === "/datapacks";
+    const hasUnsavedChanges = JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
+    if (hasUnsavedChanges && !(isOnDatapackPath || isOnDatapacksTab)) {
+      return true;
+    }
+    return false;
+    };
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -93,7 +97,7 @@ export default observer(function App() {
           />
           <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
           <TSCYesNoPopup
-            open={checkOpen}
+            open={checkUnsavedChanges()}
             title={t("dialogs.confirm-datapack-change.title")}
             message={t("dialogs.confirm-datapack-change.message")}
             onNo={async () => {
