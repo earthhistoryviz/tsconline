@@ -227,17 +227,14 @@ export const NavBar = observer(function Navbar() {
           />
         )}
 
-        <PopupState variant="popover" popupId="demo-popup-menu">
+        <PopupState variant="popover">
           {(popupState) => (
             <React.Fragment>
               <Button variant="text" {...bindTrigger(popupState)}>
                 <SettingsIcon />
-                <Typography>{t(``)}</Typography>
               </Button>
-              <Menu {...bindMenu(popupState)}>
-                <MenuItem className="settings-sub-menu-item" onClick={() => {}}>
-                  <Typography>{t(``)}</Typography>
-
+              <Menu {...bindMenu(popupState)} className="lanuage-txt-break">
+                <MenuItem>
                   <CustomFormControlLabel
                     width={120}
                     control={
@@ -251,23 +248,11 @@ export const NavBar = observer(function Navbar() {
                     label={t("login.dark-mode")}
                   />
                 </MenuItem>
-                <Divider
-                  sx={{
-                    borderBottomWidth: 1,
-                    borderColor: "white",
-                    my: 1
-                  }}
-                />
+                <Divider className="div-bar-top"/>
                 <MenuItem>
-                  <Typography sx={{ textAlign: "center", width: "100%" }}>{t(`LANGUAGES`)}</Typography>
+                  <Typography >{t(`LANGUAGES`)}</Typography>
                 </MenuItem>
-                <Divider
-                  sx={{
-                    borderBottomWidth: 0.75,
-                    borderColor: "gray",
-                    my: 1
-                  }}
-                />
+                <Divider className = "div-bar-bottom"/>
                 {Object.entries(languageList).map(([key, value]) => (
                   <MenuItem
                     ref={dropRef}

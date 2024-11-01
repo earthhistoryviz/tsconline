@@ -31,3 +31,21 @@
   padding-left: 0px;
   padding-right: 0px;
 }
+.lanuage-txt-break .MuiMenuItem-root{
+  display: flex;
+  justify-content: center;
+}
+
+.div-bar-top {
+  border-width: 1;
+  border-color: white;
+  margin-top: 1;
+  margin-bottom: 1;
+}
+
+.div-bar-bottom{
+  border-width: 0.75;
+  border-color: grey;
+  margin-top: 1;
+  margin-bottom: 1;
+}
