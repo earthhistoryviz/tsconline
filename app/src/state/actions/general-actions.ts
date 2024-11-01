@@ -1205,9 +1205,11 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
 });
-export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   state.datapackProfilePage.editableDatapackMetadata = metadata;
+  state.datapackProfilePage.tempEditableDatapackFile = null;
+  state.datapackProfilePage.tempEditableDatapackImage = null;
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;
@@ -1222,4 +1224,13 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
+});
+
+export const setDatapackProfilePageTempEditableDatapackFile = action((file: File) => {
+  setUnsavedChanges(true);
+  state.datapackProfilePage.tempEditableDatapackFile = file;
+});
+export const setDatapackProfilePageTempEditableDatapackImage = action((file: File) => {
+  setUnsavedChanges(true);
+  state.datapackProfilePage.tempEditableDatapackImage = file;
 });

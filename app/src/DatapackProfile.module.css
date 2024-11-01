@@ -104,6 +104,18 @@
   gap: 10px;
   width: 100%;
 }
+.profilePencilEdit {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+.editableDatapackImage {
+  cursor: pointer;
+}
+.editableDatapackImage:hover {
+  opacity: 0.8;
+}
 
 .ah {
   position: relative;
