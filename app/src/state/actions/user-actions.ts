@@ -8,7 +8,7 @@ import {
   removeAllErrors,
   removeDatapack,
   setDatapackProfilePageEditMode,
-  setEditableDatapackMetadata
+  resetEditableDatapackMetadata
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -16,7 +16,12 @@ import { EditableDatapackMetadata } from "../../types";
 import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
 
 export const handleDatapackEdit = action(
-  async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
+  async (
+    originalDatapack: EditableDatapackMetadata,
+    editedDatapack: EditableDatapackMetadata,
+    newDatapackFile?: File | null,
+    newDatapackImage?: File | null
+  ) => {
     const formData = new FormData();
     for (const key in editedDatapack) {
       const castedKey = key as keyof EditableDatapackMetadata;
@@ -27,6 +32,12 @@ export const handleDatapackEdit = action(
         }
         formData.append(castedKey, editedDatapack[castedKey] as string);
       }
+    }
+    if (newDatapackFile) {
+      formData.append("datapack", newDatapackFile);
+    }
+    if (newDatapackImage) {
+      formData.append("datapack-image", newDatapackImage);
     }
     if (Array.from(formData.keys()).length === 0) {
       pushSnackbar("No changes made", "info");
@@ -46,12 +57,12 @@ export const handleDatapackEdit = action(
       });
       if (response.ok) {
         pushSnackbar("Datapack updated", "success");
-        setEditableDatapackMetadata(editedDatapack);
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
         if (!datapack) return false;
         removeDatapack(originalDatapack);
         addDatapack(datapack);
+        resetEditableDatapackMetadata(datapack);
         removeAllErrors();
         return true;
       } else {

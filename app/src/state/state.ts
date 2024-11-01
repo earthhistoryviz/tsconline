@@ -81,6 +81,8 @@ export type State = {
   datapackProfilePage: {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
+    tempEditableDatapackFile: File | null;
+    tempEditableDatapackImage: File | null;
     unsavedChanges: boolean;
   };
   mapState: {
@@ -160,6 +162,8 @@ export const state = observable<State>({
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,
+    tempEditableDatapackFile: null,
+    tempEditableDatapackImage: null,
     unsavedChanges: false
   },
   chartLoading: false,

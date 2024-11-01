@@ -4,7 +4,7 @@ import styles from "./DatapackProfile.module.css";
 import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
-import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
+import { Autocomplete, Avatar, Badge, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
 import { CustomDivider, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -35,6 +35,7 @@ import {
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile
 } from "./state/non-action-util";
+import { AddPhotoAlternate, Edit, FileUpload } from "@mui/icons-material";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -49,7 +50,7 @@ export const DatapackProfile = observer(() => {
   };
   const datapack = fetchDatapack();
   useEffect(() => {
-    if (datapack) actions.setEditableDatapackMetadata(datapack);
+    if (datapack) actions.resetEditableDatapackMetadata(datapack);
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
@@ -101,7 +102,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <img className={styles.di} src={image} />
+        <DatapackImage image={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
@@ -129,7 +130,12 @@ export const DatapackProfile = observer(() => {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
       }
-      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      const result = await actions.handleDatapackEdit(
+        datapack,
+        state.datapackProfilePage.editableDatapackMetadata,
+        state.datapackProfilePage.tempEditableDatapackFile,
+        state.datapackProfilePage.tempEditableDatapackImage
+      );
       if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
         navigate(
           getNavigationRouteForDatapackProfile(
@@ -155,6 +161,53 @@ export const DatapackProfile = observer(() => {
     </div>
   );
 });
+
+type DatapackImageProps = {
+  image: string;
+};
+const DatapackImage: React.FC<DatapackImageProps> = ({ image }) => {
+  const { state, actions } = useContext(context);
+  const profileImageRef = useRef<HTMLInputElement>(null);
+  const handleDatapackFileChange = () => {
+    if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
+      actions.setDatapackProfilePageTempEditableDatapackImage(profileImageRef.current.files[0]);
+    }
+  }
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.editableDatapackImage}>
+          <Badge
+            overlap="rectangular"
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              badgeContent={
+                <Avatar className={styles.profilePencilEdit} sx={{ backgroundColor: "button.main"}}>
+                  <FileUpload fontSize="small" />
+                </Avatar>
+              }
+            onClick={() => {
+              if (profileImageRef.current) profileImageRef.current.click();
+            }}>
+            {state.datapackProfilePage.tempEditableDatapackImage ? (
+              <img src={URL.createObjectURL(state.datapackProfilePage.tempEditableDatapackImage)} className={styles.di}/>
+            ) : (
+              <img src={image} className={styles.di}/>
+            )}
+          </Badge>
+          <input
+            type="file"
+            accept=".png, .jpg, .jpeg"
+            ref={profileImageRef}
+            style={{ display: "none" }}
+            onChange={handleDatapackFileChange}
+          />
+        </Box>
+      ) : (
+        <img className={styles.di} src={image} />
+      )}
+    </>
+  );
+};
 
 type WarningTabProps = {
   count: number;
@@ -237,7 +290,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
           <EditButtons
             unsavedChanges={state.datapackProfilePage.unsavedChanges}
-            resetForm={() => actions.setEditableDatapackMetadata(datapack)}
+            resetForm={() => actions.resetEditableDatapackMetadata(datapack)}
           />
         )}
         <div className={styles.ai}>
