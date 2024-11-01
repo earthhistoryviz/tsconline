@@ -341,7 +341,7 @@ export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
 export async function processEditDatapackRequest(
   formData: AsyncIterableIterator<Multipart>,
   uuid: string
-): Promise<OperationResult | { code: number; fields: Record<string, string> }> {
+): Promise<OperationResult | { code: number; fields: Record<string, string>; tempFiles: string[] }> {
   const users = await findUser({ uuid });
   const user = users[0];
   if (!user) {
@@ -394,7 +394,14 @@ export async function processEditDatapackRequest(
       fields[part.fieldname] = part.value;
     }
   }
-  return { code: 200, fields };
+  const tempFiles: string[] = [];
+  if (fields.filepath) {
+    tempFiles.push(fields.filepath);
+  }
+  if (datapackImageFilepath) {
+    tempFiles.push(datapackImageFilepath);
+  }
+  return { code: 200, fields, tempFiles };
 }
 
 /**
@@ -421,6 +428,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "notes":
       case "originalFileName":
       case "storedFileName":
+      case "datapackImage":
         partial[key] = value;
         break;
       case "references":

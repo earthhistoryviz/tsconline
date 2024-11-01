@@ -83,6 +83,7 @@ export type State = {
     editableDatapackMetadata: EditableDatapackMetadata | null;
     tempEditableDatapackFile: File | null;
     tempEditableDatapackImage: File | null;
+    datapackImageVersion: number; // this is used to force the image to update when the user uploads a new image
     unsavedChanges: boolean;
   };
   mapState: {
@@ -164,6 +165,7 @@ export const state = observable<State>({
     editableDatapackMetadata: null,
     tempEditableDatapackFile: null,
     tempEditableDatapackImage: null,
+    datapackImageVersion: 0,
     unsavedChanges: false
   },
   chartLoading: false,

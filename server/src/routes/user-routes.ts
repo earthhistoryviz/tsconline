@@ -54,9 +54,13 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
     await editDatapack(uuid, datapack, partial);
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
     return;
+  } finally {
+    // remove temp files; files should be removed normally, but if there is an error, we should remove them here
+    for (const file of response.tempFiles) {
+      await rm(file, { force: true });
+    }
   }
   reply.send({ message: `Successfully updated ${datapack}` });
 };
