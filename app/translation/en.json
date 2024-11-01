@@ -217,8 +217,9 @@
                 "see-info-guidance": "Click a datapack to see more information!",
                 "add-datapack-guidance": "Add a datapack by clicking the checkbox",
                 "title": {
-                    "server": "Server Datapacks",
-                    "public-user": "Public User Datapacks",
+                    "private-official": "Private Official Datapacks",
+                    "public-official": "Official Datapacks",
+                    "contributed": "User Contributed Datapacks",
                     "workshop": "Workshop Datapacks",
                     "your": "Your Datapacks"
                 },
@@ -354,7 +355,8 @@
             "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted.",
             "ADMIN_WORKSHOP_EDIT_FAILED": "Unable to edit workshop. Please try again later.",
             "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
-            "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later."
+            "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later.",
+            "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later."
         },
         "button": {
             "generate": "Generate",

@@ -73,7 +73,7 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     references: "references" in datapack ? datapack.references : [],
     tags: "tags" in datapack ? datapack.tags : [],
     isPublic: "isPublic" in datapack ? datapack.isPublic : false,
-    type: "type" in datapack ? datapack.type : "server",
+    type: "type" in datapack ? datapack.type : "official",
     description: "description" in datapack ? datapack.description : "",
     size: "size" in datapack ? datapack.size : 0,
     originalFileName: "originalFileName" in datapack ? datapack.originalFileName : "",
