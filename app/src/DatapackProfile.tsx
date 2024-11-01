@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
 import {
@@ -16,7 +16,7 @@ import {
   Typography,
   useTheme
 } from "@mui/material";
-import { CustomDivider, TSCButton, TagButton } from "./components";
+import { CustomDivider, InputFileUpload, TSCButton, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
@@ -47,6 +47,7 @@ import {
   getNavigationRouteForDatapackProfile
 } from "./state/non-action-util";
 import { FileUpload } from "@mui/icons-material";
+import { checkDatapackValidity } from "./state/actions/util-actions";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -323,7 +324,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <Typography>{datapack.originalFileName}</Typography>
+          <DatapackFile fileName={datapack.originalFileName} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
@@ -340,6 +341,32 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         <Contact contact={datapack.contact} />
       </div>
     </Box>
+  );
+});
+type DatapackFileProps = {
+  fileName: string;
+};
+
+const DatapackFile: React.FC<DatapackFileProps> = observer(({ fileName }) => {
+  const { state, actions } = useContext(context);
+  const name = state.datapackProfilePage.tempEditableDatapackFile?.name ?? fileName;
+  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !checkDatapackValidity(file)) return;
+    actions.removeAllErrors();
+    actions.setDatapackProfilePageTempEditableDatapackFile(file);
+  };
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.changeDatapackFile}>
+          <Typography>{name}</Typography>
+          <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} />
+        </Box>
+      ) : (
+        <Typography>{fileName}</Typography>
+      )}
+    </>
   );
 });
 

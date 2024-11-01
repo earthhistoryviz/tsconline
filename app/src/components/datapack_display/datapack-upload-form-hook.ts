@@ -6,6 +6,7 @@ import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
 import { getDatapackFromArray } from "../../state/non-action-util";
+import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
   upload: UploadDatapackMethodType;
@@ -91,21 +92,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
-    if (!file) {
-      return;
-    }
-    if (file.name.length > 50) {
-      actions.pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
-      return;
-    }
-    const ext = file.name.split(".").pop();
-    // either an unencoded file (text file) or an encoded file that we have no type for
-    if (file.type !== "text/plain" && file.type !== "") {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
-      return;
-    }
-    if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
+    if (!file || !checkDatapackValidity(file)) {
       return;
     }
     actions.removeAllErrors();
