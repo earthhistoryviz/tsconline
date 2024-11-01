@@ -1,6 +1,10 @@
 import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
-import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import {
+  CACHED_USER_DATAPACK_FILENAME,
+  DATAPACK_PROFILE_PICTURE_FILENAME,
+  DECRYPTED_DIRECTORY_NAME
+} from "../constants.js";
 import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
 import { Datapack, DatapackMetadata, assertDatapack, isDateValid } from "@tsconline/shared";
 import logger from "../error-logger.js";
@@ -19,7 +23,7 @@ import { OperationResult, User } from "../types.js";
 import {
   changeProfilePicture,
   getTemporaryFilepath,
-  setupNewDatapackDirectoryInUUIDDirectory,
+  replaceDatapackFile,
   uploadFileToFileSystem
 } from "../upload-handlers.js";
 import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
@@ -134,14 +138,12 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
 
 /**
  * rename a user datapack which means we have to rename the folder and the file metadata (the key only)
- * also updates the datapack with a new datapack object
  * @param uuid the uuid of the user
  * @param oldDatapack the old datapack title
  * @param datapack the new datapack object
  */
 export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
-  const oldDatapackMetadata = await fetchUserDatapack(uuid, oldDatapack);
   const newDatapackPath = path.join(path.dirname(oldDatapackPath), datapack.title);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
     throw new Error("Invalid filepath");
@@ -150,14 +152,8 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, data
     throw new Error("Datapack with that title already exists");
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await writeUserDatapack(uuid, datapack).catch(async (e) => {
-    await rename(newDatapackPath, oldDatapackPath);
-    throw e;
-  });
   await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
     await rename(newDatapackPath, oldDatapackPath);
-    // revert the write if the metadata change fails
-    await writeUserDatapack(uuid, oldDatapackMetadata);
     throw e;
   });
 }
@@ -177,25 +173,18 @@ export async function editDatapack(
   const originalTitle = _.clone(metadata.title);
   Object.assign(metadata, newDatapack);
   if ("originalFileName" in newDatapack) {
-    await setupNewDatapackDirectoryInUUIDDirectory(
-      uuid,
-      await getTemporaryFilepath(uuid, metadata.storedFileName),
-      metadata,
-      false,
-      metadata.datapackImage ? await getTemporaryFilepath(uuid, metadata.datapackImage) : undefined
-    );
-  } else if ("title" in newDatapack && originalTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, originalTitle, metadata);
-  } else {
-    await writeUserDatapack(uuid, metadata);
+    await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
   }
-  // if the user already changed the file, we already updated the profile picture
-  if (!("originalFileName" in newDatapack) && "datapackImage" in newDatapack) {
+  if ("title" in newDatapack && originalTitle !== newDatapack.title) {
+    await renameUserDatapack(uuid, originalTitle, metadata);
+  }
+  if ("datapackImage" in newDatapack) {
     await changeProfilePicture(uuid, metadata.title, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
   }
+  await writeUserDatapack(uuid, metadata);
 }
 
 /**
@@ -231,6 +220,16 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   }
   await rm(datapackPath, { recursive: true, force: true });
   await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
+}
+
+export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {
+  const datapackFilepath = await getUploadedDatapackFilepath(uuid, datapack);
+  const parentDir = path.dirname(datapackFilepath);
+  const decrypted = path.join(parentDir, DECRYPTED_DIRECTORY_NAME);
+  const json = path.join(parentDir, CACHED_USER_DATAPACK_FILENAME);
+  await rm(datapackFilepath, { force: true });
+  await rm(decrypted, { recursive: true, force: true });
+  await rm(json, { force: true });
 }
 
 /**
