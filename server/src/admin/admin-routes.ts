@@ -497,7 +497,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
-    const duplicatedEmails: string[] = [];
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -510,9 +509,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
             invalidEmails.push(email);
             continue;
           }
-        } else {
-          duplicatedEmails.push(email);
-          continue;
         }
       } else {
         await createUser({
@@ -542,10 +538,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
     }
     if (invalidEmails.length > 0) {
       reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: invalidEmails });
-      return;
-    }
-    if (duplicatedEmails.length > 0) {
-      reply.status(500).send({ error: "Duplicated user-workshop relationship", invalidEmails: duplicatedEmails });
       return;
     }
     reply.send({ message: "Users added" });

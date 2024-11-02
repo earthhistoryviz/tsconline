@@ -1727,31 +1727,6 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
-  it("should return 500 if the user is already added to the workshop", async () => {
-    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
-    checkWorkshopHasUser
-      .mockResolvedValueOnce([testUserWorkshop])
-      .mockResolvedValueOnce([])
-      .mockResolvedValueOnce([testUserWorkshop2]);
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/workshop/users",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(parseExcelFile).toHaveBeenCalledTimes(1);
-    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
-    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
-    expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({
-      error: "Duplicated user-workshop relationship",
-      invalidEmails: ["test@gmail.com"]
-    });
-    expect(response.statusCode).toBe(500);
-  });
   it("should return 500 if unable to update old user", async () => {
     checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
     checkWorkshopHasUser

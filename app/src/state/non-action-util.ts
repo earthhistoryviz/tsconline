@@ -1,5 +1,6 @@
 import { Datapack, DatapackConfigForChartRequest, isServerDatapack, isUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
+import dayjs from "dayjs";
 
 export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
@@ -34,4 +35,28 @@ export function getDatapackProfileImageUrl(datapack: Datapack) {
   } else {
     return devSafeUrl(`/datapack-images/default/${uuid}`);
   }
+}
+
+export function formatDate(input: string | dayjs.Dayjs): string {
+  let date: Date;
+  if (typeof input === "string") {
+    date = new Date(input);
+  } else if (dayjs.isDayjs(input)) {
+    date = input.toDate();
+  } else {
+    throw new Error("Invalid input: must be a string or a Day.js object.");
+  }
+  const datePart = date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+
+  return `${datePart} at ${timePart}`;
 }

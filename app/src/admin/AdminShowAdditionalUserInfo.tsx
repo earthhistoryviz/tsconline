@@ -14,7 +14,9 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead
+  TableHead,
+  Button,
+  useTheme
 } from "@mui/material";
 import { AdminSharedUser } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
@@ -22,6 +24,7 @@ import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
 import useEditUser from "../components/edit-user-stats-hook";
 import { useContext } from "react";
 import { context } from "../state";
+import { formatDate } from "../state/non-action-util";
 
 type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
@@ -32,30 +35,19 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
   const { state } = useContext(context);
   const { editState, setters, handlers } = useEditUser({ data: props.data });
   const allWorkshops = state.admin.workshops;
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-
-    const datePart = date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
-    });
-
-    const timePart = date.toLocaleTimeString(undefined, {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true
-    });
-
-    return `${datePart} at ${timePart}`;
-  };
+  const theme = useTheme();
 
   const WorkshopsList: React.FC = () => {
     // Create a lookup map for allWorkshops
     const workshopMap = Object.fromEntries(allWorkshops.map((workshop) => [workshop.workshopId, workshop]));
 
     return (
-      <TableContainer component={Paper} style={{ maxWidth: "100%" }}>
+      <TableContainer
+        component={Paper}
+        sx={{
+          backgroundColor: theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)",
+          maxWidth: "100%"
+        }}>
         <Table>
           <TableHead>
             <TableRow>
@@ -85,7 +77,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                     <TableCell>
                       <CustomTooltip title="Remove user from this workshop">
                         <IconButton
-                          onClick={() => handlers.handleOpenConfirmDialog(value)}
+                          onClick={() => handlers.handleOpenConfirmRemovalOfUserFromWorkshop(value)}
                           edge="end"
                           aria-label="leave">
                           <PersonRemove />
@@ -105,19 +97,19 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
   return (
     <>
       <CustomTooltip title="Show Additional User Info">
-        <IconButton onClick={() => setters.setMoreUsersInfoFormOpen(true)}>
+        <IconButton onClick={() => setters.setMoreUserInfoFormOpen(true)}>
           <MoreVertOutlinedIcon />
         </IconButton>
       </CustomTooltip>
       <Dialog
-        open={editState.moreUsersInfoFormOpen}
-        onClose={handlers.handleCloseForm}
+        open={editState.moreUserInfoFormOpen}
+        onClose={handlers.handleCloseTheMoreUserInfoForm}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
         maxWidth="md"
         fullWidth={true}>
-        <IconButton onClick={handlers.handleCloseForm} sx={{ position: "absolute", top: 8, right: 8 }}>
+        <IconButton onClick={handlers.handleCloseTheMoreUserInfoForm} sx={{ position: "absolute", top: 8, right: 8 }}>
           <Close />
         </IconButton>
 
@@ -152,7 +144,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                     editState.userInfo.username[0].toUpperCase()
                   )}
                 </Avatar>
-                {editState.isEditing && (
+                {editState.editMode && (
                   <Box position="absolute" bottom={-3} right={12} zIndex={1}>
                     <CustomTooltip title="Upload avatar">
                       <IconButton
@@ -166,7 +158,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 )}
               </Box>
 
-              {editState.isEditing ? (
+              {editState.editMode ? (
                 <TextField
                   label="Username"
                   name="username"
@@ -180,7 +172,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
 
             {/* User Email */}
             <Box mb={1}>
-              {editState.isEditing ? (
+              {editState.editMode ? (
                 <TextField
                   label="Email"
                   name="email"
@@ -200,7 +192,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <Typography variant="body1" mr={1} fontWeight={"bold"}>
                 Admin:
               </Typography>
-              {editState.isEditing ? (
+              {editState.editMode ? (
                 <Select value={editState.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
@@ -210,15 +202,22 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               )}
             </Box>
           </Box>
-          {editState.isEditing && (
+          {editState.editMode && (
             <Box display="flex" justifyContent="flex-end" mb={2}>
-              <TSCButton
+              <Button
                 variant="outlined"
-                buttonType="secondary"
-                onClick={handlers.handleShowDiscardDialog}
-                sx={{ mr: 1 }}>
+                sx={{
+                  borderColor: "error.main",
+                  color: "error.main",
+                  ":hover": {
+                    borderColor: "error.light",
+                    backgroundColor: "transparent"
+                  },
+                  mr: 1
+                }}
+                onClick={handlers.handleOpenConfirmDiscardUserInfoChange}>
                 Discard
-              </TSCButton>
+              </Button>
               <TSCButton variant="contained" buttonType="primary" onClick={handlers.handleSaveChanges}>
                 Save Changes
               </TSCButton>
@@ -240,25 +239,25 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         </Box>
       </Dialog>
       <TSCYesNoPopup
-        open={editState.openConfirmDialog}
+        open={editState.openConfirmRemovalOfUserFromWorkshopDialog}
         title="Are you sure you want to remove the user from the workshop?"
         onYes={handlers.handleRemoveWorkshop}
-        onNo={handlers.handleCloseConfirmDialog}
-        onClose={handlers.handleCloseConfirmDialog}
+        onNo={handlers.handleCloseConfirmRemovalOfUserFromWorkshop}
+        onClose={handlers.handleCloseConfirmRemovalOfUserFromWorkshop}
       />
       <TSCYesNoPopup
-        open={editState.showDiscardDialogAndCloseForm}
+        open={editState.openConfirmDiscardUserInfoChangeAndCloseForm}
         title="You have unsaved changes. Are you sure you want to discard them?"
-        onYes={handlers.handleDiscardChangesAndCloseTheForm}
-        onNo={handlers.handleCloseDiscardDialog}
-        onClose={handlers.handleCloseDiscardDialog}
+        onYes={handlers.handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm}
+        onNo={handlers.handleCloseConfirmDiscardUserInfoChange}
+        onClose={handlers.handleCloseConfirmDiscardUserInfoChange}
       />
       <TSCYesNoPopup
-        open={editState.showDiscardDialog}
+        open={editState.openConfirmDiscardUserInfoChange}
         title="You have unsaved changes. Are you sure you want to discard them?"
-        onYes={handlers.handleDiscardChanges}
-        onNo={handlers.handleCloseDiscardDialog}
-        onClose={handlers.handleCloseDiscardDialog}
+        onYes={handlers.handleDiscardUserInfoChanges}
+        onNo={handlers.handleCloseConfirmDiscardUserInfoChange}
+        onClose={handlers.handleCloseConfirmDiscardUserInfoChange}
       />
     </>
   );
