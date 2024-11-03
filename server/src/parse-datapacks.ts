@@ -298,6 +298,7 @@ export async function parseDatapacks(
   setShowLabels(chartColumn);
 
   const baseDatapackProps: BaseDatapackProps = {
+    ...datapackInfo,
     columnInfo: chartColumn,
     ageUnits,
     defaultChronostrat,
@@ -307,8 +308,7 @@ export async function parseDatapacks(
       (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "datapack-images"))) +
       (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    mapPack: await parseMapPacks([datapackInfo.storedFileName], decryptFilePath),
-    ...datapackInfo
+    mapPack: await parseMapPacks([datapackInfo.storedFileName], decryptFilePath)
   };
   // use datapack date if date not given by user
   if (date && !datapackInfo.date) baseDatapackProps.date = date;

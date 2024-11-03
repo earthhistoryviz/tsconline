@@ -100,10 +100,10 @@ export type State = {
     };
     mapHistory: MapHistory;
   };
-  config: Config;
+  config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
-  datapacks: Datapack[];
+  datapacks: Datapack[]; // all datapacks on the server
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];

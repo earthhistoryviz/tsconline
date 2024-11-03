@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
   addDatapack,
@@ -9,21 +9,27 @@ import {
   removeDatapack,
   setDatapackProfilePageEditMode,
   resetEditableDatapackMetadata,
-  setDatapackImageVersion
+  setDatapackImageVersion,
+  processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { EditableDatapackMetadata } from "../../types";
-import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
+import { Datapack, assertDatapack, assertUserDatapack } from "@tsconline/shared";
 import { state } from "../state";
+import { doesDatapackExistInCurrentConfig } from "../non-action-util";
 
 export const handleDatapackEdit = action(
   async (
-    originalDatapack: EditableDatapackMetadata,
+    originalDatapack: Datapack,
     editedDatapack: EditableDatapackMetadata,
     newDatapackFile?: File | null,
     newDatapackImage?: File | null
   ) => {
+    if (!state.user.uuid) {
+      pushError(ErrorCodes.NOT_LOGGED_IN);
+      return false;
+    }
     const formData = new FormData();
     for (const key in editedDatapack) {
       const castedKey = key as keyof EditableDatapackMetadata;
@@ -67,6 +73,10 @@ export const handleDatapackEdit = action(
         addDatapack(datapack);
         resetEditableDatapackMetadata(datapack);
         removeAllErrors();
+        // if selected in the config, force a reprocess of the config
+        if (doesDatapackExistInCurrentConfig(originalDatapack, state.config.datapacks)) {
+          await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
+        }
         return true;
       } else {
         displayServerError(

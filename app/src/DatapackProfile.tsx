@@ -148,6 +148,7 @@ export const DatapackProfile = observer(() => {
         state.datapackProfilePage.tempEditableDatapackFile,
         state.datapackProfilePage.tempEditableDatapackImage
       );
+      // if the title has changed, navigate to the new title
       if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
         navigate(
           getNavigationRouteForDatapackProfile(
