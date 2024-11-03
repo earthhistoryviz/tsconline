@@ -1,14 +1,20 @@
-import { Datapack, DatapackConfigForChartRequest, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackUniqueIdentifier, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 
-export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
-export function doesDatapackAlreadyExist(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
 }
-export function compareExistingDatapacks(a: DatapackConfigForChartRequest, b: DatapackConfigForChartRequest) {
+export function doesDatapackExistInCurrentConfig(
+  datapack: DatapackUniqueIdentifier,
+  datapacks: DatapackUniqueIdentifier[]
+) {
+  return !!datapacks.find((d) => compareExistingDatapacks(d, datapack));
+}
+export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: DatapackUniqueIdentifier) {
   return (
     a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
   );

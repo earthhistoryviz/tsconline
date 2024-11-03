@@ -111,7 +111,7 @@ export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
 export async function getUploadedDatapackFilepath(uuid: string, datapack: string): Promise<string> {
   const directory = await fetchUserDatapackDirectory(uuid, datapack);
   const metadata = await fetchUserDatapack(uuid, datapack);
-  const uploadedFilepath = path.join(directory, metadata.originalFileName);
+  const uploadedFilepath = path.join(directory, metadata.storedFileName);
   if (!(await verifyFilepath(uploadedFilepath))) {
     throw new Error("Invalid filepath");
   }
@@ -168,10 +168,10 @@ export async function editDatapack(
   oldDatapackTitle: string,
   newDatapack: Partial<DatapackMetadata>
 ): Promise<void> {
-  const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
+  let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
   Object.assign(metadata, newDatapack);
   if ("originalFileName" in newDatapack) {
-    await replaceDatapackFile(
+    metadata = await replaceDatapackFile(
       uuid,
       await getTemporaryFilepath(uuid, metadata.storedFileName),
       oldDatapackTitle,
@@ -228,11 +228,9 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
 export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {
   const datapackFilepath = await getUploadedDatapackFilepath(uuid, datapack);
   const parentDir = path.dirname(datapackFilepath);
-  const decrypted = path.join(parentDir, DECRYPTED_DIRECTORY_NAME);
-  const json = path.join(parentDir, CACHED_USER_DATAPACK_FILENAME);
+  const decrypted = path.join(parentDir, DECRYPTED_DIRECTORY_NAME, path.parse(datapackFilepath).name);
   await rm(datapackFilepath, { force: true });
   await rm(decrypted, { recursive: true, force: true });
-  await rm(json, { force: true });
 }
 
 /**
