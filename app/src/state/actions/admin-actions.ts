@@ -593,6 +593,85 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
   return;
 });
 
+export const adminAddServerDatapackToWorkshop = action(async (title: string) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminAddServerDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop/datapack`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ title }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      pushSnackbar("Datapack added to workshop successfully", "success");
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+/**
+ * Uploads a datapack to a workshop
+ * @param file The file to upload
+ * @param metadata The metadata for the datapack
+ * @param workshopId The ID of the workshop to upload to (required)
+ */
+export const adminUploadDatapackToWorkshop = action(
+  async (file: File, metadata: DatapackMetadata, workshopId?: number) => {
+    if (!workshopId) {
+      pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
+    formData.append("file", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(isPublic));
+    formData.append("type", metadata.type);
+    formData.append("workshopId", String(workshopId));
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/admin/workshop/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
+
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
   state.admin.workshops = workshop;
 });

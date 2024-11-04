@@ -11,9 +11,10 @@ import { checkDatapackValidity } from "../../state/actions/util-actions";
 type DatapackUploadFormProps = {
   upload: UploadDatapackMethodType;
   type: DatapackType;
+  workshopId?: number;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload, type } = props;
+  const { upload, type, workshopId } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -74,7 +75,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    upload(file, metadata, profileImage || undefined);
+    upload(file, metadata, profileImage || undefined, workshopId);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
@@ -139,7 +140,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       dateError,
       file,
       profileImageRef,
-      priority
+      priority,
     },
     setters: {
       setTitle,
@@ -152,7 +153,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setReferences,
       setDate,
       setFile,
-      setPriority
+      setPriority,
     },
     handlers: {
       resetForm,

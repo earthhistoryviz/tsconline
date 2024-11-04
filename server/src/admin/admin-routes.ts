@@ -803,3 +803,92 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
   };
   reply.send(success);
 };
+
+export const adminUploadDatapackToWorkshop = async function adminUploadDatapackToWorkshop(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const parts = request.parts();
+  let file: MultipartFile | undefined;
+  let filepath: string | undefined;
+  let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
+  const fields: { [fieldname: string]: string } = {};
+  let workshopId: number | undefined;
+  const serverDir = await getPrivateUserUUIDDirectory("official");
+  const cleanupTempFiles = async () => {
+    if (filepath) {
+      await rm(filepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
+    }
+    if (tempProfilePictureFilepath) {
+      await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
+    }
+    if (fields.title) {
+      await deleteOfficialDatapack(fields.title).catch((e) => {
+        console.error(e);
+      });
+    }
+  };
+  try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        if (part.fieldname === "datapack") {
+          // DOWNLOAD FILE HERE AND SAVE TO FILE
+          file = part;
+          originalFileName = file.filename;
+          storedFileName = makeTempFilename(originalFileName);
+          filepath = join(serverDir, storedFileName);
+          // store it temporarily in the upload directory
+          // this is because we can't check if the file should overwrite the existing file until we verify it
+          if (!checkFileTypeIsDatapack(file)) {
+            reply.status(415).send({ error: "Invalid file type for datapack file" });
+            return;
+          }
+          const { code, message } = await uploadFileToFileSystem(file, filepath);
+          if (code !== 200) {
+            await cleanupTempFiles();
+            reply.status(code).send({ error: message });
+            return;
+          }
+        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+          if (!checkFileTypeIsDatapackImage(part)) {
+            reply.status(415).send({ error: "Invalid file type for datapack image" });
+            return;
+          }
+          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
+          tempProfilePictureFilepath = join(serverDir, fields.datapackImage);
+          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+          if (code !== 200) {
+            await cleanupTempFiles();
+            reply.status(code).send({ error: message });
+            return;
+          }
+        }
+      }
+      if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+        if (part.fieldname === "workshopId") {
+          workshopId = parseInt(part.value);
+        }
+        fields[part.fieldname] = part.value;
+      }
+    }
+  } catch (error) {
+    await cleanupTempFiles();
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+    return;
+  }
+  if (!file || !filepath || !originalFileName || !storedFileName || !workshopId) {
+    await cleanupTempFiles();
+    reply.status(400).send({ error: "Missing file" });
+    return;
+  }
+  fields.filepath = filepath;
+  fields.storedFileName = storedFileName;
+  fields.originalFileName = originalFileName;
+  fields.uuid = "official";

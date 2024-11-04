@@ -141,10 +141,9 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         onClose={() => setDeleteWorkshopFormOpen(false)}
         onNo={() => setDeleteWorkshopFormOpen(false)}
       />
-      {workshop && (createWorkshopFormOpen || editWorkshopFormOpen) && (
+      {((editWorkshopFormOpen && workshop) || createWorkshopFormOpen) && (
         <WorkshopForm
-          createWorkshopFormOpen={createWorkshopFormOpen}
-          editWorkshopFormOpen={editWorkshopFormOpen}
+          editMode={editWorkshopFormOpen}
           currentWorkshop={workshop}
           onClose={() => {
             setCreateWorkshopFormOpen(false);
@@ -155,7 +154,6 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       )}
       {workshop && addDatapacksFormOpen && (
         <AddDatapacksForm
-          addDatapacksFormOpen={addDatapacksFormOpen}
           currentWorkshop={workshop}
           onClose={() => {
             setAddDatapacksFormOpen(false);
