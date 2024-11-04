@@ -172,7 +172,7 @@ jobs:
 
       - name: Debug event context
         run: | 
-          echo "Actor: ${{ github.actor }}, PR owner: ${{ github.event.pull_request.head.repo.owner.login }}"
+          echo "Actor: ${{ github.actor }}, PR owner: ${{ github.event.pull_request.user.login }}"
 
       - name: Checkout code from Bitbucket
         if: github.event.pull_request.head.repo.owner.login != 'dependabot[bot]'
