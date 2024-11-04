@@ -265,7 +265,15 @@ export const uploadUserDatapack = action(
         }
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
-        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+        if (response.status === 403) {
+          displayServerError(data, ErrorCodes.DATAPACK_TOO_LARGE, ErrorMessages[ErrorCodes.DATAPACK_TOO_LARGE]);
+        } else {
+          displayServerError(
+            data,
+            ErrorCodes.INVALID_DATAPACK_UPLOAD,
+            ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]
+          );
+        }
       }
     } catch (e) {
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
