@@ -15,7 +15,7 @@ import {
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, Lottie } from "../components";
+import { TSCButton, InputFileUpload, TSCPopup, Lottie, CustomDivider, DatapackUploadForm } from "../components";
 import loader from "../assets/icons/loading.json";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
@@ -26,12 +26,10 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
 
 type AddDatapacksFormProps = {
-  addDatapacksFormOpen: boolean;
-  currentWorkshop: SharedWorkshop | null;
+  currentWorkshop: SharedWorkshop;
   onClose: () => void;
 };
 export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(function AddDatapacksForm({
-  addDatapacksFormOpen,
   currentWorkshop,
   onClose
 }) {
@@ -40,6 +38,7 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
   const [loading, setLoading] = useState(false);
   const [datapacks, setDatapacks] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
+  const [uploadDatapacks, setUploadDatapacks] = useState(false);
 
   const handleDialogClose = () => {
     setDatapacks([]);
@@ -105,8 +104,8 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
     // }
   };
 
-  return (
-    <Dialog open={addDatapacksFormOpen} onClose={handleDialogClose}>
+  return !uploadDatapacks ? (
+    <Dialog open={true} onClose={handleDialogClose} fullWidth>
       <Box textAlign="center" padding="10px">
         <Typography variant="h5" mb="5px">
           Add Datapacks
@@ -118,7 +117,7 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
           flexDirection="column"
           alignItems="center"
           onSubmit={handleFormSubmit}>
-          <Box display="flex" flexDirection="column" alignItems="center" gap={5} height={300}>
+          <Box display="flex" flexDirection="column" alignItems="center" gap={5}>
             <FormControl variant="outlined" sx={{ m: 1 }} size="small">
               <InputLabel id="datapacks-label">Select Server Datapacks</InputLabel>
               <Select
@@ -153,18 +152,9 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
                 ))}
               </Select>
             </FormControl>
-            <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-              <InputFileUpload
-                text="Upload Datapacks"
-                onChange={handleFileUpload}
-                accept=".xls,.xlsx"
-                startIcon={<CloudUploadIcon />}
-              />
-              <Typography ml="10px">{file?.name || "No file selected"}</Typography>
-            </Box>
           </Box>
           <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
-            <TSCButton type="submit">Confirm Selection</TSCButton>
+            <TSCButton type="submit">Add Datapacks</TSCButton>
           </Box>
           {loading && (
             <Box
@@ -182,20 +172,35 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
             </Box>
           )}
         </Box>
+        <Box className="divider-box">
+          <CustomDivider className="divider-line" />
+          <Box sx={{ px: 2 }}>
+            <Typography variant="caption">or</Typography>
+          </Box>
+          <CustomDivider className="divider-line" />
+        </Box>
+        <TSCButton onClick={() => setUploadDatapacks(true)}>Upload Datapacks</TSCButton>
       </Box>
+    </Dialog>
+  ) : (
+    <Dialog open={true} onClose={() => setUploadDatapacks(false)} maxWidth={false}>
+      <DatapackUploadForm
+        close={() => setUploadDatapacks(false)}
+        upload={actions.adminUploadDatapackToWorkshop}
+        type={{ type: "workshop" }}
+        workshopId={currentWorkshop.workshopId}
+      />
     </Dialog>
   );
 });
 
 type WorkshopFormProps = {
-  createWorkshopFormOpen: boolean;
-  editWorkshopFormOpen: boolean;
+  editMode: boolean;
   currentWorkshop: SharedWorkshop | null;
   onClose: () => void;
 };
 export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function WorkshopForm({
-  createWorkshopFormOpen,
-  editWorkshopFormOpen,
+  editMode,
   currentWorkshop,
   onClose
 }) {
@@ -204,9 +209,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [loading, setLoading] = useState(false);
   const [workshop, setWorkshop] = useState<SharedWorkshop | null>(currentWorkshop);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
-  const [workshopTitle, setWorkshopTitle] = useState(editWorkshopFormOpen ? workshop?.title || "" : "");
-  const [startDate, setStartDate] = useState<Dayjs | null>(editWorkshopFormOpen ? dayjs(workshop?.start) : null);
-  const [endDate, setEndDate] = useState<Dayjs | null>(editWorkshopFormOpen ? dayjs(workshop?.end) : null);
+  const [workshopTitle, setWorkshopTitle] = useState(editMode ? workshop?.title || "" : "");
+  const [startDate, setStartDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.start) : null);
+  const [endDate, setEndDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.end) : null);
   const [emails, setEmails] = useState<string>("");
   const [file, setFile] = useState<File | null>(null);
 
@@ -243,7 +248,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       let edited = false;
       let created = false;
 
-      if (createWorkshopFormOpen) {
+      if (!editMode) {
         const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end);
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
@@ -349,7 +354,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         onClose={() => setInvalidEmails("")}
         maxWidth="xs"
       />
-      <Dialog open={createWorkshopFormOpen || editWorkshopFormOpen} onClose={handleDialogClose}>
+      <Dialog open={true} onClose={handleDialogClose}>
         {loading && (
           <Box
             position="absolute"
@@ -367,7 +372,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         )}
         <Box textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
-            {createWorkshopFormOpen ? "Create Workshop" : "Edit Workshop"}
+            {editMode ? "Edit Workshop" : "Create Workshop"}
           </Typography>
           <Box
             component="form"
@@ -411,7 +416,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 value={startDate}
                 onChange={(newValue) => setStartDate(newValue)}
                 minDateTime={dayjs(workshop?.start).isBefore(dayjs()) ? dayjs(workshop?.start) : dayjs()}
-                disablePast={!editWorkshopFormOpen}
+                disablePast={!editMode}
               />
               <DateTimePicker
                 label="End Date"
@@ -465,7 +470,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   <Typography ml="10px">{file?.name || "No file selected"}</Typography>
                 </Box>
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
-                  {editWorkshopFormOpen && (
+                  {editMode && (
                     <>
                       <TSCButton
                         onClick={() => {
@@ -479,9 +484,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                       </TSCButton>
                     </>
                   )}
-                  <TSCButton type="submit">
-                    {createWorkshopFormOpen ? "Create Workshop" : "Confirm Selection"}
-                  </TSCButton>
+                  <TSCButton type="submit">{editMode ? "Confirm Selection" : "Create Workshop"}</TSCButton>
                 </Box>
               </Box>
             </Box>

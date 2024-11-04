@@ -41,9 +41,10 @@ type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
   type: DatapackType;
+  workshopId?: number;
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type, workshopId }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, workshopId});
   const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
