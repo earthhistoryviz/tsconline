@@ -55,7 +55,7 @@ export default observer(function App() {
       return true;
     }
     return false;
-    };
+  };
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
