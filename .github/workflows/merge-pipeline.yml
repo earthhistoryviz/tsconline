@@ -170,6 +170,10 @@ jobs:
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
+      - name: Debug event context
+        run: | 
+          echo "Actor: ${{ github.actor }}, PR owner: ${{ github.event.pull_request.head.repo.owner.login }}"
+
       - name: Checkout code from Bitbucket
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
