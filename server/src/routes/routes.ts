@@ -466,6 +466,14 @@ export const fetchDatapackCoverImage = async function (
     }
     reply.send(await readFile(uniqueImageFilepath));
   } catch (e) {
+    try {
+      if (await checkFileExists(defaultFilepath)) {
+        reply.send(await readFile(defaultFilepath));
+        return;
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+    }
     console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
   }

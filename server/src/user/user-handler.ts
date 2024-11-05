@@ -26,6 +26,7 @@ import {
   uploadFileToFileSystem
 } from "../upload-handlers.js";
 import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
+import _ from "lodash";
 
 /**
  * TODO: WRITE TESTS
@@ -141,13 +142,13 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
  * @param oldDatapack the old datapack title
  * @param datapack the new datapack object
  */
-export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
+export async function renameUserDatapack(uuid: string, oldDatapack: string, newDatapack: string): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
-  const newDatapackPath = path.join(path.dirname(oldDatapackPath), datapack.title);
+  const newDatapackPath = path.join(path.dirname(oldDatapackPath), newDatapack);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
     throw new Error("Invalid filepath");
   }
-  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, datapack.title)) {
+  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, newDatapack)) {
     throw new Error("Datapack with that title already exists");
   }
   await rename(oldDatapackPath, newDatapackPath);
@@ -168,26 +169,52 @@ export async function editDatapack(
   oldDatapackTitle: string,
   newDatapack: Partial<DatapackMetadata>
 ): Promise<void> {
+  const rollbackActions: (() => Promise<void>)[] = [];
   let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
+  let originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
-  if ("originalFileName" in newDatapack) {
-    metadata = await replaceDatapackFile(
-      uuid,
-      await getTemporaryFilepath(uuid, metadata.storedFileName),
-      oldDatapackTitle,
-      metadata
-    );
+  try {
+    if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
+        await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!);
+        rollbackActions.push(async () => {
+          await renameUserDatapack(uuid, newDatapack.title!, oldDatapackTitle);
+        });
+    }
+    if ("originalFileName" in newDatapack) {
+      metadata = await replaceDatapackFile(
+        uuid,
+        await getTemporaryFilepath(uuid, metadata.storedFileName),
+        metadata
+      );
+      rollbackActions.push(async () => {
+        await replaceDatapackFile(
+          uuid,
+          await getTemporaryFilepath(uuid, metadata.storedFileName),
+          originalMetadata
+        );
+      });
+    }
+    if ("datapackImage" in newDatapack) {
+      await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
+      rollbackActions.push(async () => {
+        await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, originalMetadata.datapackImage!));
+      })
+    }
+    if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
+      await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
+    }
+    await writeUserDatapack(uuid, metadata);
+  } finally {
+    rollbackActions.reverse();
+    try {
+      rollbackActions.forEach(async (action) => {
+        await action();
+      })
+    } catch (e) {
+      logger.error(`Error rolling back editDatapack: ${e}`);
+      throw e;
+    }
   }
-  if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, oldDatapackTitle, metadata);
-  }
-  if ("datapackImage" in newDatapack) {
-    await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
-  }
-  if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
-  }
-  await writeUserDatapack(uuid, metadata);
 }
 
 /**

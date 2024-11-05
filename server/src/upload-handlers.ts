@@ -189,8 +189,8 @@ export async function uploadUserDatapackHandler(
  * @param sourceFilePath
  * @param metadata
  */
-export async function replaceDatapackFile(uuid: string, sourceFilePath: string, datapack: string, metadata: Datapack) {
-  const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
+export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: Datapack) {
+  const datapackDirectory = await fetchUserDatapackDirectory(uuid, metadata.title);
   const filename = path.basename(sourceFilePath);
   const decryptionFilepath = path.join(datapackDirectory, DECRYPTED_DIRECTORY_NAME);
   const datapackFilepath = path.join(datapackDirectory, filename);
@@ -203,12 +203,12 @@ export async function replaceDatapackFile(uuid: string, sourceFilePath: string, 
   const success = await loadDatapackIntoIndex(datapackIndex, decryptionFilepath, metadata);
   // will delete the whole directory if the file.
   // otherwise we would have a directory with no valid file, this makes it easier to manage (no dangling directories)
-  if (!success || !datapackIndex[datapack]) {
-    await rm(datapackDirectory, { force: true });
+  if (!success || !datapackIndex[metadata.title]) {
+    await rm(datapackDirectory, { recursive: true, force: true });
     throw new Error("Failed to load datapack into index, please reupload the file");
   }
-  await deleteDatapackFileAndDecryptedCounterpart(uuid, datapack);
-  return datapackIndex[datapack]!;
+  await deleteDatapackFileAndDecryptedCounterpart(uuid, metadata.title);
+  return datapackIndex[metadata.title]!;
 }
 
 /**
