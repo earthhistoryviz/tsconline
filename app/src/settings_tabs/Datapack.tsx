@@ -114,7 +114,7 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
         />
       </Box>
-      <Box className={styles.container}>
+      <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
           <TSCButton
             className={styles.buttons}
