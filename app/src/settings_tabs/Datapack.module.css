@@ -66,6 +66,15 @@
   margin: 0px;
 }
 
+.show {
+  font-style: italic;
+  width: max-content;
+}
+.show:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .container,
 .wrappedDatapackCategories:not(.cards) {
   display: flex;
