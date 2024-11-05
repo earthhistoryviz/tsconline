@@ -90,12 +90,13 @@
   align-items: center;
   flex-direction: column;
 }
+.container.buttonContainer {
+  flex-direction: row;
+}
 .item {
   display: flex;
   flex-wrap: wrap;
-  padding: 4px;
   width: 100%;
-  margin-bottom: 3px;
 }
 .wrapItem > *,
 .datapackDisplayContainer > .container:not(.official, .cards) {
@@ -106,7 +107,6 @@
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
-  padding: 16px;
 }
 .datapackDisplayContainer:not(.cards) {
   align-items: flex-start;
@@ -115,6 +115,13 @@
 .datapackDisplayContainer.cards {
   align-items: center;
   width: 90%;
+}
+.container.cards,
+.container.cards > .item {
+  gap: 10px;
+}
+.container.cards {
+  margin: 0px 20px 20px;
 }
 
 .buttons {
