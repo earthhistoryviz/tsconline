@@ -4,7 +4,6 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
-  flex-wrap: wrap;
 }
 
 .h {
@@ -66,6 +65,11 @@
   margin: 0px;
 }
 
+.showBox {
+  align-self: flex-start;
+  justify-self: flex-start;
+  margin-left: 45px;
+}
 .show {
   font-style: italic;
   width: max-content;
@@ -75,16 +79,16 @@
   text-decoration: underline;
 }
 
-.container,
-.wrappedDatapackCategories:not(.cards) {
+.container {
   display: flex;
   overflow-y: auto;
   flex-wrap: wrap;
   padding: 4px;
-  width: 70%;
+  width: 100%;
   margin-bottom: 3px;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
+  flex-direction: column;
 }
 .item {
   display: flex;
@@ -94,16 +98,23 @@
   margin-bottom: 3px;
 }
 .wrapItem > *,
-.wrappedDatapackCategories > .container {
+.datapackDisplayContainer > .container:not(.official, .cards) {
   flex: 1 1 50%;
 }
-
-.container.cards,
-.wrappedDatapackCategories.cards {
-  gap: 10px;
+.datapackDisplayContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 16px;
+}
+.datapackDisplayContainer:not(.cards) {
+  align-items: flex-start;
+  width: 70%;
+}
+.datapackDisplayContainer.cards {
+  align-items: center;
   width: 90%;
-  margin: 0 20px 20px 20px;
-  justify-content: flex-start;
 }
 
 .buttons {
