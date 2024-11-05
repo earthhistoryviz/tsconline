@@ -44,6 +44,7 @@
     "test:ui": "vitest --ui",
     "test:case": "vitest run -t",
     "coverage:ci": "vitest run --coverage --no-color",
+    "coverage:ci:exclude-encryption": "vitest run --coverage --no-color --exclude **/encryption.test.ts",
     "coverage": "vitest run --coverage",
     "clean": "yarn workspaces foreach -A --parallel run clean"
   },
