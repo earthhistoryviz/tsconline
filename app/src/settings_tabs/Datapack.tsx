@@ -91,7 +91,8 @@ export const Datapacks = observer(function Datapacks() {
         header={t("settings.datapacks.title.public-official")}
         HeaderIcon={Verified}
       />
-      <Box className={`${styles.wrappedDatapackCategories}`}>
+      <Box
+        className={`${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} ${styles.wrappedDatapackCategories}`}>
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapacks(state.datapacks)}
