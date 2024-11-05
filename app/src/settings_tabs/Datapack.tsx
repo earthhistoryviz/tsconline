@@ -182,6 +182,10 @@ type DatapackGroupDisplayProps = {
 const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ datapacks, header, HeaderIcon }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const isOfficial = header === t("settings.datapacks.title.public-official");
+  const visibleLimit = isOfficial ? 12 : 6;
+  const visibleDatapacks = showAll ? datapacks : datapacks.slice(0, visibleLimit);
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(
@@ -192,8 +196,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
     }
   };
   const numberOfDatapacks = datapacks.length;
-  const shouldWrap =
-    header === t("settings.datapacks.title.public-official") && state.settingsTabs.datapackDisplayType !== "cards";
+  const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
 
   return (
     <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
@@ -210,7 +213,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
       <CustomDivider className={styles.divider} />
       {numberOfDatapacks !== 0 && (
         <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`}>
-          {datapacks.map((datapack) => {
+          {visibleDatapacks.map((datapack) => {
             const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
             return state.settingsTabs.datapackDisplayType === "rows" ? (
               <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
@@ -220,6 +223,13 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
               <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
             );
           })}
+          {numberOfDatapacks > visibleLimit && (
+            <Box onClick={() => setShowAll(!showAll)}>
+              <Typography className={styles.show} variant="body2" color="primary">
+                {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+              </Typography>
+            </Box>
+          )}
         </Box>
       )}
       {numberOfDatapacks === 0 && (
