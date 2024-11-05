@@ -86,13 +86,13 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      <DatapackGroupDisplay
-        datapacks={getPublicOfficialDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.public-official")}
-        HeaderIcon={Verified}
-      />
       <Box
-        className={`${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} ${styles.wrappedDatapackCategories}`}>
+        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
+        <DatapackGroupDisplay
+          datapacks={getPublicOfficialDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.public-official")}
+          HeaderIcon={Verified}
+        />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapacks(state.datapacks)}
@@ -199,7 +199,8 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
   const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
 
   return (
-    <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
+    <Box
+      className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""} ${isOfficial && styles.official}`}>
       <Box className={styles.header}>
         <SvgIcon className={styles.sdi}>
           <HeaderIcon />
@@ -223,13 +224,13 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
               <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
             );
           })}
-          {numberOfDatapacks > visibleLimit && (
-            <Box onClick={() => setShowAll(!showAll)}>
-              <Typography className={styles.show} variant="body2" color="primary">
-                {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
-              </Typography>
-            </Box>
-          )}
+        </Box>
+      )}
+      {numberOfDatapacks > visibleLimit && (
+        <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
+          <Typography className={styles.show} variant="body2" color="primary">
+            {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+          </Typography>
         </Box>
       )}
       {numberOfDatapacks === 0 && (
