@@ -4,6 +4,7 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
+  flex-wrap: wrap;
 }
 
 .h {
@@ -74,10 +75,27 @@
   margin-bottom: 3px;
   justify-content: center;
 }
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 4px;
+  width: 100%;
+  margin-bottom: 3px;
+}
+.wrapItem > *, .wrappedDatapackCategories > .container {
+  flex: 1 1 50%;
+}
+.wrappedDatapackCategories {
+  display: flex;
+  flex-direction: row;
+  width: 70%;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
 
 .container.cards {
   gap: 10px;
-  width: 90%;
+  width: 100%;
   margin: 0 20px 20px 20px;
   justify-content: flex-start;
   justify-self: center;
