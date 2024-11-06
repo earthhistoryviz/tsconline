@@ -15,8 +15,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
-  Button,
-  useTheme
+  Button
 } from "@mui/material";
 import { AdminSharedUser } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
@@ -35,7 +34,6 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
   const { state } = useContext(context);
   const { editState, setters, handlers } = useEditUser({ data: props.data });
   const allWorkshops = state.admin.workshops;
-  const theme = useTheme();
 
   const WorkshopsList: React.FC = () => {
     // Create a lookup map for allWorkshops
@@ -45,7 +43,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
       <TableContainer
         component={Paper}
         sx={{
-          backgroundColor: theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)",
+          backgroundColor: "tableContainer.main",
           maxWidth: "100%"
         }}>
         <Table>
@@ -97,12 +95,12 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
   return (
     <>
       <CustomTooltip title="Show Additional User Info">
-        <IconButton onClick={() => setters.setMoreUserInfoFormOpen(true)}>
+        <IconButton onClick={() => setters.setIsMoreUserInfoFormOpen(true)}>
           <MoreVertOutlinedIcon />
         </IconButton>
       </CustomTooltip>
       <Dialog
-        open={editState.moreUserInfoFormOpen}
+        open={editState.isMoreUserInfoFormOpen}
         onClose={handlers.handleCloseTheMoreUserInfoForm}
         disableEscapeKeyDown
         aria-labelledby="alert-dialog-title"
@@ -215,7 +213,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                   },
                   mr: 1
                 }}
-                onClick={handlers.handleOpenConfirmDiscardUserInfoChange}>
+                onClick={handlers.handleisConfirmDiscardUserInfoChangeOpen}>
                 Discard
               </Button>
               <TSCButton variant="contained" buttonType="primary" onClick={handlers.handleSaveChanges}>
@@ -239,25 +237,25 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         </Box>
       </Dialog>
       <TSCYesNoPopup
-        open={editState.openConfirmRemovalOfUserFromWorkshopDialog}
+        open={editState.isConfirmRemovalOfUserFromWorkshopDialogOpen}
         title="Are you sure you want to remove the user from the workshop?"
-        onYes={handlers.handleRemoveWorkshop}
-        onNo={handlers.handleCloseConfirmRemovalOfUserFromWorkshop}
-        onClose={handlers.handleCloseConfirmRemovalOfUserFromWorkshop}
+        onYes={handlers.removeUserFromWorkshop}
+        onNo={handlers.cancelRemovalOfUserFromWorkshop}
+        onClose={handlers.cancelRemovalOfUserFromWorkshop}
       />
       <TSCYesNoPopup
-        open={editState.openConfirmDiscardUserInfoChangeAndCloseForm}
+        open={editState.isConfirmUserInfoChangesOnExitFormOpen}
         title="You have unsaved changes. Are you sure you want to discard them?"
         onYes={handlers.handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm}
-        onNo={handlers.handleCloseConfirmDiscardUserInfoChange}
-        onClose={handlers.handleCloseConfirmDiscardUserInfoChange}
+        onNo={handlers.handleCloseConfirmUserInfoChangesDialog}
+        onClose={handlers.handleCloseConfirmUserInfoChangesDialog}
       />
       <TSCYesNoPopup
-        open={editState.openConfirmDiscardUserInfoChange}
+        open={editState.isConfirmDiscardUserInfoChangeOpen}
         title="You have unsaved changes. Are you sure you want to discard them?"
         onYes={handlers.handleDiscardUserInfoChanges}
-        onNo={handlers.handleCloseConfirmDiscardUserInfoChange}
-        onClose={handlers.handleCloseConfirmDiscardUserInfoChange}
+        onNo={handlers.handleCloseConfirmUserInfoChangesDialog}
+        onClose={handlers.handleCloseConfirmUserInfoChangesDialog}
       />
     </>
   );

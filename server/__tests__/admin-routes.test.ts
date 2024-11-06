@@ -1727,7 +1727,7 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
-  it("should return 500 if unable to update old user", async () => {
+  it("should return 500 if fails to update one of multiple old users", async () => {
     checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
     checkWorkshopHasUser
       .mockResolvedValueOnce([])
@@ -1758,7 +1758,7 @@ describe("adminAddUsersToWorkshop", () => {
     });
     expect(response.statusCode).toBe(500);
   });
-  it("should return 500 if unable to add new user to the workshop", async () => {
+  it("should return 500 if one of multiple users fails to be added to the workshop", async () => {
     findUser
       .mockResolvedValueOnce([testAdminUser])
       .mockResolvedValueOnce([testAdminUser])

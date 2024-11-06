@@ -9,12 +9,11 @@ type UseUserStatsProps = {
 
 const useEditUser = ({ data }: UseUserStatsProps) => {
   const workshops = data.workshopIds;
-  const [moreUserInfoFormOpen, setMoreUserInfoFormOpen] = useState(false);
+  const [isMoreUserInfoFormOpen, setIsMoreUserInfoFormOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [unsavedChanges, setUnsavedChanges] = useState(false);
-  const [openConfirmDiscardUserInfoChange, setOpenConfirmDiscardUserInfoChange] = useState(false);
-  const [openConfirmDiscardUserInfoChangeAndCloseForm, setOpenConfirmDiscardUserInfoChangeAndCloseForm] =
-    useState(false);
+  const [isConfirmDiscardUserInfoChangeOpen, setIsConfirmDiscardUserInfoChangeOpen] = useState(false);
+  const [isConfirmUserInfoChangesOnExitFormOpen, setIsConfirmUserInfoChangesOnExitFormOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
     username: data.username,
     email: data.email,
@@ -25,15 +24,16 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
   const [currentWorkshops, setCurrentWorkshops] = useState<number[] | undefined>(workshops);
   const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
-  const [openConfirmRemovalOfUserFromWorkshopDialog, setOpenConfirmRemovalOfUserFromWorkshopDialog] = useState(false);
+  const [isConfirmRemovalOfUserFromWorkshopDialogOpen, setIsConfirmRemovalOfUserFromWorkshopDialogOpen] =
+    useState(false);
   // Function to remove a workshop
-  const handleRemoveWorkshop = () => {
+  const removeUserFromWorkshop = () => {
     if (currentWorkshops) {
       if (selectedWorkshop) {
         const updatedWorkshops = currentWorkshops.filter((workshop) => workshop !== selectedWorkshop);
         setCurrentWorkshops(updatedWorkshops);
       }
-      handleCloseConfirmRemovalOfUserFromWorkshop();
+      cancelRemovalOfUserFromWorkshop();
     }
   };
 
@@ -76,21 +76,21 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setEditMode(false);
   };
 
-  const handleDiscardUserInfoChanges = () => {
+  function discardUserInfoChanges() {
     setUserInfo(originalUserInfo); // Reset to original data
     setSelectedFile(null); // Clear any selected file
     setEditMode(false);
     setUnsavedChanges(false);
-    setOpenConfirmDiscardUserInfoChange(false);
+    setIsConfirmDiscardUserInfoChangeOpen(false);
+  }
+
+  const handleDiscardUserInfoChanges = () => {
+    discardUserInfoChanges();
   };
 
   const handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm = () => {
-    setUserInfo(originalUserInfo); // Reset to original data
-    setSelectedFile(null); // Clear any selected file
-    setEditMode(false);
-    setUnsavedChanges(false);
-    setOpenConfirmDiscardUserInfoChangeAndCloseForm(false);
-    setMoreUserInfoFormOpen(false);
+    discardUserInfoChanges();
+    setIsMoreUserInfoFormOpen(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -102,28 +102,28 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
 
   const handleOpenConfirmRemovalOfUserFromWorkshop = (id: number) => {
     setSelectedWorkshop(id);
-    setOpenConfirmRemovalOfUserFromWorkshopDialog(true);
+    setIsConfirmRemovalOfUserFromWorkshopDialogOpen(true);
   };
 
-  const handleCloseConfirmRemovalOfUserFromWorkshop = () => {
-    setOpenConfirmRemovalOfUserFromWorkshopDialog(false);
+  const cancelRemovalOfUserFromWorkshop = () => {
+    setIsConfirmRemovalOfUserFromWorkshopDialogOpen(false);
     setSelectedWorkshop(null);
   };
 
-  const handleCloseConfirmDiscardUserInfoChange = () => {
-    setOpenConfirmDiscardUserInfoChange(false);
-    setOpenConfirmDiscardUserInfoChangeAndCloseForm(false);
+  const handleCloseConfirmUserInfoChangesDialog = () => {
+    setIsConfirmDiscardUserInfoChangeOpen(false);
+    setIsConfirmUserInfoChangesOnExitFormOpen(false);
   };
 
   const handleCloseTheMoreUserInfoForm = () => {
     if (unsavedChanges) {
-      setOpenConfirmDiscardUserInfoChangeAndCloseForm(true);
+      setIsConfirmUserInfoChangesOnExitFormOpen(true);
     } else {
       handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm();
     }
   };
-  const handleOpenConfirmDiscardUserInfoChange = () => {
-    setOpenConfirmDiscardUserInfoChange(true);
+  const handleisConfirmDiscardUserInfoChangeOpen = () => {
+    setIsConfirmDiscardUserInfoChangeOpen(true);
   };
 
   useEffect(() => {
@@ -141,24 +141,24 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
 
   return {
     editState: {
-      moreUserInfoFormOpen,
+      isMoreUserInfoFormOpen,
       editMode,
       unsavedChanges,
-      openConfirmDiscardUserInfoChange,
+      isConfirmDiscardUserInfoChangeOpen,
       userInfo,
       selectedFile,
       originalUserInfo,
       currentWorkshops,
       selectedWorkshop,
-      openConfirmRemovalOfUserFromWorkshopDialog,
-      openConfirmDiscardUserInfoChangeAndCloseForm
+      isConfirmRemovalOfUserFromWorkshopDialogOpen,
+      isConfirmUserInfoChangesOnExitFormOpen
     },
 
     setters: {
-      setMoreUserInfoFormOpen,
+      setIsMoreUserInfoFormOpen,
       setCurrentWorkshops,
       setEditMode,
-      setOpenConfirmRemovalOfUserFromWorkshopDialog,
+      setIsConfirmRemovalOfUserFromWorkshopDialogOpen,
       setOriginalUserInfo,
       setSelectedFile,
       setSelectedWorkshop
@@ -171,12 +171,12 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleDiscardUserInfoChanges,
       handleFileChange,
       handleOpenConfirmRemovalOfUserFromWorkshop,
-      handleCloseConfirmRemovalOfUserFromWorkshop,
-      handleCloseConfirmDiscardUserInfoChange,
+      cancelRemovalOfUserFromWorkshop,
+      handleCloseConfirmUserInfoChangesDialog,
       handleCloseTheMoreUserInfoForm,
-      handleRemoveWorkshop,
+      removeUserFromWorkshop,
       handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm,
-      handleOpenConfirmDiscardUserInfoChange
+      handleisConfirmDiscardUserInfoChangeOpen
     }
   };
 };
