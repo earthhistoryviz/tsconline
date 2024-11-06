@@ -17,7 +17,7 @@ import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
 
-export const fetchServerDatapack = async function fetchServerDatapack(
+export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
   reply: FastifyReply
 ) {
@@ -26,12 +26,12 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const serverDatapack = await fetchUserDatapack("server", name);
-  if (!serverDatapack) {
+  const OfficialDatapack = await fetchUserDatapack("official", name);
+  if (!OfficialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(serverDatapack);
+  reply.send(OfficialDatapack);
 };
 
 export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
@@ -213,8 +213,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "workshop":
         uuidFolder = "workshop";
         break;
-      case "server":
-        uuidFolder = "server";
+      case "official":
+        uuidFolder = "official";
         break;
       case "user":
         if (uuid !== datapack.uuid && !datapack.isPublic) {

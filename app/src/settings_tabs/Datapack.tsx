@@ -8,6 +8,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
+import { People, School, Security, Verified } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -18,13 +19,14 @@ import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompact
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
-import { Work, Storage, Lock, Public } from "@mui/icons-material";
+import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
   getCurrentUserDatapacks,
+  getPrivateOfficialDatapacks,
   getPublicDatapacksWithoutCurrentUser,
-  getServerDatapacks,
+  getPublicOfficialDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -34,11 +36,13 @@ export const Datapacks = observer(function Datapacks() {
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (state.isLoggedIn) {
-      loadRecaptcha();
+    if (state.isLoggedIn && state.user.isAdmin) {
+      loadRecaptcha().then(async () => {
+        await actions.adminFetchPrivateOfficialDatapacks();
+      });
     }
     return () => {
-      if (state.isLoggedIn) {
+      if (state.isLoggedIn && state.user.isAdmin) {
         removeRecaptcha();
       }
     };
@@ -82,25 +86,35 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      <DatapackGroupDisplay
-        datapacks={getServerDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.server")}
-        HeaderIcon={Storage}
-      />
-      {state.isLoggedIn && state.user && (
+      <Box
+        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
         <DatapackGroupDisplay
-          datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
-          header={t("settings.datapacks.title.your")}
-          HeaderIcon={Lock}
+          datapacks={getPublicOfficialDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.public-official")}
+          HeaderIcon={Verified}
         />
-      )}
-      <DatapackGroupDisplay
-        datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
-        header={t("settings.datapacks.title.public-user")}
-        HeaderIcon={Public}
-      />
-      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={Work} />
-      <Box className={styles.container}>
+        {state.user.isAdmin && (
+          <DatapackGroupDisplay
+            datapacks={getPrivateOfficialDatapacks(state.datapacks)}
+            header={t("settings.datapacks.title.private-official")}
+            HeaderIcon={Security}
+          />
+        )}
+        <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
+        {state.isLoggedIn && state.user && (
+          <DatapackGroupDisplay
+            datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
+            header={t("settings.datapacks.title.your")}
+            HeaderIcon={Lock}
+          />
+        )}
+        <DatapackGroupDisplay
+          datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
+          header={t("settings.datapacks.title.contributed")}
+          HeaderIcon={People}
+        />
+      </Box>
+      <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
           <TSCButton
             className={styles.buttons}
@@ -168,6 +182,10 @@ type DatapackGroupDisplayProps = {
 const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ datapacks, header, HeaderIcon }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const isOfficial = header === t("settings.datapacks.title.public-official");
+  const visibleLimit = isOfficial ? 12 : 6;
+  const visibleDatapacks = showAll ? datapacks : datapacks.slice(0, visibleLimit);
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(
@@ -178,9 +196,11 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
     }
   };
   const numberOfDatapacks = datapacks.length;
+  const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
 
   return (
-    <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
+    <Box
+      className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""} ${isOfficial && styles.official}`}>
       <Box className={styles.header}>
         <SvgIcon className={styles.sdi}>
           <HeaderIcon />
@@ -192,16 +212,27 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
           className={styles.idh}>{`${header} (${numberOfDatapacks})`}</Typography>
       </Box>
       <CustomDivider className={styles.divider} />
-      {datapacks.map((datapack) => {
-        const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
-        return state.settingsTabs.datapackDisplayType === "rows" ? (
-          <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-          <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        ) : (
-          <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        );
-      })}
+      {numberOfDatapacks !== 0 && (
+        <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`}>
+          {visibleDatapacks.map((datapack) => {
+            const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
+            return state.settingsTabs.datapackDisplayType === "rows" ? (
+              <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+              <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            ) : (
+              <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            );
+          })}
+        </Box>
+      )}
+      {numberOfDatapacks > visibleLimit && (
+        <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
+          <Typography className={styles.show} variant="body2" color="primary">
+            {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+          </Typography>
+        </Box>
+      )}
       {numberOfDatapacks === 0 && (
         <Typography>
           {t("settings.datapacks.no")} {header} {t("settings.datapacks.avaliable")}

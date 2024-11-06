@@ -78,8 +78,8 @@ export type BaseDatapackProps = {
   mapPack: MapPack; // this can be empty
 } & DatapackMetadata;
 
-type ServerDatapack = {
-  type: "server";
+type OfficialDatapack = {
+  type: "official";
 };
 type WorkshopDatapack = {
   type: "workshop";
@@ -88,7 +88,7 @@ type UserDatapack = {
   type: "user";
   uuid: string;
 };
-export type DatapackType = ServerDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
 export type DatapackTypeString = DatapackType["type"];
 export type Datapack = BaseDatapackProps;
 
@@ -1073,10 +1073,10 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function isDatapackTypeString(o: any): o is DatapackTypeString {
-  return /^(user|server|workshop)$/.test(o);
+  return /^(user|official|workshop)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
-  if (typeof o !== "string" || !/^(user|server|workshop)$/.test(o))
+  if (typeof o !== "string" || !/^(user|official|workshop)$/.test(o))
     throwError("DatapackType", "type", "string and user | server | workshop", o);
 }
 export function assertTransects(o: any): asserts o is Transects {
@@ -1097,8 +1097,8 @@ export function assertDatapack(o: any): asserts o is Datapack {
   assertDatapackType(o);
   assertBaseDatapackProps(o);
 }
-export function isServerDatapack(o: any): o is ServerDatapack {
-  return o.type === "server";
+export function isOfficialDatapack(o: any): o is OfficialDatapack {
+  return o.type === "official";
 }
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
   return o.type === "workshop";
@@ -1112,20 +1112,20 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "user":
       assertUserDatapack(o);
       break;
-    case "server":
-      assertServerDatapack(o);
+    case "official":
+      assertOfficialDatapack(o);
       break;
     case "workshop":
       assertWorkshopDatapack(o);
       break;
     default:
-      throwError("Datapack", "type", "private_user | public_user | server | workshop", o.type);
+      throwError("Datapack", "type", "user | official | workshop", o.type);
   }
 }
-export function assertServerDatapack(o: any): asserts o is ServerDatapack {
-  if (!o || typeof o !== "object") throw new Error("ServerDatapack must be a non-null object");
-  if (typeof o.type !== "string") throwError("ServerDatapack", "type", "string", o.type);
-  if (o.type !== "server") throwError("ServerDatapack", "type", "server", o.type);
+export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
+  if (!o || typeof o !== "object") throw new Error("OfficialDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("OfficialDatapack", "type", "string", o.type);
+  if (o.type !== "official") throwError("OfficialDatapack", "type", "official", o.type);
 }
 export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
   if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
