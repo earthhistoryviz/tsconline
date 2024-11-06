@@ -213,7 +213,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                   },
                   mr: 1
                 }}
-                onClick={handlers.handleisConfirmDiscardUserInfoChangeOpen}>
+                onClick={handlers.handleIsConfirmDiscardUserInfoChangeOpen}>
                 Discard
               </Button>
               <TSCButton variant="contained" buttonType="primary" onClick={handlers.handleSaveChanges}>

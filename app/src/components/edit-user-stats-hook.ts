@@ -122,7 +122,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm();
     }
   };
-  const handleisConfirmDiscardUserInfoChangeOpen = () => {
+  const handleIsConfirmDiscardUserInfoChangeOpen = () => {
     setIsConfirmDiscardUserInfoChangeOpen(true);
   };
 
@@ -176,7 +176,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleCloseTheMoreUserInfoForm,
       removeUserFromWorkshop,
       handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm,
-      handleisConfirmDiscardUserInfoChangeOpen
+      handleIsConfirmDiscardUserInfoChangeOpen
     }
   };
 };
