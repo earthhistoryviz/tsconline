@@ -497,18 +497,21 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
+    const addedNewUserWorkshopRelationship = async (userId: number, workshopId: number, email: string) => {
+      await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+      const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+      if (newRelationship.length !== 1) {
+        invalidEmails.push(email);
+      }
+    };
+
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
         const { userId } = user[0]!;
         const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
         if (existingRelationship.length == 0) {
-          await createUsersWorkshops({ userId: userId, workshopId: workshopId });
-          const newRelationship = await checkWorkshopHasUser(userId, workshopId);
-          if (newRelationship.length !== 1) {
-            invalidEmails.push(email);
-            continue;
-          }
+          addedNewUserWorkshopRelationship(userId, workshopId, email);
         }
       } else {
         await createUser({
@@ -529,11 +532,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         }
 
         const { userId } = newUser[0]!;
-        await createUsersWorkshops({ userId: userId, workshopId: workshopId });
-        const newRelationship = await checkWorkshopHasUser(userId, workshopId);
-        if (newRelationship.length !== 1) {
-          invalidEmails.push(email);
-        }
+        addedNewUserWorkshopRelationship(userId, workshopId, email);
       }
     }
     if (invalidEmails.length > 0) {
