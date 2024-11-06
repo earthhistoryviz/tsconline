@@ -86,32 +86,35 @@ export const Datapacks = observer(function Datapacks() {
           </ToggleButton>
         </ToggleButtonGroup>
       </div>
-      <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
-      <DatapackGroupDisplay
-        datapacks={getPublicOfficialDatapacks(state.datapacks)}
-        header={t("settings.datapacks.title.public-official")}
-        HeaderIcon={Verified}
-      />
-      {state.user.isAdmin && (
+      <Box
+        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
         <DatapackGroupDisplay
-          datapacks={getPrivateOfficialDatapacks(state.datapacks)}
-          header={t("settings.datapacks.title.private-official")}
-          HeaderIcon={Security}
+          datapacks={getPublicOfficialDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.public-official")}
+          HeaderIcon={Verified}
         />
-      )}
-      {state.isLoggedIn && state.user && (
+        {state.user.isAdmin && (
+          <DatapackGroupDisplay
+            datapacks={getPrivateOfficialDatapacks(state.datapacks)}
+            header={t("settings.datapacks.title.private-official")}
+            HeaderIcon={Security}
+          />
+        )}
+        <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
+        {state.isLoggedIn && state.user && (
+          <DatapackGroupDisplay
+            datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
+            header={t("settings.datapacks.title.your")}
+            HeaderIcon={Lock}
+          />
+        )}
         <DatapackGroupDisplay
-          datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
-          header={t("settings.datapacks.title.your")}
-          HeaderIcon={Lock}
+          datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
+          header={t("settings.datapacks.title.contributed")}
+          HeaderIcon={People}
         />
-      )}
-      <DatapackGroupDisplay
-        datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
-        header={t("settings.datapacks.title.contributed")}
-        HeaderIcon={People}
-      />
-      <Box className={styles.container}>
+      </Box>
+      <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
           <TSCButton
             className={styles.buttons}
@@ -179,6 +182,10 @@ type DatapackGroupDisplayProps = {
 const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ datapacks, header, HeaderIcon }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
+  const [showAll, setShowAll] = useState(false);
+  const isOfficial = header === t("settings.datapacks.title.public-official");
+  const visibleLimit = isOfficial ? 12 : 6;
+  const visibleDatapacks = showAll ? datapacks : datapacks.slice(0, visibleLimit);
   const onChange = (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(
@@ -189,9 +196,11 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
     }
   };
   const numberOfDatapacks = datapacks.length;
+  const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
 
   return (
-    <Box className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""}`}>
+    <Box
+      className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""} ${isOfficial && styles.official}`}>
       <Box className={styles.header}>
         <SvgIcon className={styles.sdi}>
           <HeaderIcon />
@@ -203,16 +212,27 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
           className={styles.idh}>{`${header} (${numberOfDatapacks})`}</Typography>
       </Box>
       <CustomDivider className={styles.divider} />
-      {datapacks.map((datapack) => {
-        const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
-        return state.settingsTabs.datapackDisplayType === "rows" ? (
-          <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-          <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        ) : (
-          <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-        );
-      })}
+      {numberOfDatapacks !== 0 && (
+        <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`}>
+          {visibleDatapacks.map((datapack) => {
+            const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
+            return state.settingsTabs.datapackDisplayType === "rows" ? (
+              <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+              <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            ) : (
+              <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+            );
+          })}
+        </Box>
+      )}
+      {numberOfDatapacks > visibleLimit && (
+        <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
+          <Typography className={styles.show} variant="body2" color="primary">
+            {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+          </Typography>
+        </Box>
+      )}
       {numberOfDatapacks === 0 && (
         <Typography>
           {t("settings.datapacks.no")} {header} {t("settings.datapacks.avaliable")}
