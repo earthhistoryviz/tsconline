@@ -225,6 +225,8 @@
                 "no": "No",
                 "avaliable": "Avaliable",
                 "upload": "Upload Datapack",
+                "seeMore": "See More...",
+                "seeLess": "See Less...",
                 "upload-form": {
                     "title": "Upload Your Own Datapack",
                     "no-file": "No file selected",
