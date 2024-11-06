@@ -50,12 +50,13 @@ vi.mock("../src/user/fetch-user-files", async () => {
 
 vi.mock("../src/user/user-handler", async () => {
   return {
+    fetchAllPrivateOfficialDatapacks: vi.fn().mockResolvedValue([]),
     deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
     getUploadedDatapackFilepath: vi.fn().mockResolvedValue(""),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
     doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
-    deleteServerDatapack: vi.fn().mockResolvedValue({}),
+    deleteOfficialDatapack: vi.fn().mockResolvedValue({}),
     fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
     checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
     checkFileTypeIsDatapackImage: vi.fn().mockReturnValue(true)
@@ -154,7 +155,7 @@ vi.mock("../src/verify", async () => {
 
 vi.mock("../src/index", async () => {
   return {
-    serverDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
+    OfficialDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
     mapPackIndex: {}
   };
 });
@@ -904,7 +905,7 @@ describe("adminDeleteUserDatapack", () => {
   });
 });
 
-describe("adminUploadServerDatapack", () => {
+describe("adminUploadOfficialDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   let jsonOfFormData: Record<string, unknown>;
   const rm = vi.spyOn(fsPromises, "rm");
@@ -913,7 +914,7 @@ describe("adminUploadServerDatapack", () => {
   const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
   const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
   const getPrivateUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getPrivateUserUUIDDirectory");
-  const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
+  const deleteOfficialDatapack = vi.spyOn(userHandlers, "deleteOfficialDatapack");
   const testDatapackDescription: DatapackMetadata = {
     originalFileName: "test.dpk",
     storedFileName: "",
@@ -957,7 +958,7 @@ describe("adminUploadServerDatapack", () => {
       });
     }
     if (checkFieldInFormData("title")) {
-      expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+      expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
     }
   };
   const createForm = (json: Record<string, unknown> = {}) => {
@@ -1275,8 +1276,8 @@ describe("getUsers", () => {
   });
 });
 
-describe("adminDeleteServerDatapack", () => {
-  const deleteServerDatapack = vi.spyOn(userHandlers, "deleteServerDatapack");
+describe("adminDeleteOfficialDatapack", () => {
+  const deleteOfficialDatapack = vi.spyOn(userHandlers, "deleteOfficialDatapack");
   const datapackTitle = "test-datapack";
   const body = { datapack: datapackTitle };
   beforeEach(() => {
@@ -1307,15 +1308,15 @@ describe("adminDeleteServerDatapack", () => {
     expect(await response.json()).toEqual({ error: "Missing datapack title" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 500 if deleteServerDatapack throws error", async () => {
-    deleteServerDatapack.mockRejectedValueOnce(new Error());
+  it("should return 500 if deleteOfficialDatapack throws error", async () => {
+    deleteOfficialDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/server/datapack",
       payload: { datapack: "test-datapack" },
       headers
     });
-    expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+    expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Error deleting server datapack" });
     expect(response.statusCode).toBe(500);
   });
@@ -1326,7 +1327,7 @@ describe("adminDeleteServerDatapack", () => {
       payload: body,
       headers
     });
-    expect(deleteServerDatapack).toHaveBeenCalledTimes(1);
+    expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: `Datapack ${datapackTitle} deleted` });
     expect(response.statusCode).toBe(200);
   });
