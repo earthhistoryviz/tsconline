@@ -266,7 +266,7 @@ export const uploadUserDatapack = action(
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         if (response.status === 403) {
-          displayServerError(data, ErrorCodes.DATAPACK_TOO_LARGE, ErrorMessages[ErrorCodes.DATAPACK_TOO_LARGE]);
+          pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
         } else {
           displayServerError(
             data,
