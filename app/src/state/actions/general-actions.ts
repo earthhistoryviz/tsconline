@@ -254,6 +254,25 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
   }
 });
 
+export const fetchTreatiseDatapacks = action("fetchTreatiseDatapacks", async (datapackHash: string) => {
+  try {
+    const response = await fetcher(`/treatise/datapacks/${datapackHash}`, {
+      method: "GET"
+    });
+    const data = await response.json();
+    try {
+      assertDatapack(data);
+      addDatapack(data);
+    } catch (e) {
+      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      console.error(e);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
