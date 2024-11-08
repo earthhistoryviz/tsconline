@@ -21,7 +21,7 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
-  workshopTitle?: string;
+  workshopIds?: number[];
   uuid: string;
 };
 
@@ -658,8 +658,11 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
-  if (o.workshopTitle != null && typeof o.workshopTitle !== "string")
-    throwError("User", "workshopTitle", "number", o.workshopTitle);
+  if (o.workshopIds != undefined) {
+    for (const workshopId of o.workshopIds) {
+      if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
+    }
+  }
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {

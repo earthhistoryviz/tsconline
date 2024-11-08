@@ -65,23 +65,64 @@
   margin: 0px;
 }
 
+.showBox {
+  align-self: flex-start;
+  justify-self: flex-start;
+  margin-left: 45px;
+}
+.show {
+  font-style: italic;
+  width: max-content;
+}
+.show:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .container {
   display: flex;
   overflow-y: auto;
   flex-wrap: wrap;
   padding: 4px;
-  width: 70%;
+  width: 100%;
   margin-bottom: 3px;
   justify-content: center;
+  align-items: center;
+  flex-direction: column;
 }
-
-.container.cards {
-  gap: 10px;
+.container.buttonContainer {
+  flex-direction: row;
+}
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  overflow-x: hidden;
+}
+.wrapItem > *,
+.datapackDisplayContainer > .container:not(.official, .cards) {
+  flex: 1 1 50%;
+}
+.datapackDisplayContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.datapackDisplayContainer:not(.cards) {
+  align-items: flex-start;
+  width: 70%;
+}
+.datapackDisplayContainer.cards {
+  align-items: center;
   width: 90%;
-  margin: 0 20px 20px 20px;
-  justify-content: flex-start;
-  justify-self: center;
-  align-self: center;
+}
+.container.cards,
+.container.cards > .item {
+  gap: 10px;
+}
+.container.cards {
+  margin: 0px 20px 20px;
 }
 
 .buttons {

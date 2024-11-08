@@ -6,6 +6,7 @@ export interface Database {
   verification: VerificationTable;
   ip: IpTable;
   workshop: WorkshopTable;
+  usersWorkshops: UsersWorkshopsTable;
 }
 
 export type AccountType = "pro" | "default";
@@ -20,7 +21,6 @@ export interface UserTable {
   emailVerified: number;
   invalidateSession: number;
   isAdmin: number;
-  workshopId: number;
   accountType: AccountType;
 }
 
@@ -44,12 +44,20 @@ export interface WorkshopTable {
   end: string;
 }
 
+export interface UsersWorkshopsTable {
+  workshopId: number;
+  userId: number;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
 
 export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
+
+export type UsersWorkshops = Selectable<UsersWorkshopsTable>;
+export type NewUsersWorkshops = Insertable<UsersWorkshopsTable>;
 
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;

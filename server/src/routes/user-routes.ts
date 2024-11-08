@@ -332,7 +332,7 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
           if (filepath) {
             await rm(filepath, { force: true });
           }
-          reply.status(400).send({ error: `Regular users cannot upload datapacks over 3000 characters.` });
+          reply.status(403).send({ error: "Regular users cannot upload datapacks over 3000 characters." });
           return;
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {

@@ -16,6 +16,8 @@ import {
 } from "@tsconline/shared";
 import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
+import React from "react";
+import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -68,12 +70,12 @@ const userColDefs: ColDef[] = [
   },
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
-    headerName: "Workshop Title",
-    field: "workshopTitle",
+    headerName: "More",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,
-    flex: 1
+    flex: 1,
+    cellRenderer: ShowAdditionalUserInfo
   }
 ];
 const userDefaultColDefs = {
@@ -103,6 +105,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       console.error(e);
     }
   };
+
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box className="admin-user-config-buttons">
@@ -117,6 +120,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
+        components={{ ShowAdditionalUserInfo }}
         onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
