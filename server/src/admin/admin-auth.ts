@@ -144,7 +144,11 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
-  fastify.get("/server/datapacks/private", { config: { rateLimit: looseRateLimit } }, fetchAllPrivateOfficialDatapacks);
+  fastify.get(
+    "/official/datapacks/private",
+    { config: { rateLimit: looseRateLimit } },
+    fetchAllPrivateOfficialDatapacks
+  );
   fastify.post(
     "/user",
     {
@@ -181,9 +185,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteUserDatapack
   );
-  fastify.post("/server/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadOfficialDatapack);
+  fastify.post("/official/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadOfficialDatapack);
   fastify.delete(
-    "/server/datapack",
+    "/official/datapack",
     {
       schema: {
         body: adminDeleteOfficialDatapackBody
