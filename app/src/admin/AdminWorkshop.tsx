@@ -15,6 +15,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
+import { formatDate } from "../state/non-action-util";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -83,13 +84,13 @@ const workshopColDefs: ColDef[] = [
     headerName: "Workshop Start Date",
     field: "start",
     flex: 1,
-    valueFormatter: (params) => dayjs(params.value).format("MMMM D, YYYY [at] h:mm A")
+    valueFormatter: (params) => formatDate(params.value)
   },
   {
     headerName: "Workshop End Date",
     field: "end",
     flex: 1,
-    valueFormatter: (params) => dayjs(params.value).format("MMMM D, YYYY [at] h:mm A")
+    valueFormatter: (params) => formatDate(params.value)
   },
   { headerName: "Active", field: "active", flex: 0.2, cellRenderer: checkboxRenderer },
   {
