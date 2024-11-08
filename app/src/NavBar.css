@@ -21,7 +21,7 @@
 .szh-menu-container.settings-sub-menu > .szh-menu {
   min-width: 130px;
 }
-.lanuage-txt-break .MuiMenuItem-root{
+.lanuage-txt-break .MuiMenuItem-root {
   display: flex;
   justify-content: center;
 }
@@ -33,7 +33,7 @@
   margin-bottom: 1;
 }
 
-.div-bar-bottom{
+.div-bar-bottom {
   border-width: 0.75;
   border-color: grey;
   margin-top: 1;
