@@ -248,11 +248,11 @@ export const NavBar = observer(function Navbar() {
                     label={t("login.dark-mode")}
                   />
                 </MenuItem>
-                <Divider className="div-bar-top"/>
+                <Divider className="div-bar-top" />
                 <MenuItem>
-                  <Typography >{t(`LANGUAGES`)}</Typography>
+                  <Typography>{t(`LANGUAGES`)}</Typography>
                 </MenuItem>
-                <Divider className = "div-bar-bottom"/>
+                <Divider className="div-bar-bottom" />
                 {Object.entries(languageList).map(([key, value]) => (
                   <MenuItem
                     ref={dropRef}
