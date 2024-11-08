@@ -289,7 +289,7 @@ export const adminDeleteOfficialDatapacks = action(
 );
 
 export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, optionalFields?: { profileImage?: File, workshopId?: number }) => {
     const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
     if (!recaptchaToken) return;
     if (getDatapackFromArray(metadata, state.datapacks)) {
@@ -298,6 +298,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     }
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
+    const datapackProfilePicture = optionalFields?.profileImage;
     formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
@@ -628,7 +629,8 @@ export const adminAddServerDatapackToWorkshop = action(async (title: string) => 
  * @param workshopId The ID of the workshop to upload to (required)
  */
 export const adminUploadDatapackToWorkshop = action(
-  async (file: File, metadata: DatapackMetadata, workshopId?: number) => {
+  async (file: File, metadata: DatapackMetadata, optionalFields?: { profileImage?: File; workshopId?: number }) => {
+    const workshopId = optionalFields?.workshopId;
     if (!workshopId) {
       pushError(ErrorCodes.INVALID_FORM);
       return;
@@ -637,7 +639,8 @@ export const adminUploadDatapackToWorkshop = action(
     if (!recaptchaToken) return;
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
-    formData.append("file", file);
+    const datapackProfilePicture = optionalFields?.profileImage;
+    formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
     formData.append("references", JSON.stringify(references));
@@ -646,6 +649,7 @@ export const adminUploadDatapackToWorkshop = action(
     formData.append("isPublic", String(isPublic));
     formData.append("type", metadata.type);
     formData.append("workshopId", String(workshopId));
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);

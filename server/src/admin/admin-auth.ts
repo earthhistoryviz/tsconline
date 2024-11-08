@@ -14,7 +14,8 @@ import {
   adminEditWorkshop,
   adminDeleteWorkshop,
   adminModifyUser,
-  adminEditDatapackPriorities
+  adminEditDatapackPriorities,
+  adminUploadDatapackToWorkshop
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -231,4 +232,5 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     { config: { rateLimit: moderateRateLimit } },
     adminEditDatapackPriorities
   );
+  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapackToWorkshop);
 };

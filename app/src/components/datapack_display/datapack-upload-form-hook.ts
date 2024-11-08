@@ -12,13 +12,14 @@ type DatapackUploadFormProps = {
   upload: UploadDatapackMethodType;
   type: DatapackType;
   workshopId?: number;
+  forcePublic?: boolean;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const { upload, type, workshopId } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(props.forcePublic || false);
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -75,7 +76,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    upload(file, metadata, profileImage || undefined, workshopId);
+    upload(file, metadata, { profileImage: profileImage || undefined, workshopId });
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
