@@ -336,8 +336,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   },
   { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
-  { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
+  { method: "DELETE", url: "/admin/official/datapack", body: { datapack: "test" } },
+  { method: "POST", url: "/admin/official/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
   { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
   { method: "GET", url: "/admin/workshops" },
@@ -995,7 +995,7 @@ describe("adminUploadOfficialDatapack", () => {
   it("should return 400 if missing datapack file field", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       headers: formHeaders
     });
     expect(uploadFileToFileSystem).not.toHaveBeenCalled();
@@ -1008,7 +1008,7 @@ describe("adminUploadOfficialDatapack", () => {
     checkFileTypeIsDatapack.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1022,7 +1022,7 @@ describe("adminUploadOfficialDatapack", () => {
     checkFileTypeIsDatapackImage.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1035,7 +1035,7 @@ describe("adminUploadOfficialDatapack", () => {
     uploadFileToFileSystem.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1051,7 +1051,7 @@ describe("adminUploadOfficialDatapack", () => {
     });
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1065,7 +1065,7 @@ describe("adminUploadOfficialDatapack", () => {
     uploadUserDatapackHandler.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1079,7 +1079,7 @@ describe("adminUploadOfficialDatapack", () => {
     uploadUserDatapackHandler.mockResolvedValueOnce();
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1092,7 +1092,7 @@ describe("adminUploadOfficialDatapack", () => {
     doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1106,7 +1106,7 @@ describe("adminUploadOfficialDatapack", () => {
     doesDatapackFolderExistInAllUUIDDirectories.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1120,7 +1120,7 @@ describe("adminUploadOfficialDatapack", () => {
     setupNewDatapackDirectoryInUUIDDirectory.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1135,7 +1135,7 @@ describe("adminUploadOfficialDatapack", () => {
     setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({});
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1153,7 +1153,7 @@ describe("adminUploadOfficialDatapack", () => {
     });
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1170,7 +1170,7 @@ describe("adminUploadOfficialDatapack", () => {
     });
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
@@ -1286,7 +1286,7 @@ describe("adminDeleteOfficialDatapack", () => {
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: {},
       headers
     });
@@ -1301,7 +1301,7 @@ describe("adminDeleteOfficialDatapack", () => {
   it("should return 400 if datapack is empty", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: { datapack: "" },
       headers
     });
@@ -1312,7 +1312,7 @@ describe("adminDeleteOfficialDatapack", () => {
     deleteOfficialDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: { datapack: "test-datapack" },
       headers
     });
@@ -1323,7 +1323,7 @@ describe("adminDeleteOfficialDatapack", () => {
   it("should return 200 if successful", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: body,
       headers
     });
