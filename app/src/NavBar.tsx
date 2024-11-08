@@ -255,7 +255,6 @@ export const NavBar = observer(function Navbar() {
                 <Divider className="div-bar-bottom" />
                 {Object.entries(languageList).map(([key, value]) => (
                   <MenuItem
-                    ref={dropRef}
                     key={key}
                     className="settings-sub-menu-item"
                     onClick={() => {
