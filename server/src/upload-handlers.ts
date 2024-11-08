@@ -52,6 +52,13 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   return datapack.storedFileName;
 }
 
+/**
+ * Validate the fields and return the metadata if valid
+ * @param reply 
+ * @param fields
+ * @param bytes Bytes read 
+ * @returns The metadata if valid, otherwise void
+ */
 export async function uploadUserDatapackHandler(
   reply: FastifyReply,
   fields: Record<string, string>,

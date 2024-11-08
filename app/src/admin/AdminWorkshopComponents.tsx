@@ -189,6 +189,7 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
         upload={actions.adminUploadDatapackToWorkshop}
         type={{ type: "workshop" }}
         workshopId={currentWorkshop.workshopId}
+        forcePublic
       />
     </Dialog>
   );

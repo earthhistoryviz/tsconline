@@ -1091,7 +1091,7 @@ describe("adminUploadOfficialDatapack", () => {
     checkCleanupTempFiles();
     expect(response.statusCode).toBe(500);
   });
-  it("should just return if uploadUserDataPackHandler returns void", async () => {
+  it("should just return if uploadUserDatapackHandler returns void", async () => {
     uploadUserDatapackHandler.mockResolvedValueOnce();
     const response = await app.inject({
       method: "POST",

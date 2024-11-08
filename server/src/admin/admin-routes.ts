@@ -19,7 +19,7 @@ import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
-import { rm } from "fs/promises";
+import { rm, rename } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
@@ -57,6 +57,7 @@ import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
+import { tmpdir } from "node:os";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -355,6 +356,11 @@ export const adminUploadOfficialDatapack = async function adminUploadOfficialDat
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
+  if (!fields.isPublic) {
+    await cleanupTempFiles();
+    reply.status(400).send({ error: "Workshop datapack must be public" });
+    return
+  }
   if (!datapackMetadata) {
     reply.status(500).send({ error: "Unexpected error with request fields." });
     await cleanupTempFiles();
@@ -816,7 +822,8 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   let tempProfilePictureFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
   let workshopId: number | undefined;
-  const serverDir = await getPrivateUserUUIDDirectory("official");
+  let workshopUuid: string | undefined;
+  let privateDir: string;
   const cleanupTempFiles = async () => {
     if (filepath) {
       await rm(filepath, { force: true }).catch((e) => {
@@ -825,11 +832,6 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     }
     if (tempProfilePictureFilepath) {
       await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
-        console.error(e);
-      });
-    }
-    if (fields.title) {
-      await deleteOfficialDatapack(fields.title).catch((e) => {
         console.error(e);
       });
     }
@@ -842,9 +844,9 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
           file = part;
           originalFileName = file.filename;
           storedFileName = makeTempFilename(originalFileName);
-          filepath = join(serverDir, storedFileName);
-          // store it temporarily in the upload directory
-          // this is because we can't check if the file should overwrite the existing file until we verify it
+          // store it temporarily in the /tmp directory
+          // this is because we can't check if the file should overwrite the existing file until we verify it and we need workshopId
+          filepath = join(tmpdir(), storedFileName);
           if (!checkFileTypeIsDatapack(file)) {
             reply.status(415).send({ error: "Invalid file type for datapack file" });
             return;
@@ -861,7 +863,7 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
             return;
           }
           fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
-          tempProfilePictureFilepath = join(serverDir, fields.datapackImage);
+          tempProfilePictureFilepath = join(tmpdir(), fields.datapackImage);
           const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
           if (code !== 200) {
             await cleanupTempFiles();
@@ -869,10 +871,10 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
             return;
           }
         }
-      }
-      if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
         if (part.fieldname === "workshopId") {
           workshopId = parseInt(part.value);
+          continue;
         }
         fields[part.fieldname] = part.value;
       }
@@ -883,7 +885,13 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
-  if (!file || !filepath || !originalFileName || !storedFileName || !workshopId) {
+  const workshop = await findWorkshop({ workshopId });
+  if (workshop.length !== 1 || !workshop[0]) {
+    await cleanupTempFiles();
+    reply.status(404).send({ error: "Workshop not found" });
+    return;
+  }
+  if (!file || !filepath || !originalFileName || !workshopId || !storedFileName) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
@@ -891,4 +899,41 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
-  fields.uuid = "official";
+  fields.uuid = `workshop-${workshopId}`;
+  const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
+    // @eslint-disable-next-line
+  });
+  if (!datapackMetadata) {
+    reply.status(500).send({ error: "Unexpected error with request fields." });
+    await cleanupTempFiles();
+    return;
+  }
+  try {
+    if (await doesDatapackFolderExistInAllUUIDDirectories(fields.uuid, datapackMetadata.title)) {
+      await cleanupTempFiles();
+      reply.status(409).send({ error: "Datapack already exists" });
+      return;
+    }
+  } catch (e) {
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error checking if datapack exists" });
+    return;
+  }
+  try {
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
+      fields.uuid,
+      filepath,
+      datapackMetadata,
+      false,
+      tempProfilePictureFilepath
+    );
+    if (!datapackIndex[datapackMetadata.title]) {
+      throw new Error("Datapack not found in index");
+    }
+  } catch (error) {
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error setting up datapack directory" });
+    return;
+  }
+  reply.send({ message: "Datapack uploaded" });
+}
