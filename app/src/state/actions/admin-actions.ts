@@ -232,13 +232,13 @@ export const adminDeleteOfficialDatapacks = action(
     let deletedNoDatapacks = true;
     for (const datapack of datapacks) {
       try {
-        const response = await fetcher("/admin/server/datapack", {
+        const response = await fetcher("/admin/official/datapack", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             "recaptcha-token": recaptchaToken
           },
-          body: JSON.stringify({ datapack }),
+          body: JSON.stringify({ datapack: datapack.title }),
           credentials: "include"
         });
         if (!response.ok) {
@@ -307,7 +307,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
     try {
-      const response = await fetcher(`/admin/server/datapack`, {
+      const response = await fetcher(`/admin/official/datapack`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -338,7 +338,7 @@ export const adminFetchPrivateOfficialDatapacks = action(async () => {
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
-    const response = await fetcher("/admin/server/datapacks/private", {
+    const response = await fetcher("/admin/official/datapacks/private", {
       method: "GET",
       credentials: "include",
       headers: {
