@@ -47,7 +47,6 @@ export const NavBar = observer(function Navbar() {
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
   const { t } = useTranslation();
   const location = useLocation();
-  const dropRef = useRef(null);
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
