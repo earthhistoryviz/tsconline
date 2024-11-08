@@ -51,6 +51,9 @@ export default observer(function App() {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
     const hasUnsavedChanges = JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
+    if (state.isProcessingDatapacks) {
+      return false;
+    }
     if (hasUnsavedChanges && !(isOnDatapackPath || isOnDatapacksTab)) {
       return true;
     }
