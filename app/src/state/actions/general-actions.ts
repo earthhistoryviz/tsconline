@@ -1019,7 +1019,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 });
 export const setTab = action("setTab", (newval: number) => {
   if (
-    newval == 1 &&
+    newval == 2 &&
     state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
