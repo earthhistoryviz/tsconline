@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
@@ -6,12 +6,16 @@ import styles from "./TSCCompactDatapackRow.module.css";
 import Color from "color";
 import { useTheme } from "@mui/material";
 import { CheckIcon, Loader } from "../TSCComponents";
-import { devSafeUrl } from "../../util";
 import { useNavigate } from "react-router";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import Lottie from "../TSCLottie";
 import { context } from "../../state";
-import { getNavigationRouteForDatapackProfile, isOwnedByUser } from "../../state/non-action-util";
+import {
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile,
+  isOwnedByUser
+} from "../../state/non-action-util";
+import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
   datapack: Datapack;
@@ -23,12 +27,10 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
   value,
   onChange
 }) {
-  const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
   const { actions, state } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
     <Box
       className={styles.rc}
@@ -57,11 +59,14 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
-      <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
+      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
       <div className={styles.title}>
-        <Typography className={styles.header} color="textSecondary">
-          {datapack.title}
-        </Typography>
+        <Box className={styles.titleHeader}>
+          <Typography className={styles.header} color="textSecondary">
+            {datapack.title}
+          </Typography>
+          {isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+        </Box>
       </div>
       {isOwnedByUser(datapack, state.user?.uuid) && (
         <Box

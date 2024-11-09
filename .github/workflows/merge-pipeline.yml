@@ -322,11 +322,6 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Transfer files
-        if: github.event.pull_request.merged == false
-        run: |
-          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
-
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
         uses: appleboy/ssh-action@v1.0.3
@@ -337,7 +332,21 @@ jobs:
           script: |
             PR_NUMBER=${{ github.event.number }}
             CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-            cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
+            PR_PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_NUMBER}"
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            
+            if [ ! -d "$PR_PREVIEW_DIR" ]; then
+              echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
+              mkdir -p "$PR_PREVIEW_DIR"
+              git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
+            else
+              echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
+              cd "$PR_PREVIEW_DIR"
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            fi
+            
+            cd "$PR_PREVIEW_DIR"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
               docker-compose -f docker-compose-preview.yml up pr-preview-build
@@ -356,6 +365,7 @@ jobs:
                 sleep $INTERVAL
                 ELAPSED=$((ELAPSED + INTERVAL))
               done
+              echo "Succesfully built"
             else
               echo "Setting up files for PR #${PR_NUMBER}"
               cp ../server/assets/jars/* ./server/assets/jars/

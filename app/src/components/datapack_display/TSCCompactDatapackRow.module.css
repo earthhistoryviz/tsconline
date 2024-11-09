@@ -37,6 +37,17 @@
   cursor: pointer;
   margin: 5px;
 }
+.titleHeader {
+  align-items: center;
+  justify-content: left;
+  flex-direction: row;
+  display: flex;
+  gap: 5px;
+}
+.publicIcon {
+  width: 20px;
+  height: 20px;
+}
 
 .header {
   font-weight: 600;

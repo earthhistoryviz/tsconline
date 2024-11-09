@@ -4,9 +4,11 @@ import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
+  Datapack,
   DatapackMetadata,
   SharedWorkshop,
   assertAdminSharedUserArray,
+  assertDatapackArray,
   assertDatapackIndex,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
@@ -15,7 +17,7 @@ import {
 import { displayServerError } from "./util-actions";
 import {
   addDatapack,
-  fetchServerDatapack,
+  fetchOfficialDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -24,7 +26,7 @@ import {
 } from "./general-actions";
 import { State } from "../state";
 import { getDatapackFromArray } from "../non-action-util";
-import { EditableDatapackMetadata } from "../../types";
+import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -222,104 +224,148 @@ export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string;
   }
 });
 
-export const adminDeleteServerDatapacks = action(async (datapacks: DatapackMetadata[] | EditableDatapackMetadata[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminDeleteServerDatapacks");
-  if (!recaptchaToken) return;
-  let deletedAllDatapacks = true;
-  let deletedNoDatapacks = true;
-  for (const datapack of datapacks) {
-    try {
-      const response = await fetcher("/admin/server/datapack", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          "recaptcha-token": recaptchaToken
-        },
-        body: JSON.stringify({ datapack }),
-        credentials: "include"
-      });
-      if (!response.ok) {
-        deletedAllDatapacks = false;
-        const serverResponse = await response.json();
-        if (response.status == 403 && isServerResponseError(serverResponse) && serverResponse.error.includes("root")) {
-          displayServerError(
-            serverResponse,
-            ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK,
-            ErrorMessages[ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]
-          );
-        } else {
-          displayServerError(
-            serverResponse,
-            ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED,
-            ErrorMessages[ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]
-          );
-        }
-      } else {
-        deletedNoDatapacks = false;
-        runInAction(() => {
-          removeDatapack(datapack);
+export const adminDeleteOfficialDatapacks = action(
+  async (datapacks: DatapackMetadata[] | EditableDatapackMetadata[]) => {
+    const recaptchaToken = await getRecaptchaToken("adminDeleteOfficialDatapacks");
+    if (!recaptchaToken) return;
+    let deletedAllDatapacks = true;
+    let deletedNoDatapacks = true;
+    for (const datapack of datapacks) {
+      try {
+        const response = await fetcher("/admin/official/datapack", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            "recaptcha-token": recaptchaToken
+          },
+          body: JSON.stringify({ datapack: datapack.title }),
+          credentials: "include"
         });
+        if (!response.ok) {
+          deletedAllDatapacks = false;
+          const serverResponse = await response.json();
+          if (
+            response.status == 403 &&
+            isServerResponseError(serverResponse) &&
+            serverResponse.error.includes("root")
+          ) {
+            displayServerError(
+              serverResponse,
+              ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK,
+              ErrorMessages[ErrorCodes.ADMIN_CANNOT_DELETE_ROOT_DATAPACK]
+            );
+          } else {
+            displayServerError(
+              serverResponse,
+              ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED,
+              ErrorMessages[ErrorCodes.ADMIN_DELETE_SERVER_DATAPACK_FAILED]
+            );
+          }
+        } else {
+          deletedNoDatapacks = false;
+          runInAction(() => {
+            removeDatapack(datapack);
+          });
+        }
+      } catch (error) {
+        console.error(error);
+        pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
       }
-    } catch (error) {
-      console.error(error);
-      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+    if (deletedNoDatapacks) {
+      pushSnackbar("No datapacks deleted", "warning");
+    } else if (deletedAllDatapacks) {
+      pushSnackbar("Datapacks deleted successfully", "success");
+    } else if (datapacks.length > 1) {
+      pushSnackbar("Some datapacks were not deleted", "warning");
+    }
+    // this will return if any datapacks were deleted
+    return !deletedNoDatapacks;
+  }
+);
+
+export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
+    if (!recaptchaToken) return;
+    if (getDatapackFromArray(metadata, state.datapacks)) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
+    }
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(isPublic));
+    formData.append("type", metadata.type);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/admin/official/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const pack = await fetchOfficialDatapack(metadata.title);
+        if (!pack) {
+          return;
+        }
+        addDatapack(pack);
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
     }
   }
-  if (deletedNoDatapacks) {
-    pushSnackbar("No datapacks deleted", "warning");
-  } else if (deletedAllDatapacks) {
-    pushSnackbar("Datapacks deleted successfully", "success");
-  } else if (datapacks.length > 1) {
-    pushSnackbar("Some datapacks were not deleted", "warning");
-  }
-  // this will return if any datapacks were deleted
-  return !deletedNoDatapacks;
-});
+);
 
-export const adminUploadServerDatapack = action(async (file: File, metadata: DatapackMetadata) => {
-  const recaptchaToken = await getRecaptchaToken("adminUploadServerDatapack");
-  if (!recaptchaToken) return;
-  if (getDatapackFromArray(metadata, state.datapacks)) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
-  formData.append("file", file);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("references", JSON.stringify(references));
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("authoredBy", authoredBy);
-  formData.append("isPublic", String(isPublic));
-  formData.append("type", metadata.type);
-  if (notes) formData.append("notes", notes);
-  if (date) formData.append("date", date);
-  if (contact) formData.append("contact", contact);
+export const adminFetchPrivateOfficialDatapacks = action(async () => {
   try {
-    const response = await fetcher(`/admin/server/datapack`, {
-      method: "POST",
-      body: formData,
+    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/official/datapacks/private", {
+      method: "GET",
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
       }
     });
-    const data = await response.json();
-
     if (response.ok) {
-      const pack = await fetchServerDatapack(metadata.title);
-      if (!pack) {
+      const array = await response.json();
+      if (!array) {
+        pushError(ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED);
         return;
       }
-      addDatapack(pack);
-      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      assertDatapackArray(array);
+      array.forEach((datapack: Datapack) => {
+        addDatapack(datapack);
+      });
     } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
   }
 });
 

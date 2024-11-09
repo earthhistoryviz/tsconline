@@ -4,16 +4,19 @@ import {
   createUser,
   findUser,
   deleteUser,
-  updateUser,
   createWorkshop,
   findWorkshop,
   getAndHandleWorkshopEnd,
   updateWorkshop,
-  deleteWorkshop
+  deleteWorkshop,
+  checkWorkshopHasUser,
+  createUsersWorkshops,
+  findUsersWorkshops,
+  updateUser
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, relative } from "path";
+import { resolve, extname, relative, join } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -27,20 +30,41 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { setupNewDatapackDirectoryInUUIDDirectory, uploadUserDatapackHandler } from "../upload-handlers.js";
+import {
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadFileToFileSystem,
+  uploadUserDatapackHandler
+} from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
-import { addAdminConfigDatapack, removeAdminConfigDatapack } from "./admin-config.js";
 import "dotenv/config";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,
-  deleteServerDatapack,
+  deleteOfficialDatapack,
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
+  fetchAllPrivateOfficialDatapacks,
   fetchAllUsersDatapacks
 } from "../user/user-handler.js";
-import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+
+export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    const datapacks = await fetchAllPrivateOfficialDatapacks();
+    reply.send(datapacks);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown error fetching user datapacks" });
+    return;
+  }
+};
 
 /**
  * Get all users for admin to configure on frontend
@@ -52,22 +76,26 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
     const users = await findUser({});
     const displayedUsers = await Promise.all(
       users.map(async (user) => {
-        const { hashedPassword, workshopId, ...displayedUser } = user;
-        let workshopTitle = "";
-        if (workshopId) {
+        const { hashedPassword, userId, ...displayedUser } = user;
+        const userWorkshops = await findUsersWorkshops({ userId });
+        const workshopIds: number[] = [];
+        for (const userWorkshop of userWorkshops) {
+          const { workshopId } = userWorkshop;
           const workshop = await findWorkshop({ workshopId });
-          if (workshop && workshop.length === 1) {
-            workshopTitle = workshop[0]?.title ?? "";
+          if (workshop && workshop.length === 1 && workshop[0]?.title) {
+            workshopIds.push(workshopId);
           }
         }
+
         return {
           ...displayedUser,
+          userId: userId,
           username: displayedUser.username,
           isGoogleUser: hashedPassword === null,
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopTitle && { workshopTitle })
+          ...(workshopIds.length > 0 && { workshopIds })
         };
       })
     );
@@ -114,7 +142,6 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
       isAdmin: isAdmin,
       emailVerified: 1,
       invalidateSession: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(customUser);
@@ -236,99 +263,122 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   reply.send({ message: "Datapack deleted" });
 };
 
-export const adminUploadServerDatapack = async function adminUploadServerDatapack(
+export const adminUploadOfficialDatapack = async function adminUploadOfficialDatapack(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
   const parts = request.parts();
   let file: MultipartFile | undefined;
-  let storedFileName: string | undefined;
   let filepath: string | undefined;
   let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  for await (const part of parts) {
-    if (part.type === "file") {
-      // DOWNLOAD FILE HERE AND SAVE TO FILE
-      file = part;
-      originalFileName = file.filename;
-      storedFileName = makeTempFilename(originalFileName);
-      // store it temporarily in the upload directory
-      // this is because we can't check if the file should overwrite the existing file until we verify it
-      filepath = resolve(assetconfigs.datapacksDirectory, storedFileName);
-      if (!filepath.startsWith(resolve(assetconfigs.datapacksDirectory))) {
-        reply.status(403).send({ error: "Directory traversal detected" });
-        return;
-      }
-      if (!/^(\.dpk|\.txt|\.map|\.mdpk)$/.test(extname(file.filename))) {
-        reply.status(400).send({ error: "Invalid file type" });
-        return;
-      }
-      try {
-        await pipeline(file.file, createWriteStream(filepath));
-      } catch (error) {
-        console.error(error);
-        await rm(filepath, { force: true });
-        reply.status(500).send({ error: "Error saving file" });
-        return;
-      }
-      if (file.file.truncated) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: "File too large" });
-        return;
-      }
-      if (file.file.bytesRead === 0) {
-        await rm(filepath, { force: true });
-        reply.status(400).send({ error: `Empty file cannot be uploaded` });
-        return;
-      }
-    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-      fields[part.fieldname] = part.value;
+  const serverDir = await getPrivateUserUUIDDirectory("official");
+  const cleanupTempFiles = async () => {
+    if (filepath) {
+      await rm(filepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
     }
+    if (tempProfilePictureFilepath) {
+      await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
+        console.error(e);
+      });
+    }
+    if (fields.title) {
+      await deleteOfficialDatapack(fields.title).catch((e) => {
+        console.error(e);
+      });
+    }
+  };
+  try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        if (part.fieldname === "datapack") {
+          // DOWNLOAD FILE HERE AND SAVE TO FILE
+          file = part;
+          originalFileName = file.filename;
+          storedFileName = makeTempFilename(originalFileName);
+          filepath = join(serverDir, storedFileName);
+          // store it temporarily in the upload directory
+          // this is because we can't check if the file should overwrite the existing file until we verify it
+          if (!checkFileTypeIsDatapack(file)) {
+            reply.status(415).send({ error: "Invalid file type for datapack file" });
+            return;
+          }
+          const { code, message } = await uploadFileToFileSystem(file, filepath);
+          if (code !== 200) {
+            await cleanupTempFiles();
+            reply.status(code).send({ error: message });
+            return;
+          }
+        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+          if (!checkFileTypeIsDatapackImage(part)) {
+            reply.status(415).send({ error: "Invalid file type for datapack image" });
+            return;
+          }
+          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
+          tempProfilePictureFilepath = join(serverDir, fields.datapackImage);
+          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+          if (code !== 200) {
+            await cleanupTempFiles();
+            reply.status(code).send({ error: message });
+            return;
+          }
+        }
+      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+        fields[part.fieldname] = part.value;
+      }
+    }
+  } catch (error) {
+    await cleanupTempFiles();
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
+    return;
   }
-  if (!file || !filepath || !storedFileName || !originalFileName) {
+  if (!file || !filepath || !originalFileName || !storedFileName) {
+    await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
   }
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
-  fields.uuid = "server";
+  fields.uuid = "official";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
-    reply.status(500).send({ error: "Unexpected error with request fields." });
+    // @eslint-disable-next-line
   });
   if (!datapackMetadata) {
-    filepath && (await rm(filepath, { force: true }));
+    reply.status(500).send({ error: "Unexpected error with request fields." });
+    await cleanupTempFiles();
     return;
   }
-  // if uploadUserDatapackHandler fails, it will send the error and delete the file and set the message so just return
-  const errorHandler = async (error: string, errorCode: number = 500) => {
-    if (!filepath || !storedFileName || !datapackMetadata)
-      throw new Error("Missing required variables for file deletion and error handling");
-    await rm(filepath, { force: true });
-    reply.status(errorCode).send({ error });
-  };
   try {
-    if (await doesDatapackFolderExistInAllUUIDDirectories("server", datapackMetadata.title)) {
-      await errorHandler("Datapack already exists", 409);
+    if (await doesDatapackFolderExistInAllUUIDDirectories("official", datapackMetadata.title)) {
+      await cleanupTempFiles();
+      reply.status(409).send({ error: "Datapack already exists" });
       return;
     }
   } catch (e) {
-    await errorHandler("Error checking if datapack exists");
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error checking if datapack exists" });
     return;
   }
   try {
-    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory("server", filepath, datapackMetadata);
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
+      "official",
+      filepath,
+      datapackMetadata,
+      false,
+      tempProfilePictureFilepath
+    );
     if (!datapackIndex[datapackMetadata.title]) {
       throw new Error("Datapack not found in index");
     }
   } catch (error) {
-    await errorHandler("Error setting up UUID Directory");
-    return;
-  }
-  try {
-    await addAdminConfigDatapack(datapackMetadata);
-  } catch (e) {
-    await errorHandler("Error updating admin config");
+    await cleanupTempFiles();
+    reply.status(500).send({ error: "Error setting up datapack directory" });
     return;
   }
   reply.send({ message: "Datapack uploaded" });
@@ -340,7 +390,7 @@ export const adminUploadServerDatapack = async function adminUploadServerDatapac
  * @param reply
  * @returns
  */
-export const adminDeleteServerDatapack = async function adminDeleteServerDatapack(
+export const adminDeleteOfficialDatapack = async function adminDeleteOfficialDatapack(
   request: FastifyRequest<{ Body: { datapack: string } }>,
   reply: FastifyReply
 ) {
@@ -350,18 +400,10 @@ export const adminDeleteServerDatapack = async function adminDeleteServerDatapac
     return;
   }
   try {
-    await deleteServerDatapack(datapack);
+    await deleteOfficialDatapack(datapack);
   } catch (e) {
     reply.status(500).send({ error: "Error deleting server datapack" });
     return;
-  }
-  try {
-    await removeAdminConfigDatapack({ title: datapack });
-  } catch (e) {
-    reply.status(500).send({
-      error:
-        "Deleted datapack in filesystem, but was not able to write to file. Check with server admin to make sure your configuration is still viable"
-    });
   }
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
@@ -448,6 +490,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(404).send({ error: "Workshop not found" });
       return;
     }
+
     let emailList: string[] = [];
     let invalidEmails: string[] = [];
     if (file && filepath) {
@@ -469,10 +512,22 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(409).send({ error: "Invalid email addresses provided", invalidEmails: invalidEmails.join(", ") });
       return;
     }
+    const addNewUserWorkshopRelationship = async (userId: number, workshopId: number, email: string) => {
+      await createUsersWorkshops({ userId: userId, workshopId: workshopId });
+      const newRelationship = await checkWorkshopHasUser(userId, workshopId);
+      if (newRelationship.length !== 1) {
+        invalidEmails.push(email);
+      }
+    };
+
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
-        await updateUser({ email }, { workshopId });
+        const { userId } = user[0]!;
+        const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
+        if (existingRelationship.length == 0) {
+          addNewUserWorkshopRelationship(userId, workshopId, email);
+        }
       } else {
         await createUser({
           email,
@@ -483,7 +538,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           pictureUrl: null,
           username: email,
           uuid: randomUUID(),
-          workshopId: workshopId,
           accountType: "default"
         });
         const newUser = await findUser({ email });
@@ -491,7 +545,14 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
           reply.status(500).send({ error: "Error creating user", invalidEmails: email });
           return;
         }
+
+        const { userId } = newUser[0]!;
+        addNewUserWorkshopRelationship(userId, workshopId, email);
       }
+    }
+    if (invalidEmails.length > 0) {
+      reply.status(500).send({ error: "Error adding user to workshop", invalidEmails: invalidEmails });
+      return;
     }
     reply.send({ message: "Users added" });
   } catch (error) {

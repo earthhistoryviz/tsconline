@@ -2,7 +2,7 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath } from "../util.js";
+import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -12,11 +12,12 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
-import { findUser } from "../database.js";
+import { findUser, findUsersWorkshops } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
+import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
 
-export const fetchServerDatapack = async function fetchServerDatapack(
+export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
   reply: FastifyReply
 ) {
@@ -25,12 +26,12 @@ export const fetchServerDatapack = async function fetchServerDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const serverDatapack = await fetchUserDatapack("server", name);
-  if (!serverDatapack) {
+  const OfficialDatapack = await fetchUserDatapack("official", name);
+  if (!OfficialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(serverDatapack);
+  reply.send(OfficialDatapack);
 };
 
 export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
@@ -191,7 +192,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   }
   const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
-  const workshopId = uuid ? (await findUser({ uuid }))[0]?.workshopId ?? 0 : 0;
+  const userId = (await findUser({ uuid }))[0]?.userId;
+  const userInWorkshops = userId ? (await findUsersWorkshops({ userId })).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
@@ -211,8 +213,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "workshop":
         uuidFolder = "workshop";
         break;
-      case "server":
-        uuidFolder = "server";
+      case "official":
+        uuidFolder = "official";
         break;
       case "user":
         if (uuid !== datapack.uuid && !datapack.isPublic) {
@@ -371,7 +373,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   try {
-    const priority = workshopId ? 2 : uuid ? 1 : 0;
+    const priority = userInWorkshops ? 2 : uuid ? 1 : 0;
     await queue.add(async () => {
       await execJavaCommand(1000 * 30), { priority };
     });
@@ -434,6 +436,37 @@ export const fetchTimescale = async function (_request: FastifyRequest, reply: F
     reply.send({ timescaleData });
   } catch (error) {
     console.error("Error reading Excel file:", error);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+export const fetchDatapackCoverImage = async function (
+  request: FastifyRequest<{ Params: { title: string; uuid: string } }>,
+  reply: FastifyReply
+) {
+  const { title, uuid } = request.params;
+  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "default.png");
+  try {
+    if (title === "default") {
+      if (!(await checkFileExists(defaultFilepath))) {
+        reply.status(404).send({ error: "Default image not found" });
+        return;
+      }
+      reply.send(await readFile(defaultFilepath));
+      return;
+    }
+    const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
+    if (!(await checkFileExists(uniqueImageFilepath))) {
+      if (!(await checkFileExists(defaultFilepath))) {
+        reply.status(404).send({ error: "Default image not found" });
+        return;
+      }
+      reply.send(await readFile(defaultFilepath));
+      return;
+    }
+    reply.send(await readFile(uniqueImageFilepath));
+  } catch (e) {
+    console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };

@@ -1,7 +1,12 @@
-import { describe, it, vi, expect, beforeEach } from "vitest";
+import { describe, it, vi, expect, beforeEach, afterEach, test } from "vitest";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsDatapackImage,
+  doesDatapackFolderExistInAllUUIDDirectories,
+  editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
+  getUploadedDatapackFilepath,
   renameUserDatapack,
   writeUserDatapack
 } from "../src/user/user-handler";
@@ -12,6 +17,7 @@ import * as logger from "../src/error-logger";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import path from "path";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
+import { MultipartFile } from "@fastify/multipart";
 
 vi.mock("../src/file-metadata-handler", () => {
   return {
@@ -80,7 +86,8 @@ vi.mock("../src/user/fetch-user-files", () => {
   return {
     getAllUserDatapackDirectories: vi.fn(async () => ["test1/test"]),
     getDirectories: vi.fn(async () => ["test"]),
-    fetchUserDatapackDirectory: vi.fn(async () => "test/test")
+    fetchUserDatapackDirectory: vi.fn(async () => "test/test"),
+    getPrivateUserUUIDDirectory: vi.fn(async () => "test")
   };
 });
 const readFileMockReturn = { title: "test" };
@@ -262,5 +269,191 @@ describe("writeUserDatapack test", () => {
     await writeUserDatapack("test", datapack);
     expect(writeFile).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledWith("test/test/test", JSON.stringify(datapack, null, 2));
+  });
+});
+
+describe("doesDatapackFolderExistInAllUUIDDirectories test", () => {
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return true if the datapack exists in all UUID directories", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test", "test2"]);
+    getDirectories.mockResolvedValueOnce(["test-datapack-one", "test-datapack-two"]);
+    expect(await doesDatapackFolderExistInAllUUIDDirectories("test", "test-datapack-one")).toBe(true);
+    expect(getAllUserDatapackDirectories).toHaveBeenCalledOnce();
+    expect(getDirectories).toHaveBeenCalledOnce();
+  });
+  it("should return false if the datapack doesn't exist in all UUID directories", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test2"]);
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test"]);
+    expect(await doesDatapackFolderExistInAllUUIDDirectories("test", "invalid-datapack")).toBe(false);
+  });
+  it("should throw error if getDirectories fails", async () => {
+    getDirectories.mockRejectedValueOnce(new Error("getDirectories error"));
+    await expect(doesDatapackFolderExistInAllUUIDDirectories("test", "test-datapack-one")).rejects.toThrow(
+      "getDirectories error"
+    );
+  });
+});
+
+describe("fetchAllPrivateOfficialDatapacks test", () => {
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const loggerError = vi.spyOn(logger.default, "error");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return no datapacks if no datapacks are found", async () => {
+    getDirectories.mockResolvedValueOnce([]);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(getDirectories).toHaveBeenCalledOnce();
+    expect(loggerError).not.toHaveBeenCalled();
+  });
+  it("should return no datapacks if the datapack is invalid", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    readFile.mockRejectedValueOnce(new Error("readFile error"));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return no datapacks and log if a dupe datapack is found", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test"]);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([readFileMockReturn]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return no datapacks and log if verifyFilepath fails", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    verifyFilepath.mockResolvedValueOnce(false);
+    expect(await fetchAllUsersDatapacks("test")).toEqual([]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+  it("should return one datapack successfully", async () => {
+    getDirectories.mockResolvedValueOnce(["test"]);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([readFileMockReturn]);
+  });
+  it("should return multiple datapacks successfully", async () => {
+    const array = [{ title: "test1" }, { title: "test2" }, { title: "test3" }, { title: "test4" }];
+    getDirectories.mockResolvedValueOnce(array.map((datapack) => datapack.title));
+    for (const datapack of array) {
+      readFile.mockResolvedValueOnce(JSON.stringify(datapack));
+    }
+    expect(await fetchAllUsersDatapacks("test")).toEqual(array);
+  });
+  it("should return one datapack if other datapacks fail", async () => {
+    getDirectories.mockResolvedValueOnce(["test", "test2"]);
+    readFile
+      .mockResolvedValueOnce(JSON.stringify({ title: "test" }))
+      .mockRejectedValueOnce(new Error("readFile error"));
+    expect(await fetchAllUsersDatapacks("test")).toEqual([{ title: "test" }]);
+    expect(loggerError).toHaveBeenCalledOnce();
+  });
+});
+
+describe("getUploadedDatapackFilepath test", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const readFileMockReturn = { originalFileName: "test" };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw an error if verifyFilepath returns false", async () => {
+    verifyFilepath.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("Invalid filepath");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+    expect(verifyFilepath).toHaveBeenCalledTimes(2);
+  });
+  it("should throw an error if verifyFilepath throws an error", async () => {
+    verifyFilepath.mockRejectedValueOnce(new Error("verifyFilepath error"));
+    await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("verifyFilepath error");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+  });
+  it("should return the filepath", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    expect(await getUploadedDatapackFilepath("test", "test")).toBe("test/test/test");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("editDatapack tests", async () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const rename = vi.spyOn(fsPromises, "rename");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  // TODO: make these into method mocks where it mocks and expects for other methods that use fetchUserDatapackFilepath or fetchUserDatapack
+  beforeEach(() => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("test");
+    verifyFilepath.mockResolvedValueOnce(true);
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
+    vi.clearAllMocks();
+  });
+  afterEach(() => {
+    expect(fetchUserDatapackDirectory).toHaveNthReturnedWith(1, "test");
+    expect(verifyFilepath).toHaveNthReturnedWith(1, true);
+    expect(readFile).toHaveNthReturnedWith(1, JSON.stringify(readFileMockReturn));
+  });
+  it("should call renameUserDatapack if the newDatapack has a title", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { title: "new-title" };
+    await editDatapack("test", "old-title", newDatapack);
+    expect(rename).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledOnce();
+  });
+  it("should call writeUserDatapack if the newDatapack doesn't have a title", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { description: "new-title" };
+    await editDatapack("test", "old-title", newDatapack);
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(rename).not.toHaveBeenCalled();
+  });
+});
+
+describe("checkFileTypeIsDatapack test", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  test.each([
+    ["application/zip", "test.dpk"],
+    ["application/octet-stream", "test.map"],
+    ["text/plain", "test.mdpk"],
+    ["text/plain", "test.dpk"],
+    ["text/plain", "test.txt"]
+  ])("should return true if the file is a datapack", async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(true);
+  });
+  test.each([
+    ["application/json", "test.json"],
+    ["application/zip", "test.zip"],
+    ["text/plain", "test"],
+    ["application/octet-stream", "test"]
+  ])(`should return false if the file is not a datapack for %s and %s`, async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapack({ mimetype, filename } as MultipartFile)).toBe(false);
+  });
+});
+describe("checkFileTypeIsDatapackImage test", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  test.each([
+    ["image/png", "test.png"],
+    ["image/jpeg", "test.jpg"],
+    ["image/jpg", "test.jpeg"]
+  ])("should return true if the file is a datapack image for %s and %s", async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapackImage({ mimetype, filename } as MultipartFile)).toBe(true);
+  });
+  test.each([
+    ["application/json", "test.json"],
+    ["application/zip", "test.zip"],
+    ["text/plain", "test"],
+    ["image/svg+xml", "test.svg"],
+    ["image/gif", "test.gif"],
+    ["application/octet-stream", "test"]
+  ])(`should return false if the file is not a datapack image for %s and %s`, async (mimetype, filename) => {
+    expect(checkFileTypeIsDatapackImage({ mimetype, filename } as MultipartFile)).toBe(false);
   });
 });

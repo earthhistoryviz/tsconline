@@ -13,8 +13,8 @@ import {
   Datapack,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  isServerDatapack,
-  assertServerDatapack,
+  isOfficialDatapack,
+  assertOfficialDatapack,
   assertDatapack,
   assertDatapackArray
 } from "@tsconline/shared";
@@ -54,19 +54,19 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
+import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
 
-export const fetchServerDatapack = action("fetchServerDatapack", async (datapack: string) => {
+export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
     const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET"
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapack(data);
+      assertOfficialDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -217,58 +217,70 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   }
 });
 
-export const uploadUserDatapack = action("uploadUserDatapack", async (file: File, metadata: DatapackMetadata) => {
-  if (getDatapackFromArray(metadata, state.datapacks)) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const recaptcha = await getRecaptchaToken("uploadUserDatapack");
-  if (!recaptcha) return;
-  const formData = new FormData();
-  const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
-  formData.append("file", file);
-  formData.append("title", title);
-  formData.append("description", description);
-  formData.append("references", JSON.stringify(references));
-  formData.append("tags", JSON.stringify(tags));
-  formData.append("authoredBy", authoredBy);
-  formData.append("isPublic", String(metadata.isPublic));
-  formData.append("type", metadata.type);
-  if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
-  formData.append("isPublic", String(metadata.isPublic));
-  if (notes) formData.append("notes", notes);
-  if (date) formData.append("date", date);
-  if (contact) formData.append("contact", contact);
-  try {
-    const response = await fetcher(`/user/datapack`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptcha
-      }
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      const datapack = await fetchUserDatapack(metadata.title);
-      if (!datapack) {
-        pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
-        return;
-      }
-      addDatapack(datapack);
-      if (metadata.isPublic) {
-        refreshPublicDatapacks();
-      }
-      pushSnackbar("Successfully uploaded " + title + " datapack", "success");
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const uploadUserDatapack = action(
+  "uploadUserDatapack",
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    if (getDatapackFromArray(metadata, state.datapacks)) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+    const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    formData.append("isPublic", String(metadata.isPublic));
+    formData.append("type", metadata.type);
+    if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
+    formData.append("isPublic", String(metadata.isPublic));
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/user/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptcha
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const datapack = await fetchUserDatapack(metadata.title);
+        if (!datapack) {
+          pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+          return;
+        }
+        addDatapack(datapack);
+        if (metadata.isPublic) {
+          refreshPublicDatapacks();
+        }
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        if (response.status === 403) {
+          pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+        } else {
+          displayServerError(
+            data,
+            ErrorCodes.INVALID_DATAPACK_UPLOAD,
+            ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]
+          );
+        }
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
   }
-});
+);
 
 export const setLargeDataIndex = action(
   "setLargeDataIndex",
@@ -790,7 +802,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isOfficialDatapack(datapack) ? "official" : "",
       isPublic: datapack.isPublic
     })
   });
@@ -930,7 +942,6 @@ export const sessionCheck = action("sessionCheck", async () => {
 });
 
 export const setDefaultUserState = action(() => {
-  removeUserDatapacks(state.user.uuid);
   state.user = {
     username: "",
     email: "",
@@ -940,12 +951,13 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "en"
+      language: "English"
     }
   };
+  removeUnauthorizedDatapacks();
 });
-export const removeUserDatapacks = action((uuid: string) => {
-  state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
+export const removeUnauthorizedDatapacks = action(() => {
+  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
@@ -1007,7 +1019,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 });
 export const setTab = action("setTab", (newval: number) => {
   if (
-    newval == 1 &&
+    newval == 2 &&
     state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {

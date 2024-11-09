@@ -112,7 +112,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
-  generalActions.setTab(1);
+  generalActions.setTab(2);
   generalActions.setChartMade(true);
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");

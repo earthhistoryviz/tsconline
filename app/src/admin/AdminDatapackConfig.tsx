@@ -37,7 +37,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         assertBaseDatapackProps(node.data);
         return node.data;
       });
-      await actions.adminDeleteServerDatapacks(datapacks);
+      await actions.adminDeleteOfficialDatapacks(datapacks);
     } catch (e) {
       console.error(e);
     }
@@ -55,8 +55,8 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <DatapackUploadForm
             close={() => setFormOpen(false)}
-            upload={actions.adminUploadServerDatapack}
-            type={{ type: "server" }}
+            upload={actions.adminUploadOfficialDatapack}
+            type={{ type: "official" }}
           />
         </Dialog>
       </Box>
@@ -66,7 +66,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         rowSelection="multiple"
         rowDragManaged
         rowMultiSelectWithClick
-        rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "server")}
+        rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "official")}
       />
     </Box>
   );
