@@ -1,4 +1,4 @@
-import { throwError, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+import { throwError } from "@tsconline/shared";
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
@@ -6,6 +6,7 @@ export interface Database {
   verification: VerificationTable;
   ip: IpTable;
   workshop: WorkshopTable;
+  usersWorkshops: UsersWorkshopsTable;
 }
 
 export type AccountType = "pro" | "default";
@@ -20,7 +21,6 @@ export interface UserTable {
   emailVerified: number;
   invalidateSession: number;
   isAdmin: number;
-  workshopId: number;
   accountType: AccountType;
 }
 
@@ -44,12 +44,20 @@ export interface WorkshopTable {
   end: string;
 }
 
+export interface UsersWorkshopsTable {
+  workshopId: number;
+  userId: number;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
 
 export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
+
+export type UsersWorkshops = Selectable<UsersWorkshopsTable>;
+export type NewUsersWorkshops = Insertable<UsersWorkshopsTable>;
 
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;
@@ -84,14 +92,9 @@ export type AssetConfig = {
   fileMetadata: string;
   publicDirectory: string;
   datapackImagesDirectory: string;
-  adminConfigPath: string;
   privateDatapacksDirectory: string;
   uploadDirectory: string;
   publicDatapacksDirectory: string;
-};
-
-export type AdminConfigType = {
-  datapacks: DatapackMetadata[];
 };
 
 export type Colors = {
@@ -108,13 +111,6 @@ export type FileMetadata = {
   uuid: string;
 };
 
-export function assertAdminConfig(o: any): asserts o is AdminConfigType {
-  if (typeof o !== "object" || !o) throw "AdminConfigType must be an object";
-  if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfigType must have a "datapacks" array';
-  for (const datapack of o.datapacks) {
-    assertDatapackMetadata(datapack);
-  }
-}
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
@@ -164,7 +160,6 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.uploadDirectory !== "string") throw 'AssetConfig must have a "uploadDirectory" string';
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
-  if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';
   if (typeof o.publicDirectory !== "string") throw 'AssetConfig must have a "publicDirectory" string';
   if (typeof o.privateDatapacksDirectory !== "string")
     throw 'AssetConfig must have a "privateDatapacksDirectory" string';

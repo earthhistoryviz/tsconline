@@ -1,7 +1,7 @@
 import path from "path";
 import { getDirectories } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
-import { readdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
 import { DatapackIndex, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
@@ -10,10 +10,11 @@ import chalk from "chalk";
 const allowedExtensions = [".dpk", ".mdpk", ".txt", ".map"];
 try {
   await loadAssetConfigs();
-  const directories = [
-    path.join(assetconfigs.uploadDirectory, "public"),
-    path.join(assetconfigs.uploadDirectory, "private")
-  ];
+  const publicDir = path.join(assetconfigs.uploadDirectory, "public");
+  const privateDir = path.join(assetconfigs.uploadDirectory, "private");
+  await mkdir(publicDir, { recursive: true });
+  await mkdir(privateDir, { recursive: true });
+  const directories = [publicDir, privateDir];
   for (const directory of directories) {
     const users = await getDirectories(directory);
     for (const user of users) {
@@ -62,6 +63,7 @@ try {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetadata> = {}): DatapackMetadata {
+  migrateImageToDatapackImage(datapack);
   const metadata: DatapackMetadata = {
     title: "title" in datapack ? datapack.title : "",
     authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "Unknwon",
@@ -71,13 +73,23 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     references: "references" in datapack ? datapack.references : [],
     tags: "tags" in datapack ? datapack.tags : [],
     isPublic: "isPublic" in datapack ? datapack.isPublic : false,
-    type: "type" in datapack ? datapack.type : "server",
+    type: "type" in datapack ? datapack.type : "official",
     description: "description" in datapack ? datapack.description : "",
     size: "size" in datapack ? datapack.size : 0,
     originalFileName: "originalFileName" in datapack ? datapack.originalFileName : "",
     storedFileName: "storedFileName" in datapack ? datapack.storedFileName : "",
+    datapackImage: "datapackImage" in datapack ? datapack.datapackImage : "",
     ...partial
   };
   assertDatapackMetadata(metadata);
   return metadata;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function migrateImageToDatapackImage(datapack: any) {
+  if ("image" in datapack) {
+    datapack.datapackImage = datapack.image;
+    delete datapack.image;
+  }
+  return datapack;
 }

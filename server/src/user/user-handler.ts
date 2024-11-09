@@ -6,8 +6,14 @@ import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
-import { getAllUserDatapackDirectories, fetchUserDatapackDirectory, getDirectories } from "./fetch-user-files.js";
+import {
+  getAllUserDatapackDirectories,
+  fetchUserDatapackDirectory,
+  getDirectories,
+  getPrivateUserUUIDDirectory
+} from "./fetch-user-files.js";
 import _ from "lodash";
+import { MultipartFile } from "@fastify/multipart";
 
 /**
  * TODO: WRITE TESTS
@@ -54,6 +60,30 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
       } catch (e) {
         logger.error(`Error reading datapack ${datapack} for user ${uuid} with error ${e}`);
       }
+    }
+  }
+  return datapacksArray;
+}
+
+export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
+  const directory = await getPrivateUserUUIDDirectory("official");
+  const datapacksArray: Datapack[] = [];
+  const datapacks = await getDirectories(directory);
+  for (const datapack of datapacks) {
+    try {
+      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+      const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
+      if (await verifyFilepath(cachedDatapack)) {
+        if (datapacksArray.find((datapack) => datapack.title === parsedCachedDatapack.title)) {
+          throw new Error(`Datapack ${datapack} already exists in the array`);
+        }
+        assertDatapack(parsedCachedDatapack);
+        datapacksArray.push(parsedCachedDatapack);
+      } else {
+        throw new Error(`File ${datapack} doesn't exist`);
+      }
+    } catch (e) {
+      logger.error(`Error reading datapack ${datapack} for user server with error ${e}`);
     }
   }
   return datapacksArray;
@@ -184,8 +214,8 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
  * @param datapack the title of the datapack
  * TODO: write tests
  */
-export async function deleteServerDatapack(datapack: string): Promise<void> {
-  const datapackPath = await fetchUserDatapackDirectory("server", datapack);
+export async function deleteOfficialDatapack(datapack: string): Promise<void> {
+  const datapackPath = await fetchUserDatapackDirectory("official", datapack);
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
@@ -259,4 +289,20 @@ export async function getEncryptedDatapackDirectory(uuid: string, datapackTitle:
   const encryptedDir = path.join(datapackDir, "encrypted");
   const encryptedFilepath = path.join(encryptedDir, metadata.originalFileName);
   return { encryptedDir, encryptedFilepath };
+}
+
+export function checkFileTypeIsDatapack(file: MultipartFile): boolean {
+  return (
+    (file.mimetype === "application/octet-stream" ||
+      file.mimetype === "text/plain" ||
+      file.mimetype === "application/zip") &&
+    /^(\.dpk|\.txt|\.map|\.mdpk)$/.test(path.extname(file.filename))
+  );
+}
+
+export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
+  return (
+    (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") &&
+    /^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
+  );
 }

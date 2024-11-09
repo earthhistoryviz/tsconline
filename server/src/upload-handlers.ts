@@ -4,7 +4,6 @@ import {
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
-  isServerDatapack,
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
@@ -13,11 +12,13 @@ import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
 import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
-import { getUserUUIDDirectory } from "./user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { addAdminConfigDatapack } from "./admin/admin-config.js";
-import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
+import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
+import { MultipartFile } from "@fastify/multipart";
+import { createWriteStream } from "fs";
+import { pipeline } from "stream/promises";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -53,7 +54,8 @@ export async function uploadUserDatapackHandler(
     storedFileName,
     isPublic,
     type,
-    uuid
+    uuid,
+    datapackImage
   } = fields;
   let { references, tags } = fields;
   if (
@@ -120,6 +122,7 @@ export async function uploadUserDatapackHandler(
     uuid,
     isPublic: isPublic === "true",
     size: getBytes(bytes),
+    ...(datapackImage && { datapackImage }),
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date })
@@ -139,7 +142,8 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   uuid: string,
   sourceFilePath: string,
   metadata: DatapackMetadata,
-  manual?: boolean // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
+  manual: boolean, // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
+  datapackImageFilepath?: string
 ) {
   if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
     throw new Error("Datapack already exists");
@@ -151,7 +155,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
   const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
-  if (!manual) {
+  if (!manual && sourceFilePath !== sourceFileDestination) {
     await rm(sourceFilePath, { force: true });
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
@@ -160,14 +164,54 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     await rm(datapackFolder, { force: true });
     throw new Error("Failed to load datapack into index");
   }
+  if (datapackImageFilepath) {
+    const datapackImageFilepathDest = path.join(
+      datapackFolder,
+      DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
+    );
+    await copyFile(datapackImageFilepath, datapackImageFilepathDest);
+    await rm(datapackImageFilepath, { force: true });
+  }
   await writeFile(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
   );
   if (isUserDatapack(metadata)) {
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
-  } else if (isServerDatapack(metadata) && !manual) {
-    await addAdminConfigDatapack(metadata);
   }
   return datapackIndex;
+}
+
+export async function uploadFileToFileSystem(
+  file: MultipartFile,
+  filepath: string
+): Promise<{ code: number; message: string }> {
+  try {
+    await pipeline(file.file, createWriteStream(filepath));
+  } catch (e) {
+    return { code: 500, message: "Failed to save file" };
+  }
+  if (file.file.truncated) {
+    await rm(filepath, { force: true });
+    return { code: 400, message: "File is too large" };
+  }
+  if (file.file.bytesRead === 0) {
+    await rm(filepath, { force: true });
+    return { code: 400, message: "Empty file" };
+  }
+  return { code: 200, message: "File uploaded" };
+}
+
+export async function fetchDatapackProfilePictureFilepath(uuid: string, datapackTitle: string) {
+  const directory = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  const possibleExtensions = [".png", ".jpeg", ".jpg"];
+
+  // Loop through possible extensions and check if the file exists
+  for (const ext of possibleExtensions) {
+    const profilePicturePath = path.join(directory, DATAPACK_PROFILE_PICTURE_FILENAME + ext);
+    if (await checkFileExists(profilePicturePath)) {
+      return profilePicturePath;
+    }
+  }
+  throw new Error("Profile picture does not exist");
 }
