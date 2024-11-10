@@ -39,6 +39,7 @@ export type DatapackMetadata = {
   contact?: string;
   notes?: string;
   datapackImage?: string;
+  priority: number;
 } & DatapackType;
 
 export type AdminSharedUser = {
@@ -587,8 +588,20 @@ export type TimescaleItem = {
   key: string;
   value: number;
 };
+export type DatapackPriorityChangeRequest = {
+  type: DatapackType["type"];
+  title: string;
+  priority: number;
+}
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest  {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityChangeRequest must be a non-null object");
+  assertDatapackTypeString(o.type);
+  if (typeof o.title !== "string") throwError("DatapackPrioirtyChangeRequest", "title", "string", o.title)
+  if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
+}
 
 export type BatchUpdateServerPartialError = {
   message: string;
@@ -1014,7 +1027,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "references",
     "contact",
     "notes",
-    "isPublic"
+    "isPublic",
+    "priority"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1034,6 +1048,7 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("notes" in o && typeof o.notes !== "string") return false;
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
   if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
+  if ("priority" in o && typeof o.priority !== "number") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
@@ -1060,6 +1075,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
+  if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");

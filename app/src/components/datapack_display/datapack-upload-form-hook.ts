@@ -27,6 +27,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
   const filename = file?.name || "";
@@ -39,6 +40,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     authoredBy,
     references: references.map((reference) => reference.reference),
     tags,
+    priority,
     size: "0", // placeholder, this will get set after the file is uploaded
     ...type,
     ...(contact && { contact }),
@@ -136,7 +138,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
-      profileImageRef
+      profileImageRef,
+      priority
     },
     setters: {
       setTitle,
@@ -148,7 +151,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setTags,
       setReferences,
       setDate,
-      setFile
+      setFile,
+      setPriority
     },
     handlers: {
       resetForm,
