@@ -6,10 +6,13 @@ import {
   AdminSharedUser,
   Datapack,
   DatapackMetadata,
+  DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUserArray,
   assertDatapackArray,
   assertDatapackIndex,
+  assertDatapackPriorityPartialUpdateSuccess,
+  assertDatapackPriorityUpdateSuccess,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   isServerResponseError
@@ -613,4 +616,39 @@ export const updateAdminUserDatapacks = action(async (uuid: string[]) => {
 
 export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"]["displayedUserDatapacks"]) => {
   state.admin.displayedUserDatapacks = datapacks;
+});
+
+export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/datapack/priority", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify(tasks),
+      credentials: "include"
+    });
+    const json = await response.json();
+    if (response.ok) {
+      assertDatapackPriorityUpdateSuccess(json);
+      json.completedRequests.forEach((datapack) => {
+        const index = state.datapacks.findIndex((d) => d.title === datapack.id);
+        if (index !== -1) {
+          runInAction(() => {
+            state.datapacks[index].priority = datapack.priority;
+          });
+        }
+      });
+      pushSnackbar("Datapack priorities updated successfully", "success");
+    } else {
+      assertDatapackPriorityPartialUpdateSuccess(json);
+      const failedRequests = json.failedRequests;
+      console.log(failedRequests);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+  }
 });

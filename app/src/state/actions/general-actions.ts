@@ -144,7 +144,7 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
       try {
         assertDatapackInfoChunk(index);
         for (const dp of index.datapacks) {
-          console.log(dp.type)
+          console.log(dp.type);
           addDatapack(dp);
         }
         if (total == -1) total = index.totalChunks;

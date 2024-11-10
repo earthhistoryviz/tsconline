@@ -26,6 +26,8 @@ import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
   DatapackPriorityChangeRequest,
+  DatapackPriorityPartialUpdateSuccess,
+  DatapackPriorityUpdateSuccess,
   SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
@@ -754,7 +756,7 @@ export const adminDeleteWorkshop = async function adminDeleteWorkshop(
 };
 
 export const adminEditDatapackPriorities = async function adminEditDatapackPriorities(
-  request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] }}>,
+  request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] } }>,
   reply: FastifyReply
 ) {
   const { tasks } = request.body;
@@ -764,14 +766,25 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
     reply.status(400).send({ error: "Invalid request" });
     return;
   }
-  const uncompletedTasks = tasks
+  const failedRequests = tasks;
+  const completedRequests = [];
   try {
     for (const task of tasks) {
       await editAdminDatapackPriorities(task);
-      uncompletedTasks.shift();
+      failedRequests.shift();
+      completedRequests.push(task);
     }
   } catch (e) {
-    reply.status(500).send({ error: "Error updating priorities", uncompletedTasks });
+    const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
+      error: "Some priorities updated",
+      failedRequests,
+      completedRequests
+    };
+    reply.status(500).send(partialSuccess);
   }
-  reply.send({ message: "Priorities updated" });
+  const success: DatapackPriorityUpdateSuccess = {
+    message: "Priorities updated",
+    completedRequests
+  };
+  reply.send(success);
 };
