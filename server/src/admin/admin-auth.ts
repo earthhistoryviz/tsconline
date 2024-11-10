@@ -227,8 +227,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     adminModifyUser
   );
   fastify.patch(
-    "/official/datapack/priorities",
+    "/official/datapack/priority",
     { config: { rateLimit: moderateRateLimit } },
     adminEditDatapackPriorities
-  )
+  );
 };

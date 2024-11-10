@@ -8,7 +8,7 @@ import { TSCButton, DatapackUploadForm } from "../components";
 import { BaseDatapackProps, assertBaseDatapackProps } from "@tsconline/shared";
 
 const datapackColDefs: ColDef[] = [
-  { headerName: "Priority", field: "priority", flex: 0.4, rowDrag: true},
+  { headerName: "Priority", field: "priority", flex: 0.4, rowDrag: true },
   {
     headerName: "Datapack Title",
     field: "title",
@@ -21,7 +21,7 @@ const datapackColDefs: ColDef[] = [
   { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
   { headerName: "Description", field: "description", flex: 1 },
   { headerName: "Size", field: "size", flex: 0.5 },
-  { headerName: "Format Version", field: "formatVersion", flex: 0.8 },
+  { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
 ];
 
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {

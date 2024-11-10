@@ -592,9 +592,30 @@ export type DatapackPriorityChangeRequest = {
   uuid: DatapackType["type"];
   id: string;
   priority: number;
-}
+};
+export type DatapackPriorityPartialUpdateSuccess = {
+  error: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+  failedRequests: DatapackPriorityChangeRequest[];
+};
+export type DatapackPriorityUpdateSuccess = {
+  message: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+};
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
+  if (typeof o.message !== "string") throwError("DatapackPriorityUpdateSuccess", "message", "string", o.message);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+}
+export function assertDatapackPriorityPartialUpdateSuccess(o: any): asserts o is DatapackPriorityPartialUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityPartialUpdateSuccess must be a non-null object");
+  if (typeof o.error !== "string") throwError("DatapackPriorityPartialUpdateSuccess", "error", "string", o.error);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+  assertDatapackPriorityChangeRequestArray(o.failedRequests);
+}
 
 export function assertDatapackPriorityChangeRequestArray(o: any): asserts o is DatapackPriorityChangeRequest[] {
   if (!Array.isArray(o)) throw new Error("DatapackPriorityChangeRequest must be an array");
@@ -603,7 +624,7 @@ export function assertDatapackPriorityChangeRequestArray(o: any): asserts o is D
   }
 }
 
-export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest  {
+export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityChangeRequest must be a non-null object");
   assertDatapackTypeString(o.uuid);
   if (typeof o.id !== "string") throwError("DatapackPriorityChangeRequest", "id", "string", o.id);
