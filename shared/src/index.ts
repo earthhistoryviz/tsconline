@@ -589,17 +589,24 @@ export type TimescaleItem = {
   value: number;
 };
 export type DatapackPriorityChangeRequest = {
-  type: DatapackType["type"];
-  title: string;
+  uuid: DatapackType["type"];
+  id: string;
   priority: number;
 }
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function assertDatapackPriorityChangeRequestArray(o: any): asserts o is DatapackPriorityChangeRequest[] {
+  if (!Array.isArray(o)) throw new Error("DatapackPriorityChangeRequest must be an array");
+  for (const request of o) {
+    assertDatapackPriorityChangeRequest(request);
+  }
+}
+
 export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest  {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityChangeRequest must be a non-null object");
-  assertDatapackTypeString(o.type);
-  if (typeof o.title !== "string") throwError("DatapackPrioirtyChangeRequest", "title", "string", o.title)
+  assertDatapackTypeString(o.uuid);
+  if (typeof o.id !== "string") throwError("DatapackPriorityChangeRequest", "id", "string", o.id);
   if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
 }
 

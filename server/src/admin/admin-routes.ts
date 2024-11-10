@@ -25,8 +25,10 @@ import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
+  DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUser,
+  assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
@@ -51,6 +53,7 @@ import {
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { editAdminDatapackPriorities } from "./admin-handler.js";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -748,4 +751,27 @@ export const adminDeleteWorkshop = async function adminDeleteWorkshop(
     reply.status(500).send({ error: "Unknown error" });
   }
   reply.send({ message: "Workshop deleted" });
+};
+
+export const adminEditDatapackPriorities = async function adminEditDatapackPriorities(
+  request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] }}>,
+  reply: FastifyReply
+) {
+  const { tasks } = request.body;
+  try {
+    assertDatapackPriorityChangeRequestArray(tasks);
+  } catch (e) {
+    reply.status(400).send({ error: "Invalid request" });
+    return;
+  }
+  const uncompletedTasks = tasks
+  try {
+    for (const task of tasks) {
+      await editAdminDatapackPriorities(task);
+      uncompletedTasks.shift();
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Error updating priorities", uncompletedTasks });
+  }
+  reply.send({ message: "Priorities updated" });
 };

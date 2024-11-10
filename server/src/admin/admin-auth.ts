@@ -13,7 +13,8 @@ import {
   adminGetWorkshops,
   adminEditWorkshop,
   adminDeleteWorkshop,
-  adminModifyUser
+  adminModifyUser,
+  adminEditDatapackPriorities
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -225,4 +226,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     { schema: { body: adminModifyUserBody }, config: { rateLimit: moderateRateLimit } },
     adminModifyUser
   );
+  fastify.patch(
+    "/official/datapack/priorities",
+    { config: { rateLimit: moderateRateLimit } },
+    adminEditDatapackPriorities
+  )
 };
