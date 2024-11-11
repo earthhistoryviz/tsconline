@@ -1,19 +1,19 @@
-import { action, runInAction } from "mobx";
+import { action } from "mobx";
 import { fetcher } from "../../util";
 import {
-  addDatapackToUserDatapackIndex,
+  addDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
-  removeDatapackFromUserDatapackIndex,
+  removeAllErrors,
+  removeDatapack,
   setDatapackProfilePageEditMode,
   setEditableDatapackMetadata
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { state } from "../state";
 import { EditableDatapackMetadata } from "../../types";
-import { assertDatapack, assertPrivateUserDatapack } from "@tsconline/shared";
+import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
 
 export const handleDatapackEdit = action(
   async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
@@ -27,11 +27,11 @@ export const handleDatapackEdit = action(
     if (Object.keys(body).length === 0) {
       pushSnackbar("No changes made", "info");
       setDatapackProfilePageEditMode(false);
-      return;
+      return false;
     }
     try {
       const recaptcha = await getRecaptchaToken("handleDatapackEdit");
-      if (!recaptcha) return;
+      if (!recaptcha) return false;
       const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
         method: "PATCH",
         body: JSON.stringify(body),
@@ -46,17 +46,20 @@ export const handleDatapackEdit = action(
         setEditableDatapackMetadata(editedDatapack);
         setDatapackProfilePageEditMode(false);
         const datapack = await fetchUserDatapack(editedDatapack.title);
-        if (!datapack) return;
-        addDatapackToUserDatapackIndex(editedDatapack.title, datapack);
+        if (!datapack) return false;
+        addDatapack(datapack);
         if (originalDatapack.title !== editedDatapack.title) {
-          removeDatapackFromUserDatapackIndex(originalDatapack.title);
+          removeDatapack(originalDatapack);
         }
+        removeAllErrors();
+        return true;
       } else {
         displayServerError(
           response,
           ErrorCodes.USER_EDIT_DATAPACK_FAILED,
           ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
         );
+        return false;
       }
     } catch (e) {
       pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
@@ -76,7 +79,7 @@ export const fetchUserDatapack = action(async (datapack: string) => {
     });
     if (response.ok) {
       const data = await response.json();
-      assertPrivateUserDatapack(data);
+      assertUserDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -103,9 +106,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       }
     });
     if (response.ok) {
-      runInAction(() => {
-        delete state.datapackCollection.privateUserDatapackIndex[datapack];
-      });
+      removeDatapack({ title: datapack, type: "user" });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(

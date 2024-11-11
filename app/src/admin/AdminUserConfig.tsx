@@ -12,9 +12,12 @@ import {
   DatapackIndex,
   BaseDatapackProps,
   assertAdminSharedUser,
-  isPrivateUserDatapack
+  isUserDatapack
 } from "@tsconline/shared";
 import { TSCButton } from "../components";
+import { isOwnedByUser } from "../state/non-action-util";
+import React from "react";
+import { ShowAdditionalUserInfo } from "./AdminShowAdditionalUserInfo";
 
 const checkboxRenderer = (params: { value: boolean }) => {
   if (params.value === true) {
@@ -67,12 +70,12 @@ const userColDefs: ColDef[] = [
   },
   { headerName: "Picture URL", field: "pictureUrl", width: 80, autoHeaderHeight: true, wrapHeaderText: true, flex: 1 },
   {
-    headerName: "Workshop Title",
-    field: "workshopTitle",
+    headerName: "More",
     width: 100,
     autoHeaderHeight: true,
     wrapHeaderText: true,
-    flex: 1
+    flex: 1,
+    cellRenderer: ShowAdditionalUserInfo
   }
 ];
 const userDefaultColDefs = {
@@ -102,6 +105,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
       console.error(e);
     }
   };
+
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box className="admin-user-config-buttons">
@@ -116,6 +120,7 @@ export const AdminUserConfig = observer(function AdminUserConfig() {
         rowDragManaged
         columnDefs={userColDefs}
         rowData={state.admin.displayedUsers}
+        components={{ ShowAdditionalUserInfo }}
         onModelUpdated={() => actions.adminSetDisplayedUserDatapacks({})}
         onRowSelected={async (event) => {
           if (event.node.isSelected()) {
@@ -162,7 +167,7 @@ type AdminDatapackDetailsProps = {
 };
 const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
   /**
    * delete selected datapacks then refetch the user's datapacks
@@ -173,10 +178,11 @@ const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ da
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        if (!node.data?.storedFileName || !isPrivateUserDatapack(node.data)) throw new Error("Invalid datapack");
-        return { uuid: node.data.uuid, datapack: node.data.storedFileName };
+        if (!node.data?.storedFileName || !isOwnedByUser(node.data, state.user?.uuid))
+          throw new Error("Invalid datapack");
+        return { uuid: isUserDatapack(node.data) ? node.data.uuid : "", datapack: node.data.storedFileName };
       });
-      const uuids = new Set<string>(datapacks.map((dp) => dp.uuid));
+      const uuids = new Set<string>(datapacks.map((dp) => dp.uuid).filter((uuid) => !!uuid));
       await actions.adminDeleteUserDatapacks(datapacks);
       actions.updateAdminUserDatapacks([...uuids]);
     } catch (e) {

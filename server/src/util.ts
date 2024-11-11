@@ -71,6 +71,9 @@ export async function copyDirectory(src: string, destination: string): Promise<v
  * @returns
  */
 export async function grabFilepaths(files: string[], topDirectory: string, botDirectory: string): Promise<string[]> {
+  // TODO: FIX HACK
+  topDirectory = topDirectory.replaceAll("\\", "/");
+
   // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
   const pattern = new RegExp(
     files
@@ -78,7 +81,7 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
         const escapedFilename = filename.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
-        return path.join(topDirectory, escapedFilename, botDirectory, ".*");
+        return [topDirectory, escapedFilename, botDirectory, ".*"].join("/");
       })
       .join("|")
   );
@@ -254,6 +257,18 @@ export async function verifyFilepath(filepath: string) {
     return false;
   }
   return true;
+}
+
+export async function verifyNonExistentFilepath(filepath: string) {
+  try {
+    filepath = path.resolve(filepath);
+    if (!filepath.startsWith(process.cwd())) {
+      return false;
+    }
+    return false;
+  } catch {
+    return true;
+  }
 }
 
 export async function countFiles(filepath: string): Promise<number> {

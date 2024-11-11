@@ -21,8 +21,11 @@ rm -f $XERR
 XARGS="-e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24'"
 cd /code
 yarn && yarn build
+rm -f /tmp/.X99-lock
 if [ "$NODE_ENV" == "production" ]; then
-  yarn production
+  xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
+      yarn production || \
+      cat $XERR
 else
   yarn dev:config
   echo "-----------------------------------------------------------------------------------------------"
@@ -54,7 +57,6 @@ else
   echo "and then CTRL-C to stop it.  Now you can exit the bash shell."
   echo "-----------------------------------------------------------------------------------------------"
   # After a restart, this lock file still exists.  Have to remove it to get xvfb to run again
-  rm -f /tmp/.X99-lock
   xvfb-run -e $XERR -l -f $XAUTH -n 99 --server-args='-screen 0 1280x1024x24' \
       yarn dev || \
       cat $XERR

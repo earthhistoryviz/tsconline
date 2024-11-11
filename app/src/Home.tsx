@@ -106,7 +106,9 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       let datapacks: DatapackConfigForChartRequest[] = [];
                       try {
                         datapacks = preset.datapacks.map((dp) => {
-                          const datapack = _.cloneDeep(state.datapackCollection.serverDatapackIndex[dp.name]);
+                          const datapack = _.cloneDeep(
+                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
+                          );
                           assertDatapackConfigForChartRequest(datapack);
                           return datapack;
                         });

@@ -4,7 +4,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyMultipart from "@fastify/multipart";
 import { OAuth2Client } from "google-auth-library";
 import { compare } from "bcrypt-ts";
-import { Verification, Workshop } from "../src/types";
+import { User, Verification, Workshop } from "../src/types";
 import formAutoContent from "form-auto-content";
 import * as cryptoModule from "crypto";
 import * as loginRoutes from "../src/routes/login-routes";
@@ -19,6 +19,11 @@ import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
 import logger from "../src/error-logger";
 import { normalize } from "path";
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    getPrivateUserUUIDDirectory: vi.fn().mockResolvedValue("private")
+  };
+});
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -39,7 +44,12 @@ vi.mock("../src/database", async (importOriginal) => {
     deleteUser: vi.fn().mockResolvedValue({}),
     findWorkshop: vi.fn().mockResolvedValue([]),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null)
+    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null),
+    deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findUsersWorkshops: vi.fn().mockResolvedValue([]),
+    handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -123,7 +133,7 @@ vi.mock("../src/file-metadata-handler", async () => {
 });
 
 let app: FastifyInstance;
-const testUser = {
+const testUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -133,7 +143,7 @@ const testUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 0,
-  workshopId: 0
+  accountType: "default"
 };
 const mockDate = new Date("2022-01-01T00:00:00Z");
 const testToken: Verification = {
@@ -152,6 +162,10 @@ const workshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString()
+};
+const testUserWorkshop = {
+  userId: 123,
+  workshopId: 1
 };
 
 beforeAll(async () => {
@@ -1849,11 +1863,11 @@ describe("login-routes tests", () => {
       });
     });
 
-    it("should return 200 and workshop title if user is in workshop and workshop is active", async () => {
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+    it("should return 200 and workshop id if user is in workshop and workshop is active", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
-
+      vi.mocked(databaseModule.findUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
       const response = await app.inject({
         method: "POST",
         url: "/session-check",
@@ -1871,13 +1885,13 @@ describe("login-routes tests", () => {
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        workshopTitle: "test",
+        workshopIds: [workshop.workshopId],
         uuid: testUser.uuid
       });
     });
 
     it("should return 200 and without workshop title if no workshop is provided", async () => {
-      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, workshopId: 1 }]);
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
       vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(null);
 
@@ -2030,14 +2044,12 @@ describe("login-routes tests", () => {
       const rmSpy = vi.spyOn(fsPromisesModule, "rm");
       const createWriteStreamSpy = vi.spyOn(fsModule, "createWriteStream");
       const pipelineSpy = vi.spyOn(streamPromisesModule, "pipeline");
-
       const response = await app.inject({
         method: "POST",
         url: "/upload-profile-picture",
         ...formWithCookieHeader
       });
-
-      const profilePath = normalize(`uploads/${testUser.uuid}/profile`);
+      const profilePath = normalize("private");
       const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
       const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });

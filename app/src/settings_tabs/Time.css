@@ -5,6 +5,8 @@
   border: 1px solid gray;
   border-radius: 4px;
   margin: 20px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 .time-settings-container > * {
   flex: 1;
@@ -75,6 +77,18 @@
   justify-content: center;
   margin-top: 5px;
   margin-left: 20px;
+}
+
+.generate-button {
+  width: auto;
+  height: auto;
+  font-size: 0.85rem;
+}
+
+.generate-button-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 10px;
 }
 
 @media screen and (max-width: 600px) {

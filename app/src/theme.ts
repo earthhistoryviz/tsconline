@@ -528,7 +528,10 @@ export let originalLightTheme = createTheme(baseTheme, {
         main: "#27476E"
       },
       name: "cardBackground"
-    })
+    }),
+    tableContainer: {
+      main: "#FFFFFFB3"
+    }
   }
 });
 export let originalDarkTheme = createTheme(baseTheme, {
@@ -602,6 +605,9 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#b5b5b560"
+    },
+    tableContainer: {
+      main: "#1A222DB3"
     }
   }
 });

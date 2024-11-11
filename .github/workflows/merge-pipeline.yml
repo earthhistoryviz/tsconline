@@ -161,6 +161,7 @@ jobs:
         run: exit 1
 
       - name: Set up SSH key
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           eval $(ssh-agent)
           mkdir -p ~/.ssh
@@ -171,10 +172,11 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
-
       - name: Set up jdk
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -182,6 +184,7 @@ jobs:
           java-package: "jdk"
 
       - name: Build and compile TSCreator Jar for tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
@@ -193,13 +196,22 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
-
       - name: Run Tests
         id: run_tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Run Tests and Coverage (Exclude Encryption)
+        id: run_tests_exclude_encryption
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: | 
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
 
       - name: Post Coverage Comment
@@ -307,11 +319,6 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Transfer files
-        if: github.event.pull_request.merged == false
-        run: |
-          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
-
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
         uses: appleboy/ssh-action@v1.0.3
@@ -322,7 +329,21 @@ jobs:
           script: |
             PR_NUMBER=${{ github.event.number }}
             CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-            cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
+            PR_PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_NUMBER}"
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            
+            if [ ! -d "$PR_PREVIEW_DIR" ]; then
+              echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
+              mkdir -p "$PR_PREVIEW_DIR"
+              git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
+            else
+              echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
+              cd "$PR_PREVIEW_DIR"
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            fi
+            
+            cd "$PR_PREVIEW_DIR"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
               docker-compose -f docker-compose-preview.yml up pr-preview-build
@@ -341,6 +362,7 @@ jobs:
                 sleep $INTERVAL
                 ELAPSED=$((ELAPSED + INTERVAL))
               done
+              echo "Succesfully built"
             else
               echo "Setting up files for PR #${PR_NUMBER}"
               cp ../server/assets/jars/* ./server/assets/jars/

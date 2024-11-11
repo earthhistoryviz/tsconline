@@ -1,17 +1,65 @@
-import { DatapackConfigForChartRequest } from "@tsconline/shared";
-import { State } from "./state";
+import { Datapack, DatapackConfigForChartRequest, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
+import { devSafeUrl } from "../util";
+import dayjs from "dayjs";
 
-export function getDatapackFromIndex(datapack: DatapackConfigForChartRequest, state: State) {
-  switch (datapack.type) {
-    case "server":
-      return state.datapackCollection.serverDatapackIndex[datapack.title];
-    case "private_user":
-      return state.datapackCollection.privateUserDatapackIndex[datapack.title];
-    case "public_user":
-      return state.datapackCollection.publicUserDatapackIndex[datapack.title];
-    case "workshop":
-      return state.datapackCollection.workshopDatapackIndex[datapack.title];
-    default:
-      return null;
+export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+  return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
+}
+export function doesDatapackAlreadyExist(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+  return !!getDatapackFromArray(datapack, datapacks);
+}
+export function compareExistingDatapacks(a: DatapackConfigForChartRequest, b: DatapackConfigForChartRequest) {
+  return (
+    a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
+  );
+}
+export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
+  return datapacks.filter((d) => isUserDatapack(d) && d.uuid === uuid);
+}
+export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid?: string) {
+  return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
+}
+export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic);
+}
+export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
+  return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
+}
+export function isOwnedByUser(datapack: Datapack, uuid: string) {
+  return isUserDatapack(datapack) && datapack.uuid === uuid;
+}
+export function getNavigationRouteForDatapackProfile(title: string, type: string) {
+  return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
+}
+export function getDatapackProfileImageUrl(datapack: Datapack) {
+  const uuid = isUserDatapack(datapack) ? datapack.uuid : datapack.type;
+  if (datapack.datapackImage) {
+    return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);
+  } else {
+    return devSafeUrl(`/datapack-images/default/${uuid}`);
   }
+}
+
+export function formatDate(input: string | dayjs.Dayjs): string {
+  let date: Date;
+  if (typeof input === "string") {
+    date = new Date(input);
+  } else if (dayjs.isDayjs(input)) {
+    date = input.toDate();
+  } else {
+    throw new Error("Invalid input: must be a string or a Day.js object.");
+  }
+  const datePart = date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "long",
+    day: "numeric"
+  });
+
+  const timePart = date.toLocaleTimeString(undefined, {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+
+  return `${datePart} at ${timePart}`;
 }

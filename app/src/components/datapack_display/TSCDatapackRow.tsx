@@ -1,7 +1,6 @@
-import { Datapack, DatapackConfigForChartRequest, isPrivateUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
-import { devSafeUrl } from "../../util";
 import { Box, IconButton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
@@ -12,22 +11,23 @@ import Color from "color";
 import Lottie from "../TSCLottie";
 import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import { context } from "../../state";
+import {
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile,
+  isOwnedByUser
+} from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
-  name: string;
   datapack: Datapack;
   value: boolean;
   onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 
-export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, value, onChange }) => {
-  const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
+export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value, onChange }) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
-
   return (
     <Box
       className={styles.rc}
@@ -42,7 +42,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
               : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
         }
       }}
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}?index=${datapack.type}`)}>
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
         borderRight="1px solid"
@@ -61,7 +61,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
-      <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
+      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
       <div className={styles.middle}>
         <Typography className={styles.header} color="textSecondary">
           {datapack.title}
@@ -74,7 +74,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ name, datapack, 
           {datapack.date && ` · Created ${datapack.date}`}
         </Typography>
       </div>
-      {isPrivateUserDatapack(datapack) && (
+      {isOwnedByUser(datapack, state.user?.uuid) && (
         <div
           className={styles.right}
           onClick={(e) => {

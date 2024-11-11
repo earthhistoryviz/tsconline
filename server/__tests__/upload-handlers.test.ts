@@ -4,7 +4,8 @@ import { FastifyReply } from "fastify";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 vi.mock("@tsconline/shared", () => ({
-  isDateValid: vi.fn().mockReturnValue(true)
+  isDateValid: vi.fn().mockReturnValue(true),
+  isDatapackTypeString: vi.fn().mockReturnValue(true)
 }));
 vi.mock("fs/promises", () => ({
   rm: vi.fn().mockResolvedValue(undefined)
@@ -25,7 +26,10 @@ describe("uploadUserDatapackHandler", () => {
     filepath: "filepath",
     originalFileName: "originalFileName",
     storedFileName: "storedFileName",
-    date: "12-12-2000"
+    date: "12-12-2000",
+    uuid: "user",
+    isPublic: "true",
+    type: "type"
   };
   beforeEach(async () => {
     reply = {
@@ -49,14 +53,24 @@ describe("uploadUserDatapackHandler", () => {
     { title: "" },
     { description: "" },
     { originalFileName: "" },
-    { storedFileName: "" }
+    { storedFileName: "" },
+    { isPublic: "" },
+    { type: "" },
+    { type: "user", uuid: "" }
   ])(`should return a 400 error if %p is missing`, async (field) => {
     const val = await uploadUserDatapackHandler(reply, { ...fields, ...field }, 1);
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({
       error:
-        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]"
+        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]"
     });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if title is a reserved word", async () => {
+    const val = await uploadUserDatapackHandler(reply, { ...fields, title: "__proto__" }, 1);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid title" });
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
     expect(val).toBeUndefined();
   });
@@ -65,9 +79,25 @@ describe("uploadUserDatapackHandler", () => {
     expect(reply.status).toHaveBeenCalledWith(400);
     expect(reply.send).toHaveBeenCalledWith({
       error:
-        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName]"
+        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]"
     });
     expect(rm).not.toHaveBeenCalled();
+    expect(val).toBeUndefined();
+  });
+  it("should return 400 if bytes is 0", async () => {
+    const val = await uploadUserDatapackHandler(reply, fields, 0);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "File is empty" });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return 400 if incorrect datapack type", async () => {
+    const isDatapackTypeString = vi.spyOn(shared, "isDatapackTypeString");
+    isDatapackTypeString.mockReturnValueOnce(false);
+    const val = await uploadUserDatapackHandler(reply, fields, 1);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid datapack type" });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
     expect(val).toBeUndefined();
   });
   test.each([{ references: "[hi]" }, { tags: "[hi" }, { references: "{3" }, { tags: '[3"]' }])(
@@ -118,7 +148,10 @@ describe("uploadUserDatapackHandler", () => {
       size: "1 B",
       date: fields.date,
       contact: "contact",
-      notes: "notes"
+      notes: "notes",
+      type: fields.type,
+      uuid: fields.uuid,
+      isPublic: Boolean(fields.isPublic)
     });
   });
 });
