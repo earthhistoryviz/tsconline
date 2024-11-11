@@ -3,9 +3,13 @@ import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
 import { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import { ColDef } from "ag-grid-community";
+import { ColDef, RowDragEndEvent } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
-import { BaseDatapackProps, assertBaseDatapackProps } from "@tsconline/shared";
+import {
+  BaseDatapackProps,
+  DatapackPriorityChangeRequest,
+  assertBaseDatapackProps,
+} from "@tsconline/shared";
 
 const datapackColDefs: ColDef[] = [
   { headerName: "Priority", field: "priority", flex: 0.4, rowDrag: true },
@@ -42,6 +46,26 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       console.error(e);
     }
   };
+  async function onRowDragEnd(event: RowDragEndEvent<BaseDatapackProps>) {
+    const { api } = event;
+    let prevPriority = 0;
+    const rowCount = api.getDisplayedRowCount();
+    const updatedRowData = [];
+    const updatedNodes: DatapackPriorityChangeRequest[] = [];
+    for (let i = 0; i < rowCount; i++) {
+      const rowNode = api.getDisplayedRowAtIndex(i);
+      if (!rowNode || !rowNode.data) continue;
+      if (rowNode.data.priority <= prevPriority) {
+        rowNode.data.priority = prevPriority + 1;
+        updatedNodes.push({ id: rowNode.data.title, uuid: "official", priority: rowNode.data.priority });
+      }
+      prevPriority = rowNode.data.priority;
+      updatedRowData.push(rowNode.data);
+    }
+    api.setGridOption("rowData", updatedRowData);
+    actions.adminUpdateDatapackPriority(updatedNodes);
+  }
+
   return (
     <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
       <Box display="flex" m="10px" gap="20px">
@@ -65,6 +89,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         columnDefs={datapackColDefs}
         rowSelection="multiple"
         rowDragManaged
+        gridOptions={{
+          onRowDragEnd
+        }}
         rowMultiSelectWithClick
         rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "official")}
       />

@@ -622,13 +622,13 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
   try {
     const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
     if (!recaptchaToken) return;
-    const response = await fetcher("/admin/datapack/priority", {
+    const response = await fetcher("/admin/official/datapack/priority", {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
         "recaptcha-token": recaptchaToken
       },
-      body: JSON.stringify(tasks),
+      body: JSON.stringify({ tasks }),
       credentials: "include"
     });
     const json = await response.json();
@@ -649,6 +649,7 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
       console.log(failedRequests);
     }
   } catch (e) {
+    console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
