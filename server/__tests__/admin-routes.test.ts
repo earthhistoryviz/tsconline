@@ -5,22 +5,22 @@ import * as verify from "../src/verify";
 import * as fsPromises from "fs/promises";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as path from "path";
-import * as childProcess from "node:child_process";
-import * as loadPacks from "../src/load-packs";
 import * as util from "../src/util";
 import * as streamPromises from "stream/promises";
-import * as index from "../src/index";
 import * as shared from "@tsconline/shared";
 import { afterAll, beforeAll, describe, test, it, vi, expect, beforeEach } from "vitest";
 import fastifySecureSession from "@fastify/secure-session";
-import { join, normalize, resolve } from "path";
-import fastifyMultipart from "@fastify/multipart";
+import { resolve } from "path";
+import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
-import { DatapackMetadata, ServerDatapackIndex } from "@tsconline/shared";
+import { DatapackMetadata } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
-import * as adminConfig from "../src/admin/admin-config";
-import { Workshop } from "../src/types";
+import * as userHandlers from "../src/user/user-handler";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
+import { User, Workshop } from "../src/types";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import { cloneDeep } from "lodash";
 
 vi.mock("node:child_process", async () => {
   return {
@@ -41,10 +41,33 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray)
   };
 });
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    fetchUserDatapackDirectory: vi.fn().mockResolvedValue("test-user"),
+    getPrivateUserUUIDDirectory: vi.fn().mockResolvedValue("test-private")
+  };
+});
+
+vi.mock("../src/user/user-handler", async () => {
+  return {
+    fetchAllPrivateOfficialDatapacks: vi.fn().mockResolvedValue([]),
+    deleteDatapackFoundInMetadata: vi.fn().mockResolvedValue({}),
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue(""),
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    deleteAllUserDatapacks: vi.fn().mockResolvedValue({}),
+    doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
+    deleteOfficialDatapack: vi.fn().mockResolvedValue({}),
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
+    checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
+    checkFileTypeIsDatapackImage: vi.fn().mockReturnValue(true)
+  };
+});
 
 vi.mock("../src/upload-handlers", async () => {
   return {
-    uploadUserDatapackHandler: vi.fn().mockResolvedValue({})
+    uploadUserDatapackHandler: vi.fn().mockResolvedValue({}),
+    setupNewDatapackDirectoryInUUIDDirectory: vi.fn().mockResolvedValue({}),
+    uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file))
   };
 });
 vi.mock("../src/util", async (importOriginal) => {
@@ -73,7 +96,8 @@ vi.mock("path", async (importOriginal) => {
   return {
     ...actual,
     resolve: vi.fn().mockImplementation(actual.resolve),
-    join: vi.fn().mockImplementation((...args) => args.join("/"))
+    join: vi.fn().mockImplementation((...args) => args.join("/")),
+    relative: vi.fn().mockImplementation(actual.relative)
   };
 });
 
@@ -131,18 +155,8 @@ vi.mock("../src/verify", async () => {
 
 vi.mock("../src/index", async () => {
   return {
-    serverDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
+    OfficialDatapackIndex: { "admin-datapack": {}, "active-datapack": {}, "remove-datapack": {} },
     mapPackIndex: {}
-  };
-});
-
-vi.mock("../src/admin/admin-config", async () => {
-  return {
-    getAdminConfigDatapacks: vi.fn(() => {
-      return [];
-    }),
-    addAdminConfigDatapack: vi.fn(),
-    removeAdminConfigDatapack: vi.fn()
   };
 });
 
@@ -164,7 +178,12 @@ vi.mock("../src/database", async (importOriginal) => {
     updateUser: vi.fn().mockResolvedValue({}),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
     getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop)),
-    updateWorkshop: vi.fn().mockResolvedValue({})
+    updateWorkshop: vi.fn().mockResolvedValue({}),
+    deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findUsersWorkshops: vi.fn().mockResolvedValue([]),
+    handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -186,7 +205,16 @@ vi.mock("../src/parse-excel-file", async () => {
     parseExcelFile: vi.fn().mockResolvedValue([])
   };
 });
-
+const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
+  const file = multipartFile.file;
+  await new Promise<void>((resolve) => {
+    file.on("data", () => {});
+    file.on("end", () => {
+      resolve();
+    });
+  });
+  return { code, message };
+};
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
@@ -233,7 +261,30 @@ beforeEach(() => {
   process.env.NODE_ENV = "test";
 });
 
-const testAdminUser = {
+const testUserWorkshop = {
+  workshopId: 1,
+  userId: 123
+};
+
+const testUserWorkshop2 = {
+  workshopId: 1,
+  userId: 321
+};
+
+const testAdminUser2: User = {
+  userId: 321,
+  uuid: "123e4567-e89b-12d3-a456-426614174000",
+  email: "test@example.com",
+  emailVerified: 1,
+  invalidateSession: 0,
+  username: "testuser",
+  hashedPassword: "password123",
+  pictureUrl: "https://example.com/picture.jpg",
+  isAdmin: 1,
+  accountType: "default"
+};
+
+const testAdminUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -243,7 +294,7 @@ const testAdminUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  workshopId: 1
+  accountType: "default"
 };
 const testNonAdminUser = {
   ...testAdminUser,
@@ -257,7 +308,8 @@ const testSharedAdminUser = {
   invalidateSession: 0,
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 1
+  isAdmin: 1,
+  accountType: "default"
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -284,8 +336,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   },
   { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
   { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
-  { method: "DELETE", url: "/admin/server/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/server/datapack", body: { datapack: "test" } },
+  { method: "DELETE", url: "/admin/official/datapack", body: { datapack: "test" } },
+  { method: "POST", url: "/admin/official/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
   { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
   { method: "GET", url: "/admin/workshops" },
@@ -299,7 +351,16 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     url: "/admin/workshop",
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
-  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } }
+  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  {
+    method: "PATCH",
+    url: "/admin/user",
+    body: {
+      username: "username",
+      email: "email@email.com",
+      accountType: "pro"
+    }
+  }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -423,7 +484,7 @@ describe("adminCreateUser tests", () => {
     uuid: "random-uuid",
     emailVerified: 1,
     invalidateSession: 0,
-    workshopId: 0
+    accountType: "default"
   };
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const createUser = vi.spyOn(database, "createUser");
@@ -577,9 +638,8 @@ describe("adminCreateUser tests", () => {
 describe("adminDeleteUser tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const deleteUser = vi.spyOn(database, "deleteUser");
-  const realpath = vi.spyOn(fsPromises, "realpath");
   const deleteAllUserMetadata = vi.spyOn(fileMetadataHandler, "deleteAllUserMetadata");
-  const rm = vi.spyOn(fsPromises, "rm");
+  const deleteAllUserDatapacks = vi.spyOn(userHandlers, "deleteAllUserDatapacks");
   const body = { uuid: "test" };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -608,22 +668,6 @@ describe("adminDeleteUser tests", () => {
     });
     expect(await response.json()).toEqual({ error: "Missing uuid" });
     expect(response.statusCode).toBe(400);
-  });
-  it("should return 403 if uuid attempts a directory traversal", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: { uuid: "../" },
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: "../" });
-    expect(deleteUser).toHaveBeenCalledOnce();
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: "../" });
-    expect(realpath).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toBe(403);
   });
   it("should return 404 if user not found", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
@@ -714,9 +758,24 @@ describe("adminDeleteUser tests", () => {
     });
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 even if deleteAllUserDatapacks throws error", async () => {
+    deleteAllUserDatapacks.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(deleteUser).toHaveBeenCalledTimes(1);
+    expect(deleteAllUserDatapacks).toHaveBeenCalledTimes(1);
+    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User deleted" });
+    expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful", async () => {
     const response = await app.inject({
@@ -725,54 +784,10 @@ describe("adminDeleteUser tests", () => {
       payload: body,
       headers
     });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
+    expect(findUser).toHaveBeenCalledTimes(2);
     expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
+    expect(deleteAllUserDatapacks).toHaveBeenCalledTimes(1);
     expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true });
-    expect(await response.json()).toEqual({ message: "User deleted" });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 even if no upload directory is found", async () => {
-    realpath.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: body,
-      headers
-    });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
-    expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ message: "User deleted" });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 if removing user directory throws error", async () => {
-    rm.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user",
-      payload: body,
-      headers
-    });
-    expect(findUser).toHaveBeenNthCalledWith(2, { uuid: body.uuid });
-    expect(deleteUser).toHaveBeenCalledTimes(1);
-    expect(deleteUser).toHaveBeenCalledWith({ uuid: body.uuid });
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid));
-    expect(deleteAllUserMetadata).toHaveBeenCalledTimes(1);
-    expect(deleteAllUserMetadata).toHaveBeenCalledWith("testdir/fileMetadata.json", body.uuid);
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve("testdir/uploadDirectory", body.uuid), { recursive: true, force: true });
     expect(await response.json()).toEqual({ message: "User deleted" });
     expect(response.statusCode).toBe(200);
   });
@@ -783,13 +798,17 @@ describe("adminDeleteUserDatapack", () => {
     uuid: "test-uuid",
     datapack: "test-datapack"
   };
-  const realpath = vi.spyOn(fsPromises, "realpath");
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
-  const relativeDatapackDirectory = normalize(
-    join("testdir", "uploadDirectory", body.uuid, "datapacks", body.datapack)
-  );
+  const deleteUserDatapack = vi.spyOn(userHandlers, "deleteUserDatapack");
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const relative = vi.spyOn(path, "relative");
+  const originalEnv = { ...process.env };
+  process.cwd = () => "testdir";
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  afterAll(() => {
+    process.env = originalEnv;
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -820,31 +839,37 @@ describe("adminDeleteUserDatapack", () => {
     expect(await response.json()).toEqual({ error: "Missing uuid or datapack id" });
     expect(response.statusCode).toEqual(400);
   });
-  it("should return 403 if uuid attempts a traversal of directories", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/user/datapack",
-      payload: { ...body, uuid: "../" },
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toEqual(403);
-  });
-  it("should return 500 if directory doesn't exist", async () => {
-    realpath.mockRejectedValueOnce(new Error());
+  it("should return 500 if delete user datapack throws error", async () => {
+    deleteUserDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
-    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
-    expect(realpath).toBeCalledTimes(1);
-    expect(realpath).toBeCalledWith(resolve("testdir/uploadDirectory"));
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).not.toBeCalled();
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
-  it("should return 500 if delete datapack throws error", async () => {
+  it("should return 500 if fetchUserDatapackFilepath throws error", async () => {
+    fetchUserDatapackDirectory.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/user/datapack",
+      payload: body,
+      headers
+    });
+    expect(deleteUserDatapack).toHaveBeenCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
+    expect(deleteDatapackFoundInMetadata).not.toBeCalled();
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toEqual(500);
+  });
+  it("should return 500 if deleteDatapackFoundInMetadata throws error", async () => {
+    relative.mockReturnValueOnce("test-datapack");
     deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
@@ -852,33 +877,44 @@ describe("adminDeleteUserDatapack", () => {
       payload: body,
       headers
     });
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
-    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", relativeDatapackDirectory);
+    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toEqual(500);
   });
   it("should return 200 if successful", async () => {
+    relative.mockReturnValueOnce("test-datapack");
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/user/datapack",
       payload: body,
       headers
     });
+    expect(deleteUserDatapack).toBeCalledTimes(1);
+    expect(deleteUserDatapack).toBeCalledWith(body.uuid, body.datapack);
+    expect(fetchUserDatapackDirectory).toBeCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toBeCalledWith(body.uuid, body.datapack);
     expect(deleteDatapackFoundInMetadata).toBeCalledTimes(1);
-    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", relativeDatapackDirectory);
+    expect(deleteDatapackFoundInMetadata).toBeCalledWith("testdir/fileMetadata.json", "test-datapack");
     expect(await response.json()).toEqual({ message: "Datapack deleted" });
     expect(response.statusCode).toEqual(200);
   });
 });
 
-describe("adminUploadServerDatapack", () => {
+describe("adminUploadOfficialDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const execFile = vi.spyOn(childProcess, "execFile");
+  let jsonOfFormData: Record<string, unknown>;
   const rm = vi.spyOn(fsPromises, "rm");
-  const realpath = vi.spyOn(fsPromises, "realpath");
-  const loadIndexes = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
-  const pipeline = vi.spyOn(streamPromises, "pipeline");
-  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
+  const uploadFileToFileSystem = vi.spyOn(uploadHandlers, "uploadFileToFileSystem");
+  const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
+  const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const getPrivateUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getPrivateUserUUIDDirectory");
+  const deleteOfficialDatapack = vi.spyOn(userHandlers, "deleteOfficialDatapack");
   const testDatapackDescription: DatapackMetadata = {
     originalFileName: "test.dpk",
     storedFileName: "",
@@ -890,27 +926,44 @@ describe("adminUploadServerDatapack", () => {
     references: ["test-reference"],
     contact: "test-contact",
     notes: "test-notes",
-    authoredBy: "test-author"
+    authoredBy: "test-author",
+    type: "user",
+    uuid: "test-uuid",
+    isPublic: false
   };
-  const filepath = resolve(join("testdir", "datapacksDirectory", "tempFilename"));
-  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
-  const addAdminConfigDatapack = vi.spyOn(adminConfig, "addAdminConfigDatapack");
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
+    userHandlers,
+    "doesDatapackFolderExistInAllUUIDDirectories"
+  );
   const uploadUserDatapackHandler = vi
     .spyOn(uploadHandlers, "uploadUserDatapackHandler")
     .mockResolvedValue(testDatapackDescription);
-  const checkErrorHandler = (statusCode: number) => {
-    expect(rm).toHaveBeenNthCalledWith(1, expect.stringContaining(normalize("testdir/datapacksDirectory")), {
-      force: true
-    });
-    expect(rm).toHaveBeenNthCalledWith(2, expect.stringContaining(normalize("testdir/decryptionDirectory")), {
-      recursive: true,
-      force: true
-    });
-    expect(statusCode).toBe(500);
+  const checkFieldInFormData = (field: string) => {
+    return field in jsonOfFormData;
+  };
+  const checkCleanupTempFiles = (maxCalls: number = 2) => {
+    const maxRMCalls =
+      checkFieldInFormData("datapack") && checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)
+        ? maxCalls
+        : checkFieldInFormData("datapack") || checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)
+          ? 1
+          : 0;
+    expect(rm).toHaveBeenCalledTimes(maxRMCalls);
+    if (checkFieldInFormData("datapack")) {
+      expect(rm).toHaveBeenNthCalledWith(1, `test-private/tempFilename`, { force: true });
+    }
+    if (checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)) {
+      expect(rm).toHaveBeenNthCalledWith(maxRMCalls, `test-private/${DATAPACK_PROFILE_PICTURE_FILENAME}.jpg`, {
+        force: true
+      });
+    }
+    if (checkFieldInFormData("title")) {
+      expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
+    }
   };
   const createForm = (json: Record<string, unknown> = {}) => {
-    if (!("file" in json)) {
-      json.file = {
+    if (!("datapack" in json)) {
+      json.datapack = {
         value: Buffer.from("test"),
         options: {
           filename: "test.dpk",
@@ -918,6 +971,16 @@ describe("adminUploadServerDatapack", () => {
         }
       };
     }
+    if (!(DATAPACK_PROFILE_PICTURE_FILENAME in json)) {
+      json[DATAPACK_PROFILE_PICTURE_FILENAME] = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.jpg",
+          contentType: "image/jpeg"
+        }
+      };
+    }
+    jsonOfFormData = cloneDeep(json);
     formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
     formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
   };
@@ -929,321 +992,200 @@ describe("adminUploadServerDatapack", () => {
     uploadUserDatapackHandler.mockReset();
     uploadUserDatapackHandler.mockResolvedValue({} as DatapackMetadata);
   });
-  it("should return 400 if missing file field", async () => {
-    createForm({ file: "" });
+  it("should return 400 if missing datapack file field", async () => {
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
+      url: "/admin/official/datapack",
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
+    expect(uploadFileToFileSystem).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Missing file" });
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
   });
-  it("should return 403 if file attempts directory traversal", async () => {
-    vi.mocked(path.resolve)
-      .mockImplementationOnce((...args) => resolve(...args))
-      .mockReturnValueOnce("root");
-    createForm({
-      file: {
-        value: Buffer.from("test"),
-        options: {
-          filename: "./../../../etc.dpk", // multipart form data doesn't allow ../ so this goes to etc.dpk
-          contentType: "application/zip"
-        }
-      }
-    });
+  it("should return 415 if datapack file is not a datapack", async () => {
+    createForm({ [DATAPACK_PROFILE_PICTURE_FILENAME]: "" });
+    checkFileTypeIsDatapack.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).not.toHaveBeenCalled();
-    expect(pipeline).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Directory traversal detected" });
-    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Invalid file type for datapack file" });
+    expect(uploadFileToFileSystem).not.toHaveBeenCalled();
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(415);
   });
-  test.each(["text.png", "text.jpg", "text.gif", "text.bmp", "text", "text.tx", "text.zip"])(
-    `should return 400 if file is not in a correct format: %s`,
-    async (filename) => {
-      createForm({
-        file: {
-          value: Buffer.from("test"),
-          options: {
-            filename: filename,
-            contentType: "plain/text"
-          }
-        }
-      });
-      const response = await app.inject({
-        method: "POST",
-        url: "/admin/server/datapack",
-        payload: formData.body,
-        headers: formHeaders
-      });
-      expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-      expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-      expect(pipeline).not.toHaveBeenCalled();
-      expect(execFile).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Invalid file type" });
-      expect(response.statusCode).toBe(400);
-    }
-  );
-  it("should return 409 if file already exists and admin config states it exists", async () => {
-    const adminConfig = {
-      ...testDatapackDescription,
-      title: "admin-datapack"
-    };
-    getAdminConfigDatapacks.mockReturnValueOnce([adminConfig]);
-    uploadUserDatapackHandler.mockResolvedValueOnce(adminConfig);
-    createForm({
-      file: {
-        value: Buffer.from("test"),
-        options: {
-          filename: "admin-datapack.dpk", // only in adminconfigs import
-          contentType: "application/zip"
-        }
-      }
-    });
+  it("should return 415 if datapack image is not an image", async () => {
+    createForm({ datapack: "" });
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
-    expect(getAdminConfigDatapacks).toHaveBeenCalledWith();
-    expect(await response.json()).toEqual({ error: "Datapack already exists" });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(checkFileExists).toHaveBeenCalledTimes(2);
-    expect(execFile).not.toHaveBeenCalled();
-    expect(pipeline).toHaveBeenCalledOnce();
-    expect(uploadUserDatapackHandler).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(409);
+    expect(await response.json()).toEqual({ error: "Invalid file type for datapack image" });
+    expect(uploadFileToFileSystem).not.toHaveBeenCalled();
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(415);
   });
-  it("should return 500 if pipeline throws error", async () => {
-    pipeline.mockRejectedValueOnce(new Error());
-    createForm();
+  it("should return 500 if uploadFileToFileSystem throws error", async () => {
+    uploadFileToFileSystem.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).not.toHaveBeenCalled();
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
-      force: true
-    });
-    expect(await response.json()).toEqual({ error: "Error saving file" });
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
+    expect(rm).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
   });
-  it("should return 500 if execFile throws error", async () => {
-    execFile.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).not.toHaveBeenCalled();
-    checkErrorHandler(response.statusCode);
-    expect(await response.json()).toEqual({ error: "Error decrypting file" });
-  });
-  it("should return 400 if file is too big", async () => {
-    createForm({
-      file: {
-        value: Buffer.from("t".repeat(60 * 1024 * 1024 + 1)), // 60MB + 1 byte
-        options: {
-          filename: "test.dpk",
-          contentType: "application/zip"
-        }
-      }
+  it("should return 500 if uploadFileToFileSystem returns a bad code", async () => {
+    uploadFileToFileSystem.mockImplementationOnce(async (file) => {
+      return await consumeStream(file, 500, "Custom error");
     });
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).not.toHaveBeenCalled();
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
-      force: true
-    });
-    expect(await response.json()).toEqual({ error: "File too large" });
-    expect(response.statusCode).toBe(400);
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Custom error" });
+    expect(uploadUserDatapackHandler).not.toHaveBeenCalled();
+    expect(rm).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
   });
   it("should return 500 if uploadUserDatapackHandler throws error", async () => {
     uploadUserDatapackHandler.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
-      force: true
-    });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(response.statusCode).toBe(500);
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
     expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    checkCleanupTempFiles();
+    expect(response.statusCode).toBe(500);
   });
   it("should just return if uploadUserDataPackHandler returns void", async () => {
     uploadUserDatapackHandler.mockResolvedValueOnce();
-    await app.inject({
+    const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
     expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
-    expect(loadIndexes).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unexpected error with request fields." });
+    checkCleanupTempFiles();
   });
-  it("should return 500 if realpath doesn't find a real path for the decrypted file", async () => {
-    realpath.mockRejectedValueOnce(new Error());
+  it("should return 409 if doesDatapackFolderExistInAllUUIDDirectories returns true", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "File was not decrypted properly" });
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    checkErrorHandler(response.statusCode);
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    checkCleanupTempFiles();
+    expect(response.statusCode).toBe(409);
+    expect(await response.json()).toEqual({ error: "Datapack already exists" });
   });
-  it("should return 400 if bytesRead is 0", async () => {
-    createForm({
-      file: {
-        value: Buffer.from(""),
-        options: {
-          filename: "test.dpk",
-          contentType: "application/zip"
-        }
-      }
-    });
+  it("should return 500 if doesDatapackFolderExistInAllUUIDDirectories throws error", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(rm).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/datapacksDirectory/tempFilename`), {
-      force: true
-    });
-    expect(execFile).not.toHaveBeenCalled();
-    expect(realpath).not.toHaveBeenCalled();
-    expect(loadIndexes).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Empty file cannot be uploaded" });
-  });
-  it("should return 500 if loadIndexes fails", async () => {
-    loadIndexes.mockResolvedValueOnce(false);
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(addAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
-    checkErrorHandler(response.statusCode);
-    expect(await response.json()).toEqual({ error: "Error parsing the datapack for chart generation" });
-  });
-  it("should return 500 if adding admin config fails", async () => {
-    addAdminConfigDatapack.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/server/datapack",
-      payload: formData.body,
-      headers: formHeaders
-    });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ error: "Error updating admin config" });
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(500);
+    checkCleanupTempFiles();
+    expect(await response.json()).toEqual({ error: "Error checking if datapack exists" });
   });
-  it("should return 200 if successful and add to adminconfig", async () => {
+  it("should return 500 if setupNewDatapackDirecotryInUUIDDirectory throws error", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledWith("java", [
-      "-jar",
-      "testdir/decryptionJar.jar",
-      "-d",
-      filepath,
-      "-dest",
-      "testdir/decryptionDirectory"
-    ]);
-    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
+    checkCleanupTempFiles();
+    expect(await response.json()).toEqual({ error: "Error setting up datapack directory" });
+  });
+  it("should return 500 if datapackIndex with correct datapack is not created", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({});
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/official/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
+    checkCleanupTempFiles();
+    expect(await response.json()).toEqual({ error: "Error setting up datapack directory" });
+  });
+  it("should return 200 even when no datapack image is uploaded", async () => {
+    createForm({ [DATAPACK_PROFILE_PICTURE_FILENAME]: "" });
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({
+      [testDatapackDescription.title]: {} as shared.Datapack
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/official/datapack",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(1);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
   });
-  it("should return 200 if successful where datapack is already a part of adminconfigs but isn't in serverDatapackIndex", async () => {
-    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValueOnce({});
-    getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
+  it("should return 200 if successful", async () => {
+    uploadUserDatapackHandler.mockResolvedValueOnce(testDatapackDescription);
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({
+      [testDatapackDescription.title]: {} as shared.Datapack
+    });
     const response = await app.inject({
       method: "POST",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: formData.body,
       headers: formHeaders
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledTimes(1);
-    expect(addAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
+    expect(getPrivateUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(uploadFileToFileSystem).toHaveBeenCalledTimes(2);
+    expect(uploadUserDatapackHandler).toHaveBeenCalledTimes(1);
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledTimes(1);
-    expect(execFile).toHaveBeenCalledWith("java", [
-      "-jar",
-      "testdir/decryptionJar.jar",
-      "-d",
-      filepath,
-      "-dest",
-      "testdir/decryptionDirectory"
-    ]);
-    expect(realpath).toHaveBeenCalledTimes(1);
-    expect(loadIndexes).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(200);
   });
 });
 describe("getUsers", () => {
   const findUser = vi.spyOn(database, "findUser");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const findUsersWorkshops = vi.spyOn(database, "findUsersWorkshops");
   it("should return any users without passwords", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     const response = await app.inject({
@@ -1271,9 +1213,10 @@ describe("getUsers", () => {
     });
     expect(response.statusCode).toBe(200);
   });
-  it("should return user with workshopTitle and one without", async () => {
+  it("should return user with workshopIds and one without", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
     findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
+    findUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/users",
@@ -1287,7 +1230,7 @@ describe("getUsers", () => {
           isGoogleUser: false,
           invalidateSession: false,
           emailVerified: true,
-          workshopTitle: testWorkshop.title
+          workshopIds: [testWorkshop.workshopId]
         },
         {
           ...testNonSharedAdminUser,
@@ -1322,6 +1265,7 @@ describe("getUsers", () => {
     expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
     expect(assertAdminSharedUser).toHaveBeenCalledWith({
       ...testSharedAdminUser,
+      userId: 123,
       isAdmin: true,
       isGoogleUser: false,
       invalidateSession: false,
@@ -1332,38 +1276,17 @@ describe("getUsers", () => {
   });
 });
 
-describe("adminDeleteServerDatapack", () => {
-  const rm = vi.spyOn(fsPromises, "rm");
-  const testDatapackDescription: DatapackMetadata = {
-    title: "test-title",
-    description: "test-description",
-    originalFileName: "active-datapack.dpk",
-    storedFileName: "tempFilename",
-    size: "30MB",
-    date: "2021-01-01",
-    tags: ["test-tag"],
-    references: ["test-reference"],
-    contact: "test-contact",
-    notes: "test-notes",
-    authoredBy: "test-author"
-  };
-  const removeAdminConfigDatapack = vi.spyOn(adminConfig, "removeAdminConfigDatapack");
-  const getAdminConfigDatapacks = vi.spyOn(adminConfig, "getAdminConfigDatapacks");
-  const body = {
-    datapack: testDatapackDescription.title
-  };
-  const filepath = join("testdir", "datapacksDirectory", testDatapackDescription.storedFileName);
-  const decryptedFilepath = join("testdir", "decryptionDirectory", testDatapackDescription.storedFileName);
-  beforeEach(async () => {
+describe("adminDeleteOfficialDatapack", () => {
+  const deleteOfficialDatapack = vi.spyOn(userHandlers, "deleteOfficialDatapack");
+  const datapackTitle = "test-datapack";
+  const body = { datapack: datapackTitle };
+  beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(index, "serverDatapackIndex", "get").mockReturnValue({
-      [body.datapack]: {} as ServerDatapackIndex[string]
-    });
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: {},
       headers
     });
@@ -1373,120 +1296,55 @@ describe("adminDeleteServerDatapack", () => {
       message: "body must have required property 'datapack'",
       statusCode: 400
     });
-    expect(getAdminConfigDatapacks).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if datapack is empty", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
       payload: { datapack: "" },
       headers
     });
-    expect(getAdminConfigDatapacks).not.toHaveBeenCalled();
-    expect(rm).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing datapack id" });
+    expect(await response.json()).toEqual({ error: "Missing datapack title" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 404 if not in adminconfig", async () => {
-    getAdminConfigDatapacks.mockReturnValueOnce([]);
+  it("should return 500 if deleteOfficialDatapack throws error", async () => {
+    deleteOfficialDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
-      url: "/admin/server/datapack",
+      url: "/admin/official/datapack",
+      payload: { datapack: "test-datapack" },
+      headers
+    });
+    expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Error deleting server datapack" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/official/datapack",
       payload: body,
       headers
     });
-    expect(getAdminConfigDatapacks).toHaveBeenCalledOnce();
-    expect(rm).not.toHaveBeenCalled();
-    expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Datapack not found" });
-    expect(response.statusCode).toBe(404);
-  });
-  describe("admin datapack deletion where datapack is in adminconfig", async () => {
-    it("should return 500 if remove filepaths fail", async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      rm.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(removeAdminConfigDatapack).not.toHaveBeenCalled();
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(await response.json()).toEqual({ error: "Deleted from indexes, but was not able to delete files" });
-      expect(response.statusCode).toBe(500);
-    });
-    it(`should return 500 on partial success when admin datapacks contains the datapack to be deleted but removeAdminConfigDatapack fails`, async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      removeAdminConfigDatapack.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
-      expect(removeAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-      expect(index.serverDatapackIndex).toEqual({});
-      expect(rm).toHaveBeenCalledTimes(2);
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
-      expect(await response.json()).toEqual({
-        error: `Deleted and resolved configurations, but was not able to write to file. Check with server admin to make sure your configuration is still viable`
-      });
-      expect(response.statusCode).toBe(500);
-    });
-    it(`should return 200 on success when admin datapacks contains ${body.datapack}`, async () => {
-      getAdminConfigDatapacks.mockReturnValueOnce([testDatapackDescription]);
-      const response = await app.inject({
-        method: "DELETE",
-        url: "/admin/server/datapack",
-        payload: body,
-        headers
-      });
-      expect(await response.json()).toEqual({
-        message: `Datapack ${body.datapack} deleted`
-      });
-      expect(removeAdminConfigDatapack).toHaveBeenCalledTimes(1);
-      expect(removeAdminConfigDatapack).toHaveBeenCalledWith(testDatapackDescription);
-      expect(index.serverDatapackIndex).toEqual({});
-      expect(rm).toHaveBeenCalledTimes(2);
-      expect(rm).toHaveBeenNthCalledWith(1, filepath, { force: true });
-      expect(rm).toHaveBeenNthCalledWith(2, decryptedFilepath, { force: true, recursive: true });
-      expect(response.statusCode).toBe(200);
-    });
+    expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: `Datapack ${datapackTitle} deleted` });
+    expect(response.statusCode).toBe(200);
   });
 });
 
 describe("getAllUserDatapacks", () => {
-  const readFile = vi.spyOn(fsPromises, "readFile");
-  const assertDatapackIndex = vi.spyOn(shared, "assertDatapackIndex");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const fetchAllUsersDatapacks = vi.spyOn(userHandlers, "fetchAllUsersDatapacks");
   const payload = {
     uuid: "test-uuid"
   };
-  const testParsingPack = {
-    "test-datapack.dpk": {
+  const testDatapackArray = [
+    {
       mock: "test-datapack"
-    }
-  };
+    } as unknown as shared.Datapack
+  ];
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should return 200 and all datapacks for a user", async () => {
-    readFile.mockResolvedValueOnce(JSON.stringify(testParsingPack));
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/user/datapacks",
-      payload,
-      headers
-    });
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual(testParsingPack);
-    expect(response.statusCode).toBe(200);
   });
   it("should return 400 if incorrect body", async () => {
     const response = await app.inject({
@@ -1495,6 +1353,7 @@ describe("getAllUserDatapacks", () => {
       payload: {},
       headers
     });
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
@@ -1510,34 +1369,32 @@ describe("getAllUserDatapacks", () => {
       payload: { uuid: "" },
       headers
     });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Missing uuid in body" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 500 when readFile fails", async () => {
-    readFile.mockRejectedValueOnce(new Error());
+  it("should return 500 if fetchAllUsersDatapacks throws error", async () => {
+    fetchAllUsersDatapacks.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
       payload,
       headers
     });
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({ error: "Error reading user datapack index, possible corruption of file" });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Unknown error fetching user datapacks" });
     expect(response.statusCode).toBe(500);
   });
-  it("should return 200 if the filepath is bad/doesn't exist", async () => {
-    verifyFilepath.mockResolvedValueOnce(false);
+  it("should return 200 if successful", async () => {
+    fetchAllUsersDatapacks.mockResolvedValueOnce(testDatapackArray);
     const response = await app.inject({
       method: "POST",
       url: "/admin/user/datapacks",
       payload,
       headers
     });
-    expect(readFile).toHaveBeenCalledTimes(0);
-    expect(assertDatapackIndex).toHaveBeenCalledTimes(0);
-    expect(await response.json()).toEqual({});
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual(testDatapackArray);
     expect(response.statusCode).toBe(200);
   });
 });
@@ -1552,6 +1409,8 @@ describe("adminAddUsersToWorkshop", () => {
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const updateUser = vi.spyOn(database, "updateUser");
   const getAndHandleWorkshopEnd = vi.spyOn(database, "getAndHandleWorkshopEnd");
+  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
+  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("file" in json)) {
       json.file = {
@@ -1790,6 +1649,11 @@ describe("adminAddUsersToWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and add new users", async () => {
+    findUser
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([testUserWorkshop2]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1801,6 +1665,8 @@ describe("adminAddUsersToWorkshop", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
     expect(createUser).toHaveBeenCalledTimes(2);
     expect(createUser).toHaveBeenNthCalledWith(1, {
       email: "test@gmail.com",
@@ -1811,7 +1677,7 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      accountType: "default"
     });
     expect(createUser).toHaveBeenNthCalledWith(2, {
       email: "test2@gmail.com",
@@ -1822,17 +1688,84 @@ describe("adminAddUsersToWorkshop", () => {
       pictureUrl: null,
       username: "test2@gmail.com",
       uuid: "random-uuid",
-      workshopId: 1
+      accountType: "default"
     });
     expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
     expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
     expect(findUser).toHaveBeenNthCalledWith(3, { email: "test2@gmail.com" });
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 321, 1);
     expect(updateUser).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and update old users", async () => {
-    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser]);
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop2]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(3, 321, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(4, 321, 1);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
+    expect(await response.json()).toEqual({ message: "Users added" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 500 if fails to update one of multiple old users", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop2]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(3, 321, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(4, 321, 1);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      error: "Error adding user to workshop",
+      invalidEmails: ["test@gmail.com"]
+    });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if one of multiple users fails to be added to the workshop", async () => {
+    findUser
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser])
+      .mockResolvedValueOnce([testAdminUser2])
+      .mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser.mockResolvedValueOnce([]).mockResolvedValueOnce([testUserWorkshop2]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1844,25 +1777,43 @@ describe("adminAddUsersToWorkshop", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
-    expect(updateUser).toHaveBeenCalledTimes(2);
-    expect(updateUser).toHaveBeenNthCalledWith(
-      1,
-      {
-        email: "test@gmail.com"
-      },
-      { workshopId: 1 }
-    );
-    expect(updateUser).toHaveBeenNthCalledWith(
-      2,
-      {
-        email: "test2@gmail.com"
-      },
-      { workshopId: 1 }
-    );
-    expect(createUser).not.toHaveBeenCalled();
-    expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
-    expect(await response.json()).toEqual({ message: "Users added" });
-    expect(response.statusCode).toBe(200);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
+    expect(createUser).toHaveBeenCalledTimes(2);
+    expect(createUser).toHaveBeenNthCalledWith(1, {
+      email: "test@gmail.com",
+      hashedPassword: "hashedPassword",
+      isAdmin: 0,
+      emailVerified: 1,
+      invalidateSession: 0,
+      pictureUrl: null,
+      username: "test@gmail.com",
+      uuid: "random-uuid",
+      accountType: "default"
+    });
+    expect(createUser).toHaveBeenNthCalledWith(2, {
+      email: "test2@gmail.com",
+      hashedPassword: "hashedPassword",
+      isAdmin: 0,
+      emailVerified: 1,
+      invalidateSession: 0,
+      pictureUrl: null,
+      username: "test2@gmail.com",
+      uuid: "random-uuid",
+      accountType: "default"
+    });
+
+    expect(findUser).toHaveBeenCalledTimes(3); // 1st call is from the prehandler verifyAdmin
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: "test@gmail.com" });
+    expect(findUser).toHaveBeenNthCalledWith(3, { email: "test2@gmail.com" });
+    expect(checkWorkshopHasUser).toHaveBeenCalledTimes(2);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 321, 1);
+    expect(await response.json()).toEqual({
+      error: "Error adding user to workshop",
+      invalidEmails: ["test@gmail.com"]
+    });
+    expect(response.statusCode).toBe(500);
   });
 });
 
@@ -2238,6 +2189,177 @@ describe("adminDeleteWorkshop", () => {
     expect(deleteWorkshop).toHaveBeenCalledTimes(1);
     expect(deleteWorkshop).toHaveBeenCalledWith(body);
     expect(await response.json()).toEqual({ message: "Workshop deleted" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminModifyUser tests", () => {
+  const body = {
+    username: "username",
+    email: "email@email.com",
+    accountType: "pro",
+    isAdmin: 1
+  };
+
+  const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
+  const updateUser = vi.spyOn(database, "updateUser");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 400 if fields are missing", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {},
+      headers
+    });
+
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message:
+        "body must have required property 'accountType', body must have required property 'isAdmin', body must match a schema in anyOf",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if fields are empty", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: { username: "", email: "", accountType: "", isAdmin: null },
+      headers
+    });
+
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if accountType is invalid", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: { username: "username", email: "email@email.com", accountType: "pro+", isAdmin: null },
+      headers
+    });
+
+    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 409 if user does not exist", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "User does not exist." });
+    expect(response.statusCode).toBe(409);
+  });
+
+  it("should return 500 if checkForUsersWithUsernameOrEmail throws error", async () => {
+    checkForUsersWithUsernameOrEmail.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Database error" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 500 if updateUser throws error", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    updateUser.mockRejectedValueOnce(new Error("Database error"));
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith(
+      { email: body.email },
+      { accountType: body.accountType, isAdmin: body.isAdmin }
+    );
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Database error" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 200 if successful", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith(
+      { email: body.email },
+      { accountType: body.accountType, isAdmin: body.isAdmin }
+    );
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just accountType", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        accountType: "pro"
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { accountType: body.accountType });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+
+  it("should return 200 if successful with just isAdmin", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: {
+        username: "username",
+        email: "email@email.com",
+        isAdmin: 1
+      },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { isAdmin: body.isAdmin });
+    expect(updateUser).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "User modified." });
     expect(response.statusCode).toBe(200);
   });
 });

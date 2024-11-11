@@ -13,6 +13,7 @@ import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
 import { SignUp } from "./SignUp";
+import { Datapacks } from "./settings_tabs/Datapack";
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
@@ -46,11 +47,18 @@ export default observer(function App() {
   }, []);
 
   // on theme change, update the background color
-  const checkOpen =
-    location.pathname === "/settings" &&
-    state.settingsTabs.selected !== "datapacks" &&
-    JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
-
+  const checkUnsavedChanges = () => {
+    const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
+    const isOnDatapackPath = location.pathname === "/datapacks";
+    const hasUnsavedChanges = JSON.stringify(state.config.datapacks) !== JSON.stringify(state.unsavedDatapackConfig);
+    if (state.isProcessingDatapacks) {
+      return false;
+    }
+    if (hasUnsavedChanges && !(isOnDatapackPath || isOnDatapacksTab)) {
+      return true;
+    }
+    return false;
+  };
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -72,6 +80,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/datapacks" element={<Datapacks />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
             <TSCError
@@ -91,7 +100,7 @@ export default observer(function App() {
           />
           <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
           <TSCYesNoPopup
-            open={checkOpen}
+            open={checkUnsavedChanges()}
             title={t("dialogs.confirm-datapack-change.title")}
             message={t("dialogs.confirm-datapack-change.message")}
             onNo={async () => {

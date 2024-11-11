@@ -16,6 +16,12 @@ import { State } from "./state";
 
 export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
 
+export type UploadDatapackMethodType = (
+  file: File,
+  metadata: DatapackMetadata,
+  datapackProfilePicture?: File
+) => Promise<void>;
+
 export type User = SharedUser & {
   settings: {
     darkMode: boolean;
@@ -26,10 +32,6 @@ export type User = SharedUser & {
 export type Reference = {
   id: number;
   reference: string;
-};
-
-export type UploadOptions = {
-  isPublic: boolean;
 };
 
 export type WindowStats = {
@@ -160,6 +162,13 @@ export type ChartSettings = {
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
+};
+
+export type EditableUserProperties = {
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  pictureUrl: string | undefined;
 };
 
 export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {
