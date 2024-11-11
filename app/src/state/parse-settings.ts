@@ -684,8 +684,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       xml += `${indent}<setting name="type" type="${column.type}"/>\n`;
     } else if (isRGB(keyValue)) {
       xml += `${indent}<setting name="${key}">${convertRgbToString(keyValue)}</setting>\n`;
-    } else if (key === "drawDualColCompColumn") {
-      if (typeof keyValue !== "string") continue;
+    } else if (key === "drawDualColCompColumn" && typeof keyValue === "string") {
       xml += `${indent}<setting name="${key}">${escapeHtmlChars(keyValue, "attribute")}</setting>\n`;
     } else {
       xml += `${indent}<setting name="${key}">${keyValue}</setting>\n`;
