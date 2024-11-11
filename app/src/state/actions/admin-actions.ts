@@ -4,6 +4,7 @@ import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
+  BaseDatapackProps,
   Datapack,
   DatapackMetadata,
   DatapackPriorityChangeRequest,
@@ -616,6 +617,10 @@ export const updateAdminUserDatapacks = action(async (uuid: string[]) => {
 
 export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"]["displayedUserDatapacks"]) => {
   state.admin.displayedUserDatapacks = datapacks;
+});
+
+export const handleDatapackPriorityChange = action((data: BaseDatapackProps, newPriority: number) => {
+  data.priority = newPriority;
 });
 
 export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {

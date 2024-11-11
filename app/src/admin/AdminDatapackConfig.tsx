@@ -3,36 +3,55 @@ import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
 import { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import { ColDef, RowDragEndEvent } from "ag-grid-community";
-import { TSCButton, DatapackUploadForm } from "../components";
 import {
-  BaseDatapackProps,
-  DatapackPriorityChangeRequest,
-  assertBaseDatapackProps,
-} from "@tsconline/shared";
-
-const datapackColDefs: ColDef[] = [
-  { headerName: "Priority", field: "priority", flex: 0.4, rowDrag: true },
-  {
-    headerName: "Datapack Title",
-    field: "title",
-    sortable: true,
-    filter: true,
-    flex: 1,
-    checkboxSelection: true
-  },
-  { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true },
-  { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
-  { headerName: "Description", field: "description", flex: 1 },
-  { headerName: "Size", field: "size", flex: 0.5 },
-  { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
-];
+  CellValueChangedEvent,
+  ColDef,
+  RowDragEndEvent,
+  ValueSetterParams
+} from "ag-grid-community";
+import { TSCButton, DatapackUploadForm } from "../components";
+import { BaseDatapackProps, DatapackPriorityChangeRequest, assertBaseDatapackProps } from "@tsconline/shared";
+import { debounce } from "lodash";
+import { toJS } from "mobx";
 
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
+  const rowData = Object.values(state.datapacks)
+    .filter((datapack) => datapack.type === "official")
+    .sort((a, b) => a.priority - b.priority);
   const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
+  const datapackColDefs: ColDef[] = [
+    {
+      headerName: "Priority",
+      editable: true,
+      field: "priority",
+      flex: 0.5,
+      rowDrag: true,
+      valueSetter: (data: ValueSetterParams<BaseDatapackProps, string>) => {
+        // to make sure the value is changed WITHIN an action
+        if (data.newValue === undefined) return false;
+        const newValue = parseInt(data.newValue || "");
+        if (isNaN(newValue)) return false;
+        actions.handleDatapackPriorityChange(data.data, newValue);
+        return true;
+      }
+    },
+    {
+      headerName: "Datapack Title",
+      field: "title",
+      sortable: true,
+      filter: true,
+      flex: 1,
+      checkboxSelection: true
+    },
+    { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true },
+    { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
+    { headerName: "Description", field: "description", flex: 1 },
+    { headerName: "Size", field: "size", flex: 0.5 },
+    { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
+  ];
   const deleteDatapacks = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
@@ -46,6 +65,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       console.error(e);
     }
   };
+  const debouncedUpdateDatapackPriority = debounce(async (updatedNodes: DatapackPriorityChangeRequest[]) => {
+    await actions.adminUpdateDatapackPriority(updatedNodes);
+  }, 3000);
   async function onRowDragEnd(event: RowDragEndEvent<BaseDatapackProps>) {
     const { api } = event;
     let prevPriority = 0;
@@ -55,15 +77,26 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     for (let i = 0; i < rowCount; i++) {
       const rowNode = api.getDisplayedRowAtIndex(i);
       if (!rowNode || !rowNode.data) continue;
-      if (rowNode.data.priority <= prevPriority) {
-        rowNode.data.priority = prevPriority + 1;
-        updatedNodes.push({ id: rowNode.data.title, uuid: "official", priority: rowNode.data.priority });
+      let currentPriority = toJS(rowNode.data.priority);
+      if (currentPriority <= prevPriority) {
+        currentPriority = prevPriority + 1;
+        updatedNodes.push({ id: rowNode.data.title, uuid: "official", priority: currentPriority });
       }
-      prevPriority = rowNode.data.priority;
-      updatedRowData.push(rowNode.data);
+      prevPriority = currentPriority;
+      updatedRowData.push({ ...rowNode.data, priority: currentPriority });
     }
     api.setGridOption("rowData", updatedRowData);
-    actions.adminUpdateDatapackPriority(updatedNodes);
+    debouncedUpdateDatapackPriority(updatedNodes);
+  }
+  async function onCellValueChanged(event: CellValueChangedEvent<BaseDatapackProps>) {
+    if (event.colDef.field === "priority") {
+      event.api.stopEditing();
+      const { data } = event;
+      const updatedNodes: DatapackPriorityChangeRequest[] = [
+        toJS({ id: data.title, uuid: "official", priority: data.priority })
+      ];
+      await actions.adminUpdateDatapackPriority(updatedNodes);
+    }
   }
 
   return (
@@ -90,10 +123,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         rowSelection="multiple"
         rowDragManaged
         gridOptions={{
-          onRowDragEnd
+          onRowDragEnd,
+          onCellValueChanged
         }}
         rowMultiSelectWithClick
-        rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "official")}
+        rowData={rowData}
       />
     </Box>
   );
