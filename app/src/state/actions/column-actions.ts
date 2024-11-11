@@ -60,6 +60,11 @@ function extractName(text: string): string {
 function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
+
+function prependDualColCompColumnName(text: string): string {
+  return "Overlay for " + text;
+}
+
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
@@ -124,8 +129,8 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   }
 }
 
-//key: column name (Has "Overlay for" as prepend)
-//value: loaded settings for column
+//key: column name found in the loaded settings xml (Has "Overlay for" as prepend)
+//value: loaded settings for the found column
 const dualColCompFoundCache = new Map<string, PointColumnInfoTSC | EventColumnInfoTSC>();
 
 //key: column name (of column that has value in drawDualColComp tag)
@@ -612,34 +617,34 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
   if (column.columnDisplayType === "Event") {
     assertEventSettings(column.columnSpecificSettings);
     if (column.columnSpecificSettings.drawDualColCompColumn === null) {
-      console.log("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      console.warn("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
       return;
     }
   } else if (column.columnDisplayType === "Point") {
     assertPointSettings(column.columnSpecificSettings);
     if (column.columnSpecificSettings.drawDualColCompColumn === null) {
-      console.log("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      console.warn("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
       return;
     }
   } else {
-    console.log("WARNING: tried to add a dual col comp column to a column that is not an event or point column");
+    console.warn("WARNING: tried to add a dual col comp column to a column that is not an event or point column");
     return;
   }
   if (!column.parent) {
-    console.log("WARNING: tried to add a data mining column to a column with no parent");
+    console.warn("WARNING: tried to add a data mining column to a column with no parent");
     return;
   }
   const parent = state.settingsTabs.columnHashMap.get(column.parent);
   if (!parent) {
-    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    console.warn("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
   const index = parent.children.findIndex((child) => child.name === column.name);
   if (index === -1) {
-    console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+    console.warn("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
     return;
   }
-  const dualColCompColumnName = "Overlay for " + column.editName;
+  const dualColCompColumnName = prependDualColCompColumnName(column.editName);
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
@@ -679,7 +684,7 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const columnToRemove = "Overlay for " + parent.name;
+  const columnToRemove = prependDualColCompColumnName(parent.name);
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
