@@ -142,12 +142,7 @@ export const DatapackProfile = observer(() => {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
       }
-      const result = await actions.handleDatapackEdit(
-        datapack,
-        state.datapackProfilePage.editableDatapackMetadata,
-        state.datapackProfilePage.tempEditableDatapackFile,
-        state.datapackProfilePage.tempEditableDatapackImage
-      );
+      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
       // if the title has changed, navigate to the new title
       if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
         navigate(
@@ -181,16 +176,15 @@ type DatapackImageProps = {
 const DatapackImage: React.FC<DatapackImageProps> = observer(({ image }) => {
   const { state, actions } = useContext(context);
   const profileImageRef = useRef<HTMLInputElement>(null);
-  const [tempImage, setTempImage] = useState<string>(image);
   const handleDatapackFileChange = () => {
     if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
       const file = profileImageRef.current.files[0];
       actions.setDatapackProfilePageTempEditableDatapackImage(file);
       const newImageUrl = URL.createObjectURL(file);
-      setTempImage(newImageUrl);
       return () => URL.revokeObjectURL(newImageUrl);
     }
   };
+  // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
   const imageUrl = `${image}?ver=${state.datapackProfilePage.datapackImageVersion}`;
   return (
     <>
@@ -207,11 +201,7 @@ const DatapackImage: React.FC<DatapackImageProps> = observer(({ image }) => {
             onClick={() => {
               if (profileImageRef.current) profileImageRef.current.click();
             }}>
-            {state.datapackProfilePage.tempEditableDatapackImage ? (
-              <img src={tempImage} className={styles.di} />
-            ) : (
-              <img src={imageUrl} className={styles.di} />
-            )}
+            <img src={imageUrl} className={styles.di} />
           </Badge>
           <input
             type="file"
@@ -325,7 +315,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <DatapackFile fileName={datapack.originalFileName} />
+          <DatapackFile id={datapack.title} fileName={datapack.originalFileName} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
@@ -346,22 +336,22 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
 });
 type DatapackFileProps = {
   fileName: string;
+  id: string;
 };
 
-const DatapackFile: React.FC<DatapackFileProps> = observer(({ fileName }) => {
+const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
   const { state, actions } = useContext(context);
-  const name = state.datapackProfilePage.tempEditableDatapackFile?.name ?? fileName;
   const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
     actions.removeAllErrors();
-    actions.setDatapackProfilePageTempEditableDatapackFile(file);
+    actions.replaceUserDatapackFile(id, file);
   };
   return (
     <>
       {state.datapackProfilePage.editMode ? (
         <Box className={styles.changeDatapackFile}>
-          <Typography>{name}</Typography>
+          <Typography>{fileName}</Typography>
           <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} />
         </Box>
       ) : (
