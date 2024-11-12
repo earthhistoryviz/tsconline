@@ -56,6 +56,7 @@ import {
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
+import _ from "lodash";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -766,8 +767,8 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
     reply.status(400).send({ error: "Invalid request" });
     return;
   }
-  const failedRequests = tasks;
-  const completedRequests = [];
+  const failedRequests = _.cloneDeep(tasks);
+  const completedRequests: DatapackPriorityChangeRequest[] = [];
   try {
     for (const task of tasks) {
       await editAdminDatapackPriorities(task);
@@ -781,6 +782,15 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
       completedRequests
     };
     reply.status(500).send(partialSuccess);
+  }
+  if (failedRequests.length > 0) {
+    const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
+      error: "Some priorities updated",
+      failedRequests,
+      completedRequests
+    };
+    reply.send(partialSuccess);
+    return;
   }
   const success: DatapackPriorityUpdateSuccess = {
     message: "Priorities updated",
