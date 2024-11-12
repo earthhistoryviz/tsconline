@@ -28,7 +28,7 @@ export const handleDatapackEdit = action(
     const formData = new FormData();
     for (const key in editedDatapack) {
       const castedKey = key as keyof EditableDatapackMetadata;
-      if (editedDatapack[castedKey] !== originalDatapack[castedKey]) {
+      if (JSON.stringify(editedDatapack[castedKey]) !== JSON.stringify(originalDatapack[castedKey])) {
         if (castedKey === "tags" || castedKey === "references") {
           formData.append(castedKey, JSON.stringify(editedDatapack[castedKey]));
           continue;
@@ -55,7 +55,7 @@ export const handleDatapackEdit = action(
       if (response.ok) {
         pushSnackbar("Datapack updated", "success");
         setDatapackProfilePageEditMode(false);
-        const datapack = await refetchDatapack(originalDatapack);
+        const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid });
         if (!datapack) return false;
         resetEditableDatapackMetadata(datapack);
         removeAllErrors();

@@ -264,7 +264,7 @@ export const adminDeleteOfficialDatapacks = action(
         } else {
           deletedNoDatapacks = false;
           runInAction(() => {
-            removeDatapack(datapack);
+            removeDatapack({ title: datapack.title, type: "official" });
           });
         }
       } catch (error) {

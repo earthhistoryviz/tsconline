@@ -169,31 +169,16 @@ export async function editDatapack(
   oldDatapackTitle: string,
   newDatapack: Partial<DatapackMetadata>
 ): Promise<void> {
-  const rollbackActions: (() => Promise<void>)[] = [];
   let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
-  const originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
   if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
     await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!);
-    rollbackActions.push(async () => {
-      await renameUserDatapack(uuid, newDatapack.title!, oldDatapackTitle);
-    });
   }
   if ("originalFileName" in newDatapack) {
     metadata = await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
-    rollbackActions.push(async () => {
-      await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), originalMetadata);
-    });
   }
   if ("datapackImage" in newDatapack) {
     await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
-    rollbackActions.push(async () => {
-      await changeProfilePicture(
-        uuid,
-        oldDatapackTitle,
-        await getTemporaryFilepath(uuid, originalMetadata.datapackImage!)
-      );
-    });
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
