@@ -15,7 +15,13 @@ import {
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { EditableDatapackMetadata } from "../../types";
-import { Datapack, DatapackUniqueIdentifier, assertDatapack, assertUserDatapack } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackUniqueIdentifier,
+  assertBatchUpdateServerPartialError,
+  assertDatapack,
+  assertUserDatapack
+} from "@tsconline/shared";
 import { state } from "../state";
 import { doesDatapackExistInCurrentConfig } from "../non-action-util";
 
@@ -61,11 +67,19 @@ export const handleDatapackEdit = action(
         removeAllErrors();
         return true;
       } else {
-        displayServerError(
-          response,
-          ErrorCodes.USER_EDIT_DATAPACK_FAILED,
-          ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
-        );
+        try {
+          const error = await response.json();
+          assertBatchUpdateServerPartialError(error);
+          for (const err of error.errors) {
+            pushSnackbar(err, "warning");
+          }
+        } catch (e) {
+          displayServerError(
+            response,
+            ErrorCodes.USER_EDIT_DATAPACK_FAILED,
+            ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+          );
+        }
         return false;
       }
     } catch (e) {

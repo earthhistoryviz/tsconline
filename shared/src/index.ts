@@ -590,6 +590,20 @@ export type TimescaleItem = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export type BatchUpdateServerPartialError = {
+  message: string;
+  errors: string[];
+};
+
+export function assertBatchUpdateServerPartialError(o: any): asserts o is BatchUpdateServerPartialError {
+  if (!o || typeof o !== "object") throw new Error("BatchUpdateServerPartialError must be a non-null object");
+  if (typeof o.message !== "string") throwError("BatchUpdateServerPartialError", "message", "string", o.message);
+  if (!Array.isArray(o.errors)) throwError("BatchUpdateServerPartialError", "errors", "array", o.errors);
+  for (const error of o.errors) {
+    if (typeof error !== "string") throwError("BatchUpdateServerPartialError", "errors", "string", error);
+  }
+}
+
 export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
   if (typeof o.title !== "string") throwError("Workshop", "title", "string", o.title);
