@@ -761,7 +761,7 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
   reply: FastifyReply
 ) {
   try {
-    assertDatapackPriorityChangeRequestArray(request.body);
+    assertDatapackPriorityChangeRequestArray(request.body.tasks);
   } catch (e) {
     reply.status(400).send({ error: "Invalid request" });
     return;

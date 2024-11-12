@@ -26,7 +26,7 @@ export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
 export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
-  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic);
+  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
 export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);

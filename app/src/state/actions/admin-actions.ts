@@ -642,21 +642,29 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
       credentials: "include"
     });
     const json = await response.json();
-    if (response.ok) {
-      assertDatapackPriorityUpdateSuccess(json);
-      json.completedRequests.forEach((datapack) => {
-        const index = state.datapacks.findIndex((d) => d.title === datapack.id);
-        if (index !== -1) {
-          runInAction(() => {
-            state.datapacks[index].priority = datapack.priority;
-          });
-        }
-      });
-      pushSnackbar("Datapack priorities updated successfully", "success");
-    } else {
-      assertDatapackPriorityPartialUpdateSuccess(json);
-      const failedRequests = json.failedRequests;
-      //TODO
+    try {
+      if (response.ok) {
+        assertDatapackPriorityUpdateSuccess(json);
+        json.completedRequests.forEach((datapack) => {
+          const index = state.datapacks.findIndex((d) => d.title === datapack.id);
+          if (index !== -1) {
+            runInAction(() => {
+              state.datapacks[index].priority = datapack.priority;
+            });
+          }
+        });
+        pushSnackbar("Datapack priorities updated successfully", "success");
+      } else {
+        assertDatapackPriorityPartialUpdateSuccess(json);
+        pushSnackbar("Some datapack priorities were not updated", "warning");
+      }
+    } catch (e) {
+      console.error(e);
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
+      );
     }
   } catch (e) {
     console.error(e);

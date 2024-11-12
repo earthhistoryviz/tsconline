@@ -41,12 +41,13 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       flex: 1,
       checkboxSelection: true
     },
-    { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true },
+    { headerName: "File Name", field: "originalFileName", flex: 1, sortable: true, filter: true },
     { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
     { headerName: "Description", field: "description", flex: 1 },
     { headerName: "Size", field: "size", flex: 0.5 },
     { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
   ];
+  // delete selected datapacks
   const deleteDatapacks = async () => {
     const selectedNodes = gridRef.current?.api.getSelectedNodes();
     if (!selectedNodes || !selectedNodes.length) return;
@@ -60,9 +61,11 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       console.error(e);
     }
   };
+  // debounce the update of datapack priority
   const debouncedUpdateDatapackPriority = debounce(async (updatedNodes: DatapackPriorityChangeRequest[]) => {
     await actions.adminUpdateDatapackPriority(updatedNodes);
   }, 3000);
+  // update the priority of the datapacks on row drag
   async function onRowDragEnd(event: RowDragEndEvent<BaseDatapackProps>) {
     const { api } = event;
     let prevPriority = 0;
@@ -82,8 +85,8 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     }
     api.setGridOption("rowData", updatedRowData);
     debouncedUpdateDatapackPriority(updatedNodes);
-    api.refreshCells();
   }
+  // update the priority of the datapacks on cell value change
   async function onCellValueChanged(event: CellValueChangedEvent<BaseDatapackProps>) {
     if (event.colDef.field === "priority") {
       event.api.stopEditing();
@@ -94,7 +97,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       await actions.adminUpdateDatapackPriority(updatedNodes);
     }
   }
-
+  // reset the priorities of the datapacks to one-based index
   async function resetPriorities() {
     const api = gridRef.current?.api;
     if (!api) return;
