@@ -173,44 +173,32 @@ export async function editDatapack(
   let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
   const originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
-  try {
-    if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
-      await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!);
-      rollbackActions.push(async () => {
-        await renameUserDatapack(uuid, newDatapack.title!, oldDatapackTitle);
-      });
-    }
-    if ("originalFileName" in newDatapack) {
-      metadata = await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
-      rollbackActions.push(async () => {
-        await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), originalMetadata);
-      });
-    }
-    if ("datapackImage" in newDatapack) {
-      await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
-      rollbackActions.push(async () => {
-        await changeProfilePicture(
-          uuid,
-          oldDatapackTitle,
-          await getTemporaryFilepath(uuid, originalMetadata.datapackImage!)
-        );
-      });
-    }
-    if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
-      await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
-    }
-    await writeUserDatapack(uuid, metadata);
-  } finally {
-    rollbackActions.reverse();
-    try {
-      rollbackActions.forEach(async (action) => {
-        await action();
-      });
-    } catch (e) {
-      logger.error(`Error rolling back editDatapack: ${e}`);
-      throw e;
-    }
+  if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
+    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!);
+    rollbackActions.push(async () => {
+      await renameUserDatapack(uuid, newDatapack.title!, oldDatapackTitle);
+    });
   }
+  if ("originalFileName" in newDatapack) {
+    metadata = await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
+    rollbackActions.push(async () => {
+      await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), originalMetadata);
+    });
+  }
+  if ("datapackImage" in newDatapack) {
+    await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
+    rollbackActions.push(async () => {
+      await changeProfilePicture(
+        uuid,
+        oldDatapackTitle,
+        await getTemporaryFilepath(uuid, originalMetadata.datapackImage!)
+      );
+    });
+  }
+  if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
+  }
+  await writeUserDatapack(uuid, metadata);
 }
 
 /**

@@ -360,7 +360,8 @@
             "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
             "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later.",
             "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
-            "USER_REPLACE_DATAPACK_FILE_FAILED": "Failed to replace user datapack file. Please try again later."
+            "USER_REPLACE_DATAPACK_FILE_FAILED": "Failed to replace user datapack file. Please try again later.",
+            "USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED": "Failed to replace user datapack profile image. Please try again later."
         },
         "button": {
             "generate": "Generate",
