@@ -66,7 +66,7 @@ export const DatapackProfile = observer(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
-  }, [datapack]);
+  }, []);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
