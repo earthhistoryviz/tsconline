@@ -104,6 +104,10 @@ export type DatapackWarning = {
   warning: string;
 };
 
+export type DatapackUniqueIdentifier = {
+  title: string;
+} & DatapackType;
+
 export type ChartErrorResponse = {
   error: string;
   errorCode: number;

@@ -9,23 +9,17 @@ import {
   removeDatapack,
   setDatapackProfilePageEditMode,
   resetEditableDatapackMetadata,
-  setDatapackImageVersion,
   processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { EditableDatapackMetadata } from "../../types";
-import { Datapack, assertDatapack, assertUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackUniqueIdentifier, assertDatapack, assertUserDatapack } from "@tsconline/shared";
 import { state } from "../state";
 import { doesDatapackExistInCurrentConfig } from "../non-action-util";
 
 export const handleDatapackEdit = action(
-  async (
-    originalDatapack: Datapack,
-    editedDatapack: EditableDatapackMetadata,
-    newDatapackFile?: File | null,
-    newDatapackImage?: File | null
-  ) => {
+  async (originalDatapack: Datapack, editedDatapack: EditableDatapackMetadata) => {
     if (!state.user.uuid) {
       pushError(ErrorCodes.NOT_LOGGED_IN);
       return false;
@@ -40,12 +34,6 @@ export const handleDatapackEdit = action(
         }
         formData.append(castedKey, editedDatapack[castedKey] as string);
       }
-    }
-    if (newDatapackFile) {
-      formData.append("datapack", newDatapackFile);
-    }
-    if (newDatapackImage) {
-      formData.append("datapack-image", newDatapackImage);
     }
     if (Array.from(formData.keys()).length === 0) {
       pushSnackbar("No changes made", "info");
@@ -66,17 +54,10 @@ export const handleDatapackEdit = action(
       if (response.ok) {
         pushSnackbar("Datapack updated", "success");
         setDatapackProfilePageEditMode(false);
-        const datapack = await fetchUserDatapack(editedDatapack.title);
+        const datapack = await refetchDatapack(originalDatapack);
         if (!datapack) return false;
-        if (newDatapackImage) setDatapackImageVersion(state.datapackProfilePage.datapackImageVersion + 1);
-        removeDatapack(originalDatapack);
-        addDatapack(datapack);
         resetEditableDatapackMetadata(datapack);
         removeAllErrors();
-        // if selected in the config, force a reprocess of the config
-        if (doesDatapackExistInCurrentConfig(originalDatapack, state.config.datapacks)) {
-          await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
-        }
         return true;
       } else {
         displayServerError(
@@ -91,6 +72,17 @@ export const handleDatapackEdit = action(
     }
   }
 );
+
+export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier) => {
+  const userDatapack = await fetchUserDatapack(datapack.title);
+  if (userDatapack) {
+    removeDatapack(datapack);
+    addDatapack(userDatapack);
+    return userDatapack;
+  } else {
+    return null;
+  }
+});
 
 export const fetchUserDatapack = action(async (datapack: string) => {
   try {
@@ -131,13 +123,49 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       }
     });
     if (response.ok) {
-      removeDatapack({ title: datapack, type: "user" });
+      removeDatapack({ title: datapack, type: "user", uuid: state.user.uuid });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(
         response,
         ErrorCodes.USER_DELETE_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_DELETE_DATAPACK_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const replaceUserDatapackFile = action(async (id: string, file: File) => {
+  const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+  try {
+    const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    formData.append("datapack", file);
+    const response = await fetcher(`/datapack/${id}`, {
+      method: "PATCH",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      pushSnackbar("File replaced", "success");
+      const datapack = await refetchDatapack(datapackUniqueIdentifier);
+      if (!datapack) return;
+      removeAllErrors();
+      // if selected in the config, force a reprocess of the config
+      if (doesDatapackExistInCurrentConfig(datapackUniqueIdentifier, state.config.datapacks)) {
+        await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
+      }
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED,
+        ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED]
       );
     }
   } catch (e) {

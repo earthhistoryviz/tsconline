@@ -16,7 +16,8 @@ import {
   isOfficialDatapack,
   assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray
+  assertDatapackArray,
+  DatapackUniqueIdentifier
 } from "@tsconline/shared";
 
 import {
@@ -103,8 +104,15 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action("removeDatapack", (datapack: { title: string; type: string }) => {
-  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
+  state.datapacks = observable(
+    state.datapacks.filter(
+      (d) =>
+        d.title !== datapack.title ||
+        d.type !== datapack.type ||
+        (d.type === "user" && datapack.type === "user" && d.uuid !== datapack.uuid)
+    )
+  );
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
@@ -1209,8 +1217,6 @@ export const setUnsafeChartContent = action((content: string) => {
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   state.datapackProfilePage.editableDatapackMetadata = metadata;
-  state.datapackProfilePage.tempEditableDatapackFile = null;
-  state.datapackProfilePage.tempEditableDatapackImage = null;
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;
@@ -1225,15 +1231,6 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
-});
-
-export const setDatapackProfilePageTempEditableDatapackFile = action((file: File) => {
-  setUnsavedChanges(true);
-  state.datapackProfilePage.tempEditableDatapackFile = file;
-});
-export const setDatapackProfilePageTempEditableDatapackImage = action((file: File) => {
-  setUnsavedChanges(true);
-  state.datapackProfilePage.tempEditableDatapackImage = file;
 });
 
 export const setDatapackImageVersion = action((version: number) => {
