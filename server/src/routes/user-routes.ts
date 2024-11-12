@@ -52,7 +52,11 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   }
   try {
     const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
-    await editDatapack(uuid, datapack, partial);
+    const errors = await editDatapack(uuid, datapack, partial);
+    if (errors.length > 0) {
+      reply.status(422).send({ error: "There were errors updating the datapack", errors });
+      return;
+    }
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });

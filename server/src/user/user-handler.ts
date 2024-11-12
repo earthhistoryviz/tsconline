@@ -168,22 +168,55 @@ export async function editDatapack(
   uuid: string,
   oldDatapackTitle: string,
   newDatapack: Partial<DatapackMetadata>
-): Promise<void> {
+): Promise<string[]> {
   let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
+  const originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
+  const errors: string[] = [];
   if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!);
+    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!).catch((e) => {
+      console.error(e);
+      logger.error(e);
+      errors.push("Error renaming datapack to a different title");
+    });
   }
   if ("originalFileName" in newDatapack) {
-    metadata = await replaceDatapackFile(uuid, await getTemporaryFilepath(uuid, metadata.storedFileName), metadata);
+    // this changes the storedFileName as well so we need to update the metadata
+    metadata = await replaceDatapackFile(
+      uuid,
+      await getTemporaryFilepath(uuid, metadata.storedFileName),
+      metadata
+    ).catch((e) => {
+      logger.error(e);
+      errors.push("Error replacing datapack file");
+      return {
+        ...metadata,
+        originalFileName: originalMetadata.originalFileName,
+        storedFileName: originalMetadata.storedFileName
+      };
+    });
   }
   if ("datapackImage" in newDatapack) {
-    await changeProfilePicture(uuid, oldDatapackTitle, await getTemporaryFilepath(uuid, newDatapack.datapackImage!));
+    await changeProfilePicture(
+      uuid,
+      oldDatapackTitle,
+      await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
+    ).catch((e) => {
+      logger.error(e);
+      errors.push("Error changing profile picture");
+    });
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic);
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic).catch((e) => {
+      logger.error(e);
+      errors.push("Error switching privacy settings");
+    });
   }
-  await writeUserDatapack(uuid, metadata);
+  await writeUserDatapack(uuid, metadata).catch((e) => {
+    logger.error(e);
+    errors.push("Error writing metadata");
+  });
+  return errors;
 }
 
 /**
