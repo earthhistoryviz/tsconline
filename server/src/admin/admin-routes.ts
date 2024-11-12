@@ -760,37 +760,42 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
   request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] } }>,
   reply: FastifyReply
 ) {
-  const { tasks } = request.body;
   try {
-    assertDatapackPriorityChangeRequestArray(tasks);
+    assertDatapackPriorityChangeRequestArray(request.body);
   } catch (e) {
     reply.status(400).send({ error: "Invalid request" });
     return;
   }
+  const { tasks } = request.body;
   const failedRequests = _.cloneDeep(tasks);
   const completedRequests: DatapackPriorityChangeRequest[] = [];
   try {
     for (const task of tasks) {
-      await editAdminDatapackPriorities(task);
+      try {
+        await editAdminDatapackPriorities(task);
+      } catch (e) {
+        logger.error(e);
+        continue;
+      }
       failedRequests.shift();
       completedRequests.push(task);
     }
   } catch (e) {
-    const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
-      error: "Some priorities updated",
-      failedRequests,
-      completedRequests
-    };
-    reply.status(500).send(partialSuccess);
+    logger.error(e);
   }
   if (failedRequests.length > 0) {
-    const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
-      error: "Some priorities updated",
-      failedRequests,
-      completedRequests
-    };
-    reply.send(partialSuccess);
-    return;
+    if (completedRequests.length > 0) {
+      const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
+        error: "Some priorities updated",
+        failedRequests,
+        completedRequests
+      };
+      reply.status(500).send(partialSuccess);
+      return;
+    } else {
+      reply.status(500).send({ error: "Unknown error, no priorities updated" });
+      return;
+    }
   }
   const success: DatapackPriorityUpdateSuccess = {
     message: "Priorities updated",

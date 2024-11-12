@@ -625,7 +625,7 @@ export const handleDatapackPriorityChange = action((data: BaseDatapackProps, new
 
 export const setLoadingDatapackPriority = action((loading: boolean) => {
   state.admin.datapackPriorityLoading = loading;
-})
+});
 
 export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
   try {
