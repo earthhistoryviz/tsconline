@@ -2408,6 +2408,7 @@ describe("adminEditDatapackPriorities", () => {
     const response = await app.inject({
       method: "PATCH",
       url,
+      payload: { tasks: "not an array" },
       headers
     });
     expect(assertDatapackPriorityChangeRequestArray).toHaveBeenCalledTimes(1);
