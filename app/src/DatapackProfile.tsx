@@ -114,7 +114,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <DatapackImage image={image} />
+        <DatapackImage id={datapack.title} image={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
@@ -172,16 +172,15 @@ export const DatapackProfile = observer(() => {
 
 type DatapackImageProps = {
   image: string;
+  id: string;
 };
-const DatapackImage: React.FC<DatapackImageProps> = observer(({ image }) => {
+const DatapackImage: React.FC<DatapackImageProps> = observer(({ id, image }) => {
   const { state, actions } = useContext(context);
   const profileImageRef = useRef<HTMLInputElement>(null);
-  const handleDatapackFileChange = () => {
+  const handleDatapackImageChange = async () => {
     if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
       const file = profileImageRef.current.files[0];
-      actions.setDatapackProfilePageTempEditableDatapackImage(file);
-      const newImageUrl = URL.createObjectURL(file);
-      return () => URL.revokeObjectURL(newImageUrl);
+      await actions.replaceUserProfileImageFile(id, file);
     }
   };
   // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
@@ -208,7 +207,7 @@ const DatapackImage: React.FC<DatapackImageProps> = observer(({ image }) => {
             accept=".png, .jpg, .jpeg"
             ref={profileImageRef}
             style={{ display: "none" }}
-            onChange={handleDatapackFileChange}
+            onChange={handleDatapackImageChange}
           />
         </Box>
       ) : (
@@ -341,11 +340,10 @@ type DatapackFileProps = {
 
 const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
   const { state, actions } = useContext(context);
-  const handleFileUpload = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
-    actions.removeAllErrors();
-    actions.replaceUserDatapackFile(id, file);
+    await actions.replaceUserDatapackFile(id, file);
   };
   return (
     <>

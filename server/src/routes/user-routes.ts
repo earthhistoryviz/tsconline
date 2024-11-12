@@ -60,7 +60,9 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   } finally {
     // remove temp files; files should be removed normally, but if there is an error, we should remove them here
     for (const file of response.tempFiles) {
-      await rm(file, { force: true });
+      await rm(file, { force: true }).catch(() => {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+      });
     }
   }
   reply.send({ message: `Successfully updated ${datapack}` });

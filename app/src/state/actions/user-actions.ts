@@ -9,7 +9,8 @@ import {
   removeDatapack,
   setDatapackProfilePageEditMode,
   resetEditableDatapackMetadata,
-  processDatapackConfig
+  processDatapackConfig,
+  setDatapackImageVersion
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -144,7 +145,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     if (!recaptcha) return;
     const formData = new FormData();
     formData.append("datapack", file);
-    const response = await fetcher(`/datapack/${id}`, {
+    const response = await fetcher(`/user/datapack/${id}`, {
       method: "PATCH",
       body: formData,
       credentials: "include",
@@ -166,6 +167,42 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
         response,
         ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED,
         ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const setDatapackImageOnDatapack = action((datapack: Datapack, image: string) => {
+  datapack.datapackImage = image;
+});
+
+export const replaceUserProfileImageFile = action(async (id: string, file: File) => {
+  try {
+    const recaptcha = await getRecaptchaToken("replaceUserProfileImageFile");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    formData.append("datapack-image", file);
+    const response = await fetcher(`/user/datapack/${id}`, {
+      method: "PATCH",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      pushSnackbar("Image replaced", "success");
+      const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
+      if (!datapack) return;
+      setDatapackImageVersion(state.datapackProfilePage.datapackImageVersion + 1);
+      removeAllErrors();
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED,
+        ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED]
       );
     }
   } catch (e) {
