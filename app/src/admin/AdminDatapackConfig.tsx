@@ -22,7 +22,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       headerName: "Priority",
       editable: true,
       field: "priority",
-      flex: 0.5,
+      flex: 0.6,
       rowDrag: true,
       valueSetter: (data: ValueSetterParams<BaseDatapackProps, string>) => {
         // to make sure the value is changed WITHIN an action

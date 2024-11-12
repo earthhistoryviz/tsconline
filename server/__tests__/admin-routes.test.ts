@@ -18,9 +18,25 @@ import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as userHandlers from "../src/user/user-handler";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
+import * as adminHandler from "../src/admin/admin-handler";
+import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import { cloneDeep } from "lodash";
+
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
+
+vi.mock("../src/admin/admin-handler", async () => {
+  return {
+    editAdminDatapackPriorities: vi.fn().mockResolvedValue({})
+  };
+});
 
 vi.mock("node:child_process", async () => {
   return {
@@ -38,7 +54,8 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
     assertDatapackIndex: vi.fn().mockReturnValue(true),
     assertSharedWorkshop: vi.fn().mockImplementation(actual.assertSharedWorkshop),
-    assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray)
+    assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray),
+    assertDatapackPriorityChangeRequestArray: vi.fn().mockReturnValue(true)
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -353,6 +370,11 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
       email: "email@email.com",
       accountType: "pro"
     }
+  },
+  {
+    method: "PATCH",
+    url: "/admin/official/datapack/priority",
+    body: [{ uuid: "test", id: "test", priority: 1 }]
   }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
@@ -922,7 +944,8 @@ describe("adminUploadOfficialDatapack", () => {
     authoredBy: "test-author",
     type: "user",
     uuid: "test-uuid",
-    isPublic: false
+    isPublic: false,
+    priority: 0
   };
   const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
     userHandlers,
@@ -2353,6 +2376,114 @@ describe("adminModifyUser tests", () => {
     expect(updateUser).toHaveBeenCalledWith({ email: body.email }, { isAdmin: body.isAdmin });
     expect(updateUser).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "User modified." });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminEditDatapackPriorities", () => {
+  const url = "/admin/official/datapack/priority";
+  const datapackPriorityTaskOne = {
+    id: 1,
+    priority: 1,
+    uuid: "uuid1"
+  };
+  const datapackPriorityTaskTwo = {
+    id: 2,
+    priority: 2,
+    uuid: "uuid2"
+  };
+  const payload = {
+    tasks: [datapackPriorityTaskOne]
+  };
+  const assertDatapackPriorityChangeRequestArray = vi.spyOn(shared, "assertDatapackPriorityChangeRequestArray");
+  const editAdminDatapackPriorities = vi.spyOn(adminHandler, "editAdminDatapackPriorities");
+  const loggerError = vi.spyOn(logger.default, "error");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if body is not in the correct format", async () => {
+    assertDatapackPriorityChangeRequestArray.mockImplementationOnce(() => {
+      throw new Error("Not valid body");
+    });
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      headers
+    });
+    expect(assertDatapackPriorityChangeRequestArray).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Invalid request" });
+  });
+  it("should return 500 if editAdminDatapackPriorities throws error for 1 task", async () => {
+    editAdminDatapackPriorities.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload,
+      headers
+    });
+    expect(editAdminDatapackPriorities).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Unknown error, no priorities updated" });
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if editAdminDatapackPriorities throws error for 2 tasks", async () => {
+    editAdminDatapackPriorities.mockRejectedValueOnce(new Error()).mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [datapackPriorityTaskOne, datapackPriorityTaskTwo] },
+      headers
+    });
+    expect(editAdminDatapackPriorities).toHaveBeenCalledTimes(2);
+    expect(await response.json()).toEqual({ error: "Unknown error, no priorities updated" });
+    expect(loggerError).toHaveBeenCalledTimes(2);
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 for a partial error where one task completes but another throws an error", async () => {
+    editAdminDatapackPriorities.mockResolvedValueOnce().mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [datapackPriorityTaskOne, datapackPriorityTaskTwo] },
+      headers
+    });
+    expect(editAdminDatapackPriorities).toHaveBeenCalledTimes(2);
+    expect(await response.json()).toEqual({
+      error: "Some priorities updated",
+      failedRequests: [datapackPriorityTaskTwo],
+      completedRequests: [datapackPriorityTaskOne]
+    });
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful for 1 task", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload,
+      headers
+    });
+    expect(editAdminDatapackPriorities).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({
+      message: "Priorities updated",
+      completedRequests: [datapackPriorityTaskOne]
+    });
+    expect(loggerError).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful for 2 tasks", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url,
+      payload: { tasks: [datapackPriorityTaskOne, datapackPriorityTaskTwo] },
+      headers
+    });
+    expect(editAdminDatapackPriorities).toHaveBeenCalledTimes(2);
+    expect(await response.json()).toEqual({
+      message: "Priorities updated",
+      completedRequests: [datapackPriorityTaskOne, datapackPriorityTaskTwo]
+    });
+    expect(loggerError).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(200);
   });
 });
