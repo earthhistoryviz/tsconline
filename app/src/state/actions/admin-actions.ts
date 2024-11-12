@@ -623,8 +623,13 @@ export const handleDatapackPriorityChange = action((data: BaseDatapackProps, new
   data.priority = newPriority;
 });
 
+export const setLoadingDatapackPriority = action((loading: boolean) => {
+  state.admin.datapackPriorityLoading = loading;
+})
+
 export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
   try {
+    setLoadingDatapackPriority(true);
     const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
     if (!recaptchaToken) return;
     const response = await fetcher("/admin/official/datapack/priority", {
@@ -651,10 +656,12 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
     } else {
       assertDatapackPriorityPartialUpdateSuccess(json);
       const failedRequests = json.failedRequests;
-      console.log(failedRequests);
+      //TODO
     }
   } catch (e) {
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+  } finally {
+    setLoadingDatapackPriority(false);
   }
 });
