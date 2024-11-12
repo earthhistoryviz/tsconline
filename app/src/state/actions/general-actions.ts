@@ -251,6 +251,7 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",

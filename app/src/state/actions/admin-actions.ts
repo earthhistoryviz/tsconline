@@ -306,6 +306,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     formData.append("authoredBy", authoredBy);
     formData.append("isPublic", String(isPublic));
     formData.append("type", metadata.type);
+    formData.append("priority", String(metadata.priority));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
