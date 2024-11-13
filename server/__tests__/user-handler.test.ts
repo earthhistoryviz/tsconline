@@ -198,43 +198,41 @@ describe("renameUserDatapack test", () => {
   const writeFile = vi.spyOn(fsPromises, "writeFile");
   const rename = vi.spyOn(fsPromises, "rename");
   const changeFileMetadataKey = vi.spyOn(fileMetadataHandler, "changeFileMetadataKey");
-  const datapack = {
-    title: "datapack"
-  } as shared.Datapack;
+  const title = "datapack";
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it("should throw an error if fetchUserDatapackDirectory fails", async () => {
     fetchUserDatapackDirectory.mockRejectedValueOnce(new Error("fetchUserDatapackDirectory error"));
-    await expect(renameUserDatapack("test", "test", datapack)).rejects.toThrow("fetchUserDatapackDirectory error");
+    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("fetchUserDatapackDirectory error");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
   });
   it("should throw an error if resolve fails", async () => {
     resolve.mockImplementationOnce(() => {
       throw new Error("resolve error");
     });
-    await expect(renameUserDatapack("test", "test", datapack)).rejects.toThrow("resolve error");
+    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("resolve error");
     expect(resolve).toHaveBeenCalledOnce();
   });
   it("should throw error if resolve check fails", async () => {
     resolve.mockReturnValueOnce("test");
-    await expect(renameUserDatapack("test", "test", datapack)).rejects.toThrow("Invalid filepath");
+    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("Invalid filepath");
     expect(resolve).toHaveBeenCalledTimes(2);
   });
   it("should throw error and rename if writeUserDatapack fails", async () => {
     writeFile.mockRejectedValueOnce(new Error("writeUserDatapack error"));
-    await expect(renameUserDatapack("test", "test", datapack)).rejects.toThrow("writeUserDatapack error");
+    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("writeUserDatapack error");
     expect(writeFile).toHaveBeenCalledOnce();
     expect(rename).toHaveBeenCalledTimes(2);
   });
   it("should clean up and throw error if changeFileMetadataKey fails", async () => {
     changeFileMetadataKey.mockRejectedValueOnce(new Error("changeFileMetadataKey error"));
-    await expect(renameUserDatapack("test", "test", datapack)).rejects.toThrow("changeFileMetadataKey error");
+    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("changeFileMetadataKey error");
     expect(writeFile).toHaveBeenCalledTimes(2);
     expect(rename).toHaveBeenCalledTimes(2);
   });
   it("should rename the datapack", async () => {
-    await renameUserDatapack("test", "test", datapack);
+    await renameUserDatapack("test", "test", title);
     expect(rename).toHaveBeenCalledTimes(1);
     // once in the method and twice when writing
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(3);
