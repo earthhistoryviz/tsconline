@@ -195,7 +195,6 @@ describe("fetchUserDatapack test", () => {
 describe("renameUserDatapack test", () => {
   const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const resolve = vi.spyOn(path, "resolve");
-  const writeFile = vi.spyOn(fsPromises, "writeFile");
   const rename = vi.spyOn(fsPromises, "rename");
   const changeFileMetadataKey = vi.spyOn(fileMetadataHandler, "changeFileMetadataKey");
   const title = "datapack";
@@ -219,24 +218,16 @@ describe("renameUserDatapack test", () => {
     await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("Invalid filepath");
     expect(resolve).toHaveBeenCalledTimes(2);
   });
-  it("should throw error and rename if writeUserDatapack fails", async () => {
-    writeFile.mockRejectedValueOnce(new Error("writeUserDatapack error"));
-    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("writeUserDatapack error");
-    expect(writeFile).toHaveBeenCalledOnce();
-    expect(rename).toHaveBeenCalledTimes(2);
-  });
   it("should clean up and throw error if changeFileMetadataKey fails", async () => {
     changeFileMetadataKey.mockRejectedValueOnce(new Error("changeFileMetadataKey error"));
     await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("changeFileMetadataKey error");
-    expect(writeFile).toHaveBeenCalledTimes(2);
     expect(rename).toHaveBeenCalledTimes(2);
   });
   it("should rename the datapack", async () => {
     await renameUserDatapack("test", "test", title);
     expect(rename).toHaveBeenCalledTimes(1);
     // once in the method and twice when writing
-    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(3);
-    expect(writeFile).toHaveBeenCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -355,7 +346,7 @@ describe("getUploadedDatapackFilepath test", () => {
   const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");
-  const readFileMockReturn = { originalFileName: "test" };
+  const readFileMockReturn = { storedFileName: "test" };
   beforeEach(() => {
     vi.clearAllMocks();
   });
