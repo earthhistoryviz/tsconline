@@ -207,7 +207,7 @@ export async function editDatapack(
       errors.push("Error changing profile picture");
     });
   }
-  if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
+  if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic).catch((e) => {
       logger.error(e);
       metadata.isPublic = originalMetadata.isPublic;
