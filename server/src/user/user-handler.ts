@@ -175,8 +175,8 @@ export async function editDatapack(
   const errors: string[] = [];
   if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
     await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!).catch((e) => {
-      console.error(e);
       logger.error(e);
+      metadata.title = oldDatapackTitle;
       errors.push("Error renaming datapack to a different title");
     });
   }
@@ -203,12 +203,14 @@ export async function editDatapack(
       await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
     ).catch((e) => {
       logger.error(e);
+      metadata.datapackImage = originalMetadata.datapackImage;
       errors.push("Error changing profile picture");
     });
   }
   if ("isPublic" in newDatapack && metadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic).catch((e) => {
       logger.error(e);
+      metadata.isPublic = originalMetadata.isPublic;
       errors.push("Error switching privacy settings");
     });
   }
