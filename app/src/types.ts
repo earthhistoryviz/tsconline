@@ -22,7 +22,7 @@ export type EditableDatapackMetadata = Omit<
 export type UploadDatapackMethodType = (
   file: File,
   metadata: DatapackMetadata,
-  optionalFields?: { profileImage?: File, workshopId?: number }
+  datapackProfilePicture?: File
 ) => Promise<void>;
 
 export type User = SharedUser & {

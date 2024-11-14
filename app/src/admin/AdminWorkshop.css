@@ -6,3 +6,7 @@
 .date-time-picker .MuiPickersDay-root.Mui-disabled {
   color: darkgray;
 }
+
+.datapack-buttons {
+  flex: 0 0 auto;
+}

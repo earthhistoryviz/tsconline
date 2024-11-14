@@ -19,7 +19,7 @@ import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
 import { createWriteStream } from "fs";
-import { rm, rename } from "fs/promises";
+import { rm, readFile } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
@@ -28,11 +28,14 @@ import {
   DatapackPriorityChangeRequest,
   DatapackPriorityPartialUpdateSuccess,
   DatapackPriorityUpdateSuccess,
+  DatapackMetadata,
   SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
+  assertDatapack,
   assertSharedWorkshop,
-  assertSharedWorkshopArray
+  assertSharedWorkshopArray,
+  assertWorkshopDatapack
 } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -54,7 +57,7 @@ import {
   fetchAllUsersDatapacks
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
-import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { tmpdir } from "node:os";
@@ -356,11 +359,6 @@ export const adminUploadOfficialDatapack = async function adminUploadOfficialDat
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
-  if (!fields.isPublic) {
-    await cleanupTempFiles();
-    reply.status(400).send({ error: "Workshop datapack must be public" });
-    return
-  }
   if (!datapackMetadata) {
     reply.status(500).send({ error: "Unexpected error with request fields." });
     await cleanupTempFiles();
@@ -821,9 +819,6 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   let storedFileName: string | undefined;
   let tempProfilePictureFilepath: string | undefined;
   const fields: { [fieldname: string]: string } = {};
-  let workshopId: number | undefined;
-  let workshopUuid: string | undefined;
-  let privateDir: string;
   const cleanupTempFiles = async () => {
     if (filepath) {
       await rm(filepath, { force: true }).catch((e) => {
@@ -872,10 +867,6 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
           }
         }
       } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        if (part.fieldname === "workshopId") {
-          workshopId = parseInt(part.value);
-          continue;
-        }
         fields[part.fieldname] = part.value;
       }
     }
@@ -885,13 +876,7 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
-  const workshop = await findWorkshop({ workshopId });
-  if (workshop.length !== 1 || !workshop[0]) {
-    await cleanupTempFiles();
-    reply.status(404).send({ error: "Workshop not found" });
-    return;
-  }
-  if (!file || !filepath || !originalFileName || !workshopId || !storedFileName) {
+  if (!file || !filepath || !originalFileName || !storedFileName) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
@@ -899,7 +884,6 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
-  fields.uuid = `workshop-${workshopId}`;
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
@@ -908,8 +892,26 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     await cleanupTempFiles();
     return;
   }
+  assertWorkshopDatapack(datapackMetadata);
+  const workshopId = parseInt(datapackMetadata.uuid.split("-")[1] ?? "");
+  if (!workshopId || isNaN(workshopId)) {
+    await cleanupTempFiles();
+    reply.status(400).send({ error: "Invalid workshopId" });
+    return;
+  }
+  const workshop = await findWorkshop({ workshopId });
+  if (workshop.length !== 1 || !workshop[0]) {
+    await cleanupTempFiles();
+    reply.status(404).send({ error: "Workshop not found" });
+    return;
+  }
+  if (!datapackMetadata.isPublic) {
+    await cleanupTempFiles();
+    reply.status(400).send({ error: "Workshop datapack must be public" });
+    return;
+  }
   try {
-    if (await doesDatapackFolderExistInAllUUIDDirectories(fields.uuid, datapackMetadata.title)) {
+    if (await doesDatapackFolderExistInAllUUIDDirectories(datapackMetadata.uuid, datapackMetadata.title)) {
       await cleanupTempFiles();
       reply.status(409).send({ error: "Datapack already exists" });
       return;
@@ -921,7 +923,7 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   }
   try {
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
-      fields.uuid,
+      datapackMetadata.uuid,
       filepath,
       datapackMetadata,
       false,
@@ -936,4 +938,81 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     return;
   }
   reply.send({ message: "Datapack uploaded" });
-}
+};
+
+export const adminAddServerDatapackToWorkshop = async function addServerDatapackToWorkshop(
+  request: FastifyRequest<{ Body: { workshopId: number; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopId, datapackTitle } = request.body;
+  if (!workshopId || !datapackTitle) {
+    reply.status(400).send({ error: "Missing workshopId or datapack" });
+    return;
+  }
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (workshop.length !== 1 || !workshop[0]) {
+      reply.status(404).send({ error: "Workshop not found" });
+      return;
+    }
+    const workshopUUID = `workshop-${workshopId}`;
+    const datapackDirectory = await fetchUserDatapackDirectory("official", datapackTitle).catch(() => {
+      reply.status(404).send({ error: "Datapack not found" });
+    });
+    if (!datapackDirectory) {
+      return;
+    }
+    if (await doesDatapackFolderExistInAllUUIDDirectories(workshopUUID, datapackTitle)) {
+      reply.status(409).send({ error: "Datapack already exists" });
+      return;
+    }
+    const cachedDatapack = JSON.parse(await readFile(join(datapackDirectory, CACHED_USER_DATAPACK_FILENAME), "utf-8"));
+    assertDatapack(cachedDatapack);
+    const {
+      description,
+      title,
+      originalFileName,
+      storedFileName,
+      size,
+      date,
+      authoredBy,
+      tags,
+      references,
+      contact,
+      notes,
+      datapackImage
+    } = cachedDatapack;
+    const metadata: DatapackMetadata = {
+      description,
+      title,
+      originalFileName,
+      storedFileName,
+      size,
+      date,
+      authoredBy,
+      tags,
+      references,
+      isPublic: true,
+      contact,
+      notes,
+      datapackImage,
+      type: "workshop",
+      uuid: workshopUUID
+    };
+    const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
+      workshopUUID,
+      join(datapackDirectory, storedFileName),
+      metadata,
+      true,
+      cachedDatapack.datapackImage
+    );
+    if (!datapackIndex[title]) {
+      throw new Error("Datapack not found in index");
+    }
+    reply.send({ message: "Datapack added to workshop" });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Error setting up datapack directory" });
+    return;
+  }
+};

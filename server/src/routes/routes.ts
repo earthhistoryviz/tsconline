@@ -210,9 +210,15 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   for (const datapack of chartrequest.datapacks) {
     let uuidFolder = uuid;
     switch (datapack.type) {
-      case "workshop":
-        uuidFolder = "workshop";
+      case "workshop": {
+        const workshopId = parseInt(datapack.uuid.split("-")[1] ?? "");
+        if (!workshopId || isNaN(workshopId) || (await findUsersWorkshops({ userId, workshopId })).length === 0) {
+          reply.send({ error: "ERROR: user does not have access to requested workshop datapack" });
+          return;
+        }
+        uuidFolder = datapack.uuid;
         break;
+      }
       case "official":
         uuidFolder = "official";
         break;
