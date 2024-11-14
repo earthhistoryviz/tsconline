@@ -9,7 +9,7 @@ import {
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { findUser } from "../database.js";
+import { findUser, findUsersWorkshops } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -253,17 +253,20 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
-    return;
-  }
 
-  try {
-    const datapackIndex = await fetchAllUsersDatapacks(uuid);
-    reply.send(datapackIndex);
+    const userDatapacks = await fetchAllUsersDatapacks(uuid);
+    const workshops = await findUsersWorkshops({ userId: user[0].userId });
+    const workshopDatapacksPromises = workshops.map((workshop) =>
+      fetchAllUsersDatapacks(`workshop-${workshop.workshopId}`)
+    );
+
+    const workshopDatapacks = await Promise.all(workshopDatapacksPromises);
+    const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
+
+    reply.send(allDatapacks);
   } catch (e) {
     console.error(e);
-    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
+    reply.status(500).send({ error: "Database or processing error" });
   }
 };
 

@@ -97,7 +97,6 @@
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-  overflow-x: hidden;
 }
 .official > .item {
   display: grid;
@@ -110,6 +109,9 @@
   flex: 1 1 50%;
 }
 
+.datapackDisplayContainer > .container {
+  overflow-x: hidden;
+}
 .datapackDisplayContainer {
   display: flex;
   flex-direction: row;

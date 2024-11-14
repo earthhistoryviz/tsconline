@@ -7,7 +7,6 @@ import {
   Select,
   MenuItem,
   InputLabel,
-  Checkbox,
   ListItemText,
   SelectChangeEvent,
   FormControl
@@ -15,12 +14,12 @@ import {
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, Lottie, CustomDivider, DatapackUploadForm } from "../components";
+import { TSCButton, InputFileUpload, TSCPopup, Lottie, DatapackUploadForm } from "../components";
 import loader from "../assets/icons/loading.json";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
-import { SharedWorkshop } from "@tsconline/shared";
+import { SharedWorkshop, isOfficialDatapack } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
@@ -33,128 +32,74 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
   currentWorkshop,
   onClose
 }) {
-  const theme = useTheme();
   const { state, actions } = useContext(context);
+  const [datapack, setDatapack] = useState<string>("");
   const [loading, setLoading] = useState(false);
-  const [datapacks, setDatapacks] = useState<string[]>([]);
-  const [file, setFile] = useState<File | null>(null);
   const [uploadDatapacks, setUploadDatapacks] = useState(false);
+  const theme = useTheme();
 
   const handleDialogClose = () => {
-    setDatapacks([]);
-    setFile(null);
+    setDatapack("");
+    setLoading(false);
     onClose();
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files![0];
-    if (!file) {
-      return;
+  const addServerDatapacks = async () => {
+    setLoading(true);
+    try {
+      if (!datapack) {
+        actions.pushError(ErrorCodes.INVALID_FORM);
+        return;
+      }
+      await actions.adminAddServerDatapackToWorkshop(currentWorkshop.workshopId, datapack);
+    } catch (error) {
+      displayServerError(
+        error,
+        ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED,
+        ErrorCodes[ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED]
+      );
+    } finally {
+      setLoading(false);
     }
-    const ext = file.name.split(".").pop();
-    if (
-      file.type !== "application/vnd.ms-excel" && // for .xls files
-      file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && // for .xlsx files
-      file.type !== ""
-    ) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
-      return;
-    }
-    if (!ext || !/^(xlx|xlsx)$/.test(ext)) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
-      return;
-    }
-    setFile(file);
-  };
-
-  const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    // try {
-    //   setLoading(true);
-    //   event.preventDefault();
-    //   if (!datapacks.length && !file) {
-    //     actions.pushError(ErrorCodes.INVALID_FORM);
-    //     return;
-    //   }
-    //   if (datapacks.length) {
-    //     const response = await actions.adminAddDatapacksToWorkshop(datapacks);
-    //     if (!response.success) {
-    //       actions.pushSnackbar("Datapacks could not be added", "warning");
-    //       return;
-    //     }
-    //   }
-    //   if (file) {
-    //     const form = new FormData();
-    //     form.append("file", file);
-    //     const response = await actions.adminUploadWorkshopDatapacks(form);
-    //     if (!response.success) {
-    //       actions.pushSnackbar("Datapacks could not be added", "warning");
-    //       return;
-    //     }
-    //   }
-    //   actions.pushSnackbar("Datapacks added successfully", "success");
-    //   handleDialogClose();
-    // } catch (error) {
-    //   displayServerError(
-    //     error,
-    //     ErrorCodes.ADMIN_ADD_DATAPACKS_FAILED,
-    //     ErrorCodes[ErrorCodes.ADMIN_ADD_DATAPACKS_FAILED]
-    //   );
-    // } finally {
-    //   setLoading(false);
-    // }
   };
 
   return !uploadDatapacks ? (
     <Dialog open={true} onClose={handleDialogClose} fullWidth>
       <Box textAlign="center" padding="10px">
         <Typography variant="h5" mb="5px">
-          Add Datapacks
+          Add Datapacks to Workshop
         </Typography>
-        <Box
-          component="form"
-          gap="20px"
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          onSubmit={handleFormSubmit}>
-          <Box display="flex" flexDirection="column" alignItems="center" gap={5}>
+        <Box gap="20px" display="flex" alignItems="center">
+          <Box display="flex" alignItems="center" gap={5}>
             <FormControl variant="outlined" sx={{ m: 1 }} size="small">
-              <InputLabel id="datapacks-label">Select Server Datapacks</InputLabel>
+              <InputLabel id="datapacks-label">Select Server Datapack</InputLabel>
               <Select
                 name="datapack"
                 label="Select Server Datapacks"
                 labelId="datapacks-label"
-                fullWidth
-                multiple
                 size="small"
-                value={datapacks}
-                renderValue={(selected) => selected.join(", ")}
-                onChange={(event: SelectChangeEvent<typeof datapacks>) => {
-                  const {
-                    target: { value }
-                  } = event;
-                  setDatapacks(typeof value === "string" ? value.split(",") : value);
+                value={datapack}
+                onChange={(event: SelectChangeEvent<typeof datapack>) => {
+                  setDatapack(event.target.value as string);
                 }}
-                sx={{ minWidth: "50ch" }}
-                MenuProps={{
-                  PaperProps: {
-                    style: {
-                      maxHeight: 224,
-                      width: "50ch"
-                    }
-                  }
-                }}>
-                {Array.from(state.datapacks).map((datapack) => (
-                  <MenuItem key={datapack.title} value={datapack.title}>
-                    <Checkbox checked={datapacks.includes(datapack.title)} color="default" />
-                    <ListItemText primary={datapack.title} />
-                  </MenuItem>
-                ))}
+                sx={{ minWidth: "30ch" }}>
+                {Array.from(state.datapacks)
+                  .filter((datapack) => isOfficialDatapack(datapack))
+                  .map((datapack) => (
+                    <MenuItem key={datapack.title} value={datapack.title}>
+                      <ListItemText primary={datapack.title} />
+                    </MenuItem>
+                  ))}
               </Select>
             </FormControl>
           </Box>
-          <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
-            <TSCButton type="submit">Add Datapacks</TSCButton>
+          <Box display="flex" alignItems="flex-start" gap={1}>
+            <TSCButton className="datapack-buttons" onClick={addServerDatapacks}>
+              Add Datapack
+            </TSCButton>
+            <TSCButton className="datapack-buttons" onClick={() => setUploadDatapacks(true)}>
+              Upload Datapack
+            </TSCButton>
           </Box>
           {loading && (
             <Box
@@ -172,14 +117,6 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
             </Box>
           )}
         </Box>
-        <Box className="divider-box">
-          <CustomDivider className="divider-line" />
-          <Box sx={{ px: 2 }}>
-            <Typography variant="caption">or</Typography>
-          </Box>
-          <CustomDivider className="divider-line" />
-        </Box>
-        <TSCButton onClick={() => setUploadDatapacks(true)}>Upload Datapacks</TSCButton>
       </Box>
     </Dialog>
   ) : (
@@ -187,8 +124,7 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
       <DatapackUploadForm
         close={() => setUploadDatapacks(false)}
         upload={actions.adminUploadDatapackToWorkshop}
-        type={{ type: "workshop" }}
-        workshopId={currentWorkshop.workshopId}
+        type={{ type: "workshop", uuid: `workshop-${currentWorkshop.workshopId}` }}
         forcePublic
       />
     </Dialog>
