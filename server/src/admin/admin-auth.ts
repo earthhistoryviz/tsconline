@@ -242,7 +242,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   );
   fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapackToWorkshop);
   fastify.post(
-    "/workshop/datapacks",
+    "/workshop/server/datapack",
     { schema: { body: adminAddServerDatapackToWorkshopBody }, config: { rateLimit: moderateRateLimit } },
     adminAddServerDatapackToWorkshop
   );

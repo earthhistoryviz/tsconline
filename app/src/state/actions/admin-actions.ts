@@ -607,7 +607,7 @@ export const adminUploadDatapackToWorkshop = action(
     const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
     if (!recaptchaToken) return;
     const formData = new FormData();
-    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic } = metadata;
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid } = metadata;
     formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
@@ -615,8 +615,8 @@ export const adminUploadDatapackToWorkshop = action(
     formData.append("tags", JSON.stringify(tags));
     formData.append("authoredBy", authoredBy);
     formData.append("isPublic", String(isPublic));
-    formData.append("type", metadata.type);
-    formData.append("uuid", String(metadata.uuid));
+    formData.append("type", type);
+    formData.append("uuid", String(uuid));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -657,7 +657,7 @@ export const adminAddServerDatapackToWorkshop = action(async (workshopId: number
   try {
     const recaptchaToken = await getRecaptchaToken("adminAddServerDatapackToWorkshop");
     if (!recaptchaToken) return;
-    const response = await fetcher(`/admin/workshop/datapacks`, {
+    const response = await fetcher(`/admin/workshop/server/datapack`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
