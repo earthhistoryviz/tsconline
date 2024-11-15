@@ -277,7 +277,7 @@ export async function deleteOfficialDatapack(datapack: string): Promise<void> {
   await rm(datapackPath, { recursive: true, force: true });
 }
 
-export async function canUserUploadThisFile(user: User, file: MultipartFile) {
+export function canUserUploadThisFile(user: User, file: MultipartFile) {
   if (user.isAdmin || user.accountType === "pro") {
     return true;
   }
@@ -382,6 +382,7 @@ export async function processEditDatapackRequest(
   let datapackImageFilepath: string | undefined;
   const cleanupTempFiles = async () => {
     if (datapackImageFilepath) {
+      console.log("here");
       await rm(datapackImageFilepath, { force: true });
     }
     if (fields.filepath) {
@@ -397,7 +398,7 @@ export async function processEditDatapackRequest(
         }
         if (!canUserUploadThisFile(user, part)) {
           await cleanupTempFiles();
-          return { code: 413, message: "File too large" };
+          return { code: 413, message: "File is too large" };
         }
         fields.storedFileName = makeTempFilename(part.filename);
         fields.originalFileName = part.filename;
@@ -431,6 +432,9 @@ export async function processEditDatapackRequest(
   }
   if (datapackImageFilepath) {
     tempFiles.push(datapackImageFilepath);
+  }
+  if (Object.keys(fields).length === 0) {
+    return { code: 400, message: "No fields provided" };
   }
   return { code: 200, fields, tempFiles };
 }

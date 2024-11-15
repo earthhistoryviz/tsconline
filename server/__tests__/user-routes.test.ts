@@ -13,7 +13,6 @@ import * as types from "../src/types";
 import formAutoContent from "form-auto-content";
 import { Datapack, BaseDatapackProps } from "@tsconline/shared";
 import { User } from "../src/types";
-import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import fastifyMultipart from "@fastify/multipart";
 
 vi.mock("../src/types", async () => {
@@ -383,24 +382,6 @@ describe("edit datapack tests", () => {
         options: {
           filename: "test.txt",
           contentType: "text/plain"
-        }
-      };
-    }
-    if ("datapack" in json) {
-      json.datapack = {
-        value: Buffer.from("test"),
-        options: {
-          filename: "test.dpk",
-          contentType: "text/plain"
-        }
-      };
-    }
-    if (DATAPACK_PROFILE_PICTURE_FILENAME in json) {
-      json[DATAPACK_PROFILE_PICTURE_FILENAME] = {
-        value: Buffer.from("test"),
-        options: {
-          filename: "test.jpg",
-          contentType: "image/jpeg"
         }
       };
     }
