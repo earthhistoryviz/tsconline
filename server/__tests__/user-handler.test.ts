@@ -2,6 +2,7 @@ import { describe, it, vi, expect, beforeEach, afterEach, test } from "vitest";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
+  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
   fetchAllUsersDatapacks,
@@ -24,7 +25,6 @@ import * as publicDatapackHandler from "../src/public-datapack-handler";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { cloneDeep } from "lodash";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import { getTemporaryFilepath } from "../src/upload-handlers";
 
 vi.mock("../src/public-datapack-handler", () => {
   return {
@@ -63,6 +63,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     ...actual,
+    isDateValid: vi.fn().mockReturnValue(true),
     assertPrivateUserDatapack: vi.fn(),
     assertDatapack: vi.fn()
   };
@@ -684,6 +685,66 @@ describe("processEditDatapackRequest tests", () => {
         storedFileName: expect.stringContaining("temp"),
         size: "1 B"
       }
+    });
+  });
+});
+
+describe("convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest tests", () => {
+  const isDateValid = vi.spyOn(shared, "isDateValid");
+  it("should convert fields to correct types", () => {
+    const request: Record<string, string> = {
+      title: "test",
+      isPublic: "true",
+      originalFileName: "test",
+      description: "test",
+      datapackImage: "test"
+    };
+    expect(convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(request)).toEqual({
+      title: "test",
+      isPublic: true,
+      originalFileName: "test",
+      description: "test",
+      datapackImage: "test"
+    });
+  });
+  it("should return the same object if no fields are provided", () => {
+    const request: Record<string, string> = {};
+    expect(convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(request)).toEqual({});
+  });
+  it("should throw error if date is invalid", () => {
+    isDateValid.mockReturnValueOnce(false);
+    expect(() => convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest({ date: "invalid" })).toThrow();
+    expect(isDateValid).toHaveBeenCalledOnce();
+  });
+  it("should throw error if title is not trimmed", () => {
+    expect(() => convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest({ title: " invalid " })).toThrow();
+  });
+  it("should throw error if tags are not an array", () => {
+    expect(() => convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest({ tags: "invalid" })).toThrow();
+  });
+  it("should throw an error if references are not an array", () => {
+    expect(() => convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest({ references: "invalid" })).toThrow();
+  });
+  it("should handle all fields", () => {
+    const request: Record<string, string> = {
+      title: "test",
+      isPublic: "true",
+      originalFileName: "test",
+      description: "test",
+      datapackImage: "test",
+      date: "2021-01-01",
+      tags: JSON.stringify(["tag1", "tag2"]),
+      references: JSON.stringify(["ref1", "ref2"])
+    };
+    expect(convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(request)).toEqual({
+      title: "test",
+      isPublic: true,
+      originalFileName: "test",
+      description: "test",
+      datapackImage: "test",
+      date: "2021-01-01",
+      tags: ["tag1", "tag2"],
+      references: ["ref1", "ref2"]
     });
   });
 });
