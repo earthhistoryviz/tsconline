@@ -47,9 +47,6 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
     throw new Error("File does not exist");
   }
   const datapack = JSON.parse(await readFile(cachedFilepath, "utf-8"));
-  if (!datapack) {
-    throw new Error("File is empty");
-  }
   assertUserDatapack(datapack);
   assertDatapack(datapack);
   return datapack.storedFileName;
