@@ -25,7 +25,8 @@ export default defineConfig({
         "server/src/routes/login-routes.ts": thresholdConfig,
         "server/src/parse-datapacks.ts": thresholdConfig,
         "server/src/parse-map-packs.ts": thresholdConfig,
-        "shared/src/util.ts": thresholdConfig
+        "shared/src/util.ts": thresholdConfig,
+        "server/src/upload-handlers.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true

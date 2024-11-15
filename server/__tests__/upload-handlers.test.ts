@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi, test } from "vitest";
 import {
   changeProfilePicture,
+  getFileNameFromCachedDatapack,
+  getTemporaryFilepath,
   replaceDatapackFile,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
@@ -31,7 +33,9 @@ vi.mock("../src/constants", () => ({
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
   isDatapackTypeString: vi.fn().mockReturnValue(true),
-  isUserDatapack: vi.fn().mockReturnValue(true)
+  isUserDatapack: vi.fn().mockReturnValue(true),
+  assertDatapack: vi.fn().mockReturnValue(undefined),
+  assertUserDatapack: vi.fn().mockReturnValue(undefined),
   MAX_DATAPACK_TAG_LENGTH: 20,
   MAX_DATAPACK_TITLE_LENGTH: 100,
   MAX_AUTHORED_BY_LENGTH: 200,
@@ -58,7 +62,8 @@ vi.mock("fs/promises", () => ({
   rename: vi.fn().mockResolvedValue(undefined),
   copyFile: vi.fn().mockResolvedValue(undefined),
   mkdir: vi.fn().mockResolvedValue(undefined),
-  writeFile: vi.fn().mockResolvedValue(undefined)
+  writeFile: vi.fn().mockResolvedValue(undefined),
+  readFile: vi.fn().mockResolvedValue(JSON.stringify({ storedFileName: "storedFileName" }))
 }));
 vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
@@ -188,7 +193,7 @@ describe("uploadUserDatapackHandler", () => {
     expect(val).toBeUndefined();
   });
   it("should return a DatapackMetadata object on success", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, notes: "notes", contact: "contact" }, 1);
+    const val = await uploadUserDatapackHandler(reply, { ...fields, notes: "notes", contact: "contact", datapackImage: "datapackImage" }, 1);
     expect(reply.send).not.toHaveBeenCalled();
     expect(reply.status).not.toHaveBeenCalled();
     expect(val).toEqual({
@@ -203,6 +208,7 @@ describe("uploadUserDatapackHandler", () => {
       date: fields.date,
       contact: "contact",
       notes: "notes",
+      datapackImage: "datapackImage",
       type: fields.type,
       uuid: fields.uuid,
       isPublic: Boolean(fields.isPublic)
@@ -541,4 +547,39 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true);
     expect(writeFileMetadata).not.toHaveBeenCalled();
   });
+});
+
+describe("getFileNameFromCachedDatapack tests", () => {
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  const assertUserDatapack = vi.spyOn(shared, "assertUserDatapack");
+  const assertDatapack = vi.spyOn(shared, "assertDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if file doesn't exist", async () => {
+    checkFileExists.mockResolvedValueOnce(false);
+    await expect(() => getFileNameFromCachedDatapack("filepath")).rejects.toThrow();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+  });
+  it("should throw error if file is empty", async () => {
+    readFile.mockResolvedValueOnce("");
+    await expect(() => getFileNameFromCachedDatapack("filepath")).rejects.toThrow();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledOnce();
+  });
+  it("should return the storedFileName", async () => {
+    readFile.mockResolvedValueOnce(JSON.stringify({ storedFileName: "storedFileName" }));
+    await expect(getFileNameFromCachedDatapack("filepath")).resolves.toEqual("storedFileName");
+    expect(checkFileExists).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledOnce();
+    expect(assertUserDatapack).toHaveBeenCalledOnce();
+    expect(assertDatapack).toHaveBeenCalledOnce();
+  });
+})
+it("should return the directory and filename", async () => {
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
+  expect(await getTemporaryFilepath("uuid", "filename")).toEqual("uuid-directory/filename");
+  expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
 });
