@@ -9,6 +9,7 @@
   line-height: 1.2rem;
   border-radius: 10px;
   margin: 1px 0;
+  cursor: pointer;
 }
 .cc {
   display: flex;
@@ -25,11 +26,27 @@
 .loading {
   background-color: rgba(0, 0, 0, 0.068) !important;
 }
-.right {
+.title {
   flex-grow: 1;
   display: flex;
   overflow: hidden;
   flex-direction: column;
+}
+
+.lottie {
+  cursor: pointer;
+  margin: 5px;
+}
+.titleHeader {
+  align-items: center;
+  justify-content: left;
+  flex-direction: row;
+  display: flex;
+  gap: 5px;
+}
+.publicIcon {
+  width: 20px;
+  height: 20px;
 }
 
 .header {

@@ -3,14 +3,14 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
-import { ColumnInfo, assertChartInfo } from "@tsconline/shared";
+import { ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { pushSnackbar } from "./general-actions";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
+import { getDatapackFromArray } from "../non-action-util";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (state.settings.useDatapackSuggestedAge != response) {
@@ -26,14 +26,14 @@ type UnitValues = {
   baseStageAge: number;
   verticalScale: number;
 };
-
 function setDatapackTimeDefaults() {
   const unitMap = new Map<string, UnitValues>();
 
   // combine the datapacks and the min and max ages for their respective units
   // (can't just min or max the time settings immediately, since we have to set it on top of the user settings)
   for (const datapack of state.config.datapacks) {
-    const pack = state.datapackIndex[datapack];
+    const pack = getDatapackFromArray(datapack, state.datapacks);
+    if (!pack) continue;
     const timeSettings = state.settings.timeSettings[pack.ageUnits];
     if (!timeSettings) continue;
     if (!unitMap.has(pack.ageUnits)) {
@@ -112,7 +112,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
-  generalActions.setTab(1);
+  generalActions.setTab(2);
   generalActions.setChartMade(true);
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
@@ -124,11 +124,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   generalActions.setChartTabZoomFitMidCoordIsX(true);
   let body;
   try {
-    normalizeColumnProperties(state.settingsTabs.columns!);
-    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    changeManuallyAddedColumns(columnCopy);
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-    const xmlSettings = jsonToXml(columnCopy, chartSettingsCopy);
+    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
     body = JSON.stringify({
       settings: xmlSettings,
       datapacks: state.config.datapacks,
@@ -143,13 +141,41 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   }
   console.log("Sending settings to server...");
   try {
-    const response = await fetcher(`/charts/${state.useCache}/${state.settings.useDatapackSuggestedAge}/username`, {
+    const response = await fetcher(`/chart`, {
       method: "POST",
       body,
       credentials: "include"
     });
     const answer = await response.json();
-    // will check if svg is loaded
+    if (response.status === 500) {
+      assertChartErrorResponse(answer);
+      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
+      switch (answer.errorCode) {
+        case 100:
+          errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
+          break;
+        case 1000:
+          errorCode = ErrorCodes.INVALID_SETTINGS;
+          break;
+        case 1001:
+          errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
+          break;
+        case 400:
+        case 1002:
+        case 1003:
+        case 1004:
+        case 1005:
+        case 2000:
+        case 2001:
+        case 2002:
+        case 2003:
+          errorCode = ErrorCodes.INTERNAL_ERROR;
+          break;
+      }
+      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
+      generalActions.setChartLoading(false);
+      return;
+    }
     try {
       assertChartInfo(answer);
       generalActions.setChartHash(answer.hash);
@@ -160,6 +186,9 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
+      // for download ONLY
+      generalActions.setUnsafeChartContent(content);
+      // the display version
       generalActions.setChartContent(sanitizedSVG);
       generalActions.setChartTimelineEnabled(false);
       generalActions.setChartTimelineLocked(false);
@@ -180,52 +209,6 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
   } catch (e) {
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  }
-});
-
-/**
- * Since we hash by name only to allow consistency between facies maps and
- * the column page, a generic like Facies Label will cause errors.
- * The solution @Paolo came up with is to prepend the name of the parent
- * and change before the conversion to xml. The downside is we must check
- * every ColumnInfo object which may cause problems with time consistency.
- * However, this is asyncronous, which makes it less likely to cause problems.
- * @param column
- */
-const changeManuallyAddedColumns = action((column: ColumnInfo) => {
-  const parent = column.parent && state.settingsTabs.columnHashMap.get(column.parent);
-  if (parent && parent.columnDisplayType === "BlockSeriesMetaColumn") {
-    if (column.name === `${column.parent} Facies Label`) {
-      column.name = "Facies Label";
-    } else if (column.name === `${column.parent} Series Label`) {
-      column.name = "Series Label";
-    } else if (column.name === `${column.parent} Members`) {
-      column.name = "Members";
-    } else if (column.name === `${column.parent} Facies`) {
-      column.name = "Facies";
-    } else if (column.name === `${column.parent} Chron`) {
-      column.name = "Chron";
-    } else if (column.name === `${column.parent} Chron Label`) {
-      column.name = "Chron Label";
-    }
-  }
-  if (column.columnDisplayType === "RootColumn" && column.name.substring(0, 14) === "Chart Title in") {
-    column.name = column.name.substring(15, column.name.length);
-  }
-  for (const child of column.children) {
-    changeManuallyAddedColumns(child);
-  }
-});
-
-const normalizeColumnProperties = action((column: ColumnInfo) => {
-  if (column.width !== undefined && (isNaN(column.width) || column.width < 20)) {
-    column.width = 20;
-    let name = column.name.substring(0, 17);
-    if (name.length < column.name.length) name += "...";
-    pushSnackbar("Invalid width input found, updating " + name + " width to 20", "warning");
-  }
-  for (const child of column.children) {
-    normalizeColumnProperties(child);
   }
 });
 

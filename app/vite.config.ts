@@ -5,10 +5,14 @@ import react from "@vitejs/plugin-react";
 export default defineConfig({
   plugins: [react()],
   server: {
-    open: true,
-    port: 5173
+    open: process.env.VITE_OPEN_SCREEN !== undefined ? process.env.VITE_OPEN_SCREEN === "true" : true,
+    port: 5173,
+    host: "0.0.0.0"
   },
   worker: {
     format: "es"
+  },
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"]
   }
 });

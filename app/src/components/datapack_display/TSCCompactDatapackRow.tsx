@@ -1,36 +1,41 @@
-import { DatapackParsingPack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import styles from "./TSCCompactDatapackRow.module.css";
 import Color from "color";
 import { useTheme } from "@mui/material";
 import { CheckIcon, Loader } from "../TSCComponents";
-import { devSafeUrl } from "../../util";
 import { useNavigate } from "react-router";
+import TrashCanIcon from "../../assets/icons/trash-icon.json";
+import Lottie from "../TSCLottie";
+import { context } from "../../state";
+import {
+  getDatapackProfileImageUrl,
+  getNavigationRouteForDatapackProfile,
+  isOwnedByUser
+} from "../../state/non-action-util";
+import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
-  name: string;
-  datapack: DatapackParsingPack;
+  datapack: Datapack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
-  name,
   datapack,
   value,
   onChange
 }) {
-  const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
   const [loading, setLoading] = useState(false);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
   return (
     <Box
       className={styles.rc}
       bgcolor="secondaryBackground.main"
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}
       sx={{
         "&:hover": {
           bgcolor:
@@ -49,18 +54,36 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-          await onChange(name);
+          onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
-      <img className={styles.image} src={imageUrl} alt="datapack" onError={() => setImageUrl(defaultImageUrl)} />
-      <div className={styles.right}>
-        <Typography className={styles.header} color="textSecondary">
-          {datapack.title}
-        </Typography>
+      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
+      <div className={styles.title}>
+        <Box className={styles.titleHeader}>
+          <Typography className={styles.header} color="textSecondary">
+            {datapack.title}
+          </Typography>
+          {isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+        </Box>
       </div>
+      {isOwnedByUser(datapack, state.user?.uuid) && (
+        <Box
+          onClick={async (e) => {
+            e.stopPropagation();
+            await actions.userDeleteDatapack(datapack.title);
+          }}>
+          <Lottie
+            className={styles.lottie}
+            animationData={TrashCanIcon}
+            width={20}
+            height={20}
+            playOnHover
+            speed={1.7}
+          />
+        </Box>
+      )}
     </Box>
   );
 });

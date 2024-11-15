@@ -1,10 +1,19 @@
 // Shared types between app and server (i.e. messages they send back and forth)
 
-import { defaultFontsInfoConstant } from "./constants.js";
+import { defaultColumnRootConstant, defaultFontsInfoConstant, validDateFormats } from "./constants.js";
+import validator from "validator";
 
 export * from "./constants.js";
 export * from "./util.js";
 export * from "./settings-types.js";
+
+export type SharedWorkshop = {
+  title: string;
+  start: string;
+  end: string;
+  workshopId: number;
+  active: boolean;
+};
 
 export type SharedUser = {
   username: string;
@@ -12,7 +21,25 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
+  workshopIds?: number[];
+  uuid: string;
 };
+
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  originalFileName: string;
+  storedFileName: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  isPublic: boolean;
+  contact?: string;
+  notes?: string;
+  datapackImage?: string;
+} & DatapackType;
 
 export type AdminSharedUser = {
   userId: number;
@@ -26,7 +53,7 @@ export type SuccessfulServerResponse = {
 };
 
 export type DatapackInfoChunk = {
-  datapackIndex: DatapackIndex;
+  datapacks: Datapack[];
   totalChunks: number;
 };
 export type MapPackInfoChunk = {
@@ -36,23 +63,40 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-export type DatapackParsingPack = {
+export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
   defaultChronostrat: "USGS" | "UNESCO";
   formatVersion: number;
   topAge?: number;
   baseAge?: number;
-  date?: string;
   verticalScale?: number;
-  isUserDatapack: boolean;
-  description: string;
-  title: string;
-  file: string;
-  size: string;
   warnings?: DatapackWarning[];
-  image: string;
+  totalColumns: number;
+  columnTypeCount: ColumnTypeCounter;
+  datapackImageCount: number;
+  mapPack: MapPack; // this can be empty
+} & DatapackMetadata;
+
+type OfficialDatapack = {
+  type: "official";
 };
+type WorkshopDatapack = {
+  type: "workshop";
+};
+type UserDatapack = {
+  type: "user";
+  uuid: string;
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackTypeString = DatapackType["type"];
+export type Datapack = BaseDatapackProps;
+
+export type PresetDatapack = {
+  file: string;
+  name: string;
+};
+export type ColumnTypeCounter = Record<ColumnInfoType, number>;
 
 export type DatapackWarning = {
   lineNumber?: number;
@@ -60,13 +104,13 @@ export type DatapackWarning = {
   warning: string;
 };
 
-export type IndexResponse = {
-  datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
+export type ChartErrorResponse = {
+  error: string;
+  errorCode: number;
 };
 
 export type DatapackIndex = {
-  [name: string]: DatapackParsingPack;
+  [name: string]: Datapack;
 };
 export type MapPackIndex = {
   [name: string]: MapPack;
@@ -117,13 +161,9 @@ export type ChartConfig = {
   title: string;
   description: string;
   settings: string; // path to base settings file
-  datapacks: Datapack[]; // active datapack names
+  datapacks: PresetDatapack[]; // active datapack names
   date: string; // active datapack names
   type?: string; // type of preset
-};
-export type Datapack = {
-  name: string;
-  file: string;
 };
 
 export type FontLabelOptions = {
@@ -155,6 +195,7 @@ export type FontsInfo = {
 };
 
 export const defaultFontsInfo: FontsInfo = defaultFontsInfoConstant;
+export const defaultColumnRoot: ColumnInfo = defaultColumnRootConstant;
 
 export type SubBlockInfo = {
   label: string;
@@ -164,9 +205,15 @@ export type SubBlockInfo = {
   rgb: RGB;
 };
 
+export type DatapackConfigForChartRequest = {
+  storedFileName: string;
+  title: string;
+  isPublic: boolean;
+} & DatapackType;
+
 export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
-  datapacks: string[]; // active datapacks to be used on chart
+  datapacks: DatapackConfigForChartRequest[]; // array of datapacks you want to use to make a chart
   useCache: boolean; // whether to use the cache or not
 };
 
@@ -195,6 +242,7 @@ export type ColumnInfoType = keyof ColumnInfoTypeMap;
 
 export type DisplayedColumnTypes =
   | ColumnInfoType
+  | "Data"
   | "Zone"
   | "Ruler"
   | "AgeAge"
@@ -230,8 +278,21 @@ export type SubInfo =
   | SubSequenceInfo
   | SubTransectInfo;
 
-export type ColumnSpecificSettings = EventSettings | PointSettings | ChronSettings | RangeSettings | SequenceSettings;
+export type ColumnSpecificSettings =
+  | EventSettings
+  | PointSettings
+  | ChronSettings
+  | RangeSettings
+  | SequenceSettings
+  | RulerSettings
+  | ZoneSettings;
 
+export type RulerSettings = {
+  justification: RulerJustification;
+};
+export type ZoneSettings = {
+  orientation: ZoneOrientation;
+};
 export type SequenceSettings = {
   labelMarginLeft: number;
   labelMarginRight: number;
@@ -239,6 +300,9 @@ export type SequenceSettings = {
   drawNameLabel: boolean;
   type: SequenceType;
 };
+
+export type RulerJustification = "left" | "right";
+export type ZoneOrientation = "normal" | "vertical";
 
 export type SequenceType = "sequence" | "trend";
 
@@ -446,30 +510,34 @@ export type ChartResponseInfo = {
   hash: string; // hash for where it is stored
 };
 
+export type MapTransect = {
+  startMapPoint: string;
+  endMapPoint: string;
+  note?: string;
+};
 export type Transects = {
-  [name: string]: {
-    startMapPoint: string;
-    endMapPoint: string;
-    note?: string;
-  };
+  [name: string]: MapTransect;
+};
+export type MapPoint = {
+  lat: number;
+  lon: number;
+  default?: string;
+  minage?: number;
+  maxage?: number;
+  note?: string;
 };
 export type MapPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    default?: string;
-    minage?: number;
-    maxage?: number;
-    note?: string;
-  };
+  [name: string]: MapPoint;
+};
+
+export type InfoPoint = {
+  lat: number;
+  lon: number;
+  note?: string;
 };
 
 export type InfoPoints = {
-  [name: string]: {
-    lat: number;
-    lon: number;
-    note?: string;
-  };
+  [name: string]: InfoPoint;
 };
 
 export type MapInfo = {
@@ -516,6 +584,56 @@ export type TimescaleItem = {
   value: number;
 };
 
+export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
+  if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
+  if (typeof o.title !== "string") throwError("Workshop", "title", "string", o.title);
+  if (typeof o.start !== "string") throwError("Workshop", "start", "string", o.start);
+  if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
+  if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
+  if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
+}
+
+export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
+  if (!Array.isArray(o)) throw new Error("Workshop must be an array");
+  for (const workshop of o) {
+    assertSharedWorkshop(workshop);
+  }
+}
+
+export function assertDatapackConfigForChartRequest(o: any): asserts o is DatapackConfigForChartRequest {
+  if (!o || typeof o !== "object") throw new Error("DatapackConfigForChartRequest must be a non-null object");
+  if (typeof o.storedFileName !== "string")
+    throwError("DatapackConfigForChartRequest", "storedFileName", "string", o.storedFileName);
+  if (typeof o.title !== "string") throwError("DatapackConfigForChartRequest", "title", "string", o.title);
+  if (typeof o.isPublic !== "boolean") throwError("DatapackConfigForChartRequest", "isPublic", "boolean", o.isPublic);
+  assertDatapackType(o);
+}
+
+export function assertChartErrorResponse(o: any): asserts o is ChartErrorResponse {
+  if (!o || typeof o !== "object") throw new Error("ChartErrorResponse must be a non-null object");
+  if (typeof o.error !== "string") throwError("ChartErrorResponse", "error", "string", o.error);
+  if (typeof o.errorCode !== "number") throwError("ChartErrorResponse", "errorCode", "number", o.errorCode);
+}
+
+export function isDefaultChronostrat(o: any): o is DefaultChronostrat {
+  return /^(USGS|UNESCO)$/.test(o);
+}
+
+export function isDateValid(date: string): boolean {
+  for (const format of validDateFormats) {
+    try {
+      if (validator.isDate(date, { format, delimiters: ["-", ".", "/"] })) {
+        return true;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return false;
+}
+
 export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser[] {
   if (!Array.isArray(o)) throw new Error("AdminSharedUser must be an array");
   for (const user of o) {
@@ -539,6 +657,12 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
+  if (o.workshopIds != undefined) {
+    for (const workshopId of o.workshopIds) {
+      if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
+    }
+  }
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {
@@ -616,7 +740,19 @@ export function assertRangeSettings(o: any): asserts o is RangeSettings {
   if (typeof o.margin !== "number") throwError("RangeSettings", "margin", "number", o.margin);
   if (typeof o.agePad !== "number") throwError("RangeSettings", "agePad", "number", o.agePad);
 }
-
+export function assertRulerSettings(o: any): asserts o is RulerSettings {
+  if (!o || typeof o !== "object") throw new Error("RulerSettings must be a non-null object");
+  if (typeof o.justification !== "string" || !isRulerJustification(o.justification))
+    throwError("RulerSettings", "justification", "string and left | right", o.justification);
+}
+export function isZoneOrientation(o: any): o is ZoneOrientation {
+  return /^(normal|vertical)$/.test(o);
+}
+export function assertZoneSettings(o: any): asserts o is ZoneSettings {
+  if (!o || typeof o !== "object") throw new Error("ZoneSettings must be a non-null object");
+  if (typeof o.orientation !== "string" || !isZoneOrientation(o.orientation))
+    throwError("ZoneSettings", "orientation", "string and normal | vertical", o.orientation);
+}
 export function assertEventSettings(o: any): asserts o is EventSettings {
   if (!o || typeof o !== "object") throw new Error("EventSettings must be a non-null object");
   if (typeof o.type !== "string" || !isEventType(o.type))
@@ -644,6 +780,9 @@ export function assertSequenceSettings(o: any): asserts o is SequenceSettings {
   if (typeof o.graphStyle !== "string") throwError("SequenceSettings", "graphStyle", "string", o.graphStyle);
   if (typeof o.drawNameLabel !== "boolean") throwError("SequenceSettings", "drawNameLabel", "boolean", o.drawNameLabel);
 }
+export function isRulerJustification(o: any): o is RulerJustification {
+  return /^(left|right)$/.test(o);
+}
 
 export function isSequenceType(o: any): o is SequenceType {
   return /^(sequence|trend)$/.test(o);
@@ -662,7 +801,13 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
 export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
   if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
   if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackIndex(o.datapackIndex);
+  assertDatapackArray(o.datapacks);
+}
+export function assertDatapackArray(o: any): asserts o is Datapack[] {
+  if (!Array.isArray(o)) throw new Error("Datapack must be an array");
+  for (const datapack of o) {
+    assertDatapack(datapack);
+  }
 }
 
 export function assertSubFreehandInfo(o: any): asserts o is SubFreehandInfo {
@@ -836,6 +981,72 @@ export function assertPatterns(o: any): asserts o is Patterns {
     assertColor(pattern.color);
   }
 }
+
+export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
+  if (!o || typeof o !== "object") return false;
+  const validKeys = [
+    "description",
+    "title",
+    "originalFileName",
+    "storedFileName",
+    "size",
+    "authoredBy",
+    "tags",
+    "date",
+    "references",
+    "contact",
+    "notes"
+  ];
+  for (const key in o) {
+    if (!validKeys.includes(key)) {
+      return false;
+    }
+  }
+  if ("description" in o && typeof o.description !== "string") return false;
+  if ("title" in o && typeof o.title !== "string") return false;
+  if ("originalFileName" in o && typeof o.originalFileName !== "string") return false;
+  if ("storedFileName" in o && typeof o.storedFileName !== "string") return false;
+  if ("size" in o && typeof o.size !== "string") return false;
+  if ("authoredBy" in o && typeof o.authoredBy !== "string") return false;
+  if ("tags" in o && !Array.isArray(o.tags)) return false;
+  if ("date" in o && typeof o.date !== "string") return false;
+  if ("references" in o && !Array.isArray(o.references)) return false;
+  if ("contact" in o && typeof o.contact !== "string") return false;
+  if ("notes" in o && typeof o.notes !== "string") return false;
+  if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
+  return true;
+}
+export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
+  if (!o || typeof o !== "object") throw new Error("DatapackMetadata must be a non-null object");
+  if (typeof o.description !== "string") throwError("DatapackMetadata", "description", "string", o.description);
+  if (typeof o.title !== "string") throwError("DatapackMetadata", "title", "string", o.title);
+  if (typeof o.originalFileName !== "string")
+    throwError("DatapackMetadata", "originalFileName", "string", o.originalFileName);
+  if (typeof o.storedFileName !== "string")
+    throwError("DatapackMetadata", "storedFileName", "string", o.storedFileName);
+  if (typeof o.size !== "string") throwError("DatapackMetadata", "size", "string", o.size);
+  if (typeof o.authoredBy !== "string") throwError("DatapackMetadata", "authoredBy", "string", o.authoredBy);
+  if (!Array.isArray(o.tags)) throwError("DatapackMetadata", "tags", "array", o.tags);
+  for (const tag of o.tags) {
+    if (typeof tag !== "string") throwError("DatapackMetadata", "tags", "array of strings", o.tags);
+  }
+  if (o.date && typeof o.date !== "string") throwError("DatapackMetadata", "date", "string", o.date);
+  if (!Array.isArray(o.references)) throwError("DatapackMetadata", "references", "array", o.references);
+  for (const reference of o.references) {
+    if (typeof reference !== "string") throwError("DatapackMetadata", "references", "array of strings", o.references);
+  }
+  if ("contact" in o && typeof o.contact !== "string") throwError("DatapackMetadata", "contact", "string", o.contact);
+  if ("notes" in o && typeof o.notes !== "string") throwError("DatapackMetadata", "notes", "string", o.notes);
+  if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
+  if ("datapackImage" in o && typeof o.datapackImage !== "string")
+    throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
+}
+export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
+  if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
+  for (const metadata of o) {
+    assertDatapackMetadata(metadata);
+  }
+}
 export function assertMapPackIndex(o: any): asserts o is MapPackIndex {
   if (!o || typeof o !== "object") throw new Error("MapPackIndex must be a non-null object");
   for (const key in o) {
@@ -855,6 +1066,19 @@ export function assertPresets(o: any): asserts o is Presets {
     }
   }
 }
+export function assertMapTransect(o: any): asserts o is Transects[string] {
+  if (!o || typeof o !== "object") throw new Error("MapTransect must be a non-null object");
+  if (typeof o.startMapPoint !== "string") throwError("MapTransect", "startMapPoint", "string", o.startMapPoint);
+  if (typeof o.endMapPoint !== "string") throwError("MapTransect", "endMapPoint", "string", o.endMapPoint);
+  if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
+}
+export function isDatapackTypeString(o: any): o is DatapackTypeString {
+  return /^(user|official|workshop)$/.test(o);
+}
+export function assertDatapackTypeString(o: any): asserts o is DatapackType {
+  if (typeof o !== "string" || !/^(user|official|workshop)$/.test(o))
+    throwError("DatapackType", "type", "string and user | server | workshop", o);
+}
 export function assertTransects(o: any): asserts o is Transects {
   if (!o || typeof o !== "object") throw new Error("Transects must be a non-null object");
   for (const key in o) {
@@ -868,9 +1092,51 @@ export function assertTransects(o: any): asserts o is Transects {
   }
 }
 export function assertDatapack(o: any): asserts o is Datapack {
-  if (typeof o !== "object") throw new Error("Datapack must be an object");
-  if (typeof o.name !== "string") throw new Error("Datapack must have a field name of type string");
-  if (typeof o.file !== "string") throw new Error("Datapack must have a field file of type string");
+  if (!o || typeof o !== "object") throw new Error("Datapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
+  assertDatapackType(o);
+  assertBaseDatapackProps(o);
+}
+export function isOfficialDatapack(o: any): o is OfficialDatapack {
+  return o.type === "official";
+}
+export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
+  return o.type === "workshop";
+}
+export function isUserDatapack(o: any): o is UserDatapack {
+  return o.type === "user" && typeof o.uuid === "string";
+}
+export function assertDatapackType(o: any): asserts o is DatapackType {
+  if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
+  switch (o.type) {
+    case "user":
+      assertUserDatapack(o);
+      break;
+    case "official":
+      assertOfficialDatapack(o);
+      break;
+    case "workshop":
+      assertWorkshopDatapack(o);
+      break;
+    default:
+      throwError("Datapack", "type", "user | official | workshop", o.type);
+  }
+}
+export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
+  if (!o || typeof o !== "object") throw new Error("OfficialDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("OfficialDatapack", "type", "string", o.type);
+  if (o.type !== "official") throwError("OfficialDatapack", "type", "official", o.type);
+}
+export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
+  if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("WorkshopDatapack", "type", "string", o.type);
+  if (o.type !== "workshop") throwError("WorkshopDatapack", "type", "workshop", o.type);
+}
+export function assertUserDatapack(o: any): asserts o is UserDatapack {
+  if (!o || typeof o !== "object") throw new Error("UserDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("UserDatapack", "type", "string", o.type);
+  if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
+  if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
@@ -904,37 +1170,37 @@ export function assertFacies(o: any): asserts o is Facies {
   assertSubFaciesInfoArray(o.subFaciesInfo);
   assertColumnHeaderProps(o);
 }
-export function assertDatapackParsingPack(o: any): asserts o is DatapackParsingPack {
-  if (!o || typeof o !== "object") throw new Error("DatapackParsingPack must be a non-null object");
-  if (typeof o.ageUnits !== "string") throwError("DatapackParsingPack", "ageUnits", "string", o.ageUnits);
+export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps {
+  if (!o || typeof o !== "object") throw new Error("BaseDatapackProps must be a non-null object");
+  if (typeof o.ageUnits !== "string") throwError("BaseDatapackProps", "ageUnits", "string", o.ageUnits);
   if (typeof o.defaultChronostrat !== "string")
-    throwError("DatapackParsingPack", "defaultChronostrat", "string", o.defaultChronostrat);
+    throwError("BaseDatapackProps", "defaultChronostrat", "string", o.defaultChronostrat);
   if (!/^(USGS|UNESCO)$/.test(o.defaultChronostrat))
-    throwError("DatapackParsingPack", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
-  if (typeof o.formatVersion !== "number")
-    throwError("DatapackParsingPack", "formatVersion", "number", o.formatVersion);
+    throwError("BaseDatapackProps", "defaultChronostrat", "USGS | UNESCO", o.defaultChronostrat);
+  if (typeof o.formatVersion !== "number") throwError("BaseDatapackProps", "formatVersion", "number", o.formatVersion);
   if ("verticalScale" in o && typeof o.verticalScale !== "number")
-    throwError("DatapackParsingPack", "verticalScale", "number", o.verticalScale);
-  if ("date" in o && typeof o.date !== "string") throwError("DatapackParsingPack", "date", "string", o.date);
-  if ("date" in o && !/^(\d{4}-\d{2}-\d{2})$/.test(o.date))
-    throwError("DatapackParsingPack", "date", "YYYY-MM-DD", o.date);
-  if ("topAge" in o && typeof o.topAge !== "number") throwError("DatapackParsingPack", "topAge", "number", o.topAge);
-  if ("baseAge" in o && typeof o.baseAge !== "number")
-    throwError("DatapackParsingPack", "baseAge", "number", o.baseAge);
-  if (typeof o.isUserDatapack !== "boolean")
-    throwError("DatapackParingPack", "isUserDatapack", "boolean", o.isUserDatapack);
-  if (typeof o.description !== "string") throwError("DatapackParsingPack", "description", "string", o.description);
-  if (typeof o.title !== "string") throwError("DatapackParsingPack", "title", "string", o.title);
-  if (typeof o.file !== "string") throwError("DatapackParsingPack", "file", "string", o.file);
-  if (typeof o.size !== "string") throwError("DatapackParsingPack", "size", "string", o.size);
+    throwError("BaseDatapackProps", "verticalScale", "number", o.verticalScale);
+  if ("topAge" in o && typeof o.topAge !== "number") throwError("BaseDatapackProps", "topAge", "number", o.topAge);
+  if ("baseAge" in o && typeof o.baseAge !== "number") throwError("BaseDatapackProps", "baseAge", "number", o.baseAge);
   if ("warnings" in o) {
-    if (!Array.isArray(o.warnings)) throwError("DatapackParsingPack", "warnings", "array", o.warnings);
+    if (!Array.isArray(o.warnings)) throwError("BaseDatapackProps", "warnings", "array", o.warnings);
     for (const warning of o.warnings) {
       assertDatapackWarning(warning);
     }
   }
-  if (typeof o.image !== "string") throwError("DatapackParsingPack", "image", "string", o.image);
+  assertsColumnTypeCounter(o.columnTypeCount);
+  if (typeof o.totalColumns !== "number") throwError("BaseDatapackProps", "totalColumns", "number", o.totalColumns);
+  if (typeof o.datapackImageCount !== "number")
+    throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
+  assertDatapackMetadata(o);
+  assertDatapackType(o);
+}
+
+export function assertPresetDatapack(o: any): asserts o is PresetDatapack {
+  if (!o || typeof o !== "object") throw new Error("PresetDatapack must be a non-null object");
+  if (typeof o.name !== "string") throwError("PresetDatapack", "name", "string", o.name);
+  if (typeof o.file !== "string") throwError("PresetDatapack", "file", "string", o.file);
 }
 
 export function assertDatapackWarning(o: any): asserts o is DatapackWarning {
@@ -948,7 +1214,7 @@ export function assertDatapackIndex(o: any): asserts o is DatapackIndex {
   if (!o || typeof o !== "object") throw new Error("DatapackIndex must be a non-null object");
   for (const key in o) {
     const pack = o[key];
-    assertDatapackParsingPack(pack);
+    assertDatapack(pack);
   }
 }
 
@@ -959,12 +1225,6 @@ export function assertSubFaciesInfo(o: any): asserts o is SubFaciesInfo {
   if ("label" in o && typeof o.label !== "string") throwError("SubFaciesInfo", "label", "string", o.label);
   if (typeof o.age !== "number") throwError("SubFaciesInfo", "age", "number", o.age);
 }
-export function assertIndexResponse(o: any): asserts o is IndexResponse {
-  if (!o || typeof o !== "object") throw new Error("IndexResponse must be a non-null object");
-  assertDatapackIndex(o.datapackIndex);
-  assertMapPackIndex(o.mapPackIndex);
-}
-
 export function assertChartConfig(o: any): asserts o is ChartConfig {
   if (typeof o !== "object") throw new Error("ChartConfig must be an object");
   if (typeof o.icon !== "string") throwError("ChartConfig", "icon", "string", o.icon);
@@ -1096,7 +1356,7 @@ export function assertSubInfo(o: any, type: DisplayedColumnTypes): asserts o is 
 export function assertDisplayedColumnTypes(o: any): asserts o is DisplayedColumnTypes {
   if (!o || typeof o !== "string") throwError("DisplayedColumnTypes", "DisplayedColumnTypes", "string", o);
   if (
-    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank)$/.test(
+    !/^(Block|Facies|Event|Range|Chron|Point|Sequence|Transect|Freehand|Zone|Ruler|AgeAge|MetaColumn|BlockSeriesMetaColumn|RootColumn|Blank|Data)$/.test(
       o
     )
   )
@@ -1176,6 +1436,12 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
       break;
     case "Sequence":
       assertSequenceSettings(o);
+      break;
+    case "Ruler":
+      assertRulerSettings(o);
+      break;
+    case "Zone":
+      assertZoneSettings(o);
       break;
     default:
       throw new Error(
@@ -1321,6 +1587,15 @@ export function isSubEventType(o: any): o is SubEventType {
   return true;
 }
 
+export function assertsColumnTypeCounter(o: any): asserts o is ColumnTypeCounter {
+  const keys = ["Block", "Facies", "Event", "Range", "Chron", "Point", "Sequence", "Transect", "Freehand", "Blank"];
+  if (!o || typeof o !== "object") throw new Error("ColumnTypeCounter must be an object");
+  for (const key of keys) {
+    if (!(key in o)) throwError("ColumnTypeCounter", key, "ColumnInfoType", o[key]);
+    if (typeof o[key] !== "number") throwError("ColumnTypeCounter", key, "number", o[key]);
+  }
+}
+
 export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBounds {
   if (typeof rectBounds !== "object" || rectBounds === null) {
     throw new Error("RectBounds must be a non-null object");
@@ -1337,6 +1612,14 @@ export function assertRectBounds(rectBounds: any): asserts rectBounds is RectBou
   if (typeof rectBounds.lowerRightLat !== "number") {
     throw new Error("RectBounds must have a lowerRightLat number property");
   }
+}
+export function assertInfoPoint(o: any): asserts o is InfoPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("InfoPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("InfoPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("InfoPoint", "lon", "number", o.lon);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("InfoPoint", "note", "string", o.note);
 }
 export function assertInfoPoints(o: any): asserts o is InfoPoints {
   if (typeof o !== "object" || o === null) {
@@ -1360,6 +1643,17 @@ export function assertInfoPoints(o: any): asserts o is InfoPoints {
   }
 }
 
+export function assertMapPoint(o: any): asserts o is MapPoint {
+  if (typeof o !== "object" || o === null) {
+    throw new Error("MapPoint must be a non-null object");
+  }
+  if (typeof o.lat !== "number") throwError("MapPoint", "lat", "number", o.lat);
+  if (typeof o.lon !== "number") throwError("MapPoint", "lon", "number", o.lon);
+  if (o.default !== undefined && typeof o.default !== "string") throwError("MapPoint", "default", "string", o.default);
+  if (o.minage !== undefined && typeof o.minage !== "number") throwError("MapPoint", "minage", "number", o.minage);
+  if (o.maxage !== undefined && typeof o.maxage !== "number") throwError("MapPoint", "maxage", "number", o.maxage);
+  if (o.note !== undefined && typeof o.note !== "string") throwError("MapPoint", "note", "string", o.note);
+}
 export function assertMapPoints(o: any): asserts o is MapPoints {
   if (typeof o !== "object" || o === null) {
     throw new Error("MapPoints must be a non-null object");

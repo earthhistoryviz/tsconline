@@ -3,6 +3,7 @@ import {
   ChronColumnInfoTSC,
   ChronSettings,
   ColumnBasicInfoTSC,
+  ColumnInfo,
   DataMiningSettings,
   EventColumnInfoTSC,
   EventSettings,
@@ -16,8 +17,14 @@ import {
   SequenceColumnInfoTSC,
   SequenceSettings,
   ValidFontOptions,
-  ZoneColumnInfoTSC
+  ZoneColumnInfoTSC,
+  ZoneSettings
 } from "./index";
+
+export const MAX_DATAPACK_TAG_LENGTH = 20;
+export const MAX_DATAPACK_TITLE_LENGTH = 100;
+export const MAX_AUTHORED_BY_LENGTH = 200;
+export const MAX_DATAPACK_TAGS_ALLOWED = 30;
 
 export const allColumnTypes = [
   "Block",
@@ -32,6 +39,8 @@ export const allColumnTypes = [
   "Transect",
   "Trend"
 ];
+
+export const validDateFormats = ["YYYY-MM-DD", "YY-MM-DD", "MM-DD-YYYY", "MM-DD-YY", "DD-MM-YYYY", "DD-MM-YY"];
 
 export const defaultDataMiningSettings: DataMiningSettings = {
   windowSize: 2,
@@ -205,6 +214,30 @@ export const defaultFontsInfoConstant: FontsInfo = {
   }
 };
 
+export const defaultColumnRootConstant: ColumnInfo = {
+  name: "Chart Root",
+  editName: "Chart Root",
+  fontsInfo: defaultFontsInfoConstant,
+  fontOptions: ["Column Header"],
+  popup: "",
+  on: true,
+  width: 100,
+  enableTitle: true,
+  rgb: {
+    r: 255,
+    g: 255,
+    b: 255
+  },
+  minAge: Number.MAX_VALUE,
+  maxAge: Number.MIN_VALUE,
+  children: [],
+  parent: null,
+  units: "",
+  columnDisplayType: "RootColumn",
+  show: true,
+  expanded: true
+};
+
 export const defaultChartSettingsInfoTSC: ChartSettingsInfoTSC = {
   topAge: [],
   baseAge: [],
@@ -294,7 +327,7 @@ export const defaultRangeColumnInfoTSC: RangeColumnInfoTSC = {
 
 export const defaultRulerColumnInfoTSC: RulerColumnInfoTSC = {
   ...defaultColumnBasicInfoTSC,
-  justification: "left"
+  justification: "right"
 };
 
 export const defaultPointColumnInfoTSC: PointColumnInfoTSC = {
@@ -429,4 +462,8 @@ export const defaultSequenceSettings: SequenceSettings = {
   graphStyle: "",
   drawNameLabel: true,
   type: "sequence"
+};
+
+export const defaultZoneSettings: ZoneSettings = {
+  orientation: "normal"
 };

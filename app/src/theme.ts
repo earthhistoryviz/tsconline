@@ -216,6 +216,15 @@ function createThemeOverrides(theme: Theme, primary: string) {
             }
           }
         ]
+      },
+      MuiTableCell: {
+        styleOverrides: {
+          root: {
+            "&.event-group-header-text": {
+              backgroundColor: theme.palette.secondaryBackground.main
+            }
+          }
+        }
       }
     }
   });
@@ -519,7 +528,10 @@ export let originalLightTheme = createTheme(baseTheme, {
         main: "#27476E"
       },
       name: "cardBackground"
-    })
+    }),
+    tableContainer: {
+      main: "#FFFFFFB3"
+    }
   }
 });
 export let originalDarkTheme = createTheme(baseTheme, {
@@ -545,7 +557,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     secondaryButton: baseTheme.palette.augmentColor({
       color: {
-        main: "#f64747"
+        main: "#acbfd7"
       },
       name: "secondaryButton"
     }),
@@ -593,6 +605,9 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#b5b5b560"
+    },
+    tableContainer: {
+      main: "#1A222DB3"
     }
   }
 });

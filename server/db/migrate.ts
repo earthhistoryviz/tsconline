@@ -6,7 +6,7 @@ import { Database } from "../dist/types.js";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
-The migration script is executed automatically upon server startup. If you need an example on alterations that can delete data, see 2024.05.08-17.59.45-adjust-columns-in-verification-table.ts.
+The migration script is executed automatically upon server startup. If you need an example on alterations that can delete data, see 2024.09.17-10.58.43-drop-unique-constraint-for-workshop-title.ts.
 
 Database migrations are essential for managing schema changes over time without the need for manually entering SQL commands on the server. Without this you would need to run ALTER TABLE commands manually.
 Locally, it is easy to just delete your db file and start fresh, but in production, this is not an option.

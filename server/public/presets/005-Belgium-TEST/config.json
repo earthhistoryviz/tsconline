@@ -7,7 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "Belgium Map Pack",
+      "name": "Belgium",
       "file": "Belgium_GTS2020.mdpk"
     }
   ],

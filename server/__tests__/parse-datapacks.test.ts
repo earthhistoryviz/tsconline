@@ -1,13 +1,21 @@
 import { vi, describe, beforeEach, it, expect, test } from "vitest";
 import * as utilModule from "../src/util";
 import * as sharedModule from "@tsconline/shared";
+vi.mock("../src/parse-map-packs", async () => {
+  return {
+    parseMapPacks: vi.fn().mockResolvedValue({
+      mapInfo: ""
+    })
+  };
+});
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
     ...actual,
     grabFilepaths: vi.fn().mockImplementation((_files, decrypt_filepath) => {
       return Promise.resolve([`server/__tests__/__data__/${decrypt_filepath}`]);
-    })
+    }),
+    countFiles: vi.fn().mockResolvedValue(0)
   };
 });
 vi.mock("@tsconline/shared", async (importOriginal) => {
@@ -15,7 +23,7 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   return {
     ...actual,
     assertSubSequenceInfo: vi.fn().mockReturnValue(true),
-    assertDatapackParsingPack: vi.fn().mockReturnValue(true),
+    assertBaseDatapackProps: vi.fn().mockReturnValue(true),
     assertColumnSpecificSettings: vi.fn().mockReturnValue(true),
     calculateAutoScale: vi.fn().mockImplementation((min: number, max: number) => {
       return { lowerRange: min, upperRange: max, scaleStep: 0.18 };
@@ -40,8 +48,7 @@ import {
   configureOptionalPointSettings
 } from "../src/parse-datapacks";
 import { readFileSync } from "fs";
-import { ColumnInfo, DatapackWarning, Point } from "@tsconline/shared";
-import { DatapackDescriptionInfo } from "../src/types";
+import { DatapackMetadata, ColumnInfo, DatapackWarning, Point } from "@tsconline/shared";
 const key = JSON.parse(readFileSync("server/__tests__/__data__/column-keys.json").toString());
 vi.spyOn(console, "log").mockImplementation(() => {});
 vi.spyOn(console, "error").mockImplementation(() => {});
@@ -49,15 +56,28 @@ describe("general parse-datapacks tests", () => {
   /**
    * Parses the general Africa Bight map pack
    */
-  const datapack: DatapackDescriptionInfo = {
+  const datapack: DatapackMetadata = {
     description: "description",
     title: "Title",
-    file: "file.dpk",
-    size: "size"
+    originalFileName: "file.dpk",
+    storedFileName: "tempFileName",
+    size: "size",
+    tags: [],
+    authoredBy: "authoredBy",
+    references: [],
+    datapackImage: "image",
+    isPublic: true,
+    type: "official"
   };
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks(
-      { title: "Africa Bight", description: "Africa Bight Map", file: "AfricaBight.map", size: "200.98 KB" },
+      {
+        ...datapack,
+        title: "Africa Bight",
+        description: "Africa Bight Map",
+        originalFileName: "AfricaBight.map",
+        size: "200.98 KB"
+      },
       "parse-datapacks-test-1.txt"
     );
     expect(datapacks).toEqual(key["general-parse-datapacks-test-1-key"]);

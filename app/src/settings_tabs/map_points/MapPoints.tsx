@@ -2,13 +2,14 @@ import { useContext } from "react";
 import { context } from "../../state";
 import { useTheme } from "@mui/material/styles";
 import { Typography, Dialog, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar } from "@mui/material";
-import type { MapInfo } from "@tsconline/shared";
+import { type MapInfo } from "@tsconline/shared";
 import { styled } from "@mui/material/styles";
 import { devSafeUrl } from "../../util";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import { MapViewer } from "./MapViewer";
 import "./MapPoints.css";
+import { useTranslation } from "react-i18next";
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
@@ -23,6 +24,7 @@ const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
 export const MapPoints = observer(function MapPoint() {
   const { state } = useContext(context);
   const theme = useTheme();
+  const { t } = useTranslation();
   return (
     <div>
       {!state.mapState.mapInfo || Object.entries(state.mapState.mapInfo).length === 0 ? (
@@ -31,7 +33,7 @@ export const MapPoints = observer(function MapPoint() {
             sx={{
               fontSize: theme.typography.pxToRem(18)
             }}>
-            No Map Points available for this datapack
+            {t("settings.map-points.not-avaliable")}
           </Typography>
         </div>
       ) : (
@@ -52,12 +54,32 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
     actions.setSelectedMap(name);
     actions.setIsMapViewerOpen(true);
   };
-
+  // Sort mapHierarchy keys so that world map is always the first
+  const sortedMapHierarchyKeys = Object.keys(state.mapState.mapHierarchy).sort((a, b) => {
+    if (a === "World Map") return -1;
+    if (b === "World Map") return 1;
+    return a.localeCompare(b);
+  });
+  const sortedMapEntries: Array<[string, MapInfo[string]]> = [];
+  const mapEntries = new Set<string>();
+  // parent maps first
+  for (const parent of sortedMapHierarchyKeys) {
+    if (mapInfo[parent]) {
+      sortedMapEntries.push([parent, mapInfo[parent]]);
+      mapEntries.add(parent);
+    }
+  }
+  for (const map in state.mapState.mapInfo) {
+    const mapInfo = state.mapState.mapInfo[map];
+    if (mapEntries.has(map)) continue;
+    sortedMapEntries.push([map, mapInfo]);
+  }
+  const sortedMapInfoObj: MapInfo = Object.fromEntries(sortedMapEntries);
   return (
     <div className="map=list">
       <Box>
         <List>
-          {Object.entries(mapInfo).map(([name, map]) => {
+          {Object.entries(sortedMapInfoObj).map(([name, map]) => {
             return (
               <MapListItemButton
                 disableRipple

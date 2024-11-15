@@ -3,12 +3,14 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
+import { useTranslation } from "react-i18next";
 
 type RangeSpecificSettingsProps = {
   column: ColumnInfo;
 };
 export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Range" || !column.columnSpecificSettings) return null;
   assertRangeSettings(column.columnSpecificSettings);
   const handleRangeSortChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -26,9 +28,9 @@ export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = obser
       value={column.columnSpecificSettings.rangeSort}
       name={""}
       radioArray={[
-        { value: "first occurrence", label: "First Occurrence" },
-        { value: "last occurrence", label: "Last Occurrence" },
-        { value: "alphabetical", label: "Alphabetical" }
+        { value: "first occurrence", label: t("settings.column.menu.first-occurrence") },
+        { value: "last occurrence", label: t("settings.column.menu.last-occurrence") },
+        { value: "alphabetical", label: t("settings.column.menu.alphabetical") }
       ]}
     />
   );

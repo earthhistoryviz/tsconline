@@ -1,11 +1,12 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { rm, readFile, access, mkdir, readdir, copyFile, writeFile } from "fs/promises";
+import { readFile, access, mkdir, readdir, copyFile, realpath } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
 import levenshtein from "js-levenshtein";
-import { AdminConfig, assertAdminConfig, assertAssetConfig, AssetConfig } from "./types.js";
+import { assertAssetConfig, AssetConfig } from "./types.js";
+import { createHash, randomUUID } from "crypto";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -70,13 +71,17 @@ export async function copyDirectory(src: string, destination: string): Promise<v
  * @returns
  */
 export async function grabFilepaths(files: string[], topDirectory: string, botDirectory: string): Promise<string[]> {
+  // TODO: FIX HACK
+  topDirectory = topDirectory.replaceAll("\\", "/");
+
   // regular expression for all filenames located in <topDirectory>/<file_name>/<botDirectory>
   const pattern = new RegExp(
     files
       .map((name) => {
         const lastIndex = name.lastIndexOf(".");
         const filename = lastIndex !== -1 ? name.substring(0, lastIndex) : name;
-        return `${topDirectory}/${filename}/${botDirectory}/.*`;
+        const escapedFilename = filename.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+        return [topDirectory, escapedFilename, botDirectory, ".*"].join("/");
       })
       .join("|")
   );
@@ -118,7 +123,7 @@ export function componentToHex(c: number) {
  */
 export function rgbToHex(r: number, g: number, b: number) {
   if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) throw new Error("Invalid rgb value");
-  return "#" + componentToHex(r) + componentToHex(g) + componentToHex(b);
+  return "#" + componentToHex(Math.round(r)) + componentToHex(Math.round(g)) + componentToHex(Math.round(b));
 }
 
 /**
@@ -138,18 +143,6 @@ export function hasVisibleCharacters(input: string): boolean {
 export function capitalizeFirstLetter(input: string): string {
   if (!input) return input;
   return input.charAt(0).toUpperCase() + input.slice(1).toLowerCase();
-}
-
-/**
- * delete the uploaded file and the decrypted directory if they exist
- * @param uploadedFile
- * @param decryptedUploadedDirectory
- */
-export async function resetUploadDirectory(uploadedFile: string, decryptedUploadedDirectory: string) {
-  await rm(uploadedFile, { force: true });
-  if (fs.existsSync(decryptedUploadedDirectory)) {
-    deleteDirectory(decryptedUploadedDirectory);
-  }
 }
 
 /**
@@ -210,7 +203,6 @@ export async function checkFileExists(filePath: string): Promise<boolean> {
 }
 
 export let assetconfigs: AssetConfig;
-export let adminconfig: AdminConfig = { datapacks: [], removeDevDatapacks: [] };
 export async function loadAssetConfigs() {
   try {
     const contents = JSON.parse((await readFile("assets/config.json")).toString());
@@ -219,27 +211,6 @@ export async function loadAssetConfigs() {
   } catch (e) {
     console.log("ERROR: Failed to load asset configs from assets/config.json.  Error was: ", e);
     process.exit(1);
-  }
-  if (await checkFileExists(assetconfigs.adminConfigPath)) {
-    try {
-      const content = JSON.parse((await readFile(assetconfigs.adminConfigPath)).toString());
-      assertAdminConfig(content);
-      adminconfig = content;
-      assetconfigs.activeDatapacks = assetconfigs.activeDatapacks.filter(
-        (datapack) => !adminconfig.removeDevDatapacks.includes(datapack.file)
-      );
-    } catch (e) {
-      console.log("ERROR: Failed to load admin configs from assets/admin-config.json.  Error was: ", e);
-      console.error("Removing admin-config.json and writing a new config file");
-      adminconfig = { datapacks: [], removeDevDatapacks: [] };
-      try {
-        await rm(assetconfigs.adminConfigPath);
-        await writeFile(assetconfigs.adminConfigPath, JSON.stringify(adminconfig, null, 2));
-      } catch (e) {
-        console.log("ERROR: Failed to write admin configs to assets/admin-config.json.  Error was: ", e);
-        process.exit(1);
-      }
-    }
   }
 }
 
@@ -273,4 +244,45 @@ export function getBytes(bytes: number) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+}
+
+export async function verifyFilepath(filepath: string) {
+  const root = process.cwd();
+  try {
+    filepath = await realpath(path.resolve(filepath));
+    if (!filepath.startsWith(root)) {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+  return true;
+}
+
+export async function verifyNonExistentFilepath(filepath: string) {
+  try {
+    filepath = path.resolve(filepath);
+    if (!filepath.startsWith(process.cwd())) {
+      return false;
+    }
+    return false;
+  } catch {
+    return true;
+  }
+}
+
+export async function countFiles(filepath: string): Promise<number> {
+  try {
+    if (!(await checkFileExists(filepath))) return 0;
+    return (await readdir(filepath, { withFileTypes: true })).filter((dirent) => dirent.isFile()).length;
+  } catch {
+    return 0;
+  }
+}
+// so similar filenames are always unique
+export function makeTempFilename(filename: string) {
+  const hash = createHash("sha256");
+  hash.update(randomUUID());
+  const uniqueHash = hash.digest("hex").substring(0, 10);
+  return `temp__${uniqueHash}__${filename}`;
 }

@@ -16,6 +16,7 @@ import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import { displayServerError } from "./state/actions/util-actions";
 import Container from "@mui/material/Container";
 import "./Login.css";
+import { useTranslation } from "react-i18next";
 
 export const ForgotPassword: React.FC = observer(() => {
   const location = useLocation();
@@ -156,7 +157,7 @@ export const ForgotPassword: React.FC = observer(() => {
       setLoading(false);
     }
   };
-
+  const { t } = useTranslation();
   return (
     <Container component="main" maxWidth="xs">
       <Box className="login-box">
@@ -167,9 +168,9 @@ export const ForgotPassword: React.FC = observer(() => {
         <Typography variant="h5" sx={{ textAlign: "center", mt: 1 }}>
           {showPasswordForm || showResendForm
             ? showResendForm
-              ? "Enter your email to receive a password reset link."
-              : "Please enter your new password."
-            : "Password Recovery"}
+              ? t("login.reset-password")
+              : t("login.enter-new-password")
+            : t("login.recovery")}
         </Typography>
         {showResendForm && (
           <Box component="form" onSubmit={handleEmailSubmit} className="account-form">
@@ -177,7 +178,7 @@ export const ForgotPassword: React.FC = observer(() => {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label={t("signup.email")}
               name="email"
               autoComplete="email"
               type="email"
@@ -185,7 +186,7 @@ export const ForgotPassword: React.FC = observer(() => {
               margin="normal"
             />
             <TSCButton type="submit" fullWidth startIcon={<SendIcon />}>
-              Send
+              {t("login.send")}
             </TSCButton>
           </Box>
         )}
@@ -195,7 +196,7 @@ export const ForgotPassword: React.FC = observer(() => {
               required
               fullWidth
               id="password"
-              label="Password"
+              label={t("login.password")}
               name="password"
               autoComplete="new-password"
               type="password"
@@ -203,7 +204,7 @@ export const ForgotPassword: React.FC = observer(() => {
               margin="normal"
             />
             <TSCButton type="submit" fullWidth variant="contained" startIcon={<SendIcon />}>
-              Send
+              {t("login.send")}
             </TSCButton>
           </Box>
         )}

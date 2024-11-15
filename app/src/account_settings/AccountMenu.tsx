@@ -15,9 +15,11 @@ import { useNavigate } from "react-router";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { useTheme } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 export const AccountMenu = observer(() => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const { t } = useTranslation();
   const open = Boolean(anchorEl);
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -31,7 +33,7 @@ export const AccountMenu = observer(() => {
   return (
     <>
       <Box sx={{ display: "flex", alignItems: "center", textAlign: "center" }}>
-        <Tooltip title="Account settings">
+        <Tooltip title={t("login.tooltip")}>
           <IconButton
             onClick={handleClick}
             size="small"
@@ -76,22 +78,21 @@ export const AccountMenu = observer(() => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}>
         <MenuItem onClick={() => navigate("/profile")}>
-          <Avatar /> Profile
+          <Avatar /> {t("login.profile")}
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => navigate("/signup")}>
           <ListItemIcon>
             <PersonAdd fontSize="small" color="icon" />
           </ListItemIcon>
-          Add another account
+          {t("login.add")}
         </MenuItem>
-        {/* TODO: Implement Admin Controls */}
         {state.user.isAdmin && (
           <MenuItem onClick={() => navigate("/admin")}>
             <ListItemIcon>
               <AdminPanelSettingsIcon fontSize="small" color="icon" />
             </ListItemIcon>
-            Admin
+            {t("login.admin")}
           </MenuItem>
         )}
         <MenuItem
@@ -102,7 +103,7 @@ export const AccountMenu = observer(() => {
           <ListItemIcon>
             <Logout fontSize="small" color="icon" />
           </ListItemIcon>
-          Logout
+          {t("login.logout")}
         </MenuItem>
       </Menu>
     </>

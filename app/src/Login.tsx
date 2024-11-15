@@ -19,6 +19,7 @@ import { useNavigate } from "react-router";
 import { displayServerError } from "./state/actions/util-actions";
 import CookieConsent from "./CookieConsent";
 import "./Login.css";
+import { useTranslation } from "react-i18next";
 
 export const Login: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -130,7 +131,7 @@ export const Login: React.FC = observer(() => {
     };
     await handleLogin(false, formData);
   };
-
+  const { t } = useTranslation();
   return (
     <Box className="login-box">
       <Avatar sx={{ bgcolor: theme.palette.backgroundColor.main }}>
@@ -140,14 +141,14 @@ export const Login: React.FC = observer(() => {
         <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
       ) : (
         <>
-          <Typography variant="h5">Sign In</Typography>
+          <Typography variant="h5">{t("login.signin")}</Typography>
           <Box component="form" onSubmit={handleSubmit} className="form-box">
             <TextField
               margin="normal"
               required
               fullWidth
               id="username"
-              label="Username"
+              label={t("login.username")}
               name="username"
               autoComplete="username"
               autoFocus
@@ -158,7 +159,7 @@ export const Login: React.FC = observer(() => {
               required
               fullWidth
               name="password"
-              label="Password"
+              label={t("login.password")}
               type="password"
               id="password"
               autoComplete="current-password"
@@ -171,14 +172,14 @@ export const Login: React.FC = observer(() => {
               sx={{ mt: 3, mb: 2 }}
               endIcon={<LoginIcon />}
               disabled={!state.cookieConsent}>
-              Sign In
+              {t("login.signin")}
             </TSCButton>
             <Grid container className="grid-container">
               <Grid item xs>
-                <Link href="/forgot-password">Forgot password?</Link>
+                <Link href="/forgot-password">{t("login.forgot-password")}</Link>
               </Grid>
               <Grid item>
-                <Link href="/signup">Don&apos;t have an account? Sign Up</Link>
+                <Link href="/signup">{t("login.signup")}</Link>
               </Grid>
             </Grid>
             <Box className="divider-box">

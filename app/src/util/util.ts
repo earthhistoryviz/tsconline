@@ -1,4 +1,4 @@
-import { RGB } from "@tsconline/shared";
+import { ColumnInfo, RGB } from "@tsconline/shared";
 import Color from "color";
 
 /**
@@ -10,7 +10,7 @@ import Color from "color";
  * @returns
  */
 export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, userTopAge: number, userBaseAge: number) {
-  if (userBaseAge == userTopAge) {
+  if (userBaseAge <= userTopAge) {
     return false;
   }
 
@@ -24,6 +24,18 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
   }
   return (minDataAge > userTopAge && minDataAge < userBaseAge) || (maxDataAge < userBaseAge && maxDataAge > userTopAge);
 }
+
+export const willColumnBeVisibleOnChart = (column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>): boolean => {
+  if (!column.on) return false;
+  // reached the top, so it will be visible
+  if (!column.parent) return true;
+  const parent = columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in columnHashMap, but is undefined");
+    return false;
+  }
+  return willColumnBeVisibleOnChart(parent, columnHashMap);
+};
 
 /**
  * Compare viewport height and px height
@@ -160,4 +172,18 @@ function getContrastText(color1: string) {
     console.error(e);
     return "#000000";
   }
+}
+
+export function findSerialNum(name: string) {
+  const firstBlankspaceIndex = name.indexOf(" ");
+  const secondBlankspaceIndex = name.indexOf(" for");
+  if (firstBlankspaceIndex === -1 || secondBlankspaceIndex === -1) {
+    return 0;
+  }
+  const serialNumber = Number(name.substring(firstBlankspaceIndex + 1, secondBlankspaceIndex));
+  if (isNaN(serialNumber)) {
+    console.error("Failed to find the correct largest existing serial number");
+    return 0;
+  }
+  return serialNumber;
 }

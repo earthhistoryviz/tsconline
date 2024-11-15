@@ -1,0 +1,102 @@
+name: Deploy Release
+
+concurrency:
+  group: deploy-release
+
+on:
+  push:
+    branches:
+      - 'release-*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: 
+      name: production
+      url: ${{ vars.WEBSITE_URL }}
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+    steps:
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add known hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.RELEASE_PATH }}
+
+            git pull --no-edit
+
+            PULL_STATUS=$?
+
+            if [ $PULL_STATUS -eq 0 ]; then
+              echo "git pull succeeded"
+            else
+              echo "git pull failed with exit status $PULL_STATUS"
+              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
+              exit 1
+            fi
+
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="tsconline.timescalecreator.org"' >> ./server/.env
+
+            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+
+            if [ ! -f "docker-compose.yml" ]; then
+              echo "Error: docker-compose.yml not found"
+              exit 1
+            fi
+            if [ ! -f "docker-compose-server.yml" ]; then
+              echo "Error: docker-compose-server.yml not found"
+              exit 1
+            fi
+            
+            docker compose -f docker-compose-server.yml restart
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
+            sleep 5
+
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for tsconline."
+              exit 1
+            fi
+
+            MAX_WAIT=240
+            INTERVAL=5
+            ELAPSED=0
+
+            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                echo "Last 200 lines in container:"
+                docker-compose -f docker-compose-server.yml logs --tail=200
+                docker-compose -f docker-compose-server.yml down
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
+            

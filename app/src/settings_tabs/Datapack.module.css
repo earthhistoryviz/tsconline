@@ -5,11 +5,23 @@
   width: 100%;
   min-height: 100vh;
 }
+
 .h {
   font-size: 1.2rem;
   text-align: center;
   font-weight: bold;
 }
+.sdi {
+  width: 20px;
+  height: 20px;
+}
+
+.idh {
+  justify-self: flex-start;
+  align-self: flex-start;
+  text-align: left;
+}
+
 .hdc {
   display: flex;
   flex-direction: row;
@@ -19,6 +31,7 @@
   padding: 16px;
   position: relative;
 }
+
 .dh {
   flex-grow: 1;
   text-align: center;
@@ -28,6 +41,7 @@
   width: 30px;
   height: 30px;
 }
+
 .ib {
   position: absolute;
   top: 15%;
@@ -51,40 +65,109 @@
   margin: 0px;
 }
 
+.showBox {
+  align-self: flex-start;
+  justify-self: flex-start;
+  margin-left: 45px;
+}
+.show {
+  font-style: italic;
+  width: max-content;
+}
+.show:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
 .container {
   display: flex;
   overflow-y: auto;
   flex-wrap: wrap;
   padding: 4px;
-  width: 70%;
+  width: 100%;
+  margin-bottom: 3px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+.container.buttonContainer {
+  flex-direction: row;
+}
+.item {
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  overflow-x: hidden;
+}
+.wrapItem > *,
+.datapackDisplayContainer > .container:not(.official, .cards) {
+  flex: 1 1 50%;
+}
+.datapackDisplayContainer {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   justify-content: center;
 }
-.container.cards {
-  gap: 20px;
-  width: 90%;
-  margin: 0 20px 20px 20px;
-  justify-content: flex-start;
-  justify-self: center;
-  align-self: center;
+.datapackDisplayContainer:not(.cards) {
+  align-items: flex-start;
+  width: 70%;
 }
+.datapackDisplayContainer.cards {
+  align-items: center;
+  width: 90%;
+}
+.container.cards,
+.container.cards > .item {
+  gap: 10px;
+}
+.container.cards {
+  margin: 0px 20px 20px;
+}
+
+.buttons {
+  margin: 10px;
+}
+.divider {
+  width: 98%;
+  margin: 5px 0;
+}
+
+.loader {
+  margin-left: 30px;
+}
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  gap: 10px;
+  margin-left: 5px;
+}
+
 @media (max-width: 720px) {
   .container.cards {
     overflow-y: hidden;
     overflow-x: auto;
     flex-wrap: nowrap;
   }
+
   .container.cards > * {
     flex: 0 0 auto;
   }
+
   .hdc {
     flex-direction: row;
     gap: 10px;
   }
+
   .ib {
     position: relative;
     top: 0;
     left: 0;
   }
+
   .display {
     position: relative;
     top: 0;

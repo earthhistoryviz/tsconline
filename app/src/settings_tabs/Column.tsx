@@ -1,11 +1,11 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
 import { ColumnMenu } from "./column_menu/ColumnMenu";
@@ -18,21 +18,56 @@ import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
+import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
+import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
+import { useTranslation } from "react-i18next";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
-  //state array of column names that are expanded
+  const [showScroll, setShowScroll] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const theme = useTheme();
+
+  // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
+  const handleScroll = () => {
+    if (scrollRef.current && scrollRef.current.scrollTop > 200) {
+      setShowScroll(true);
+    } else {
+      setShowScroll(false);
+    }
+  };
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (ref) {
+        ref.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, []);
+
   return (
     <div className="column-top-level-container">
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
         <Box
           id="ResizableColumnAccordionWrapper"
+          ref={scrollRef}
           border={1}
           borderColor="divider"
           bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}>
+          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+          position="relative">
           <div className="column-filter-buttons">
             <CustomTooltip title="Expand All" placement="top">
               <IconButton
@@ -61,6 +96,16 @@ export const Column = observer(function Column() {
             Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
               <ColumnAccordion key={childName} details={childDetails} />
             ))}
+          {/* Button to take users to top of column menu when scrolling */}
+
+          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+            <Lottie
+              key="settings-arrow-up"
+              style={{ width: "28px", height: "28px" }}
+              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+              playOnClick
+            />
+          </IconButton>
         </Box>
         <ColumnMenu />
       </div>
@@ -77,7 +122,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.settingsTabs.columnSelected ? "selected-column" : "";
+  const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -90,7 +135,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     );
   }
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.settingsTabs.columnSelected)
+  const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
     ? { opacity: 1 }
     : {};
   return (
@@ -134,6 +179,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 
 const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   const theme = useTheme();
   const dataInrange = checkIfDataIsInRange(
     column.minAge,
@@ -144,7 +190,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip
-        title="Data not included in time range"
+        title={t("settings.column.tooltip。not-in-range")}
         placement="top"
         arrow
         slotProps={{
@@ -189,14 +235,14 @@ const ColumnSearchBar = observer(() => {
   const { state, actions } = useContext(context);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    actions.setColumnSearchTerm(term);
     actions.searchColumns(term);
   };
+  const { t } = useTranslation();
   return (
     <div className="column-search-bar-container">
       <TextField
         className="column-search-bar"
-        label="Search"
+        label={t("settings.search.search-bar")}
         variant="outlined"
         size="small"
         fullWidth

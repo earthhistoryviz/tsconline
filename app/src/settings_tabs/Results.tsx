@@ -1,30 +1,38 @@
-import { TableCell, TableBody, TableContainer, Paper, SvgIcon, Typography, Box, IconButton } from "@mui/material";
+import {
+  TableCell,
+  TableBody,
+  TableContainer,
+  Paper,
+  SvgIcon,
+  Typography,
+  Box,
+  IconButton,
+  TableRow
+} from "@mui/material";
 import React, { useContext } from "react";
 import { Table } from "react-bootstrap";
 import { TableComponents, TableVirtuoso } from "react-virtuoso";
-import { CustomTooltip, StyledScrollbar } from "../components";
+import { CustomTooltip, StyledScrollbar, TSCCheckbox } from "../components";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ErrorOutline } from "@mui/icons-material";
 import NotesIcon from "@mui/icons-material/Notes";
 import { useTheme } from "@mui/material/styles";
 import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
-import { trimQuotes } from "../util/util";
+import { checkIfDataIsInRange, trimQuotes, willColumnBeVisibleOnChart } from "../util/util";
 import bigDecimal from "js-big-decimal";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import VerticalAlignCenterIcon from "@mui/icons-material/VerticalAlignCenter";
 import FormatLineSpacingIcon from "@mui/icons-material/FormatLineSpacing";
-import CloseIcon from "@mui/icons-material/Close";
 import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
-import CheckIcon from "@mui/icons-material/Check";
-import PriorityHighIcon from "@mui/icons-material/PriorityHigh";
 
 import "./Results.css";
+import { useTranslation } from "react-i18next";
 
-const tooltipDelayTime = 700;
+const tooltipDelayTime = 400;
 
 const Status = observer(({ info }: { info: EventSearchInfo }) => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const column = state.settingsTabs.columnHashMap.get(info.columnName);
   if (!column) {
     return (
@@ -33,100 +41,35 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
       </SvgIcon>
     );
   }
-  const ColumnPathToRootOn = () => {
-    let currColumn = column!;
-    while (currColumn.parent) {
-      if (currColumn.on === false) {
-        return false;
-      }
-      const parent = state.settingsTabs.columnHashMap.get(currColumn.parent);
-      if (!parent) {
-        console.error("parent of " + currColumn.name + "not found");
-        return false;
-      }
-      currColumn = parent;
-    }
-    return true;
-  };
-  const isAgeWithinTimeInterval = () => {
-    const { state } = useContext(context);
-    if (!(info.unit in state.settings.timeSettings)) {
-      console.error(info.unit + "not in time settings");
-      return false;
-    }
-    const chartTopAge = state.settings.timeSettings[info.unit].topStageAge;
-    const chartBaseAge = state.settings.timeSettings[info.unit].baseStageAge;
-    const ages = info.age;
-    if (!ages) return true;
-    if (ages.topAge >= chartTopAge && ages.baseAge <= chartBaseAge) {
-      return true;
-    }
-    return false;
-  };
-  if (!info.age) {
-    return (
-      <div>
-        {ColumnPathToRootOn() ? (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON">
-            <CheckIcon color="success" />
-          </CustomTooltip>
-        ) : (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled OFF">
-            <CloseIcon color="error" />
-          </CustomTooltip>
-        )}
-      </div>
-    );
-  }
+  const on = willColumnBeVisibleOnChart(column, state.settingsTabs.columnHashMap);
+  const ages = info.age;
+  const dataInRange = ages
+    ? checkIfDataIsInRange(
+        ages.topAge,
+        ages.baseAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
+    : true;
   return (
     <div>
-      {ColumnPathToRootOn() ? (
-        isAgeWithinTimeInterval() ? (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON, age within time interval">
-            <CheckIcon color="success" />
-          </CustomTooltip>
-        ) : (
-          <CustomTooltip
-            enterDelay={tooltipDelayTime}
-            enterNextDelay={tooltipDelayTime}
-            disableInteractive
-            placement="top"
-            title="Column Toggled ON, age not within time interval">
-            <PriorityHighIcon sx={{ color: "orange" }} />
-          </CustomTooltip>
-        )
-      ) : isAgeWithinTimeInterval() ? (
+      {dataInRange ? (
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
           disableInteractive
           placement="top"
-          title="Column Toggled OFF, age within time interval">
-          <PriorityHighIcon sx={{ color: "orange" }} />
+          title={on ? "Column Toggled ON" : "Column Toggled OFF"}>
+          <TSCCheckbox
+            className="status-checkbox"
+            size="large"
+            onClick={() => actions.toggleSettingsTabColumn(column)}
+            checked={on}
+          />
         </CustomTooltip>
       ) : (
-        <CustomTooltip
-          enterDelay={tooltipDelayTime}
-          enterNextDelay={tooltipDelayTime}
-          disableInteractive
-          placement="top"
-          title="Column Toggled OFF, age not within time interval">
-          <CloseIcon color="error" />
+        <CustomTooltip disableInteractive placement="top" title="age not within time interval">
+          <ErrorOutline className="status-error-icon" color="error" />
         </CustomTooltip>
       )}
     </div>
@@ -134,7 +77,7 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
 });
 
 const Column = observer(({ info }: { info: EventSearchInfo }) => {
-  const { state, actions } = useContext(context);
+  const { state } = useContext(context);
   const { columnName, columnPath } = info;
   const column = state.settingsTabs.columnHashMap.get(columnName);
 
@@ -147,11 +90,7 @@ const Column = observer(({ info }: { info: EventSearchInfo }) => {
   }
   return (
     <>
-      <div
-        className="search-result-column-container"
-        onClick={() => {
-          actions.toggleSettingsTabColumn(column);
-        }}>
+      <div className="search-result-column-container">
         <CustomTooltip
           enterDelay={tooltipDelayTime}
           enterNextDelay={tooltipDelayTime}
@@ -173,10 +112,10 @@ const verifyAgesAndAddAgeMargin = (age: { topAge: number; baseAge: number } | un
   let min = age.topAge;
   let max = age.baseAge;
   //for floating point inaccuracies
-  if (Number(bigDecimal.add(String(min), "-3")) < 0) {
+  if ((min = Number(bigDecimal.add(String(min), "-3"))) < 0) {
     min = 0;
   }
-  if (Number(bigDecimal.add(String(min), "3")) < 0) {
+  if ((max = Number(bigDecimal.add(String(max), "3"))) < 0) {
     max = 0;
   }
   return { topAge: min, baseAge: max };
@@ -218,7 +157,8 @@ const Center = observer(({ info }: { info: EventSearchInfo }) => {
           centerTimeOnEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <VerticalAlignCenterIcon color="info" />
       </IconButton>
     </CustomTooltip>
@@ -265,7 +205,8 @@ const Extend = observer(({ info }: { info: EventSearchInfo }) => {
           extendTimeToIncludeEvent();
           actions.setColumnOn(false, column);
           actions.toggleSettingsTabColumn(column);
-        }}>
+        }}
+        sx={{ padding: 0 }}>
         <FormatLineSpacingIcon color="info" />
       </IconButton>
     </CustomTooltip>
@@ -310,15 +251,15 @@ const Age = observer(({ info }: { info: EventSearchInfo }) => {
   return <AgeDisplay />;
 });
 
-const Qualifier = observer(({ info }: { info: EventSearchInfo }) => {
-  if (!info.qualifier) {
+const Type = observer(({ info }: { info: EventSearchInfo }) => {
+  if (!info.type) {
     return (
       <SvgIcon>
         <HorizontalRuleIcon />
       </SvgIcon>
     );
   }
-  return <Typography variant="subtitle2">{info.qualifier}</Typography>;
+  return <Typography variant="subtitle2">{info.type}</Typography>;
 });
 
 const Notes = observer(({ info }: { info: EventSearchInfo }) => {
@@ -358,48 +299,16 @@ const Notes = observer(({ info }: { info: EventSearchInfo }) => {
   );
 });
 
-export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
+export const Results = observer(({ groupedEvents }: { groupedEvents: GroupedEventSearchInfo[] }) => {
   const theme = useTheme();
   //this is necessary to prevent table hierachy errors
   //virtuoso assigns each array element to a table row, and a table row can't be a child
   //of a table row which would be necessary for display without stretching the array.
-  const stretchedEvents: (string | EventSearchInfo)[] = [];
-  groupedEvents.map((value) => {
-    stretchedEvents.push(value.key);
-    stretchedEvents.push("subheader");
-    for (const event of value.info) {
-      stretchedEvents.push(event);
-    }
+  const stretchedEvents: (string | EventSearchInfo)[] = groupedEvents.flatMap((value) => {
+    return [value.key, ...value.info];
   });
-
   function EventGroup(index: number, info: string | EventSearchInfo) {
-    if (info === "subheader") {
-      return (
-        <>
-          <TableCell className="event-group-header-text search-result-status-column" align="left">
-            Status
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-column-column" align="left">
-            Column
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-center-column" align="center">
-            Center
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-extend-column" align="center">
-            Extend
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-age-column" align="center">
-            Age
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
-            Qualifier
-          </TableCell>
-          <TableCell className="event-group-header-text search-result-notes-column" align="right">
-            Notes
-          </TableCell>
-        </>
-      );
-    } else if (typeof info === "string") {
+    if (typeof info === "string") {
       return (
         <TableCell
           className="event-group-identifier"
@@ -417,20 +326,20 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
           <TableCell className="search-result-status-column" align="left">
             <Status info={info} />
           </TableCell>
-          <TableCell className="search-result-column-column" align="left">
-            <Column info={info} />
-          </TableCell>
-          <TableCell className="search-result-center-column" align="center">
+          <TableCell className="search-result-center-column" align="left">
             <Center info={info} />
           </TableCell>
-          <TableCell className="search-result-extend-column" align="center">
+          <TableCell className="search-result-extend-column" align="left">
             <Extend info={info} />
+          </TableCell>
+          <TableCell className="search-result-column-column" align="left">
+            <Column info={info} />
           </TableCell>
           <TableCell className="search-result-age-column" align="center">
             <Age info={info} />
           </TableCell>
-          <TableCell className="search-result-qualifier-column" align="center">
-            <Qualifier info={info} />
+          <TableCell className="search-result-type-column" align="center">
+            <Type info={info} />
           </TableCell>
           <TableCell className="search-result-notes-column" align="right">
             <Notes info={info} />
@@ -457,31 +366,58 @@ export const Results = ({ groupedEvents }: { groupedEvents: GroupedEventSearchIn
   if (!VirtuosoTableComponents.Scroller || !VirtuosoTableComponents.TableBody) return;
   VirtuosoTableComponents.Scroller.displayName = "Scroller";
   VirtuosoTableComponents.TableBody.displayName = "TableBody";
-
+  const { t } = useTranslation();
   return (
     <Box className="table-container" id="event-search-results-table">
       <CustomTooltip
         enterDelay={tooltipDelayTime}
+        enterNextDelay={tooltipDelayTime}
+        placement="top"
         title={
           <>
+            Status: for ages with a range, the error outline will only show up if the entire range is outside the
+            selected time interval.
+            <br />
             Center: sets the time interval to the selected age surrounded with 3myr
             <br />
             Extend: takes the smallest top age and greatest base age between the current time interval and the selected
             age surrounded with 3myr
             <br />
-            Status: Events with ages will have a yellow/exclamation point status that indicates that either the column
-            is turned on or its age is within the time interval, but not both. Hover over the icon to see what you have
-            to change.
           </>
         }>
         <HelpOutlineIcon />
       </CustomTooltip>
       <TableVirtuoso
         className="events-search-results-table"
+        fixedHeaderContent={() => (
+          <TableRow>
+            <TableCell className="event-group-header-text search-result-status-column" align="left">
+              {t("settings.search.header.status")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-center-column" align="left">
+              {t("settings.search.header.center")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-extend-column" align="left">
+              {t("settings.search.header.extend")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-column-column" align="left">
+              {t("settings.search.header.column")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-age-column" align="center">
+              {t("settings.search.header.age")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-qualifier-column" align="center">
+              {t("settings.search.header.qualifier")}
+            </TableCell>
+            <TableCell className="event-group-header-text search-result-notes-column" align="right">
+              {t("settings.search.header.notes")}
+            </TableCell>
+          </TableRow>
+        )}
         data={stretchedEvents}
         components={VirtuosoTableComponents}
         itemContent={EventGroup}
       />
     </Box>
   );
-};
+});

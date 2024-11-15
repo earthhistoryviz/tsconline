@@ -2,13 +2,11 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { execSync } from "child_process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, adminconfig } from "./util.js";
-import * as routes from "./routes.js";
-import * as loginRoutes from "./login-routes.js";
-import { DatapackIndex, MapPackIndex, assertIndexResponse } from "@tsconline/shared";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
+import * as routes from "./routes/routes.js";
+import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
-import { loadFaciesPatterns, loadIndexes } from "./load-packs.js";
+import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
@@ -20,10 +18,14 @@ import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.j
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
-import { adminRoutes } from "./admin-auth.js";
+import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
+import { userRoutes } from "./routes/user-auth.js";
+import { fetchUserDatapacks } from "./routes/user-routes.js";
+import logger from "./error-logger.js";
 
-export const maxQueueSize = 3;
+const maxConcurrencySize = 2;
+export const maxQueueSize = 30;
 
 const server = fastify({
   logger: false,
@@ -41,8 +43,13 @@ const server = fastify({
 
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
-// Load the current asset config:
-await loadAssetConfigs();
+try {
+  // Load the current asset config:
+  await loadAssetConfigs();
+} catch (e) {
+  console.error("Error loading configs: ", e);
+  process.exit(1);
+}
 // Check if the required JAR files exist
 const activeJarPath = path.join(assetconfigs.activeJar);
 const decryptionJarPath = path.join(assetconfigs.decryptionJar);
@@ -55,35 +62,7 @@ if (!(await checkFileExists(decryptionJarPath))) {
   console.error("ERROR: Required decryption JAR file does not exist:", decryptionJarPath);
   process.exit(1);
 }
-
-// this try will run the decryption jar to decrypt all files in the datapack folder
-try {
-  const datapackPaths = assetconfigs.activeDatapacks.map(
-    (datapack) => '"' + assetconfigs.datapacksDirectory + "/" + datapack.file + '"'
-  );
-  const cmd =
-    `java -jar ${assetconfigs.decryptionJar} ` +
-    // Decrypting these datapacks:
-    `-d ${datapackPaths.join(" ")} ` +
-    // Tell it where to send the datapacks
-    `-dest ${assetconfigs.decryptionDirectory} `;
-  console.log("Calling Java decrypt.jar: ", cmd);
-  execSync(cmd, { stdio: "inherit" });
-  console.log("Finished decryption");
-} catch (e) {
-  console.log("ERROR: Failed to decrypt activeDatapacks in AssetConfig with error: ", e);
-  process.exit(1);
-}
-
-export const datapackIndex: DatapackIndex = {};
-export const mapPackIndex: MapPackIndex = {};
 const patterns = await loadFaciesPatterns();
-await loadIndexes(
-  datapackIndex,
-  mapPackIndex,
-  assetconfigs.decryptionDirectory,
-  assetconfigs.activeDatapacks.concat(adminconfig.datapacks)
-);
 
 declare module "@fastify/secure-session" {
   interface SessionData {
@@ -99,7 +78,7 @@ server.register(fastifySecureSession, {
   cookie: {
     path: "/",
     httpOnly: true,
-    domain: process.env.NODE_ENV === "production" ? "dev.timescalecreator.org" : "localhost",
+    domain: process.env.DOMAIN ?? "localhost",
     secure: process.env.NODE_ENV === "production",
     sameSite: "strict",
     maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
@@ -141,6 +120,13 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
+// Serve the about picture images from server/public/aboutPictures/
+server.register(fastifyStatic, {
+  root: process.cwd() + "/public/aboutPictures",
+  prefix: "/public/aboutPictures/",
+  decorateReply: false // first registration above already added the decorator
+});
+
 server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),
   prefix: "/datapack-images/",
@@ -165,11 +151,11 @@ server.register(fastifyStatic, {
 // Helpful for testing locally:
 server.register(cors, {
   origin: process.env.APP_ORIGIN || "http://localhost:5173",
-  methods: ["GET", "POST", "DELETE"],
+  methods: ["GET", "POST", "DELETE", "PATCH"],
   credentials: true
 });
 
-server.register(fastifyCompress, { global: true, threshold: 2048 });
+server.register(fastifyCompress, { global: false, threshold: 1024 * 20 });
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
@@ -190,22 +176,9 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
-server.get("/datapack-index", routes.fetchServerDatapackInfo);
-server.get("/map-pack-index", routes.fetchServerMapPackInfo);
+server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
 
-server.get("/datapackinfoindex", (_request, reply) => {
-  if (!datapackIndex || !mapPackIndex) {
-    reply.send({ error: "datapackIndex/mapPackIndex is null" });
-  } else {
-    const indexResponse = { datapackIndex, mapPackIndex };
-    try {
-      assertIndexResponse(indexResponse);
-      reply.send(indexResponse);
-    } catch (e) {
-      reply.send({ error: `${e}` });
-    }
-  }
-});
+server.get("/public/datapacks", routes.fetchPublicDatapackChunk);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -240,22 +213,31 @@ const looseRateLimit = {
     }
   }
 };
-
-server.get("/user-datapacks", moderateRateLimit, routes.fetchUserDatapacks);
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
-//download datapack
-server.get<{ Params: { filename: string }; Querystring: { needEncryption?: boolean } }>(
-  "/download/user-datapacks/:filename",
-  moderateRateLimit,
-  routes.requestDownload
+
+server.get<{ Params: { title: string; uuid: string } }>(
+  "/datapack-images/:title/:uuid",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  routes.fetchDatapackCoverImage
 );
-// uploads datapack
-server.post("/upload", moderateRateLimit, routes.uploadDatapack);
+
 server.register(adminRoutes, { prefix: "/admin" });
+
+server.register(userRoutes, { prefix: "/user" });
+// this is seperate from the user routes because it doesn't require recaptcha
+server.get("/user/datapacks", looseRateLimit, fetchUserDatapacks);
+
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
@@ -275,7 +257,7 @@ server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProf
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
-  "/charts/:usecache/:useSuggestedAge/:username",
+  "/chart",
   looseRateLimit,
   routes.fetchChart
 );
@@ -283,17 +265,46 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
 
-server.get<{ Params: { datapackName: string; imageName: string } }>(
-  "/images/:datapackName/:imageName",
+server.post(
+  "/images",
+  {
+    config: {
+      rateLimit: {
+        max: 60,
+        timeWindow: 1000 * 60
+      }
+    },
+    schema: {
+      body: {
+        type: "object",
+        properties: {
+          datapackTitle: { type: "string" },
+          datapackFilename: { type: "string" },
+          uuid: { type: "string" },
+          imageName: { type: "string" },
+          isPublic: { type: "boolean" }
+        },
+        required: ["datapackTitle", "imageName", "datapackFilename", "isPublic", "uuid"]
+      }
+    }
+  },
   routes.fetchImage
 );
 
-setInterval(() => {
-  checkFileMetadata(assetconfigs.fileMetadata);
+setInterval(async () => {
+  await checkFileMetadata(assetconfigs.fileMetadata)
+    .catch((e) => {
+      console.error("Error checking file metadata: ", e);
+    })
+    .finally(() => console.log("Successfully checked file metadata"));
 }, sunsetInterval);
 setInterval(
   () => {
-    db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+    try {
+      db.deleteFrom("verification").where("expiresAt", "<", new Date().toISOString()).execute();
+    } catch (e) {
+      logger.error("Error deleting verification: ", e);
+    }
   },
   1000 * 60 * 60 * 24 * 7
 ); // 1 week
@@ -321,17 +332,17 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
         await sendEmail(notificationEmail);
         await db.deleteFrom("ip").execute();
       } catch (e) {
-        console.error("Error sending email: ", e);
+        logger.error("Error sending email: ", e);
       }
     }
   );
 }
 
-server.setNotFoundHandler((request, reply) => {
+server.setNotFoundHandler((_request, reply) => {
   void reply.sendFile("index.html");
 });
 
-export const queue = new PQueue({ concurrency: maxQueueSize });
+export const queue = new PQueue({ concurrency: maxConcurrencySize });
 
 //Start the server...
 try {

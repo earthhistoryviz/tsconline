@@ -13,6 +13,7 @@ import {
   TSCCheckbox
 } from "../../components";
 import { GenericTextField } from "../../components";
+import { useTranslation } from "react-i18next";
 
 type PointSettingsPopupProps = {
   column: ColumnInfo;
@@ -20,6 +21,7 @@ type PointSettingsPopupProps = {
 
 export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Point") return;
   assertPointSettings(column.columnSpecificSettings);
   const pointSettings = column.columnSpecificSettings;
@@ -27,7 +29,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
     <>
       <div className="point-header-subsection">
         <Typography variant="h6" className="advanced-settings-header">
-          Point Settings
+          {t("settings.column.curve-drawing-menu.title")}
         </Typography>
         <CustomDivider className="settings-header-divider" />
       </div>
@@ -37,14 +39,16 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
             <div className="point-range-and-toggle-container">
               <div className="point-range-settings-container">
                 <div className="point-range-settings-header-container">
-                  <Typography className="point-range-settings-header">Range of Data</Typography>
+                  <Typography className="point-range-settings-header">
+                    {t("settings.column.curve-drawing-menu.rod")}
+                  </Typography>
                   <div>
-                    <CustomTooltip title="Auto Scale" placement="top" arrow>
+                    <CustomTooltip title={t("settings.column.tooltip.auto-scale")} placement="top" arrow>
                       <IconButton onClick={() => actions.setAutoScale(pointSettings)}>
                         <span className="auto-button-icon" />
                       </IconButton>
                     </CustomTooltip>
-                    <CustomTooltip title="Flip Range" placement="top" arrow>
+                    <CustomTooltip title={t("settings.column.tooltip.flip")} placement="top" arrow>
                       <IconButton onClick={() => actions.flipRange(pointSettings)}>
                         <span className="flip-button-icon" />
                       </IconButton>
@@ -59,7 +63,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                   helperPosition="bottom"
                   inputs={[
                     {
-                      helperText: "Lower Range",
+                      helperText: t("settings.column.curve-drawing-menu.lower-range"),
                       id: "lowerRange",
                       value: pointSettings.lowerRange,
                       onValueChange: (value) => {
@@ -67,7 +71,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                       }
                     },
                     {
-                      helperText: "Upper Range",
+                      helperText: t("settings.column.curve-drawing-menu.upper-range"),
                       id: "upperRange",
                       value: pointSettings.upperRange,
                       onValueChange: (value) => {
@@ -75,7 +79,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                       }
                     },
                     {
-                      helperText: "Scale Start",
+                      helperText: t("settings.column.curve-drawing-menu.scale-start"),
                       id: "scaleStart",
                       value: pointSettings.scaleStart,
                       onValueChange: (value) => {
@@ -83,7 +87,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                       }
                     },
                     {
-                      helperText: "Scale Step",
+                      helperText: t("settings.column.curve-drawing-menu.scale-step"),
                       value: pointSettings.scaleStep,
                       id: "scaleStep",
                       onValueChange: (value) => {
@@ -96,7 +100,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
               <div className="draw-buttons-and-point-shape-container">
                 <CustomFormControlLabel
                   name="drawScale"
-                  label="Show Scale"
+                  label={t("settings.column.curve-drawing-menu.show-scale")}
                   control={
                     <TSCCheckbox
                       checked={pointSettings.drawScale}
@@ -110,7 +114,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                 <section className="point-shape-and-toggle-container">
                   <CustomFormControlLabel
                     name="drawPoints"
-                    label="Draw Points"
+                    label={t("settings.column.curve-drawing-menu.draw-points")}
                     className="point-shape-checkbox"
                     control={
                       <TSCCheckbox
@@ -125,7 +129,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                   />
                   <div className="point-shape-toggle-group">
                     <Typography fontSize="0.8rem" mb="5px" textAlign="center">
-                      Point Shape
+                      {t("settings.column.curve-drawing-menu.point-shape")}
                     </Typography>
                     <ToggleButtonGroup
                       exclusive
@@ -151,7 +155,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
             <div className="point-adjustment-rgb-modifier">
               <Box display="flex" flexDirection="column" gap="20px">
                 <RGBModifier
-                  label="Line"
+                  label={t("settings.column.curve-drawing-menu.line")}
                   checked={pointSettings.drawLine}
                   onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawLine: value })}
                   rgbInputs={[
@@ -162,7 +166,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                   ]}
                 />
                 <RGBModifier
-                  label="Fill"
+                  label={t("settings.column.curve-drawing-menu.fill")}
                   checked={pointSettings.drawFill}
                   onCheckedChange={(value) => actions.setPointColumnSettings(pointSettings, { drawFill: value })}
                   rgbInputs={[
@@ -176,7 +180,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
               <Box display="flex" flexDirection="column">
                 <div className="point-settings-gradient-buttons">
                   <RGBModifier
-                    label="Background Gradient"
+                    label={t("settings.column.curve-drawing-menu.background-gradient")}
                     checked={pointSettings.drawBackgroundGradient}
                     onCheckedChange={(value) =>
                       actions.setPointColumnSettings(pointSettings, { drawBackgroundGradient: value })
@@ -199,7 +203,7 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                 </div>
                 <div className="point-settings-gradient-buttons">
                   <RGBModifier
-                    label="Curve Gradient"
+                    label={t("settings.column.curve-drawing-menu.curve-gradient")}
                     checked={pointSettings.drawCurveGradient}
                     onCheckedChange={(value) =>
                       actions.setPointColumnSettings(pointSettings, { drawCurveGradient: value })
@@ -209,13 +213,13 @@ export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(
                         rgb: pointSettings.curveGradientStart,
                         onRGBChange: (value) =>
                           actions.setPointColumnSettings(pointSettings, { curveGradientStart: value }),
-                        label: "Start"
+                        label: t("settings.column.curve-drawing-menu.start")
                       },
                       {
                         rgb: pointSettings.curveGradientEnd,
                         onRGBChange: (value) =>
                           actions.setPointColumnSettings(pointSettings, { curveGradientEnd: value }),
-                        label: "End"
+                        label: t("settings.column.curve-drawing-menu.end")
                       }
                     ]}
                   />

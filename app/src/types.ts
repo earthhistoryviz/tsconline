@@ -1,10 +1,37 @@
-import { ColumnInfo, DataMiningPointDataType, MapHierarchy, MapInfo, SharedUser } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  DataMiningPointDataType,
+  DatapackConfigForChartRequest,
+  DatapackMetadata,
+  MapHierarchy,
+  MapInfo,
+  SharedUser,
+  assertColumnInfo,
+  assertDatapackConfigForChartRequest,
+  assertMapHierarchy,
+  assertMapInfo,
+  throwError
+} from "@tsconline/shared";
+import { State } from "./state";
+
+export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+
+export type UploadDatapackMethodType = (
+  file: File,
+  metadata: DatapackMetadata,
+  datapackProfilePicture?: File
+) => Promise<void>;
 
 export type User = SharedUser & {
   settings: {
     darkMode: boolean;
     language: string;
   };
+};
+
+export type Reference = {
+  id: number;
+  reference: string;
 };
 
 export type WindowStats = {
@@ -24,12 +51,29 @@ export type DownloadPdfCompleteMessage = {
   value: Blob | undefined;
 };
 
+export type SetDatapackConfigMessage = {
+  datapacks: DatapackConfigForChartRequest[];
+  stateCopy: State;
+};
+
+export type SetDatapackConfigCompleteMessage = {
+  status: "success" | "failure";
+  value: SetDatapackConfigReturnValue | undefined;
+};
+export type SetDatapackConfigReturnValue = {
+  columnRoot: ColumnInfo;
+  foundDefaultAge: boolean;
+  mapHierarchy: MapHierarchy;
+  mapInfo: MapInfo;
+  datapacks: DatapackConfigForChartRequest[];
+};
+
 //id: unique id among search results
 //columnName: name of column that event/column is under
 //columnPath: path of edit names up until chart root for display
 //unit: unit of time (ex. Ma) for "in context" feature
 //age: undefined = no age, topAge and baseAge can be the same
-//qualifier: qualifier for events
+//type: type for events
 //notes: popup included with event and any other info
 export type EventSearchInfo = {
   id: number;
@@ -37,7 +81,7 @@ export type EventSearchInfo = {
   columnPath: string[];
   unit: string;
   age?: { topAge: number; baseAge: number };
-  qualifier?: string;
+  type?: string;
   notes?: string;
 };
 
@@ -77,7 +121,7 @@ export type ErrorAlert = {
   errorCount: number;
 };
 export type Config = {
-  datapacks: string[];
+  datapacks: DatapackConfigForChartRequest[];
   settingsPath: string;
 };
 
@@ -120,14 +164,26 @@ export type ChartSettings = {
   useDatapackSuggestedAge: boolean;
 };
 
-export type CachedConfig = {
-  mapHierarchy: MapHierarchy;
-  columnHashMap: Map<string, ColumnInfo>;
-  columns: ColumnInfo;
-  datapackContainsSuggAge: boolean;
-  mapInfo: MapInfo;
-  units: string[];
+export type EditableUserProperties = {
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  pictureUrl: string | undefined;
 };
+
+export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {
+  if (!o || typeof o !== "object") throw new Error("SetDatapackConfigReturnValue must be a non-null object");
+  if (!o.datapacks || !Array.isArray(o.datapacks))
+    throw new Error("SetDatapackConfigReturnValue datapacks must be an array");
+  if (typeof o.foundDefaultAge !== "boolean")
+    throwError("SetDatapackConfigReturnValue", "foundDefaultAge", "boolean", o.foundDefaultAge);
+  for (const datapack of o.datapacks) {
+    assertDatapackConfigForChartRequest(datapack);
+  }
+  assertMapHierarchy(o.mapHierarchy);
+  assertMapInfo(o.mapInfo);
+  assertColumnInfo(o.columnRoot);
+}
 
 export function convertDataMiningPointDataTypeToDataMiningStatisticApproach(
   value: DataMiningPointDataType

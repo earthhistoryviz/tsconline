@@ -7,11 +7,16 @@ import {
   defaultEventSettings,
   defaultPointSettings,
   defaultRangeSettings,
-  defaultSequenceSettings
+  defaultSequenceSettings,
+  defaultZoneSettings
 } from "@tsconline/shared";
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
 import { readFileSync } from "fs";
+vi.mock("../src/state/actions/util-actions", () => ({
+  changeManuallyAddedColumns: vi.fn(),
+  normalizeColumnProperties: vi.fn()
+}));
 const tests = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-tests.json").toString());
 const keys = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-keys.json").toString());
 describe("escape html chars", () => {
@@ -145,7 +150,12 @@ describe("translate columnInfo to columnInfoTSC", () => {
       "class datastore.BlankColumn:Chart Root",
       { ...basicColumn, columnDisplayType: "Blank" }
     ],
-    [basicColumn.name, "Zone", "class datastore.ZoneColumn:Chart Root", { ...basicColumn, columnDisplayType: "Zone" }],
+    [
+      basicColumn.name,
+      "Zone",
+      "class datastore.ZoneColumn:Chart Root",
+      { ...basicColumn, columnDisplayType: "Zone", columnSpecificSettings: { ...defaultZoneSettings } }
+    ],
     [
       basicColumn.name,
       "Ruler",
@@ -597,6 +607,6 @@ describe("json to xml", () => {
       `    <column id="class datastore.RootColumn:Chart Root">\n` +
       `    </column>\n` +
       `</TSCreator>`;
-    expect(parseSettings.jsonToXml({} as ColumnInfo, {} as ChartSettings)).toEqual(key);
+    expect(parseSettings.jsonToXml({} as ColumnInfo, new Map<string, ColumnInfo>(), {} as ChartSettings)).toEqual(key);
   });
 });

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig } from "@tsconline/shared";
+import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography } from "@mui/material";
@@ -10,6 +10,9 @@ import { useTheme, styled } from "@mui/material/styles";
 import { TSCIcon, TSCButton, TSCCard, StyledScrollbar } from "./components";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import "./Home.css";
+import { ErrorCodes } from "./util/error-codes";
+import _ from "lodash";
+import { useTranslation } from "react-i18next";
 
 const HeaderContainer = styled("div")(({ theme }) => ({
   display: "flex",
@@ -25,10 +28,11 @@ const HeaderTitle = styled(Typography)(({ theme }) => ({
 }));
 
 const TSCOnlineHeader = () => {
+  const { t } = useTranslation();
   return (
     <HeaderContainer>
       <TSCIcon src={TSCreatorLogo} alt="Logo" size="80px" marginTop="20px" />
-      <HeaderTitle variant="h2">Time Scale Creator Online</HeaderTitle>
+      <HeaderTitle variant="h2">{t("title.main")}</HeaderTitle>
     </HeaderContainer>
   );
 };
@@ -37,6 +41,7 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div className="whole_page">
       <TSCOnlineHeader />
@@ -49,11 +54,11 @@ export const Home = observer(function Home() {
           style={{
             fontSize: theme.typography.pxToRem(12)
           }}
-          onClick={() => {
+          onClick={async () => {
             actions.removeCache();
             actions.resetState();
           }}>
-          Remove Cache
+          {t("button.remove-cache")}
         </TSCButton>
       </div>
     </div>
@@ -69,9 +74,10 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   navigate: NavigateFunction;
   configArray: ChartConfig[];
 }) {
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
+  const { t } = useTranslation();
   const handleAccordionChange = () => {
     setExpanded(!expanded);
   };
@@ -87,7 +93,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
           aria-controls="panel1a-content"
           id="panel1a-header"
           className="preset-summary">
-          <Typography className="preset-type-title">{`${type} PRESETS`}</Typography>
+          <Typography className="preset-type-title">{t(`presets.${type}`)}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <StyledScrollbar>
@@ -97,15 +103,22 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      const success = await actions.setDatapackConfig(
-                        preset.datapacks.map((datapack) => datapack.file),
-                        preset.settings
-                      );
-                      // wait to see if we can grab necessary data
-                      if (success) {
-                        actions.initiateChartGeneration(navigate, "/home");
+                      let datapacks: DatapackConfigForChartRequest[] = [];
+                      try {
+                        datapacks = preset.datapacks.map((dp) => {
+                          const datapack = _.cloneDeep(
+                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
+                          );
+                          assertDatapackConfigForChartRequest(datapack);
+                          return datapack;
+                        });
+                      } catch (e) {
+                        actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
+                        return;
                       }
-                      //TODO add an error message saying the data is irregular and can't be loaded
+                      const success = await actions.processDatapackConfig(datapacks, preset.settings);
+                      if (!success) return;
+                      actions.initiateChartGeneration(navigate, "/home");
                     }}
                   />
                 </Grid>

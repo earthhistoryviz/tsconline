@@ -4,6 +4,7 @@ import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import { ColumnInfo } from "@tsconline/shared";
 import { context } from "../../state"; // Import the context
+import { useTranslation } from "react-i18next";
 
 interface AccordionPositionControlsProps {
   column: ColumnInfo;
@@ -11,7 +12,7 @@ interface AccordionPositionControlsProps {
 
 const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {
   const { actions } = useContext(context); // Use the context to get actions
-
+  const { t } = useTranslation();
   const incrementPosition = () => {
     actions.incrementColumnPosition(column);
   };
@@ -24,10 +25,9 @@ const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ c
   // This IS the file, along with column-actions.ts
   // I am not sure why it is refered to as shift row in the original Java program this is based off of,
   // since everywhere else refers to it as a column, as does the final product.
-
   return (
     <div className="accordion-position-controls">
-      <Typography>Shift Row Positions</Typography>
+      <Typography>{t("settings.column.menu.shift-row")}</Typography>
       <div className="lightgray-square">
         <IconButton
           className="custom-icon-button"

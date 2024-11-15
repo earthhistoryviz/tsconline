@@ -16,9 +16,11 @@ import {
   assertPointSettings,
   assertRangeSettings,
   assertRulerColumnInfoTSC,
+  assertRulerSettings,
   assertSequenceColumnInfoTSC,
   assertSequenceSettings,
   assertZoneColumnInfoTSC,
+  assertZoneSettings,
   convertPointShapeToPointType,
   defaultChartSettingsInfoTSC,
   defaultChronColumnInfoTSC,
@@ -34,11 +36,12 @@ import {
   isRGB
 } from "@tsconline/shared";
 import { ChartSettings } from "../types";
-import { convertRgbToString, convertTSCColorToRGB } from "../util/util";
+import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
+import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 
 /**
  * casts a string to a specified type
@@ -219,6 +222,9 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
     case "PointColumn":
       column = JSON.parse(JSON.stringify(defaultPointColumnInfoTSC));
       break;
+    case "ChronColumn":
+      column = JSON.parse(JSON.stringify(defaultChronColumnInfoTSC));
+      break;
     default:
       column = JSON.parse(JSON.stringify(defaultColumnBasicInfoTSC));
   }
@@ -232,7 +238,13 @@ function processColumn(node: Element, id: string): ColumnInfoTSC {
         const child = <Element>maybeChild;
         const childName = child.getAttribute("id");
         if (child.nodeName === "column") {
-          column.children.push(processColumn(child, childName!));
+          let childColumn = processColumn(child, childName!);
+          //since isDataMiningColumn is an attribute of the column node, have to set it here
+          if (child.getAttribute("isDataMiningColumn") === "true") {
+            assertPointColumnInfoTSC(childColumn);
+            childColumn.isDataMiningColumn = true;
+          }
+          column.children.push(childColumn);
         } else if (child.nodeName === "fonts") {
           column.fonts = processFonts(child);
         } else if (child.nodeName === "setting") {
@@ -369,7 +381,7 @@ export function generateSettingsXml(stateSettings: ChartSettings, indent: string
     xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">${timeSettings.skipEmptyColumns}</setting>\n`;
   }
   xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
-  xml += `${indent}<setting name="noIndentPattern">false</setting>\n`;
+  xml += `${indent}<setting name="noIndentPattern">${stateSettings.noIndentPattern}</setting>\n`;
   xml += `${indent}<setting name="negativeChk">false</setting>\n`;
   xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
   xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
@@ -395,7 +407,11 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Zone":
-      column = cloneDeep(defaultZoneColumnInfoTSC);
+      assertZoneSettings(state.columnSpecificSettings);
+      column = {
+        ...cloneDeep(defaultZoneColumnInfoTSC),
+        orientation: state.columnSpecificSettings.orientation
+      };
       break;
     case "Sequence":
       assertSequenceSettings(state.columnSpecificSettings);
@@ -419,8 +435,16 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
     case "Ruler":
-      column = cloneDeep(defaultRulerColumnInfoTSC);
+      if (state.name != "Ma" && state.name != "Chart Root" && state.name != state.units.split(" ")[0]) {
+        console.log(state.name);
+        assertRulerSettings(state.columnSpecificSettings);
+        column = { ...cloneDeep(defaultRulerColumnInfoTSC), justification: state.columnSpecificSettings.justification };
+      } else {
+        column = cloneDeep(defaultRulerColumnInfoTSC);
+      }
+
       break;
+
     case "Point":
       assertPointSettings(state.columnSpecificSettings);
       column = {
@@ -546,7 +570,14 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
       continue;
     }
     if (key === "title") {
-      xml += `${indent}<setting name="title">${column[key]}</setting>\n`;
+      let title = column[key];
+      if (/^Age \d+ for .+$/.test(column[key])) {
+        title = "Age";
+      } else if (/^Blank \d+ for .+$/.test(column[key])) {
+        title = "Blank " + findSerialNum(column[key]);
+      }
+
+      xml += `${indent}<setting name="title">${title}</setting>\n`;
     } else if (key === "backgroundColor") {
       // add if useNamed and standardized properties are implemented
       // if ("standardized" in column[key] && "useNamed" in column[key]) {
@@ -635,7 +666,14 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
   return xml;
 }
 
-export function jsonToXml(state: ColumnInfo, settings: ChartSettings, version: string = "PRO8.1"): string {
+export function jsonToXml(
+  state: ColumnInfo,
+  hash: Map<string, ColumnInfo>,
+  settings: ChartSettings,
+  version: string = "PRO8.1"
+): string {
+  normalizeColumnProperties(state);
+  changeManuallyAddedColumns(state, hash);
   let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;

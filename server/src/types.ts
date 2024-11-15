@@ -5,7 +5,11 @@ export interface Database {
   users: UserTable;
   verification: VerificationTable;
   ip: IpTable;
+  workshop: WorkshopTable;
+  usersWorkshops: UsersWorkshopsTable;
 }
+
+export type AccountType = "pro" | "default";
 
 export interface UserTable {
   userId: Generated<number>;
@@ -17,6 +21,7 @@ export interface UserTable {
   emailVerified: number;
   invalidateSession: number;
   isAdmin: number;
+  accountType: AccountType;
 }
 
 export interface VerificationTable {
@@ -32,6 +37,18 @@ export interface IpTable {
   count: number;
 }
 
+export interface WorkshopTable {
+  workshopId: Generated<number>;
+  title: string;
+  start: string;
+  end: string;
+}
+
+export interface UsersWorkshopsTable {
+  workshopId: number;
+  userId: number;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
@@ -39,9 +56,16 @@ export type UpdatedUser = Updateable<UserTable>;
 export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
 
+export type UsersWorkshops = Selectable<UsersWorkshopsTable>;
+export type NewUsersWorkshops = Insertable<UsersWorkshopsTable>;
+
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;
 export type UpdatedIp = Updateable<IpTable>;
+
+export type Workshop = Selectable<WorkshopTable>;
+export type NewWorkshop = Insertable<WorkshopTable>;
+export type UpdatedWorkshop = Updateable<WorkshopTable>;
 
 export type Email = {
   from: string;
@@ -57,7 +81,6 @@ export type Email = {
 
 export type AssetConfig = {
   activeJar: string;
-  activeDatapacks: DatapackDescriptionInfo[];
   decryptionJar: string;
   decryptionDirectory: string;
   datapacksDirectory: string;
@@ -67,14 +90,11 @@ export type AssetConfig = {
   patternsDirectory: string;
   colors: string;
   fileMetadata: string;
-  uploadDirectory: string;
+  publicDirectory: string;
   datapackImagesDirectory: string;
-  adminConfigPath: string;
-};
-
-export type AdminConfig = {
-  datapacks: DatapackDescriptionInfo[];
-  removeDevDatapacks: string[]; // for ignoring any datapacks that dev wants to use to prevent merge conflicts
+  privateDatapacksDirectory: string;
+  uploadDirectory: string;
+  publicDatapacksDirectory: string;
 };
 
 export type Colors = {
@@ -88,30 +108,9 @@ export type FileMetadataIndex = {
 export type FileMetadata = {
   fileName: string;
   lastUpdated: string;
-  decryptedFilepath: string;
-  mapPackIndexFilepath: string;
-  datapackIndexFilepath: string;
+  uuid: string;
 };
 
-export type DatapackDescriptionInfo = {
-  description: string;
-  title: string;
-  file: string;
-  size: string;
-};
-
-export function assertAdminConfig(o: any): asserts o is AdminConfig {
-  if (typeof o !== "object" || !o) throw "AdminConfig must be an object";
-  if (!o.datapacks || !Array.isArray(o.datapacks)) throw 'AdminConfig must have a "datapacks" array';
-  for (const datapack of o.datapacks) {
-    assertDatapackDescriptionInfo(datapack);
-  }
-  if (!o.removeDevDatapacks || !Array.isArray(o.removeDevDatapacks))
-    throw 'AdminConfig must have a "removeDevDatapacks" array';
-  for (const datapack of o.removeDevDatapacks) {
-    if (typeof datapack !== "string") throw "AdminConfig removeDevDatapacks must be an array of strings";
-  }
-}
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
@@ -129,12 +128,7 @@ export function assertFileMetadata(o: any): asserts o is FileMetadata {
   if (typeof o !== "object" || !o) throw "FileMetadata must be an object";
   if (typeof o.fileName !== "string") throwError("FileMetadata", "fileName", "string", o.fileName);
   if (typeof o.lastUpdated !== "string") throwError("FileMetadata", "lastUpdated", "string", o.lastUpdated);
-  if (typeof o.decryptedFilepath !== "string")
-    throwError("FileMetadata", "decryptedFilepath", "string", o.decryptedFilepath);
-  if (typeof o.mapPackIndexFilepath !== "string")
-    throwError("FileMetadata", "mapPackIndexFilepath", "string", o.mapPackIndexFilepath);
-  if (typeof o.datapackIndexFilepath !== "string")
-    throwError("FileMetadata", "datapackIndexFilepath", "string", o.datapackIndexFilepath);
+  if (typeof o.uuid !== "string") throwError("FileMetadata", "uuid", "string", o.uuid);
 }
 
 export function assertFileMetadataIndex(o: any): asserts o is FileMetadataIndex {
@@ -152,14 +146,6 @@ export function assertColors(o: any): asserts o is Colors {
   }
 }
 
-export function assertDatapackDescriptionInfo(o: any): asserts o is DatapackDescriptionInfo {
-  if (!o || typeof o !== "object") throw new Error("DatapackDescriptionInfo must be a non-null object");
-  if (typeof o.description !== "string") throw new Error("DatapackDescriptionInfo description must be of type string");
-  if (typeof o.title !== "string") throw new Error("DatapackDescriptionInfo title must be of type string");
-  if (typeof o.file !== "string") throw new Error("DatapackDescriptionInfo file must be of type string");
-  if (typeof o.size !== "string") throw new Error("DatapackDescriptionInfo size must be of type string");
-}
-
 export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o !== "object" || !o) throw "AssetConfig must be an object";
   if (typeof o.activeJar !== "string") throw 'AssetConfig must have an "activeJar" string';
@@ -172,18 +158,14 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.colors !== "string") throw 'AssetConfig must have a "colors" string';
   if (typeof o.fileMetadata !== "string") throw 'AssetConfig must have a "fileMetadata" string';
   if (typeof o.uploadDirectory !== "string") throw 'AssetConfig must have a "uploadDirectory" string';
-  if (!o.activeDatapacks || !Array.isArray(o.activeDatapacks)) throw 'AssetConfig must have an "activeJar" string';
-  for (const [index, ad] of o.activeDatapacks.entries()) {
-    if (typeof ad !== "object")
-      throw "AssetConfig activeDatapacks item " + index + " must be a valid DatapackDescriptionInfo object";
-    if (typeof ad.description !== "string")
-      throw "AssetConfig activeDatapacks description item " + index + " must be a valid string";
-    if (typeof ad.title !== "string")
-      throw "AssetConfig activeDatapacks title item " + index + " must be a valid string";
-    if (typeof ad.file !== "string") throw "AssetConfig activeDatapacks file item " + index + " must be a valid string";
-    if (typeof ad.size !== "string") throw "AssetConfig activeDatapacks size item " + index + " must be a valid string";
-  }
   if (typeof o.timescaleFilepath !== "string") throw 'AssetConfig must have a "timescaleFilepath" string';
   if (typeof o.datapackImagesDirectory !== "string") throw 'AssetConfig must have a "datapackImagesDirectory" string';
-  if (typeof o.adminConfigPath !== "string") throw 'AssetConfig must have a "adminConfigPath" string';
+  if (typeof o.publicDirectory !== "string") throw 'AssetConfig must have a "publicDirectory" string';
+  if (typeof o.privateDatapacksDirectory !== "string")
+    throw 'AssetConfig must have a "privateDatapacksDirectory" string';
+  if (typeof o.publicDatapacksDirectory !== "string") throw 'AssetConfig must have a "publicDatapacksDirectory" string';
+}
+
+export function isAccountType(o: any): o is AccountType {
+  return o === "pro" || o === "default";
 }

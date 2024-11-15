@@ -1,11 +1,73 @@
-import { Box } from "@mui/material";
+import { Box, Dialog, useTheme } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { NotImplemented } from "../components";
+import { AgGridReact } from "ag-grid-react";
+import { useContext, useRef, useState } from "react";
+import { context } from "../state";
+import { ColDef } from "ag-grid-community";
+import { TSCButton, DatapackUploadForm } from "../components";
+import { BaseDatapackProps, assertBaseDatapackProps } from "@tsconline/shared";
+
+const datapackColDefs: ColDef[] = [
+  {
+    headerName: "Datapack Title",
+    field: "title",
+    sortable: true,
+    filter: true,
+    rowDrag: true,
+    flex: 1,
+    checkboxSelection: true
+  },
+  { headerName: "File Name", field: "file", flex: 1, sortable: true, filter: true },
+  { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
+  { headerName: "Description", field: "description", flex: 1 },
+  { headerName: "Size", field: "size", flex: 0.5 },
+  { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
+];
 
 export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
+  const theme = useTheme();
+  const { state, actions } = useContext(context);
+  const [formOpen, setFormOpen] = useState(false);
+  const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
+  const deleteDatapacks = async () => {
+    const selectedNodes = gridRef.current?.api.getSelectedNodes();
+    if (!selectedNodes || !selectedNodes.length) return;
+    try {
+      const datapacks = selectedNodes.map((node) => {
+        assertBaseDatapackProps(node.data);
+        return node.data;
+      });
+      await actions.adminDeleteOfficialDatapacks(datapacks);
+    } catch (e) {
+      console.error(e);
+    }
+  };
   return (
-    <Box>
-      <NotImplemented />
+    <Box className={theme.palette.mode === "dark" ? "ag-theme-quartz-dark" : "ag-theme-quartz"} height={500}>
+      <Box display="flex" m="10px" gap="20px">
+        <TSCButton
+          onClick={() => {
+            setFormOpen(!formOpen);
+          }}>
+          Upload Datapack
+        </TSCButton>
+        <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
+        <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
+          <DatapackUploadForm
+            close={() => setFormOpen(false)}
+            upload={actions.adminUploadOfficialDatapack}
+            type={{ type: "official" }}
+          />
+        </Dialog>
+      </Box>
+      <AgGridReact
+        ref={gridRef}
+        columnDefs={datapackColDefs}
+        rowSelection="multiple"
+        rowDragManaged
+        rowMultiSelectWithClick
+        rowData={Object.values(state.datapacks).filter((datapack) => datapack.type === "official")}
+      />
     </Box>
   );
 });

@@ -13,26 +13,27 @@
 }
 
 .search-time-display-container {
-  min-width: 18vw;
+  min-width: 200px;
+  max-width: 800px;
+  min-height: 70px;
+  max-height: 200px;
+  resize: both;
+}
+.search-time-display-first-header {
+  padding: 0;
+}
+.search-time-display-second-header {
+  top: 26px;
+  padding: 0 16px;
+}
+
+.search-header-container {
   display: flex;
-  justify-content: center;
-  flex-direction: column;
-  align-items: center;
+  flex-direction: row;
 }
 
-.search-time-display-ages-container {
-  margin-top: 20px;
-}
-.search-time-display-ages {
-  padding: 8px;
-  margin: 8px;
-  border: 1px solid;
-}
-
-@media (max-width: 520px) {
-  .search-time-display-ages-container {
-    margin-top: 20px;
-    display: flex;
+@media screen and (max-width: 440px) {
+  .search-header-container {
     flex-direction: column;
   }
 }

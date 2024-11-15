@@ -68,6 +68,7 @@ type TSCRadioGroupProps = {
     value: string;
     label?: string;
     imageSrc?: string;
+    defaultChecked?: boolean;
   }[];
   disabled?: boolean;
   direction?: "horizontal" | "vertical";
@@ -105,6 +106,7 @@ export const TSCRadioGroup: React.FC<TSCRadioGroupProps> = ({
             className="radio-form-label"
             value={radio.value}
             control={<TSCRadio />}
+            defaultChecked={radio.defaultChecked}
             label={
               <div className="radio-label-information">
                 {radio.imageSrc && <img src={radio.imageSrc} alt={radio.label} className="radio-img-label" />}

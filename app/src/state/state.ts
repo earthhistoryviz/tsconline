@@ -1,4 +1,4 @@
-import { observable } from "mobx";
+import { configure, observable } from "mobx";
 
 import {
   SnackbarInfo,
@@ -8,8 +8,9 @@ import {
   MapHistory,
   Config,
   SettingsTabs,
-  CachedConfig,
-  User
+  User,
+  GroupedEventSearchInfo,
+  EditableDatapackMetadata
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -19,13 +20,17 @@ import type {
   ColumnInfo,
   Presets,
   DatapackIndex,
-  MapPackIndex,
   Patterns,
-  AdminSharedUser
+  AdminSharedUser,
+  DatapackConfigForChartRequest,
+  SharedWorkshop,
+  Datapack
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
+import { getInitialDarkMode } from "./actions";
+configure({ enforceActions: "observed" });
 
 export type State = {
   chartTab: {
@@ -40,6 +45,7 @@ export type State = {
     downloadFiletype: "svg" | "pdf" | "png";
     isSavingChart: boolean;
     enableScrollZoom: boolean;
+    unsafeChartContent: string;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -53,17 +59,29 @@ export type State = {
   showPresetInfo: boolean;
   geologicalTopStageAges: TimescaleItem[];
   geologicalBaseStageAges: TimescaleItem[];
+  columnMenu: {
+    columnSelected: string | null;
+    tabs: string[];
+    tabValue: number;
+  };
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
-    columnSelected: string | null;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
+    groupedEvents: GroupedEventSearchInfo[];
   };
   admin: {
     displayedUsers: AdminSharedUser[];
+    displayedUserDatapacks: { [uuid: string]: DatapackIndex };
+    workshops: SharedWorkshop[];
+  };
+  datapackProfilePage: {
+    editMode: boolean;
+    editableDatapackMetadata: EditableDatapackMetadata | null;
+    unsavedChanges: boolean;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -82,8 +100,7 @@ export type State = {
   config: Config;
   prevConfig: Config;
   presets: Presets;
-  datapackIndex: DatapackIndex;
-  mapPackIndex: MapPackIndex;
+  datapacks: Datapack[];
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -101,7 +118,8 @@ export type State = {
   };
   snackbars: SnackbarInfo[];
   presetColors: string[];
-  datapackCachedConfiguration: Map<string, CachedConfig>;
+  isProcessingDatapacks: boolean;
+  unsavedDatapackConfig: DatapackConfigForChartRequest[];
 };
 
 export const state = observable<State>({
@@ -116,7 +134,8 @@ export const state = observable<State>({
     downloadFilename: "chart",
     downloadFiletype: "svg",
     isSavingChart: false,
-    enableScrollZoom: false
+    enableScrollZoom: false,
+    unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -127,13 +146,21 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    uuid: "",
     settings: {
-      darkMode: false,
+      darkMode: getInitialDarkMode(),
       language: "English"
     }
   },
   admin: {
-    displayedUsers: []
+    displayedUsers: [],
+    displayedUserDatapacks: {},
+    workshops: []
+  },
+  datapackProfilePage: {
+    editMode: false,
+    editableDatapackMetadata: null,
+    unsavedChanges: false
   },
   chartLoading: false,
   madeChart: false,
@@ -143,14 +170,19 @@ export const state = observable<State>({
   showPresetInfo: false,
   geologicalTopStageAges: [],
   geologicalBaseStageAges: [],
+  columnMenu: {
+    columnSelected: null,
+    tabs: ["General", "Font"],
+    tabValue: 0
+  },
   settingsTabs: {
     selected: "time",
     columns: undefined,
-    columnSelected: null,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact",
-    eventSearchTerm: ""
+    eventSearchTerm: "",
+    groupedEvents: []
   },
   mapState: {
     mapInfo: {},
@@ -182,8 +214,7 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
-  datapackIndex: {},
-  mapPackIndex: {},
+  datapacks: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
@@ -201,5 +232,6 @@ export const state = observable<State>({
   },
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: [],
-  datapackCachedConfiguration: new Map<string, CachedConfig>()
+  isProcessingDatapacks: false,
+  unsavedDatapackConfig: []
 });

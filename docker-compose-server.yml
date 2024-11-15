@@ -1,0 +1,17 @@
+version: "3"
+services:
+  tsconline:
+    build: .
+    restart: on-failure
+    #image: tscreator/tscreator_online:v2
+    env_file:
+      - secrets.env
+    volumes:
+      - .:/code
+    environment:
+      - NODE_ENV=production
+    networks:
+      - shared_network
+networks:
+  shared_network:
+    external: true

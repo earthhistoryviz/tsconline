@@ -8,6 +8,7 @@ import "./TSCError.css";
 import Color from "color";
 import ErrorIcon from "@mui/icons-material/Error";
 import { ErrorCodes } from "../util/error-codes";
+import { useTranslation } from "react-i18next";
 
 type TSCErrorProps = {
   errorContext: ErrorCodes;
@@ -29,6 +30,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
     if (reason === "clickaway") return;
     actions.removeError(errorContext);
   }
+  const { t } = useTranslation();
   return (
     <Snackbar
       open={true}
@@ -41,21 +43,21 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
       <div
         className="alert"
         style={{
-          backgroundColor: Color(theme.palette.error.light).lighten(0.1).string(),
+          backgroundColor: Color(theme.palette.error.light).lighten(0.3).string(),
           border: `1px solid ${Color(theme.palette.error.light).darken(0.4)}`
         }}>
         <div className="alert-header">
           <div className="alert-title">
             <ErrorIcon className="error-icon-alert" sx={{ color: theme.palette.error.dark }} />
             <Typography className="error-title" variant="h2" color="error.dark">
-              Error {countDisplay}
+              {t("errors.title")} {countDisplay}
             </Typography>
           </div>
           <IconButton className="alert-close" onClick={handleCloseError} size="large">
             <CloseIcon className="alert-close-icon" style={{ color: theme.palette.error.dark }} />
           </IconButton>
         </div>
-        <CustomDivider key={`${index} error`} />
+        <CustomDivider key={`${index} error`} style={{ borderColor: theme.palette.error.dark }} />
         <StyledScrollbar className="alert-text">
           <Typography className="alert-info-text" color="error.dark">
             {message}

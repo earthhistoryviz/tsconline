@@ -1,198 +1,97 @@
-import { Box, Paper, TextField, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import {
+  Paper,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  TextField,
+  useTheme
+} from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useRef, useState } from "react";
+import { useContext, useRef } from "react";
 import "./Search.css";
 import { context } from "../state";
 import { Results } from "./Results";
-import { EventSearchInfo, GroupedEventSearchInfo } from "../types";
+import { StyledScrollbar } from "../components";
+import { useTranslation } from "react-i18next";
 export const Search = observer(function Search() {
   const { state, actions } = useContext(context);
-  function makeColumnPath(name: string): string[] {
-    const columnPath: string[] = [];
-    let column = state.settingsTabs.columnHashMap.get(name);
-    if (!column) {
-      return [];
-    }
-    while (column.name !== "Chart Root") {
-      columnPath.push(column.editName);
-      column = state.settingsTabs.columnHashMap.get(column.parent!);
-      if (!column) break;
-    }
-    return columnPath;
-  }
-  const count = useRef(0);
-  function searchResultData() {
-    count.current = 0;
-    if (state.settingsTabs.eventSearchTerm === "") return [];
-
-    //key: column name/event name
-    //info: info found in subinfo array
-    const results = new Map<string, EventSearchInfo[]>();
-
-    for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-      if (columnInfo.name === "Chart Root") {
-        continue;
-      }
-      if (columnInfo.editName.toLowerCase().includes(state.settingsTabs.eventSearchTerm.toLowerCase())) {
-        //for column names
-        const id = columnInfo.editName + " - " + "Column";
-        if (!results.has(id)) {
-          results.set(id, []);
-        }
-        results.get(id)!.push({
-          id: count.current,
-          columnName: columnInfo.name,
-          columnPath: makeColumnPath(columnInfo.name),
-          unit: columnInfo.units
-        });
-        count.current++;
-      }
-      if (columnInfo.subInfo) {
-        //skip since subInfo is not associated with this but the app does it for map points
-        if (columnInfo.columnDisplayType === "MetaColumn") {
-          continue;
-        }
-        for (let i = 0; i < columnInfo.subInfo.length; i++) {
-          const subInfo = columnInfo.subInfo[i];
-          if ("label" in subInfo) {
-            if (subInfo.label!.toLowerCase().includes(state.settingsTabs.eventSearchTerm.toLowerCase())) {
-              const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
-              const resInfo: EventSearchInfo = {
-                id: count.current,
-                columnName: columnInfo.name,
-                columnPath: makeColumnPath(columnInfo.name),
-                unit: columnInfo.units
-              };
-
-              //facies/chron label doesn't have subinfo because they are block type but its parent has facies/chron info, so access it through BlockSeriesMetaColumn
-              if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Facies Label")) {
-                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
-                  resInfo.columnName = columnInfo.name + " Facies Label";
-                } else if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Chron Label")) {
-                  resInfo.columnPath = makeColumnPath(columnInfo.name + " Chron Label");
-                  resInfo.columnName = columnInfo.name + " Chron Label";
-                } else {
-                  console.error(
-                    "While searching, could not find Facies or Chron label for " +
-                      columnInfo.name +
-                      " but should have found it"
-                  );
-                  continue;
-                }
-              }
-              if ("age" in subInfo) {
-                //facies and chron label show up as block, so find ranges for them too
-                if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
-                  if (i > 0) {
-                    const nextBlock = columnInfo.subInfo[i - 1];
-                    if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
-                  } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
-                } else {
-                  resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
-                }
-              }
-              if ("subEventType" in subInfo) {
-                resInfo.qualifier = subInfo.subEventType;
-              }
-              if ("popup" in subInfo) {
-                resInfo.notes = subInfo.popup;
-              }
-              //same special case as above
-              const key =
-                resultType === "BlockSeriesMetaColumn"
-                  ? subInfo.label + " - " + "Block"
-                  : subInfo.label + " - " + resultType;
-              if (!results.has(key)) {
-                results.set(key, []);
-              }
-              const eventGroup = results.get(key)!;
-              eventGroup.push(resInfo);
-              count.current++;
-            }
-          }
-        }
-      }
-    }
-
-    const groupedEvents: GroupedEventSearchInfo[] = [];
-    results.forEach((info: EventSearchInfo[], key: string) => {
-      groupedEvents.push({ key: key, info: [...info] });
-    });
-    return groupedEvents;
-  }
-
+  const countRef = useRef(0);
+  const theme = useTheme();
+  const { t } = useTranslation();
+  const count = countRef.current; //can't directly pass countRef.current to the translator
   const TimeDisplay = observer(() => {
-    const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
     return (
-      <Paper
-        variant="outlined"
-        className="search-time-display-container"
-        sx={(theme) => ({
-          backgroundColor: theme.palette.backgroundColor.main
-        })}>
-        <ToggleButtonGroup
-          value={units}
-          exclusive
-          size="small"
-          onChange={(_event: React.MouseEvent<HTMLElement>, value: string) => {
-            if (value === null) {
-              return;
-            }
-            setUnits(value);
-          }}
-          className="ToggleButtonGroup"
-          aria-label="Units">
-          {Object.keys(state.settings.timeSettings).map((unit) => (
-            <ToggleButton key={unit} value={unit} disableRipple>
-              {unit}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-        <Box className="search-time-display-ages-container">
-          <Box
-            className="search-time-display-ages"
-            bgcolor="secondaryBackground.main"
-            sx={{
-              display: "inline",
-              borderRadius: 2
-            }}>
-            Top Age: {state.settings.timeSettings[units].topStageAge}
-          </Box>
-          <Box
-            className="search-time-display-ages"
-            bgcolor="secondaryBackground.main"
-            sx={{
-              display: "inline",
-              borderRadius: 2
-            }}>
-            Base Age:
-            {state.settings.timeSettings[units].baseStageAge}
-          </Box>
-        </Box>
-      </Paper>
+      <TableContainer
+        component={Paper}
+        sx={{ background: theme.palette.backgroundColor.main }}
+        className="search-time-display-container">
+        <StyledScrollbar>
+          <Table stickyHeader size="small">
+            <TableHead>
+              <TableRow>
+                <TableCell
+                  className="search-time-display-first-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="center"
+                  colSpan={2}>
+                  {t("settings.search.current-time-settings")}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell
+                  className="search-time-display-second-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="left">
+                  Unit
+                </TableCell>
+                <TableCell
+                  className="search-time-display-second-header"
+                  sx={{ background: theme.palette.backgroundColor.main }}
+                  align="left">
+                  Top/Base
+                </TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {Object.keys(state.settings.timeSettings).map((unit) => (
+                <TableRow key={unit} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
+                  <TableCell>{unit}</TableCell>
+                  <TableCell align="left">
+                    {state.settings.timeSettings[unit].topStageAge}/{state.settings.timeSettings[unit].baseStageAge}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </StyledScrollbar>
+      </TableContainer>
     );
   });
 
   return (
     <div className="search-container">
-      <div style={{ display: "flex", flexDirection: "row" }}>
+      <div className="search-header-container">
         <div className="search-and-options">
           <TextField
             className="search-bar"
-            label="Search"
+            label={t("settings.search.search-bar")}
             variant="outlined"
             size="small"
             fullWidth
-            onChange={(e) => actions.setEventSearchTerm(e.target.value)}
+            onChange={async (e) => {
+              countRef.current = await actions.searchEvents(e.target.value);
+            }}
             value={state.settingsTabs.eventSearchTerm}
           />
-          <div>Found {count.current} Results</div>
+          <div>{t("settings.search.found-result", { count })}</div>
         </div>
         <TimeDisplay />
       </div>
 
-      <Results groupedEvents={searchResultData()} />
+      <Results groupedEvents={state.settingsTabs.groupedEvents} />
     </div>
   );
 });

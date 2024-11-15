@@ -7,7 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "Africa Bight Map Pack",
+      "name": "Africa Bight",
       "file": "AfricaBight.map"
     }
   ],

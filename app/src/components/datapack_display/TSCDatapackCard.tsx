@@ -1,35 +1,32 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Typography } from "@mui/material";
-import { DatapackParsingPack } from "@tsconline/shared";
-import { devSafeUrl } from "../../util";
+import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
+import { getDatapackProfileImageUrl, getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
-  name: string;
-  datapack: DatapackParsingPack;
+  datapack: Datapack;
   value: boolean;
-  onChange: (name: string) => Promise<void>;
+  onChange: (datapack: DatapackConfigForChartRequest) => void;
 };
-export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack, value, onChange }) => {
-  const [imageUrl, setImageUrl] = useState(devSafeUrl("/datapack-images/" + datapack.image));
+export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, value, onChange }) => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const defaultImageUrl = devSafeUrl("/datapack-images/default.png");
 
   return (
     <Card
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
-      onClick={() => navigate(`/datapack/${encodeURIComponent(name)}`)}>
-      <CardMedia component="img" height="140" image={imageUrl} onError={() => setImageUrl(defaultImageUrl)} />
+      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
+      <CardMedia component="img" height="140" image={getDatapackProfileImageUrl(datapack)} />
       <CardContent className={styles.cc}>
         <div className={styles.hc}>
           <Typography className={styles.header}>{datapack.title}</Typography>
           <DatapackMenu
-            name={name}
+            datapack={datapack}
             button={
               <IconButton className={styles.other} onClick={(e) => e.stopPropagation()}>
                 <span className={styles.more} />
@@ -38,7 +35,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
           />
         </div>
         <Typography className={styles.description}>{datapack.description}</Typography>
-        <Typography className={styles.fd}>Dixon, Dougal, et al. (1980) · {datapack.size}</Typography>
+        <Typography className={styles.fd}>{datapack.authoredBy}</Typography>
       </CardContent>
       <div className={styles.footer} onClick={(e) => e.stopPropagation()}>
         <CardActions className={styles.ca}>
@@ -54,8 +51,7 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ name, datapack
                 onClick={async (e) => {
                   e.stopPropagation();
                   setLoading(true);
-                  await new Promise((resolve) => setTimeout(resolve, 1000));
-                  await onChange(name);
+                  onChange(datapack);
                   setLoading(false);
                 }}>
                 {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}

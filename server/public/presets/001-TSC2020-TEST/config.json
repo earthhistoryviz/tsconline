@@ -7,7 +7,7 @@
   "settings": "settings.tsc",
   "datapacks": [
     {
-      "name": "Internal TSCreator Datapack",
+      "name": "TimeScale Creator Internal Datapack",
       "file": "TSC2020_InternalDatapack_encrypted_13Feb2021.txt"
     }
   ]

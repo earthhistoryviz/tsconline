@@ -6,8 +6,6 @@
 }
 
 .MuiTableCell-root.event-group-identifier {
-  padding-top: 10px;
-  padding-bottom: 10px;
   border-top: 1px solid;
   border-bottom: 1px solid;
 }
@@ -60,7 +58,7 @@
   max-width: 120px;
 }
 
-.search-result-qualifier-column {
+.search-result-type-column {
   min-width: 70px;
   max-width: 70px;
 }
@@ -70,7 +68,18 @@
   max-width: 50px;
 }
 
-.search-result-column-container:hover {
+.MuiSvgIcon-root.status-error-icon {
+  width: 22px;
+  height: 22px;
+}
+
+.status-checkbox,
+.MuiSvgIcon-root.status-error-icon {
+  margin: 0 9px 0 0px;
+  padding: 0px;
+}
+
+.search-result-status-container:hover {
   cursor: pointer;
 }
 

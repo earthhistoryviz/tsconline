@@ -10,7 +10,7 @@ jobs:
   check-files:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -26,8 +26,8 @@ jobs:
           if git diff --name-only main...HEAD | grep -E 'uploads/'; then
             echo "uploads folder detected, please remove" >> disallowed_files.txt
           fi
-          if git diff --name-only main...HEAD | grep 'file_metadata.json'; then
-            echo "file_metadata.json detected, please remove" >> disallowed_files.txt
+          if git diff --name-only main...HEAD | grep 'file-metadata.json'; then
+            echo "file-metadata.json detected, please remove" >> disallowed_files.txt
           fi   
           git diff --name-only main...HEAD | grep -E '\.(dpk|mdpk|txt|map|java|jar|DS_Store|db)$' |grep -v -E '^server/__tests__/__data__/(encryption-test-keys/.*|.*)\.(dpk|txt)$' >> disallowed_files.txt || true
           if git diff --name-only main...HEAD | grep -E 'app/dist/|server/dist/|shared/dist'; then
@@ -69,10 +69,10 @@ jobs:
   code-quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install --immutable
 
       - name: Run ESLint
         id: eslint
@@ -117,18 +117,20 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18"
+          node-version: "21"
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Build with Vite
-        id: vite_build
+      - name: Build the project
+        id: build
         run: |
           set -o pipefail
           if ! yarn build 2>&1 | tee build.log; then
@@ -137,7 +139,7 @@ jobs:
         continue-on-error: true
 
       - name: Report Build Errors
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
@@ -155,10 +157,11 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any build failures
-        if: steps.vite_build.outputs.build_failed == 'true'
+        if: steps.build.outputs.build_failed == 'true'
         run: exit 1
 
       - name: Set up SSH key
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           eval $(ssh-agent)
           mkdir -p ~/.ssh
@@ -169,47 +172,76 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
-
-      - name: set up jdk
+      - name: Set up jdk
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "8"
           java-package: "jdk"
 
-      - name: set up make & zip
-        run: |
-          sudo apt install make
-          sudo apt install zip
-
       - name: Build and compile TSCreator Jar for tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
-          cd /home/runner/work/tsconline/tsconline/tscreator/devel
+          cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find '/home/runner/work/tsconline/tsconline/tscreator/jars/' -type f -name '*.jar' -exec cp {} '/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar' \;
-          if [ -f "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
             exit 1
           fi
-
-      - name: Install xvfb
-        run: sudo apt-get install xvfb
-
       - name: Run Tests
         id: run_tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          set -o pipefail
-          if ! yarn test > test_output.log 2>&1; then
-              echo "test_failed=true" >> $GITHUB_OUTPUT
-              fi
+          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
         continue-on-error: true
+
+      - name: Run Tests and Coverage (Exclude Encryption)
+        id: run_tests_exclude_encryption
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: | 
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Post Coverage Comment
+        if: steps.run_tests.outputs.coverage_failed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('test_output.log', 'utf8');
+            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
+  
+            const commentBody = `
+            ## :x: Coverage Thresholds Not Met
+  
+            The following coverage thresholds were not met:
+            
+            \`\`\`
+            ${coverageErrors.join('\n')}
+            \`\`\`
+  
+            Please review the coverage report and improve the tests to meet the thresholds.
+            `;
+  
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
 
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
@@ -230,7 +262,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
         run: exit 1
 
   wait-for-checks:
@@ -245,6 +277,7 @@ jobs:
 
   setup-preview:
     needs: wait-for-checks
+    if: github.event.pull_request.merged == false
     runs-on: ubuntu-latest
     steps:
       - name: Checkout CODEOWNERS file from main branch
@@ -254,6 +287,7 @@ jobs:
           branch: main
 
       - name: Check if PR author is a code owner
+        if: github.event.pull_request.merged == false
         id: check_codeowner
         run: |
           PR_AUTHOR=${{ github.event.pull_request.user.login }}
@@ -268,25 +302,25 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@v3
+        if: github.event.pull_request.merged == false
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
 
       - name: Set up SSH key
+        if: github.event.pull_request.merged == false
         uses: webfactory/ssh-agent@v0.5.3
         with:
           ssh-private-key: ${{ secrets.SSH_KEY }}
 
       - name: Add known hosts
+        if: github.event.pull_request.merged == false
         run: |
           mkdir -p ~/.ssh
           ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
 
-      - name: Transfer files
-        run: |
-          rsync -avz --exclude '.git' ./ deployuser@dev.geolex.org:/home/aaron/tsconline/pr-preview-${{ github.event.number }}/
-
       - name: Setup files for deployment preview
+        if: github.event.pull_request.merged == false
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: dev.geolex.org
@@ -295,26 +329,47 @@ jobs:
           script: |
             PR_NUMBER=${{ github.event.number }}
             CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-            cd /home/aaron/tsconline/pr-preview-${PR_NUMBER}
+            PR_PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_NUMBER}"
+            BRANCH="${{ github.event.pull_request.head.ref }}"
+            
+            if [ ! -d "$PR_PREVIEW_DIR" ]; then
+              echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
+              mkdir -p "$PR_PREVIEW_DIR"
+              git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
+            else
+              echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
+              cd "$PR_PREVIEW_DIR"
+              git fetch origin "$BRANCH"
+              git reset --hard "origin/$BRANCH"
+            fi
+            
+            cd "$PR_PREVIEW_DIR"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
-              docker-compose -f docker-compose-preview.yml exec -T pr-preview-run bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn && yarn build"
+              docker-compose -f docker-compose-preview.yml up pr-preview-build
+              docker-compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5
               ELAPSED=0
-              while ! docker-compose -f docker-compose-preview.yml logs | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+              while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
+                  docker-compose -f docker-compose-preview.yml down
                   exit 1
                 fi
                 echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
                 sleep $INTERVAL
                 ELAPSED=$((ELAPSED + INTERVAL))
               done
+              echo "Succesfully built"
             else
               echo "Setting up files for PR #${PR_NUMBER}"
               cp ../server/assets/jars/* ./server/assets/jars/
               mkdir -p ./server/assets/datapacks
               cp ../server/assets/datapacks/* ./server/assets/datapacks/
+              cp ../server/.env ./server
+              cp ../app/.env ./app
+              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' ./server/.env
               docker-compose -f docker-compose-preview.yml up pr-preview-build
             fi

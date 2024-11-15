@@ -1,16 +1,22 @@
-import { action, runInAction } from "mobx";
+import { action, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  DatapackIndex,
-  FontsInfo,
-  MapPackIndex,
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
   assertDatapackInfoChunk,
-  assertMapPackInfoChunk
+  DatapackMetadata,
+  defaultColumnRoot,
+  FontsInfo,
+  Datapack,
+  DatapackConfigForChartRequest,
+  isUserDatapack,
+  isOfficialDatapack,
+  assertOfficialDatapack,
+  assertDatapack,
+  assertDatapackArray
 } from "@tsconline/shared";
 
 import {
@@ -20,27 +26,62 @@ import {
   assertSuccessfulServerResponse,
   Presets,
   assertSVGStatus,
-  IndexResponse,
-  assertMapHierarchy,
-  assertColumnInfo,
-  assertMapInfo,
-  defaultFontsInfo,
-  assertIndexResponse,
   assertPresets,
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { fetcher } from "../../util";
-import { applyChartColumnSettings, applyRowOrder, initializeColumnHashMap } from "./column-actions";
+import { executeRecaptcha, fetcher } from "../../util";
+import {
+  applyChartColumnSettings,
+  applyRowOrder,
+  handleDataMiningColumns,
+  initializeColumnHashMap,
+  searchColumns,
+  searchEvents
+} from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { SettingsTabs, equalChartSettings, equalConfig } from "../../types";
+import {
+  EditableDatapackMetadata,
+  SetDatapackConfigCompleteMessage,
+  SetDatapackConfigMessage,
+  SettingsTabs,
+  equalChartSettings,
+  equalConfig
+} from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
+import { actions } from "..";
 import { cloneDeep } from "lodash";
+import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
+import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
+
+export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
+  try {
+    const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
+      method: "GET"
+    });
+    const data = await response.json();
+    if (response.ok) {
+      assertOfficialDatapack(data);
+      assertDatapack(data);
+      return data;
+    } else {
+      displayServerError(
+        data,
+        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      );
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+  return null;
+});
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -62,6 +103,19 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
+export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
+  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+});
+export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
+  state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
+  fetchAllPublicDatapacks();
+});
+export const addDatapack = action("addDatapack", (datapack: Datapack) => {
+  // we don't log since fetching datapacks could produce duplicates
+  if (!doesDatapackAlreadyExist(datapack, state.datapacks)) {
+    state.datapacks.push(observable(datapack));
+  }
+});
 /**
  * Resets any user defined settings
  */
@@ -69,19 +123,20 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
+export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async () => {
   let start = 0;
   let total = -1;
-  const datapackIndex: DatapackIndex = {};
   try {
     while (total == -1 || start < total) {
-      const response = await fetcher(`/datapack-index?start=${start}&increment=${increment}`, {
+      const response = await fetcher(`/public/datapacks?start=${start}&increment=${increment}`, {
         method: "GET"
       });
       const index = await response.json();
       try {
         assertDatapackInfoChunk(index);
-        Object.assign(datapackIndex, index.datapackIndex);
+        for (const dp of index.datapacks) {
+          addDatapack(dp);
+        }
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
@@ -90,70 +145,12 @@ export const fetchDatapackIndex = action("fetchDatapackIndex", async () => {
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
-    setDatapackIndex(datapackIndex);
     console.log("Datapacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   }
 });
-
-export const fetchMapPackIndex = action("fetchMapPackIndex", async () => {
-  let start = 0;
-  let total = -1;
-  const mapPackIndex: MapPackIndex = {};
-  try {
-    while (total == -1 || start < total) {
-      const response = await fetcher(`/map-pack-index?start=${start}&increment=${increment}`, {
-        method: "GET"
-      });
-      const index = await response.json();
-      try {
-        assertMapPackInfoChunk(index);
-        Object.assign(mapPackIndex, index.mapPackIndex);
-        if (total == -1) total = index.totalChunks;
-        start += increment;
-      } catch (e) {
-        displayServerError(index, ErrorCodes.INVALID_MAPPACK_INFO, ErrorMessages[ErrorCodes.INVALID_MAPPACK_INFO]);
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    }
-    setMapPackIndex(mapPackIndex);
-    console.log("MapPacks loaded");
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-/**
- * This is not used to prioritize chunk loading to prevent ui lag
- * however, this will technichally load faster with the current datapacks 5/4/2024
- */
-export const fetchAllIndexes = action("fetchAllIndexes", async () => {
-  try {
-    const response = await fetcher("/datapackinfoindex", {
-      method: "GET"
-    });
-    const indexResponse = await response.json();
-    try {
-      assertIndexResponse(indexResponse);
-      loadIndexResponse(indexResponse);
-      console.log("Indexes loaded");
-    } catch (e) {
-      displayServerError(
-        indexResponse,
-        ErrorCodes.INVALID_DATAPACK_INFO,
-        ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
-      );
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
 export const fetchPresets = action("fetchPresets", async () => {
   try {
     const response = await fetcher("/presets");
@@ -171,89 +168,134 @@ export const fetchPresets = action("fetchPresets", async () => {
   }
 });
 
+export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
+  try {
+    const response = await fetcher("/public/datapacks", {
+      method: "GET"
+    });
+    const data = await response.json();
+    try {
+      assertDatapackArray(data);
+      for (const dp of data) {
+        addDatapack(dp);
+      }
+      console.log("Public Datapacks loaded");
+    } catch (e) {
+      console.error(e);
+      displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
 /**
  * This will grab the user datapacks AND the server datapacks from the server
  */
 export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   try {
-    const response = await fetcher(`/user-datapacks`, {
+    const response = await fetcher(`/user/datapacks`, {
       method: "GET",
       credentials: "include"
     });
     const data = await response.json();
     try {
-      assertIndexResponse(data);
-      const { mapPackIndex, datapackIndex } = data;
-      setMapPackIndex(mapPackIndex);
-      setDatapackIndex(datapackIndex);
+      assertDatapackArray(data);
+      // this does not check for duplicate keys
+      for (const dp in data) {
+        addDatapack(data[dp]);
+      }
       console.log("User Datapacks loaded");
     } catch (e) {
-      if (response.status != 404) {
-        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      console.error(e);
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+export const uploadUserDatapack = action(
+  "uploadUserDatapack",
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    if (getDatapackFromArray(metadata, state.datapacks)) {
+      pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
+      return;
+    }
+    const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    formData.append("isPublic", String(metadata.isPublic));
+    formData.append("type", metadata.type);
+    if (isUserDatapack(metadata)) formData.append("uuid", metadata.uuid);
+    formData.append("isPublic", String(metadata.isPublic));
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/user/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptcha
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        const datapack = await fetchUserDatapack(metadata.title);
+        if (!datapack) {
+          pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+          return;
+        }
+        addDatapack(datapack);
+        if (metadata.isPublic) {
+          refreshPublicDatapacks();
+        }
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
-        fetchDatapackIndex();
-        fetchMapPackIndex();
+        if (response.status === 403) {
+          pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+        } else {
+          displayServerError(
+            data,
+            ErrorCodes.INVALID_DATAPACK_UPLOAD,
+            ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]
+          );
+        }
       }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
   }
-});
+);
 
-export const uploadDatapack = action("uploadDatapack", async (file: File, name: string, description: string) => {
-  if (state.datapackIndex[file.name]) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
-  const formData = new FormData();
-  formData.append("file", file);
-  formData.append("name", name);
-  formData.append("description", description);
-  try {
-    const response = await fetcher(`/upload`, {
-      method: "POST",
-      body: formData,
-      credentials: "include"
-    });
-    const data = await response.json();
-
-    if (response.ok) {
-      fetchUserDatapacks();
-      pushSnackbar("Successfully uploaded " + name + " datapack", "success");
-    } else {
-      displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+export const setLargeDataIndex = action(
+  "setLargeDataIndex",
+  async <T>(target: Record<string, T>, index: Record<string, T>) => {
+    // This is to prevent the UI from lagging
+    // we delete so we don't reassign
+    Object.keys(index).forEach((key) => delete target[key]);
+    for (const key in index) {
+      runInAction(() => {
+        target[key] = index[key];
+      });
+      await new Promise((resolve) => setTimeout(resolve, 0));
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
   }
-});
-
-export const setMapPackIndex = action("setMapPackIndex", async (mapPackIndex: MapPackIndex) => {
-  // This is to prevent the UI from lagging
-  state.mapPackIndex = {};
-  for (const key in mapPackIndex) {
-    state.mapPackIndex[key] = mapPackIndex[key];
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-});
-
-export const setDatapackIndex = action("setDatapackIndex", async (datapackIndex: DatapackIndex) => {
-  // This is to prevent the UI from lagging
-  state.datapackIndex = {};
-  for (const key in datapackIndex) {
-    runInAction(() => {
-      state.datapackIndex[key] = datapackIndex[key];
-    });
-    await new Promise((resolve) => setTimeout(resolve, 0));
-  }
-});
-
-export const loadIndexResponse = action("loadIndexResponse", async (response: IndexResponse) => {
-  setDatapackIndex(response.datapackIndex);
-  setMapPackIndex(response.mapPackIndex);
-});
+);
 export const fetchTimescaleDataAction = action("fetchTimescaleData", async () => {
   try {
     const response = await fetcher("/timescale", { method: "GET" });
@@ -284,6 +326,7 @@ export const fetchTimescaleDataAction = action("fetchTimescaleData", async () =>
 export const applySettings = action("applySettings", async (settings: ChartInfoTSC) => {
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
+  handleDataMiningColumns();
   await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
@@ -356,164 +399,152 @@ const applyChartSettings = action("applyChartSettings", (settings: ChartSettings
   setEnableHideBlockLabel(enHideBlockLable);
 });
 
-const setPreviousDatapackConfig = action("setPreviousDatapackConfig", (datapacks: string[]) => {
-  if (!state.datapackCachedConfiguration.has(state.config.datapacks.join(","))) {
-    return;
-  }
-  const cachedConfig = state.datapackCachedConfiguration.get(state.config.datapacks.join(","))!;
-  state.config.datapacks = datapacks;
-  state.settingsTabs.columns = cachedConfig.columns;
-  state.settingsTabs.columnHashMap = cachedConfig.columnHashMap;
-  state.mapState.mapInfo = cachedConfig.mapInfo;
-  state.mapState.mapHierarchy = cachedConfig.mapHierarchy;
-  state.settings.datapackContainsSuggAge = cachedConfig.datapackContainsSuggAge;
-  // add new units
-  for (const unit of cachedConfig.units) {
-    if (!state.settings.timeSettings[unit]) {
-      state.settings.timeSettings[unit] = JSON.parse(JSON.stringify(defaultTimeSettings));
-    }
-  }
-  // remove old units
-  for (const unit of Object.keys(state.settings.timeSettings)) {
-    if (!cachedConfig.units.includes(unit)) {
-      delete state.settings.timeSettings[unit];
-    }
-  }
+export const setIsProcessingDatapacks = action("setIsProcessingDatapacks", (isProcessingDatapacks: boolean) => {
+  state.isProcessingDatapacks = isProcessingDatapacks;
 });
 
-/**
- * Rests the settings, sets the tabs to 0
- * sets chart to newval and requests info on the datapacks from the server
- * If attributed settings, load them.
- */
-export const setDatapackConfig = action(
-  "setDatapackConfig",
-  async (datapacks: string[], settingsPath?: string): Promise<boolean> => {
-    if (state.datapackCachedConfiguration.has(datapacks.join(","))) {
-      setPreviousDatapackConfig(datapacks);
-      return true;
+export const setUnsavedDatapackConfig = action(
+  "setUnsavedDatapackConfig",
+  (newDatapacks: DatapackConfigForChartRequest[]) => {
+    state.unsavedDatapackConfig = newDatapacks;
+  }
+);
+
+const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
+  resetSettings();
+  const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
+  // all chart root font options have inheritable on
+  for (const opt in columnRoot.fontsInfo) {
+    columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
+  }
+  // throws warning if this isn't in its own action.
+  runInAction(() => {
+    state.settingsTabs.columns = columnRoot;
+    state.settings.datapackContainsSuggAge = false;
+    state.mapState.mapHierarchy = {};
+    state.mapState.mapInfo = {};
+    state.settingsTabs.columnHashMap = new Map();
+    state.config.datapacks = [];
+    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
+  });
+
+  // we add Ma unit by default
+  state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+
+  searchColumns(state.settingsTabs.columnSearchTerm);
+  searchEvents(state.settingsTabs.eventSearchTerm);
+  setUnsavedDatapackConfig([]);
+});
+
+export const processDatapackConfig = action(
+  "processDatapackConfig",
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
+    if (datapacks.length === 0) {
+      setEmptyDatapackConfig();
+      return;
     }
-    const unitMap: Map<string, ColumnInfo> = new Map();
-    let mapInfo: MapInfo = {};
-    let mapHierarchy: MapHierarchy = {};
-    let columnRoot: ColumnInfo;
-    let chartSettings: ChartInfoTSC | null = null;
-    let foundDefaultAge = false;
+    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
+    setIsProcessingDatapacks(true);
+    const fetchSettings = async () => {
+      if (settingsPath && settingsPath.length !== 0) {
+        try {
+          const settings = await fetchSettingsXML(settingsPath);
+          if (settings) {
+            removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+            return JSON.parse(JSON.stringify(settings));
+          }
+        } catch (e) {
+          console.error(e);
+          pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
+        }
+      }
+      return null;
+    };
+    const chartSettings = await fetchSettings();
     try {
-      if (settingsPath && settingsPath.length > 0) {
-        await fetchSettingsXML(settingsPath)
-          .then((settings) => {
-            if (settings) {
-              removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-              chartSettings = JSON.parse(JSON.stringify(settings));
-            } else {
-              return false;
+      await new Promise((resolve, reject) => {
+        const setDatapackConfigWorker: Worker = new Worker(
+          new URL("../../util/workers/set-datapack-config.ts", import.meta.url),
+          {
+            type: "module"
+          }
+        );
+
+        const message: SetDatapackConfigMessage = {
+          datapacks,
+          stateCopy: toJS(state)
+        };
+        setDatapackConfigWorker.postMessage(message);
+
+        setDatapackConfigWorker.onmessage = async function (e: MessageEvent<SetDatapackConfigCompleteMessage>) {
+          const { status, value } = e.data;
+
+          if (status === "success" && value) {
+            try {
+              await actions.setDatapackConfig(
+                value.columnRoot,
+                value.foundDefaultAge,
+                value.mapHierarchy,
+                value.mapInfo,
+                value.datapacks,
+                chartSettings
+              );
+
+              pushSnackbar("Datapack Config Updated", "success");
+              setUnsavedDatapackConfig(datapacks);
+              resolve("Datapack Config Updated successfully.");
+            } catch (e) {
+              reject(new Error("Failed to set datapack config with error " + e));
             }
-          })
-          .catch((e) => {
-            console.error(e);
-            pushError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return false;
-          });
-      }
-      // the default overarching variable for the columnInfo
-      columnRoot = {
-        name: "Chart Root", // if you change this, change parse-datapacks.ts :69
-        editName: "Chart Root",
-        fontsInfo: JSON.parse(JSON.stringify(defaultFontsInfo)),
-        fontOptions: ["Column Header"],
-        popup: "",
-        on: true,
-        width: 100,
-        enableTitle: true,
-        rgb: {
-          r: 255,
-          g: 255,
-          b: 255
-        },
-        minAge: Number.MAX_VALUE,
-        maxAge: Number.MIN_VALUE,
-        children: [],
-        parent: null,
-        units: "",
-        columnDisplayType: "RootColumn",
-        show: true,
-        expanded: true
-      };
-      // all chart root font options have inheritable on
-      for (const opt in columnRoot.fontsInfo) {
-        columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
-      }
-      // add everything together
-      // uses preparsed data on server start and appends items together
-      for (const datapack of datapacks) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (!datapack || !state.datapackIndex[datapack])
-          throw new Error(`File requested doesn't exist on server: ${datapack}`);
-        const datapackParsingPack = state.datapackIndex[datapack]!;
-        if (
-          ((datapackParsingPack.topAge || datapackParsingPack.topAge === 0) &&
-            (datapackParsingPack.baseAge || datapackParsingPack.baseAge === 0)) ||
-          datapackParsingPack.verticalScale
-        )
-          foundDefaultAge = true;
-        if (unitMap.has(datapackParsingPack.ageUnits)) {
-          const existingUnitColumnInfo = unitMap.get(datapackParsingPack.ageUnits)!;
-          const newUnitChart = datapackParsingPack.columnInfo;
-          // slice off the existing unit column
-          const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
-          for (const child of columnsToAdd) {
-            child.parent = existingUnitColumnInfo.name;
+          } else {
+            reject(new Error("Setting Datapack Config Timed Out"));
           }
-          existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
-        } else {
-          const columnInfo = cloneDeep(datapackParsingPack.columnInfo);
-          columnInfo.parent = columnRoot.name;
-          unitMap.set(datapackParsingPack.ageUnits, columnInfo);
-        }
-        const mapPack = state.mapPackIndex[datapack]!;
-        if (!mapInfo) mapInfo = mapPack.mapInfo;
-        else Object.assign(mapInfo, mapPack.mapInfo);
-        if (!mapHierarchy) mapHierarchy = mapPack.mapHierarchy;
-        else Object.assign(mapHierarchy, mapPack.mapHierarchy);
-      }
-      // makes sure things are named correctly for users and for the hash map to not have collisions
-      for (const [unit, column] of unitMap) {
-        await new Promise((resolve) => setTimeout(resolve, 0));
-        if (unit !== "Ma" && column.name === "Chart Title") {
-          column.name = column.name + " in " + unit;
-          column.editName = unit;
-          for (const child of column.children) {
-            child.parent = column.name;
-          }
-        }
-        columnRoot.fontOptions = Array.from(new Set([...columnRoot.fontOptions, ...column.fontOptions]));
-        columnRoot.children.push(column);
-      }
-      assertMapHierarchy(mapHierarchy);
-      assertColumnInfo(columnRoot);
-      assertMapInfo(mapInfo);
+          setIsProcessingDatapacks(false);
+          setDatapackConfigWorker.terminate();
+        };
+
+        setDatapackConfigWorker.onerror = function (error) {
+          setDatapackConfigWorker.terminate();
+          setIsProcessingDatapacks(false);
+          reject(new Error("Webworker failed with error." + error.message));
+        };
+      });
     } catch (e) {
       console.error(e);
-      pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      chartSettings = null;
+      setIsProcessingDatapacks(false);
+      pushError(ErrorCodes.UNABLE_TO_PROCESS_DATAPACK_CONFIG);
       return false;
     }
+    return true;
+  }
+);
+
+export const setDatapackConfig = action(
+  "setDatapackConfig",
+  async (
+    columnRoot: ColumnInfo,
+    foundDefaultAge: boolean,
+    mapHierarchy: MapHierarchy,
+    mapInfo: MapInfo,
+    datapacks: DatapackConfigForChartRequest[],
+    chartSettings: ChartInfoTSC | null
+  ): Promise<boolean> => {
     resetSettings();
-    state.settingsTabs.columns = columnRoot;
-    state.settings.datapackContainsSuggAge = foundDefaultAge;
-    state.mapState.mapHierarchy = mapHierarchy;
-    state.mapState.mapInfo = mapInfo;
-    state.settingsTabs.columnHashMap = new Map();
     // throws warning if this isn't in its own action. may have other fix but left as is
-    runInAction(() => {
+    await runInAction(async () => {
+      state.settingsTabs.columns = columnRoot;
+      state.settings.datapackContainsSuggAge = foundDefaultAge;
+      state.mapState.mapHierarchy = mapHierarchy;
+      state.mapState.mapInfo = mapInfo;
+      state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
+      await initializeColumnHashMap(state.settingsTabs.columns);
     });
-    // this is for app start up or when all datapacks are removed
-    if (datapacks.length === 0) {
-      state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
+    // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
+    if (datapacks.length !== 0) {
+      delete state.settings.timeSettings["Ma"];
     }
-    await initializeColumnHashMap(state.settingsTabs.columns);
+
     if (chartSettings !== null) {
       assertChartInfoTSC(chartSettings);
       await applySettings(chartSettings);
@@ -525,14 +556,8 @@ export const setDatapackConfig = action(
         }
       }
     }
-    state.datapackCachedConfiguration.set(datapacks.join(","), {
-      columns: columnRoot,
-      columnHashMap: state.settingsTabs.columnHashMap,
-      mapInfo,
-      mapHierarchy,
-      datapackContainsSuggAge: state.settings.datapackContainsSuggAge,
-      units: Object.keys(state.settings.timeSettings)
-    });
+    searchColumns(state.settingsTabs.columnSearchTerm);
+    searchEvents(state.settingsTabs.eventSearchTerm);
     return true;
   }
 );
@@ -586,7 +611,7 @@ export const removeCache = action("removeCache", async () => {
 export const resetState = action("resetState", () => {
   setChartMade(true);
   setChartLoading(true);
-  setDatapackConfig([], "");
+  processDatapackConfig([]);
   setChartHash("");
   setChartContent("");
   setUseCache(true);
@@ -595,7 +620,9 @@ export const resetState = action("resetState", () => {
   setSettingsTabsSelected("time");
   setSettingsColumns(undefined);
   setMapInfo({});
-  state.settingsTabs.columnSelected = null;
+  state.columnMenu.columnSelected = null;
+  state.columnMenu.tabValue = 0;
+  state.columnMenu.tabs = ["General", "Font"];
   state.settingsXML = "";
 });
 
@@ -750,6 +777,7 @@ export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });
 export const pushSnackbar = action("pushSnackbar", (text: string, severity: "success" | "info" | "warning") => {
+  if (severity === "warning") console.warn(text);
   for (const snackbar of state.snackbars) {
     if (snackbar.snackbarText === text) {
       snackbar.snackbarCount += 1;
@@ -763,9 +791,20 @@ export const pushSnackbar = action("pushSnackbar", (text: string, severity: "suc
   });
 });
 
-export const fetchImage = action("fetchImage", async (datapackName: string, imageName: string) => {
-  const response = await fetcher(`/images/${datapackName}/${imageName}`, {
-    method: "GET"
+export const fetchImage = action("fetchImage", async (datapack: DatapackConfigForChartRequest, imageName: string) => {
+  const { title, storedFileName } = datapack;
+  const response = await fetcher(`/images`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      datapackTitle: title,
+      datapackFilename: storedFileName,
+      imageName,
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isOfficialDatapack(datapack) ? "official" : "",
+      isPublic: datapack.isPublic
+    })
   });
   if (!response.ok) {
     if (response.status === 404) {
@@ -780,16 +819,35 @@ export const fetchImage = action("fetchImage", async (datapackName: string, imag
   return image;
 });
 
-export const requestDownload = action(async (filename: string, needEncryption: boolean) => {
+export async function getRecaptchaToken(token: string) {
+  try {
+    const recaptchaToken = await executeRecaptcha(token);
+    if (!recaptchaToken) {
+      pushError(ErrorCodes.RECAPTCHA_FAILED);
+      return null;
+    }
+    return recaptchaToken;
+  } catch (error) {
+    pushError(ErrorCodes.RECAPTCHA_FAILED);
+    return null;
+  }
+}
+
+export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
-    route = `/download/user-datapacks/${filename}`;
+    route = `/user/datapack/download/${datapack.title}`;
   } else {
-    route = `/download/user-datapacks/${filename}?needEncryption=${needEncryption}`;
+    route = `/user/datapack/download/${datapack.title}?needEncryption=${needEncryption}`;
   }
+  const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
+  if (!recaptchaToken) return null;
   const response = await fetcher(route, {
     method: "GET",
-    credentials: "include"
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
   });
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
@@ -828,7 +886,7 @@ export const requestDownload = action(async (filename: string, needEncryption: b
         const aTag = document.createElement("a");
         aTag.href = fileURL;
 
-        aTag.setAttribute("download", filename);
+        aTag.setAttribute("download", datapack.originalFileName);
 
         document.body.appendChild(aTag);
         aTag.click();
@@ -876,8 +934,6 @@ export const sessionCheck = action("sessionCheck", async () => {
       setUser(data.user);
       fetchUserDatapacks();
     } else {
-      fetchDatapackIndex();
-      fetchMapPackIndex();
       setIsLoggedIn(false);
     }
   } catch (error) {
@@ -892,12 +948,44 @@ export const setDefaultUserState = action(() => {
     pictureUrl: "",
     isAdmin: false,
     isGoogleUser: false,
+    uuid: "",
     settings: {
       darkMode: false,
-      language: "en"
+      language: "English"
     }
   };
+  removeUnauthorizedDatapacks();
 });
+export const removeUnauthorizedDatapacks = action(() => {
+  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
+});
+
+// This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
+export const getInitialDarkMode = () => {
+  const prefersDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const storedDarkMode = localStorage.getItem("darkMode");
+  if (storedDarkMode !== null) {
+    return storedDarkMode === "true";
+  }
+  return prefersDarkMode;
+};
+
+// This is a helper function to listen for system dark mode changes (if the user has not set a preference)
+export const listenForSystemDarkMode = () => {
+  const darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleChange = () => {
+    if (localStorage.getItem("darkMode") === null) {
+      // this is external dark mode changing (not in our ui)
+      runInAction(() => {
+        state.user.settings.darkMode = darkModeMediaQuery.matches;
+      });
+    }
+  };
+  darkModeMediaQuery.addEventListener("change", handleChange);
+  return () => {
+    darkModeMediaQuery.removeEventListener("change", handleChange);
+  };
+};
 
 export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
   state.chartTab.chartTimelineEnabled = enabled;
@@ -915,6 +1003,9 @@ export const setPictureUrl = action("setPictureUrl", (url: string) => {
   state.user.pictureUrl = url;
 });
 export const setDarkMode = action("setDarkMode", (newval: boolean) => {
+  if (state.cookieConsent) {
+    localStorage.setItem("darkMode", newval.toString());
+  }
   state.user.settings.darkMode = newval;
 });
 export const setLanguage = action("setLanguage", (newval: string) => {
@@ -928,7 +1019,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 });
 export const setTab = action("setTab", (newval: number) => {
   if (
-    newval == 1 &&
+    newval == 2 &&
     state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
@@ -1000,6 +1091,9 @@ export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHiera
 export const setChartHash = action("setChartHash", (charthash: string) => {
   state.chartHash = charthash;
 });
+export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
+  state.datapackProfilePage.editMode = editMode;
+});
 export const setTopStageAge = action("setTopStageAge", (age: number, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
@@ -1036,8 +1130,11 @@ export const updatePresetColors = action("updatePresetColors", (newColor: string
     updatedColors = updatedColors.slice(0, 10);
   }
   state.presetColors = updatedColors;
-  localStorage.setItem("savedColors", JSON.stringify(updatedColors));
+  if (state.cookieConsent) {
+    localStorage.setItem("savedColors", JSON.stringify(updatedColors));
+  }
 });
+
 export const setSkipEmptyColumns = action("setSkipEmptyColumns", (newval: boolean, unit: string) => {
   if (!state.settings.timeSettings[unit]) {
     throw new Error(`Unit ${unit} not found in timeSettings`);
@@ -1104,4 +1201,25 @@ export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom",
 
 export const setChartTabIsSavingChart = action((term: boolean) => {
   state.chartTab.isSavingChart = term;
+});
+export const setUnsafeChartContent = action((content: string) => {
+  state.chartTab.unsafeChartContent = content;
+});
+export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+  setUnsavedChanges(false);
+  state.datapackProfilePage.editableDatapackMetadata = metadata;
+});
+export const setUnsavedChanges = action((unsavedChanges: boolean) => {
+  state.datapackProfilePage.unsavedChanges = unsavedChanges;
+});
+export const updateEditableDatapackMetadata = action((metadata: Partial<EditableDatapackMetadata>) => {
+  if (!state.datapackProfilePage.editableDatapackMetadata) {
+    console.error("Editable datapack metadata is not initialized");
+    return;
+  }
+  setUnsavedChanges(true);
+  state.datapackProfilePage.editableDatapackMetadata = {
+    ...state.datapackProfilePage.editableDatapackMetadata,
+    ...metadata
+  };
 });

@@ -4,10 +4,10 @@ import fastifySecureSession from "@fastify/secure-session";
 import fastifyMultipart from "@fastify/multipart";
 import { OAuth2Client } from "google-auth-library";
 import { compare } from "bcrypt-ts";
-import { Verification } from "../src/types";
+import { User, Verification, Workshop } from "../src/types";
 import formAutoContent from "form-auto-content";
 import * as cryptoModule from "crypto";
-import * as loginRoutes from "../src/login-routes";
+import * as loginRoutes from "../src/routes/login-routes";
 import * as verifyModule from "../src/verify";
 import * as databaseModule from "../src/database";
 import * as emailModule from "../src/send-email";
@@ -17,7 +17,13 @@ import * as fsPromisesModule from "fs/promises";
 import * as streamPromisesModule from "stream/promises";
 import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
+import logger from "../src/error-logger";
 import { normalize } from "path";
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    getPrivateUserUUIDDirectory: vi.fn().mockResolvedValue("private")
+  };
+});
 vi.mock("../src/database", async (importOriginal) => {
   const actual = await importOriginal<typeof databaseModule>();
   return {
@@ -35,7 +41,15 @@ vi.mock("../src/database", async (importOriginal) => {
     findVerification: vi.fn(() => Promise.resolve([testToken])),
     deleteVerification: vi.fn().mockResolvedValue({}),
     updateUser: vi.fn().mockResolvedValue({}),
-    deleteUser: vi.fn().mockResolvedValue({})
+    deleteUser: vi.fn().mockResolvedValue({}),
+    findWorkshop: vi.fn().mockResolvedValue([]),
+    deleteWorkshop: vi.fn().mockResolvedValue({}),
+    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null),
+    deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
+    findUsersWorkshops: vi.fn().mockResolvedValue([]),
+    handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -52,6 +66,13 @@ vi.mock("google-auth-library", () => {
         getPayload: vi.fn(() => ({ email: testUser.email, picture: testUser.pictureUrl }))
       })
     }))
+  };
+});
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockResolvedValue(undefined)
+    }
   };
 });
 vi.mock("bcrypt-ts", () => {
@@ -105,31 +126,14 @@ vi.mock("fs", async (importOriginal) => {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
-vi.mock("../src/file-metadata-handler", async (importOriginal) => {
-  const actual = await importOriginal<typeof metadataModule>();
+vi.mock("../src/file-metadata-handler", async () => {
   return {
-    ...actual,
-    loadFileMetadata: vi.fn().mockReturnValue({
-      "assets/uploads/123e4567-e89b-12d3-a456-426614174000/datapacks/AfricaBight1.map": {
-        fileName: "AfricaBight1.map",
-        lastUpdated: "2024-05-26T18:25:31.800Z",
-        decryptedFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/decrypted/AfricaBight1",
-        mapPackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/MapPackIndex.json",
-        datapackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/DatapackIndex.json"
-      },
-      "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/datapacks/AfricaBight.map": {
-        fileName: "AfricaBight.map",
-        lastUpdated: "2024-05-27T14:11:46.280Z",
-        decryptedFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/decrypted/AfricaBight",
-        mapPackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/MapPackIndex.json",
-        datapackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/DatapackIndex.json"
-      }
-    })
+    deleteAllUserMetadata: vi.fn().mockResolvedValue(undefined)
   };
 });
 
 let app: FastifyInstance;
-const testUser = {
+const testUser: User = {
   userId: 123,
   uuid: "123e4567-e89b-12d3-a456-426614174000",
   email: "test@example.com",
@@ -138,7 +142,8 @@ const testUser = {
   username: "testuser",
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
-  isAdmin: 0
+  isAdmin: 0,
+  accountType: "default"
 };
 const mockDate = new Date("2022-01-01T00:00:00Z");
 const testToken: Verification = {
@@ -149,6 +154,19 @@ const testToken: Verification = {
 };
 let cookieHeader: Record<string, string>;
 let deleteSessionSpy: MockInstance;
+const start = mockDate;
+const end = new Date(mockDate);
+end.setHours(end.getHours() + 1);
+const workshop: Workshop = {
+  workshopId: 1,
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString()
+};
+const testUserWorkshop = {
+  userId: 123,
+  workshopId: 1
+};
 
 beforeAll(async () => {
   app = fastify();
@@ -1762,6 +1780,10 @@ describe("login-routes tests", () => {
   });
 
   describe("/session-check", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+    const getAndHandleWorkshopEndSpy = vi.spyOn(databaseModule, "getAndHandleWorkshopEnd");
     it("should return 200 and authenticated false if not logged in", async () => {
       const response = await app.inject({
         method: "POST",
@@ -1836,295 +1858,238 @@ describe("login-routes tests", () => {
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
-        isAdmin: false
+        isAdmin: false,
+        uuid: testUser.uuid
       });
     });
 
-    describe("/upload-profile-picture", () => {
-      type FormType = ReturnType<typeof formAutoContent>;
-      let formWithCookieHeader: FormType;
+    it("should return 200 and workshop id if user is in workshop and workshop is active", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
+      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
+      vi.mocked(databaseModule.findUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
+      const response = await app.inject({
+        method: "POST",
+        url: "/session-check",
+        headers: cookieHeader
+      });
 
-      const createFormWithCookieHeader = (fileOptions: Record<string, Buffer | Record<string, string>>) => {
-        const form: FormType = formAutoContent({ file: fileOptions });
-        form.headers = form.headers as Record<string, string>;
-        formWithCookieHeader = {
-          ...form,
-          headers: { ...cookieHeader, ...form.headers }
-        };
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(getAndHandleWorkshopEndSpy).toHaveBeenCalledWith(workshop.workshopId);
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().authenticated).toBe(true);
+      expect(response.json().user).toEqual({
+        email: testUser.email,
+        username: testUser.username,
+        pictureUrl: testUser.pictureUrl,
+        isGoogleUser: false,
+        isAdmin: false,
+        workshopIds: [workshop.workshopId],
+        uuid: testUser.uuid
+      });
+    });
+
+    it("should return 200 and without workshop title if no workshop is provided", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
+      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
+      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(null);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/session-check",
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().authenticated).toBe(true);
+      expect(response.json().user).toEqual({
+        email: testUser.email,
+        username: testUser.username,
+        pictureUrl: testUser.pictureUrl,
+        isGoogleUser: false,
+        isAdmin: false,
+        uuid: testUser.uuid
+      });
+    });
+  });
+
+  describe("/upload-profile-picture", () => {
+    type FormType = ReturnType<typeof formAutoContent>;
+    let formWithCookieHeader: FormType;
+
+    const createFormWithCookieHeader = (fileOptions: Record<string, Buffer | Record<string, string>>) => {
+      const form: FormType = formAutoContent({ file: fileOptions });
+      form.headers = form.headers as Record<string, string>;
+      formWithCookieHeader = {
+        ...form,
+        headers: { ...cookieHeader, ...form.headers }
       };
+    };
 
-      beforeEach(() => {
-        createFormWithCookieHeader({
-          value: Buffer.from("aditya"),
-          options: {
-            filename: "test.png",
-            contentType: "image/png"
-          }
-        });
-      });
-
-      it("should return 401 if not logged in", async () => {
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture"
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(401);
-        expect(response.json().error).toBe("Not logged in");
-      });
-
-      it("should return 500 if user does not exist", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture",
-          ...formWithCookieHeader
-        });
-
-        expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("User not found");
-      });
-
-      it("should return 404 if no file", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture",
-          headers: formWithCookieHeader.headers as Record<string, string>
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(404);
-        expect(response.json().error).toBe("No file uploaded");
-      });
-
-      const testCases = [
-        {
-          filename: "test.txt",
-          contentType: "text/plain"
-        },
-        {
-          filename: "test",
-          contentType: "image/png"
-        },
-        {
+    beforeEach(() => {
+      createFormWithCookieHeader({
+        value: Buffer.from("aditya"),
+        options: {
           filename: "test.png",
-          contentType: "text/plain"
+          contentType: "image/png"
         }
-      ];
-
-      test.each(testCases)("should return 400 for invalid file", async ({ filename, contentType }) => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        createFormWithCookieHeader({
-          value: Buffer.from("aditya"),
-          options: {
-            filename,
-            contentType
-          }
-        });
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture",
-          ...formWithCookieHeader
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(400);
-        expect(response.json().error).toBe("Invalid file");
-      });
-
-      it("should return 500 if file is too large", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        createFormWithCookieHeader({
-          value: Buffer.from("a".repeat(1024 * 1024 * 2)),
-          options: {
-            filename: "test.png",
-            contentType: "image/png"
-          }
-        });
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture",
-          ...formWithCookieHeader
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("File too large");
-      });
-
-      it("should return 200 if successful", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        // @ts-expect-error ts does not infer that readdir will be called with { withFileTypes: true } so expects Dirent
-        vi.mocked(fsPromisesModule.readdir).mockResolvedValueOnce([`profile-${testUser.uuid}.png`]);
-        const mkdirSpy = vi.spyOn(fsPromisesModule, "mkdir");
-        const readdirSpy = vi.spyOn(fsPromisesModule, "readdir");
-        const rmSpy = vi.spyOn(fsPromisesModule, "rm");
-        const createWriteStreamSpy = vi.spyOn(fsModule, "createWriteStream");
-        const pipelineSpy = vi.spyOn(streamPromisesModule, "pipeline");
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/upload-profile-picture",
-          ...formWithCookieHeader
-        });
-
-        const profilePath = normalize(`uploads/${testUser.uuid}/profile`);
-        const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
-        const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
-        expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(mkdirSpy).toHaveBeenCalledWith(profilePath, { recursive: true });
-        expect(readdirSpy).toHaveBeenCalledWith(profilePath, { withFileTypes: false });
-        expect(rmSpy).toHaveBeenCalledWith(profileImagePath);
-        expect(createWriteStreamSpy).toHaveBeenCalledWith(profileImagePath);
-        expect(pipelineSpy).toHaveBeenCalled();
-        expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { pictureUrl: profileImageUrl });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(200);
-        expect(response.json().pictureUrl).toBe(profileImageUrl);
       });
     });
 
-    describe("/change-username", () => {
-      const payload = {
-        newUsername: "newtest",
-        recaptchaToken: "test"
-      };
-
-      it("should return 401 if not logged in", async () => {
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-username",
-          payload: payload
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(401);
-        expect(response.json().error).toBe("Not logged in");
+    it("should return 401 if not logged in", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture"
       });
 
-      test.each([[{ ...payload, newUsername: "" }], [{ ...payload, recaptchaToken: "" }]])(
-        "should return 400 if form is invalid",
-        async (invalidPayload) => {
-          const response = await app.inject({
-            method: "POST",
-            url: "/change-username",
-            payload: invalidPayload,
-            headers: cookieHeader
-          });
-
-          expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-          expect(deleteSessionSpy).not.toHaveBeenCalled();
-          expect(response.statusCode).toBe(400);
-          expect(response.json().error).toBe("Invalid form");
-        }
-      );
-
-      it("should return 422 if recaptcha fails", async () => {
-        const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-username",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(spy).toHaveBeenCalledOnce();
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(422);
-        expect(response.json().error).toBe("Recaptcha failed");
-      });
-
-      it("should return 500 if user does not exist", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-username",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("Unknown Error");
-      });
-
-      it("should return 409 if username is taken", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]).mockResolvedValueOnce([testUser]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-username",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(409);
-        expect(response.json().error).toBe("Username already taken");
-      });
-
-      it("should return 200 if successful", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]).mockResolvedValueOnce([]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-username",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
-        expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { username: payload.newUsername });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(response.statusCode).toBe(200);
-        expect(response.json().message).toBe("Username changed");
-      });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Not logged in");
     });
 
-    describe("/change-password", () => {
-      const payload = {
-        currentPassword: "password",
-        newPassword: "newpassword",
-        recaptchaToken: "test"
-      };
-
-      it("should return 401 if not logged in", async () => {
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(401);
-        expect(response.json().error).toBe("Not logged in");
+    it("should return 500 if user does not exist", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture",
+        ...formWithCookieHeader
       });
 
-      test.each([
-        [{ ...payload, currentPassword: "" }],
-        [{ ...payload, newPassword: "" }],
-        [{ ...payload, recaptchaToken: "" }]
-      ])("should return 400 if form is invalid", async (invalidPayload) => {
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("User not found");
+    });
+
+    it("should return 404 if no file", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture",
+        headers: formWithCookieHeader.headers as Record<string, string>
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(404);
+      expect(response.json().error).toBe("No file uploaded");
+    });
+
+    const testCases = [
+      {
+        filename: "test.txt",
+        contentType: "text/plain"
+      },
+      {
+        filename: "test",
+        contentType: "image/png"
+      },
+      {
+        filename: "test.png",
+        contentType: "text/plain"
+      }
+    ];
+
+    test.each(testCases)("should return 400 for invalid file", async ({ filename, contentType }) => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      createFormWithCookieHeader({
+        value: Buffer.from("aditya"),
+        options: {
+          filename,
+          contentType
+        }
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture",
+        ...formWithCookieHeader
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error).toBe("Invalid file");
+    });
+
+    it("should return 500 if file is too large", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      createFormWithCookieHeader({
+        value: Buffer.from("a".repeat(1024 * 1024 * 2)),
+        options: {
+          filename: "test.png",
+          contentType: "image/png"
+        }
+      });
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture",
+        ...formWithCookieHeader
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("File too large");
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      // @ts-expect-error ts does not infer that readdir will be called with { withFileTypes: true } so expects Dirent
+      vi.mocked(fsPromisesModule.readdir).mockResolvedValueOnce([`profile-${testUser.uuid}.png`]);
+      const mkdirSpy = vi.spyOn(fsPromisesModule, "mkdir");
+      const readdirSpy = vi.spyOn(fsPromisesModule, "readdir");
+      const rmSpy = vi.spyOn(fsPromisesModule, "rm");
+      const createWriteStreamSpy = vi.spyOn(fsModule, "createWriteStream");
+      const pipelineSpy = vi.spyOn(streamPromisesModule, "pipeline");
+      const response = await app.inject({
+        method: "POST",
+        url: "/upload-profile-picture",
+        ...formWithCookieHeader
+      });
+      const profilePath = normalize("private");
+      const profileImagePath = normalize(`${profilePath}/profile-${testUser.uuid}.png`);
+      const profileImageUrl = `http://localhost:3000/profile-images/${testUser.uuid}/profile/profile-${testUser.uuid}.png`;
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(mkdirSpy).toHaveBeenCalledWith(profilePath, { recursive: true });
+      expect(readdirSpy).toHaveBeenCalledWith(profilePath, { withFileTypes: false });
+      expect(rmSpy).toHaveBeenCalledWith(profileImagePath);
+      expect(createWriteStreamSpy).toHaveBeenCalledWith(profileImagePath);
+      expect(pipelineSpy).toHaveBeenCalled();
+      expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { pictureUrl: profileImageUrl });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().pictureUrl).toBe(profileImageUrl);
+    });
+  });
+
+  describe("/change-username", () => {
+    const payload = {
+      newUsername: "newtest",
+      recaptchaToken: "test"
+    };
+
+    it("should return 401 if not logged in", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-username",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Not logged in");
+    });
+
+    test.each([[{ ...payload, newUsername: "" }], [{ ...payload, recaptchaToken: "" }]])(
+      "should return 400 if form is invalid",
+      async (invalidPayload) => {
         const response = await app.inject({
           method: "POST",
-          url: "/change-password",
+          url: "/change-username",
           payload: invalidPayload,
           headers: cookieHeader
         });
@@ -2133,219 +2098,327 @@ describe("login-routes tests", () => {
         expect(deleteSessionSpy).not.toHaveBeenCalled();
         expect(response.statusCode).toBe(400);
         expect(response.json().error).toBe("Invalid form");
+      }
+    );
+
+    it("should return 422 if recaptcha fails", async () => {
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-username",
+        payload: payload,
+        headers: cookieHeader
       });
 
-      it("should return 422 if recaptcha fails", async () => {
-        const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(spy).toHaveBeenCalledOnce();
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(422);
-        expect(response.json().error).toBe("Recaptcha failed");
-      });
-
-      it("should return 500 if user does not exist", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("Unknown Error");
-      });
-
-      it("should return 403 if user is google user", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, hashedPassword: null }]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(403);
-        expect(response.json().error).toBe("Account authenticated via Google");
-      });
-
-      it("should return 409 if password is incorrect", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        vi.mocked(bcryptModule.compare).mockResolvedValueOnce(false);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(409);
-        expect(response.json().error).toBe("Incorrect password");
-      });
-
-      it("should return 500 if password update fails", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        vi.mocked(databaseModule.updateUser).mockRejectedValueOnce(new Error("Database Error"));
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).not.toHaveBeenCalled();
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("Unknown Error");
-      });
-
-      it("should return 200 if successful", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/change-password",
-          payload: payload,
-          headers: cookieHeader
-        });
-
-        expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(response.statusCode).toBe(200);
-        expect(response.json().message).toBe("Password changed");
-      });
+      expect(spy).toHaveBeenCalledOnce();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(422);
+      expect(response.json().error).toBe("Recaptcha failed");
     });
 
-    describe("/delete-profile", () => {
-      it("should return 401 if not logged in", async () => {
-        const response = await app.inject({
-          method: "POST",
-          url: "/delete-profile"
-        });
+    it("should return 500 if user does not exist", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
 
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(401);
-        expect(response.json().error).toBe("Not logged in");
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-username",
+        payload: payload,
+        headers: cookieHeader
       });
 
-      it("should return 500 if delete user fails", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        vi.mocked(databaseModule.deleteUser).mockRejectedValueOnce(new Error("Database Error"));
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/delete-profile",
-          headers: cookieHeader
-        });
-
-        expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(response.statusCode).toBe(500);
-        expect(response.json().error).toBe("Unknown Error");
-      });
-
-      it("should return 200 if rm fails", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        vi.mocked(fsPromisesModule.rm).mockRejectedValueOnce(new Error("Filesystem Error"));
-        const loadFileMetadataSpy = vi.spyOn(metadataModule, "loadFileMetadata");
-        const writeFileSpy = vi.spyOn(fsPromisesModule, "writeFile");
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/delete-profile",
-          headers: cookieHeader
-        });
-
-        expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(loadFileMetadataSpy).toHaveBeenCalledWith("file-metadata.json");
-        expect(writeFileSpy).toHaveBeenCalledWith(
-          "file-metadata.json",
-          JSON.stringify({
-            "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/datapacks/AfricaBight.map": {
-              fileName: "AfricaBight.map",
-              lastUpdated: "2024-05-27T14:11:46.280Z",
-              decryptedFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/decrypted/AfricaBight",
-              mapPackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/MapPackIndex.json",
-              datapackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/DatapackIndex.json"
-            }
-          })
-        );
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(response.statusCode).toBe(200);
-        expect(response.json().message).toBe("Profile deleted");
-      });
-
-      it("should return 200 if successful", async () => {
-        vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
-        const rmSpy = vi.spyOn(fsPromisesModule, "rm");
-        const loadFileMetadataSpy = vi.spyOn(metadataModule, "loadFileMetadata");
-        const writeFileSpy = vi.spyOn(fsPromisesModule, "writeFile");
-
-        const response = await app.inject({
-          method: "POST",
-          url: "/delete-profile",
-          headers: cookieHeader
-        });
-
-        expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-        expect(rmSpy).toHaveBeenCalledWith(normalize(`uploads/${testUser.uuid}`), { recursive: true, force: true });
-        expect(loadFileMetadataSpy).toHaveBeenCalledWith("file-metadata.json");
-        expect(writeFileSpy).toHaveBeenCalledWith(
-          "file-metadata.json",
-          JSON.stringify({
-            "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/datapacks/AfricaBight.map": {
-              fileName: "AfricaBight.map",
-              lastUpdated: "2024-05-27T14:11:46.280Z",
-              decryptedFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/decrypted/AfricaBight",
-              mapPackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/MapPackIndex.json",
-              datapackIndexFilepath: "assets/uploads/0c981a54-18d9-4aad-ba14-6f644aa9eec6/DatapackIndex.json"
-            }
-          })
-        );
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(response.statusCode).toBe(200);
-        expect(response.json().message).toBe("Profile deleted");
-      });
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
     });
 
-    describe("/logout", () => {
-      it("should return 200", async () => {
-        const response = await app.inject({
-          method: "POST",
-          url: "/logout",
-          headers: cookieHeader
-        });
+    it("should return 409 if username is taken", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]).mockResolvedValueOnce([testUser]);
 
-        expect(deleteSessionSpy).toHaveBeenCalled();
-        expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
-        expect(response.statusCode).toBe(200);
-        expect(response.json().message).toBe("Logged out");
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-username",
+        payload: payload,
+        headers: cookieHeader
       });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(409);
+      expect(response.json().error).toBe("Username already taken");
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-username",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ username: payload.newUsername });
+      expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { username: payload.newUsername });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Username changed");
+    });
+  });
+
+  describe("/change-password", () => {
+    const payload = {
+      currentPassword: "password",
+      newPassword: "newpassword",
+      recaptchaToken: "test"
+    };
+
+    it("should return 401 if not logged in", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Not logged in");
+    });
+
+    test.each([
+      [{ ...payload, currentPassword: "" }],
+      [{ ...payload, newPassword: "" }],
+      [{ ...payload, recaptchaToken: "" }]
+    ])("should return 400 if form is invalid", async (invalidPayload) => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: invalidPayload,
+        headers: cookieHeader
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(400);
+      expect(response.json().error).toBe("Invalid form");
+    });
+
+    it("should return 422 if recaptcha fails", async () => {
+      const spy = vi.spyOn(verifyModule, "checkRecaptchaToken").mockResolvedValueOnce(0.0);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(spy).toHaveBeenCalledOnce();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(422);
+      expect(response.json().error).toBe("Recaptcha failed");
+    });
+
+    it("should return 500 if user does not exist", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 403 if user is google user", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser, hashedPassword: null }]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(403);
+      expect(response.json().error).toBe("Account authenticated via Google");
+    });
+
+    it("should return 409 if password is incorrect", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(bcryptModule.compare).mockResolvedValueOnce(false);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(409);
+      expect(response.json().error).toBe("Incorrect password");
+    });
+
+    it("should return 500 if password update fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.updateUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/change-password",
+        payload: payload,
+        headers: cookieHeader
+      });
+
+      expect(updateUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid }, { hashedPassword: "hashedPassword" });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Password changed");
+    });
+  });
+
+  describe("/delete-profile", () => {
+    it("should return 401 if not logged in", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/delete-profile"
+      });
+
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error).toBe("Not logged in");
+    });
+
+    it("should return 500 if delete user fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(databaseModule.deleteUser).mockRejectedValueOnce(new Error("Database Error"));
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/delete-profile",
+        headers: cookieHeader
+      });
+
+      expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(response.statusCode).toBe(500);
+      expect(response.json().error).toBe("Unknown Error");
+    });
+
+    it("should return 200 if rm fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      vi.mocked(fsPromisesModule.rm).mockRejectedValueOnce(new Error("Filesystem Error"));
+      const deleteAllUserMetadata = vi.spyOn(metadataModule, "deleteAllUserMetadata");
+      const loggerSpy = vi.spyOn(logger, "error");
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/delete-profile",
+        headers: cookieHeader
+      });
+
+      expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(loggerSpy).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Profile deleted");
+    });
+
+    it("should return 200 if deleting metadata fails", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      const deleteAllUserMetadata = vi
+        .spyOn(metadataModule, "deleteAllUserMetadata")
+        .mockRejectedValueOnce(new Error());
+      const loggerSpy = vi.spyOn(logger, "error");
+
+      const response = await app.inject({
+        method: "POST",
+        url: "/delete-profile",
+        headers: cookieHeader
+      });
+
+      expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(loggerSpy).toHaveBeenCalledOnce();
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
+      expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(response.json().message).toBe("Profile deleted");
+      expect(response.statusCode).toBe(200);
+    });
+
+    it("should return 200 if successful", async () => {
+      vi.mocked(databaseModule.findUser).mockResolvedValueOnce([testUser]);
+      const rmSpy = vi.spyOn(fsPromisesModule, "rm");
+      const deleteAllUserMetadata = vi.spyOn(metadataModule, "deleteAllUserMetadata");
+      const response = await app.inject({
+        method: "POST",
+        url: "/delete-profile",
+        headers: cookieHeader
+      });
+
+      expect(deleteUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
+      expect(rmSpy).toHaveBeenCalledWith(normalize(`uploads/${testUser.uuid}`), { recursive: true, force: true });
+      expect(deleteAllUserMetadata).toHaveBeenCalledWith("file-metadata.json", testUser.uuid);
+      expect(deleteAllUserMetadata).toHaveBeenCalledOnce();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Profile deleted");
+    });
+  });
+
+  describe("/logout", () => {
+    it("should return 200", async () => {
+      const response = await app.inject({
+        method: "POST",
+        url: "/logout",
+        headers: cookieHeader
+      });
+
+      expect(deleteSessionSpy).toHaveBeenCalled();
+      expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
+      expect(response.statusCode).toBe(200);
+      expect(response.json().message).toBe("Logged out");
     });
   });
 });

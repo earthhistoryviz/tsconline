@@ -9,21 +9,25 @@ import {
   DataMiningSettings,
   EventFrequency,
   EventSettings,
+  PointColumnInfoTSC,
   PointSettings,
   RGB,
   RangeSettings,
   SequenceSettings,
   ValidFontOptions,
+  assertChronColumnInfoTSC,
   assertChronSettings,
   assertEventColumnInfoTSC,
   assertEventSettings,
   assertPointColumnInfoTSC,
   assertPointSettings,
+  assertRulerSettings,
   assertSequenceColumnInfoTSC,
   assertSequenceSettings,
   assertSubChronInfoArray,
   assertSubEventInfoArray,
   assertSubPointInfoArray,
+  assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
   defaultPointSettings,
@@ -34,6 +38,8 @@ import {
 import { cloneDeep } from "lodash";
 import {
   DataMiningStatisticApproach,
+  EventSearchInfo,
+  GroupedEventSearchInfo,
   WindowStats,
   convertDataMiningPointDataTypeToDataMiningStatisticApproach
 } from "../../types";
@@ -42,8 +48,9 @@ import {
   computeWindowStatisticsForDataPoints,
   findRangeOfWindowStats
 } from "../../util/data-mining";
-import { yieldControl } from "../../util";
+import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
+import { findSerialNum } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -72,30 +79,29 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
       break;
     case "PointColumn":
-      {
-        assertPointColumnInfoTSC(settings);
-        assertPointSettings(column.columnSpecificSettings);
-        setPointColumnSettings(column.columnSpecificSettings, {
-          drawLine: settings.drawLine,
-          drawFill: settings.drawFill,
-          drawScale: settings.drawScale,
-          drawCurveGradient: settings.drawCurveGradient,
-          drawBackgroundGradient: settings.drawBgrndGradient,
-          backgroundGradientStart: settings.backGradStart,
-          backgroundGradientEnd: settings.backGradEnd,
-          curveGradientStart: settings.curveGradStart,
-          curveGradientEnd: settings.curveGradEnd,
-          lineColor: settings.lineColor,
-          flipScale: settings.flipScale,
-          scaleStart: settings.scaleStart,
-          scaleStep: settings.scaleStep,
-          fill: settings.fillColor,
-          pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
-          smoothed: settings.drawSmooth,
-          lowerRange: settings.minWindow,
-          upperRange: settings.maxWindow
-        });
-      }
+      assertPointColumnInfoTSC(settings);
+      assertPointSettings(column.columnSpecificSettings);
+      setPointColumnSettings(column.columnSpecificSettings, {
+        drawLine: settings.drawLine,
+        drawFill: settings.drawFill,
+        drawScale: settings.drawScale,
+        drawCurveGradient: settings.drawCurveGradient,
+        drawBackgroundGradient: settings.drawBgrndGradient,
+        backgroundGradientStart: settings.backGradStart,
+        backgroundGradientEnd: settings.backGradEnd,
+        curveGradientStart: settings.curveGradStart,
+        curveGradientEnd: settings.curveGradEnd,
+        lineColor: settings.lineColor,
+        flipScale: settings.flipScale,
+        scaleStart: settings.scaleStart,
+        scaleStep: settings.scaleStep,
+        fill: settings.fillColor,
+        pointShape: settings.drawPoints === false ? "nopoints" : convertPointTypeToPointShape(settings.pointType),
+        smoothed: settings.drawSmooth,
+        lowerRange: settings.minWindow,
+        upperRange: settings.maxWindow,
+        isDataMiningColumn: settings.isDataMiningColumn
+      });
       break;
     case "SequenceColumn":
       assertSequenceColumnInfoTSC(settings);
@@ -110,20 +116,187 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       break;
   }
 }
+
+const dataminingFoundCache = new Map<string, PointColumnInfoTSC>();
+
+//key: column name
+//currIdentifier: indicates the datamine column (if it exists) that references the key.
+//loadedIdentifier: the type of datamine column to draw according to the loaded settings
+const dataMiningRefCache = new Map<
+  string,
+  {
+    existingDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType | null;
+    loadedDataMiningType: EventFrequency | DataMiningChronDataType | DataMiningPointDataType;
+  }
+>();
+
+//TODO: maybe ask user to confirm overwrite of datamining columns
+
+export function handleDataMiningColumns() {
+  //shortest to largest name
+  const sortedRefNameList = Array.from(dataMiningRefCache.keys()).sort((a, b) => a.length - b.length);
+  for (const name of sortedRefNameList) {
+    const refCol = state.settingsTabs.columnHashMap.get(name);
+    const refInfo = dataMiningRefCache.get(name);
+    if (!refCol) {
+      //also could not be in selected datapacks, so commented since many of these columns could exist
+      //console.error("Datamining reference column is not in state");
+      continue;
+    }
+    if (!refInfo) {
+      console.error("While handling datamining columns, failed to find refInfo for reference column");
+      continue;
+    }
+    const { existingDataMiningType, loadedDataMiningType } = refInfo;
+    let dmName: string | undefined = undefined;
+    try {
+      dmName = addDataMiningColumn(refCol, loadedDataMiningType);
+    } catch (e) {
+      console.error(e);
+      continue;
+    }
+    if (!dmName) {
+      console.error("While handling datamining columns, failed to add datamining column");
+      continue;
+    }
+    const createdDmColumn = state.settingsTabs.columnHashMap.get(dmName);
+    if (!createdDmColumn) {
+      console.error("while handling datamining columns, failed to access created datamining column from state");
+      continue;
+    }
+    const foundDmColumn = dataminingFoundCache.get(dmName);
+    if (!foundDmColumn) {
+      console.error(
+        "While handling datamining columns, name of created datamining column does not match any datamining columns in loaded settings"
+      );
+      continue;
+    }
+
+    setColumnProperties(createdDmColumn, foundDmColumn);
+    //this means there was a datamine column for the refcol before loading settings, so remove it since we only have one datamine at a time
+    if (existingDataMiningType) removeDataMiningColumn(refCol, existingDataMiningType);
+
+    try {
+      switch (refCol.columnDisplayType) {
+        case "Event":
+          assertEventSettings(refCol.columnSpecificSettings);
+          if (isEventFrequency(loadedDataMiningType)) refCol.columnSpecificSettings.frequency = loadedDataMiningType;
+          break;
+        case "Chron":
+          assertChronSettings(refCol.columnSpecificSettings);
+          if (isDataMiningChronDataType(loadedDataMiningType))
+            refCol.columnSpecificSettings.dataMiningChronDataType = loadedDataMiningType;
+          break;
+        case "Point":
+          assertPointSettings(refCol.columnSpecificSettings);
+          if (isDataMiningPointDataType(loadedDataMiningType))
+            refCol.columnSpecificSettings.dataMiningPointDataType = loadedDataMiningType;
+          break;
+        default:
+          console.log("WARNING: datamining reference column's type is not event, chron, or point");
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+  //reset cache
+  dataminingFoundCache.clear();
+  dataMiningRefCache.clear();
+}
+
+export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
+  const columnName = extractName(settings._id);
+  const column = state.settingsTabs.columnHashMap.get(columnName);
+  switch (extractColumnType(settings._id)) {
+    case "EventColumn":
+      assertEventColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        //column in state and column in loaded settings that have same name (unique identifier per column) could have different types
+        //if loaded settings came from a different datapack
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Event") {
+          assertEventSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.frequency,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      break;
+    case "ChronColumn":
+      assertChronColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Chron") {
+          assertChronSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.dataMiningChronDataType,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      break;
+    case "PointColumn":
+      assertPointColumnInfoTSC(settings);
+      if (settings.drawExtraColumn) {
+        if (!column) {
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: null,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+        if (column && column.columnDisplayType === "Point") {
+          assertPointSettings(column.columnSpecificSettings);
+          dataMiningRefCache.set(columnName, {
+            existingDataMiningType: column.columnSpecificSettings.dataMiningPointDataType,
+            loadedDataMiningType: settings.drawExtraColumn
+          });
+        }
+      }
+      if (settings.isDataMiningColumn) {
+        dataminingFoundCache.set(columnName, settings);
+      }
+  }
+}
+
+/**
+ * applys the chart column settings from a settings file to the
+ * columninfo stored in state.
+ *
+ * @param settings settings that is being applied to the current column
+ * @param parent parent of current column, used for creating datamining column
+ *
+ */
+
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
   let curcol: ColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
-  if (curcol === undefined) {
-    //const errorDesc: string = "Unknown column name found while loading settings: ";
-    //makes website super slow if a lot of unknown columns (ex. if loaded settings for a different datapack)
-    //pushSnackbar(errorDesc + columnName.substring(0, snackbarTextLengthLimit - errorDesc.length - 1), "warning");
-  } else setColumnProperties(curcol, settings);
+  if (curcol) {
+    setColumnProperties(curcol, settings);
+  }
+
+  addColumnToDataMiningCache(settings);
+
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
-      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + extractName(settings.children[i]._id));
-      if (curcol !== undefined) setColumnProperties(curcol, settings.children[i]);
+      const child = settings.children[i];
+      const childName = extractName(child._id);
+      curcol = state.settingsTabs.columnHashMap.get(columnName + " " + childName);
+      if (curcol) setColumnProperties(curcol, child);
+
+      addColumnToDataMiningCache(child);
     }
   } else {
     for (let i = 0; i < settings.children.length; i++) {
@@ -150,7 +323,9 @@ export const applyRowOrder = action(
       let childName = extractName(settingsChild._id);
       //for manually changed columns (facies, chron, etc.)
       if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
-        childName = extractName(settings._id) + " " + childName;
+        //change name for facies, chron, member, and labels (keep name same for blank, age, datamining column)
+        if (["Facies", "Chron", "Members", "Facies Label", "Series Label", "Chron Label"].includes(childName))
+          childName = extractName(settings._id) + " " + childName;
       }
       //for chart titles with different units
       else if (!column.parent) {
@@ -178,7 +353,9 @@ export const applyRowOrder = action(
 
 export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
   await yieldControl(counter, 30);
+
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
+
   for (const childColumn of columnInfo.children) {
     await initializeColumnHashMap(childColumn, counter);
   }
@@ -258,14 +435,31 @@ export const setWidth = action((newWidth: number, column: ColumnInfo) => {
 });
 
 export const setColumnSelected = action((name: string) => {
-  state.settingsTabs.columnSelected = name;
-  if (!state.settingsTabs.columnHashMap.has(name)) {
+  state.columnMenu.columnSelected = name;
+  const column = state.settingsTabs.columnHashMap.get(name);
+  setColumnMenuTabValue(0);
+  setColumnMenuTabs(["General", "Font"]);
+  if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Chron")) {
+    setColumnMenuTabs(["General", "Font", "Data Mining"]);
+  } else if (column && column.columnDisplayType === "Point") {
+    setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
+  } else setColumnMenuTabs(["General", "Font"]);
+  if (!column) {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
 });
+export const setColumnMenuTabs = action((tabs: string[]) => {
+  state.columnMenu.tabs = tabs;
+});
+export const setColumnMenuTabValue = action((tabValue: number) => {
+  state.columnMenu.tabValue = tabValue;
+});
 
+let searchColumnsAbortController: AbortController | null = null;
 export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
+  if (searchColumnsAbortController) searchColumnsAbortController.abort();
+  searchColumnsAbortController = new AbortController();
+  setColumnSearchTerm(searchTerm);
   if (searchTerm === "") {
     state.settingsTabs.columnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
@@ -278,12 +472,16 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     return;
   }
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    await yieldControl(counter, 30);
     setShow(false, columnInfo);
     setExpanded(false, columnInfo);
   }
 
+  const regExp = getRegex(searchTerm);
+
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-    if (columnInfo.show != true && columnInfo.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+    await yieldControl(counter, 30);
+    if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
@@ -301,6 +499,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       }
     }
   }
+  searchColumnsAbortController = null;
 });
 
 export const addDataMiningColumn = action(
@@ -509,11 +708,11 @@ export const addDataMiningColumn = action(
     });
     parent.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    return dataMiningColumnName;
   }
 );
 
 export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
-  const columnToRemove = type + " for " + column.name;
   if (!column.parent) {
     console.log("WARNING: tried to remove a data mining column from a column with no parent");
     return;
@@ -523,6 +722,8 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
+  const columnToRemove =
+    column.columnDisplayType !== "Chron" ? type + " for " + column.name : type + " for " + parent.name;
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
@@ -531,6 +732,221 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
+export const addBlankColumn = action((column: ColumnInfo) => {
+  if (column.children.length == 0) {
+    console.log("WARNING: tried to add a blank column to a column with no children");
+    return;
+  }
+  let serialNumber = 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+  }
+  const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
+  const blankColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    on: true,
+    children: [],
+    subInfo: [],
+    parent: column.name,
+    popup: "",
+    name: blankColumnName,
+    editName: "Blank " + `${serialNumber}`,
+    enableTitle: true,
+    columnDisplayType: "Data",
+    width: 100,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  });
+
+  column.children.splice(column.children.length, 0, blankColumn);
+  state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
+});
+export const addAgeColumn = action((column: ColumnInfo) => {
+  if (column.children.length == 0) {
+    console.log("WARNING: tried to add an age column to a column with no children");
+    return;
+  }
+
+  let serialNumber = 1;
+  const largestExistingSerialNum = column.children.findLastIndex(
+    (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
+  );
+  if (largestExistingSerialNum > -1) {
+    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+  }
+  const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
+  const ageColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    on: true,
+    children: [],
+    parent: column.name,
+    subInfo: [],
+    popup: "",
+    name: ageColumnName,
+    editName: "Age",
+    enableTitle: true,
+    columnDisplayType: "Ruler",
+    width: undefined,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    },
+    columnSpecificSettings: {
+      justification: "left"
+    }
+  });
+  column.children.splice(column.children.length, 0, ageColumn);
+  state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
+});
+export const makeColumnPath = action((name: string): string[] => {
+  const columnPath: string[] = [];
+  let column = state.settingsTabs.columnHashMap.get(name);
+  if (!column) {
+    return [];
+  }
+  while (column.name !== "Chart Root") {
+    columnPath.push(column.editName);
+    column = state.settingsTabs.columnHashMap.get(column.parent!);
+    if (!column) break;
+  }
+  return columnPath;
+});
+let searchEventsAbortController: AbortController | null = null;
+export const searchEvents = action(async (searchTerm: string, counter = { count: 0 }) => {
+  if (searchEventsAbortController) searchEventsAbortController.abort();
+  searchEventsAbortController = new AbortController();
+  setEventSearchTerm(searchTerm);
+  let count = 0;
+  if (state.settingsTabs.eventSearchTerm === "") return 0;
+  const regExp = getRegex(state.settingsTabs.eventSearchTerm);
+
+  //key: column name/event name
+  //info: info found in subinfo array
+  const results = new Map<string, EventSearchInfo[]>();
+
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    await yieldControl(counter, 30);
+    if (columnInfo.name === "Chart Root") {
+      continue;
+    }
+    if (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName)) {
+      //for column names
+      const id = columnInfo.editName + " - " + "Column";
+      if (!results.has(id)) {
+        results.set(id, []);
+      }
+      results.get(id)!.push({
+        id: count,
+        columnName: columnInfo.name,
+        columnPath: makeColumnPath(columnInfo.name),
+        unit: columnInfo.units
+      });
+      count++;
+    }
+    if (columnInfo.subInfo) {
+      //skip since subInfo is not associated with this but the app does it for map points
+      if (columnInfo.columnDisplayType === "MetaColumn") {
+        continue;
+      }
+      for (let i = 0; i < columnInfo.subInfo.length; i++) {
+        const subInfo = columnInfo.subInfo[i];
+        if ("label" in subInfo && subInfo.label) {
+          if (regExp.test(subInfo.label)) {
+            const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
+            const resInfo: EventSearchInfo = {
+              id: count,
+              columnName: columnInfo.name,
+              columnPath: makeColumnPath(columnInfo.name),
+              unit: columnInfo.units
+            };
+
+            //facies/chron label doesn't have subinfo because they are block type but its parent has facies/chron info, so access it through BlockSeriesMetaColumn
+            if (columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
+              if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Facies Label")) {
+                resInfo.columnPath = makeColumnPath(columnInfo.name + " Facies Label");
+                resInfo.columnName = columnInfo.name + " Facies Label";
+              } else if (state.settingsTabs.columnHashMap.get(columnInfo.name + " Chron Label")) {
+                resInfo.columnPath = makeColumnPath(columnInfo.name + " Chron Label");
+                resInfo.columnName = columnInfo.name + " Chron Label";
+              } else {
+                console.error(
+                  "While searching, could not find Facies or Chron label for " +
+                    columnInfo.name +
+                    " but should have found it"
+                );
+                continue;
+              }
+            }
+            if ("age" in subInfo) {
+              //facies and chron label show up as block, so find ranges for them too
+              if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
+                if (i > 0) {
+                  const nextBlock = columnInfo.subInfo[i - 1];
+                  if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
+                } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
+              } else {
+                resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
+              }
+            }
+            if ("subEventType" in subInfo) {
+              resInfo.type = subInfo.subEventType;
+            }
+            if ("popup" in subInfo) {
+              resInfo.notes = subInfo.popup;
+            }
+            //same special case as above
+            const key =
+              resultType === "BlockSeriesMetaColumn"
+                ? subInfo.label + " - " + "Block"
+                : subInfo.label + " - " + resultType;
+            if (!results.has(key)) {
+              results.set(key, []);
+            }
+            const eventGroup = results.get(key)!;
+            eventGroup.push(resInfo);
+            count++;
+          }
+        }
+      }
+    }
+  }
+
+  const groupedEvents: GroupedEventSearchInfo[] = [];
+  results.forEach((info: EventSearchInfo[], key: string) => {
+    groupedEvents.push({ key: key, info: [...info] });
+  });
+  setGroupedEvents(groupedEvents);
+  searchEventsAbortController = null;
+  return count;
+});
+
+export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[]) => {
+  state.settingsTabs.groupedEvents = groupedEvents;
+});
+
+export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
+  if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
+    console.log("WARNING: tried to change justification on a column which is not Age");
+    return;
+  }
+  assertRulerSettings(column.columnSpecificSettings);
+  column.columnSpecificSettings.justification = newJustification;
+});
+export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrientation: "normal" | "vertical") => {
+  if (column.columnDisplayType !== "Zone") {
+    console.log("WARNING: tried to change orientation on a column which is not Zone");
+    return;
+  }
+  assertZoneSettings(column.columnSpecificSettings);
+  column.columnSpecificSettings.orientation = newOrientation;
+});
 export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
   await yieldControl(counter, 30);

@@ -7,12 +7,14 @@ import { useContext } from "react";
 import { context } from "../../state";
 import "./EventSpecificSettings.css";
 import { Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 type EventSpecificSettingsProps = {
   column: ColumnInfo;
 };
 export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   if (column.columnDisplayType !== "Event" || !column.columnSpecificSettings) return null;
   assertEventSettings(column.columnSpecificSettings);
   const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -40,8 +42,8 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
         value={column.columnSpecificSettings.type}
         name={""}
         radioArray={[
-          { value: "events", label: "Events", imageSrc: EventLogo },
-          { value: "ranges", label: "Ranges", imageSrc: RangeLogo }
+          { value: "events", label: t("settings.column.menu.events"), imageSrc: EventLogo },
+          { value: "ranges", label: t("settings.column.menu.ranges"), imageSrc: RangeLogo }
         ]}
       />
       <TSCRadioGroup
@@ -51,9 +53,9 @@ export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = obser
         value={column.columnSpecificSettings.rangeSort}
         name={""}
         radioArray={[
-          { value: "first occurrence", label: "First Occurrence" },
-          { value: "last occurrence", label: "Last Occurrence" },
-          { value: "alphabetical", label: "Alphabetical" }
+          { value: "first occurrence", label: t("settings.column.menu.first-occurrence") },
+          { value: "last occurrence", label: t("settings.column.menu.last-occurrence") },
+          { value: "alphabetical", label: t("settings.column.menu.alphabetical") }
         ]}
       />
     </Box>

@@ -20,12 +20,13 @@ import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "../util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "../util";
 import { displayServerError } from "../state/actions/util-actions";
-import { Lottie, TSCButton, TSCPopupDialog, CustomFormControlLabel } from "../components";
+import { Lottie, TSCButton, TSCYesNoPopup, CustomFormControlLabel } from "../components";
 import loader from "../assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import { observer } from "mobx-react-lite";
 import EditIcon from "@mui/icons-material/Edit";
 import "./Profile.css";
+import { useTranslation } from "react-i18next";
 
 export const Profile = observer(() => {
   const navigate = useNavigate();
@@ -231,14 +232,14 @@ export const Profile = observer(() => {
   };
 
   const borderStyle = { border: "2px solid", borderColor: "button.main" };
-
+  const { t } = useTranslation();
   return loading ? (
     <Box display="flex" justifyContent="center" alignItems="center">
       <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
     </Box>
   ) : (
     <Container maxWidth="md">
-      <TSCPopupDialog
+      <TSCYesNoPopup
         open={popupOpen}
         title="Are you sure you want to delete your profile?"
         message="This action cannot be undone. All your data (including datapacks) will be lost."
@@ -266,14 +267,14 @@ export const Profile = observer(() => {
         </Badge>
         <input type="file" style={{ display: "none" }} onChange={handleUpload} ref={fileInputRef} />
         <Typography variant="h4" component="h1" sx={{ ml: 2 }}>
-          {`Welcome, ${state.user.username}`}
+          {`${t("login.welcome")}, ${state.user.username}`}
         </Typography>
       </Box>
       <Grid container spacing={2} direction="column">
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
-              Profile Information
+              {t("login.profile-info")}
             </Typography>
             <Box>
               <Grid container spacing={2}>
@@ -286,14 +287,14 @@ export const Profile = observer(() => {
                     justifyContent: editMode.username ? "" : "space-between"
                   }}>
                   <Box sx={{ minWidth: 75 }}>
-                    <Typography>Username:</Typography>
+                    <Typography>{t("login.username")}:</Typography>
                   </Box>
                   {editMode.username ? (
                     <>
                       <TextField
                         fullWidth
                         name="username"
-                        label="New Username"
+                        label={t("login.new-username")}
                         value={formValues.username}
                         onChange={handleChange}
                         size="small"
@@ -303,15 +304,15 @@ export const Profile = observer(() => {
                       />
                       <Box sx={{ mt: 2 }}>
                         <TSCButton onClick={() => handleChangeProfile("username")} sx={{ mr: 1 }}>
-                          Save
+                          {t("login.save")}
                         </TSCButton>
-                        <TSCButton onClick={() => handleEditToggle("username")}>Cancel</TSCButton>
+                        <TSCButton onClick={() => handleEditToggle("username")}>{t("login.cancel")}</TSCButton>
                       </Box>
                     </>
                   ) : (
                     <>
                       <Typography>{state.user.username}</Typography>
-                      <TSCButton onClick={() => handleEditToggle("username")}>Change</TSCButton>
+                      <TSCButton onClick={() => handleEditToggle("username")}>{t("login.change")}</TSCButton>
                     </>
                   )}
                 </Grid>
@@ -324,14 +325,14 @@ export const Profile = observer(() => {
                     justifyContent: editMode.email ? "" : "space-between"
                   }}>
                   <Box sx={{ minWidth: 75 }}>
-                    <Typography>Email:</Typography>
+                    <Typography>{t("login.email")}:</Typography>
                   </Box>
                   {editMode.email ? (
                     <>
                       <TextField
                         fullWidth
                         name="email"
-                        label="New Email"
+                        label={t("login.new-email")}
                         value={formValues.email}
                         onChange={handleChange}
                         size="small"
@@ -341,15 +342,15 @@ export const Profile = observer(() => {
                       />
                       <Box>
                         <TSCButton onClick={() => handleChangeProfile("email")} sx={{ mr: 1 }}>
-                          Save
+                          {t("login.save")}
                         </TSCButton>
-                        <TSCButton onClick={() => handleEditToggle("email")}>Cancel</TSCButton>
+                        <TSCButton onClick={() => handleEditToggle("email")}>{t("login.cancel")}</TSCButton>
                       </Box>
                     </>
                   ) : (
                     <>
                       <Typography>{state.user.email}</Typography>
-                      <TSCButton onClick={() => handleEditToggle("email")}>Change</TSCButton>
+                      <TSCButton onClick={() => handleEditToggle("email")}>{t("login.change")}</TSCButton>
                     </>
                   )}
                 </Grid>
@@ -363,7 +364,7 @@ export const Profile = observer(() => {
                     }}
                     alignItems="center">
                     <Box sx={{ minWidth: 75 }}>
-                      <Typography>Password:</Typography>
+                      <Typography>{t("login.password")}:</Typography>
                     </Box>
                     {editMode.password ? (
                       <form
@@ -383,7 +384,7 @@ export const Profile = observer(() => {
                             <TextField
                               type="password"
                               name="currentPassword"
-                              label="Current Password"
+                              label={t("login.current-password")}
                               value={formValues.currentPassword}
                               onChange={handleChange}
                               size="small"
@@ -397,7 +398,7 @@ export const Profile = observer(() => {
                             <TextField
                               type="password"
                               name="newPassword"
-                              label="New Password"
+                              label={t("login.new-password")}
                               value={formValues.newPassword}
                               onChange={handleChange}
                               size="small"
@@ -410,15 +411,15 @@ export const Profile = observer(() => {
                         </Grid>
                         <Box>
                           <TSCButton type="submit" sx={{ mr: 1 }}>
-                            Save
+                            {t("login.save")}
                           </TSCButton>
-                          <TSCButton onClick={() => handleEditToggle("password")}>Cancel</TSCButton>
+                          <TSCButton onClick={() => handleEditToggle("password")}> {t("login.cancel")}</TSCButton>
                         </Box>
                       </form>
                     ) : (
                       <>
                         <Typography>***********</Typography>
-                        <TSCButton onClick={() => handleEditToggle("password")}>Change</TSCButton>
+                        <TSCButton onClick={() => handleEditToggle("password")}> {t("login.change")}</TSCButton>
                       </>
                     )}
                   </Grid>
@@ -430,7 +431,7 @@ export const Profile = observer(() => {
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
             <Typography variant="h5" component="h2" gutterBottom>
-              Settings
+              {t("login.settings")}
             </Typography>
             <CustomFormControlLabel
               width={120}
@@ -442,7 +443,7 @@ export const Profile = observer(() => {
                   onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
                 />
               }
-              label="Dark Mode"
+              label={t("login.dark-mode")}
             />
             <FormControl fullWidth variant="outlined" margin="normal">
               <InputLabel>Language</InputLabel>
@@ -459,7 +460,7 @@ export const Profile = observer(() => {
             </FormControl>
             <Box mt={2}>
               <Button variant="contained" color="error" fullWidth onClick={() => setPopupOpen(true)}>
-                Delete Profile
+                {t("login.delete")}
               </Button>
             </Box>
           </Paper>
