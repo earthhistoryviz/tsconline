@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi, test } from "vitest";
 import {
   changeProfilePicture,
   replaceDatapackFile,
+  setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../src/upload-handlers";
@@ -14,8 +15,10 @@ import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
 import * as loadPacks from "../src/load-packs";
 import { MultipartFile } from "@fastify/multipart";
+import * as fileMetadataHandler from "../src/file-metadata-handler";
 vi.mock("../src/user/fetch-user-files", () => ({
-  fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory")
+  fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
+  getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory")
 }));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
@@ -28,6 +31,7 @@ vi.mock("../src/constants", () => ({
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
   isDatapackTypeString: vi.fn().mockReturnValue(true),
+  isUserDatapack: vi.fn().mockReturnValue(true)
   MAX_DATAPACK_TAG_LENGTH: 20,
   MAX_DATAPACK_TITLE_LENGTH: 100,
   MAX_AUTHORED_BY_LENGTH: 200,
@@ -38,21 +42,30 @@ vi.mock("@tsconline/shared", () => ({
   MAX_DATAPACK_REFERENCES_ALLOWED: 30,
   MAX_DATAPACK_REFERENCE_LENGTH: 100
 }));
+vi.mock("../src/file-metadata-handler", () => ({
+  writeFileMetadata: vi.fn().mockResolvedValue(undefined)
+}));
 vi.mock("../src/load-packs", () => ({
   loadDatapackIntoIndex: vi.fn().mockResolvedValue(true)
 }));
 vi.mock("../src/user/user-handler", () => ({
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
-  deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined)
+  deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
+  doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
 }));
 vi.mock("fs/promises", () => ({
   rm: vi.fn().mockResolvedValue(undefined),
   rename: vi.fn().mockResolvedValue(undefined),
-  copyFile: vi.fn().mockResolvedValue(undefined)
+  copyFile: vi.fn().mockResolvedValue(undefined),
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined)
 }));
 vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
-  checkFileExists: vi.fn().mockResolvedValue(true)
+  checkFileExists: vi.fn().mockResolvedValue(true),
+  assetconfigs: {
+    fileMetadata: "fileMetadata"
+  }
 }));
 describe("uploadUserDatapackHandler", () => {
   let reply: FastifyReply;
@@ -435,5 +448,97 @@ describe("replaceDatapackFile", () => {
     expect(decryptDatapack).toHaveBeenCalledOnce();
     expect(copyFile).toHaveBeenCalledOnce();
     expect(deleteDatapackFileAndDecryptedCounterpart).toHaveBeenCalledOnce();
+  });
+});
+
+describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
+  const doesDatapackFolderExistInAllUUIDDirectories = vi.spyOn(
+    userHandlers,
+    "doesDatapackFolderExistInAllUUIDDirectories"
+  );
+  const mkdir = vi.spyOn(fsPromises, "mkdir");
+  const copyFile = vi.spyOn(fsPromises, "copyFile");
+  const decryptDatapack = vi.spyOn(userHandlers, "decryptDatapack");
+  const loadDatapackIntoIndex = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  const writeFileMetadata = vi.spyOn(fileMetadataHandler, "writeFileMetadata");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const isUserDatapack = vi.spyOn(shared, "isUserDatapack");
+  const metadata = {
+    title: "title",
+    storedFileName: "storedFileName",
+    isPublic: true
+  } as shared.Datapack;
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if already exists in uuid directory", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
+    await expect(() =>
+      setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false)
+    ).rejects.toThrow();
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
+  });
+  it("should remove source path if sourceFilePath is different from sourceFileDestination and not manual", async () => {
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false);
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
+    expect(mkdir).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledOnce();
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should throw error if failed to load datapack into index", async () => {
+    loadDatapackIntoIndex.mockResolvedValueOnce(false);
+    await expect(() =>
+      setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true)
+    ).rejects.toThrow();
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
+    expect(mkdir).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledOnce();
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should copyFile and rm if datapackImageFilepath is provided", async () => {
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true, "datapackImageFilepath");
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
+    expect(mkdir).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledTimes(2);
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(writeFileMetadata).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should return the datapack index on success", async () => {
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    await expect(setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true)).resolves.toEqual({
+      [metadata.title]: metadata
+    });
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
+    expect(mkdir).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledOnce();
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(rm).not.toHaveBeenCalled();
+    expect(writeFile).toHaveBeenCalledOnce();
+    expect(writeFileMetadata).toHaveBeenCalledOnce();
+  });
+  it("should skip writing to file metadat if not a user datapack", async () => {
+    isUserDatapack.mockReturnValueOnce(false);
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true);
+    expect(writeFileMetadata).not.toHaveBeenCalled();
   });
 });
