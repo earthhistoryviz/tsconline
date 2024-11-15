@@ -1,12 +1,29 @@
 import { describe, it, expect, beforeEach, vi, test } from "vitest";
-import { uploadFileToFileSystem, uploadUserDatapackHandler } from "../src/upload-handlers";
+import {
+  changeProfilePicture,
+  replaceDatapackFile,
+  uploadFileToFileSystem,
+  uploadUserDatapackHandler
+} from "../src/upload-handlers";
 import { FastifyReply } from "fastify";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 import * as streamPromises from "stream/promises";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
+import * as util from "../src/util";
+import * as userHandlers from "../src/user/user-handler";
+import * as loadPacks from "../src/load-packs";
 import { MultipartFile } from "@fastify/multipart";
+vi.mock("../src/user/fetch-user-files", () => ({
+  fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory")
+}));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
+}));
+vi.mock("../src/constants", () => ({
+  DATAPACK_PROFILE_PICTURE_FILENAME: "datapack-image",
+  CACHED_USER_DATAPACK_FILENAME: "Datapack.json",
+  DECRYPTED_DIRECTORY_NAME: "decrypted"
 }));
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
@@ -21,11 +38,21 @@ vi.mock("@tsconline/shared", () => ({
   MAX_DATAPACK_REFERENCES_ALLOWED: 30,
   MAX_DATAPACK_REFERENCE_LENGTH: 100
 }));
+vi.mock("../src/load-packs", () => ({
+  loadDatapackIntoIndex: vi.fn().mockResolvedValue(true)
+}));
+vi.mock("../src/user/user-handler", () => ({
+  decryptDatapack: vi.fn().mockResolvedValue(undefined),
+  deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined)
+}));
 vi.mock("fs/promises", () => ({
-  rm: vi.fn().mockResolvedValue(undefined)
+  rm: vi.fn().mockResolvedValue(undefined),
+  rename: vi.fn().mockResolvedValue(undefined),
+  copyFile: vi.fn().mockResolvedValue(undefined)
 }));
 vi.mock("../src/util", () => ({
-  getBytes: vi.fn().mockReturnValue("1 B")
+  getBytes: vi.fn().mockReturnValue("1 B"),
+  checkFileExists: vi.fn().mockResolvedValue(true)
 }));
 describe("uploadUserDatapackHandler", () => {
   let reply: FastifyReply;
@@ -351,5 +378,62 @@ describe("uploadFileToFileSystem tests", () => {
   });
   it("should return 200 on success", async () => {
     expect(await uploadFileToFileSystem(multipartFile, "filepath")).toEqual({ code: 200, message: "File uploaded" });
+  });
+});
+
+describe("changeProfilePicture tests", () => {
+  const rename = vi.spyOn(fsPromises, "rename");
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const rm = vi.spyOn(fsPromises, "rm");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should move the file to the correct location if previous profile picture doesn't exists", async () => {
+    checkFileExists.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
+    await changeProfilePicture("user", "datapack", "sourceFile");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+  });
+  it("should move the file to the correct location if previous profile picture exists", async () => {
+    checkFileExists.mockResolvedValueOnce(true);
+    await changeProfilePicture("user", "datapack", "sourceFile");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledWith("directory/datapack-image.png", { force: true });
+    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+  });
+});
+
+describe("replaceDatapackFile", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const copyFile = vi.spyOn(fsPromises, "copyFile");
+  const decryptDatapack = vi.spyOn(userHandlers, "decryptDatapack");
+  const deleteDatapackFileAndDecryptedCounterpart = vi.spyOn(userHandlers, "deleteDatapackFileAndDecryptedCounterpart");
+  const loadDatapackIntoIndex = vi.spyOn(loadPacks, "loadDatapackIntoIndex");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const metadata = {
+    title: "title"
+  } as shared.Datapack;
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if failed to load datapack", async () => {
+    await expect(() => replaceDatapackFile("user", "sourceFile", metadata)).rejects.toThrow();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledTimes(2);
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledOnce();
+  });
+  it("should return the successfully loaded datapack and rm the temp file", async () => {
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    await expect(replaceDatapackFile("user", "sourceFile", metadata)).resolves.toEqual(metadata);
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+    expect(rm).toHaveBeenCalledTimes(1);
+    expect(decryptDatapack).toHaveBeenCalledOnce();
+    expect(copyFile).toHaveBeenCalledOnce();
+    expect(deleteDatapackFileAndDecryptedCounterpart).toHaveBeenCalledOnce();
   });
 });
