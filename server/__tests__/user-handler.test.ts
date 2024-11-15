@@ -7,9 +7,11 @@ import {
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   getUploadedDatapackFilepath,
+  processEditDatapackRequest,
   renameUserDatapack,
   writeUserDatapack
 } from "../src/user/user-handler";
+import * as database from "../src/database";
 import * as fsPromises from "fs/promises";
 import * as util from "../src/util";
 import * as shared from "@tsconline/shared";
@@ -19,11 +21,19 @@ import * as uploadHandler from "../src/upload-handlers";
 import path from "path";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as publicDatapackHandler from "../src/public-datapack-handler";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
+import { cloneDeep } from "lodash";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import { getTemporaryFilepath } from "../src/upload-handlers";
 
 vi.mock("../src/public-datapack-handler", () => {
   return {
     switchPrivacySettingsOfDatapack: vi.fn(async () => {})
+  };
+});
+vi.mock("../src/database", () => {
+  return {
+    findUser: vi.fn(async () => [Promise.resolve(testUser)])
   };
 });
 
@@ -31,7 +41,8 @@ vi.mock("../src/upload-handlers", () => {
   return {
     changeProfilePicture: vi.fn(async () => {}),
     getTemporaryFilepath: vi.fn().mockResolvedValue("test"),
-    replaceDatapackFile: vi.fn(async () => {})
+    replaceDatapackFile: vi.fn(async () => {}),
+    uploadFileToFileSystem: vi.fn(async () => ({ code: 200, message: "success" }))
   };
 });
 
@@ -43,7 +54,8 @@ vi.mock("../src/file-metadata-handler", () => {
 
 vi.mock("../src/constants", () => {
   return {
-    CACHED_USER_DATAPACK_FILENAME: "test"
+    CACHED_USER_DATAPACK_FILENAME: "test-cached-filename",
+    DATAPACK_PROFILE_PICTURE_FILENAME: "test-datapack-pro-pic-filename"
   };
 });
 
@@ -83,6 +95,7 @@ vi.mock("../src/error-logger", () => {
 
 vi.mock("fs/promises", () => {
   return {
+    rm: vi.fn(async () => {}),
     rename: vi.fn(async () => {}),
     writeFile: vi.fn(async () => {}),
     readFile: vi.fn(async () => Promise.resolve(JSON.stringify(readFileMockReturn)))
@@ -91,6 +104,8 @@ vi.mock("fs/promises", () => {
 vi.mock("../src/util", () => {
   return {
     verifyFilepath: vi.fn(async () => true),
+    makeTempFilename: vi.fn(() => "tempFileName"),
+    getBytes: vi.fn(() => "1 B"),
     assetconfigs: {
       uploadDirectory: "test",
       privateDatapacksDirectory: "private",
@@ -106,6 +121,17 @@ vi.mock("../src/user/fetch-user-files", () => {
     getPrivateUserUUIDDirectory: vi.fn(async () => "test")
   };
 });
+const testUser = {
+  uuid: "test-uuid",
+  userId: 123,
+  email: "test@example.com",
+  emailVerified: 1,
+  invalidateSession: 0,
+  username: "testuser",
+  hashedPassword: "password123",
+  pictureUrl: "https://example.com/picture.jpg",
+  isAdmin: 0
+};
 const readFileMockReturn = { title: "test" };
 
 describe("fetchAllUsersDatapacks test", () => {
@@ -273,7 +299,7 @@ describe("writeUserDatapack test", () => {
   it("should write the datapack", async () => {
     await writeUserDatapack("test", datapack);
     expect(writeFile).toHaveBeenCalledOnce();
-    expect(writeFile).toHaveBeenCalledWith("test/test/test", JSON.stringify(datapack, null, 2));
+    expect(writeFile).toHaveBeenCalledWith("test/test/test-cached-filename", JSON.stringify(datapack, null, 2));
   });
 });
 
@@ -463,7 +489,7 @@ describe("editDatapack tests", async () => {
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledWith(
-      "test/test/test",
+      "test/test/test-cached-filename",
       JSON.stringify({ ...readFileMockReturn, description: newDatapack.description }, null, 2)
     );
   });
@@ -511,5 +537,153 @@ describe("checkFileTypeIsDatapackImage test", () => {
     ["application/octet-stream", "test"]
   ])(`should return false if the file is not a datapack image for %s and %s`, async (mimetype, filename) => {
     expect(checkFileTypeIsDatapackImage({ mimetype, filename } as MultipartFile)).toBe(false);
+  });
+});
+describe("processEditDatapackRequest tests", () => {
+  let formData: AsyncIterableIterator<Multipart>;
+  let currentJson: Record<string, string | { mimetype: string; filename: string; fieldname: string }>;
+  const findUser = vi.spyOn(database, "findUser");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const uploadFileToFileSystem = vi.spyOn(uploadHandler, "uploadFileToFileSystem");
+
+  function createFormData(
+    json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
+  ) {
+    currentJson = cloneDeep(json);
+    formData = {
+      async *[Symbol.asyncIterator]() {
+        yield* Object.entries(json).map(([name, value]) => {
+          if (typeof value === "object") {
+            return {
+              name,
+              type: "file",
+              mimetype: value.mimetype,
+              filename: value.filename,
+              fieldname: value.fieldname,
+              bytesRead: value.bytesRead,
+              file: {
+                truncated: false,
+                bytesRead: value.bytesRead ?? 0,
+                pipe: vi.fn(),
+                on: vi.fn(),
+                resume: vi.fn(),
+                pause: vi.fn(),
+                destroy: vi.fn(),
+                destroySoon: vi.fn(),
+                unpipe: vi.fn(),
+                unshift: vi.fn(),
+                wrap: vi.fn(),
+                [Symbol.asyncIterator]: vi.fn()
+              }
+            };
+          }
+          return {
+            name,
+            type: "field",
+            data: Buffer.from(value.toString())
+          };
+        });
+      }
+    } as AsyncIterableIterator<Multipart>;
+  }
+  const expectCleanUpTempFiles = () => {
+    const isDatapackInRequest =
+      typeof currentJson.datapack === "object" && currentJson.datapack.fieldname === "datapack";
+    const isImageInRequest =
+      typeof currentJson.datapackImage === "object" &&
+      currentJson.datapackImage.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME;
+    if (isDatapackInRequest && isImageInRequest) {
+      expect(rm).toHaveBeenCalledTimes(2);
+    } else if (isDatapackInRequest || isImageInRequest) {
+      expect(rm).toHaveBeenCalledTimes(1);
+    } else {
+      expect(rm).not.toHaveBeenCalled();
+    }
+  };
+  const testDatapackFormData = {
+    mimetype: "application/zip",
+    filename: "test.dpk",
+    fieldname: "datapack"
+  };
+  const testDatapackImageFormData = {
+    mimetype: "image/png",
+    filename: "test.png",
+    fieldname: DATAPACK_PROFILE_PICTURE_FILENAME
+  };
+  beforeEach(() => {
+    currentJson = {};
+    createFormData();
+    vi.clearAllMocks();
+  });
+  it("should return 401 operation result if find user returns empty", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(result).toEqual({ code: 401, message: "User not found" });
+  });
+  test.each([
+    ["application/encoded", "test.dpk"],
+    ["application/octet-stream", "test.enc"],
+    ["text/plain", "test.mk"],
+    ["application/json", "test.k"],
+    ["application/json", "test.txt"]
+  ])("should return 415 operation result if the file is not a datapack for %s and %s", async (mimetype, filename) => {
+    createFormData({ datapack: { mimetype, filename, fieldname: "datapack" } });
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({ code: 415, message: "Invalid file type for datapack" });
+  });
+  it("should return 413 if file is too large", async () => {
+    createFormData({ datapack: { ...testDatapackFormData, bytesRead: 10000 } });
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({ code: 413, message: "File is too large" });
+  });
+  it("should return non 200 if uploadFileToFileSystem fails", async () => {
+    createFormData({ datapack: { ...testDatapackFormData } });
+    uploadFileToFileSystem.mockResolvedValueOnce({ code: 500, message: "uploadFileToFileSystem error" });
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({ code: 500, message: "uploadFileToFileSystem error" });
+    expectCleanUpTempFiles();
+  });
+  test.each([
+    ["image/url", "test.png"],
+    ["image/png", "test"],
+    ["image/png", "test.jp"],
+    ["image/png", "test.jpeeg"],
+    ["application/json", "test.png"],
+    ["application/json", "test.jpg"],
+    ["application/json", "test.jpeg"]
+  ])(
+    "should return 415 operation result if the file is not a datapack image for %s and %s",
+    async (mimetype, filename) => {
+      createFormData({ datapackImage: { ...testDatapackImageFormData, mimetype, filename } });
+      const result = await processEditDatapackRequest(formData, "test");
+      expect(result).toEqual({ code: 415, message: "Invalid file type for datapack image" });
+    }
+  );
+  it("should return non 200 if uploadFileToFileSystem fails for datapack image", async () => {
+    createFormData({ datapackImage: { ...testDatapackImageFormData } });
+    uploadFileToFileSystem.mockResolvedValueOnce({ code: 500, message: "uploadFileToFileSystem error" });
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({ code: 500, message: "uploadFileToFileSystem error" });
+    expectCleanUpTempFiles();
+  });
+  it("should return 400 if no fields are provided", async () => {
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({ code: 400, message: "No fields provided" });
+  });
+  it("should return 200 if all fields are provided", async () => {
+    createFormData({ datapack: testDatapackFormData, datapackImage: testDatapackImageFormData });
+    const result = await processEditDatapackRequest(formData, "test");
+    expect(result).toEqual({
+      code: 200,
+      tempFiles: ["test", "test"],
+      fields: {
+        datapackImage: expect.stringContaining(DATAPACK_PROFILE_PICTURE_FILENAME),
+        filepath: expect.stringContaining("test"),
+        originalFileName: testDatapackFormData.filename,
+        storedFileName: expect.stringContaining("temp"),
+        size: "1 B"
+      }
+    });
   });
 });
