@@ -946,7 +946,7 @@ export const adminAddServerDatapackToWorkshop = async function addServerDatapack
 ) {
   const { workshopId, datapackTitle } = request.body;
   if (!workshopId || !datapackTitle) {
-    reply.status(400).send({ error: "Missing workshopId or datapack" });
+    reply.status(400).send({ error: "Missing workshopId or datapackTitle" });
     return;
   }
   try {
@@ -956,6 +956,7 @@ export const adminAddServerDatapackToWorkshop = async function addServerDatapack
       return;
     }
     const workshopUUID = `workshop-${workshopId}`;
+    console.log("workshopUUID", workshopUUID);
     const datapackDirectory = await fetchUserDatapackDirectory("official", datapackTitle).catch(() => {
       reply.status(404).send({ error: "Datapack not found" });
     });
