@@ -307,7 +307,7 @@ export async function uploadFileToFileSystem(
   }
   if (file.file.bytesRead === 0) {
     await rm(filepath, { force: true });
-    return { code: 400, message: "Empty file" };
+    return { code: 400, message: "File is empty" };
   }
   return { code: 200, message: "File uploaded" };
 }

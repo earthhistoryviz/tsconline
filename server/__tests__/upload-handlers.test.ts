@@ -1,8 +1,13 @@
 import { describe, it, expect, beforeEach, vi, test } from "vitest";
-import { uploadUserDatapackHandler } from "../src/upload-handlers";
+import { uploadFileToFileSystem, uploadUserDatapackHandler } from "../src/upload-handlers";
 import { FastifyReply } from "fastify";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
+import * as streamPromises from "stream/promises";
+import { MultipartFile } from "@fastify/multipart";
+vi.mock("stream/promises", () => ({
+  pipeline: vi.fn().mockResolvedValue(undefined)
+}));
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
   isDatapackTypeString: vi.fn().mockReturnValue(true),
@@ -305,5 +310,46 @@ describe("uploadUserDatapackHandler", () => {
     expect(reply.send).toHaveBeenCalledWith({ error: `Max contact length is ${shared.MAX_DATAPACK_CONTACT_LENGTH}` });
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
     expect(val).toBeUndefined();
+  });
+});
+
+describe("uploadFileToFileSystem tests", () => {
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const multipartFile = {
+    name: "file",
+    type: "file",
+    mimetype: "mimetype",
+    filename: "filename",
+    fieldname: "fieldname",
+    bytesRead: 1,
+    file: {
+      truncated: false,
+      bytesRead: 1
+    }
+  } as unknown as MultipartFile;
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return a 500 error if pipeline fails", async () => {
+    pipeline.mockRejectedValueOnce(new Error("error"));
+    expect(await uploadFileToFileSystem(multipartFile, "filepath")).toEqual({
+      code: 500,
+      message: "Failed to save file"
+    });
+    expect(pipeline).toHaveBeenCalledOnce();
+  });
+  it("should return a 500 error if the file is truncated", async () => {
+    const truncated = { ...multipartFile, file: { truncated: true } } as unknown as MultipartFile;
+    expect(await uploadFileToFileSystem(truncated, "filepath")).toEqual({ code: 400, message: "File is too large" });
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should return a 400 if the file is empty", async () => {
+    const empty = { ...multipartFile, file: { bytesRead: 0 } } as unknown as MultipartFile;
+    expect(await uploadFileToFileSystem(empty, "filepath")).toEqual({ code: 400, message: "File is empty" });
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should return 200 on success", async () => {
+    expect(await uploadFileToFileSystem(multipartFile, "filepath")).toEqual({ code: 200, message: "File uploaded" });
   });
 });
