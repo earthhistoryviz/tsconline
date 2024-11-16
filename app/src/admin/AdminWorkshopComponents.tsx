@@ -64,25 +64,25 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
   };
 
   return !uploadDatapacks ? (
-    <Dialog open={true} onClose={handleDialogClose} fullWidth>
+    <Dialog open={true} onClose={handleDialogClose} maxWidth="md">
       <Box textAlign="center" padding="10px">
         <Typography variant="h5" mb="5px">
           Add Datapacks to Workshop
         </Typography>
         <Box gap="20px" display="flex" alignItems="center">
           <Box display="flex" alignItems="center" gap={5}>
-            <FormControl variant="outlined" sx={{ m: 1 }} size="small">
+            <FormControl variant="outlined" sx={{ m: 1 }}>
               <InputLabel id="datapacks-label">Select Server Datapack</InputLabel>
               <Select
+                className="datapack-select"
                 name="datapack"
                 label="Select Server Datapacks"
                 labelId="datapacks-label"
-                size="small"
                 value={datapack}
                 onChange={(event: SelectChangeEvent<typeof datapack>) => {
                   setDatapack(event.target.value as string);
                 }}
-                sx={{ minWidth: "30ch" }}>
+                autoWidth>
                 {Array.from(state.datapacks)
                   .filter((datapack) => isOfficialDatapack(datapack))
                   .map((datapack) => (
@@ -113,7 +113,7 @@ export const AddDatapacksForm: React.FC<AddDatapacksFormProps> = observer(functi
               alignItems="center"
               bgcolor={theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)"}
               zIndex={1}>
-              <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
+              <Lottie animationData={loader} autoplay loop width={200} height={100} speed={0.7} />
             </Box>
           )}
         </Box>

@@ -21,6 +21,9 @@ export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
     const datapacks: Datapack[] = [];
     const uuids = uuidChunk ? uuidChunk : await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
+      if (uuid.startsWith("workshop")) {
+        continue;
+      }
       try {
         const datapackDirs = await getDirectories(await getPublicUserUUIDDirectory(uuid));
         for (const datapack of datapackDirs) {

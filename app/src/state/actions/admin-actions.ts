@@ -17,8 +17,7 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   assertWorkshopDatapack,
-  isServerResponseError,
-  isWorkshopDatapack
+  isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import {
@@ -616,7 +615,7 @@ export const adminUploadDatapackToWorkshop = action(
     formData.append("authoredBy", authoredBy);
     formData.append("isPublic", String(isPublic));
     formData.append("type", type);
-    formData.append("uuid", String(uuid));
+    formData.append("uuid", uuid);
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -650,10 +649,6 @@ export const adminUploadDatapackToWorkshop = action(
  * @param titles The title of the datapack to add
  */
 export const adminAddServerDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
-  if (state.datapacks.find((d) => d.title === datapackTitle && isWorkshopDatapack(d))) {
-    pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
-    return;
-  }
   try {
     const recaptchaToken = await getRecaptchaToken("adminAddServerDatapackToWorkshop");
     if (!recaptchaToken) return;
@@ -672,7 +667,7 @@ export const adminAddServerDatapackToWorkshop = action(async (workshopId: number
       let errorCode = ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED;
       switch (response.status) {
         case 409:
-          errorCode = ErrorCodes.DATAPACK_ALREADY_EXISTS;
+          errorCode = ErrorCodes.ADMIN_SERVER_DATAPACK_ALREADY_EXISTS;
           break;
         case 422:
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
