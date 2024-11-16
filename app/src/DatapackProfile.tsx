@@ -352,7 +352,7 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) =>
       {state.datapackProfilePage.editMode ? (
         <Box className={styles.changeDatapackFile}>
           <Typography className={styles.fileName}>{fileName}</Typography>
-          <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} />
+          <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} accept=".dpk, .mdpk, .txt, .zip"/>
         </Box>
       ) : (
         <Typography className={styles.fileName}>{fileName}</Typography>
