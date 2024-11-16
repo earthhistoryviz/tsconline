@@ -6,7 +6,7 @@ import {
   deleteUser,
   createWorkshop,
   findWorkshop,
-  getAndHandleWorkshopEnd,
+  getWorkshopIfNotEnded,
   updateWorkshop,
   deleteWorkshop,
   checkWorkshopHasUser,
@@ -495,7 +495,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
       reply.status(400).send({ error: "Missing either emails or file" });
       return;
     }
-    const workshop = await getAndHandleWorkshopEnd(workshopId);
+    const workshop = await getWorkshopIfNotEnded(workshopId);
     if (!workshop) {
       reply.status(404).send({ error: "Workshop not found" });
       return;
@@ -536,7 +536,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         const { userId } = user[0]!;
         const existingRelationship = await checkWorkshopHasUser(userId, workshopId);
         if (existingRelationship.length == 0) {
-          addNewUserWorkshopRelationship(userId, workshopId, email);
+          await addNewUserWorkshopRelationship(userId, workshopId, email);
         }
       } else {
         await createUser({
@@ -956,8 +956,7 @@ export const adminAddServerDatapackToWorkshop = async function addServerDatapack
       return;
     }
     const workshopUUID = `workshop-${workshopId}`;
-    console.log("workshopUUID", workshopUUID);
-    const datapackDirectory = await fetchUserDatapackDirectory("official", datapackTitle).catch(() => {
+    const datapackDirectory = await Promise.resolve(fetchUserDatapackDirectory("official", datapackTitle)).catch(() => {
       reply.status(404).send({ error: "Datapack not found" });
     });
     if (!datapackDirectory) {

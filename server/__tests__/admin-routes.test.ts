@@ -52,10 +52,8 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     ...actual,
-    assertAdminSharedUser: vi.fn().mockImplementation(actual.assertAdminSharedUser),
     assertDatapackIndex: vi.fn().mockReturnValue(true),
-    assertSharedWorkshop: vi.fn().mockImplementation(actual.assertSharedWorkshop),
-    assertSharedWorkshopArray: vi.fn().mockImplementation(actual.assertSharedWorkshopArray),
+    assertDatapack: vi.fn().mockReturnValue(true),
     assertDatapackPriorityChangeRequestArray: vi.fn().mockReturnValue(true)
   };
 });
@@ -147,7 +145,8 @@ vi.mock("fs/promises", async (importOriginal) => {
     ...actual,
     rm: vi.fn().mockResolvedValue({}),
     writeFile: vi.fn().mockResolvedValue({}),
-    realpath: vi.fn().mockImplementation(async (path) => path)
+    realpath: vi.fn().mockImplementation(async (path) => path),
+    readFile: vi.fn().mockResolvedValue("")
   };
 });
 
@@ -188,7 +187,7 @@ vi.mock("../src/database", async (importOriginal) => {
     findWorkshop: vi.fn().mockResolvedValue([]),
     updateUser: vi.fn().mockResolvedValue({}),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn(() => Promise.resolve(testWorkshop)),
+    getWorkshopIfNotEnded: vi.fn(() => Promise.resolve(testWorkshop)),
     updateWorkshop: vi.fn().mockResolvedValue({}),
     deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
     findUsersWorkshops: vi.fn().mockResolvedValue([]),
@@ -1428,7 +1427,7 @@ describe("adminAddUsersToWorkshop", () => {
   const createUser = vi.spyOn(database, "createUser");
   const checkForUsersWithUsernameOrEmail = vi.spyOn(database, "checkForUsersWithUsernameOrEmail");
   const updateUser = vi.spyOn(database, "updateUser");
-  const getAndHandleWorkshopEnd = vi.spyOn(database, "getAndHandleWorkshopEnd");
+  const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
   const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
   const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
   const createForm = (json: Record<string, unknown> = {}) => {
@@ -1597,8 +1596,8 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Missing either emails or file" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 404 if getAndHandleWorkshopEnd returns empty", async () => {
-    getAndHandleWorkshopEnd.mockResolvedValueOnce(null);
+  it("should return 404 if getWorkshopIfNotEnded returns empty", async () => {
+    getWorkshopIfNotEnded.mockResolvedValueOnce(null);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1606,8 +1605,8 @@ describe("adminAddUsersToWorkshop", () => {
       headers: formHeaders
     });
     expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(getAndHandleWorkshopEnd).toHaveBeenCalledTimes(1);
-    expect(getAndHandleWorkshopEnd).toHaveBeenCalledWith(testWorkshop.workshopId);
+    expect(getWorkshopIfNotEnded).toHaveBeenCalledTimes(1);
+    expect(getWorkshopIfNotEnded).toHaveBeenCalledWith(testWorkshop.workshopId);
     expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Workshop not found" });
     expect(response.statusCode).toBe(404);
@@ -2576,9 +2575,6 @@ describe("adminUploadDatapackToWorkshop", () => {
     vi.mocked(uploadHandlers.uploadUserDatapackHandler).mockResolvedValue(testDatapackDescriptionForWorkshop);
     vi.mocked(database.findWorkshop).mockResolvedValue([testWorkshop]);
   });
-  afterAll(() => {
-    vi.restoreAllMocks();
-  });
   it("should return 400 if missing datapack file field", async () => {
     const response = await app.inject({
       method: "POST",
@@ -2826,6 +2822,7 @@ describe("adminAddServerDatapackToWorkshop", () => {
     userHandlers,
     "doesDatapackFolderExistInAllUUIDDirectories"
   );
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(database.findWorkshop).mockResolvedValue([testWorkshop]);
@@ -2891,5 +2888,40 @@ describe("adminAddServerDatapackToWorkshop", () => {
     expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledWith("workshop-1", body.datapackTitle);
     expect(await response.json()).toEqual({ error: "Datapack already exists" });
     expect(response.statusCode).toBe(409);
+  });
+  it("should return 500 if setupNewDatapackDirectoryInUUIDDirectory does not add datapck", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({});
+    vi.mocked(fsPromises.readFile).mockResolvedValueOnce(JSON.stringify(testDatapackDescription));
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/server/datapack",
+      payload: body,
+      headers
+    });
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledWith("official", body.datapackTitle);
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledTimes(1);
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledWith("workshop-1", body.datapackTitle);
+    expect(await response.json()).toEqual({ error: "Error setting up datapack directory" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful", async () => {
+    doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(false);
+    vi.mocked(fsPromises.readFile).mockResolvedValueOnce(JSON.stringify(testDatapackDescription));
+    setupNewDatapackDirectoryInUUIDDirectory.mockResolvedValueOnce({
+      [testDatapackDescription.title]: {} as shared.Datapack
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/server/datapack",
+      payload: body,
+      headers
+    });
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledWith("official", body.datapackTitle);
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledTimes(1);
+    expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledWith("workshop-1", body.datapackTitle);
+    expect(await response.json()).toEqual({ message: "Datapack added to workshop" });
+    expect(response.statusCode).toBe(200);
   });
 });

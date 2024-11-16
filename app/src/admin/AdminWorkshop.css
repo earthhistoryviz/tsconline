@@ -10,3 +10,7 @@
 .datapack-buttons {
   flex: 0 0 auto;
 }
+
+.datapack-select {
+  min-width: 35ch;
+}

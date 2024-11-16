@@ -9,7 +9,7 @@ import {
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { findUser, findUsersWorkshops } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -255,7 +255,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     }
 
     const userDatapacks = await fetchAllUsersDatapacks(uuid);
-    const workshops = await findUsersWorkshops({ userId: user[0].userId });
+    const workshops = await getActiveWorkshopsUserIsIn(user[0].userId);
     const workshopDatapacksPromises = workshops.map((workshop) =>
       fetchAllUsersDatapacks(`workshop-${workshop.workshopId}`)
     );

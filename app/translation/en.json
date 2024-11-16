@@ -364,7 +364,8 @@
             "DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE": "Datapack title cannot have leading or trailing whitespace.",
             "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
             "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance.",
-            "ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add server datapack to workshop. Please try again later."
+            "ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add server datapack to workshop. Please try again later.",
+            "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack."
         },
         "button": {
             "generate": "Generate",
