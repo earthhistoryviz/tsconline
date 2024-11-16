@@ -133,9 +133,6 @@
   margin: 5px 0;
 }
 
-.loader {
-  margin-left: 30px;
-}
 .header {
   display: flex;
   flex-direction: row;

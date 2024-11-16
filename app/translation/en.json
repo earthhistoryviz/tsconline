@@ -56,7 +56,7 @@
         },
         "loading": {
             "loading-chart": "Loading Chart...",
-            "loading-datapacks": "Loading Datapacks...",
+            "loading-datapacks": "Loading Datapacks",
             "time": "this could take more than a minute"
         },
         "settingsTabs": {
