@@ -193,7 +193,11 @@ describe("uploadUserDatapackHandler", () => {
     expect(val).toBeUndefined();
   });
   it("should return a DatapackMetadata object on success", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, notes: "notes", contact: "contact", datapackImage: "datapackImage" }, 1);
+    const val = await uploadUserDatapackHandler(
+      reply,
+      { ...fields, notes: "notes", contact: "contact", datapackImage: "datapackImage" },
+      1
+    );
     expect(reply.send).not.toHaveBeenCalled();
     expect(reply.status).not.toHaveBeenCalled();
     expect(val).toEqual({
@@ -576,7 +580,7 @@ describe("getFileNameFromCachedDatapack tests", () => {
     expect(assertUserDatapack).toHaveBeenCalledOnce();
     expect(assertDatapack).toHaveBeenCalledOnce();
   });
-})
+});
 it("should return the directory and filename", async () => {
   const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");

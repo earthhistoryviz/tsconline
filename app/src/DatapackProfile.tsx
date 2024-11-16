@@ -48,6 +48,7 @@ import {
 } from "./state/non-action-util";
 import { FileUpload } from "@mui/icons-material";
 import { checkDatapackValidity } from "./state/actions/util-actions";
+import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -66,7 +67,7 @@ export const DatapackProfile = observer(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
-  }, []);
+  }, [datapack?.title]);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
@@ -90,6 +91,7 @@ export const DatapackProfile = observer(() => {
   ];
   const Content: React.FC = observer(() => (
     <>
+      <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
         <IconButton className={styles.back} onClick={() => navigate("/settings")}>
           <ArrowBackIcon className={styles.icon} />
@@ -349,11 +351,11 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) =>
     <>
       {state.datapackProfilePage.editMode ? (
         <Box className={styles.changeDatapackFile}>
-          <Typography>{fileName}</Typography>
+          <Typography className={styles.fileName}>{fileName}</Typography>
           <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} />
         </Box>
       ) : (
-        <Typography>{fileName}</Typography>
+        <Typography className={styles.fileName}>{fileName}</Typography>
       )}
     </>
   );

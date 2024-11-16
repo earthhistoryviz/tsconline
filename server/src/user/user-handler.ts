@@ -253,7 +253,9 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
     throw new Error("Invalid filepath");
   }
   await rm(datapackPath, { recursive: true, force: true });
-  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
+  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
+    logger.error(e);
+  });
 }
 
 export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {
