@@ -227,7 +227,7 @@ export async function editDatapack(
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
       (e) => {
-        console.error(e)
+        console.error(e);
         logger.error(e);
         metadata.isPublic = originalMetadata.isPublic;
         errors.push("Error switching privacy settings");
