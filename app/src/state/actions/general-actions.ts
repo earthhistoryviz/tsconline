@@ -1216,7 +1216,20 @@ export const setUnsafeChartContent = action((content: string) => {
 });
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
-  state.datapackProfilePage.editableDatapackMetadata = metadata;
+  if (!metadata) {
+    state.datapackProfilePage.editableDatapackMetadata = null;
+    return;
+  }
+  // so we don't include any extra fields (since destructuring includes all fields)
+  state.datapackProfilePage.editableDatapackMetadata = {
+    description: metadata.description,
+    title: metadata.title,
+    isPublic: metadata.isPublic,
+    tags: metadata.tags,
+    type: metadata.type,
+    authoredBy: metadata.authoredBy,
+    references: metadata.references
+  };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;

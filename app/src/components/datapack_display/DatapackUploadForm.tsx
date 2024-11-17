@@ -70,6 +70,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                 text={t("settings.datapacks.upload")}
                 variant="contained"
                 onChange={handlers.handleFileUpload}
+                accept=".dpk, .mdpk, .zip, .txt"
               />
               <Typography className="file-upload-text" variant="body2">
                 {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}

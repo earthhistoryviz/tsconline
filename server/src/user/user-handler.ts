@@ -187,6 +187,7 @@ export async function editDatapack(
       await getTemporaryFilepath(uuid, metadata.storedFileName),
       metadata
     ).catch((e) => {
+      console.error(e);
       logger.error(e);
       errors.push("Error replacing datapack file");
       return {
@@ -259,7 +260,12 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
 }
 
 export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {
-  const datapackFilepath = await getUploadedDatapackFilepath(uuid, datapack);
+  const datapackFilepath = await getUploadedDatapackFilepath(uuid, datapack).catch((e) => {
+    logger.error(e);
+  });
+  if (!datapackFilepath) {
+    return;
+  }
   const parentDir = path.dirname(datapackFilepath);
   const decrypted = path.join(parentDir, DECRYPTED_DIRECTORY_NAME, path.parse(datapackFilepath).name);
   await rm(datapackFilepath, { force: true });

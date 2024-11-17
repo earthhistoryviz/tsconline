@@ -14,7 +14,10 @@ import {
 } from "@tsconline/shared";
 import { State } from "./state";
 
-export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+export type EditableDatapackMetadata = Omit<
+  DatapackMetadata,
+  "originalFileName" | "storedFileName" | "size" | "datapackImage"
+>;
 
 export type UploadDatapackMethodType = (
   file: File,
