@@ -165,6 +165,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
 export const replaceUserDatapackFile = action(async (id: string, file: File) => {
   const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
   try {
+    setEditRequestInProgress(true);
     const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
     if (!recaptcha) return;
     const formData = new FormData();
@@ -195,6 +196,8 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     }
   } catch (e) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  } finally {
+    setEditRequestInProgress(false);
   }
 });
 
@@ -204,6 +207,7 @@ export const setDatapackImageOnDatapack = action((datapack: Datapack, image: str
 
 export const replaceUserProfileImageFile = action(async (id: string, file: File) => {
   try {
+    setEditRequestInProgress(true);
     const recaptcha = await getRecaptchaToken("replaceUserProfileImageFile");
     if (!recaptcha) return;
     const formData = new FormData();
@@ -231,5 +235,7 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
     }
   } catch (e) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  } finally {
+    setEditRequestInProgress(false);
   }
 });

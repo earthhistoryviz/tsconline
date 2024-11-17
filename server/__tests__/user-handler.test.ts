@@ -453,6 +453,30 @@ describe("editDatapack tests", async () => {
     expect(replaceDatapackFile).toHaveBeenCalledOnce();
     expect(getTemporaryFilepath).toHaveBeenCalledOnce();
   });
+  it("should push error if no file is uploaded for replaceDatapackFile", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { originalFileName: "new-file" };
+    getTemporaryFilepath.mockResolvedValueOnce("");
+    verifyFilepath.mockResolvedValueOnce(false);
+    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    expect(verifyFilepath).toHaveBeenCalledTimes(2);
+    expect(errors.length).toBe(1);
+    expect(rename).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(replaceDatapackFile).not.toHaveBeenCalled();
+    expect(getTemporaryFilepath).toHaveBeenCalledOnce();
+  });
+  it("should not call changeProfilePicture if no temp file is uploaded", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = { datapackImage: "new-image" };
+    getTemporaryFilepath.mockResolvedValueOnce("");
+    verifyFilepath.mockResolvedValueOnce(false);
+    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    expect(errors.length).toBe(1);
+    expect(rename).not.toHaveBeenCalled();
+    expect(writeFile).not.toHaveBeenCalled();
+    expect(replaceDatapackFile).not.toHaveBeenCalled();
+    expect(changeProfilePicture).not.toHaveBeenCalled();
+    expect(getTemporaryFilepath).toHaveBeenCalledOnce();
+  });
   it("should call changeProfilePicture and write to datapack if image change requested", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { datapackImage: "new-image" };
     await editDatapack("test", readFileMockReturn.title, newDatapack);
@@ -493,6 +517,26 @@ describe("editDatapack tests", async () => {
       "test/test/test-cached-filename",
       JSON.stringify({ ...readFileMockReturn, description: newDatapack.description }, null, 2)
     );
+  });
+  it("should not write if all properties fail and no non-file access properties are present", async () => {
+    const newDatapack: Partial<shared.DatapackMetadata> = {
+      title: "new-title",
+      originalFileName: "new-file",
+      isPublic: true,
+      datapackImage: "new-image"
+    };
+    rename.mockRejectedValueOnce(new Error("rename error"));
+    replaceDatapackFile.mockRejectedValueOnce(new Error("replaceDatapackFile error"));
+    changeProfilePicture.mockRejectedValueOnce(new Error("changeProfilePicture error"));
+    switchPrivacySettingsOfDatapack.mockRejectedValueOnce(new Error("switchPrivacySettingsOfDatapack error"));
+    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    expect(errors.length).toBe(4);
+    expect(rename).toHaveBeenCalledOnce();
+    expect(loggerError).toHaveBeenCalledTimes(4);
+    expect(replaceDatapackFile).toHaveBeenCalledOnce();
+    expect(changeProfilePicture).toHaveBeenCalledOnce();
+    expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
+    expect(writeFile).not.toHaveBeenCalled();
   });
 });
 
