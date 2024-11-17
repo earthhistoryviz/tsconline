@@ -32,6 +32,7 @@ export const setEditRequestInProgress = action((inProgress: boolean) => {
 export const handleDatapackEdit = action(
   async (originalDatapack: Datapack, editedDatapack: EditableDatapackMetadata) => {
     try {
+      console.log("handleDatapackEdit");
       setEditRequestInProgress(true);
       if (!state.user.uuid) {
         pushError(ErrorCodes.NOT_LOGGED_IN);
