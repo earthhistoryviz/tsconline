@@ -8,7 +8,7 @@ import {
 } from "./user/fetch-user-files.js";
 import { fetchUserDatapack } from "./user/user-handler.js";
 import logger from "./error-logger.js";
-import { assetconfigs } from "./util.js";
+import { assetconfigs, verifyNonExistentFilepath } from "./util.js";
 import { rename } from "fs/promises";
 import { changeFileMetadataKey } from "./file-metadata-handler.js";
 import { join } from "path";
@@ -57,6 +57,9 @@ export async function switchPrivacySettingsOfDatapack(
       newIsPublic ? await getPublicUserUUIDDirectory(uuid) : await getPrivateUserUUIDDirectory(uuid),
       datapack
     );
+    if (!(await verifyNonExistentFilepath(newDatapackPath))) {
+      throw new Error("Invalid datapack path");
+    }
     await rename(oldDatapackPath, newDatapackPath);
     await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
       await rename(newDatapackPath, oldDatapackPath);
