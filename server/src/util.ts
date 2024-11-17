@@ -265,9 +265,9 @@ export async function verifyNonExistentFilepath(filepath: string) {
     if (!filepath.startsWith(process.cwd())) {
       return false;
     }
-    return false;
-  } catch {
     return true;
+  } catch {
+    return false;
   }
 }
 
