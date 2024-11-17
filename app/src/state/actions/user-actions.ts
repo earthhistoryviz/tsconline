@@ -40,6 +40,7 @@ export const handleDatapackEdit = action(
       const formData = new FormData();
       for (const key in editedDatapack) {
         const castedKey = key as keyof EditableDatapackMetadata;
+        if (editedDatapack[castedKey] === null) continue;
         if (JSON.stringify(editedDatapack[castedKey]) !== JSON.stringify(originalDatapack[castedKey])) {
           if (castedKey === "tags" || castedKey === "references") {
             formData.append(castedKey, JSON.stringify(editedDatapack[castedKey]));

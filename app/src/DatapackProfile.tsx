@@ -63,11 +63,15 @@ export const DatapackProfile = observer(() => {
   };
   const datapack = fetchDatapack();
   useEffect(() => {
-    if (datapack) actions.resetEditableDatapackMetadata(datapack);
+    if (datapack) {
+      actions.resetEditableDatapackMetadata(datapack);
+    }
+  }, [query.get("type"), id]);
+  useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
-  }, [datapack?.title]);
+  }, []);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
@@ -352,7 +356,12 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) =>
       {state.datapackProfilePage.editMode ? (
         <Box className={styles.changeDatapackFile}>
           <Typography className={styles.fileName}>{fileName}</Typography>
-          <InputFileUpload startIcon={<FileUpload />} text="Change Datapack File" onChange={handleFileUpload} accept=".dpk, .mdpk, .txt, .zip"/>
+          <InputFileUpload
+            startIcon={<FileUpload />}
+            text="Change Datapack File"
+            onChange={handleFileUpload}
+            accept=".dpk, .mdpk, .txt, .zip"
+          />
         </Box>
       ) : (
         <Typography className={styles.fileName}>{fileName}</Typography>
