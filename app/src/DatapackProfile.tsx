@@ -44,7 +44,8 @@ import { ErrorCodes } from "./util/error-codes";
 import {
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
-  getNavigationRouteForDatapackProfile
+  getNavigationRouteForDatapackProfile,
+  hasLeadingTrailingWhiteSpace
 } from "./state/non-action-util";
 import { FileUpload } from "@mui/icons-material";
 import { checkDatapackValidity } from "./state/actions/util-actions";
@@ -55,6 +56,9 @@ export const DatapackProfile = observer(() => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
+  // we need this because if a user refreshes the page, the metadata will be reset and we also
+  // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
+  const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
     if (!id) return;
@@ -63,10 +67,11 @@ export const DatapackProfile = observer(() => {
   };
   const datapack = fetchDatapack();
   useEffect(() => {
-    if (datapack) {
+    if (datapack && !isMetadataInitialized) {
       actions.resetEditableDatapackMetadata(datapack);
+      setIsMetadataInitialized(true);
     }
-  }, [query.get("type"), id]);
+  }, [query.get("type"), id, isMetadataInitialized, datapack]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
@@ -133,6 +138,10 @@ export const DatapackProfile = observer(() => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (hasLeadingTrailingWhiteSpace(state.datapackProfilePage.editableDatapackMetadata?.title || "")) {
+      actions.pushError(ErrorCodes.DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE);
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {

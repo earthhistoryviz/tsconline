@@ -69,3 +69,7 @@ export function formatDate(input: string | dayjs.Dayjs): string {
 
   return `${datePart} at ${timePart}`;
 }
+
+export function hasLeadingTrailingWhiteSpace(input: string) {
+  return input.trim() !== input;
+}

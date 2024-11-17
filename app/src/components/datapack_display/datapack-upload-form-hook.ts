@@ -5,7 +5,7 @@ import { context } from "../../state";
 import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
-import { getDatapackFromArray } from "../../state/non-action-util";
+import { getDatapackFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
 import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
@@ -51,6 +51,10 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (hasLeadingTrailingWhiteSpace(title)) {
+      actions.pushError(ErrorCodes.DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE);
       return;
     }
     if (dateError) {
