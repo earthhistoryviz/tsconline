@@ -16,7 +16,7 @@ import {
   Typography,
   useTheme
 } from "@mui/material";
-import { CustomDivider, InputFileUpload, TSCButton, TagButton } from "./components";
+import { CustomDivider, InputFileUpload, TSCButton, TSCSwitch, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
@@ -47,7 +47,7 @@ import {
   getNavigationRouteForDatapackProfile,
   hasLeadingTrailingWhiteSpace
 } from "./state/non-action-util";
-import { FileUpload } from "@mui/icons-material";
+import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
@@ -324,6 +324,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
+          <PublicField isPublic={datapack.isPublic} />
+        </div>
+        <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
           <Typography>{datapack.totalColumns}</Typography>
         </div>
@@ -346,6 +349,43 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         <Contact contact={datapack.contact} />
       </div>
     </Box>
+  );
+});
+type PublicFieldProps = {
+  isPublic: boolean;
+};
+const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
+  const { state, actions } = useContext(context);
+  const PrivateComp = () => (
+    <>
+      <Lock className={styles.privacyIcon} />
+      <Typography>{"Private"}</Typography>
+    </>
+  );
+  const PublicComp = () => (
+    <>
+      <Public className={styles.privacyIcon} />
+      <Typography>{"Public"}</Typography>
+    </>
+  );
+  return (
+    <>
+      <Typography className={styles.aih}>Privacy</Typography>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.privacyContainer}>
+          <PrivateComp />
+          <TSCSwitch
+            checked={state.datapackProfilePage.editableDatapackMetadata?.isPublic}
+            onChange={(e) => {
+              actions.updateEditableDatapackMetadata({ isPublic: e.target.checked });
+            }}
+          />
+          <PublicComp />
+        </Box>
+      ) : (
+        <Box className={styles.privacyContainer}>{isPublic ? <PublicComp /> : <PrivateComp />}</Box>
+      )}
+    </>
   );
 });
 type DatapackFileProps = {

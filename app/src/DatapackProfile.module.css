@@ -84,6 +84,10 @@
   line-height: 1.2em;
 }
 
+.switch {
+  color: "blue";
+}
+
 .back {
   flex-shrink: 0;
   width: 35px;
@@ -163,7 +167,18 @@
   font-weight: 600;
   white-space: nowrap;
   margin-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #c4c2c2;
+}
+.privacyContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.privacyIcon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .dt {

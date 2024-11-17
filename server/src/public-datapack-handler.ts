@@ -10,6 +10,8 @@ import { fetchUserDatapack } from "./user/user-handler.js";
 import logger from "./error-logger.js";
 import { assetconfigs } from "./util.js";
 import { rename } from "fs/promises";
+import { changeFileMetadataKey } from "./file-metadata-handler.js";
+import { join } from "path";
 
 const mutex = new Mutex();
 
@@ -50,12 +52,16 @@ export async function switchPrivacySettingsOfDatapack(
   }
   const release = await mutex.acquire();
   try {
-    const datapackDirectory = await fetchUserDatapackDirectory(uuid, datapack);
-    if (newIsPublic) {
-      await rename(datapackDirectory, await getPublicUserUUIDDirectory(uuid));
-    } else {
-      await rename(datapackDirectory, await getPrivateUserUUIDDirectory(uuid));
-    }
+    const oldDatapackPath = await fetchUserDatapackDirectory(uuid, datapack);
+    const newDatapackPath = join(
+      newIsPublic ? await getPublicUserUUIDDirectory(uuid) : await getPrivateUserUUIDDirectory(uuid),
+      datapack
+    );
+    await rename(oldDatapackPath, newDatapackPath);
+    await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+      await rename(newDatapackPath, oldDatapackPath);
+      throw e;
+    });
   } finally {
     release();
   }
