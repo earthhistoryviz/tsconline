@@ -225,11 +225,13 @@ export async function editDatapack(
     }
   }
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic).catch((e) => {
-      logger.error(e);
-      metadata.isPublic = originalMetadata.isPublic;
-      errors.push("Error switching privacy settings");
-    });
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
+      (e) => {
+        logger.error(e);
+        metadata.isPublic = originalMetadata.isPublic;
+        errors.push("Error switching privacy settings");
+      }
+    );
   }
   if (JSON.stringify(metadata) !== JSON.stringify(originalMetadata)) {
     await writeUserDatapack(uuid, metadata).catch((e) => {
