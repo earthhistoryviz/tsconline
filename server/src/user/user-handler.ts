@@ -181,32 +181,48 @@ export async function editDatapack(
     });
   }
   if ("originalFileName" in newDatapack) {
-    // this changes the storedFileName as well so we need to update the metadata
-    metadata = await replaceDatapackFile(
-      uuid,
-      await getTemporaryFilepath(uuid, metadata.storedFileName),
-      metadata
-    ).catch((e) => {
-      console.error(e);
-      logger.error(e);
-      errors.push("Error replacing datapack file");
-      return {
+    const sourceFilepath = await getTemporaryFilepath(uuid, metadata.storedFileName);
+    // check to see if a temp file was uploaded
+    if (await verifyFilepath(sourceFilepath)) {
+      // this changes the storedFileName as well so we need to update the metadata
+      metadata = await replaceDatapackFile(uuid, sourceFilepath, metadata).catch((e) => {
+        console.error(e);
+        logger.error(e);
+        errors.push("Error replacing datapack file");
+        return {
+          ...metadata,
+          originalFileName: originalMetadata.originalFileName,
+          size: originalMetadata.size,
+          storedFileName: originalMetadata.storedFileName
+        };
+      });
+    } else {
+      metadata = {
         ...metadata,
         originalFileName: originalMetadata.originalFileName,
+        size: originalMetadata.size,
         storedFileName: originalMetadata.storedFileName
       };
-    });
+      errors.push("No file uploaded with edit request");
+    }
   }
   if ("datapackImage" in newDatapack) {
-    await changeProfilePicture(
-      uuid,
-      oldDatapackTitle,
-      await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
-    ).catch((e) => {
-      logger.error(e);
+    const sourceFilepath = await getTemporaryFilepath(uuid, newDatapack.datapackImage!);
+    // check to see if a temp file was uploaded
+    if (await verifyFilepath(sourceFilepath)) {
+      await changeProfilePicture(
+        uuid,
+        oldDatapackTitle,
+        await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
+      ).catch((e) => {
+        logger.error(e);
+        metadata.datapackImage = originalMetadata.datapackImage;
+        errors.push("Error changing profile picture");
+      });
+    } else {
       metadata.datapackImage = originalMetadata.datapackImage;
-      errors.push("Error changing profile picture");
-    });
+      errors.push("No file uploaded with edit request");
+    }
   }
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, newDatapack.isPublic!, metadata.isPublic).catch((e) => {
@@ -215,10 +231,12 @@ export async function editDatapack(
       errors.push("Error switching privacy settings");
     });
   }
-  await writeUserDatapack(uuid, metadata).catch((e) => {
-    logger.error(e);
-    errors.push("Error writing metadata");
-  });
+  if (JSON.stringify(metadata) !== JSON.stringify(originalMetadata)) {
+    await writeUserDatapack(uuid, metadata).catch((e) => {
+      logger.error(e);
+      errors.push("Error writing metadata");
+    });
+  }
   return errors;
 }
 
