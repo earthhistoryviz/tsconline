@@ -5,7 +5,11 @@ import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
-  isDatapackTypeString: vi.fn().mockReturnValue(true)
+  isDatapackTypeString: vi.fn().mockReturnValue(true),
+  MAX_DATAPACK_TAG_LENGTH: 20,
+  MAX_DATAPACK_TITLE_LENGTH: 100,
+  MAX_AUTHORED_BY_LENGTH: 200,
+  MAX_DATAPACK_TAGS_ALLOWED: 30
 }));
 vi.mock("fs/promises", () => ({
   rm: vi.fn().mockResolvedValue(undefined)
@@ -153,5 +157,55 @@ describe("uploadUserDatapackHandler", () => {
       uuid: fields.uuid,
       isPublic: Boolean(fields.isPublic)
     });
+  });
+  it("should return a 400 error if title is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque rutrum ex nisi, at consequat ligula."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid title" });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if tags is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        tags: '["tag", "hi", "test3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11", "tag12", "tag13", "tag14", "tag15", "tag16", "tag17", "tag18", "tag19", "tag20", "tag21", "tag22", "tag23", "tag24", "tag25", "tag26", "tag27", "tag28", "tag29", "tag30", "tag31"]'
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max tags allowed is ${shared.MAX_DATAPACK_TAGS_ALLOWED}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if a tag is too long", async () => {
+    const val = await uploadUserDatapackHandler(reply, { ...fields, tags: '["tag", "Lorem ipsum dolor at. "]' }, 1);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max tag length is ${shared.MAX_DATAPACK_TAG_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if a authored by length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        authoredBy:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a turpis rutrum, pretium nisi vitae, consectetur diam. Integer tristique pretium nunc sit amet finibus. Suspendisse interdum, orci ut in."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max authored by length is ${shared.MAX_AUTHORED_BY_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
   });
 });

@@ -21,6 +21,7 @@ import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import {
   DatapackMetadata,
   DatapackType,
+  MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
@@ -96,7 +97,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               required
               InputLabelProps={{ shrink: true }}
               inputProps={{
-                maxLength: MAX_DATAPACK_TITLE_LENGTH
+                maxLength: MAX_AUTHORED_BY_LENGTH
               }}
               value={state.authoredBy}
               onChange={(event) => setters.setAuthoredBy(event.target.value)}
