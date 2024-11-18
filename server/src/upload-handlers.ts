@@ -1,5 +1,9 @@
 import {
   DatapackIndex,
+  MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_TAGS_ALLOWED,
+  MAX_DATAPACK_TAG_LENGTH,
+  MAX_DATAPACK_TITLE_LENGTH,
   assertDatapack,
   assertUserDatapack,
   isDatapackTypeString,
@@ -79,7 +83,12 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
-  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+  if (
+    title === "__proto__" ||
+    title === "constructor" ||
+    title === "prototype" ||
+    title.length > MAX_DATAPACK_TITLE_LENGTH
+  ) {
     await userUploadHandler(reply, 400, "Invalid title", filepath);
     return;
   }
@@ -104,6 +113,18 @@ export async function uploadUserDatapackHandler(
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
     await userUploadHandler(reply, 400, "Tags must be an array of strings", filepath);
+    return;
+  }
+  if (tags.length > MAX_DATAPACK_TAGS_ALLOWED) {
+    await userUploadHandler(reply, 400, `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}`, filepath);
+    return;
+  }
+  if (!tags.every((tag) => tag.length <= MAX_DATAPACK_TAG_LENGTH)) {
+    await userUploadHandler(reply, 400, `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}`, filepath);
+    return;
+  }
+  if (authoredBy && authoredBy.length > MAX_AUTHORED_BY_LENGTH) {
+    await userUploadHandler(reply, 400, `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}`, filepath);
     return;
   }
   if (date && !isDateValid(date)) {
