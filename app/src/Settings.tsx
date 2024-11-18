@@ -15,6 +15,7 @@ import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { useTranslation } from "react-i18next";
+import { Preferences } from "./settings_tabs/Preferences";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -55,6 +56,8 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
   switch (tab) {
     case "time":
       return <Time />;
+    case "preferences":
+      return <Preferences />;
     case "column":
       return <Column />;
     case "search":
