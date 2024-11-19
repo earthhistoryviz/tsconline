@@ -161,6 +161,7 @@ jobs:
         run: exit 1
 
       - name: Set up SSH key
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           eval $(ssh-agent)
           mkdir -p ~/.ssh
