@@ -1,4 +1,4 @@
-import { Fade, IconButton, Snackbar, Typography, useTheme } from "@mui/material";
+import { IconButton, Slide, Snackbar, Typography, useTheme } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
@@ -39,7 +39,7 @@ export const TSCError: React.FC<TSCErrorProps> = observer(({ errorContext, messa
         zIndex: `${100000 - index}`
       }}
       anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      TransitionComponent={Fade}>
+      TransitionComponent={Slide}>
       <div
         className="alert"
         style={{

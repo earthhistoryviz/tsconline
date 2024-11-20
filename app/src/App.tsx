@@ -82,15 +82,17 @@ export default observer(function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/datapacks" element={<Datapacks />} />
           </Routes>
-          {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
-            <TSCError
-              key={context}
-              errorContext={context}
-              message={error.errorText}
-              index={index}
-              count={error.errorCount}
-            />
-          ))}
+          {Array.from(state.errors.errorAlerts.entries())
+            .reverse()
+            .map(([context, error], index) => (
+              <TSCError
+                key={context}
+                errorContext={context}
+                message={error.errorText}
+                index={index}
+                count={error.errorCount}
+              />
+            ))}
           <TSCYesNoPopup
             open={state.showSuggestedAgePopup}
             title={t("dialogs.default-age.title")}
