@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
 import {
@@ -199,7 +199,7 @@ const DatapackImage: React.FC<DatapackImageProps> = observer(({ id, image }) => 
     }
   };
   // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
-  const imageUrl = `${image}?ver=${state.datapackProfilePage.datapackImageVersion}`;
+  const imageUrl = useMemo(() => `${image}?cacheBust=${Date.now()}`, [image]);
   return (
     <>
       {state.datapackProfilePage.editMode ? (

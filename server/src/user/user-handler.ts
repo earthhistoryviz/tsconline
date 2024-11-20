@@ -411,7 +411,6 @@ export async function processEditDatapackRequest(
   let datapackImageFilepath: string | undefined;
   const cleanupTempFiles = async () => {
     if (datapackImageFilepath) {
-      console.log("here");
       await rm(datapackImageFilepath, { force: true });
     }
     if (fields.filepath) {
@@ -500,14 +499,14 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
         partial[key] = value;
         break;
       case "references":
-      case "tags":
+      case "tags": {
         partial[key] = JSON.parse(value);
-        // eslint-disable-next-line no-case-declarations
         const array = partial[key];
         if (!array || !Array.isArray(array) || !array.every((ref) => typeof ref === "string")) {
           throw new Error("References and tags must be valid arrays");
         }
         break;
+      }
     }
   }
   return partial;
