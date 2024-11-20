@@ -81,7 +81,6 @@ export type State = {
   datapackProfilePage: {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
-    datapackImageVersion: number; // this is used to force the image to update when the user uploads a new image
     unsavedChanges: boolean;
     editRequestInProgress: boolean;
   };
@@ -162,7 +161,6 @@ export const state = observable<State>({
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,
-    datapackImageVersion: 0,
     unsavedChanges: false,
     editRequestInProgress: false
   },

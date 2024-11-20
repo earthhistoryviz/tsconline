@@ -55,7 +55,12 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
+import {
+  compareExistingDatapacks,
+  doesDatapackAlreadyExist,
+  getDatapackFromArray,
+  isOwnedByUser
+} from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
@@ -105,14 +110,10 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   }
 });
 export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
-  state.datapacks = observable(
-    state.datapacks.filter(
-      (d) =>
-        d.title !== datapack.title ||
-        d.type !== datapack.type ||
-        (d.type === "user" && datapack.type === "user" && d.uuid !== datapack.uuid)
-    )
-  );
+  const index = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (index > -1) {
+    state.datapacks.splice(index, 1); // Remove the matching datapack in place
+  }
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
@@ -1244,8 +1245,4 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
-});
-
-export const setDatapackImageVersion = action((version: number) => {
-  state.datapackProfilePage.datapackImageVersion = version;
 });

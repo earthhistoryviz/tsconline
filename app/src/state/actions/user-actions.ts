@@ -9,8 +9,7 @@ import {
   removeDatapack,
   setDatapackProfilePageEditMode,
   resetEditableDatapackMetadata,
-  processDatapackConfig,
-  setDatapackImageVersion
+  processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -32,7 +31,6 @@ export const setEditRequestInProgress = action((inProgress: boolean) => {
 export const handleDatapackEdit = action(
   async (originalDatapack: Datapack, editedDatapack: EditableDatapackMetadata) => {
     try {
-      console.log("handleDatapackEdit");
       setEditRequestInProgress(true);
       if (!state.user.uuid) {
         pushError(ErrorCodes.NOT_LOGGED_IN);
@@ -225,7 +223,6 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
       pushSnackbar("Image replaced", "success");
       const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
       if (!datapack) return;
-      setDatapackImageVersion(state.datapackProfilePage.datapackImageVersion + 1);
       removeAllErrors();
     } else {
       displayServerError(
