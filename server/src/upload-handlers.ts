@@ -1,6 +1,11 @@
 import {
   DatapackIndex,
   MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_REFERENCES_ALLOWED,
+  MAX_DATAPACK_REFERENCE_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
@@ -83,13 +88,12 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
-  if (
-    title === "__proto__" ||
-    title === "constructor" ||
-    title === "prototype" ||
-    title.length > MAX_DATAPACK_TITLE_LENGTH
-  ) {
+  if (title === "__proto__" || title === "constructor" || title === "prototype") {
     await userUploadHandler(reply, 400, "Invalid title", filepath);
+    return;
+  }
+  if (title.length > MAX_DATAPACK_TITLE_LENGTH) {
+    await userUploadHandler(reply, 400, `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}`, filepath);
     return;
   }
   if (!bytes) {
@@ -129,6 +133,26 @@ export async function uploadUserDatapackHandler(
   }
   if (date && !isDateValid(date)) {
     await userUploadHandler(reply, 400, "Date must be a valid date string", filepath);
+    return;
+  }
+  if (description && description.length > MAX_DATAPACK_DESC_LENGTH) {
+    await userUploadHandler(reply, 400, `Max description length is ${MAX_DATAPACK_DESC_LENGTH}`, filepath);
+    return;
+  }
+  if (notes && notes.length > MAX_DATAPACK_NOTES_LENGTH) {
+    await userUploadHandler(reply, 400, `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}`, filepath);
+    return;
+  }
+  if (references.length > MAX_DATAPACK_REFERENCES_ALLOWED) {
+    await userUploadHandler(reply, 400, `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}`, filepath);
+    return;
+  }
+  if (!references.every((reference) => reference.length <= MAX_DATAPACK_REFERENCE_LENGTH)) {
+    await userUploadHandler(reply, 400, `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}`, filepath);
+    return;
+  }
+  if (contact && contact.length > MAX_DATAPACK_CONTACT_LENGTH) {
+    await userUploadHandler(reply, 400, `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}`, filepath);
     return;
   }
   return {

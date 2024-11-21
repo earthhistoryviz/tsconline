@@ -16,6 +16,9 @@ import {
   DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
@@ -353,6 +356,7 @@ const Description: React.FC<DescriptionProps> = observer(({ description }) => {
           required
           multiline
           placeholder="A brief description of the data"
+          inputProps={{ maxLength: MAX_DATAPACK_DESC_LENGTH }}
           minRows={7}
         />
       ) : (
@@ -377,6 +381,7 @@ const Contact: React.FC<ContactProps> = observer(({ contact }) => {
             fullWidth
             multiline
             placeholder="Who can be contacted for more information"
+            inputProps={{ maxLength: MAX_DATAPACK_CONTACT_LENGTH }}
             minRows={3}
           />
         </>
@@ -407,6 +412,7 @@ const Notes: React.FC<NotesProps> = observer(({ notes }) => {
             fullWidth
             placeholder="Any additional notes for use of generating charts for this datapack"
             multiline
+            inputProps={{ maxLength: MAX_DATAPACK_NOTES_LENGTH }}
             minRows={3}
           />
         </>

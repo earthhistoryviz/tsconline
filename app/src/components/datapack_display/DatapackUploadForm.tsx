@@ -22,6 +22,10 @@ import {
   DatapackMetadata,
   DatapackType,
   MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_REFERENCE_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
@@ -109,7 +113,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             rows={5}
             label={t("settings.datapacks.upload-form.description")}
             placeholder={t("settings.datapacks.upload-form.description-placeholder")}
-            inputProps={{ className: "datapack-description-input-text" }}
+            inputProps={{ className: "datapack-description-input-text", maxLength: MAX_DATAPACK_DESC_LENGTH }}
             InputLabelProps={{ shrink: true }}
             value={state.description}
             onChange={(event) => setters.setDescription(event.target.value)}
@@ -164,6 +168,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   variant="outlined"
                   value={reference.reference}
                   onChange={(event) => handlers.changeReference(index, event)}
+                  inputProps={{ maxLength: MAX_DATAPACK_REFERENCE_LENGTH }}
                   fullWidth
                 />
                 <IconButton
@@ -195,6 +200,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   sx={{ flexGrow: 0.5 }}
                   helperText={t("settings.datapacks.upload-form.contact-helper-text")}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ maxLength: MAX_DATAPACK_CONTACT_LENGTH }}
                   value={state.contact}
                   onChange={(event) => setters.setContact(event.target.value)}
                 />
@@ -204,6 +210,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   helperText={t("settings.datapacks.upload-form.notes-helper-text")}
                   sx={{ flexGrow: 1 }}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ maxLength: MAX_DATAPACK_NOTES_LENGTH }}
                   value={state.notes}
                   onChange={(event) => setters.setNotes(event.target.value)}
                 />
