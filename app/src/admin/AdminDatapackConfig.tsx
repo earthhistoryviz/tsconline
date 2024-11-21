@@ -6,17 +6,11 @@ import { context } from "../state";
 import { ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
 import { BaseDatapackProps, DatapackPriorityChangeRequest, assertBaseDatapackProps } from "@tsconline/shared";
-import _ from "lodash";
 import { compareExistingDatapacks } from "../state/non-action-util";
 import { pushError } from "../state/actions";
 import { ErrorCodes } from "../util/error-codes";
 
-type AdminDatapackConfigProps = {
-  setShowPopup: (bool: boolean) => void;
-};
-export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(function AdminDatapackConfig({
-  setShowPopup
-}) {
+export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
