@@ -968,7 +968,7 @@ export const setDefaultUserState = action(() => {
   removeUnauthorizedDatapacks();
 });
 export const removeUnauthorizedDatapacks = action(() => {
-  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
+  state.datapacks = observable(state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic));
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
