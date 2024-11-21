@@ -1,12 +1,11 @@
 import { Box, Dialog, useTheme } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { AgGridReact } from "ag-grid-react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useRef, useState } from "react";
 import { context } from "../state";
-import { CellValueChangedEvent, ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
+import { ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
 import { BaseDatapackProps, DatapackPriorityChangeRequest, assertBaseDatapackProps } from "@tsconline/shared";
-import { toJS } from "mobx";
 import _ from "lodash";
 import { compareExistingDatapacks } from "../state/non-action-util";
 import { pushError } from "../state/actions";
@@ -14,8 +13,10 @@ import { ErrorCodes } from "../util/error-codes";
 
 type AdminDatapackConfigProps = {
   setShowPopup: (bool: boolean) => void;
-}
-export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(function AdminDatapackConfig({ setShowPopup }) {
+};
+export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(function AdminDatapackConfig({
+  setShowPopup
+}) {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
@@ -37,10 +38,20 @@ export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(
         if (isNaN(newValue)) return false;
         actions.setAdminDatapackConfigTempRowData(
           [
-            ...[...(state.admin.datapackConfig.tempRowData || rowData)].filter((dp) => !compareExistingDatapacks(dp, data.data)),
+            ...[...(state.admin.datapackConfig.tempRowData || rowData)].filter(
+              (dp) => !compareExistingDatapacks(dp, data.data)
+            ),
             { ...data.data, priority: newValue }
           ].sort((a, b) => a.priority - b.priority)
         );
+        actions.setAdminRowPriorityUpdates([
+          ...state.admin.datapackConfig.rowPriorityUpdates.filter((node) => node.id !== data.data.title),
+          {
+            id: data.data.title,
+            uuid: "official",
+            priority: newValue
+          }
+        ]);
         return true;
       }
     },
@@ -92,26 +103,13 @@ export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(
     actions.setAdminDatapackConfigTempRowData(updatedRowData);
     actions.setAdminRowPriorityUpdates(updatedNodes);
   }
-  // update the priority of the datapacks on cell value change
-  async function onCellValueChanged(event: CellValueChangedEvent<BaseDatapackProps>) {
-    if (event.colDef.field === "priority") {
-      event.api.stopEditing();
-      const { data } = event;
-      const updatedNodes: DatapackPriorityChangeRequest = toJS({
-        id: data.title,
-        uuid: "official",
-        priority: data.priority
-      });
-      actions.setAdminRowPriorityUpdates([...state.admin.datapackConfig.rowPriorityUpdates.filter((node) => node.id !== updatedNodes.id), updatedNodes]);
-    }
-  }
   async function submitPriorityChanges() {
     try {
       await actions.adminUpdateDatapackPriority(state.admin.datapackConfig.rowPriorityUpdates);
       actions.resetAdminConfigTempState();
     } catch (e) {
       console.error(e);
-      pushError(ErrorCodes.SERVER_RESPONSE_ERROR)
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
   }
   return (
@@ -124,7 +122,11 @@ export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(
           Upload Datapack
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
-          <TSCButton disabled={!state.admin.datapackConfig.tempRowData} onClick={async () => await submitPriorityChanges()}>Confirm Priority Changes</TSCButton>
+        <TSCButton
+          disabled={!state.admin.datapackConfig.tempRowData}
+          onClick={async () => await submitPriorityChanges()}>
+          Confirm Priority Changes
+        </TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <DatapackUploadForm
             close={() => setFormOpen(false)}
@@ -142,7 +144,6 @@ export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(
         rowDragManaged
         gridOptions={{
           onRowDragEnd,
-          onCellValueChanged,
           getRowId: (params) => params.data.title
         }}
         rowMultiSelectWithClick

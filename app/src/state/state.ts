@@ -81,9 +81,9 @@ export type State = {
     workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
-      tempRowData: BaseDatapackProps[] | null,
+      tempRowData: BaseDatapackProps[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
-    }
+    };
   };
   datapackProfilePage: {
     editMode: boolean;

@@ -63,10 +63,10 @@ export const Admin = observer(function Admin() {
     onCancel: async () => {
       actions.resetAdminConfigTempState();
     }
-  })
+  });
 
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabIndex(newValue)
+    setTabIndex(newValue);
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   const tabs = [
@@ -76,7 +76,7 @@ export const Admin = observer(function Admin() {
     },
     {
       tabName: "Server Datapacks",
-      component: <AdminDatapackConfig setShowPopup={setShowPopup}/>
+      component: <AdminDatapackConfig setShowPopup={setShowPopup} />
     },
     {
       tabName: "Workshops",
@@ -85,7 +85,7 @@ export const Admin = observer(function Admin() {
   ];
   return (
     <Box className="admin-container">
-        <TSCYesNoPopup
+      <TSCYesNoPopup
         open={showPopup || (state.admin.datapackConfig.tempRowData !== null && tabIndex !== 1)}
         title="Confirm Priority Changes"
         message="Are you sure you want to discard your changes?"
@@ -94,7 +94,7 @@ export const Admin = observer(function Admin() {
         onYes={handleConfirm}
         onNo={handleCancel}
         onClose={handleCancel}
-        />
+      />
       <Typography variant="h4" mb="20px" mt="20px">
         Admin Settings
       </Typography>
