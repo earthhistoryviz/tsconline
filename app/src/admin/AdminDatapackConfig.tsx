@@ -6,18 +6,19 @@ import { context } from "../state";
 import { CellValueChangedEvent, ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
 import { BaseDatapackProps, DatapackPriorityChangeRequest, assertBaseDatapackProps } from "@tsconline/shared";
-import { runInAction, toJS } from "mobx";
+import { toJS } from "mobx";
 import _ from "lodash";
 import { compareExistingDatapacks } from "../state/non-action-util";
 import { pushError } from "../state/actions";
 import { ErrorCodes } from "../util/error-codes";
 
-export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
+type AdminDatapackConfigProps = {
+  setShowPopup: (bool: boolean) => void;
+}
+export const AdminDatapackConfig: React.FC<AdminDatapackConfigProps> = observer(function AdminDatapackConfig({ setShowPopup }) {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const [rowPriorityUpdates, setRowPriorityUpdates] = useState<DatapackPriorityChangeRequest[]>([]);
-  const [tempRowData, setTempRowData] = useState<BaseDatapackProps[] | null>(null);
   const rowData = Object.values(state.datapacks)
     .filter((datapack) => datapack.type === "official")
     .sort((a, b) => a.priority - b.priority);
@@ -34,9 +35,9 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         if (data.newValue === undefined) return false;
         const newValue = parseInt(data.newValue ?? "");
         if (isNaN(newValue)) return false;
-        setTempRowData(
+        actions.setAdminDatapackConfigTempRowData(
           [
-            ...[...(tempRowData || rowData)].filter((dp) => !compareExistingDatapacks(dp, data.data)),
+            ...[...(state.admin.datapackConfig.tempRowData || rowData)].filter((dp) => !compareExistingDatapacks(dp, data.data)),
             { ...data.data, priority: newValue }
           ].sort((a, b) => a.priority - b.priority)
         );
@@ -88,8 +89,8 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       }
       updatedRowData.push({ ...rowNode.data, priority: i + 1 });
     }
-    setTempRowData(updatedRowData);
-    setRowPriorityUpdates(updatedNodes);
+    actions.setAdminDatapackConfigTempRowData(updatedRowData);
+    actions.setAdminRowPriorityUpdates(updatedNodes);
   }
   // update the priority of the datapacks on cell value change
   async function onCellValueChanged(event: CellValueChangedEvent<BaseDatapackProps>) {
@@ -101,14 +102,13 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         uuid: "official",
         priority: data.priority
       });
-      setRowPriorityUpdates([...rowPriorityUpdates.filter((node) => node.id !== updatedNodes.id), updatedNodes]);
+      actions.setAdminRowPriorityUpdates([...state.admin.datapackConfig.rowPriorityUpdates.filter((node) => node.id !== updatedNodes.id), updatedNodes]);
     }
   }
   async function submitPriorityChanges() {
     try {
-      await actions.adminUpdateDatapackPriority(rowPriorityUpdates);
-      setRowPriorityUpdates([]);
-      setTempRowData(null);
+      await actions.adminUpdateDatapackPriority(state.admin.datapackConfig.rowPriorityUpdates);
+      actions.resetAdminConfigTempState();
     } catch (e) {
       console.error(e);
       pushError(ErrorCodes.SERVER_RESPONSE_ERROR)
@@ -124,9 +124,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           Upload Datapack
         </TSCButton>
         <TSCButton onClick={deleteDatapacks}>Delete Selected Datapacks</TSCButton>
-        {/* {tempRowData && ( */}
-          <TSCButton disabled={!tempRowData} onClick={async () => await submitPriorityChanges()}>Confirm Priority Changes</TSCButton>
-        {/* )} */}
+          <TSCButton disabled={!state.admin.datapackConfig.tempRowData} onClick={async () => await submitPriorityChanges()}>Confirm Priority Changes</TSCButton>
         <Dialog open={formOpen} onClose={() => setFormOpen(false)} maxWidth={false}>
           <DatapackUploadForm
             close={() => setFormOpen(false)}
@@ -139,7 +137,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
         ref={gridRef}
         columnDefs={datapackColDefs}
         rowSelection="multiple"
-        containerStyle={{ outline: tempRowData ? "1px solid red" : "none" }}
+        containerStyle={{ outline: state.admin.datapackConfig.tempRowData ? "1px solid red" : "none" }}
         loading={state.admin.datapackPriorityLoading}
         rowDragManaged
         gridOptions={{
@@ -148,7 +146,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
           getRowId: (params) => params.data.title
         }}
         rowMultiSelectWithClick
-        rowData={tempRowData || rowData}
+        rowData={state.admin.datapackConfig.tempRowData || rowData}
       />
     </Box>
   );

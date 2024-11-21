@@ -11,6 +11,8 @@ import { UnauthorizedAccess } from "./UnauthorizedAccess";
 import { AdminDatapackConfig } from "./AdminDatapackConfig";
 import { AdminWorkshop } from "./AdminWorkshop";
 import { loadRecaptcha, removeRecaptcha } from "../util";
+import { usePopupBlocker } from "../util/blocker";
+import { TSCYesNoPopup } from "../components";
 
 const AdminTab = styled(Tab)(({ theme }) => ({
   textTransform: "none",
@@ -52,8 +54,19 @@ export const Admin = observer(function Admin() {
     };
   }, [state.user.isAdmin]);
 
+  const { showPopup, setShowPopup, handleCancel, handleConfirm } = usePopupBlocker({
+    shouldBlock: !!state.admin.datapackConfig.tempRowData,
+    onConfirm: async () => {
+      await actions.adminUpdateDatapackPriority(state.admin.datapackConfig.rowPriorityUpdates);
+      actions.resetAdminConfigTempState();
+    },
+    onCancel: async () => {
+      actions.resetAdminConfigTempState();
+    }
+  })
+
   const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabIndex(newValue);
+    setTabIndex(newValue)
   };
   if (!state.user.isAdmin) return <UnauthorizedAccess />;
   const tabs = [
@@ -63,7 +76,7 @@ export const Admin = observer(function Admin() {
     },
     {
       tabName: "Server Datapacks",
-      component: <AdminDatapackConfig />
+      component: <AdminDatapackConfig setShowPopup={setShowPopup}/>
     },
     {
       tabName: "Workshops",
@@ -72,6 +85,16 @@ export const Admin = observer(function Admin() {
   ];
   return (
     <Box className="admin-container">
+        <TSCYesNoPopup
+        open={showPopup || (state.admin.datapackConfig.tempRowData !== null && tabIndex !== 1)}
+        title="Confirm Priority Changes"
+        message="Are you sure you want to discard your changes?"
+        customNo="Discard"
+        customYes="Save"
+        onYes={handleConfirm}
+        onNo={handleCancel}
+        onClose={handleCancel}
+        />
       <Typography variant="h4" mb="20px" mt="20px">
         Admin Settings
       </Typography>

@@ -24,7 +24,9 @@ import type {
   AdminSharedUser,
   DatapackConfigForChartRequest,
   SharedWorkshop,
-  Datapack
+  Datapack,
+  BaseDatapackProps,
+  DatapackPriorityChangeRequest
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -78,6 +80,10 @@ export type State = {
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
     workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
+    datapackConfig: {
+      tempRowData: BaseDatapackProps[] | null,
+      rowPriorityUpdates: DatapackPriorityChangeRequest[];
+    }
   };
   datapackProfilePage: {
     editMode: boolean;
@@ -159,7 +165,11 @@ export const state = observable<State>({
     displayedUsers: [],
     displayedUserDatapacks: {},
     workshops: [],
-    datapackPriorityLoading: false
+    datapackPriorityLoading: false,
+    datapackConfig: {
+      tempRowData: null,
+      rowPriorityUpdates: []
+    }
   },
   datapackProfilePage: {
     editMode: false,

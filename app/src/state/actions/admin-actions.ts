@@ -674,3 +674,14 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
     setLoadingDatapackPriority(false);
   }
 });
+
+export const setAdminDatapackConfigTempRowData = action((tempRowData: State["admin"]["datapackConfig"]["tempRowData"]) => {
+  state.admin.datapackConfig.tempRowData = tempRowData
+})
+export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChangeRequest[]) => {
+  state.admin.datapackConfig.rowPriorityUpdates = newVal
+});
+export const resetAdminConfigTempState = action(() => {
+  state.admin.datapackConfig.rowPriorityUpdates = []
+  state.admin.datapackConfig.tempRowData = null
+})
