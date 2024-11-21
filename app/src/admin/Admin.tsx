@@ -54,7 +54,7 @@ export const Admin = observer(function Admin() {
     };
   }, [state.user.isAdmin]);
 
-  const { showPopup, setShowPopup, handleCancel, handleConfirm } = usePopupBlocker({
+  const { showPopup, handleCancel, handleConfirm } = usePopupBlocker({
     shouldBlock: !!state.admin.datapackConfig.tempRowData,
     onConfirm: async () => {
       await actions.adminUpdateDatapackPriority(state.admin.datapackConfig.rowPriorityUpdates);
@@ -76,7 +76,7 @@ export const Admin = observer(function Admin() {
     },
     {
       tabName: "Server Datapacks",
-      component: <AdminDatapackConfig setShowPopup={setShowPopup} />
+      component: <AdminDatapackConfig />
     },
     {
       tabName: "Workshops",
