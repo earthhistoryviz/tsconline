@@ -1,0 +1,45 @@
+.back {
+    flex-shrink: 0;
+    width: 35px;
+    height: 35px;
+}
+
+.icon {
+    width: inherit;
+    height: inherit;
+}
+
+.header {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    width: 100%;
+    justify-content: space-between;
+    padding: 16px;
+    gap: 20px;
+}
+
+.ht {
+    font-size: 2rem;
+    font-weight: 700;
+    -webkit-line-clamp: 3;
+    display: -webkit-box;
+    text-wrap: wrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-box-orient: vertical;
+    word-break: break-all;
+    line-height: 1.2em;
+}
+
+@media (max-width: 590px) {
+    .di {
+        width: 200px;
+        height: 100px;
+    }
+
+    .vd {
+        padding: 10px;
+        min-height: 0;
+    }
+}
