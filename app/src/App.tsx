@@ -28,6 +28,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { toJS } from "mobx";
 import { useTranslation } from "react-i18next";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { Workshops } from "./Workshops";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -81,6 +82,7 @@ export default observer(function App() {
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/datapacks" element={<Datapacks />} />
+            <Route path="/workshops" element={<Workshops />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
             .reverse()
