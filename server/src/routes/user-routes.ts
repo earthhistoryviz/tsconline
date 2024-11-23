@@ -24,6 +24,7 @@ import {
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { User, isOperationResult } from "../types.js";
+import { getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -257,7 +258,7 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     const userDatapacks = await fetchAllUsersDatapacks(uuid);
     const workshops = await getActiveWorkshopsUserIsIn(user[0].userId);
     const workshopDatapacksPromises = workshops.map((workshop) =>
-      fetchAllUsersDatapacks(`workshop-${workshop.workshopId}`)
+      fetchAllUsersDatapacks(getWorkshopUUIDFromWorkshopId(workshop.workshopId))
     );
 
     const workshopDatapacks = await Promise.all(workshopDatapacksPromises);

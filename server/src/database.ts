@@ -347,7 +347,7 @@ export async function getActiveWorkshopsUserIsIn(userId: number): Promise<Worksh
  * @param userId The user ID to check
  * @returns True if user is in an active workshop, false otherwise
  */
-export async function isUserInActiveWorkshop(userId: number): Promise<boolean> {
+export async function isUserInAnActiveWorkshop(userId: number): Promise<boolean> {
   const activeWorkshops = await getActiveWorkshopsUserIsIn(userId);
   return activeWorkshops.length > 0;
 }
@@ -358,11 +358,7 @@ export async function isUserInActiveWorkshop(userId: number): Promise<boolean> {
  * @param workshopId The workshop ID to check
  * @returns True if user is in workshop and workshop is active, false otherwise
  */
-export async function isUserInWorkshopAndActive(userId: number, workshopId: number): Promise<boolean> {
-  const workshop = await getWorkshopIfNotEnded(workshopId);
-  if (!workshop) {
-    return false;
-  }
-  const usersWorkshops = await findUsersWorkshops({ userId, workshopId });
-  return usersWorkshops.length > 0;
+export async function isUserInWorkshopAndWorkshopIsActive(userId: number, workshopId: number): Promise<boolean> {
+  const workshop = await getActiveWorkshopsUserIsIn(userId);
+  return workshop.some((workshop) => workshop.workshopId === workshopId);
 }

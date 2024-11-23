@@ -3,6 +3,7 @@ import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
+import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -12,7 +13,7 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
-import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndActive } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
@@ -211,8 +212,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     let uuidFolder = uuid;
     switch (datapack.type) {
       case "workshop": {
-        const workshopId = parseInt(datapack.uuid.split("-")[1] ?? "");
-        if (!userId || !workshopId || isNaN(workshopId) || !(await isUserInWorkshopAndActive(userId, workshopId))) {
+        const workshopId = getWorkshopIdFromUUID(datapack.uuid);
+        if (!userId || !workshopId || !(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
           reply.send({ error: "ERROR: user does not have access to requested workshop datapack" });
           return;
         }
