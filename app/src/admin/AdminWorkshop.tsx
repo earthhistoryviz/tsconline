@@ -11,7 +11,7 @@ import { displayServerError } from "../state/actions/util-actions";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { WorkshopForm, AddDatapacksForm } from "./AdminWorkshopComponents";
+import { WorkshopForm, AddDatapacksToWorkshopForm } from "./AdminWorkshopComponents";
 import { formatDate } from "../state/non-action-util";
 import "./AdminWorkshop.css";
 
@@ -47,24 +47,29 @@ const ActionsCellRenderer: React.FC<ActionsCellRendererProps> = (props) => {
     setWorkshop(data);
     setAddDatapacksFormOpen(true);
   };
+  const hasNotEnded = new Date(data.end) > new Date();
   return (
-    <>
-      <CustomTooltip title="Edit Workshop">
-        <IconButton onClick={handleEditClick}>
-          <EditIcon />
-        </IconButton>
-      </CustomTooltip>
-      <CustomTooltip title="Add Datapacks">
-        <IconButton onClick={handleAddDatapacksClick}>
-          <AddCircleIcon />
-        </IconButton>
-      </CustomTooltip>
+    <Box display="flex" justifyContent="center">
+      {hasNotEnded && (
+        <>
+          <CustomTooltip title="Edit Workshop">
+            <IconButton onClick={handleEditClick}>
+              <EditIcon />
+            </IconButton>
+          </CustomTooltip>
+          <CustomTooltip title="Add Datapacks">
+            <IconButton onClick={handleAddDatapacksClick}>
+              <AddCircleIcon />
+            </IconButton>
+          </CustomTooltip>
+        </>
+      )}
       <CustomTooltip title="Delete Workshop">
         <IconButton onClick={handleDeleteClick}>
           <DeleteForeverIcon />
         </IconButton>
       </CustomTooltip>
-    </>
+    </Box>
   );
 };
 
@@ -91,8 +96,8 @@ const workshopColDefs: ColDef[] = [
   {
     headerName: "Actions",
     cellRenderer: ActionsCellRenderer,
-    flex: 0.35,
-    minWidth: 150,
+    flex: 0.25,
+    minWidth: 130,
     cellStyle: { border: "none" }
   }
 ];
@@ -152,7 +157,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         />
       )}
       {workshop && addDatapacksFormOpen && (
-        <AddDatapacksForm
+        <AddDatapacksToWorkshopForm
           currentWorkshop={workshop}
           onClose={() => {
             setAddDatapacksFormOpen(false);

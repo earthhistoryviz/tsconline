@@ -12,6 +12,7 @@ import { assetconfigs, verifyNonExistentFilepath } from "./util.js";
 import { rename } from "fs/promises";
 import { changeFileMetadataKey } from "./file-metadata-handler.js";
 import { join } from "path";
+import { isUUIDFolderAWorkshopFolder } from "./workshop-util.js";
 
 const mutex = new Mutex();
 
@@ -21,9 +22,7 @@ export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
     const datapacks: Datapack[] = [];
     const uuids = uuidChunk ? uuidChunk : await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
-      if (uuid.startsWith("workshop")) {
-        continue;
-      }
+      if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {
         const datapackDirs = await getDirectories(await getPublicUserUUIDDirectory(uuid));
         for (const datapack of datapackDirs) {

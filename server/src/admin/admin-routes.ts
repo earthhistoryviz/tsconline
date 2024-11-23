@@ -18,8 +18,9 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
 import { makeTempFilename, assetconfigs } from "../util.js";
+import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
 import { createWriteStream } from "fs";
-import { rm, readFile } from "fs/promises";
+import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
@@ -32,7 +33,6 @@ import {
   SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
-  assertDatapack,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   assertWorkshopDatapack
@@ -54,10 +54,11 @@ import {
   deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchAllPrivateOfficialDatapacks,
-  fetchAllUsersDatapacks
+  fetchAllUsersDatapacks,
+  fetchUserDatapack
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
-import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { tmpdir } from "node:os";
@@ -688,9 +689,9 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       }
       fieldsToUpdate.start = startDate.toISOString();
     }
-    const existingWorkshop = (await findWorkshop({ workshopId }))[0];
+    const existingWorkshop = await getWorkshopIfNotEnded(workshopId);
     if (!existingWorkshop) {
-      reply.status(404).send({ error: "Workshop not found" });
+      reply.status(404).send({ error: "Workshop not found or has ended" });
       return;
     }
     if (end) {
@@ -893,16 +894,16 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
     return;
   }
   assertWorkshopDatapack(datapackMetadata);
-  const workshopId = parseInt(datapackMetadata.uuid.split("-")[1] ?? "");
-  if (!workshopId || isNaN(workshopId)) {
+  const workshopId = getWorkshopIdFromUUID(datapackMetadata.uuid);
+  if (!workshopId) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "Invalid workshopId" });
     return;
   }
-  const workshop = await findWorkshop({ workshopId });
-  if (workshop.length !== 1 || !workshop[0]) {
+  const workshop = await getWorkshopIfNotEnded(workshopId);
+  if (!workshop) {
     await cleanupTempFiles();
-    reply.status(404).send({ error: "Workshop not found" });
+    reply.status(404).send({ error: "Workshop not found or has ended" });
     return;
   }
   if (!datapackMetadata.isPublic) {
@@ -940,7 +941,7 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   reply.send({ message: "Datapack uploaded" });
 };
 
-export const adminAddServerDatapackToWorkshop = async function addServerDatapackToWorkshop(
+export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficialDatapackToWorkshop(
   request: FastifyRequest<{ Body: { workshopId: number; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
@@ -950,13 +951,13 @@ export const adminAddServerDatapackToWorkshop = async function addServerDatapack
     return;
   }
   try {
-    const workshop = await findWorkshop({ workshopId });
-    if (workshop.length !== 1 || !workshop[0]) {
-      reply.status(404).send({ error: "Workshop not found" });
+    const workshop = await getWorkshopIfNotEnded(workshopId);
+    if (!workshop) {
+      reply.status(404).send({ error: "Workshop not found or has ended" });
       return;
     }
-    const workshopUUID = `workshop-${workshopId}`;
-    const datapackDirectory = await Promise.resolve(fetchUserDatapackDirectory("official", datapackTitle)).catch(() => {
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const datapackDirectory = await fetchUserDatapackDirectory("official", datapackTitle).catch(() => {
       reply.status(404).send({ error: "Datapack not found" });
     });
     if (!datapackDirectory) {
@@ -966,47 +967,21 @@ export const adminAddServerDatapackToWorkshop = async function addServerDatapack
       reply.status(409).send({ error: "Datapack already exists" });
       return;
     }
-    const cachedDatapack = JSON.parse(await readFile(join(datapackDirectory, CACHED_USER_DATAPACK_FILENAME), "utf-8"));
-    assertDatapack(cachedDatapack);
-    const {
-      description,
-      title,
-      originalFileName,
-      storedFileName,
-      size,
-      date,
-      authoredBy,
-      tags,
-      references,
-      contact,
-      notes,
-      datapackImage
-    } = cachedDatapack;
+    const datapack = await fetchUserDatapack("official", datapackTitle);
     const metadata: DatapackMetadata = {
-      description,
-      title,
-      originalFileName,
-      storedFileName,
-      size,
-      date,
-      authoredBy,
-      tags,
-      references,
+      ...datapack,
       isPublic: true,
-      contact,
-      notes,
-      datapackImage,
       type: "workshop",
       uuid: workshopUUID
     };
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
       workshopUUID,
-      join(datapackDirectory, storedFileName),
+      join(datapackDirectory, datapack.storedFileName),
       metadata,
       true,
-      cachedDatapack.datapackImage
+      datapack.datapackImage
     );
-    if (!datapackIndex[title]) {
+    if (!datapackIndex[datapack.title]) {
       throw new Error("Datapack not found in index");
     }
     reply.send({ message: "Datapack added to workshop" });

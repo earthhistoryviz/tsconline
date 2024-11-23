@@ -648,11 +648,11 @@ export const adminUploadDatapackToWorkshop = action(
  * @param workshopId The ID of the workshop to add to
  * @param titles The title of the datapack to add
  */
-export const adminAddServerDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
+export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminAddServerDatapackToWorkshop");
+    const recaptchaToken = await getRecaptchaToken("adminAddOfficialDatapackToWorkshop");
     if (!recaptchaToken) return;
-    const response = await fetcher(`/admin/workshop/server/datapack`, {
+    const response = await fetcher(`/admin/workshop/official/datapack`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
