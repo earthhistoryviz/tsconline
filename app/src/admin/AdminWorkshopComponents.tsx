@@ -42,7 +42,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
       onClose();
     };
 
-    const addServerDatapacks = async () => {
+    const addOfficialDatapacks = async () => {
       setLoading(true);
       try {
         if (!datapack) {
@@ -53,8 +53,8 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
       } catch (error) {
         displayServerError(
           error,
-          ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED,
-          ErrorCodes[ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED]
+          ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED,
+          ErrorCodes[ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED]
         );
       } finally {
         setLoading(false);
@@ -70,11 +70,11 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
           <Box gap="20px" display="flex" alignItems="center">
             <Box display="flex" alignItems="center" gap={5}>
               <FormControl variant="outlined" sx={{ m: 1 }}>
-                <InputLabel id="datapacks-label">Select Server Datapack</InputLabel>
+                <InputLabel id="datapacks-label">Select Official Datapack</InputLabel>
                 <Select
                   className="datapack-select"
                   name="datapack"
-                  label="Select Server Datapacks"
+                  label="Select Official Datapacks"
                   labelId="datapacks-label"
                   value={datapack}
                   onChange={(event: SelectChangeEvent<typeof datapack>) => {
@@ -92,7 +92,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
               </FormControl>
             </Box>
             <Box display="flex" alignItems="flex-start" gap={1}>
-              <TSCButton className="datapack-buttons" onClick={addServerDatapacks}>
+              <TSCButton className="datapack-buttons" onClick={addOfficialDatapacks}>
                 Add Datapack
               </TSCButton>
               <TSCButton className="datapack-buttons" onClick={() => setUploadDatapacks(true)}>

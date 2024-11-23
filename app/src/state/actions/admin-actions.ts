@@ -664,7 +664,7 @@ export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: numb
     if (response.ok) {
       pushSnackbar("Datapacks added to workshop successfully", "success");
     } else {
-      let errorCode = ErrorCodes.ADMIN_ADD_SERVER_DATAPACK_TO_WORKSHOP_FAILED;
+      let errorCode = ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED;
       switch (response.status) {
         case 409:
           errorCode = ErrorCodes.ADMIN_SERVER_DATAPACK_ALREADY_EXISTS;
