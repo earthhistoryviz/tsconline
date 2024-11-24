@@ -5,7 +5,7 @@ import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
-import { BaseDatapackProps, DatapackPriorityChangeRequest, assertBaseDatapackProps } from "@tsconline/shared";
+import { Datapack, DatapackPriorityChangeRequest, assertDatapack } from "@tsconline/shared";
 import { compareExistingDatapacks } from "../state/non-action-util";
 import { pushError } from "../state/actions";
 import { ErrorCodes } from "../util/error-codes";
@@ -17,7 +17,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const rowData = Object.values(state.datapacks)
     .filter((datapack) => datapack.type === "official")
     .sort((a, b) => a.priority - b.priority);
-  const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
+  const gridRef = useRef<AgGridReact<Datapack>>(null);
   const datapackColDefs: ColDef[] = [
     {
       headerName: "Priority",
@@ -25,7 +25,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       field: "priority",
       flex: 0.6,
       rowDrag: true,
-      valueSetter: (data: ValueSetterParams<BaseDatapackProps, string>) => {
+      valueSetter: (data: ValueSetterParams<Datapack, string>) => {
         // to make sure the value is changed WITHIN an action
         if (data.newValue === undefined) return false;
         const newValue = parseInt(data.newValue ?? "");
@@ -69,7 +69,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        assertBaseDatapackProps(node.data);
+        assertDatapack(node.data);
         return node.data;
       });
       await actions.adminDeleteOfficialDatapacks(datapacks);
@@ -79,7 +79,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   };
   // debounce the update of datapack priority
   // update the priority of the datapacks on row drag
-  async function onRowDragEnd(event: RowDragEndEvent<BaseDatapackProps>) {
+  async function onRowDragEnd(event: RowDragEndEvent<Datapack>) {
     const { api } = event;
     const rowCount = api.getDisplayedRowCount();
     const updatedRowData = [];

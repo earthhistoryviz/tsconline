@@ -23,7 +23,7 @@ import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
-  BaseDatapackProps,
+  Datapack,
   DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
@@ -247,7 +247,7 @@ const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
 
 type DatapackProfileContentProps = {
   index: number;
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, datapack }) => {
   switch (index) {
@@ -273,7 +273,7 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
   }
 };
 type AboutProps = {
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 const About: React.FC<AboutProps> = observer(({ datapack }) => {
   const { state, actions } = useContext(context);
@@ -679,7 +679,7 @@ export const DatapackWarningAlert: React.FC<DatapackWarningProps> = ({ warning }
 };
 
 type ViewDataProps = {
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 
 const ViewData: React.FC<ViewDataProps> = observer(({ datapack }) => {

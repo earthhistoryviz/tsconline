@@ -27,7 +27,7 @@
   "packageManager": "yarn@4.0.2",
   "private": true,
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' && echo \"Cleaning all workspaces...\" && yarn clean && echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --parallel --exclude @tsconline/shared --exclude tsconline/mono-repo run build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' && echo \"Cleaning all workspaces...\" && yarn clean && echo \"Building all workspaces...\" && yarn workspaces foreach -A --topological-dev --parallel run build",
     "check-quality": "yarn prettier-format && yarn lint-check",
     "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude tsconline/mono-repo -p -v run install",
     "install:prod": "echo \"Installing production packages of specified workspaces...\" && yarn workspaces focus @tsconline/server @tsconline/app --production",
