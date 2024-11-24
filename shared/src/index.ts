@@ -78,6 +78,35 @@ export type DatapackMetadata = {
   priority: number;
 } & DatapackType;
 
+type OfficialDatapack = {
+  type: "official";
+};
+type WorkshopDatapack = {
+  type: "workshop";
+};
+type UserDatapack = {
+  type: "user";
+  uuid: string;
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackTypeString = DatapackType["type"];
+
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  originalFileName: string;
+  storedFileName: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  isPublic: boolean;
+  contact?: string;
+  notes?: string;
+  datapackImage?: string;
+} & DatapackType;
+
 export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
