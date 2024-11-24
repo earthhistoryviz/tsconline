@@ -25,23 +25,6 @@ export type SharedUser = {
   uuid: string;
 };
 
-export type DatapackMetadata = {
-  description: string;
-  title: string;
-  originalFileName: string;
-  storedFileName: string;
-  size: string;
-  date?: string;
-  authoredBy: string;
-  tags: string[];
-  references: string[];
-  isPublic: boolean;
-  contact?: string;
-  notes?: string;
-  datapackImage?: string;
-  priority: number;
-} & DatapackType;
-
 export type AdminSharedUser = {
   userId: number;
   uuid: string;
@@ -64,6 +47,36 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
+type OfficialDatapack = {
+  type: "official";
+};
+type WorkshopDatapack = {
+  type: "workshop";
+};
+type UserDatapack = {
+  type: "user";
+  uuid: string;
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackTypeString = DatapackType["type"];
+
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  originalFileName: string;
+  storedFileName: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  isPublic: boolean;
+  contact?: string;
+  notes?: string;
+  datapackImage?: string;
+  priority: number;
+} & DatapackType;
+
 export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
@@ -77,21 +90,9 @@ export type BaseDatapackProps = {
   columnTypeCount: ColumnTypeCounter;
   datapackImageCount: number;
   mapPack: MapPack; // this can be empty
-} & DatapackMetadata;
+};
 
-type OfficialDatapack = {
-  type: "official";
-};
-type WorkshopDatapack = {
-  type: "workshop";
-};
-type UserDatapack = {
-  type: "user";
-  uuid: string;
-};
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
-export type DatapackTypeString = DatapackType["type"];
-export type Datapack = BaseDatapackProps;
+export type Datapack = DatapackMetadata & BaseDatapackProps;
 
 export type PresetDatapack = {
   file: string;
@@ -1160,6 +1161,7 @@ export function assertDatapack(o: any): asserts o is Datapack {
   if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
   assertDatapackType(o);
   assertBaseDatapackProps(o);
+  assertDatapackMetadata(o);
 }
 export function isOfficialDatapack(o: any): o is OfficialDatapack {
   return o.type === "official";
@@ -1257,8 +1259,6 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if (typeof o.datapackImageCount !== "number")
     throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
-  assertDatapackMetadata(o);
-  assertDatapackType(o);
 }
 
 export function assertPresetDatapack(o: any): asserts o is PresetDatapack {
