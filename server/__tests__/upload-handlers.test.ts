@@ -5,7 +5,16 @@ import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
-  isDatapackTypeString: vi.fn().mockReturnValue(true)
+  isDatapackTypeString: vi.fn().mockReturnValue(true),
+  MAX_DATAPACK_TAG_LENGTH: 20,
+  MAX_DATAPACK_TITLE_LENGTH: 100,
+  MAX_AUTHORED_BY_LENGTH: 200,
+  MAX_DATAPACK_TAGS_ALLOWED: 30,
+  MAX_DATAPACK_CONTACT_LENGTH: 100,
+  MAX_DATAPACK_DESC_LENGTH: 400,
+  MAX_DATAPACK_NOTES_LENGTH: 200,
+  MAX_DATAPACK_REFERENCES_ALLOWED: 30,
+  MAX_DATAPACK_REFERENCE_LENGTH: 100
 }));
 vi.mock("fs/promises", () => ({
   rm: vi.fn().mockResolvedValue(undefined)
@@ -153,5 +162,148 @@ describe("uploadUserDatapackHandler", () => {
       uuid: fields.uuid,
       isPublic: Boolean(fields.isPublic)
     });
+  });
+  it("should return a 400 error if title is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque rutrum ex nisi, at consequat ligula."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max title length is ${shared.MAX_DATAPACK_TITLE_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if tags array is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        tags: '["tag", "hi", "test3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11", "tag12", "tag13", "tag14", "tag15", "tag16", "tag17", "tag18", "tag19", "tag20", "tag21", "tag22", "tag23", "tag24", "tag25", "tag26", "tag27", "tag28", "tag29", "tag30", "tag31"]'
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max tags allowed is ${shared.MAX_DATAPACK_TAGS_ALLOWED}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if a tag is too long", async () => {
+    const val = await uploadUserDatapackHandler(reply, { ...fields, tags: '["tag", "Lorem ipsum dolor at. "]' }, 1);
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max tag length is ${shared.MAX_DATAPACK_TAG_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if authored by length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        authoredBy:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam a turpis rutrum, pretium nisi vitae, consectetur diam. Integer tristique pretium nunc sit amet finibus. Suspendisse interdum, orci ut in."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max authored by length is ${shared.MAX_AUTHORED_BY_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if description length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus vulputate turpis in consectetur fermentum. Maecenas bibendum dignissim nisl et dictum. Nulla imperdiet sapien non massa dignissim, ac tincidunt magna consequat. Fusce vehicula congue sagittis. Praesent in placerat diam. Praesent varius mauris id sapien posuere, eu viverra purus sodales. Maecenas dignissim mattis bibendum cras amett."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max description length is ${shared.MAX_DATAPACK_DESC_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if notes length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        notes:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vehicula, enim non condimentum vestibulum, ligula nibh suscipit tortor, at dignissim leo elit in diam. Vestibulum mattis aliquet leo ex."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if notes length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        notes:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus vehicula, enim non condimentum vestibulum, ligula nibh suscipit tortor, at dignissim leo elit in diam. Vestibulum mattis aliquet leo ex."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if references array is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        references:
+          '["reference", "hi", "test3", "reference4", "reference5", "reference6", "reference7", "reference8", "reference9", "reference10", "reference11", "reference12", "reference13", "reference14", "reference15", "reference16", "reference17", "reference18", "reference19", "reference20", "reference21", "reference22", "reference23", "reference24", "reference25", "reference26", "reference27", "reference28", "reference29", "reference30", "reference31"]'
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: `Max references allowed is ${shared.MAX_DATAPACK_REFERENCES_ALLOWED}`
+    });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if a reference is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        references:
+          '["reference", "hi", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et metus maximus, venenatis velit a leo."]'
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({
+      error: `Max references length is ${shared.MAX_DATAPACK_REFERENCE_LENGTH}`
+    });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if contact length is too long", async () => {
+    const val = await uploadUserDatapackHandler(
+      reply,
+      {
+        ...fields,
+        contact: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et metus maximus, venenatis velit a leo."
+      },
+      1
+    );
+    expect(reply.status).toHaveBeenCalledWith(400);
+    expect(reply.send).toHaveBeenCalledWith({ error: `Max contact length is ${shared.MAX_DATAPACK_CONTACT_LENGTH}` });
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
+    expect(val).toBeUndefined();
   });
 });
