@@ -197,7 +197,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
           return;
         }
-        if (new Date(workshop.end) > new Date()) {
+        if (new Date(workshop.end) <= new Date()) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_ENDED);
           return;
         }
