@@ -1105,6 +1105,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
   if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
+  assertDatapackType(o);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
@@ -1159,7 +1160,6 @@ export function assertTransects(o: any): asserts o is Transects {
 export function assertDatapack(o: any): asserts o is Datapack {
   if (!o || typeof o !== "object") throw new Error("Datapack must be a non-null object");
   if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
-  assertDatapackType(o);
   assertBaseDatapackProps(o);
   assertDatapackMetadata(o);
 }
