@@ -83,6 +83,7 @@ export type State = {
     editableDatapackMetadata: EditableDatapackMetadata | null;
     unsavedChanges: boolean;
     editRequestInProgress: boolean;
+    datapackImageVersion: number;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -162,7 +163,8 @@ export const state = observable<State>({
     editMode: false,
     editableDatapackMetadata: null,
     unsavedChanges: false,
-    editRequestInProgress: false
+    editRequestInProgress: false,
+    datapackImageVersion: 0
   },
   chartLoading: false,
   madeChart: false,

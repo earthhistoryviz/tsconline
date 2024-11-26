@@ -224,6 +224,7 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
       const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
       if (!datapack) return;
       removeAllErrors();
+      setDatapackProfilePageImageVersion(new Date().getTime());
     } else {
       displayServerError(
         response,
@@ -236,4 +237,7 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
   } finally {
     setEditRequestInProgress(false);
   }
+});
+export const setDatapackProfilePageImageVersion = action(async (datapackVersion: number) => {
+  state.datapackProfilePage.datapackImageVersion = datapackVersion;
 });
