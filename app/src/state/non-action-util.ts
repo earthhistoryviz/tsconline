@@ -1,11 +1,17 @@
-import { Datapack, DatapackUniqueIdentifier, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackUniqueIdentifier,
+  SharedDatapack,
+  isOfficialDatapack,
+  isUserDatapack
+} from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 
-export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
+export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
-export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
+export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
 }
 export function doesDatapackExistInCurrentConfig(
@@ -31,7 +37,7 @@ export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
 export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
-export function isOwnedByUser(datapack: Datapack, uuid: string) {
+export function isOwnedByUser(datapack: SharedDatapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
 export function getNavigationRouteForDatapackProfile(title: string, type: string) {

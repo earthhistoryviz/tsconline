@@ -123,6 +123,8 @@ export type BaseDatapackProps = {
 
 export type Datapack = DatapackMetadata & BaseDatapackProps;
 
+export type SharedDatapack = DatapackMetadata & Partial<BaseDatapackProps>;
+
 export type PresetDatapack = {
   file: string;
   name: string;
@@ -634,6 +636,19 @@ export type DatapackPriorityUpdateSuccess = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertSharedDatapack(o: any): asserts o is SharedDatapack {
+  assertDatapackMetadata(o);
+  assertDatapackType(o);
+  if ("columnInfo" in o) assertBaseDatapackProps(o);
+}
+
+export function assertSharedDatapackArray(o: any): asserts o is SharedDatapack[] {
+  if (!Array.isArray(o)) throw new Error("Datapack must be an array");
+  for (const datapack of o) {
+    assertSharedDatapack(datapack);
+  }
+}
 
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
