@@ -82,6 +82,8 @@ export type State = {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
     unsavedChanges: boolean;
+    editRequestInProgress: boolean;
+    datapackImageVersion: number;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -97,10 +99,10 @@ export type State = {
     };
     mapHistory: MapHistory;
   };
-  config: Config;
+  config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
-  datapacks: Datapack[];
+  datapacks: Datapack[]; // all datapacks on the server
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -160,7 +162,9 @@ export const state = observable<State>({
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,
-    unsavedChanges: false
+    unsavedChanges: false,
+    editRequestInProgress: false,
+    datapackImageVersion: 0
   },
   chartLoading: false,
   madeChart: false,

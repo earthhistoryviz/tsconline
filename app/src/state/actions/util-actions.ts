@@ -66,3 +66,21 @@ export function displayServerError<T>(response: T | null, context: ErrorCodes, m
     pushError(context);
   }
 }
+
+export function checkDatapackValidity(file: File) {
+  if (file.name.length > 50) {
+    pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
+    return false;
+  }
+  const ext = file.name.split(".").pop();
+  // either an unencoded file (text file) or an encoded file that we have no type for
+  if (file.type !== "text/plain" && file.type !== "") {
+    pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
+    return false;
+  }
+  if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
+    pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
+    return false;
+  }
+  return true;
+}

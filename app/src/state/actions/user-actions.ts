@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
   addDatapack,
@@ -8,64 +8,105 @@ import {
   removeAllErrors,
   removeDatapack,
   setDatapackProfilePageEditMode,
-  setEditableDatapackMetadata
+  resetEditableDatapackMetadata,
+  processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { EditableDatapackMetadata } from "../../types";
-import { assertDatapack, assertUserDatapack } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackUniqueIdentifier,
+  assertBatchUpdateServerPartialError,
+  assertDatapack,
+  assertUserDatapack
+} from "@tsconline/shared";
+import { state } from "../state";
+import { doesDatapackExistInCurrentConfig } from "../non-action-util";
+
+export const setEditRequestInProgress = action((inProgress: boolean) => {
+  state.datapackProfilePage.editRequestInProgress = inProgress;
+});
 
 export const handleDatapackEdit = action(
-  async (originalDatapack: EditableDatapackMetadata, editedDatapack: EditableDatapackMetadata) => {
-    const body = {} as Partial<EditableDatapackMetadata>;
-    for (const key in editedDatapack) {
-      const castedKey = key as keyof EditableDatapackMetadata;
-      if (editedDatapack[castedKey] !== originalDatapack[castedKey]) {
-        Object.assign(body, { [castedKey]: editedDatapack[castedKey] });
-      }
-    }
-    if (Object.keys(body).length === 0) {
-      pushSnackbar("No changes made", "info");
-      setDatapackProfilePageEditMode(false);
-      return false;
-    }
+  async (originalDatapack: Datapack, editedDatapack: EditableDatapackMetadata) => {
     try {
-      const recaptcha = await getRecaptchaToken("handleDatapackEdit");
-      if (!recaptcha) return false;
-      const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
-        method: "PATCH",
-        body: JSON.stringify(body),
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "recaptcha-token": recaptcha
-        }
-      });
-      if (response.ok) {
-        pushSnackbar("Datapack updated", "success");
-        setEditableDatapackMetadata(editedDatapack);
-        setDatapackProfilePageEditMode(false);
-        const datapack = await fetchUserDatapack(editedDatapack.title);
-        if (!datapack) return false;
-        addDatapack(datapack);
-        if (originalDatapack.title !== editedDatapack.title) {
-          removeDatapack(originalDatapack);
-        }
-        removeAllErrors();
-        return true;
-      } else {
-        displayServerError(
-          response,
-          ErrorCodes.USER_EDIT_DATAPACK_FAILED,
-          ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
-        );
+      setEditRequestInProgress(true);
+      if (!state.user.uuid) {
+        pushError(ErrorCodes.NOT_LOGGED_IN);
         return false;
       }
-    } catch (e) {
-      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      const formData = new FormData();
+      for (const key in editedDatapack) {
+        const castedKey = key as keyof EditableDatapackMetadata;
+        if (editedDatapack[castedKey] === null) continue;
+        if (JSON.stringify(editedDatapack[castedKey]) !== JSON.stringify(originalDatapack[castedKey])) {
+          if (castedKey === "tags" || castedKey === "references") {
+            formData.append(castedKey, JSON.stringify(editedDatapack[castedKey]));
+            continue;
+          }
+          formData.append(castedKey, editedDatapack[castedKey] as string);
+        }
+      }
+      if (Array.from(formData.keys()).length === 0) {
+        pushSnackbar("No changes made", "info");
+        setDatapackProfilePageEditMode(false);
+        return false;
+      }
+      try {
+        const recaptcha = await getRecaptchaToken("handleDatapackEdit");
+        if (!recaptcha) return false;
+        const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
+          method: "PATCH",
+          body: formData,
+          credentials: "include",
+          headers: {
+            "recaptcha-token": recaptcha
+          }
+        });
+        if (response.ok) {
+          pushSnackbar("Datapack updated", "success");
+          setDatapackProfilePageEditMode(false);
+          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid });
+          if (!datapack) return false;
+          resetEditableDatapackMetadata(datapack);
+          removeAllErrors();
+          return true;
+        } else {
+          try {
+            const error = await response.json();
+            assertBatchUpdateServerPartialError(error);
+            for (const err of error.errors) {
+              pushSnackbar(err, "warning");
+            }
+          } catch (e) {
+            displayServerError(
+              response,
+              ErrorCodes.USER_EDIT_DATAPACK_FAILED,
+              ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
+            );
+          }
+          return false;
+        }
+      } catch (e) {
+        pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+      }
+    } finally {
+      setEditRequestInProgress(false);
     }
   }
 );
+
+export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier) => {
+  const userDatapack = await fetchUserDatapack(datapack.title);
+  if (userDatapack) {
+    removeDatapack(datapack);
+    addDatapack(userDatapack);
+    return userDatapack;
+  } else {
+    return null;
+  }
+});
 
 export const fetchUserDatapack = action(async (datapack: string) => {
   try {
@@ -106,7 +147,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       }
     });
     if (response.ok) {
-      removeDatapack({ title: datapack, type: "user" });
+      removeDatapack({ title: datapack, type: "user", uuid: state.user.uuid });
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(
@@ -118,4 +159,85 @@ export const userDeleteDatapack = action(async (datapack: string) => {
   } catch (e) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
+});
+
+export const replaceUserDatapackFile = action(async (id: string, file: File) => {
+  const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+  try {
+    setEditRequestInProgress(true);
+    const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    formData.append("datapack", file);
+    const response = await fetcher(`/user/datapack/${id}`, {
+      method: "PATCH",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      pushSnackbar("File replaced", "success");
+      const datapack = await refetchDatapack(datapackUniqueIdentifier);
+      if (!datapack) return;
+      removeAllErrors();
+      // if selected in the config, force a reprocess of the config
+      if (doesDatapackExistInCurrentConfig(datapackUniqueIdentifier, state.config.datapacks)) {
+        await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
+      }
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED,
+        ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  } finally {
+    setEditRequestInProgress(false);
+  }
+});
+
+export const setDatapackImageOnDatapack = action((datapack: Datapack, image: string) => {
+  datapack.datapackImage = image;
+});
+
+export const replaceUserProfileImageFile = action(async (id: string, file: File) => {
+  try {
+    setEditRequestInProgress(true);
+    const recaptcha = await getRecaptchaToken("replaceUserProfileImageFile");
+    if (!recaptcha) return;
+    const formData = new FormData();
+    formData.append("datapack-image", file);
+    const response = await fetcher(`/user/datapack/${id}`, {
+      method: "PATCH",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      pushSnackbar("Image replaced", "success");
+      const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
+      if (!datapack) return;
+      removeAllErrors();
+      setDatapackProfilePageImageVersion(new Date().getTime());
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED,
+        ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  } finally {
+    setEditRequestInProgress(false);
+  }
+});
+export const setDatapackProfilePageImageVersion = action(async (datapackVersion: number) => {
+  state.datapackProfilePage.datapackImageVersion = datapackVersion;
 });

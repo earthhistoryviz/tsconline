@@ -25,9 +25,9 @@ import { Profile } from "./account_settings/Profile";
 import { Admin } from "./admin/Admin";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { TSCLoadingDatapacks } from "./components/TSCLoadingDatapacks";
 import { toJS } from "mobx";
 import { useTranslation } from "react-i18next";
+import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -82,15 +82,17 @@ export default observer(function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/datapacks" element={<Datapacks />} />
           </Routes>
-          {Array.from(state.errors.errorAlerts.entries()).map(([context, error], index) => (
-            <TSCError
-              key={context}
-              errorContext={context}
-              message={error.errorText}
-              index={index}
-              count={error.errorCount}
-            />
-          ))}
+          {Array.from(state.errors.errorAlerts.entries())
+            .reverse()
+            .map(([context, error], index) => (
+              <TSCError
+                key={context}
+                errorContext={context}
+                message={error.errorText}
+                index={index}
+                count={error.errorCount}
+              />
+            ))}
           <TSCYesNoPopup
             open={state.showSuggestedAgePopup}
             title={t("dialogs.default-age.title")}
@@ -98,7 +100,11 @@ export default observer(function App() {
             onNo={() => actions.handlePopupResponse(false, navigate)}
             onClose={() => actions.fetchChartFromServer(navigate)}
           />
-          <TSCLoadingDatapacks open={state.isProcessingDatapacks} />
+          <TSCDialogLoader
+            open={state.isProcessingDatapacks}
+            headerText={t("loading.loading-datapacks")}
+            subHeaderText={t("loading.time")}
+          />
           <TSCYesNoPopup
             open={checkUnsavedChanges()}
             title={t("dialogs.confirm-datapack-change.title")}

@@ -26,12 +26,12 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
     reply.status(400).send({ error: "Invalid datapack" });
     return;
   }
-  const OfficialDatapack = await fetchUserDatapack("official", name);
-  if (!OfficialDatapack) {
+  const officialDatapack = await fetchUserDatapack("official", name);
+  if (!officialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
-  reply.send(OfficialDatapack);
+  reply.send(officialDatapack);
 };
 
 export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
@@ -456,7 +456,7 @@ export const fetchDatapackCoverImage = async function (
       return;
     }
     const uniqueImageFilepath = await fetchDatapackProfilePictureFilepath(decodeURIComponent(uuid), title);
-    if (!(await checkFileExists(uniqueImageFilepath))) {
+    if (!uniqueImageFilepath || !(await checkFileExists(uniqueImageFilepath))) {
       if (!(await checkFileExists(defaultFilepath))) {
         reply.status(404).send({ error: "Default image not found" });
         return;
@@ -466,6 +466,14 @@ export const fetchDatapackCoverImage = async function (
     }
     reply.send(await readFile(uniqueImageFilepath));
   } catch (e) {
+    try {
+      if (await checkFileExists(defaultFilepath)) {
+        reply.send(await readFile(defaultFilepath));
+        return;
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+    }
     console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
   }

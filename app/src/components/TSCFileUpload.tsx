@@ -14,11 +14,12 @@ const VisuallyHiddenInput = styled("input")({
 });
 type InputFileUploadProps = {
   startIcon?: ReactElement<object>;
-  text: string;
+  text?: string;
   variant?: "text" | "outlined" | "contained";
   onChange: ChangeEventHandler<HTMLInputElement>;
   multiple?: boolean;
   accept?: string;
+  className?: string;
 };
 export const InputFileUpload: React.FC<InputFileUploadProps> = ({
   startIcon,
@@ -26,12 +27,14 @@ export const InputFileUpload: React.FC<InputFileUploadProps> = ({
   variant = "text",
   onChange,
   multiple = false,
-  accept
+  accept,
+  className = ""
 }) => {
   return (
     <TSCButton
       component="label"
       variant={variant}
+      className={className}
       startIcon={startIcon}
       onClick={resetHandler}
       sx={{ bgcolor: "button.main" }}>
