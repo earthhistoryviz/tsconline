@@ -10,6 +10,7 @@ import WorkshopDetails from "./WorkshopDetails";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
 
+// TODO: change this when backend is finished
 type Workshop = {
     title: string;
     start: string;
@@ -17,8 +18,12 @@ type Workshop = {
     workshopId: number;
     active: boolean;
     datapacks: string[];
+    description: string;
+    files: string[];
+    downloadLink: string;
 };
 
+// TODO: change this when backend is finished
 const dummyWorkshops: Workshop[] = [
     // Active Workshops
     {
@@ -28,6 +33,9 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 1,
         active: true,
         datapacks: ['React Overview', 'JSX Basics'],
+        description: 'This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.',
+        files: ['ReactBasics.pdf', 'example_code.mdpk'],
+        downloadLink: 'https://example.com/download/react_basics.zip',
     },
     {
         title: 'Advanced TypeScript',
@@ -36,6 +44,9 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 2,
         active: true,
         datapacks: ['Generics', 'Decorators', 'Type Inference'],
+        description: 'Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.',
+        files: ['AdvancedTypeScriptGuide.pdf', 'examples.txt'],
+        downloadLink: 'https://example.com/download/advanced_typescript.zip',
     },
     // Upcoming Workshops
     {
@@ -45,6 +56,9 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 3,
         active: false,
         datapacks: ['Node Basics', 'Express.js Overview'],
+        description: 'Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.',
+        files: ['NodeIntro.pdf', 'starter_code.mdpk'],
+        downloadLink: 'https://example.com/download/node_js_beginners.zip',
     },
     {
         title: 'Fullstack Development',
@@ -53,6 +67,9 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 4,
         active: false,
         datapacks: ['Frontend-Backend Integration', 'API Design'],
+        description: 'A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.',
+        files: ['FullstackDevelopment.pdf', 'sample_project.txt'],
+        downloadLink: 'https://example.com/download/fullstack_development.zip',
     },
     // Expired Workshops
     {
@@ -62,6 +79,9 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 5,
         active: false,
         datapacks: ['Flexbox', 'Grid Layout', 'Animations'],
+        description: 'Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.',
+        files: ['CSSInDepth.pdf', 'examples.mpdk'],
+        downloadLink: 'https://example.com/download/css_in_depth.zip',
     },
     {
         title: 'Python for Data Science',
@@ -70,8 +90,12 @@ const dummyWorkshops: Workshop[] = [
         workshopId: 6,
         active: false,
         datapacks: ['Pandas', 'NumPy', 'Matplotlib'],
+        description: 'An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.',
+        files: ['PythonDataScience.pdf', 'datasets.txt'],
+        downloadLink: 'https://example.com/download/python_data_science.zip',
     },
 ];
+
 
 export const Workshops: React.FC = observer(() => {
     const { state, actions } = useContext(context);
@@ -92,19 +116,15 @@ export const Workshops: React.FC = observer(() => {
 
     const renderWorkshopsCategory = (workshops: Workshop[], noDataMessage: string) => (
         <StyledScrollbar>
-            <Grid
-                container
-                spacing={2}
+            <Box
                 sx={{
                     display: "flex",
-                    overflowX: "auto",
-                    padding: "16px 16px", // Add padding for better spacing
-                    bgcolor: "secondaryBackground.main"
+                    padding: "5px 5px"
                 }}
             >
                 {workshops.length > 0 ? (
                     workshops.map((workshop) => (
-                        <Grid item key={workshop.workshopId}>
+                        <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
                             <Card
                                 sx={{
                                     width: 250, // Fixed width for all cards
@@ -142,9 +162,14 @@ export const Workshops: React.FC = observer(() => {
                         </Grid>
                     ))
                 ) : (
-                    <Typography style={{ marginTop: 16 }}>{noDataMessage}</Typography>
+                    <Typography sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        textAlign: "center",
+                    }}>{noDataMessage}</Typography>
                 )}
-            </Grid>
+            </Box>
         </StyledScrollbar>
     );
 
@@ -161,12 +186,12 @@ export const Workshops: React.FC = observer(() => {
                     <Typography className="h">
                         Your Registered Workshops
                     </Typography>
-                    <Typography className="dh">
+                    <Typography className="dh" sx={{ marginBottom: 1 }}>
                         Click a workshop to see more information!
                     </Typography>
 
                     {/* Active Workshops */}
-                    <Accordion sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+                    <Accordion defaultExpanded sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls="active-workshops-content"
@@ -180,7 +205,7 @@ export const Workshops: React.FC = observer(() => {
                     </Accordion>
 
                     {/* Upcoming Workshops */}
-                    <Accordion sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+                    <Accordion defaultExpanded sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls="upcoming-workshops-content"
@@ -194,16 +219,16 @@ export const Workshops: React.FC = observer(() => {
                     </Accordion>
 
                     {/* Expired Workshops */}
-                    <Accordion sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }} >
+                    <Accordion defaultExpanded sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }} >
                         <AccordionSummary
                             expandIcon={<ExpandMoreIcon />}
                             aria-controls="expired-workshops-content"
                             className="workshops-summary"
                         >
-                            <Typography>Expired Workshops</Typography>
+                            <Typography>Passed Workshops</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                            {renderWorkshopsCategory(expiredWorkshops, "No expired workshops at the moment.")}
+                            {renderWorkshopsCategory(expiredWorkshops, "No passed workshops at the moment.")}
                         </AccordionDetails>
                     </Accordion>
                 </Box >
