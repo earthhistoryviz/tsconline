@@ -359,10 +359,11 @@
             "ADMIN_WORKSHOP_EDIT_FAILED": "Unable to edit workshop. Please try again later.",
             "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
             "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later.",
-            "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
             "USER_REPLACE_DATAPACK_FILE_FAILED": "Failed to replace user datapack file. Please try again later.",
             "USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED": "Failed to replace user datapack profile image. Please try again later.",
-            "DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE": "Datapack title cannot have leading or trailing whitespace."
+            "DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE": "Datapack title cannot have leading or trailing whitespace.",
+            "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
+            "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance."
         },
         "button": {
             "generate": "Generate",

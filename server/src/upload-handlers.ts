@@ -70,7 +70,8 @@ export async function uploadUserDatapackHandler(
     isPublic,
     type,
     uuid,
-    datapackImage
+    datapackImage,
+    priority
   } = fields;
   let { references, tags } = fields;
   if (
@@ -137,6 +138,10 @@ export async function uploadUserDatapackHandler(
     await userUploadHandler(reply, 400, `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}`, filepath);
     return;
   }
+  if (!priority || isNaN(parseInt(priority))) {
+    await userUploadHandler(reply, 400, "Priority must be a number", filepath);
+    return;
+  }
   if (date && !isDateValid(date)) {
     await userUploadHandler(reply, 400, "Date must be a valid date string", filepath);
     return;
@@ -171,6 +176,7 @@ export async function uploadUserDatapackHandler(
     tags,
     type,
     uuid,
+    priority: parseInt(priority),
     isPublic: isPublic === "true",
     size: getBytes(bytes),
     ...(datapackImage && { datapackImage }),

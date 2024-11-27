@@ -251,6 +251,7 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",
@@ -967,7 +968,7 @@ export const setDefaultUserState = action(() => {
   removeUnauthorizedDatapacks();
 });
 export const removeUnauthorizedDatapacks = action(() => {
-  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
+  state.datapacks = observable(state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic));
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
@@ -1229,6 +1230,7 @@ export const resetEditableDatapackMetadata = action((metadata: EditableDatapackM
     tags: metadata.tags,
     type: metadata.type,
     authoredBy: metadata.authoredBy,
+    priority: metadata.priority,
     references: metadata.references
   };
 });
