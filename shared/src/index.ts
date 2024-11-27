@@ -78,35 +78,6 @@ export type DatapackMetadata = {
   priority: number;
 } & DatapackType;
 
-type OfficialDatapack = {
-  type: "official";
-};
-type WorkshopDatapack = {
-  type: "workshop";
-};
-type UserDatapack = {
-  type: "user";
-  uuid: string;
-};
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
-export type DatapackTypeString = DatapackType["type"];
-
-export type DatapackMetadata = {
-  description: string;
-  title: string;
-  originalFileName: string;
-  storedFileName: string;
-  size: string;
-  date?: string;
-  authoredBy: string;
-  tags: string[];
-  references: string[];
-  isPublic: boolean;
-  contact?: string;
-  notes?: string;
-  datapackImage?: string;
-} & DatapackType;
-
 export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
@@ -123,6 +94,8 @@ export type BaseDatapackProps = {
 };
 
 export type Datapack = DatapackMetadata & BaseDatapackProps;
+
+export type SharedDatapack = DatapackMetadata & Partial<BaseDatapackProps>;
 
 export type PresetDatapack = {
   file: string;
@@ -639,6 +612,19 @@ export type DatapackPriorityUpdateSuccess = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertSharedDatapack(o: any): asserts o is SharedDatapack {
+  assertDatapackMetadata(o);
+  assertDatapackType(o);
+  if ("columnInfo" in o) assertBaseDatapackProps(o);
+}
+
+export function assertSharedDatapackArray(o: any): asserts o is SharedDatapack[] {
+  if (!Array.isArray(o)) throw new Error("Datapack must be an array");
+  for (const datapack of o) {
+    assertSharedDatapack(datapack);
+  }
+}
 
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
