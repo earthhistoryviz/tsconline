@@ -20,7 +20,7 @@ import {
 import { AdminSharedUser } from "@tsconline/shared";
 import { CustomTooltip, TSCButton, TSCYesNoPopup } from "../components";
 import MoreVertOutlinedIcon from "@mui/icons-material/MoreVertOutlined";
-import useEditUser from "../components/edit-user-stats-hook";
+import useEditUser from "./edit-user-stats-hook";
 import { useContext } from "react";
 import { context } from "../state";
 import { formatDate } from "../state/non-action-util";

@@ -1,4 +1,5 @@
 import {
+  Datapack,
   DatapackIndex,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_CONTACT_LENGTH,
@@ -16,14 +17,22 @@ import {
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
-import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import {
+  decryptDatapack,
+  deleteDatapackFileAndDecryptedCounterpart,
+  doesDatapackFolderExistInAllUUIDDirectories
+} from "./user/user-handler.js";
 import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "./constants.js";
+import {
+  CACHED_USER_DATAPACK_FILENAME,
+  DATAPACK_PROFILE_PICTURE_FILENAME,
+  DECRYPTED_DIRECTORY_NAME
+} from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -38,9 +47,6 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
     throw new Error("File does not exist");
   }
   const datapack = JSON.parse(await readFile(cachedFilepath, "utf-8"));
-  if (!datapack) {
-    throw new Error("File is empty");
-  }
   assertUserDatapack(datapack);
   assertDatapack(datapack);
   return datapack.storedFileName;
@@ -88,7 +94,7 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
-  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+  if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
     await userUploadHandler(reply, 400, "Invalid title", filepath);
     return;
   }
@@ -175,6 +181,34 @@ export async function uploadUserDatapackHandler(
 }
 
 /**
+ * ONLY REPLACES, does not write to cache
+ * @param uuid
+ * @param sourceFilePath
+ * @param metadata
+ */
+export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: Datapack) {
+  const datapackDirectory = await fetchUserDatapackDirectory(uuid, metadata.title);
+  const filename = path.basename(sourceFilePath);
+  const decryptionFilepath = path.join(datapackDirectory, DECRYPTED_DIRECTORY_NAME);
+  const datapackFilepath = path.join(datapackDirectory, filename);
+  await copyFile(sourceFilePath, datapackFilepath);
+  if (sourceFilePath !== datapackFilepath) {
+    await rm(sourceFilePath, { force: true });
+  }
+  await decryptDatapack(datapackFilepath, decryptionFilepath);
+  const datapackIndex: DatapackIndex = {};
+  const success = await loadDatapackIntoIndex(datapackIndex, decryptionFilepath, metadata);
+  // will delete the whole directory if the file.
+  // otherwise we would have a directory with no valid file, this makes it easier to manage (no dangling directories)
+  if (!success || !datapackIndex[metadata.title]) {
+    await rm(datapackDirectory, { recursive: true, force: true });
+    throw new Error("Failed to load datapack into index, please reupload the file");
+  }
+  await deleteDatapackFileAndDecryptedCounterpart(uuid, metadata.title);
+  return datapackIndex[metadata.title]!;
+}
+
+/**
  * THIS DOES NOT SETUP METADATA OR ADD TO ANY EXISTING INDEXES
  * TODO: WRITE TESTS
  * @param uuid
@@ -201,6 +235,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
   if (!manual && sourceFilePath !== sourceFileDestination) {
+    // remove the original file if it was copied from a temp file
     await rm(sourceFilePath, { force: true });
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
@@ -215,7 +250,10 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
     );
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
-    await rm(datapackImageFilepath, { force: true });
+    // remove the original file if it was copied from a temp file
+    if (datapackImageFilepath !== datapackImageFilepathDest) {
+      await rm(datapackImageFilepath, { force: true });
+    }
   }
   await writeFile(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
@@ -225,6 +263,30 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   }
   return datapackIndex;
+}
+export async function getTemporaryFilepath(uuid: string, filename: string) {
+  const directory = await getUserUUIDDirectory(uuid, false);
+  return path.join(directory, filename);
+}
+
+/**
+ * only updates the image, does not update the json cache
+ * @param uuid
+ * @param datapack
+ * @param sourceFile
+ */
+export async function changeProfilePicture(uuid: string, datapack: string, sourceFile: string) {
+  const origFilepath = await fetchDatapackProfilePictureFilepath(uuid, datapack);
+  const imageName = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(sourceFile);
+  if (!origFilepath) {
+    const directory = await fetchUserDatapackDirectory(uuid, datapack);
+    await rename(sourceFile, path.join(directory, imageName));
+  } else {
+    const dir = path.dirname(origFilepath);
+    const imagePath = path.join(dir, imageName);
+    await rm(origFilepath, { force: true });
+    await rename(sourceFile, imagePath);
+  }
 }
 
 export async function uploadFileToFileSystem(
@@ -242,7 +304,7 @@ export async function uploadFileToFileSystem(
   }
   if (file.file.bytesRead === 0) {
     await rm(filepath, { force: true });
-    return { code: 400, message: "Empty file" };
+    return { code: 400, message: "File is empty" };
   }
   return { code: 200, message: "File uploaded" };
 }
@@ -258,5 +320,5 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
       return profilePicturePath;
     }
   }
-  throw new Error("Profile picture does not exist");
+  return null;
 }

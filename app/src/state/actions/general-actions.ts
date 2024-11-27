@@ -16,7 +16,8 @@ import {
   isOfficialDatapack,
   assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray
+  assertDatapackArray,
+  DatapackUniqueIdentifier
 } from "@tsconline/shared";
 
 import {
@@ -54,7 +55,12 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
+import {
+  compareExistingDatapacks,
+  doesDatapackAlreadyExist,
+  getDatapackFromArray,
+  isOwnedByUser
+} from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 
 const increment = 1;
@@ -103,8 +109,11 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
-  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
+  const index = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (index > -1) {
+    state.datapacks.splice(index, 1); // Remove the matching datapack in place
+  }
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
@@ -438,12 +447,13 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return;
     }
-    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
+      return;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
@@ -1205,9 +1215,22 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
 });
-export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
-  state.datapackProfilePage.editableDatapackMetadata = metadata;
+  if (!metadata) {
+    state.datapackProfilePage.editableDatapackMetadata = null;
+    return;
+  }
+  // so we don't include any extra fields (since destructuring includes all fields)
+  state.datapackProfilePage.editableDatapackMetadata = {
+    description: metadata.description,
+    title: metadata.title,
+    isPublic: metadata.isPublic,
+    tags: metadata.tags,
+    type: metadata.type,
+    authoredBy: metadata.authoredBy,
+    references: metadata.references
+  };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;

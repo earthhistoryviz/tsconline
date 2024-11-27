@@ -104,6 +104,10 @@ export type DatapackWarning = {
   warning: string;
 };
 
+export type DatapackUniqueIdentifier = {
+  title: string;
+} & DatapackType;
+
 export type ChartErrorResponse = {
   error: string;
   errorCode: number;
@@ -586,6 +590,20 @@ export type TimescaleItem = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export type BatchUpdateServerPartialError = {
+  message: string;
+  errors: string[];
+};
+
+export function assertBatchUpdateServerPartialError(o: any): asserts o is BatchUpdateServerPartialError {
+  if (!o || typeof o !== "object") throw new Error("BatchUpdateServerPartialError must be a non-null object");
+  if (typeof o.message !== "string") throwError("BatchUpdateServerPartialError", "message", "string", o.message);
+  if (!Array.isArray(o.errors)) throwError("BatchUpdateServerPartialError", "errors", "array", o.errors);
+  for (const error of o.errors) {
+    if (typeof error !== "string") throwError("BatchUpdateServerPartialError", "errors", "string", error);
+  }
+}
+
 export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
   if (typeof o.title !== "string") throwError("Workshop", "title", "string", o.title);
@@ -995,7 +1013,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "date",
     "references",
     "contact",
-    "notes"
+    "notes",
+    "isPublic"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1014,6 +1033,7 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("contact" in o && typeof o.contact !== "string") return false;
   if ("notes" in o && typeof o.notes !== "string") return false;
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
+  if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
