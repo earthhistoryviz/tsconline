@@ -287,13 +287,14 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
     };
   }, []);
   // for when user tries to navigate away with unsaved changes
-  useBlocker(
-    ({ currentLocation, nextLocation }) =>
+  useBlocker(({ currentLocation, nextLocation }) => {
+    return (
       isMountedRef &&
       state.datapackProfilePage.unsavedChanges &&
       currentLocation.pathname !== nextLocation.pathname &&
       !window.confirm(t("dialogs.confirm-changes.message"))
-  );
+    );
+  });
   // for when user tries to leave page with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {

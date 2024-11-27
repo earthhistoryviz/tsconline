@@ -39,6 +39,7 @@ export type DatapackMetadata = {
   contact?: string;
   notes?: string;
   datapackImage?: string;
+  priority: number;
 } & DatapackType;
 
 export type AdminSharedUser = {
@@ -587,8 +588,48 @@ export type TimescaleItem = {
   key: string;
   value: number;
 };
+export type DatapackPriorityChangeRequest = {
+  uuid: DatapackType["type"];
+  id: string;
+  priority: number;
+};
+export type DatapackPriorityPartialUpdateSuccess = {
+  error: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+  failedRequests: DatapackPriorityChangeRequest[];
+};
+export type DatapackPriorityUpdateSuccess = {
+  message: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+};
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
+  if (typeof o.message !== "string") throwError("DatapackPriorityUpdateSuccess", "message", "string", o.message);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+}
+export function assertDatapackPriorityPartialUpdateSuccess(o: any): asserts o is DatapackPriorityPartialUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityPartialUpdateSuccess must be a non-null object");
+  if (typeof o.error !== "string") throwError("DatapackPriorityPartialUpdateSuccess", "error", "string", o.error);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+  assertDatapackPriorityChangeRequestArray(o.failedRequests);
+}
+
+export function assertDatapackPriorityChangeRequestArray(o: any): asserts o is DatapackPriorityChangeRequest[] {
+  if (!Array.isArray(o)) throw new Error("DatapackPriorityChangeRequest must be an array");
+  for (const request of o) {
+    assertDatapackPriorityChangeRequest(request);
+  }
+}
+
+export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityChangeRequest must be a non-null object");
+  assertDatapackTypeString(o.uuid);
+  if (typeof o.id !== "string") throwError("DatapackPriorityChangeRequest", "id", "string", o.id);
+  if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
+}
 
 export type BatchUpdateServerPartialError = {
   message: string;
@@ -1014,7 +1055,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "references",
     "contact",
     "notes",
-    "isPublic"
+    "isPublic",
+    "priority"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1034,6 +1076,7 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("notes" in o && typeof o.notes !== "string") return false;
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
   if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
+  if ("priority" in o && typeof o.priority !== "number") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
@@ -1060,6 +1103,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
+  if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");

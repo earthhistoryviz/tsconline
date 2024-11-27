@@ -593,7 +593,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     action: {
       disabled,
-      disabledBackground: disabled,
+      disabledBackground: "#858585",
       hover: "#ababab1a"
     },
     outline: {

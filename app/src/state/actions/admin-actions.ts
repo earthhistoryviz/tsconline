@@ -4,12 +4,16 @@ import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
+  BaseDatapackProps,
   Datapack,
   DatapackMetadata,
+  DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUserArray,
   assertDatapackArray,
   assertDatapackIndex,
+  assertDatapackPriorityPartialUpdateSuccess,
+  assertDatapackPriorityUpdateSuccess,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   isServerResponseError
@@ -302,6 +306,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     formData.append("authoredBy", authoredBy);
     formData.append("isPublic", String(isPublic));
     formData.append("type", metadata.type);
+    formData.append("priority", String(metadata.priority));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -613,4 +618,72 @@ export const updateAdminUserDatapacks = action(async (uuid: string[]) => {
 
 export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"]["displayedUserDatapacks"]) => {
   state.admin.displayedUserDatapacks = datapacks;
+});
+
+export const handleDatapackPriorityChange = action((data: BaseDatapackProps, newPriority: number) => {
+  data.priority = newPriority;
+});
+
+export const setLoadingDatapackPriority = action((loading: boolean) => {
+  state.admin.datapackPriorityLoading = loading;
+});
+
+export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
+  try {
+    setLoadingDatapackPriority(true);
+    const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/official/datapack/priority", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ tasks }),
+      credentials: "include"
+    });
+    const json = await response.json();
+    try {
+      if (response.ok) {
+        assertDatapackPriorityUpdateSuccess(json);
+        json.completedRequests.forEach((datapack) => {
+          const index = state.datapacks.findIndex((d) => d.title === datapack.id);
+          if (index !== -1) {
+            runInAction(() => {
+              state.datapacks[index].priority = datapack.priority;
+            });
+          }
+        });
+        pushSnackbar("Datapack priorities updated successfully", "success");
+      } else {
+        assertDatapackPriorityPartialUpdateSuccess(json);
+        pushSnackbar("Some datapack priorities were not updated", "warning");
+      }
+    } catch (e) {
+      console.error(e);
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+  } finally {
+    setLoadingDatapackPriority(false);
+  }
+});
+
+export const setAdminDatapackConfigTempRowData = action(
+  (tempRowData: State["admin"]["datapackConfig"]["tempRowData"]) => {
+    state.admin.datapackConfig.tempRowData = tempRowData;
+  }
+);
+export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChangeRequest[]) => {
+  state.admin.datapackConfig.rowPriorityUpdates = newVal;
+});
+export const resetAdminConfigTempState = action(() => {
+  state.admin.datapackConfig.rowPriorityUpdates = [];
+  state.admin.datapackConfig.tempRowData = null;
 });

@@ -25,8 +25,12 @@ import { MultipartFile } from "@fastify/multipart";
 import validator from "validator";
 import { pipeline } from "stream/promises";
 import {
+  DatapackPriorityChangeRequest,
+  DatapackPriorityPartialUpdateSuccess,
+  DatapackPriorityUpdateSuccess,
   SharedWorkshop,
   assertAdminSharedUser,
+  assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
@@ -51,6 +55,8 @@ import {
 } from "../user/user-handler.js";
 import { fetchUserDatapackDirectory, getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
+import { editAdminDatapackPriorities } from "./admin-handler.js";
+import _ from "lodash";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -748,4 +754,52 @@ export const adminDeleteWorkshop = async function adminDeleteWorkshop(
     reply.status(500).send({ error: "Unknown error" });
   }
   reply.send({ message: "Workshop deleted" });
+};
+
+export const adminEditDatapackPriorities = async function adminEditDatapackPriorities(
+  request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] } }>,
+  reply: FastifyReply
+) {
+  try {
+    assertDatapackPriorityChangeRequestArray(request.body.tasks);
+  } catch (e) {
+    reply.status(400).send({ error: "Invalid request" });
+    return;
+  }
+  const { tasks } = request.body;
+  const failedRequests = _.cloneDeep(tasks);
+  const completedRequests: DatapackPriorityChangeRequest[] = [];
+  try {
+    for (const task of tasks) {
+      try {
+        await editAdminDatapackPriorities(task);
+      } catch (e) {
+        logger.error(e);
+        continue;
+      }
+      failedRequests.shift();
+      completedRequests.push(task);
+    }
+  } catch (e) {
+    logger.error(e);
+  }
+  if (failedRequests.length > 0) {
+    if (completedRequests.length > 0) {
+      const partialSuccess: DatapackPriorityPartialUpdateSuccess = {
+        error: "Some priorities updated",
+        failedRequests,
+        completedRequests
+      };
+      reply.status(500).send(partialSuccess);
+      return;
+    } else {
+      reply.status(500).send({ error: "Unknown error, no priorities updated" });
+      return;
+    }
+  }
+  const success: DatapackPriorityUpdateSuccess = {
+    message: "Priorities updated",
+    completedRequests
+  };
+  reply.send(success);
 };

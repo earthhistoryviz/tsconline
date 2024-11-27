@@ -88,7 +88,8 @@ describe("uploadUserDatapackHandler", () => {
     date: "12-12-2000",
     uuid: "user",
     isPublic: "true",
-    type: "type"
+    type: "type",
+    priority: "1"
   };
   beforeEach(async () => {
     reply = {
@@ -215,7 +216,8 @@ describe("uploadUserDatapackHandler", () => {
       datapackImage: "datapackImage",
       type: fields.type,
       uuid: fields.uuid,
-      isPublic: Boolean(fields.isPublic)
+      isPublic: Boolean(fields.isPublic),
+      priority: parseInt(fields.priority)
     });
   });
   it("should return a 400 error if title is too long", async () => {
