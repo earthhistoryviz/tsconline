@@ -1,7 +1,17 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
-import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
+import {
+  SharedDatapack,
+  DatapackInfoChunk,
+  TimescaleItem,
+  assertChartRequest,
+  assertTimescale,
+  isUserDatapack,
+  DatapackMetadata,
+  BaseDatapackProps,
+  calculateDatapackMetadataHash
+} from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
@@ -33,6 +43,65 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
     return;
   }
   reply.send(officialDatapack);
+};
+
+export const fetchPublicBaseDatapackProps = async function fetchPublicDatapacksBaseDatapackProps(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
+  const datapackArray = await loadPublicUserDatapacks(uuids);
+  const datapackBaseProps: Record<string, BaseDatapackProps> = {};
+  for (const datapack of datapackArray) {
+    const metadataHash = await calculateDatapackMetadataHash(datapack);
+    datapackBaseProps[metadataHash] = {
+      columnInfo: datapack.columnInfo,
+      ageUnits: datapack.ageUnits,
+      defaultChronostrat: datapack.defaultChronostrat,
+      formatVersion: datapack.formatVersion,
+      topAge: datapack.topAge,
+      baseAge: datapack.baseAge,
+      verticalScale: datapack.verticalScale,
+      warnings: datapack.warnings,
+      totalColumns: datapack.totalColumns,
+      columnTypeCount: datapack.columnTypeCount,
+      datapackImageCount: datapack.datapackImageCount,
+      mapPack: datapack.mapPack
+    };
+  }
+  reply.send(datapackBaseProps);
+};
+
+export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksMetadata(
+  _request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
+  const datapackArray = await loadPublicUserDatapacks(uuids);
+  const datapackMetadata: DatapackMetadata[] = [];
+  for (const datapack of datapackArray) {
+    const partialSharedDatapackObject = {
+      description: datapack.description,
+      title: datapack.title,
+      originalFileName: datapack.originalFileName,
+      storedFileName: datapack.storedFileName,
+      size: datapack.size,
+      date: datapack.date,
+      authoredBy: datapack.authoredBy,
+      tags: datapack.tags,
+      references: datapack.references,
+      isPublic: datapack.isPublic,
+      contact: datapack.contact,
+      notes: datapack.notes,
+      datapackImage: datapack.datapackImage
+    };
+    if (isUserDatapack(datapack)) {
+      datapackMetadata.push({ ...partialSharedDatapackObject, uuid: datapack.uuid, type: "user" });
+    } else {
+      datapackMetadata.push({ ...partialSharedDatapackObject, type: datapack.type });
+    }
+  }
+  reply.send(datapackMetadata);
 };
 
 export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
