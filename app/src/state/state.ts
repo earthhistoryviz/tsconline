@@ -25,7 +25,8 @@ import type {
   DatapackConfigForChartRequest,
   SharedWorkshop,
   Datapack,
-  DatapackPriorityChangeRequest
+  DatapackPriorityChangeRequest,
+  SharedDatapack
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -109,7 +110,7 @@ export type State = {
   config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
-  datapacks: Datapack[]; // all datapacks on the server
+  datapacks: SharedDatapack[]; // all datapacks on the server
   skeletonStates: {
     presetsLoading: boolean;
     officialDatapacksLoading: boolean;

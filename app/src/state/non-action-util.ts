@@ -1,6 +1,7 @@
 import {
   Datapack,
   DatapackUniqueIdentifier,
+  SharedDatapack,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
@@ -9,10 +10,10 @@ import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
 
-export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
+export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
-export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
+export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
 }
 export function doesDatapackExistInCurrentConfig(
@@ -41,7 +42,7 @@ export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
 export function getWorkshopDatapacks(datapacks: Datapack[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
-export function isOwnedByUser(datapack: Datapack, uuid: string) {
+export function isOwnedByUser(datapack: SharedDatapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
 export function getNavigationRouteForDatapackProfile(title: string, type: string) {
