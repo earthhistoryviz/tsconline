@@ -39,7 +39,6 @@ import MenuItem from "@mui/material/MenuItem";
 import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
-import { School } from "@mui/icons-material";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -219,7 +218,8 @@ export const NavBar = observer(function Navbar() {
               "&:hover": {
                 color: theme.palette.selection.light
               }
-            }} />
+            }}
+          />
         )}
       </Toolbar>
     </StyledAppBar>
