@@ -1230,6 +1230,7 @@ export const resetEditableDatapackMetadata = action((metadata: EditableDatapackM
     tags: metadata.tags,
     type: metadata.type,
     authoredBy: metadata.authoredBy,
+    priority: metadata.priority,
     references: metadata.references
   };
 });
