@@ -14,8 +14,7 @@ import {
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, Lottie, DatapackUploadForm } from "../components";
-import loader from "../assets/icons/loading.json";
+import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -34,7 +33,6 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
     const [datapack, setDatapack] = useState<string>("");
     const [loading, setLoading] = useState(false);
     const [uploadDatapacks, setUploadDatapacks] = useState(false);
-    const theme = useTheme();
 
     const handleDialogClose = () => {
       setDatapack("");
@@ -99,21 +97,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
                 Upload Datapack
               </TSCButton>
             </Box>
-            {loading && (
-              <Box
-                position="absolute"
-                top={0}
-                left={0}
-                width="100%"
-                height="100%"
-                display="flex"
-                justifyContent="center"
-                alignItems="center"
-                bgcolor={theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)"}
-                zIndex={1}>
-                <Lottie animationData={loader} autoplay loop width={200} height={100} speed={0.7} />
-              </Box>
-            )}
+            {loading && <TSCDialogLoader open={loading} headerText="Adding Datapack" />}
           </Box>
         </Box>
       </Dialog>
@@ -295,21 +279,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         maxWidth="xs"
       />
       <Dialog open={true} onClose={handleDialogClose}>
-        {loading && (
-          <Box
-            position="absolute"
-            top={0}
-            left={0}
-            width="100%"
-            height="100%"
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            bgcolor={theme.palette.mode === "dark" ? "rgba(26, 34, 45, 0.7)" : "rgba(255, 255, 255, 0.7)"}
-            zIndex={1}>
-            <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />
-          </Box>
-        )}
+        {loading && <TSCDialogLoader open={loading} headerText={editMode ? "Editing Workshop" : "Creating Workshop"} />}
         <Box textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
             {editMode ? "Edit Workshop" : "Create Workshop"}

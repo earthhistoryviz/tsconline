@@ -1196,6 +1196,7 @@ export function assertWorkshopDatapack(o: any): asserts o is WorkshopDatapack {
   if (!o || typeof o !== "object") throw new Error("WorkshopDatapack must be a non-null object");
   if (typeof o.type !== "string") throwError("WorkshopDatapack", "type", "string", o.type);
   if (o.type !== "workshop") throwError("WorkshopDatapack", "type", "workshop", o.type);
+  if (typeof o.uuid !== "string") throwError("WorkshopDatapack", "uuid", "string", o.uuid);
 }
 export function assertUserDatapack(o: any): asserts o is UserDatapack {
   if (!o || typeof o !== "object") throw new Error("UserDatapack must be a non-null object");

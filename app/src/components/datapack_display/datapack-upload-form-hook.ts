@@ -139,8 +139,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
-      profileImageRef
-      priority,
+      profileImageRef,
+      priority
     },
     setters: {
       setTitle,
@@ -152,8 +152,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setTags,
       setReferences,
       setDate,
-      setFile
-      setPriority,
+      setFile,
+      setPriority
     },
     handlers: {
       resetForm,

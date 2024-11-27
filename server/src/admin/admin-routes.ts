@@ -885,6 +885,7 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   fields.filepath = filepath;
   fields.storedFileName = storedFileName;
   fields.originalFileName = originalFileName;
+  fields.priority = "0";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
