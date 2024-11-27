@@ -18,7 +18,12 @@ import {
   assertDatapack,
   assertDatapackArray,
   DatapackUniqueIdentifier,
-  isWorkshopDatapack
+  isWorkshopDatapack,
+  assertSharedDatapack,
+  assertSharedDatapackArray,
+  SharedDatapack,
+  calculateDatapackMetadataHash,
+  assertBaseDatapackProps
 } from "@tsconline/shared";
 
 import {
@@ -120,9 +125,9 @@ export const removeDatapack = action("removeDatapack", (datapack: DatapackUnique
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
-  fetchAllPublicDatapacks();
+  fetchAllPublicDatapacksMetadata();
 });
-export const addDatapack = action("addDatapack", (datapack: Datapack) => {
+export const addDatapack = action("addDatapack", (datapack: SharedDatapack) => {
   // we don't log since fetching datapacks could produce duplicates
   if (!doesDatapackAlreadyExist(datapack, state.datapacks)) {
     state.datapacks.push(observable(datapack));
@@ -135,30 +140,24 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async () => {
-  let start = 0;
-  let total = -1;
+export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMetadata", async () => {
   try {
-    while (total == -1 || start < total) {
-      const response = await fetcher(`/public/datapacks?start=${start}&increment=${increment}`, {
-        method: "GET"
-      });
-      const index = await response.json();
-      try {
-        assertDatapackInfoChunk(index);
-        for (const dp of index.datapacks) {
-          addDatapack(dp);
-        }
+    const response = await fetcher("/public/datapacks/metadata", {
+      method: "GET"
+    });
+    const datapacks = await response.json();
+    try {
+      assertSharedDatapackArray(datapacks);
+      for (const dp of datapacks) {
+        addDatapack(dp);
+      }
         if (index.datapacks[0]?.type === "official") {
           setOfficialDatapacksLoading(false);
         }
-        if (total == -1) total = index.totalChunks;
-        start += increment;
-      } catch (e) {
-        displayServerError(index, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
-        return;
-      }
-      await new Promise((resolve) => setTimeout(resolve, 0));
+    } catch (e) {
+      console.error(e);
+      displayServerError(datapacks, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
+      return;
     }
     console.log("Datapacks loaded");
   } catch (e) {
@@ -169,6 +168,43 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
     setPublicDatapacksLoading(false);
   }
 });
+
+export const fetchAllPublicBaseDatapackProps = action(
+  "fetchAllPublicBaseDatapackProps",
+  async () => {
+    try {
+      const response = await fetcher("/public/datapacks/base", { method: "GET" });
+      const baseDatapackProps = await response.json();
+      try {
+        const updatedDatapacks = state.datapacks.map(async (dp) => {
+          const metadataHash = await calculateDatapackMetadataHash(dp);
+          const baseDatapackProp = baseDatapackProps[metadataHash];
+          if (baseDatapackProp) {
+            assertBaseDatapackProps(baseDatapackProp);
+            return { ...dp, ...baseDatapackProp };
+          }
+          return dp;
+        });
+        state.datapacks = updatedDatapacks;
+      } catch (e) {
+        console.error(e);
+        displayServerError(
+          baseDatapackProps,
+          ErrorCodes.INVALID_DATAPACK_INFO,
+          ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]
+        );
+      }
+    } catch (e) {
+      displayServerError(
+        null,
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+      console.error(e);
+    }
+  }
+);
+
 export const fetchPresets = action("fetchPresets", async () => {
   try {
     const response = await fetcher("/presets");
