@@ -299,6 +299,7 @@ jobs:
             exit 0
           else
             echo "PR author is not a code owner"
+            exit 1
           fi
 
       - name: Checkout
