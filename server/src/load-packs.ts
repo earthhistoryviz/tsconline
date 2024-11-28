@@ -30,21 +30,19 @@ export async function loadDatapackIntoIndex(
   let successful = true;
   console.log(`\nParsing datapack ${datapack.title} \n`);
   await parseDatapacks(datapack, decryptionDirectory)
-    .then((baseDatapackProps) => {
-      if (!baseDatapackProps) {
+    .then((datapack) => {
+      if (!datapack) {
         return;
       }
       if (datapackIndex[datapack.title]) {
         throw new Error(`Datapack ${datapack.title} already exists`);
       }
-      datapackIndex[datapack.title] = baseDatapackProps;
+      datapackIndex[datapack.title] = datapack;
       console.log(chalk.green(`Successfully parsed ${datapack.originalFileName}`));
     })
     .catch((e) => {
       successful = false;
-      console.log(
-        chalk.red(`Cannot create a baseDatapackProps with datapack ${datapack.originalFileName} and error: ${e}`)
-      );
+      console.log(chalk.red(`Cannot create a datapack with datapack ${datapack.originalFileName} and error: ${e}`));
     });
   successful = (await grabMapImages([datapack.storedFileName], decryptionDirectory)).successful && successful;
   return successful;

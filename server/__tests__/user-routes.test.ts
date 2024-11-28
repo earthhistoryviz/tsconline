@@ -11,7 +11,7 @@ import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as types from "../src/types";
 import formAutoContent from "form-auto-content";
-import { Datapack, BaseDatapackProps } from "@tsconline/shared";
+import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
 import fastifyMultipart from "@fastify/multipart";
 
@@ -254,7 +254,7 @@ describe("get a single user datapack", () => {
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
   it("should reply 500 if no metadata is found", async () => {
-    fetchUserDatapack.mockResolvedValueOnce("" as unknown as BaseDatapackProps);
+    fetchUserDatapack.mockResolvedValueOnce("" as unknown as Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,

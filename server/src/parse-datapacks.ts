@@ -65,7 +65,8 @@ import {
   isDefaultChronostrat,
   DefaultChronostrat,
   DatapackMetadata,
-  allFontOptions
+  allFontOptions,
+  Datapack
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -165,13 +166,13 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  * @returns
  */
 export async function parseDatapacks(
-  datapackInfo: DatapackMetadata,
+  datapackMetadata: DatapackMetadata,
   decryptFilePath: string
-): Promise<BaseDatapackProps | null> {
-  const decryptPaths = await grabFilepaths([datapackInfo.storedFileName], decryptFilePath, "datapacks");
+): Promise<Datapack | null> {
+  const decryptPaths = await grabFilepaths([datapackMetadata.storedFileName], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(
-      `Did not find any datapacks for ${datapackInfo.originalFileName} in decryptFilePath ${decryptFilePath}`
+      `Did not find any datapacks for ${datapackMetadata.originalFileName} in decryptFilePath ${decryptFilePath}`
     );
   const columnInfoArray: ColumnInfo[] = [];
   const isChild: Set<string> = new Set();
@@ -298,25 +299,28 @@ export async function parseDatapacks(
   setShowLabels(chartColumn);
 
   const baseDatapackProps: BaseDatapackProps = {
-    ...datapackInfo,
     columnInfo: chartColumn,
     ageUnits,
     defaultChronostrat,
     formatVersion,
     columnTypeCount: _.cloneDeep(columnTypeCounter),
     datapackImageCount:
-      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "datapack-images"))) +
-      (await countFiles(join(decryptFilePath, parse(datapackInfo.storedFileName).name, "MapImages"))),
+      (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "datapack-images"))) +
+      (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    mapPack: await parseMapPacks([datapackInfo.storedFileName], decryptFilePath)
+    mapPack: await parseMapPacks([datapackMetadata.storedFileName], decryptFilePath)
+  };
+  const datapack: Datapack = {
+    ...baseDatapackProps,
+    ...datapackMetadata
   };
   // use datapack date if date not given by user
-  if (date && !datapackInfo.date) baseDatapackProps.date = date;
-  if (topAge || topAge === 0) baseDatapackProps.topAge = topAge;
-  if (baseAge || baseAge === 0) baseDatapackProps.baseAge = baseAge;
-  if (verticalScale) baseDatapackProps.verticalScale = verticalScale;
-  if (warnings.length > 0) baseDatapackProps.warnings = warnings;
-  return baseDatapackProps;
+  if (date && !datapackMetadata.date) datapack.date = date;
+  if (topAge || topAge === 0) datapack.topAge = topAge;
+  if (baseAge || baseAge === 0) datapack.baseAge = baseAge;
+  if (verticalScale) datapack.verticalScale = verticalScale;
+  if (warnings.length > 0) datapack.warnings = warnings;
+  return datapack;
 }
 
 /**

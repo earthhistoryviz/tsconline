@@ -25,7 +25,6 @@ import type {
   DatapackConfigForChartRequest,
   SharedWorkshop,
   Datapack,
-  BaseDatapackProps,
   DatapackPriorityChangeRequest
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
@@ -81,7 +80,7 @@ export type State = {
     workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
-      tempRowData: BaseDatapackProps[] | null;
+      tempRowData: Datapack[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
     };
   };
