@@ -52,6 +52,7 @@ type OfficialDatapack = {
 };
 type WorkshopDatapack = {
   type: "workshop";
+  uuid: string;
 };
 type UserDatapack = {
   type: "user";
