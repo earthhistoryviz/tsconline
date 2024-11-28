@@ -450,7 +450,7 @@ describe("editDatapack tests", async () => {
   });
   it("should call replaceDatapackFile if file change requested for datapack", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { originalFileName: "new-file" };
-    replaceDatapackFile.mockResolvedValueOnce(newDatapack as shared.BaseDatapackProps);
+    replaceDatapackFile.mockResolvedValueOnce(newDatapack as shared.Datapack);
     await editDatapack("test", readFileMockReturn.title, newDatapack);
     expect(rename).not.toHaveBeenCalled();
     expect(writeFile).toHaveBeenCalledOnce();
