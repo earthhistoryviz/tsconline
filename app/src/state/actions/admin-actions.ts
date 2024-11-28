@@ -4,7 +4,6 @@ import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   AdminSharedUser,
-  BaseDatapackProps,
   Datapack,
   DatapackMetadata,
   DatapackPriorityChangeRequest,
@@ -708,7 +707,7 @@ export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"][
   state.admin.displayedUserDatapacks = datapacks;
 });
 
-export const handleDatapackPriorityChange = action((data: BaseDatapackProps, newPriority: number) => {
+export const handleDatapackPriorityChange = action((data: Datapack, newPriority: number) => {
   data.priority = newPriority;
 });
 

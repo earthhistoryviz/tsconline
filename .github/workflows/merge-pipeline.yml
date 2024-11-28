@@ -277,7 +277,7 @@ jobs:
 
   setup-preview:
     needs: wait-for-checks
-    if: github.event.pull_request.merged == false
+    if: github.event.pull_request.merged == false && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout CODEOWNERS file from main branch
@@ -299,6 +299,7 @@ jobs:
             exit 0
           else
             echo "PR author is not a code owner"
+            exit 1
           fi
 
       - name: Checkout
