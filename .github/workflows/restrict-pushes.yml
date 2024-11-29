@@ -1,0 +1,43 @@
+name: Restrict Merges and Pushes
+
+on:
+  push:
+    branches:
+      - staging
+      - production
+  pull_request:
+    branches:
+      - staging
+      - production
+
+jobs:
+  validate-push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: Validate Push to Protected Branches
+        run: |
+          TARGET_BRANCH="${{ github.event.ref }}"
+          if [[ "$TARGET_BRANCH" == "staging" ]]; then
+            echo "Error: Direct pushes to 'staging' are not allowed. Use a PR from a 'feature-*' branch."
+            exit 1
+          elif [[ "$TARGET_BRANCH" == "production" ]]; then
+            echo "Error: Direct pushes to 'production' are not allowed. Use a PR from the 'staging' branch."
+            exit 1
+  validate-merge:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Validate Merge to Protected Branches
+        run: |
+          TARGET_BRANCH="${{ env.GITHUB_REF }}"
+          if [[ "$TARGET_BRANCH" == "staging" ]]; then
+            if [[ ! ${{ github.event.pull_request.head.ref }} =~ ^feature- ]]; then
+              echo "Error: Only branches starting with 'feature-' can merge into 'staging'."
+              exit 1
+            fi
+          elif [[ "$TARGET_BRANCH" == "production" ]]; then
+            if [[ ${{ github.event.pull_request.head.ref }} != "staging" ]]; then
+              echo "Error: Only 'staging' branch can merge into 'production'."
+              exit 1
+            fi
