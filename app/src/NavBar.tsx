@@ -162,7 +162,12 @@ export const NavBar = observer(function Navbar() {
             <Drawer
               anchor="left"
               PaperProps={{
-                sx: { borderRight: "2px solid", borderColor: "divider", bgcolor: theme.palette.dark.main }
+                sx: {
+                  borderRight: "2px solid",
+                  borderColor: "divider",
+                  bgcolor: theme.palette.dark.main,
+                  backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15))"
+                }
               }}
               open={menuDrawerOpen}
               onClose={() => setMenuDrawerOpen(false)}>
