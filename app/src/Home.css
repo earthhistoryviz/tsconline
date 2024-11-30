@@ -9,6 +9,9 @@
   position: sticky;
   width: 100%;
   min-height: 100vh;
+  padding-left: 10vw;
+  padding-right: 10vw;
+  padding-top: 5vw;
 }
 .top_box {
   position: sticky;
@@ -105,5 +108,35 @@
   background-color: rgba(0, 0, 0, 0.04);
 }
 .MuiTypography-root.preset-type-title {
+  font-size: 1.5rem;
+}
+.main-landing-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  height: 100%;
+  padding-left: 5vw;
+  gap: 10px;
+}
+.sub-header-section-landing-page-image {
+  width: 100%;
+}
+.sub-header-section-landing-page {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding-left: 5vw;
+  gap: 5vw;
+}
+.sub-header-section-landing-page-text {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.sub-header-section-landing-page-description {
   font-size: 1.5rem;
 }
