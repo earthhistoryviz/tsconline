@@ -48,6 +48,7 @@
             "MAP-PACK": "MAP-PACK PRESETS"
         },
         "navBar": {
+            "home": "Home",
             "chart": "Chart",
             "datapacks": "Datapacks",
             "settings": "Settings",
