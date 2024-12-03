@@ -12,6 +12,7 @@ type LottieIconButtonProps = {
   playOnHover?: boolean;
   className?: string;
   style?: React.CSSProperties;
+  triggerOnRef?: React.RefObject<HTMLDivElement>;
 };
 const Lottie: React.FC<LottieIconButtonProps> = ({
   animationData,
@@ -23,6 +24,7 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
   speed = 1,
   playOnHover = false,
   className,
+  triggerOnRef = null,
   style
 }) => {
   const ref = useRef<HTMLDivElement>(null);
@@ -40,6 +42,30 @@ const Lottie: React.FC<LottieIconButtonProps> = ({
     setAnimationInstance(anim);
     return () => anim.destroy();
   }, [ref]);
+
+  useEffect(() => {
+    if (!triggerOnRef?.current || !animationInstance || (!playOnHover && !playOnClick)) return;
+
+    const handleMouseEnter = () => {
+      if (playOnHover && animationInstance?.isPaused) {
+        animationInstance?.goToAndPlay(0);
+      }
+    };
+    const handleMouseClick = () => {
+      if (playOnClick && animationInstance?.isPaused) {
+        animationInstance?.goToAndPlay(0);
+      }
+    };
+
+    const triggerElement = triggerOnRef.current;
+    triggerElement.addEventListener("mouseenter", handleMouseEnter);
+    triggerElement.addEventListener("click", handleMouseClick);
+    return () => {
+      triggerElement.removeEventListener("mouseenter", handleMouseEnter);
+      triggerElement.removeEventListener("click", handleMouseClick);
+    };
+  }, [triggerOnRef]);
+
   function onClick() {
     if (playOnClick) {
       animationInstance?.goToAndPlay(0);

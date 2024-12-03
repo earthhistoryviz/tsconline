@@ -9,9 +9,6 @@
   position: sticky;
   width: 100%;
   min-height: 100vh;
-  padding-left: 10vw;
-  padding-right: 10vw;
-  padding-top: 5vw;
 }
 .top_box {
   position: sticky;
@@ -97,10 +94,9 @@
 .MuiAccordion-root.Mui-expanded.preset-highlight,
 .MuiAccordion-root.preset-highlight {
   background: transparent;
-  margin-left: 5vw;
-  margin-right: 5vw;
   margin-bottom: 20px;
   border-radius: 4px;
+  margin: 5%;
   overflow: hidden;
 }
 .MuiAccordionSummary-root.preset-summary {
@@ -109,15 +105,6 @@
 }
 .MuiTypography-root.preset-type-title {
   font-size: 1.5rem;
-}
-.main-landing-header {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: flex-start;
-  height: 100%;
-  padding-left: 5vw;
-  gap: 10px;
 }
 .sub-header-section-landing-page-image {
   width: 100%;
@@ -131,6 +118,8 @@
   height: 100%;
   padding-left: 5vw;
   gap: 5vw;
+  padding: 10%;
+  padding-bottom: 4vh;
 }
 .sub-header-section-landing-page-text {
   display: flex;
@@ -138,5 +127,19 @@
   gap: 20px;
 }
 .sub-header-section-landing-page-description {
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+}
+.get-started-landing-page {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+.get-started-button-container {
+  margin: 2%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  flex-direction: column;
 }
