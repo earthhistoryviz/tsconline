@@ -149,7 +149,7 @@ export const NotImplemented: React.FC = () => {
       <Lottie animationData={SecurityResearch} width={500} height={500} autoplay loop />
       <Typography variant="h5">Not Yet Implemented</Typography>
       <Typography>Stay tuned for updates!</Typography>
-      <div className={styles.attribution}>
+      <Attribution>
         <a
           href="https://iconscout.com/lottie-animations/security-research"
           className="text-underline font-size-sm"
@@ -165,10 +165,14 @@ export const NotImplemented: React.FC = () => {
         <a href="https://iconscout.com" className="text-underline font-size-sm">
           IconScout
         </a>
-      </div>
+      </Attribution>
     </div>
   );
 };
+
+export const Attribution = ({ children }: { children: React.ReactNode }) => {
+  return <div className={styles.attribution}>{children}</div>;
+}
 
 export const CheckIcon = () => {
   const theme = useTheme();
