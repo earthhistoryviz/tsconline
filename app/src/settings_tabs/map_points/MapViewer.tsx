@@ -99,7 +99,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     id="map"
                     ref={imageRef}
                     style={mapStyle}
-                    src={devSafeUrl(mapData.img)}
+                    src={devSafeUrl(mapData.img.replace("/assets/uploads", "/getMapImages"))}
                     alt="Map"
                     className="map"
                     onLoad={() => {

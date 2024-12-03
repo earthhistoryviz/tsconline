@@ -87,7 +87,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
                 selected={state.mapState.selectedMap === name}
                 onClick={() => handleRowClick(name)}>
                 <ListItemAvatar>
-                  <Avatar alt={name} src={devSafeUrl(map.img)} />
+                  <Avatar alt={name} src={devSafeUrl(map.img.replace("/assets/uploads", "/getMapImages"))} />
                 </ListItemAvatar>
                 <ListItemText primary={`${name}`} />
               </MapListItemButton>
