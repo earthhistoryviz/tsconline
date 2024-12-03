@@ -27,6 +27,7 @@ import {
   getPrivateOfficialDatapacks,
   getPublicDatapacksWithoutCurrentUser,
   getPublicOfficialDatapacks,
+  getWorkshopDatapacks,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -100,7 +101,11 @@ export const Datapacks = observer(function Datapacks() {
             HeaderIcon={Security}
           />
         )}
-        <DatapackGroupDisplay datapacks={[]} header={t("settings.datapacks.title.workshop")} HeaderIcon={School} />
+        <DatapackGroupDisplay
+          datapacks={getWorkshopDatapacks(state.datapacks)}
+          header={t("settings.datapacks.title.workshop")}
+          HeaderIcon={School}
+        />
         {state.isLoggedIn && state.user && (
           <DatapackGroupDisplay
             datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}

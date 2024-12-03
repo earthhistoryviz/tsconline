@@ -3,6 +3,7 @@ import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
+import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
@@ -12,7 +13,7 @@ import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
-import { findUser, findUsersWorkshops } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
@@ -193,7 +194,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const { useCache } = chartrequest;
   const uuid = request.session.get("uuid");
   const userId = (await findUser({ uuid }))[0]?.userId;
-  const userInWorkshops = userId ? (await findUsersWorkshops({ userId })).length : 0;
+  const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
   const hash = md5(settingsXml + chartrequest.datapacks.join(","));
@@ -210,9 +211,15 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   for (const datapack of chartrequest.datapacks) {
     let uuidFolder = uuid;
     switch (datapack.type) {
-      case "workshop":
-        uuidFolder = "workshop";
+      case "workshop": {
+        const workshopId = getWorkshopIdFromUUID(datapack.uuid);
+        if (!userId || !workshopId || !(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
+          reply.send({ error: "ERROR: user does not have access to requested workshop datapack" });
+          return;
+        }
+        uuidFolder = datapack.uuid;
         break;
+      }
       case "official":
         uuidFolder = "official";
         break;
@@ -373,7 +380,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     return;
   }
   try {
-    const priority = userInWorkshops ? 2 : uuid ? 1 : 0;
+    const priority = userInActiveWorkshop ? 2 : uuid ? 1 : 0;
     await queue.add(async () => {
       await execJavaCommand(1000 * 30), { priority };
     });

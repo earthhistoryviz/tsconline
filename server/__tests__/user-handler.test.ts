@@ -1,4 +1,4 @@
-import { describe, it, vi, expect, beforeEach, afterEach, test } from "vitest";
+import { describe, it, vi, expect, beforeEach, afterEach, test, beforeAll } from "vitest";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -134,6 +134,10 @@ const testUser = {
   isAdmin: 0
 };
 const readFileMockReturn = { title: "test" };
+
+beforeAll(() => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
+});
 
 describe("fetchAllUsersDatapacks test", () => {
   const readFile = vi.spyOn(fsPromises, "readFile");

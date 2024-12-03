@@ -305,14 +305,13 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
 }
 
 /**
- * Checks if a workshop has ended and performs necessary cleanup.
- * @param workshopId The workshop ID to check if it has ended
+ * Checks if a workshop has ended
+ * @param workshopId The workshop ID to check
  * @returns The workshop if it has not ended, null if it has ended
  */
-export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Workshop | null> {
+export async function getWorkshopIfNotEnded(workshopId: number): Promise<Workshop | null> {
   const workshop = (await findWorkshop({ workshopId }))[0];
   if (!workshop) {
-    await deleteFromUsersWorkshops({ workshopId });
     return null;
   }
   const end = new Date(workshop.end);
@@ -320,4 +319,46 @@ export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Works
     return null;
   }
   return workshop;
+}
+
+/**
+ * Get all active workshops user is in
+ * @param userId The user ID to check
+ * @returns The active workshops the user is in
+ */
+export async function getActiveWorkshopsUserIsIn(userId: number): Promise<Workshop[]> {
+  const usersWorkshops = await findUsersWorkshops({ userId });
+  const activeWorkshops = [];
+  for (const userWorkshop of usersWorkshops) {
+    const workshop = (await findWorkshop({ workshopId: userWorkshop.workshopId }))[0];
+    if (workshop) {
+      const start = new Date(workshop.start);
+      const end = new Date(workshop.end);
+      if (start <= new Date() && end > new Date()) {
+        activeWorkshops.push(workshop);
+      }
+    }
+  }
+  return activeWorkshops;
+}
+
+/**
+ * Check if user is in an active workshop
+ * @param userId The user ID to check
+ * @returns True if user is in an active workshop, false otherwise
+ */
+export async function isUserInAnActiveWorkshop(userId: number): Promise<boolean> {
+  const activeWorkshops = await getActiveWorkshopsUserIsIn(userId);
+  return activeWorkshops.length > 0;
+}
+
+/**
+ * Check if user is in specified workshop and if the workshop is active
+ * @param userId The user ID to check
+ * @param workshopId The workshop ID to check
+ * @returns True if user is in workshop and workshop is active, false otherwise
+ */
+export async function isUserInWorkshopAndWorkshopIsActive(userId: number, workshopId: number): Promise<boolean> {
+  const workshop = await getActiveWorkshopsUserIsIn(userId);
+  return workshop.some((workshop) => workshop.workshopId === workshopId);
 }
