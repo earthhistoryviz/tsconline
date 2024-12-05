@@ -1,0 +1,297 @@
+.adjcontainer {
+  display: flex;
+  justify-content: center;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  width: 90%;
+}
+
+.formContainer {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  padding: 16px;
+  gap: 20px;
+}
+
+.addTagButton {
+  width: 20px;
+  height: 20px;
+}
+
+.editButton {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 0.6rem;
+}
+
+.editButtonContainer {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.pencilIconContainer {
+  position: absolute;
+  right: 5px;
+  top: 0px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+.pencilIcon {
+  width: 20px;
+  height: 20px;
+}
+
+.tabs {
+  margin-left: 2vw;
+}
+
+.di {
+  width: 350px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 15%;
+  flex-shrink: 0;
+}
+
+.ht {
+  font-size: 2rem;
+  font-weight: 700;
+  -webkit-line-clamp: 3;
+  display: -webkit-box;
+  text-wrap: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  -webkit-box-orient: vertical;
+  word-break: break-all;
+  line-height: 1.2em;
+}
+
+.switch {
+  color: "blue";
+}
+
+.back {
+  flex-shrink: 0;
+  width: 35px;
+  height: 35px;
+}
+
+.icon {
+  width: inherit;
+  height: inherit;
+}
+
+.divider {
+  width: 100%;
+}
+
+.about {
+  padding: 16px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  width: 100%;
+}
+
+.profilePencilEdit {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.changeDatapackFile {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.fileName {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.fileUploadButton {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.editableDatapackImage {
+  cursor: pointer;
+}
+
+.editableDatapackImage:hover {
+  opacity: 0.8;
+}
+
+.ah {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 300px;
+}
+
+.additional {
+  flex: 3 1 0;
+  flex-shrink: 0;
+  border-left: 1px solid #e0e0e0;
+  padding: 16px;
+  padding-top: 0px;
+}
+
+.ai {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 5px;
+}
+
+.aih {
+  font-size: 1.1rem;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 8px;
+  border-bottom: 1px solid #c4c2c2;
+}
+
+.privacyContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.privacyIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.dt {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.description {
+  font-size: 1.1rem;
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.tags {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dwc {
+  width: 100%;
+  display: flex;
+  border-radius: 20px;
+  border: 1px solid gray;
+  padding: 8px;
+  box-shadow: 1px 1px 1px rgba(0, 0, 0, 0.3);
+  margin: 8px;
+  align-items: center;
+}
+
+.dwi {
+  color: transparent;
+  stroke: black;
+  margin: 10px;
+}
+
+.number {
+  background-color: rgb(255, 111, 111);
+  color: white;
+  font-size: 10px;
+  min-width: 16px;
+  padding: 2px 7px;
+  text-align: center;
+  border-radius: 10px;
+  display: inline-block;
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.3);
+  margin-left: 5px;
+  transform: scale(0.9);
+}
+
+.wtc {
+  position: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vd {
+  width: 100%;
+  height: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  max-height: 400px;
+}
+
+.tooltipPieChart {
+  position: absolute;
+  background: #fff;
+  border: 1px solid #ccc;
+  padding: 5px;
+  border-radius: 4px;
+  pointer-events: none;
+  opacity: 0;
+  color: black;
+}
+
+@media (max-width: 590px) {
+  .di {
+    width: 200px;
+    height: 100px;
+  }
+
+  .vd {
+    padding: 10px;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 500px) {
+  .di {
+    display: none;
+  }
+}

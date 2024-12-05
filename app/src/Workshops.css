@@ -1,12 +1,4 @@
-.workshops-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  min-height: 100vh;
-}
-
-.h {
+.header {
   font-size: 2rem;
   text-align: center;
 }
@@ -16,182 +8,31 @@
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-.sdi {
-  width: 20px;
-  height: 20px;
-}
-
-.card {
-  width: 234px;
-  height: 320px;
-  border-radius: 10%;
-  cursor: pointer;
-  box-shadow: none;
-  margin: 10px;
-}
-
-.hdc {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  padding: 16px;
-  position: relative;
-}
-
-.dh {
+.description-header {
   flex-grow: 1;
   text-align: center;
   font-weight: bold;
 }
 
-.tb {
-  width: 30px;
-  height: 30px;
+.not-logged-in-message {
+  font-size: 24px;
+  text-align: center;
+  margin-top: 20%;
 }
 
-.ib {
-  position: absolute;
-  top: 15%;
-  left: 15%;
-}
-
-.icon {
-  width: inherit;
-  height: inherit;
-  padding: 5px;
-}
-
-.display {
-  position: absolute;
-  top: 15%;
-  right: 20%;
-}
-
-.dd {
-  max-width: 100vw;
-  margin: 0px;
-}
-
-.showBox {
-  align-self: flex-start;
-  justify-self: flex-start;
-  margin-left: 45px;
-}
-
-.show {
-  font-style: italic;
-  width: max-content;
-}
-
-.show:hover {
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.container {
+.no-data-message {
   display: flex;
-  overflow-y: auto;
-  flex-wrap: wrap;
-  padding: 4px;
-  width: 100%;
-  margin-bottom: 3px;
   justify-content: center;
   align-items: center;
+  text-align: center;
+}
+
+.workshop-card {
+  width: 250px;
+  height: 300px;
+  display: flex;
   flex-direction: column;
-}
-
-.container.buttonContainer {
-  flex-direction: row;
-}
-
-.item {
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-  overflow-x: hidden;
-}
-
-.wrapItem > *,
-.datapackDisplayContainer > .container:not(.official, .cards) {
-  flex: 1 1 50%;
-}
-
-.datapackDisplayContainer {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.datapackDisplayContainer:not(.cards) {
-  align-items: flex-start;
-  width: 70%;
-}
-
-.datapackDisplayContainer.cards {
-  align-items: center;
-  width: 90%;
-}
-
-.container.cards,
-.container.cards > .item {
-  gap: 10px;
-}
-
-.container.cards {
-  margin: 0px 20px 20px;
-}
-
-.buttons {
-  margin: 10px;
-}
-
-.divider {
-  width: 98%;
-  margin: 5px 0;
-}
-
-.loader {
-  margin-left: 30px;
-}
-
-.header {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  gap: 10px;
-  margin-left: 5px;
-}
-
-@media (max-width: 720px) {
-  .container.cards {
-    overflow-y: hidden;
-    overflow-x: auto;
-    flex-wrap: nowrap;
-  }
-
-  .container.cards > * {
-    flex: 0 0 auto;
-  }
-
-  .hdc {
-    flex-direction: row;
-    gap: 10px;
-  }
-
-  .ib {
-    position: relative;
-    top: 0;
-    left: 0;
-  }
-
-  .display {
-    position: relative;
-    top: 0;
-    right: 0;
-  }
+  justify-content: space-between;
+  overflow: hidden;
+  cursor: pointer;
 }

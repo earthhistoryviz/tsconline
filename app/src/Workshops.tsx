@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -15,12 +15,21 @@ import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { context } from "./state";
 import { StyledScrollbar } from "./components";
-import WorkshopDetails from "./WorkshopDetails";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
+import {
+  getActiveWorkshops,
+  getNavigationRouteForWorkshopDetails,
+  getPastWorkshops,
+  getUpcomingWorkshops
+} from "./state/non-action-util";
+import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
+import { NotLoggedIn } from "./NotLoggedIn";
 
-// TODO: change this when backend is finished
-type Workshop = {
+// TODO: change this when implement the backend
+
+export type Workshop = {
   title: string;
   start: string;
   end: string;
@@ -29,23 +38,24 @@ type Workshop = {
   datapacks: string[];
   description: string;
   files: string[];
-  downloadLink: string;
+  imageLink: string;
 };
 
-// TODO: change this when backend is finished
+// TODO: change this when implement the backend
+
 const dummyWorkshops: Workshop[] = [
   // Active Workshops
   {
     title: "React Basics",
     start: "2024-11-20",
-    end: "2024-11-25",
+    end: "2024-12-25",
     workshopId: 1,
     active: true,
     datapacks: ["React Overview", "JSX Basics"],
     description:
       "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
     files: ["ReactBasics.pdf", "example_code.mdpk"],
-    downloadLink: "https://example.com/download/react_basics.zip"
+    imageLink: TSCreatorLogo
   },
   {
     title: "Advanced TypeScript",
@@ -57,7 +67,7 @@ const dummyWorkshops: Workshop[] = [
     description:
       "Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.",
     files: ["AdvancedTypeScriptGuide.pdf", "examples.txt"],
-    downloadLink: "https://example.com/download/advanced_typescript.zip"
+    imageLink: TSCreatorLogo
   },
   // Upcoming Workshops
   {
@@ -70,7 +80,7 @@ const dummyWorkshops: Workshop[] = [
     description:
       "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
     files: ["NodeIntro.pdf", "starter_code.mdpk"],
-    downloadLink: "https://example.com/download/node_js_beginners.zip"
+    imageLink: TSCreatorLogo
   },
   {
     title: "Fullstack Development",
@@ -82,7 +92,7 @@ const dummyWorkshops: Workshop[] = [
     description:
       "A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.",
     files: ["FullstackDevelopment.pdf", "sample_project.txt"],
-    downloadLink: "https://example.com/download/fullstack_development.zip"
+    imageLink: TSCreatorLogo
   },
   // Expired Workshops
   {
@@ -95,7 +105,7 @@ const dummyWorkshops: Workshop[] = [
     description:
       "Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.",
     files: ["CSSInDepth.pdf", "examples.mpdk"],
-    downloadLink: "https://example.com/download/css_in_depth.zip"
+    imageLink: TSCreatorLogo
   },
   {
     title: "Python for Data Science",
@@ -107,23 +117,24 @@ const dummyWorkshops: Workshop[] = [
     description:
       "An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.",
     files: ["PythonDataScience.pdf", "datasets.txt"],
-    downloadLink: "https://example.com/download/python_data_science.zip"
+    imageLink: TSCreatorLogo
   }
 ];
 
 export const Workshops: React.FC = observer(() => {
-  const { state } = useContext(context);
-  const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null);
+  const { state, actions } = useContext(context);
   const theme = useTheme();
-  const now = new Date();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  // 分类 Workshops
-  const activeWorkshops = dummyWorkshops.filter(
-    (workshop) => workshop.active && new Date(workshop.start) <= now && new Date(workshop.end) >= now
-  );
-  const upcomingWorkshops = dummyWorkshops.filter((workshop) => !workshop.active && new Date(workshop.start) > now);
-  const expiredWorkshops = dummyWorkshops.filter((workshop) => new Date(workshop.end) < now);
+  const activeWorkshops = getActiveWorkshops(dummyWorkshops);
+  const upcomingWorkshops = getUpcomingWorkshops(dummyWorkshops);
+  const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
+  // TODO: change this when implement the backend
+  const setWorkshopAndNavigate = (workshop: Workshop) => {
+    navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+  };
   const renderWorkshopsCategory = (workshops: Workshop[], noDataMessage: string) => (
     <StyledScrollbar>
       <Box
@@ -136,23 +147,18 @@ export const Workshops: React.FC = observer(() => {
             <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
               <Card
                 sx={{
-                  width: 250, // Fixed width for all cards
-                  height: 300, // Fixed height to ensure consistent size
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
                   outline: "1px solid",
                   outlineColor: "divider",
-                  bgcolor: "secondaryBackground.main",
-                  overflow: "hidden" // Prevents any content overflow
+                  bgcolor: "secondaryBackground.main"
                 }}
-                onClick={() => setSelectedWorkshop(workshop)} // Set selected workshop on click
+                className="workshop-card"
+                onClick={() => setWorkshopAndNavigate(workshop)} // Set selected workshop on click
               >
                 <CardContent>
                   <CardMedia
                     component="img"
                     height="140"
-                    image={TSCreatorLogo} // Placeholder image
+                    image={workshop.imageLink} // Placeholder image
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }} // Ensure the image fits well
                   />
@@ -160,43 +166,34 @@ export const Workshops: React.FC = observer(() => {
                     {workshop.title}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    Start Date: {workshop.start}
+                    {t("workshops.dates.start")}
+                    {workshop.start}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    End Date: {workshop.end}
+                    {t("workshops.dates.end")}
+                    {workshop.end}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
           ))
         ) : (
-          <Typography
-            sx={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              textAlign: "center"
-            }}>
-            {noDataMessage}
-          </Typography>
+          <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
         )}
       </Box>
     </StyledScrollbar>
   );
 
+  useEffect(() => {
+    actions.pushWorkshopToWorkshopsArray(dummyWorkshops);
+  }, []);
   return (
     <>
-      {selectedWorkshop ? (
-        // Render the WorkshopDetails component if a workshop is selected
-        <WorkshopDetails
-          workshop={selectedWorkshop}
-          onBack={() => setSelectedWorkshop(null)} // Clear selected workshop to go back
-        />
-      ) : state.isLoggedIn ? (
+      {state.isLoggedIn ? (
         <Box padding={4}>
-          <Typography className="h">Your Registered Workshops</Typography>
-          <Typography className="dh" sx={{ marginBottom: 1 }}>
-            Click a workshop to see more information!
+          <Typography className="header">{t("workshops.header")}</Typography>
+          <Typography className="description-header" sx={{ marginBottom: 1 }}>
+            {t("workshops.description-header")}
           </Typography>
 
           {/* Active Workshops */}
@@ -207,11 +204,9 @@ export const Workshops: React.FC = observer(() => {
               expandIcon={<ExpandMoreIcon />}
               aria-controls="active-workshops-content"
               className="workshops-summary">
-              <Typography>Active Workshops</Typography>
+              <Typography>{t("workshops.titles.active")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(activeWorkshops, "No active workshops at the moment.")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(activeWorkshops, "active")}</AccordionDetails>
           </Accordion>
 
           {/* Upcoming Workshops */}
@@ -222,11 +217,9 @@ export const Workshops: React.FC = observer(() => {
               expandIcon={<ExpandMoreIcon />}
               aria-controls="upcoming-workshops-content"
               className="workshops-summary">
-              <Typography>Upcoming Workshops</Typography>
+              <Typography>{t("workshops.titles.upcoming")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(upcomingWorkshops, "No upcoming workshops at the moment.")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(upcomingWorkshops, "upcoming")}</AccordionDetails>
           </Accordion>
 
           {/* Expired Workshops */}
@@ -237,17 +230,13 @@ export const Workshops: React.FC = observer(() => {
               expandIcon={<ExpandMoreIcon />}
               aria-controls="expired-workshops-content"
               className="workshops-summary">
-              <Typography>Passed Workshops</Typography>
+              <Typography>{t("workshops.titles.past")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(expiredWorkshops, "No passed workshops at the moment.")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(pastWorkshops, "past")}</AccordionDetails>
           </Accordion>
         </Box>
       ) : (
-        <Typography style={{ fontSize: 24, textAlign: "center", marginTop: "20%" }}>
-          You are not logged in. Please sign in to view your workshops.
-        </Typography>
+        <NotLoggedIn />
       )}
     </>
   );

@@ -53,7 +53,37 @@
             "datapacks": "Datapacks",
             "settings": "Settings",
             "help": "Help",
-            "about": "About"
+            "about": "About",
+            "workshops": "Workshops"
+        },
+        "workshops": {
+            "login-first": "You are not logged in. Please sign in to view your workshops.",
+            "header": "Your Registered Workshops",
+            "description-header": "Click a workshop to see more information!",
+            "titles": {
+                "upcoming": "Upcoming Workshops",
+                "active": "Active Workshops",
+                "past": "Past Workshops"
+            },
+            "messages": {
+                "upcoming": "No upcoming workshops at the moment.",
+                "active": "No active workshops at the moment.",
+                "past": "No past workshops at the moment."
+            },
+            "dates": {
+                "start": "Start Date: ",
+                "end": "End Date: "
+            },
+            "details-page": {
+                "datapacks": "Datapacks",
+                "files": "Files",
+                "download-button": "Download Files",
+                "description": "Description",
+                "messages": {
+                    "no-datapacks": "No datapacks available",
+                    "no-files": "No files available"
+                }
+            }
         },
         "loading": {
             "loading-chart": "Loading Chart...",

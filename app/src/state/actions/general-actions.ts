@@ -63,6 +63,7 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
+import { Workshop } from "../../Workshops";
 
 const increment = 1;
 
@@ -1250,4 +1251,11 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
+});
+
+// TODO: Change this when the actual backend for rendering all workshops is implemented.
+// Maybe similar to how we handled datapacks.
+// For now, this just loads the selected dummy workshop into the state.
+export const pushWorkshopToWorkshopsArray = action((workshop: Workshop[]) => {
+  state.workshops = workshop;
 });
