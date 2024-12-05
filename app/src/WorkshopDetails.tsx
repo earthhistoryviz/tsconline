@@ -2,8 +2,8 @@ import React from "react";
 import { Box, Typography, Grid, Divider, IconButton } from "@mui/material";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import "./WorkshopDetails.css";
-import { TSCButton } from "./components";
+import styles from "./WorkshopDetails.module.css";
+import { CustomDivider, TSCButton } from "./components";
 
 // TODO: change this when backend is finished
 type Workshop = {
@@ -25,94 +25,74 @@ type WorkshopDetailsProps = {
 
 const WorkshopDetails: React.FC<WorkshopDetailsProps> = ({ workshop, onBack }) => {
   return (
-    <Box padding={4} borderRadius={2}>
-      {/* Header Section */}
-      <Grid container alignItems="center" justifyContent="space-between">
-        <Box display="flex" alignItems="center" gap={2}>
-          <IconButton onClick={onBack}>
-            <ArrowBackIcon />
+    <div className={styles.adjcontainer}>
+      <div className={styles.container}>
+        <div className={styles.header}>
+          <IconButton className={styles.back} onClick={onBack}>
+            <ArrowBackIcon className={styles.icon} />
           </IconButton>
-        </Box>
-        <Typography variant="h5" fontWeight={"bold"}>
-          {workshop.title}
-        </Typography>
-        <Box>
-          <img
-            src={TSCreatorLogo}
-            alt={`${workshop.title} image`}
-            style={{ width: 100, height: 100, objectFit: "cover" }}
-          />
-        </Box>
-      </Grid>
 
-      <Divider sx={{ marginY: 4 }} />
+          <Typography className={styles.ht}>{workshop.title}</Typography>
 
-      <Box
-        sx={{
-          backgroundColor: "secondaryBackground.main",
-          padding: 4,
-          borderRadius: 2,
-          margin: "0 auto",
-          boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)"
-        }}>
-        <Grid container spacing={4}>
-          <Grid item xs={3}>
-            {/* Dates */}
-            <Typography variant="h6" fontWeight={"bold"}>
-              Start Date
-            </Typography>
-            <Typography>{workshop.start}</Typography>
+          <img className={styles.di} src={TSCreatorLogo} />
+        </div><CustomDivider className={styles.divider} />
+        <Box className={styles.about} bgcolor="secondaryBackground.main">
+          <div className={styles.ah}>
 
-            <Typography variant="h6" fontWeight={"bold"}>
-              End Date
-            </Typography>
-            <Typography>{workshop.end}</Typography>
+            <div className={styles.ai}>
+              <Typography className={styles.aih}>Start Date</Typography>
+              <Typography>{workshop.start}</Typography>
+            </div>
+            <div className={styles.ai}>
+              <Typography className={styles.aih}>End Date</Typography>
+              <Typography>{workshop.end}</Typography>
+            </div>
 
-            <Divider sx={{ marginY: 1 }} />
-
-            {/* Data Packs */}
-            <Typography variant="h6" fontWeight={"bold"}>
-              Data Packs
-            </Typography>
-            <Box>
-              {workshop.datapacks.length > 0 ? (
-                workshop.datapacks.map((datapack, index) => <Typography key={index}>• {datapack}</Typography>)
-              ) : (
-                <Typography>No datapacks available</Typography>
-              )}
-            </Box>
-
-            <Divider sx={{ marginY: 1 }} />
-
-            {/* Files */}
-            <Typography variant="h6" fontWeight={"bold"}>
-              Files
-            </Typography>
-            <Box>
-              {workshop.files.length > 0 ? (
+            <div className={styles.ai}>
+              <Typography className={styles.aih}>DataPacks</Typography>
+              <Box>
+                {workshop.datapacks.length > 0 ? (
+                  workshop.datapacks.map((datapack, index) => (
+                    <Typography key={index} className={styles.fileName}>• {datapack}</Typography>
+                  ))
+                ) : (
+                  <Typography className={styles.fileName}>No datapacks available</Typography>
+                )}
+              </Box>
+            </div>
+            <div className={styles.ai}>
+              <Typography className={styles.aih}>Files</Typography>
+              <Box>
                 <>
-                  {workshop.files.map((file, index) => (
-                    <Typography key={index}>• {file}</Typography>
-                  ))}
-                  <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} href={workshop.downloadLink}>
+                  {workshop.files.length > 0 ? (
+                    workshop.files.map((file, index) => (
+                      <Typography key={index} className={styles.fileName}>• {file}</Typography>
+
+                    ))
+                  ) : (
+                    <Typography className={styles.fileName}>No files available</Typography>
+                  )}
+                  <TSCButton
+                    variant="contained"
+                    color="primary"
+                    sx={{ marginTop: 2 }}
+                    href={workshop.downloadLink}>
                     Download Files
                   </TSCButton>
                 </>
-              ) : (
-                <Typography>No files available</Typography>
-              )}
-            </Box>
-          </Grid>
-
-          <Grid item xs={8}>
-            <Typography variant="h6" fontWeight={"bold"}>
-              Description
+              </Box>
+            </div>
+          </div>
+          <div className={styles.additional}>
+            <Typography className={styles.dt}>Description</Typography>
+            <Typography className={styles.description}>
+              {workshop.description}
             </Typography>
-            <Typography sx={{ marginTop: 1 }}>{workshop.description}</Typography>
-          </Grid>
-        </Grid>
-      </Box>
-    </Box>
+
+          </div>
+        </Box>
+      </div>
+    </div>
   );
 };
 
