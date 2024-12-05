@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Grid, Divider, IconButton } from "@mui/material";
+import { Box, Typography, IconButton } from "@mui/material";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
@@ -35,10 +35,10 @@ const WorkshopDetails: React.FC<WorkshopDetailsProps> = ({ workshop, onBack }) =
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
           <img className={styles.di} src={TSCreatorLogo} />
-        </div><CustomDivider className={styles.divider} />
+        </div>
+        <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">
           <div className={styles.ah}>
-
             <div className={styles.ai}>
               <Typography className={styles.aih}>Start Date</Typography>
               <Typography>{workshop.start}</Typography>
@@ -53,7 +53,9 @@ const WorkshopDetails: React.FC<WorkshopDetailsProps> = ({ workshop, onBack }) =
               <Box>
                 {workshop.datapacks.length > 0 ? (
                   workshop.datapacks.map((datapack, index) => (
-                    <Typography key={index} className={styles.fileName}>• {datapack}</Typography>
+                    <Typography key={index} className={styles.fileName}>
+                      • {datapack}
+                    </Typography>
                   ))
                 ) : (
                   <Typography className={styles.fileName}>No datapacks available</Typography>
@@ -66,17 +68,14 @@ const WorkshopDetails: React.FC<WorkshopDetailsProps> = ({ workshop, onBack }) =
                 <>
                   {workshop.files.length > 0 ? (
                     workshop.files.map((file, index) => (
-                      <Typography key={index} className={styles.fileName}>• {file}</Typography>
-
+                      <Typography key={index} className={styles.fileName}>
+                        • {file}
+                      </Typography>
                     ))
                   ) : (
                     <Typography className={styles.fileName}>No files available</Typography>
                   )}
-                  <TSCButton
-                    variant="contained"
-                    color="primary"
-                    sx={{ marginTop: 2 }}
-                    href={workshop.downloadLink}>
+                  <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} href={workshop.downloadLink}>
                     Download Files
                   </TSCButton>
                 </>
@@ -85,10 +84,7 @@ const WorkshopDetails: React.FC<WorkshopDetailsProps> = ({ workshop, onBack }) =
           </div>
           <div className={styles.additional}>
             <Typography className={styles.dt}>Description</Typography>
-            <Typography className={styles.description}>
-              {workshop.description}
-            </Typography>
-
+            <Typography className={styles.description}>{workshop.description}</Typography>
           </div>
         </Box>
       </div>
