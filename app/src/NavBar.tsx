@@ -20,7 +20,7 @@ import {
 } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
-import { Menu as MenuIcon, AccountCircle, TableChart, Dataset, Help, Campaign } from "@mui/icons-material";
+import { Menu as MenuIcon, AccountCircle, TableChart, Dataset, Help, Campaign, School } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -63,6 +63,7 @@ export const NavBar = observer(function Navbar() {
     { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
     { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircleIcon /> },
     { label: t("navBar.help"), path: "/help", icon: <Help /> },
+    { label: "Workshops", path: "/workshops", icon: <School /> },
     { label: t("navBar.about"), path: "/about", icon: <Campaign /> }
   ];
   const onButtonClick = (path: string) => {

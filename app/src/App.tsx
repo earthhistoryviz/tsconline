@@ -29,6 +29,7 @@ import { toJS } from "mobx";
 import { useTranslation } from "react-i18next";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { Workshops } from "./Workshops";
+import WorkshopDetails from "./WorkshopDetails";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -83,6 +84,7 @@ export default observer(function App() {
             <Route path="/admin" element={<Admin />} />
             <Route path="/datapacks" element={<Datapacks />} />
             <Route path="/workshops" element={<Workshops />} />
+            <Route path="/workshops/:id" element={<WorkshopDetails />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
             .reverse()
