@@ -1,6 +1,6 @@
 import { Box, FormGroup, FormControlLabel } from "@mui/material";
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import { useContext } from "react";
 import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
 import { TSCCheckbox } from "../components";
@@ -10,7 +10,7 @@ import "./Preferences.css";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
-  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
+  const units = Object.keys(state.settings.timeSettings)[0];
   const { t } = useTranslation();
 
   if (!units || !state.settings.timeSettings[units]) {

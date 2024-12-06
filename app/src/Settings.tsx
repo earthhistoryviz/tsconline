@@ -8,8 +8,6 @@ import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { Typography } from "@mui/material";
-import SaveSettings from "./settings_tabs/SaveSettings";
-import LoadSettings from "./settings_tabs/LoadSettings";
 import "./Settings.css";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
