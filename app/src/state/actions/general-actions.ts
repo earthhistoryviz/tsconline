@@ -681,8 +681,8 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
       state.settingsTabs.selected = "time";
       break;
     case 1:
-       state.settingsTabs.selected= "preferences";
-       break;
+      state.settingsTabs.selected = "preferences";
+      break;
     case 2:
       state.settingsTabs.selected = "column";
       break;

@@ -10,7 +10,7 @@ import "./Preferences.css";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
-  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]); 
+  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
   const { t } = useTranslation();
 
   if (!units || !state.settings.timeSettings[units]) {
@@ -26,8 +26,8 @@ export const Preferences = observer(function Preferences() {
             control={
               <TSCCheckbox
                 className="preferences-checkbox"
-                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked, units)} 
-                checked={state.settings.timeSettings[units]?.skipEmptyColumns || false} 
+                onChange={(e) => actions.setSkipEmptyColumns(e.target.checked, units)}
+                checked={state.settings.timeSettings[units]?.skipEmptyColumns || false}
               />
             }
             label={t("settings.preferences.checkboxs.skip-empty-columns")}
