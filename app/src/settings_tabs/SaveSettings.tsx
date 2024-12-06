@@ -16,7 +16,7 @@ import { jsonToXml } from "../state/parse-settings";
 import { observer } from "mobx-react-lite";
 import { CustomTooltip } from "../components";
 import { useTranslation } from "react-i18next";
-import "./SaveSettings.css"; // Make sure to import your CSS file
+import "./SaveSettings.css"; 
 
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
@@ -68,7 +68,7 @@ const SaveSettings = observer(() => {
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault(); // to stop website from reloading
+            e.preventDefault(); 
             if (!isValidFilename(state.loadSaveFilename)) {
               actions.pushSnackbar("Filename is not valid", "warning");
               return;
