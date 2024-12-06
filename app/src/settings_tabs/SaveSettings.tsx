@@ -16,7 +16,7 @@ import { jsonToXml } from "../state/parse-settings";
 import { observer } from "mobx-react-lite";
 import { CustomTooltip } from "../components";
 import { useTranslation } from "react-i18next";
-import "./SaveSettings.css"; 
+import "./SaveSettings.css";
 
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
@@ -53,12 +53,7 @@ const SaveSettings = observer(() => {
   return (
     <React.Fragment>
       <CustomTooltip title={t("settings.preferences.settings-file.save")}>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleClickOpen}
-          className="save-settings-button"
-        >
+        <Button variant="contained" color="primary" onClick={handleClickOpen} className="save-settings-button">
           {t("settings.preferences.settings-file.save")}
         </Button>
       </CustomTooltip>
@@ -68,7 +63,7 @@ const SaveSettings = observer(() => {
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault(); 
+            e.preventDefault();
             if (!isValidFilename(state.loadSaveFilename)) {
               actions.pushSnackbar("Filename is not valid", "warning");
               return;

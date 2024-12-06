@@ -8,20 +8,20 @@
 
 .preferences-settings-container {
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   border: 1px solid gray;
   border-radius: 4px;
-  padding: 10px; 
+  padding: 10px;
   margin: 10px auto;
-  max-width: 50%; 
-  min-height: 550px; 
-  background-color: #252E3C; 
+  max-width: 50%;
+  min-height: 550px;
+  background-color: #252e3c;
 }
 
 .preferences-settings-container > * {
-  width: 100%; 
+  width: 100%;
 }
 
 .settings-actions {
@@ -93,11 +93,11 @@
   .preferences-settings-container {
     flex-direction: column;
   }
-  
+
   .preferences-settings-container > * {
     max-width: 100%;
   }
-  
+
   .preferences-settings-age-container {
     margin: 20px 20px 0px 20px;
     width: 100%;
