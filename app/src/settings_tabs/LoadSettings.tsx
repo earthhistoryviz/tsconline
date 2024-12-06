@@ -11,7 +11,7 @@ import { xmlToJson } from "../state/parse-settings";
 import { CircularProgress } from "@mui/material";
 import { CustomTooltip, InputFileUpload } from "../components";
 import { useTranslation } from "react-i18next";
-import "./LoadSettings.css"; // Make sure to import your CSS file
+import "./LoadSettings.css";
 
 export default function LoadSettings() {
   const { actions } = useContext(context);
@@ -38,7 +38,7 @@ export default function LoadSettings() {
       return;
     }
     actions.pushSnackbar("Successfully loaded settings from " + file.name + "!", "success");
-    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4)); //remove extension
+    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4)); 
   }
 
   const handleClickOpen = () => {
