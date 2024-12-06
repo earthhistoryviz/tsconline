@@ -1,9 +1,7 @@
 import { Box, TextField, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { CustomDivider, TSCCheckbox } from "../components";
-import FormGroup from "@mui/material/FormGroup";
-import FormControlLabel from "@mui/material/FormControlLabel";
+import { CustomDivider } from "../components";
 import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
@@ -92,6 +90,8 @@ export const Time = observer(function Time() {
               FormHelperTextProps={{ style: { fontSize: "13px" } }}
             />
           </FormControl>
+        </Box>
+        <Box className="time-settings-age-container top-interval-container">
           <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
@@ -148,103 +148,6 @@ export const Time = observer(function Time() {
             onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
           />
         </Box>
-        <div className="time-settings-checkbox-container">
-          <FormGroup>
-            <FormControlLabel
-              name="skip-empty-columns"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setSkipEmptyColumns(e.target.checked, units)}
-                  checked={state.settings.timeSettings[units].skipEmptyColumns}
-                />
-              }
-              label={t("settings.time.checkboxs.skip-empty-columns")}
-            />
-            <FormControlLabel
-              name="mouse-over-info-checkbox"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setMouseOverPopupsEnabled(e.target.checked)}
-                  checked={state.settings.mouseOverPopupsEnabled}
-                />
-              }
-              label={t("settings.time.checkboxs.mouse-over-info")}
-            />
-            <FormControlLabel
-              name="global-priority-checkbox"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setEnablePriority(e.target.checked)}
-                  checked={state.settings.enablePriority}
-                />
-              }
-              label={t("settings.time.checkboxs.global-priority")}
-            />
-            <FormControlLabel
-              name="stage-background-checkbox"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setEnableColumnBackground(e.target.checked)}
-                  checked={state.settings.enableColumnBackground}
-                />
-              }
-              label={t("settings.time.checkboxs.stage-background")}
-            />
-            <FormControlLabel
-              name="enable-legend-checkbox"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setEnableChartLegend(e.target.checked)}
-                  checked={state.settings.enableChartLegend}
-                />
-              }
-              label={t("settings.time.checkboxs.enable-legend")}
-            />
-            <FormControlLabel
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setNoIndentPattern(e.target.checked)}
-                  checked={state.settings.noIndentPattern}
-                />
-              }
-              name="lithology-auto-indent-checkbox"
-              label={t("settings.time.checkboxs.lithology-auto-indent")}
-            />
-            <FormControlLabel
-              name="conserve-chart-checkbox"
-              control={<TSCCheckbox className="time-settings-checkbox" />}
-              label={t("settings.time.checkboxs.conserve-chart")}
-            />
-            <FormControlLabel
-              name="hide-block-labels-checkbox"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setEnableHideBlockLabel(e.target.checked)}
-                  checked={state.settings.enableHideBlockLabel}
-                />
-              }
-              label={t("settings.time.checkboxs.hide-block-labels")}
-            />
-            <FormControlLabel
-              name="use-suggested-age-spans"
-              control={
-                <TSCCheckbox
-                  className="time-settings-checkbox"
-                  onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
-                  checked={!state.settings.useDatapackSuggestedAge}
-                />
-              }
-              label={t("settings.time.checkboxs.use-suggested-age-spans")}
-            />
-          </FormGroup>
-        </div>
       </Box>
       <div className="generate-button-container">
         <TSCButton
