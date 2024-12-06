@@ -89,58 +89,63 @@
             "loading-datapacks": "加载数据包",
             "time": "这可能需要超过一分钟"
         },
+
         "settingsTabs": {
-            "Time": "选择时间区间",
-            "Column": "选择列",
-            "Search": "搜索",
-            "Font": "字体",
-            "Map Points": "地图",
-            "Datapacks": "选择数据包",
-            "General": "基础选项",
-            "Data Mining": "数据挖掘",
-            "Curve Drawing": "绘制曲线图",
-            "About": "关于",
-            "View Data": "查看数据",
-            "Discussion": "讨论",
-            "Warnings": "警告"
-        },
-        "settings": {
-            "settings-file": {
-                "load": "上传设置",
-                "save": "保存设置",
-                "load-dialog": {
+              "Time": "选择时间区间",
+              "Preferences": "選擇偏好",
+              "Column": "选择列",
+              "Search": "搜索",
+              "Font": "字体",
+              "Map Points": "地图",
+              "Datapacks": "选择数据包",
+              "General": "基础选项",
+              "Data Mining": "数据挖掘",
+              "Curve Drawing": "绘制曲线图",
+              "About": "关于",
+              "View Data": "查看数据",
+              "Discussion": "讨论",
+              "Warnings": "警告"
+            },
+            "settings": {
+              "time": {
+                "interval": {
+                  "top": "区间顶部",
+                  "base": "区间底部",
+                  "top-name": "年代/阶段 名称",
+                  "base-name": "年代/阶段 名称",
+                  "not-avaliable": "该时间单位无可选年代",
+                  "vertical-scale": "垂直比例（厘米 每 1",
+                  "helper-text": "区间底部年代应大于区间顶部年代"
+                }
+              },
+              "preferences": {
+                "checkboxs": {
+                  "skip-empty-columns": "在已选时间段内没有数据的列将不会被画出",
+                  "mouse-over-info": "鼠标移至目标上时显示详细信息",
+                  "global-priority": "启用优先级过滤",
+                  "stage-background": "启用事件列的背景",
+                  "enable-legend": "启用添加图例",
+                  "lithology-auto-indent": "禁用自动缩进岩性图案",
+                  "conserve-chart": "使用家谱绘图时节省图表空间（暂无该功能）",
+                  "hide-block-labels": "根据优先级隐藏组标签",
+                  "use-suggested-age-spans": "禁用数据包建议的时间区间"
+                },
+                "settings-file":{
+                  "load": "上传设置",
+                  "save": "保存设置",
+                  "load-dialog": {
                     "message": "这将覆盖你所做的任何更改！",
                     "cancel": "取消",
                     "load": "上传"
-                },
-                "save-dialog": {
+                  },
+                  "save-dialog": {
                     "message": "请输入文件名",
                     "cancel": "取消",
                     "save": "保存"
+                  }
                 }
-            },
-            "time": {
-                "interval": {
-                    "top": "区间顶部",
-                    "base": "区间底部",
-                    "top-name": "年代/阶段 名称",
-                    "base-name": "年代/阶段 名称",
-                    "not-avaliable": "该时间单位无可选年代",
-                    "vertical-scale": "垂直比例（厘米 每 1",
-                    "helper-text": "区间底部年代应大于区间顶部年代"
-                },
-                "checkboxs": {
-                    "skip-empty-columns": "在已选时间段内没有数据的列将不会被画出",
-                    "mouse-over-info": "鼠标移至目标上时显示详细信息",
-                    "global-priority": "启用优先级过滤",
-                    "stage-background": "启用事件列的背景",
-                    "enable-legend": "启用添加图例",
-                    "lithology-auto-indent": "禁用自动缩进岩性图案",
-                    "conserve-chart": "使用家谱绘图时节省图表空间（暂无该功能）",
-                    "hide-block-labels": "根据优先级隐藏组标签",
-                    "use-suggested-age-spans": "禁用数据包建议的时间区间"
-                }
-            },
+              },
+
             "column": {
                 "tooltip": {
                     "note-in-range": "数据不在所选时间区间内",

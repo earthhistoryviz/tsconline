@@ -8,15 +8,17 @@ import DialogTitle from "@mui/material/DialogTitle";
 import { useContext } from "react";
 import { context } from "../state";
 import { xmlToJson } from "../state/parse-settings";
-import { CircularProgress, IconButton } from "@mui/material";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { CircularProgress } from "@mui/material";
 import { CustomTooltip, InputFileUpload } from "../components";
-import "./LoadSettings.css";
 import { useTranslation } from "react-i18next";
+import "./LoadSettings.css"; // Make sure to import your CSS file
+
 export default function LoadSettings() {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   const [open, setOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
+
   async function loadSettings(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files) {
       actions.pushSnackbar("Failed to load settings: no files uploaded", "info");
@@ -46,6 +48,7 @@ export default function LoadSettings() {
   const handleClose = () => {
     setOpen(false);
   };
+
   const handleClick = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setIsLoading(true);
     await loadSettings(e);
@@ -58,7 +61,7 @@ export default function LoadSettings() {
       <div>
         {isLoading === false && (
           <InputFileUpload
-            text={t("settings.settings-file.load-dialog.load")}
+            text={t("settings.preferences.settings-file.load-dialog.load")}
             variant="text"
             onChange={(e) => {
               handleClick(e);
@@ -69,13 +72,13 @@ export default function LoadSettings() {
       </div>
     );
   };
-  const { t } = useTranslation();
+
   return (
     <>
-      <CustomTooltip title={t("settings.settings-file.load")}>
-        <IconButton className="icon-load-settings-button" onClick={handleClickOpen}>
-          <FileUploadIcon className="load-settings-button" />
-        </IconButton>
+      <CustomTooltip title={t("settings.preferences.settings-file.load")}>
+        <Button variant="contained" color="secondary" onClick={handleClickOpen} className="load-settings-button">
+          {t("settings.preferences.settings-file.load")}
+        </Button>
       </CustomTooltip>
 
       <Dialog
@@ -83,13 +86,13 @@ export default function LoadSettings() {
         onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
-        <DialogTitle>{t("settings.settings-file.load")}</DialogTitle>
+        <DialogTitle>{t("settings.preferences.settings-file.load")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{t("settings.settings-file.load-dialog.message")}</DialogContentText>
+          <DialogContentText>{t("settings.preferences.settings-file.load-dialog.message")}</DialogContentText>
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={handleClose}>
-            {t("settings.settings-file.load-dialog.cancel")}
+            {t("settings.preferences.settings-file.load-dialog.cancel")}
           </Button>
           <LoadButton />
         </DialogActions>
