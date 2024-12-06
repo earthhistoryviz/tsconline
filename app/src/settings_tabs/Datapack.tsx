@@ -197,6 +197,10 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
   };
   const numberOfDatapacks = datapacks.length;
   const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
+  const officialRowLimit =
+    isOfficial && (showAll || numberOfDatapacks <= visibleLimit)
+      ? { gridTemplateRows: `repeat(${(numberOfDatapacks / 2).toFixed(0)}, 1fr)` }
+      : {};
 
   return (
     <Box
@@ -213,7 +217,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
       </Box>
       <CustomDivider className={styles.divider} />
       {numberOfDatapacks !== 0 && (
-        <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`}>
+        <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
           {visibleDatapacks.map((datapack) => {
             const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
             return state.settingsTabs.datapackDisplayType === "rows" ? (

@@ -84,6 +84,10 @@
   line-height: 1.2em;
 }
 
+.switch {
+  color: "blue";
+}
+
 .back {
   flex-shrink: 0;
   width: 35px;
@@ -103,6 +107,40 @@
   flex-direction: row;
   gap: 10px;
   width: 100%;
+}
+.profilePencilEdit {
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+.changeDatapackFile {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  justify-content: space-between;
+}
+.fileName {
+  max-width: 100%;
+  overflow: hidden;
+  white-space: wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.fileUploadButton {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.editableDatapackImage {
+  cursor: pointer;
+}
+.editableDatapackImage:hover {
+  opacity: 0.8;
 }
 
 .ah {
@@ -129,7 +167,18 @@
   font-weight: 600;
   white-space: nowrap;
   margin-bottom: 8px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #c4c2c2;
+}
+.privacyContainer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.privacyIcon {
+  width: 1.1rem;
+  height: 1.1rem;
 }
 
 .dt {

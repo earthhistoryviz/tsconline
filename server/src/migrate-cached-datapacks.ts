@@ -36,7 +36,7 @@ try {
               title: datapack,
               storedFileName: file,
               isPublic: directory.includes("public"),
-              ...(!/workshop|server/.test(user) ? { uuid: user, type: "user" } : {})
+              ...(!/workshop|official/.test(user) ? { uuid: user, type: "user" } : {})
             });
             const datapackIndex: DatapackIndex = {};
             const successful = await loadDatapackIntoIndex(
@@ -79,6 +79,7 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     originalFileName: "originalFileName" in datapack ? datapack.originalFileName : "",
     storedFileName: "storedFileName" in datapack ? datapack.storedFileName : "",
     datapackImage: "datapackImage" in datapack ? datapack.datapackImage : "",
+    priority: "priority" in datapack ? datapack.priority : 0,
     ...partial
   };
   assertDatapackMetadata(metadata);

@@ -1,21 +1,35 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
-import { Autocomplete, Box, Button, IconButton, SvgIcon, TextField, Typography, useTheme } from "@mui/material";
-import { CustomDivider, TSCButton, TagButton } from "./components";
+import {
+  Autocomplete,
+  Avatar,
+  Badge,
+  Box,
+  Button,
+  IconButton,
+  SvgIcon,
+  TextField,
+  Typography,
+  useTheme
+} from "@mui/material";
+import { CustomDivider, InputFileUpload, TSCButton, TSCSwitch, TagButton } from "./components";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Discussion } from "./components/TSCDiscussion";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
-  BaseDatapackProps,
+  Datapack,
   DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
@@ -30,14 +44,21 @@ import { ErrorCodes } from "./util/error-codes";
 import {
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
-  getNavigationRouteForDatapackProfile
+  getNavigationRouteForDatapackProfile,
+  hasLeadingTrailingWhiteSpace
 } from "./state/non-action-util";
+import { Public, FileUpload, Lock } from "@mui/icons-material";
+import { checkDatapackValidity } from "./state/actions/util-actions";
+import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
+  // we need this because if a user refreshes the page, the metadata will be reset and we also
+  // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
+  const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
   const query = new URLSearchParams(useLocation().search);
   const fetchDatapack = () => {
     if (!id) return;
@@ -46,11 +67,16 @@ export const DatapackProfile = observer(() => {
   };
   const datapack = fetchDatapack();
   useEffect(() => {
-    if (datapack) actions.setEditableDatapackMetadata(datapack);
+    if (datapack && !isMetadataInitialized) {
+      actions.resetEditableDatapackMetadata(datapack);
+      setIsMetadataInitialized(true);
+    }
+  }, [query.get("type"), id, isMetadataInitialized, datapack]);
+  useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
-  }, [datapack]);
+  }, []);
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
@@ -74,6 +100,7 @@ export const DatapackProfile = observer(() => {
   ];
   const Content: React.FC = observer(() => (
     <>
+      <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
         <IconButton className={styles.back} onClick={() => navigate("/settings")}>
           <ArrowBackIcon className={styles.icon} />
@@ -98,7 +125,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <img className={styles.di} src={image} />
+        <DatapackImage id={datapack.title} image={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
@@ -111,6 +138,10 @@ export const DatapackProfile = observer(() => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (hasLeadingTrailingWhiteSpace(state.datapackProfilePage.editableDatapackMetadata?.title || "")) {
+      actions.pushError(ErrorCodes.DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE);
       return;
     }
     if (state.datapackProfilePage.editableDatapackMetadata) {
@@ -127,6 +158,7 @@ export const DatapackProfile = observer(() => {
         return;
       }
       const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      // if the title has changed, navigate to the new title
       if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
         navigate(
           getNavigationRouteForDatapackProfile(
@@ -153,6 +185,53 @@ export const DatapackProfile = observer(() => {
   );
 });
 
+type DatapackImageProps = {
+  image: string;
+  id: string;
+};
+const DatapackImage: React.FC<DatapackImageProps> = observer(({ id, image }) => {
+  const { state, actions } = useContext(context);
+  const profileImageRef = useRef<HTMLInputElement>(null);
+  const handleDatapackImageChange = async () => {
+    if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
+      const file = profileImageRef.current.files[0];
+      await actions.replaceUserProfileImageFile(id, file);
+    }
+  };
+  // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
+  const imageUrl = `${image}?ver=${state.datapackProfilePage.datapackImageVersion}`;
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.editableDatapackImage}>
+          <Badge
+            overlap="rectangular"
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            badgeContent={
+              <Avatar className={styles.profilePencilEdit} sx={{ backgroundColor: "button.main" }}>
+                <FileUpload fontSize="small" />
+              </Avatar>
+            }
+            onClick={() => {
+              if (profileImageRef.current) profileImageRef.current.click();
+            }}>
+            <img src={imageUrl} className={styles.di} />
+          </Badge>
+          <input
+            type="file"
+            accept=".png, .jpg, .jpeg"
+            ref={profileImageRef}
+            style={{ display: "none" }}
+            onChange={handleDatapackImageChange}
+          />
+        </Box>
+      ) : (
+        <img className={styles.di} src={imageUrl} />
+      )}
+    </>
+  );
+});
+
 type WarningTabProps = {
   count: number;
 };
@@ -168,7 +247,7 @@ const WarningsTab: React.FC<WarningTabProps> = ({ count }) => {
 
 type DatapackProfileContentProps = {
   index: number;
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, datapack }) => {
   switch (index) {
@@ -194,7 +273,7 @@ const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, 
   }
 };
 type AboutProps = {
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 const About: React.FC<AboutProps> = observer(({ datapack }) => {
   const { state, actions } = useContext(context);
@@ -208,13 +287,14 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
     };
   }, []);
   // for when user tries to navigate away with unsaved changes
-  useBlocker(
-    ({ currentLocation, nextLocation }) =>
+  useBlocker(({ currentLocation, nextLocation }) => {
+    return (
       isMountedRef &&
       state.datapackProfilePage.unsavedChanges &&
       currentLocation.pathname !== nextLocation.pathname &&
       !window.confirm(t("dialogs.confirm-changes.message"))
-  );
+    );
+  });
   // for when user tries to leave page with unsaved changes
   useEffect(() => {
     const handleBeforeUnload = (event: BeforeUnloadEvent) => {
@@ -234,7 +314,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
           <EditButtons
             unsavedChanges={state.datapackProfilePage.unsavedChanges}
-            resetForm={() => actions.setEditableDatapackMetadata(datapack)}
+            resetForm={() => actions.resetEditableDatapackMetadata(datapack)}
           />
         )}
         <div className={styles.ai}>
@@ -245,12 +325,15 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
+          <PublicField isPublic={datapack.isPublic} />
+        </div>
+        <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
           <Typography>{datapack.totalColumns}</Typography>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <Typography>{datapack.originalFileName}</Typography>
+          <DatapackFile id={datapack.title} fileName={datapack.originalFileName} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
@@ -267,6 +350,73 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         <Contact contact={datapack.contact} />
       </div>
     </Box>
+  );
+});
+type PublicFieldProps = {
+  isPublic: boolean;
+};
+const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
+  const { state, actions } = useContext(context);
+  const PrivateComp = () => (
+    <>
+      <Lock className={styles.privacyIcon} />
+      <Typography>{"Private"}</Typography>
+    </>
+  );
+  const PublicComp = () => (
+    <>
+      <Public className={styles.privacyIcon} />
+      <Typography>{"Public"}</Typography>
+    </>
+  );
+  return (
+    <>
+      <Typography className={styles.aih}>Privacy</Typography>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.privacyContainer}>
+          <PrivateComp />
+          <TSCSwitch
+            checked={state.datapackProfilePage.editableDatapackMetadata?.isPublic}
+            onChange={(e) => {
+              actions.updateEditableDatapackMetadata({ isPublic: e.target.checked });
+            }}
+          />
+          <PublicComp />
+        </Box>
+      ) : (
+        <Box className={styles.privacyContainer}>{isPublic ? <PublicComp /> : <PrivateComp />}</Box>
+      )}
+    </>
+  );
+});
+type DatapackFileProps = {
+  fileName: string;
+  id: string;
+};
+
+const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
+  const { state, actions } = useContext(context);
+  const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !checkDatapackValidity(file)) return;
+    await actions.replaceUserDatapackFile(id, file);
+  };
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.changeDatapackFile}>
+          <Typography className={styles.fileName}>{fileName}</Typography>
+          <InputFileUpload
+            startIcon={<FileUpload />}
+            text="Change Datapack File"
+            onChange={handleFileUpload}
+            accept=".dpk, .mdpk, .txt, .zip"
+          />
+        </Box>
+      ) : (
+        <Typography className={styles.fileName}>{fileName}</Typography>
+      )}
+    </>
   );
 });
 
@@ -353,6 +503,7 @@ const Description: React.FC<DescriptionProps> = observer(({ description }) => {
           required
           multiline
           placeholder="A brief description of the data"
+          inputProps={{ maxLength: MAX_DATAPACK_DESC_LENGTH }}
           minRows={7}
         />
       ) : (
@@ -377,6 +528,7 @@ const Contact: React.FC<ContactProps> = observer(({ contact }) => {
             fullWidth
             multiline
             placeholder="Who can be contacted for more information"
+            inputProps={{ maxLength: MAX_DATAPACK_CONTACT_LENGTH }}
             minRows={3}
           />
         </>
@@ -407,6 +559,7 @@ const Notes: React.FC<NotesProps> = observer(({ notes }) => {
             fullWidth
             placeholder="Any additional notes for use of generating charts for this datapack"
             multiline
+            inputProps={{ maxLength: MAX_DATAPACK_NOTES_LENGTH }}
             minRows={3}
           />
         </>
@@ -526,7 +679,7 @@ export const DatapackWarningAlert: React.FC<DatapackWarningProps> = ({ warning }
 };
 
 type ViewDataProps = {
-  datapack: BaseDatapackProps;
+  datapack: Datapack;
 };
 
 const ViewData: React.FC<ViewDataProps> = observer(({ datapack }) => {

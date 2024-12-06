@@ -25,22 +25,6 @@ export type SharedUser = {
   uuid: string;
 };
 
-export type DatapackMetadata = {
-  description: string;
-  title: string;
-  originalFileName: string;
-  storedFileName: string;
-  size: string;
-  date?: string;
-  authoredBy: string;
-  tags: string[];
-  references: string[];
-  isPublic: boolean;
-  contact?: string;
-  notes?: string;
-  datapackImage?: string;
-} & DatapackType;
-
 export type AdminSharedUser = {
   userId: number;
   uuid: string;
@@ -63,6 +47,36 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
+type OfficialDatapack = {
+  type: "official";
+};
+type WorkshopDatapack = {
+  type: "workshop";
+};
+type UserDatapack = {
+  type: "user";
+  uuid: string;
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
+export type DatapackTypeString = DatapackType["type"];
+
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  originalFileName: string;
+  storedFileName: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  isPublic: boolean;
+  contact?: string;
+  notes?: string;
+  datapackImage?: string;
+  priority: number;
+} & DatapackType;
+
 export type BaseDatapackProps = {
   columnInfo: ColumnInfo;
   ageUnits: string;
@@ -76,21 +90,9 @@ export type BaseDatapackProps = {
   columnTypeCount: ColumnTypeCounter;
   datapackImageCount: number;
   mapPack: MapPack; // this can be empty
-} & DatapackMetadata;
+};
 
-type OfficialDatapack = {
-  type: "official";
-};
-type WorkshopDatapack = {
-  type: "workshop";
-};
-type UserDatapack = {
-  type: "user";
-  uuid: string;
-};
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
-export type DatapackTypeString = DatapackType["type"];
-export type Datapack = BaseDatapackProps;
+export type Datapack = DatapackMetadata & BaseDatapackProps;
 
 export type PresetDatapack = {
   file: string;
@@ -103,6 +105,10 @@ export type DatapackWarning = {
   message?: string;
   warning: string;
 };
+
+export type DatapackUniqueIdentifier = {
+  title: string;
+} & DatapackType;
 
 export type ChartErrorResponse = {
   error: string;
@@ -583,8 +589,62 @@ export type TimescaleItem = {
   key: string;
   value: number;
 };
+export type DatapackPriorityChangeRequest = {
+  uuid: DatapackType["type"];
+  id: string;
+  priority: number;
+};
+export type DatapackPriorityPartialUpdateSuccess = {
+  error: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+  failedRequests: DatapackPriorityChangeRequest[];
+};
+export type DatapackPriorityUpdateSuccess = {
+  message: string;
+  completedRequests: DatapackPriorityChangeRequest[];
+};
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
+  if (typeof o.message !== "string") throwError("DatapackPriorityUpdateSuccess", "message", "string", o.message);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+}
+export function assertDatapackPriorityPartialUpdateSuccess(o: any): asserts o is DatapackPriorityPartialUpdateSuccess {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityPartialUpdateSuccess must be a non-null object");
+  if (typeof o.error !== "string") throwError("DatapackPriorityPartialUpdateSuccess", "error", "string", o.error);
+  assertDatapackPriorityChangeRequestArray(o.completedRequests);
+  assertDatapackPriorityChangeRequestArray(o.failedRequests);
+}
+
+export function assertDatapackPriorityChangeRequestArray(o: any): asserts o is DatapackPriorityChangeRequest[] {
+  if (!Array.isArray(o)) throw new Error("DatapackPriorityChangeRequest must be an array");
+  for (const request of o) {
+    assertDatapackPriorityChangeRequest(request);
+  }
+}
+
+export function assertDatapackPriorityChangeRequest(o: any): asserts o is DatapackPriorityChangeRequest {
+  if (!o || typeof o !== "object") throw new Error("DatapackPriorityChangeRequest must be a non-null object");
+  assertDatapackTypeString(o.uuid);
+  if (typeof o.id !== "string") throwError("DatapackPriorityChangeRequest", "id", "string", o.id);
+  if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
+}
+
+export type BatchUpdateServerPartialError = {
+  message: string;
+  errors: string[];
+};
+
+export function assertBatchUpdateServerPartialError(o: any): asserts o is BatchUpdateServerPartialError {
+  if (!o || typeof o !== "object") throw new Error("BatchUpdateServerPartialError must be a non-null object");
+  if (typeof o.message !== "string") throwError("BatchUpdateServerPartialError", "message", "string", o.message);
+  if (!Array.isArray(o.errors)) throwError("BatchUpdateServerPartialError", "errors", "array", o.errors);
+  for (const error of o.errors) {
+    if (typeof error !== "string") throwError("BatchUpdateServerPartialError", "errors", "string", error);
+  }
+}
 
 export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (!o || typeof o !== "object") throw new Error("Workshop must be a non-null object");
@@ -995,7 +1055,9 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
     "date",
     "references",
     "contact",
-    "notes"
+    "notes",
+    "isPublic",
+    "priority"
   ];
   for (const key in o) {
     if (!validKeys.includes(key)) {
@@ -1014,6 +1076,8 @@ export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata
   if ("contact" in o && typeof o.contact !== "string") return false;
   if ("notes" in o && typeof o.notes !== "string") return false;
   if ("datapackImage" in o && typeof o.datapackImage !== "string") return false;
+  if ("isPublic" in o && typeof o.isPublic !== "boolean") return false;
+  if ("priority" in o && typeof o.priority !== "number") return false;
   return true;
 }
 export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
@@ -1040,6 +1104,8 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
+  if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
+  assertDatapackType(o);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
   if (!Array.isArray(o)) throw new Error("DatapackMetadata must be an array");
@@ -1094,8 +1160,8 @@ export function assertTransects(o: any): asserts o is Transects {
 export function assertDatapack(o: any): asserts o is Datapack {
   if (!o || typeof o !== "object") throw new Error("Datapack must be a non-null object");
   if (typeof o.type !== "string") throwError("Datapack", "type", "string", o.type);
-  assertDatapackType(o);
   assertBaseDatapackProps(o);
+  assertDatapackMetadata(o);
 }
 export function isOfficialDatapack(o: any): o is OfficialDatapack {
   return o.type === "official";
@@ -1193,8 +1259,6 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if (typeof o.datapackImageCount !== "number")
     throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
-  assertDatapackMetadata(o);
-  assertDatapackType(o);
 }
 
 export function assertPresetDatapack(o: any): asserts o is PresetDatapack {

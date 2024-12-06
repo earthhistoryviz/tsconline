@@ -7,13 +7,7 @@ import "ag-grid-community/styles/ag-theme-quartz.css";
 import { ColDef } from "ag-grid-community";
 import { Box, Divider, Typography, useTheme } from "@mui/material";
 import { AdminAddUserForm } from "./AdminAddUserForm";
-import {
-  AdminSharedUser,
-  DatapackIndex,
-  BaseDatapackProps,
-  assertAdminSharedUser,
-  isUserDatapack
-} from "@tsconline/shared";
+import { AdminSharedUser, DatapackIndex, assertAdminSharedUser, isUserDatapack, Datapack } from "@tsconline/shared";
 import { TSCButton } from "../components";
 import { isOwnedByUser } from "../state/non-action-util";
 import React from "react";
@@ -168,7 +162,7 @@ type AdminDatapackDetailsProps = {
 const AdminDatapackDetails: React.FC<AdminDatapackDetailsProps> = observer(({ datapackIndex }) => {
   const theme = useTheme();
   const { actions, state } = useContext(context);
-  const gridRef = useRef<AgGridReact<BaseDatapackProps>>(null);
+  const gridRef = useRef<AgGridReact<Datapack>>(null);
   /**
    * delete selected datapacks then refetch the user's datapacks
    * @returns

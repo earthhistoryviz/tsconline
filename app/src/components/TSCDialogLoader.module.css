@@ -1,0 +1,29 @@
+.loader {
+  align-items: center;
+  text-align: center;
+  justify-content: center;
+  margin: 10px;
+  display: flex;
+  flex-direction: column;
+}
+.loading {
+  font-size: 30px;
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1;
+  grid-row: 3;
+  font-weight: 600;
+  margin: 0px;
+}
+.dd {
+  max-width: 100vw;
+  margin: 0px;
+}
+.loadingSub {
+  font-size: 14px;
+  padding: 8px;
+  border-radius: 4px;
+  line-height: 1;
+  grid-row: 4;
+  margin: 2px;
+}

@@ -21,3 +21,13 @@
 .szh-menu-container.settings-sub-menu > .szh-menu {
   min-width: 130px;
 }
+
+.nav-bar-menu-mobile {
+  width: 200px;
+  justify-content: center;
+  align-items: center;
+}
+.nav-bar-menu-list-item {
+  padding-left: 0px;
+  padding-right: 0px;
+}

@@ -1,14 +1,20 @@
-import { Datapack, DatapackConfigForChartRequest, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
+import { Datapack, DatapackUniqueIdentifier, isOfficialDatapack, isUserDatapack } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 
-export function getDatapackFromArray(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
-export function doesDatapackAlreadyExist(datapack: DatapackConfigForChartRequest, datapacks: Datapack[]) {
+export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
 }
-export function compareExistingDatapacks(a: DatapackConfigForChartRequest, b: DatapackConfigForChartRequest) {
+export function doesDatapackExistInCurrentConfig(
+  datapack: DatapackUniqueIdentifier,
+  datapacks: DatapackUniqueIdentifier[]
+) {
+  return !!datapacks.find((d) => compareExistingDatapacks(d, datapack));
+}
+export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: DatapackUniqueIdentifier) {
   return (
     a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
   );
@@ -20,7 +26,7 @@ export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
 export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
-  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic);
+  return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
 export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
@@ -62,4 +68,8 @@ export function formatDate(input: string | dayjs.Dayjs): string {
   });
 
   return `${datePart} at ${timePart}`;
+}
+
+export function hasLeadingTrailingWhiteSpace(input: string) {
+  return input.trim() !== input;
 }

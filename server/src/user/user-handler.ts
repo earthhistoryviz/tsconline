@@ -1,8 +1,12 @@
 import { access, readFile, rename, rm, writeFile } from "fs/promises";
 import path from "path";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
-import { assetconfigs, verifyFilepath } from "../util.js";
-import { Datapack, DatapackMetadata, assertDatapack } from "@tsconline/shared";
+import {
+  CACHED_USER_DATAPACK_FILENAME,
+  DATAPACK_PROFILE_PICTURE_FILENAME,
+  DECRYPTED_DIRECTORY_NAME
+} from "../constants.js";
+import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
+import { Datapack, DatapackMetadata, assertDatapack, isDateValid } from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -12,8 +16,17 @@ import {
   getDirectories,
   getPrivateUserUUIDDirectory
 } from "./fetch-user-files.js";
+import { Multipart, MultipartFile } from "@fastify/multipart";
+import { findUser } from "../database.js";
+import { OperationResult, User } from "../types.js";
+import {
+  changeProfilePicture,
+  getTemporaryFilepath,
+  replaceDatapackFile,
+  uploadFileToFileSystem
+} from "../upload-handlers.js";
+import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
 import _ from "lodash";
-import { MultipartFile } from "@fastify/multipart";
 
 /**
  * TODO: WRITE TESTS
@@ -99,7 +112,7 @@ export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
 export async function getUploadedDatapackFilepath(uuid: string, datapack: string): Promise<string> {
   const directory = await fetchUserDatapackDirectory(uuid, datapack);
   const metadata = await fetchUserDatapack(uuid, datapack);
-  const uploadedFilepath = path.join(directory, metadata.originalFileName);
+  const uploadedFilepath = path.join(directory, metadata.storedFileName);
   if (!(await verifyFilepath(uploadedFilepath))) {
     throw new Error("Invalid filepath");
   }
@@ -125,30 +138,22 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
 
 /**
  * rename a user datapack which means we have to rename the folder and the file metadata (the key only)
- * also updates the datapack with a new datapack object
  * @param uuid the uuid of the user
  * @param oldDatapack the old datapack title
  * @param datapack the new datapack object
  */
-export async function renameUserDatapack(uuid: string, oldDatapack: string, datapack: Datapack): Promise<void> {
+export async function renameUserDatapack(uuid: string, oldDatapack: string, newDatapack: string): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
-  const oldDatapackMetadata = await fetchUserDatapack(uuid, oldDatapack);
-  const newDatapackPath = path.join(path.dirname(oldDatapackPath), datapack.title);
+  const newDatapackPath = path.join(path.dirname(oldDatapackPath), newDatapack);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
     throw new Error("Invalid filepath");
   }
-  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, datapack.title)) {
+  if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, newDatapack)) {
     throw new Error("Datapack with that title already exists");
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await writeUserDatapack(uuid, datapack).catch(async (e) => {
-    await rename(newDatapackPath, oldDatapackPath);
-    throw e;
-  });
   await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
     await rename(newDatapackPath, oldDatapackPath);
-    // revert the write if the metadata change fails
-    await writeUserDatapack(uuid, oldDatapackMetadata);
     throw e;
   });
 }
@@ -163,15 +168,79 @@ export async function editDatapack(
   uuid: string,
   oldDatapackTitle: string,
   newDatapack: Partial<DatapackMetadata>
-): Promise<void> {
-  const metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
-  const originalTitle = _.clone(metadata.title);
+): Promise<string[]> {
+  let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
+  const originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
-  if ("title" in newDatapack && originalTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, originalTitle, metadata);
-  } else {
-    await writeUserDatapack(uuid, metadata);
+  const errors: string[] = [];
+  if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
+    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!).catch((e) => {
+      logger.error(e);
+      metadata.title = oldDatapackTitle;
+      errors.push("Error renaming datapack to a different title");
+    });
   }
+  if ("originalFileName" in newDatapack) {
+    const sourceFilepath = await getTemporaryFilepath(uuid, metadata.storedFileName);
+    // check to see if a temp file was uploaded
+    if (await verifyFilepath(sourceFilepath)) {
+      // this changes the storedFileName as well so we need to update the metadata
+      metadata = await replaceDatapackFile(uuid, sourceFilepath, metadata).catch((e) => {
+        console.error(e);
+        logger.error(e);
+        errors.push("Error replacing datapack file");
+        return {
+          ...metadata,
+          originalFileName: originalMetadata.originalFileName,
+          size: originalMetadata.size,
+          storedFileName: originalMetadata.storedFileName
+        };
+      });
+    } else {
+      metadata = {
+        ...metadata,
+        originalFileName: originalMetadata.originalFileName,
+        size: originalMetadata.size,
+        storedFileName: originalMetadata.storedFileName
+      };
+      errors.push("No file uploaded with edit request");
+    }
+  }
+  if ("datapackImage" in newDatapack) {
+    const sourceFilepath = await getTemporaryFilepath(uuid, newDatapack.datapackImage!);
+    // check to see if a temp file was uploaded
+    if (await verifyFilepath(sourceFilepath)) {
+      await changeProfilePicture(
+        uuid,
+        oldDatapackTitle,
+        await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
+      ).catch((e) => {
+        logger.error(e);
+        metadata.datapackImage = originalMetadata.datapackImage;
+        errors.push("Error changing profile picture");
+      });
+    } else {
+      metadata.datapackImage = originalMetadata.datapackImage;
+      errors.push("No file uploaded with edit request");
+    }
+  }
+  if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
+      (e) => {
+        console.error(e);
+        logger.error(e);
+        metadata.isPublic = originalMetadata.isPublic;
+        errors.push("Error switching privacy settings");
+      }
+    );
+  }
+  if (JSON.stringify(metadata) !== JSON.stringify(originalMetadata)) {
+    await writeUserDatapack(uuid, metadata).catch((e) => {
+      logger.error(e);
+      errors.push("Error writing metadata");
+    });
+  }
+  return errors;
 }
 
 /**
@@ -206,7 +275,22 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
     throw new Error("Invalid filepath");
   }
   await rm(datapackPath, { recursive: true, force: true });
-  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath);
+  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
+    logger.error(e);
+  });
+}
+
+export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {
+  const datapackFilepath = await getUploadedDatapackFilepath(uuid, datapack).catch((e) => {
+    logger.error(e);
+  });
+  if (!datapackFilepath) {
+    return;
+  }
+  const parentDir = path.dirname(datapackFilepath);
+  const decrypted = path.join(parentDir, DECRYPTED_DIRECTORY_NAME, path.parse(datapackFilepath).name);
+  await rm(datapackFilepath, { force: true });
+  await rm(decrypted, { recursive: true, force: true });
 }
 
 /**
@@ -220,6 +304,13 @@ export async function deleteOfficialDatapack(datapack: string): Promise<void> {
     throw new Error("Invalid filepath");
   }
   await rm(datapackPath, { recursive: true, force: true });
+}
+
+export function canUserUploadThisFile(user: User, file: MultipartFile) {
+  if (user.isAdmin || user.accountType === "pro") {
+    return true;
+  }
+  return file.file.bytesRead <= 3000;
 }
 
 /**
@@ -305,4 +396,118 @@ export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
     (file.mimetype === "image/png" || file.mimetype === "image/jpeg" || file.mimetype === "image/jpg") &&
     /^(\.png|\.jpg|\.jpeg)$/.test(path.extname(file.filename))
   );
+}
+
+export async function processEditDatapackRequest(
+  formData: AsyncIterableIterator<Multipart>,
+  uuid: string
+): Promise<OperationResult | { code: number; fields: Record<string, string>; tempFiles: string[] }> {
+  const users = await findUser({ uuid });
+  const user = users[0];
+  if (!user) {
+    return { code: 401, message: "User not found" };
+  }
+  const fields: Record<string, string> = {};
+  let datapackImageFilepath: string | undefined;
+  const cleanupTempFiles = async () => {
+    if (datapackImageFilepath) {
+      await rm(datapackImageFilepath, { force: true });
+    }
+    if (fields.filepath) {
+      await rm(fields.filepath, { force: true });
+    }
+  };
+  for await (const part of formData) {
+    if (part.type === "file") {
+      if (part.fieldname === "datapack") {
+        if (!checkFileTypeIsDatapack(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack" };
+        }
+        if (!canUserUploadThisFile(user, part)) {
+          await cleanupTempFiles();
+          return { code: 413, message: "File is too large" };
+        }
+        fields.storedFileName = makeTempFilename(part.filename);
+        fields.originalFileName = part.filename;
+        fields.filepath = await getTemporaryFilepath(uuid, fields.storedFileName);
+        fields.size = getBytes(part.file.bytesRead);
+        const { code, message } = await uploadFileToFileSystem(part, fields.filepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+        if (!checkFileTypeIsDatapackImage(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack image" };
+        }
+        fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(part.filename);
+        datapackImageFilepath = await getTemporaryFilepath(uuid, fields.datapackImage);
+        const { code, message } = await uploadFileToFileSystem(part, datapackImageFilepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
+    }
+  }
+  const tempFiles: string[] = [];
+  if (fields.filepath) {
+    tempFiles.push(fields.filepath);
+  }
+  if (datapackImageFilepath) {
+    tempFiles.push(datapackImageFilepath);
+  }
+  if (Object.keys(fields).length === 0) {
+    return { code: 400, message: "No fields provided" };
+  }
+  return { code: 200, fields, tempFiles };
+}
+
+/**
+ * Since the fields are strings that we receive from a request, we need to convert them to the correct types (arrays)
+ */
+export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fields: Record<string, string>) {
+  const partial: Partial<DatapackMetadata> = {};
+
+  for (const key in fields) {
+    const value = fields[key]!;
+    switch (key) {
+      case "isPublic":
+        partial.isPublic = fields[key] === "true";
+        break;
+      case "date":
+        if (!isDateValid(value)) {
+          throw new Error("Invalid date");
+        }
+      // eslint-disable-next-line no-fallthrough
+      case "title":
+        if (value.trim() !== value) {
+          throw new Error("Invalid title");
+        }
+      // eslint-disable-next-line no-fallthrough
+      case "description":
+      case "authoredBy":
+      case "contact":
+      case "notes":
+      case "originalFileName":
+      case "storedFileName":
+      case "datapackImage":
+        partial[key] = value;
+        break;
+      case "references":
+      case "tags": {
+        partial[key] = JSON.parse(value);
+        const array = partial[key];
+        if (!array || !Array.isArray(array) || !array.every((ref) => typeof ref === "string")) {
+          throw new Error("References and tags must be valid arrays");
+        }
+        break;
+      }
+    }
+  }
+  return partial;
 }
