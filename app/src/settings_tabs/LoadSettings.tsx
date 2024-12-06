@@ -38,7 +38,7 @@ export default function LoadSettings() {
       return;
     }
     actions.pushSnackbar("Successfully loaded settings from " + file.name + "!", "success");
-    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4)); 
+    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4));
   }
 
   const handleClickOpen = () => {

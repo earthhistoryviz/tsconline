@@ -5,7 +5,7 @@
   justify-content: space-between; /* Add space between children */
   border: 1px solid gray;
   border-radius: 4px;
-  padding: 10px; 
+  padding: 10px;
   margin: 10px auto;
   max-width: 50%; /* Adjust width if necessary */
   min-height: 350px; /* Set a minimum height to make the container longer */
@@ -19,9 +19,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px; 
+  padding: 12px;
   max-width: 700px;
-  margin: 10px 0px; 
+  margin: 10px 0px;
 }
 .IntervalLabel {
   margin-bottom: 2px;
