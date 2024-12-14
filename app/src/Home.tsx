@@ -5,7 +5,8 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box } from "@mui/material";
+import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution } from "./components";
 import "./Home.css";
@@ -14,6 +15,7 @@ import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
 import DownArrow from "./assets/icons/down-arrow.json";
+import { useTransition, animated } from "@react-spring/web";
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
@@ -35,7 +37,7 @@ export const Home = observer(function Home() {
   };
   return (
     <div className="whole_page">
-      <Box className="header-section-landing-page" sx={{ backgroundColor: "secondaryBackground.main" }}>
+      <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
             <Typography variant="h2" fontWeight="700">
@@ -70,6 +72,7 @@ export const Home = observer(function Home() {
           </Box>
         </Box>
       </Box>
+      <Carousel />
       <Box ref={presetsRef}>
         {Object.entries(state.presets).map(([type, configArray]) => {
           return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
@@ -89,9 +92,101 @@ export const Home = observer(function Home() {
         </TSCButton>
       </div>
       <Attribution>
-      <a href="https://iconscout.com/lottie-animations/down-arrow" className="text-underline font-size-sm" target="_blank">Down Arrow</a> by <a href="https://iconscout.com/contributors/graphic-room" className="text-underline font-size-sm" target="_blank">Venus</a>
+        <a href="https://iconscout.com/lottie-animations/down-arrow" className="text-underline font-size-sm">
+          Down Arrow
+        </a>{" "}
+        by{" "}
+        <a href="https://iconscout.com/contributors/graphic-room" className="text-underline font-size-sm">
+          Venus
+        </a>
       </Attribution>
     </div>
+  );
+});
+const Carousel = observer(function Carousel() {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [direction, setDirection] = useState("right");
+  const [isAnimating, setIsAnimating] = useState(false);
+  const transitions = useTransition(activeIndex, {
+    keys: activeIndex,
+    from: {
+      opacity: 0,
+      transform: direction === "right" ? "translateX(100%)" : "translateX(-100%)"
+    },
+    enter: { opacity: 1, transform: "translateX(0%)" },
+    leave: {
+      opacity: 0,
+      transform: direction === "right" ? "translateX(-100%)" : "translateX(100%)"
+    },
+    config: { duration: 500 },
+    onStart: () => {
+      setIsAnimating(true);
+    },
+    onRest: () => {
+      setIsAnimating(false);
+    }
+  });
+  const carouselContent = [
+    {
+      title: "Title 1",
+      description: "Description 1",
+      image: "map-points-example.png"
+    },
+    {
+      title: "Title 2",
+      description: "Description 2",
+      image: "image2.png"
+    },
+    {
+      title: "Title 3",
+      description: "Description 3",
+      image: "image3.png"
+    }
+  ];
+  const onNext = () => {
+    if (isAnimating) return;
+    setDirection("right");
+    setActiveIndex((activeIndex + 1) % carouselContent.length);
+  };
+  const onPrevious = () => {
+    if (isAnimating) return;
+    setDirection("left");
+    setActiveIndex((activeIndex - 1 + carouselContent.length) % carouselContent.length);
+  };
+  return (
+    <Box className="home-landing-page-carousel-container">
+      {transitions((style, index) => (
+        <animated.div
+          className="home-landing-page-carousel"
+          style={{
+            ...style,
+            position: "absolute",
+            width: "100%",
+            height: "100%"
+          }}>
+          <Box className="home-landing-page-carousel-text">
+            <Typography variant="h3" fontWeight="700">
+              {carouselContent[index].title}
+            </Typography>
+            <Typography>{carouselContent[index].description}</Typography>
+          </Box>
+          <Box className="home-landing-page-carousel-image-container">
+            <img
+              loading="lazy"
+              className="home-landing-page-carousel-image"
+              src={devSafeUrl(`/public/website-images/${carouselContent[index].image}`)}
+              alt={carouselContent[index].title}
+            />
+          </Box>
+        </animated.div>
+      ))}
+      <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious}>
+        <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
+      </IconButton>
+      <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext}>
+        <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
+      </IconButton>
+    </Box>
   );
 });
 
