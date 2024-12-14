@@ -109,7 +109,14 @@
 .sub-header-section-landing-page-image {
   width: 100%;
 }
-.sub-header-section-landing-page {
+.home-landing-page-carousel-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sub-header-section-landing-page,
+.home-landing-page-carousel {
   display: grid;
   grid-template-columns: 1fr 1fr;
   justify-content: center;
@@ -118,15 +125,47 @@
   height: 100%;
   padding-left: 5vw;
   gap: 5vw;
-  padding: 10%;
+  padding: 8%;
   padding-bottom: 4vh;
 }
-.sub-header-section-landing-page-text {
+.home-landing-page-carousel-container {
+  position: relative;
+  height: 75vh;
+}
+.home-landing-page-carousel:hover {
+  transform: translateY(-10px) scale(1.03);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.home-landing-page-carousel {
+  transition: box-shadow 0.3s ease;
+}
+.sub-header-section-landing-page-text,
+.home-landing-page-carousel-text {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
-.sub-header-section-landing-page-description {
+.home-landing-page-carousel-left-arrow {
+  position: absolute;
+  left: 1%;
+  top: 50%;
+  cursor: pointer;
+  color: black;
+}
+.home-landing-page-carousel-right-arrow {
+  position: absolute;
+  right: 1%;
+  top: 50%;
+  cursor: pointer;
+  color: black;
+}
+.home-landing-page-carousel-left-arrow-icon,
+.home-landing-page-carousel-right-arrow-icon {
+  font-size: 3rem;
+}
+
+.sub-header-section-landing-page-description,
+.home-landing-page-carousel-description {
   font-size: 1.2rem;
 }
 .get-started-landing-page {
