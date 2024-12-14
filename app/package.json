@@ -13,6 +13,7 @@
     "@nivo/core": "^0.87.0",
     "@nivo/pie": "^0.87.0",
     "@react-oauth/google": "^0.12.1",
+    "@react-spring/web": "^9.7.5",
     "@szhsin/react-menu": "4.2.2",
     "@tsconline/shared": "1.0.0",
     "ag-grid-community": "^32.0.1",

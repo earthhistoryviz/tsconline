@@ -172,7 +172,7 @@ export const NotImplemented: React.FC = () => {
 
 export const Attribution = ({ children }: { children: React.ReactNode }) => {
   return <div className={styles.attribution}>{children}</div>;
-}
+};
 
 export const CheckIcon = () => {
   const theme = useTheme();
