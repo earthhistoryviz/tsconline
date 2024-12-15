@@ -1,26 +1,13 @@
 import { useContext, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
-import {
-  Drawer,
-  IconButton,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemIcon,
-  ListItemText,
-  Tab,
-  Tabs,
-  Typography,
-  useMediaQuery
-} from "@mui/material";
+import { IconButton, Tab, Tabs, Typography } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
-import { Menu as MenuIcon, AccountCircle, TableChart, Dataset, Help, Campaign } from "@mui/icons-material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
@@ -42,7 +29,6 @@ import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
 import Divider from "@mui/material/Divider";
-import LanguageIcon from "@mui/icons-material/Language";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -58,46 +44,30 @@ export const NavBar = observer(function Navbar() {
   const navigate = useNavigate();
   const settingsRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { anchorProps, hoverProps } = useHover(settingsMenuState.state, settingsMenuToggle);
-  const [menuDrawerOpen, setMenuDrawerOpen] = React.useState(false);
   const { t } = useTranslation();
-
   const location = useLocation();
-
-  const menuItems = [
-    { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset /> },
-    { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
-    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircleIcon /> },
-    { label: t("navBar.help"), path: "/help", icon: <Help /> },
-    { label: t("navBar.about"), path: "/about", icon: <Campaign /> }
-  ];
-  const onButtonClick = (path: string) => {
-    navigate(path);
-    setMenuDrawerOpen(false);
-  };
-
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
-        {!isMobile && (
+        <Link to="/">
+          <IconButton
+            size="large"
+            sx={{
+              "&:hover": {
+                opacity: 0.9
+              }
+            }}
+            value={0}
+            onClick={() => {
+              actions.setTab(0);
+              actions.setUseCache(true);
+            }}>
+            <HomeIcon sx={{ color: "button.light" }} />
+          </IconButton>
+        </Link>
+        {
           <>
-            <Link to="/">
-              <IconButton
-                size="large"
-                sx={{
-                  "&:hover": {
-                    opacity: 0.9
-                  }
-                }}
-                value={0}
-                onClick={() => {
-                  actions.setTab(0);
-                  actions.setUseCache(true);
-                }}>
-                <HomeIcon sx={{ color: "button.light" }} />
-              </IconButton>
-            </Link>
             <Tabs
               value={state.tab !== 0 ? state.tab : false}
               onChange={(_e, value) => {
@@ -161,46 +131,7 @@ export const NavBar = observer(function Navbar() {
               ))}
             </ControlledMenu>
           </>
-        )}
-        {isMobile && (
-          <>
-            <IconButton onClick={() => setMenuDrawerOpen(true)}>
-              <MenuIcon />
-            </IconButton>
-            <Drawer
-              anchor="left"
-              PaperProps={{
-                sx: {
-                  borderRight: "2px solid",
-                  borderColor: "divider",
-                  bgcolor: theme.palette.dark.main,
-                  backgroundImage: "linear-gradient(rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.15))"
-                }
-              }}
-              open={menuDrawerOpen}
-              onClose={() => setMenuDrawerOpen(false)}>
-              <List className="nav-bar-menu-mobile">
-                <ListItem key={-1} className="nav-bar-menu-list-item">
-                  <ListItemButton onClick={() => onButtonClick("/")}>
-                    <ListItemIcon sx={{ color: "dark.contrastText" }}>
-                      <HomeIcon />
-                    </ListItemIcon>
-                    <ListItemText primary={t("navBar.home")} sx={{ color: "dark.contrastText" }} />
-                  </ListItemButton>
-                </ListItem>
-                {menuItems.map((menuItem, index) => (
-                  <ListItem key={index} className="nav-bar-menu-list-item" onClick={() => onButtonClick(menuItem.path)}>
-                    <ListItemButton>
-                      <ListItemIcon sx={{ color: "dark.contrastText" }}>{menuItem.icon}</ListItemIcon>
-                      <ListItemText primary={menuItem.label} sx={{ color: "dark.contrastText" }} />
-                    </ListItemButton>
-                  </ListItem>
-                ))}
-              </List>
-              <LanguageMenu />
-            </Drawer>
-          </>
-        )}
+        }
         <div style={{ flexGrow: 1 }} />
         <TSCButton
           buttonType="gradient"
@@ -218,7 +149,7 @@ export const NavBar = observer(function Navbar() {
             className="login-tab"
             value={7}
             label={t("login.signin")}
-            icon={<AccountCircle />}
+            icon={<AccountCircleIcon />}
             to="/login"
             component={Link}
             sx={{
@@ -279,43 +210,5 @@ export const NavBar = observer(function Navbar() {
         </PopupState>
       </Toolbar>
     </StyledAppBar>
-  );
-});
-
-const LanguageMenu = observer(function LanguageMenu() {
-  const { t } = useTranslation();
-  const currentLanguage = i18next.language;
-  return (
-    <PopupState variant="popover" popupId="demo-popup-menu">
-      {(popupState) => (
-        <React.Fragment>
-          <Button variant="text" {...bindTrigger(popupState)}>
-            <LanguageIcon />
-            <Typography>{t(`language-names.${currentLanguage}`)}</Typography>
-          </Button>
-          <Menu
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center"
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "center"
-            }}
-            {...bindMenu(popupState)}>
-            {Object.entries(languageList).map(([key, value]) => (
-              <MenuItem
-                key={key}
-                className="settings-sub-menu-item"
-                onClick={() => {
-                  i18next.changeLanguage(value);
-                }}>
-                <Typography>{t(`language-names.${value}`)}</Typography>
-              </MenuItem>
-            ))}
-          </Menu>
-        </React.Fragment>
-      )}
-    </PopupState>
   );
 });
