@@ -25,6 +25,11 @@ export const MAX_DATAPACK_TAG_LENGTH = 20;
 export const MAX_DATAPACK_TITLE_LENGTH = 100;
 export const MAX_AUTHORED_BY_LENGTH = 200;
 export const MAX_DATAPACK_TAGS_ALLOWED = 30;
+export const MAX_DATAPACK_CONTACT_LENGTH = 100;
+export const MAX_DATAPACK_DESC_LENGTH = 400;
+export const MAX_DATAPACK_NOTES_LENGTH = 200;
+export const MAX_DATAPACK_REFERENCES_ALLOWED = 30;
+export const MAX_DATAPACK_REFERENCE_LENGTH = 100;
 
 export const allColumnTypes = [
   "Block",

@@ -61,16 +61,14 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
   for (const datapackConfigForChartRequest of datapacks) {
     const datapack = getDatapackFromArray(datapackConfigForChartRequest, stateCopy.datapacks);
     if (!datapack) throw new Error(`File requested doesn't exist on server: ${datapack}`);
-    const baseDatapackProps = datapack;
     if (
-      ((baseDatapackProps.topAge || baseDatapackProps.topAge === 0) &&
-        (baseDatapackProps.baseAge || baseDatapackProps.baseAge === 0)) ||
-      baseDatapackProps.verticalScale
+      ((datapack.topAge || datapack.topAge === 0) && (datapack.baseAge || datapack.baseAge === 0)) ||
+      datapack.verticalScale
     )
       foundDefaultAge = true;
-    if (unitMap.has(baseDatapackProps.ageUnits)) {
-      const existingUnitColumnInfo = unitMap.get(baseDatapackProps.ageUnits)!;
-      const newUnitChart = baseDatapackProps.columnInfo;
+    if (unitMap.has(datapack.ageUnits)) {
+      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits)!;
+      const newUnitChart = datapack.columnInfo;
       // slice off the existing unit column
       const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
       for (const child of columnsToAdd) {
@@ -78,11 +76,11 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
       }
       existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
     } else {
-      const columnInfo = cloneDeep(baseDatapackProps.columnInfo);
+      const columnInfo = cloneDeep(datapack.columnInfo);
       columnInfo.parent = columnRoot.name;
-      unitMap.set(baseDatapackProps.ageUnits, columnInfo);
+      unitMap.set(datapack.ageUnits, columnInfo);
     }
-    const mapPack = baseDatapackProps.mapPack;
+    const mapPack = datapack.mapPack;
     Object.assign(mapInfo, mapPack.mapInfo);
     // ie. World Map is the parent in multiple map packs, so make sure it appends various children to it
     for (const parent in mapPack.mapHierarchy) {
