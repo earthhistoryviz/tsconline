@@ -101,7 +101,7 @@ export const Datapacks = observer(function Datapacks() {
             HeaderIcon={Security}
           />
         )}
-        {state.user.workshopIds && (
+        {(state.user.workshopIds?.length ?? 0) > 0 && (
           <DatapackGroupDisplay
             datapacks={getWorkshopDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.workshop")}
