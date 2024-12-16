@@ -17,7 +17,8 @@ import {
   assertOfficialDatapack,
   assertDatapack,
   assertDatapackArray,
-  DatapackUniqueIdentifier
+  DatapackUniqueIdentifier,
+  isWorkshopDatapack
 } from "@tsconline/shared";
 
 import {
@@ -968,7 +969,9 @@ export const setDefaultUserState = action(() => {
   removeUnauthorizedDatapacks();
 });
 export const removeUnauthorizedDatapacks = action(() => {
-  state.datapacks = observable(state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic));
+  state.datapacks = observable(
+    state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
+  );
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)

@@ -72,6 +72,11 @@ vi.mock("../src/util", () => ({
     fileMetadata: "fileMetadata"
   }
 }));
+vi.mock("fs", async () => {
+  return {
+    createWriteStream: vi.fn().mockReturnValue({})
+  };
+});
 describe("uploadUserDatapackHandler", () => {
   let reply: FastifyReply;
   const rm = vi.spyOn(fsPromises, "rm");
@@ -514,19 +519,19 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     expect(decryptDatapack).toHaveBeenCalledOnce();
     expect(rm).toHaveBeenCalledOnce();
   });
-  it("should copyFile and rm if datapackImageFilepath is provided", async () => {
+  it("should copyFile and rm if datapackImageFilepath is provided and manual is false", async () => {
     loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
       index[metadata.title] = metadata as shared.Datapack;
       return true;
     });
-    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true, "datapackImageFilepath");
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, "datapackImageFilepath");
     expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledOnce();
     expect(mkdir).toHaveBeenCalledOnce();
     expect(copyFile).toHaveBeenCalledTimes(2);
     expect(decryptDatapack).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledOnce();
     expect(writeFileMetadata).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledTimes(2);
   });
   it("should return the datapack index on success", async () => {
     loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {

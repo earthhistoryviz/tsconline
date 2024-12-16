@@ -36,6 +36,7 @@ try {
               title: datapack,
               storedFileName: file,
               isPublic: directory.includes("public"),
+              ...(/workshop/.test(user) ? { uuid: user, type: "workshop" } : {}),
               ...(!/workshop|official/.test(user) ? { uuid: user, type: "user" } : {})
             });
             const datapackIndex: DatapackIndex = {};

@@ -29,8 +29,8 @@ import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
 import _ from "lodash";
 
 /**
- * TODO: WRITE TESTS
  * looks for a specific datapack in all the user directories
+ * TODO: WRITE TESTS
  * @param uuid
  * @param datapack
  * @returns

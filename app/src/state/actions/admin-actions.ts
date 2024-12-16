@@ -15,6 +15,7 @@ import {
   assertDatapackPriorityUpdateSuccess,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
+  assertWorkshopDatapack,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -590,6 +591,93 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
   return;
+});
+
+/**
+ * Uploads a datapack to a workshop
+ * @param file The file to upload
+ * @param metadata The metadata for the datapack
+ * @param workshopId The ID of the workshop to upload to (required)
+ */
+export const adminUploadDatapackToWorkshop = action(
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    assertWorkshopDatapack(metadata);
+    const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(isPublic));
+    formData.append("type", type);
+    formData.append("uuid", uuid);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/admin/workshop/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
+
+/**
+ * Adds server datapacks to the workshop
+ * @param workshopId The ID of the workshop to add to
+ * @param titles The title of the datapack to add
+ */
+export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminAddOfficialDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop/official/datapack`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ workshopId, datapackTitle }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      pushSnackbar("Datapacks added to workshop successfully", "success");
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 409:
+          errorCode = ErrorCodes.ADMIN_SERVER_DATAPACK_ALREADY_EXISTS;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
 });
 
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
