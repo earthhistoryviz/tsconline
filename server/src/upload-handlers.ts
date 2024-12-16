@@ -52,6 +52,13 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   return datapack.storedFileName;
 }
 
+/**
+ * Validate the fields and return the metadata if valid
+ * @param reply
+ * @param fields
+ * @param bytes Bytes read
+ * @returns The metadata if valid, otherwise void
+ */
 export async function uploadUserDatapackHandler(
   reply: FastifyReply,
   fields: Record<string, string>,
@@ -257,7 +264,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     );
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
     // remove the original file if it was copied from a temp file
-    if (datapackImageFilepath !== datapackImageFilepathDest) {
+    if (!manual && datapackImageFilepath !== datapackImageFilepathDest) {
       await rm(datapackImageFilepath, { force: true });
     }
   }

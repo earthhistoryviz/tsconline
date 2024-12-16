@@ -9,7 +9,7 @@ import {
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { findUser } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -24,6 +24,7 @@ import {
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { User, isOperationResult } from "../types.js";
+import { getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -253,17 +254,20 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
-    return;
-  }
 
-  try {
-    const datapackIndex = await fetchAllUsersDatapacks(uuid);
-    reply.send(datapackIndex);
+    const userDatapacks = await fetchAllUsersDatapacks(uuid);
+    const workshops = await getActiveWorkshopsUserIsIn(user[0].userId);
+    const workshopDatapacksPromises = workshops.map((workshop) =>
+      fetchAllUsersDatapacks(getWorkshopUUIDFromWorkshopId(workshop.workshopId))
+    );
+
+    const workshopDatapacks = await Promise.all(workshopDatapacksPromises);
+    const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
+
+    reply.send(allDatapacks);
   } catch (e) {
     console.error(e);
-    reply.status(500).send({ error: "Failed to load cached user datapacks in user directory" });
+    reply.status(500).send({ error: "Database or processing error" });
   }
 };
 

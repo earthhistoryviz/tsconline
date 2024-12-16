@@ -14,7 +14,9 @@ import {
   adminEditWorkshop,
   adminDeleteWorkshop,
   adminModifyUser,
-  adminEditDatapackPriorities
+  adminEditDatapackPriorities,
+  adminUploadDatapackToWorkshop,
+  adminAddOfficialDatapackToWorkshop
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -130,7 +132,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["workshopId"]
   };
-
   const adminModifyUserBody = {
     type: "object",
     properties: {
@@ -141,6 +142,14 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["username", "email"],
     anyOf: [{ required: ["accountType"] }, { required: ["isAdmin"] }]
+  };
+  const adminAddOfficialDatapackToWorkshopBody = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+      datapackTitle: { type: "string" }
+    },
+    required: ["workshopId", "datapackTitle"]
   };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
@@ -230,5 +239,11 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapack/priority",
     { config: { rateLimit: moderateRateLimit } },
     adminEditDatapackPriorities
+  );
+  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapackToWorkshop);
+  fastify.post(
+    "/workshop/official/datapack",
+    { schema: { body: adminAddOfficialDatapackToWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminAddOfficialDatapackToWorkshop
   );
 };
