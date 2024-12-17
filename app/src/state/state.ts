@@ -31,6 +31,7 @@ import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
+import { Workshop } from "../Workshops";
 configure({ enforceActions: "observed" });
 
 export type State = {
@@ -109,6 +110,7 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   datapacks: Datapack[]; // all datapacks on the server
+  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -231,6 +233,7 @@ export const state = observable<State>({
   },
   presets: {},
   datapacks: [],
+  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
