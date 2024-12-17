@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState } from "react";
+import React, { useContext } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -15,7 +15,6 @@ import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { context } from "./state";
 import { StyledScrollbar } from "./components";
-import WorkshopDetails from "./WorkshopDetails";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
 import { getNavigationRouteForWorkshopDetails } from "./state/non-action-util";
@@ -165,23 +164,22 @@ export const Workshops: React.FC = observer(() => {
                     {workshop.title}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.start")}{workshop.start}
+                    {t("workshops.dates.start")}
+                    {workshop.start}
                   </Typography>
                   <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.end")}{workshop.end}
+                    {t("workshops.dates.end")}
+                    {workshop.end}
                   </Typography>
                 </CardContent>
               </Card>
             </Grid>
           ))
         ) : (
-          <Typography
-            className="no-data-message">
-            {t(`workshops.messages.${noDataMessage}`)}
-          </Typography>
+          <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
         )}
       </Box>
-    </StyledScrollbar >
+    </StyledScrollbar>
   );
 
   return (
@@ -203,9 +201,7 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.active")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(activeWorkshops, "active")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(activeWorkshops, "active")}</AccordionDetails>
           </Accordion>
 
           {/* Upcoming Workshops */}
@@ -218,9 +214,7 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.upcoming")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(upcomingWorkshops, "upcoming")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(upcomingWorkshops, "upcoming")}</AccordionDetails>
           </Accordion>
 
           {/* Expired Workshops */}
@@ -233,15 +227,11 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.past")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>
-              {renderWorkshopsCategory(expiredWorkshops, "past")}
-            </AccordionDetails>
+            <AccordionDetails>{renderWorkshopsCategory(expiredWorkshops, "past")}</AccordionDetails>
           </Accordion>
         </Box>
       ) : (
-        <Typography className="not-logged-in-message">
-          {t("workshops.login-first")}
-        </Typography>
+        <Typography className="not-logged-in-message">{t("workshops.login-first")}</Typography>
       )}
     </>
   );

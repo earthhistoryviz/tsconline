@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
@@ -9,10 +9,8 @@ import { observer } from "mobx-react-lite";
 import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
-import { Workshop } from "./Workshops";
 
 // TODO: change this when backend is finished
-
 
 export const WorkshopDetails = observer(() => {
   const { state } = useContext(context);
@@ -26,10 +24,10 @@ export const WorkshopDetails = observer(() => {
   };
   const workshop = fetchWorkshop();
   if (!workshop || !id) return <PageNotFound />;
-  const fetchWorkshopFiles = (workshop: Workshop) => {
+  const fetchWorkshopFiles = () => {
     //TODO: implement this when implement the backend
     return "https://example.com/download/advanced_typescript.zip";
-  }
+  };
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -64,7 +62,9 @@ export const WorkshopDetails = observer(() => {
                     </Typography>
                   ))
                 ) : (
-                  <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-datapacks")}</Typography>
+                  <Typography className={styles.fileName}>
+                    {t("workshops.details-page.messages.no-datapacks")}
+                  </Typography>
                 )}
               </Box>
             </div>
@@ -81,7 +81,7 @@ export const WorkshopDetails = observer(() => {
                   ) : (
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
-                  <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} href={fetchWorkshopFiles(workshop)}>
+                  <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} href={fetchWorkshopFiles()}>
                     {t("workshops.details-page.download-button")}
                   </TSCButton>
                 </>
