@@ -63,8 +63,8 @@ export const NavBar = observer(function Navbar() {
     { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
     { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircleIcon /> },
     { label: t("navBar.help"), path: "/help", icon: <Help /> },
-    { label: t("navBar.about"), path: "/about", icon: <Campaign /> },
-    { label: "Workshops", path: "/workshops", icon: <School /> }
+    { label: "Workshops", path: "/workshops", icon: <School /> },
+    { label: t("navBar.about"), path: "/about", icon: <Campaign /> }
   ];
   const onButtonClick = (path: string) => {
     navigate(path);

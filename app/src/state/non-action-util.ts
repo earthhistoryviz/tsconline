@@ -54,6 +54,9 @@ export function getDatapackProfileImageUrl(datapack: Datapack) {
     return devSafeUrl(`/datapack-images/default/${uuid}`);
   }
 }
+export function getNavigationRouteForWorkshopDetails(id: number) {
+  return `/workshops/${id}`;
+}
 
 export function formatDate(input: string | dayjs.Dayjs): string {
   let date: Date;
