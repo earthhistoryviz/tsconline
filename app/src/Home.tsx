@@ -169,10 +169,25 @@ const Carousel = observer(function Carousel() {
       image: state.user.settings.darkMode ? "search-meso-dark.png" : "search-meso.png"
     },
     {
-      title: "Title 3",
-      description: "Description 3",
-      bullets: [],
-      image: "image3.png"
+      title: "Customize Your Chart",
+      description: "",
+      bullets: [
+        {
+          title: "Customize Chart Appearance",
+          description: "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+        },
+        {
+          title: "Save Custom Settings",
+          description:
+            "Save your custom chart settings for future use and easy access to your preferred configurations."
+        },
+        {
+          title: "Share Your Charts",
+          description:
+            "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+        }
+      ],
+      image: state.user.settings.darkMode ? "customization-example-dark.png" : "customization-example-light.png"
     }
   ];
   const onNext = () => {

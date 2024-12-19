@@ -190,7 +190,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip
-        title={t("settings.column.tooltip。not-in-range")}
+        title={t("settings.column.tooltip.not-in-range")}
         placement="top"
         arrow
         slotProps={{
