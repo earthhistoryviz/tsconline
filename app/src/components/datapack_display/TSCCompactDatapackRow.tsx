@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
+import { DeferredDatapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
@@ -18,9 +18,9 @@ import {
 import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
-  datapack?: Datapack;
+  datapack?: DeferredDatapack;
   value?: boolean;
-  onChange?: (datapack: DatapackConfigForChartRequest) => void;
+  onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
   datapack,
@@ -55,9 +55,10 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
         onClick={async (e) => {
+          if (loading) return;
           e.stopPropagation();
           setLoading(true);
-          !skeleton && onChange(datapack);
+          !skeleton && await onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
