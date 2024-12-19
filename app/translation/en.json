@@ -490,6 +490,7 @@
             "SERVER_TIMEOUT": "Server timed out. Please try again later.",
             "SERVER_BUSY": "Server is too busy. Please try again later.",
             "ADMIN_DELETE_USER_FAILED": "Unable to delete user. Please try again later.",
+            "UNABLE_TO_FETCH_DATAPACKS": "Unable to fetch datapacks. Please try again later.",
             "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
             "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
             "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",

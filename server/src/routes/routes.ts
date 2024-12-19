@@ -2,14 +2,14 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
-  SharedDatapack,
+  DeferredDatapack,
   DatapackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertTimescale,
   isUserDatapack,
   DatapackMetadata,
-  BaseDatapackProps,
+  BaseDatapackPropsRecord,
   calculateDatapackMetadataHash
 } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
@@ -51,7 +51,7 @@ export const fetchPublicBaseDatapackProps = async function fetchPublicDatapacksB
 ) {
   const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
   const datapackArray = await loadPublicUserDatapacks(uuids);
-  const datapackBaseProps: Record<string, BaseDatapackProps> = {};
+  const datapackBaseProps: BaseDatapackPropsRecord = {};
   for (const datapack of datapackArray) {
     const metadataHash = await calculateDatapackMetadataHash(datapack);
     datapackBaseProps[metadataHash] = {
@@ -80,7 +80,7 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
   const datapackArray = await loadPublicUserDatapacks(uuids);
   const datapackMetadata: DatapackMetadata[] = [];
   for (const datapack of datapackArray) {
-    const partialSharedDatapackObject = {
+    const partialDeferredDatapackObject = {
       description: datapack.description,
       title: datapack.title,
       originalFileName: datapack.originalFileName,
@@ -93,12 +93,17 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
       isPublic: datapack.isPublic,
       contact: datapack.contact,
       notes: datapack.notes,
-      datapackImage: datapack.datapackImage
+      datapackImage: datapack.datapackImage,
+      priority: datapack.priority
     };
-    if (isUserDatapack(datapack)) {
-      datapackMetadata.push({ ...partialSharedDatapackObject, uuid: datapack.uuid, type: "user" });
-    } else {
-      datapackMetadata.push({ ...partialSharedDatapackObject, type: datapack.type });
+    switch (datapack.type) {
+      case "user":
+      case "workshop":
+        datapackMetadata.push({ ...partialDeferredDatapackObject, uuid: datapack.uuid, type: datapack.type });
+        break;
+      case "official":
+        datapackMetadata.push({ ...partialDeferredDatapackObject, type: "official" });
+        break;
     }
   }
   reply.send(datapackMetadata);

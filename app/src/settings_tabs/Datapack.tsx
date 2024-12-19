@@ -18,7 +18,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DeferredDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,8 +28,10 @@ import {
   getPublicDatapacksWithoutCurrentUser,
   getPublicOfficialDatapacks,
   getWorkshopDatapacks,
+  isFullDatapackTypeAvailable,
   isOwnedByUser
 } from "../state/non-action-util";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -161,7 +163,7 @@ export const Datapacks = observer(function Datapacks() {
   );
 });
 type DatapackMenuProps = {
-  datapack: Datapack;
+  datapack: DeferredDatapack;
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
@@ -190,7 +192,7 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
 };
 
 type DatapackGroupDisplayProps = {
-  datapacks: Datapack[];
+  datapacks: DeferredDatapack[];
   header: string;
   HeaderIcon: React.ElementType;
   loading?: boolean;
@@ -207,14 +209,42 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
     const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
-    const onChange = (newDatapack: DatapackConfigForChartRequest) => {
+    const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
       if (state.unsavedDatapackConfig.includes(newDatapack)) {
         actions.setUnsavedDatapackConfig(
           state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
         );
       } else {
-        actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+        actions.setLoadingDatapack(true);
+      if (!isFullDatapackTypeAvailable(newDatapack, state.datapacks)) {
+        let datapack: Datapack | undefined;
+        try {
+          switch (newDatapack.type) {
+            case "user":
+              datapack = await actions.fetchUserDatapack(newDatapack.title);
+              break;
+            case "official":
+              datapack = await actions.fetchOfficialDatapack(newDatapack.title);
+              break;
+            case "workshop":
+              // TODO: FILL THIS IN
+              break;
+          }
+        } catch (e) {
+          actions.setLoadingDatapack(false);
+          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+          return;
+        }
+        if (!datapack) {
+          actions.setLoadingDatapack(false);
+          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+          return;
+        }
+        actions.addDatapack(datapack);
       }
+      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+        actions.setLoadingDatapack(false);
+    }
     };
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
     const shouldWrap = shouldSplitIntoTwoCol && state.settingsTabs.datapackDisplayType !== "cards";
@@ -243,7 +273,8 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
               const value = datapack
                 ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack))
                 : false;
-              return state.settingsTabs.datapackDisplayType === "rows" ? (
+              if (datapack.title === "British Isles") console.log("value", value);
+            return state.settingsTabs.datapackDisplayType === "rows" ? (
                 datapack ? (
                   <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
                 ) : (

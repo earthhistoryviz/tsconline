@@ -1,5 +1,5 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Skeleton, Typography } from "@mui/material";
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { DeferredDatapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
@@ -8,9 +8,9 @@ import { DatapackMenu } from "../../settings_tabs/Datapack";
 import { getDatapackProfileImageUrl, getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
-  datapack?: Datapack;
+  datapack?: DeferredDatapack;
   value?: boolean;
-  onChange?: (datapack: DatapackConfigForChartRequest) => void;
+  onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, value, onChange }) => {
   const navigate = useNavigate();
@@ -73,9 +73,10 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
                 <div
                   className={styles.checkContainer}
                   onClick={async (e) => {
-                    e.stopPropagation();
+                    if (loading) return
+                  e.stopPropagation();
                     setLoading(true);
-                    !skeleton && onChange(datapack);
+                    !skeleton && await onChange(datapack);
                     setLoading(false);
                   }}>
                   {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
