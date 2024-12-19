@@ -8,7 +8,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution } from "./components";
+import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution, CustomDivider } from "./components";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
 import _ from "lodash";
@@ -72,6 +72,7 @@ export const Home = observer(function Home() {
           </Box>
         </Box>
       </Box>
+      <CustomDivider />
       <Carousel />
       <Box ref={presetsRef}>
         {Object.entries(state.presets).map(([type, configArray]) => {
@@ -128,18 +129,34 @@ const Carousel = observer(function Carousel() {
   });
   const carouselContent = [
     {
-      title: "Title 1",
-      description: "Description 1",
-      image: "map-points-example.png"
+      title: "Interactive Map Points",
+      description: "",
+      bullets: [
+        {
+          title: "Toggle Columns Directly on the Map",
+          description: "Select specific areas to focus on by enabling or disabling chart columns directly on the map."
+        },
+        {
+          title: "Dynamic Age Slider",
+          description: "Explore how rock formations and geologic events change over time with a simple slider."
+        },
+        {
+          title: "Link Charts to Locations",
+          description: "MapPoints connect chart columns to real-world locations for intuitive visualization."
+        }
+      ],
+      image: "interactive-map-points-feature.png"
     },
     {
       title: "Title 2",
       description: "Description 2",
-      image: "image2.png"
+      bullets: [],
+      image: "test-search-image.png"
     },
     {
       title: "Title 3",
       description: "Description 3",
+      bullets: [],
       image: "image3.png"
     }
   ];
@@ -154,7 +171,7 @@ const Carousel = observer(function Carousel() {
     setActiveIndex((activeIndex - 1 + carouselContent.length) % carouselContent.length);
   };
   return (
-    <Box className="home-landing-page-carousel-container">
+    <Box className="home-landing-page-carousel-container" sx={{}}>
       {transitions((style, index) => (
         <animated.div
           className="home-landing-page-carousel"
@@ -165,10 +182,22 @@ const Carousel = observer(function Carousel() {
             height: "100%"
           }}>
           <Box className="home-landing-page-carousel-text">
-            <Typography variant="h3" fontWeight="700">
+            <Typography fontSize="2.75rem" fontWeight="550" sx={{}}>
               {carouselContent[index].title}
             </Typography>
-            <Typography>{carouselContent[index].description}</Typography>
+            <CustomDivider />
+            <ul>
+              {carouselContent[index].bullets.map((bullet, index) => (
+                <li key={index}>
+                  <Typography variant="body1" fontSize="1.75rem" fontWeight="600" sx={{}}>
+                    {bullet.title}
+                  </Typography>
+                  <Typography variant="body2" fontSize="1.3rem" sx={{}}>
+                    {bullet.description}
+                  </Typography>
+                </li>
+              ))}
+            </ul>
           </Box>
           <Box className="home-landing-page-carousel-image-container">
             <img
