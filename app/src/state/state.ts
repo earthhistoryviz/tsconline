@@ -26,7 +26,7 @@ import type {
   SharedWorkshop,
   Datapack,
   DatapackPriorityChangeRequest,
-  DeferredDatapack
+  DatapackMetadata
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -81,7 +81,7 @@ export type State = {
     workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
-      tempRowData: DeferredDatapack[] | null;
+      tempRowData: DatapackMetadata[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
     };
   };
@@ -110,7 +110,8 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   loadingDatapacks: boolean;
-  datapacks: DeferredDatapack[]; // all datapacks on the server, on page load metadata is loaded for all datapacks, baseDatapackProps is loaded each time a datapack is selected
+  datapackMetadata: DatapackMetadata[] // all datapacks on the server, loaded on page load
+  datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -233,6 +234,7 @@ export const state = observable<State>({
   },
   presets: {},
   loadingDatapacks: false,
+  datapackMetadata: [],
   datapacks: [],
   mapPatterns: {
     patterns: {},

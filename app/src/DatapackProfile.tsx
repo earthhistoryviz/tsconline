@@ -40,7 +40,7 @@ import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { ErrorCodes } from "./util/error-codes";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import {
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
@@ -48,35 +48,64 @@ import {
   hasLeadingTrailingWhiteSpace
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
-import { checkDatapackValidity } from "./state/actions/util-actions";
+import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
+  const query = new URLSearchParams(useLocation().search);
+  const queryType = query.get("type");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
+  const [datapack, setDatapack] = useState<Datapack | undefined>(state.datapacks.find((d) => d.title === id && d.type === queryType));
+  const [loading, setLoading] = useState(false);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
-  const query = new URLSearchParams(useLocation().search);
-  const fetchDatapack = () => {
+  const fetchDatapack = async () => {
     if (!id) return;
-    const datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
-    return datapack;
-  };
-  const datapack = fetchDatapack();
-  useEffect(() => {
-    if (datapack && !isMetadataInitialized) {
-      actions.resetEditableDatapackMetadata(datapack);
-      setIsMetadataInitialized(true);
+    if (!datapack) {
+      switch (queryType) {
+        case "user":
+          return await actions.fetchUserDatapack(id);
+        case "official":
+          return await actions.fetchOfficialDatapack(id);
+        case "workshop":
+          // TODO: FILL THIS IN
+          break;
+      }
     }
-  }, [query.get("type"), id, isMetadataInitialized, datapack]);
+  };
+  useEffect(() => {
+    const intializeDatapack = async () => {
+      if (!datapack) {
+        setLoading(true);
+        const fetchedDatapack = await fetchDatapack();
+        if (fetchedDatapack) {
+          actions.resetEditableDatapackMetadata(fetchedDatapack);
+          actions.addDatapackOrMetadata(fetchedDatapack);
+          setIsMetadataInitialized(true);
+          setDatapack(fetchedDatapack);
+        } 
+        setLoading(false);
+      } else if (!isMetadataInitialized) {
+        actions.resetEditableDatapackMetadata(datapack);
+        setIsMetadataInitialized(true);
+      }
+    }
+
+    intializeDatapack().catch((e) => {
+      console.error("Error fetching datapack", e);
+      displayServerError(e, ErrorCodes.UNABLE_TO_FETCH_DATAPACKS, ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_DATAPACKS]);
+    });
+  }, [queryType, id, isMetadataInitialized, datapack]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
   }, []);
+  if (loading) return <TSCDialogLoader headerText="Fetching Datapack" open={true} />;
   if (!datapack || !id) return <PageNotFound />;
   if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
