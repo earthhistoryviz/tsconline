@@ -37,7 +37,7 @@ export type SuccessfulServerResponse = {
 };
 
 export type DatapackInfoChunk = {
-  datapacks: Datapack[];
+  datapacks: DeferredDatapack[];
   totalChunks: number;
 };
 export type MapPackInfoChunk = {
@@ -95,7 +95,8 @@ export type BaseDatapackProps = {
 
 export type Datapack = DatapackMetadata & BaseDatapackProps;
 
-export type SharedDatapack = DatapackMetadata & Partial<BaseDatapackProps>;
+export type DeferredDatapack = DatapackMetadata & Partial<BaseDatapackProps>;
+export type BaseDatapackPropsRecord = Record<string, BaseDatapackProps>;
 
 export type PresetDatapack = {
   file: string;
@@ -613,16 +614,16 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
-export function assertSharedDatapack(o: any): asserts o is SharedDatapack {
+export function assertDeferredDatapack(o: any): asserts o is DeferredDatapack {
   assertDatapackMetadata(o);
   assertDatapackType(o);
   if ("columnInfo" in o) assertBaseDatapackProps(o);
 }
 
-export function assertSharedDatapackArray(o: any): asserts o is SharedDatapack[] {
+export function assertDeferredDatapackArray(o: any): asserts o is DeferredDatapack[] {
   if (!Array.isArray(o)) throw new Error("Datapack must be an array");
   for (const datapack of o) {
-    assertSharedDatapack(datapack);
+    assertDeferredDatapack(datapack);
   }
 }
 
@@ -883,7 +884,7 @@ export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk 
   if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
   assertDatapackArray(o.datapacks);
 }
-export function assertDatapackArray(o: any): asserts o is Datapack[] {
+export function assertDatapackArray(o: any): asserts o is DeferredDatapack[] {
   if (!Array.isArray(o)) throw new Error("Datapack must be an array");
   for (const datapack of o) {
     assertDatapack(datapack);
@@ -1062,7 +1063,7 @@ export function assertPatterns(o: any): asserts o is Patterns {
   }
 }
 
-export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
+export function isDeferredDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
   if (!o || typeof o !== "object") return false;
   const validKeys = [
     "description",
@@ -1280,6 +1281,14 @@ export function assertBaseDatapackProps(o: any): asserts o is BaseDatapackProps 
   if (typeof o.datapackImageCount !== "number")
     throwError("BaseDatapackProps", "datapackImageCount", "number", o.datapackImages);
   assertColumnInfo(o.columnInfo);
+}
+
+export function assertBaseDatapackPropsRecord(o: any): asserts o is BaseDatapackPropsRecord {
+  if (!o || typeof o !== "object") throw new Error("BaseDatapackPropsRecord must be a non-null object");
+  for (const [key, record] of o) {
+    if (typeof key !== "string") throwError("BaseDatapackPropsRecord", "key", "string", key);
+    assertBaseDatapackProps(record);
+  }
 }
 
 export function assertPresetDatapack(o: any): asserts o is PresetDatapack {
