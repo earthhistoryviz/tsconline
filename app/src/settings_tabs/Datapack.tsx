@@ -18,7 +18,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DeferredDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -28,8 +28,10 @@ import {
   getPublicDatapacksWithoutCurrentUser,
   getPublicOfficialDatapacks,
   getWorkshopDatapacks,
+  isFullDatapackTypeAvailable,
   isOwnedByUser
 } from "../state/non-action-util";
+import { ErrorCodes } from "../util/error-codes";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
@@ -153,7 +155,7 @@ export const Datapacks = observer(function Datapacks() {
   );
 });
 type DatapackMenuProps = {
-  datapack: Datapack;
+  datapack: DeferredDatapack;
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
@@ -182,7 +184,7 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
 };
 
 type DatapackGroupDisplayProps = {
-  datapacks: Datapack[];
+  datapacks: DeferredDatapack[];
   header: string;
   HeaderIcon: React.ElementType;
 };
@@ -193,13 +195,41 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
   const isOfficial = header === t("settings.datapacks.title.public-official");
   const visibleLimit = isOfficial ? 12 : 6;
   const visibleDatapacks = showAll ? datapacks : datapacks.slice(0, visibleLimit);
-  const onChange = (newDatapack: DatapackConfigForChartRequest) => {
+  const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
     if (state.unsavedDatapackConfig.includes(newDatapack)) {
       actions.setUnsavedDatapackConfig(
         state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
       );
     } else {
+      actions.setLoadingDatapack(true);
+      if (!isFullDatapackTypeAvailable(newDatapack, state.datapacks)) {
+        let datapack: Datapack | undefined;
+        try {
+          switch (newDatapack.type) {
+            case "user":
+              datapack = await actions.fetchUserDatapack(newDatapack.title);
+              break;
+            case "official":
+              datapack = await actions.fetchOfficialDatapack(newDatapack.title);
+              break;
+            case "workshop":
+              // TODO: FILL THIS IN
+              break;
+          }
+        } catch (e) {
+          actions.setLoadingDatapack(false);
+          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+          return;
+        }
+        if (!datapack) {
+          actions.setLoadingDatapack(false);
+          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+          return;
+        }
+        actions.addDatapack(datapack);
+      }
       actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+      actions.setLoadingDatapack(false);
     }
   };
   const numberOfDatapacks = datapacks.length;
@@ -227,6 +257,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
         <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
           {visibleDatapacks.map((datapack) => {
             const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
+            if (datapack.title === "British Isles") console.log("value", value);
             return state.settingsTabs.datapackDisplayType === "rows" ? (
               <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
             ) : state.settingsTabs.datapackDisplayType === "compact" ? (
