@@ -5,7 +5,6 @@ export async function initialize() {
   // as the server hosts the /charts endpoint.  So, we'll hard-code that for ourselves here.
   actions.sessionCheck();
   actions.fetchAllPublicDatapacksMetadata();
-  // actions.fetchAllPublicBaseDatapackProps();
   actions.fetchPresets();
   await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();

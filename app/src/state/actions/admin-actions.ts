@@ -20,7 +20,7 @@ import {
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
 import {
-  addDatapack,
+  addDatapackOrMetadata,
   fetchOfficialDatapack,
   getRecaptchaToken,
   pushError,
@@ -327,7 +327,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
         if (!pack) {
           return;
         }
-        addDatapack(pack);
+        addDatapackOrMetadata(pack);
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
@@ -358,7 +358,7 @@ export const adminFetchPrivateOfficialDatapacks = action(async () => {
       }
       assertDatapackArray(array);
       array.forEach((datapack: Datapack) => {
-        addDatapack(datapack);
+        addDatapackOrMetadata(datapack);
       });
     } else {
       displayServerError(
