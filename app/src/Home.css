@@ -161,12 +161,15 @@
 .sub-header-section-landing-page-text,
 .home-landing-page-carousel-text {
   backdrop-filter: blur(5px);
-  display: grid;
-  grid-template-rows: 70px 1px 1fr;
+  display: flex;
   flex-direction: column;
   align-self: flex-start;
   padding-top: 50px;
   gap: 5px;
+}
+.home-landing-page-carousel-text {
+  display: grid;
+  grid-template-rows: 70px 1px 1fr;
 }
 .home-landing-page-carousel-left-arrow {
   position: absolute;
@@ -189,7 +192,9 @@
   font-size: 2rem;
 }
 
-.sub-header-section-landing-page-description,
+.sub-header-section-landing-page-description {
+  font-size: 1.5rem;
+}
 .home-landing-page-carousel-description {
   font-size: 1.2rem;
 }
