@@ -148,9 +148,24 @@ const Carousel = observer(function Carousel() {
       image: "interactive-map-points-feature.png"
     },
     {
-      title: "Title 2",
-      description: "Description 2",
-      bullets: [],
+      title: "Search Within Columns",
+      description: "",
+      bullets: [
+        {
+          title: "Find Columns/Events Quickly",
+          description:
+            "Search for specific columns or events within the chart to quickly locate and focus on relevant information."
+        },
+        {
+          title: "Extend/Center Age Range",
+          description:
+            "Once you find the column or event you're looking for, extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
+        },
+        {
+          title: "View Specific Notes",
+          description: "Access detailed notes and information about specific events directly from the chart."
+        }
+      ],
       image: state.user.settings.darkMode ? "search-meso-dark.png" : "search-meso.png"
     },
     {
@@ -178,7 +193,7 @@ const Carousel = observer(function Carousel() {
     }
   };
   return (
-    <Box className="home-landing-page-carousel-container" sx={{}}>
+    <Box className="home-landing-page-carousel-container">
       {transitions((style, index) => (
         <animated.div
           className="home-landing-page-carousel"
@@ -189,17 +204,17 @@ const Carousel = observer(function Carousel() {
             height: "100%"
           }}>
           <Box className="home-landing-page-carousel-text">
-            <Typography fontSize="2.75rem" fontWeight="550" sx={{}}>
+            <Typography fontSize="2.75rem" fontWeight="550">
               {carouselContent[index].title}
             </Typography>
             <CustomDivider />
             <ul>
               {carouselContent[index].bullets.map((bullet, index) => (
                 <li key={index}>
-                  <Typography variant="body1" fontSize="1.75rem" fontWeight="600" sx={{}}>
+                  <Typography variant="body1" fontSize="1.75rem" fontWeight="600" paddingTop="20px">
                     {bullet.title}
                   </Typography>
-                  <Typography variant="body2" fontSize="1.3rem" sx={{}}>
+                  <Typography variant="body2" fontSize="1.3rem">
                     {bullet.description}
                   </Typography>
                 </li>

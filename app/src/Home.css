@@ -149,7 +149,11 @@
 }
 .home-landing-page-carousel-container {
   position: relative;
-  height: 50vh;
+  height: 55vh;
+  max-height: 55vh;
+  min-height: 55vh;
+  display: flex;
+  overflow: hidden;
 }
 .home-landing-page-carousel {
   transition: box-shadow 0.3s ease;
@@ -157,8 +161,11 @@
 .sub-header-section-landing-page-text,
 .home-landing-page-carousel-text {
   backdrop-filter: blur(5px);
-  display: flex;
+  display: grid;
+  grid-template-rows: 70px 1px 1fr;
   flex-direction: column;
+  align-self: flex-start;
+  padding-top: 50px;
   gap: 5px;
 }
 .home-landing-page-carousel-left-arrow {
