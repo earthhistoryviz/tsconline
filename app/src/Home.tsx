@@ -3,7 +3,7 @@ import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
-import { context } from "./state";
+import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton } from "@mui/material";
@@ -142,7 +142,7 @@ const Carousel = observer(function Carousel() {
         },
         {
           title: "Link Charts to Locations",
-          description: "MapPoints connect chart columns to real-world locations for intuitive visualization."
+          description: "Map points connect chart columns to real-world locations for intuitive visualization."
         }
       ],
       image: "interactive-map-points-feature.png"
@@ -151,7 +151,7 @@ const Carousel = observer(function Carousel() {
       title: "Title 2",
       description: "Description 2",
       bullets: [],
-      image: "test-search-image.png"
+      image: state.user.settings.darkMode ? "search-meso-dark.png" : "search-meso.png"
     },
     {
       title: "Title 3",
@@ -169,6 +169,13 @@ const Carousel = observer(function Carousel() {
     if (isAnimating) return;
     setDirection("left");
     setActiveIndex((activeIndex - 1 + carouselContent.length) % carouselContent.length);
+  };
+  const buttonStyle = {
+    backgroundColor: "dark.light",
+    color: "dark.contrastText",
+    "&:hover": {
+      backgroundColor: "dark.main"
+    }
   };
   return (
     <Box className="home-landing-page-carousel-container" sx={{}}>
@@ -209,10 +216,10 @@ const Carousel = observer(function Carousel() {
           </Box>
         </animated.div>
       ))}
-      <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious}>
+      <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
         <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
       </IconButton>
-      <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext}>
+      <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
         <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
       </IconButton>
     </Box>
