@@ -1,7 +1,7 @@
 import {
   Datapack,
   DatapackUniqueIdentifier,
-  SharedDatapack,
+  DeferredDatapack,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
@@ -10,10 +10,30 @@ import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
 
-export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
+/**
+ * Check if BaseDatapackProps is available in the datapack
+ * @param datapack 
+ * @param datapacks 
+ */
+export function isFullDatapackTypeAvailable(datapack: DatapackUniqueIdentifier, datapacks: DeferredDatapack[]) {
+  const existingDatapacks = getDatapackFromArray(datapack, datapacks);
+  return !!existingDatapacks?.columnInfo;
+}
+/**
+ * Fill in BaseDatapackProps in the datapack
+ * @param datapack 
+ * @param datapacks 
+ */
+export function fillInFullDatapackType(datapack: Datapack, datapacks: DeferredDatapack[]) {
+  const index = datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (index !== -1) {
+    datapacks[index] = datapack;
+  }
+}
+export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: DeferredDatapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
-export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: SharedDatapack[]) {
+export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: DeferredDatapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
 }
 export function doesDatapackExistInCurrentConfig(
@@ -27,28 +47,28 @@ export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: Datapac
     a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
   );
 }
-export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
+export function getCurrentUserDatapacks(uuid: string, datapacks: DeferredDatapack[]) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid === uuid);
 }
-export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid?: string) {
+export function getPublicDatapacksWithoutCurrentUser(datapacks: DeferredDatapack[], uuid?: string) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
-export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
+export function getPublicOfficialDatapacks(datapacks: DeferredDatapack[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
-export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
+export function getPrivateOfficialDatapacks(datapacks: DeferredDatapack[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
-export function getWorkshopDatapacks(datapacks: Datapack[]) {
+export function getWorkshopDatapacks(datapacks: DeferredDatapack[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
-export function isOwnedByUser(datapack: SharedDatapack, uuid: string) {
+export function isOwnedByUser(datapack: DeferredDatapack, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
 export function getNavigationRouteForDatapackProfile(title: string, type: string) {
   return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
 }
-export function getDatapackProfileImageUrl(datapack: Datapack) {
+export function getDatapackProfileImageUrl(datapack: DeferredDatapack) {
   const uuid = isUserDatapack(datapack) || isWorkshopDatapack(datapack) ? datapack.uuid : datapack.type;
   if (datapack.datapackImage) {
     return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);
