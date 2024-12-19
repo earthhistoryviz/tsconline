@@ -1,4 +1,4 @@
-import { DeferredDatapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { Box, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
@@ -18,7 +18,7 @@ import {
 } from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
-  datapack?: DeferredDatapack;
+  datapack?: DatapackMetadata;
   value?: boolean;
   onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
@@ -59,8 +59,8 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
         onClick={
           !skeleton
             ? async (e) => {
-                if (loading) return;
-          e.stopPropagation();
+                e.stopPropagation();
+          if (loading) return;
                 setLoading(true);
                 await onChange(datapack);
                 setLoading(false);
