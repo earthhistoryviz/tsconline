@@ -155,6 +155,7 @@ export const state = observable<State>({
     isGoogleUser: false,
     isAdmin: false,
     uuid: "",
+    workshopIds: [],
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"

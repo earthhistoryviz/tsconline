@@ -41,9 +41,10 @@ type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
   type: DatapackType;
+  forcePublic?: boolean;
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type, forcePublic = false }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, forcePublic });
   const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
@@ -157,7 +158,11 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           <FormControlLabel
             name="public-datapack"
             control={
-              <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+              <TSCCheckbox
+                disabled={forcePublic}
+                checked={state.isPublic}
+                onChange={(event) => setters.setIsPublic(event.target.checked)}
+              />
             }
             label={t("settings.datapacks.upload-form.make-public")}
           />

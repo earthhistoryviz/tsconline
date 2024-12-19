@@ -11,13 +11,14 @@ import { checkDatapackValidity } from "../../state/actions/util-actions";
 type DatapackUploadFormProps = {
   upload: UploadDatapackMethodType;
   type: DatapackType;
+  forcePublic?: boolean;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload, type } = props;
+  const { upload, type, forcePublic } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(forcePublic || false);
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");

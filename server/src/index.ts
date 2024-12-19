@@ -120,13 +120,6 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-// Serve the about picture images from server/public/aboutPictures/
-server.register(fastifyStatic, {
-  root: process.cwd() + "/public/aboutPictures",
-  prefix: "/public/aboutPictures/",
-  decorateReply: false // first registration above already added the decorator
-});
-
 server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),
   prefix: "/datapack-images/",

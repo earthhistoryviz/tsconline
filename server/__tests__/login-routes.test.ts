@@ -44,12 +44,13 @@ vi.mock("../src/database", async (importOriginal) => {
     deleteUser: vi.fn().mockResolvedValue({}),
     findWorkshop: vi.fn().mockResolvedValue([]),
     deleteWorkshop: vi.fn().mockResolvedValue({}),
-    getAndHandleWorkshopEnd: vi.fn().mockResolvedValue(null),
+    getWorkshopIfNotEnded: vi.fn().mockResolvedValue(null),
     deleteUsersWorkshops: vi.fn().mockResolvedValue({}),
     findUsersWorkshops: vi.fn().mockResolvedValue([]),
     handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
     checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
-    createUsersWorkshops: vi.fn().mockResolvedValue({})
+    createUsersWorkshops: vi.fn().mockResolvedValue({}),
+    getActiveWorkshopsUserIsIn: vi.fn().mockResolvedValue([])
   };
 });
 vi.mock("../src/send-email", async (importOriginal) => {
@@ -162,10 +163,6 @@ const workshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString()
-};
-const testUserWorkshop = {
-  userId: 123,
-  workshopId: 1
 };
 
 beforeAll(async () => {
@@ -1783,7 +1780,7 @@ describe("login-routes tests", () => {
     beforeEach(() => {
       vi.clearAllMocks();
     });
-    const getAndHandleWorkshopEndSpy = vi.spyOn(databaseModule, "getAndHandleWorkshopEnd");
+    const getActiveWorkshopsUsersIsInSpy = vi.spyOn(databaseModule, "getActiveWorkshopsUserIsIn");
     it("should return 200 and authenticated false if not logged in", async () => {
       const response = await app.inject({
         method: "POST",
@@ -1865,9 +1862,7 @@ describe("login-routes tests", () => {
 
     it("should return 200 and workshop id if user is in workshop and workshop is active", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
-      vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
-      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(workshop);
-      vi.mocked(databaseModule.findUsersWorkshops).mockResolvedValueOnce([testUserWorkshop]);
+      vi.mocked(databaseModule.getActiveWorkshopsUserIsIn).mockResolvedValueOnce([workshop]);
       const response = await app.inject({
         method: "POST",
         url: "/session-check",
@@ -1875,7 +1870,7 @@ describe("login-routes tests", () => {
       });
 
       expect(findUserSpy).toHaveBeenCalledWith({ uuid: testUser.uuid });
-      expect(getAndHandleWorkshopEndSpy).toHaveBeenCalledWith(workshop.workshopId);
+      expect(getActiveWorkshopsUsersIsInSpy).toHaveBeenCalledWith(testUser.userId);
       expect(checkSession(response.headers["set-cookie"] as string)).toBe(false);
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
@@ -1893,7 +1888,7 @@ describe("login-routes tests", () => {
     it("should return 200 and without workshop title if no workshop is provided", async () => {
       vi.mocked(databaseModule.findUser).mockResolvedValueOnce([{ ...testUser }]);
       vi.mocked(databaseModule.findWorkshop).mockResolvedValueOnce([{ ...workshop }]);
-      vi.mocked(databaseModule.getAndHandleWorkshopEnd).mockResolvedValueOnce(null);
+      vi.mocked(databaseModule.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
 
       const response = await app.inject({
         method: "POST",

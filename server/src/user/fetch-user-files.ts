@@ -4,7 +4,7 @@ import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**
- * get the private and public user datapack directories
+ * get the private user datapack directories
  * @param uuid
  * @returns
  */
