@@ -129,6 +129,27 @@ const Carousel = observer(function Carousel() {
   });
   const carouselContent = [
     {
+      title: "Customize Your Chart",
+      description: "",
+      bullets: [
+        {
+          title: "Customize Chart Appearance",
+          description: "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+        },
+        {
+          title: "Save Custom Settings",
+          description:
+            "Save your custom chart settings for future use and easy access to your preferred configurations."
+        },
+        {
+          title: "Share Your Charts",
+          description:
+            "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+        }
+      ],
+      image: state.user.settings.darkMode ? "customization-example-dark.png" : "customization-example-light.png"
+    },
+    {
       title: "Interactive Map Points",
       description: "",
       bullets: [
@@ -169,25 +190,25 @@ const Carousel = observer(function Carousel() {
       image: state.user.settings.darkMode ? "search-meso-dark.png" : "search-meso.png"
     },
     {
-      title: "Customize Your Chart",
+      title: "Upload Your Own!",
       description: "",
       bullets: [
         {
-          title: "Customize Chart Appearance",
-          description: "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+          title: "Create Custom Datapacks",
+          description:
+          "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
         },
         {
-          title: "Save Custom Settings",
+          title: "Showcase Your Research",
           description:
-            "Save your custom chart settings for future use and easy access to your preferred configurations."
+          "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
         },
         {
-          title: "Share Your Charts",
-          description:
-            "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+          title: "Collaborate with Others",
+          description: "View other users' datapacks and collaborate on research projects to expand your knowledge and expertise."
         }
       ],
-      image: state.user.settings.darkMode ? "customization-example-dark.png" : "customization-example-light.png"
+      image: "cloud.png"
     }
   ];
   const onNext = () => {
