@@ -18,17 +18,17 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest, DeferredDatapack } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
-  getCurrentUserDatapacks,
-  getPrivateOfficialDatapacks,
-  getPublicDatapacksWithoutCurrentUser,
-  getPublicOfficialDatapacks,
-  getWorkshopDatapacks,
-  isFullDatapackTypeAvailable,
+  doesDatapackAlreadyExist,
+  getCurrentUserDatapacksMetadata,
+  getPrivateOfficialDatapackMetadatas,
+  getPublicDatapacksMetadataWithoutCurrentUser,
+  getPublicOfficialDatapacksMetadata,
+  getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
 import { ErrorCodes } from "../util/error-codes";
@@ -94,14 +94,14 @@ export const Datapacks = observer(function Datapacks() {
       <Box
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
         <DatapackGroupDisplay
-          datapacks={getPublicOfficialDatapacks(state.datapacks)}
+          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
           loading={state.skeletonStates.officialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
-            datapacks={getPrivateOfficialDatapacks(state.datapacks)}
+            datapacks={getPrivateOfficialDatapackMetadatas(state.datapackMetadata)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
             loading={state.skeletonStates.privateUserDatapacksLoading}
@@ -109,7 +109,7 @@ export const Datapacks = observer(function Datapacks() {
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (
           <DatapackGroupDisplay
-            datapacks={getWorkshopDatapacks(state.datapacks)}
+            datapacks={getWorkshopDatapacksMetadata(state.datapackMetadata)}
             header={t("settings.datapacks.title.workshop")}
             HeaderIcon={School}
             loading={state.skeletonStates.publicUserDatapacksLoading}
@@ -117,14 +117,14 @@ export const Datapacks = observer(function Datapacks() {
         )}
         {state.isLoggedIn && state.user && (
           <DatapackGroupDisplay
-            datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
+            datapacks={getCurrentUserDatapacksMetadata(state.user.uuid, state.datapackMetadata)}
             header={t("settings.datapacks.title.your")}
             HeaderIcon={Lock}
             loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         <DatapackGroupDisplay
-          datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
+          datapacks={getPublicDatapacksMetadataWithoutCurrentUser(state.datapackMetadata, state.user?.uuid)}
           header={t("settings.datapacks.title.contributed")}
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
@@ -163,7 +163,7 @@ export const Datapacks = observer(function Datapacks() {
   );
 });
 type DatapackMenuProps = {
-  datapack: DeferredDatapack;
+  datapack: DatapackMetadata;
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
@@ -192,7 +192,7 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
 };
 
 type DatapackGroupDisplayProps = {
-  datapacks: DeferredDatapack[];
+  datapacks: DatapackMetadata[];
   header: string;
   HeaderIcon: React.ElementType;
   loading?: boolean;
@@ -210,13 +210,13 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
     const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
-      if (state.unsavedDatapackConfig.includes(newDatapack)) {
+      if (state.unsavedDatapackConfig.some((datapack) => datapack.title === newDatapack.title)) {
         actions.setUnsavedDatapackConfig(
           state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
         );
       } else {
         actions.setLoadingDatapack(true);
-      if (!isFullDatapackTypeAvailable(newDatapack, state.datapacks)) {
+      if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
         let datapack: Datapack | undefined;
         try {
           switch (newDatapack.type) {
@@ -240,7 +240,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
           actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
           return;
         }
-        actions.addDatapack(datapack);
+        actions.addDatapackOrMetadata(datapack);
       }
       actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
         actions.setLoadingDatapack(false);

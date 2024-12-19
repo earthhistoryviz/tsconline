@@ -1,4 +1,4 @@
-import { DeferredDatapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, isUserDatapack, DatapackMetadata } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
@@ -18,7 +18,7 @@ import {
 import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
-  datapack?: DeferredDatapack;
+  datapack?: DatapackMetadata;
   value?: boolean;
   onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
@@ -55,8 +55,8 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
         onClick={async (e) => {
-          if (loading) return;
           e.stopPropagation();
+          if (loading) return;
           setLoading(true);
           !skeleton && await onChange(datapack);
           setLoading(false);

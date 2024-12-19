@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, makeTempFilename } from "../util.js";
+import { assetconfigs, checkHeader, extractDatapackMetadataFromDatapack, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -25,6 +25,7 @@ import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { User, isOperationResult } from "../types.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
+import { DatapackMetadata } from "@tsconline/shared";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -240,9 +241,10 @@ export const requestDownload = async function requestDownload(
   }
 };
 
-// NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
-export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  // for test usage: const uuid = "username";
+export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
@@ -264,12 +266,15 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     const workshopDatapacks = await Promise.all(workshopDatapacksPromises);
     const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
 
-    reply.send(allDatapacks);
+    const metadatas: DatapackMetadata[] = allDatapacks.map((datapack) => {
+      return extractDatapackMetadataFromDatapack(datapack);
+    });
+
+    reply.send(metadatas);
   } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: "Database or processing error" });
+    reply.status(500).send({ error: "Failed to fetch metadatas" });
   }
-};
+}
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {

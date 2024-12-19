@@ -1,7 +1,7 @@
 import { action, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
-  addDatapack,
+  addDatapackOrMetadata,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -101,7 +101,7 @@ export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier)
   const userDatapack = await fetchUserDatapack(datapack.title);
   if (userDatapack) {
     removeDatapack(datapack);
-    addDatapack(userDatapack);
+    addDatapackOrMetadata(userDatapack);
     return userDatapack;
   } else {
     return null;

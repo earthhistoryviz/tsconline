@@ -7,6 +7,7 @@ import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
+import { Datapack, DatapackMetadata, assertDatapack, assertDatapackMetadata } from "@tsconline/shared";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -285,4 +286,38 @@ export function makeTempFilename(filename: string) {
   hash.update(randomUUID());
   const uniqueHash = hash.digest("hex").substring(0, 10);
   return `temp__${uniqueHash}__${filename}`;
+}
+
+export function extractDatapackMetadataFromDatapack(datapack: Datapack) {
+  const baseMetadata: Partial<DatapackMetadata> = {
+    description: datapack.description,
+    title: datapack.title,
+    originalFileName: datapack.originalFileName,
+    storedFileName: datapack.storedFileName,
+    size: datapack.size,
+    date: datapack.date,
+    authoredBy: datapack.authoredBy,
+    tags: datapack.tags,
+    references: datapack.references,
+    isPublic: datapack.isPublic,
+    contact: datapack.contact,
+    notes: datapack.notes,
+    datapackImage: datapack.datapackImage,
+    priority: datapack.priority,
+  }
+
+  let typeMetadata: Partial<DatapackMetadata> = {};
+  switch (datapack.type) {
+    case "user":
+    case "workshop":
+      typeMetadata = { uuid: datapack.uuid, type: datapack.type };
+      break;
+    case "official":
+      typeMetadata = { type: "official" };
+      break;
+  }
+
+  const metadata = { ...baseMetadata, ...typeMetadata };
+  assertDatapackMetadata(metadata);
+  return metadata;
 }

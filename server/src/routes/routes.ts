@@ -2,17 +2,12 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
-  DeferredDatapack,
-  DatapackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertTimescale,
-  isUserDatapack,
   DatapackMetadata,
-  BaseDatapackPropsRecord,
-  calculateDatapackMetadataHash
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
+import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists, extractDatapackMetadataFromDatapack } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -45,95 +40,16 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   reply.send(officialDatapack);
 };
 
-export const fetchPublicBaseDatapackProps = async function fetchPublicDatapacksBaseDatapackProps(
-  _request: FastifyRequest,
-  reply: FastifyReply
-) {
-  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-  const datapackArray = await loadPublicUserDatapacks(uuids);
-  const datapackBaseProps: BaseDatapackPropsRecord = {};
-  for (const datapack of datapackArray) {
-    const metadataHash = await calculateDatapackMetadataHash(datapack);
-    datapackBaseProps[metadataHash] = {
-      columnInfo: datapack.columnInfo,
-      ageUnits: datapack.ageUnits,
-      defaultChronostrat: datapack.defaultChronostrat,
-      formatVersion: datapack.formatVersion,
-      topAge: datapack.topAge,
-      baseAge: datapack.baseAge,
-      verticalScale: datapack.verticalScale,
-      warnings: datapack.warnings,
-      totalColumns: datapack.totalColumns,
-      columnTypeCount: datapack.columnTypeCount,
-      datapackImageCount: datapack.datapackImageCount,
-      mapPack: datapack.mapPack
-    };
-  }
-  reply.send(datapackBaseProps);
-};
-
 export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksMetadata(
   _request: FastifyRequest,
   reply: FastifyReply
 ) {
   const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
   const datapackArray = await loadPublicUserDatapacks(uuids);
-  const datapackMetadata: DatapackMetadata[] = [];
-  for (const datapack of datapackArray) {
-    const partialDeferredDatapackObject = {
-      description: datapack.description,
-      title: datapack.title,
-      originalFileName: datapack.originalFileName,
-      storedFileName: datapack.storedFileName,
-      size: datapack.size,
-      date: datapack.date,
-      authoredBy: datapack.authoredBy,
-      tags: datapack.tags,
-      references: datapack.references,
-      isPublic: datapack.isPublic,
-      contact: datapack.contact,
-      notes: datapack.notes,
-      datapackImage: datapack.datapackImage,
-      priority: datapack.priority
-    };
-    switch (datapack.type) {
-      case "user":
-      case "workshop":
-        datapackMetadata.push({ ...partialDeferredDatapackObject, uuid: datapack.uuid, type: datapack.type });
-        break;
-      case "official":
-        datapackMetadata.push({ ...partialDeferredDatapackObject, type: "official" });
-        break;
-    }
-  }
+  const datapackMetadata: DatapackMetadata[] = datapackArray.map((datapack) => {
+    return extractDatapackMetadataFromDatapack(datapack);
+  });
   reply.send(datapackMetadata);
-};
-
-export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
-  request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
-  reply: FastifyReply
-) {
-  const { start, increment } = request.query;
-  const startIndex = start === undefined ? 0 : Number(start);
-  let incrementValue = increment === undefined ? 1 : Number(increment);
-  if (
-    (start !== undefined && isNaN(startIndex)) ||
-    (increment !== undefined && isNaN(incrementValue)) ||
-    startIndex < 0 ||
-    incrementValue <= 0
-  ) {
-    reply.status(400).send({ error: "Invalid range" });
-    return;
-  }
-  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-  if (startIndex + incrementValue > uuids.length) {
-    incrementValue = uuids.length - startIndex;
-  }
-  const undefinedIndexes = start === undefined && increment === undefined;
-  const chunk = undefinedIndexes ? uuids : uuids.slice(startIndex, startIndex + incrementValue);
-  const datapackArray = await loadPublicUserDatapacks(chunk);
-  const datapackInfoChunk: DatapackInfoChunk = { datapacks: datapackArray, totalChunks: uuids.length };
-  reply.status(200).send(datapackInfoChunk);
 };
 
 export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {
