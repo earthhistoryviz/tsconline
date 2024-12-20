@@ -292,17 +292,17 @@ const Carousel = observer(function Carousel() {
               height: "100%"
             }}>
             <Box className="home-landing-page-carousel-text">
-              <Typography fontSize="2.75rem" fontWeight="550">
+              <Typography className="home-landing-page-carousel-title">
                 {carouselContent[index].title}
               </Typography>
               <CustomDivider />
               <ul>
                 {carouselContent[index].bullets.map((bullet, index) => (
                   <li key={index}>
-                    <Typography variant="body1" fontSize="1.75rem" fontWeight="600" paddingTop="20px">
+                    <Typography variant="body1" className="home-landing-page-carousel-bullet-title">
                       {bullet.title}
                     </Typography>
-                    <Typography variant="body2" fontSize="1.3rem">
+                    <Typography variant="body2" className="home-landing-page-carousel-bullet">
                       {bullet.description}
                     </Typography>
                   </li>
