@@ -110,6 +110,9 @@
   width: 100%;
 }
 
+.landing-page-title {
+  font-size: 3.75rem;
+}
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
@@ -239,4 +242,17 @@
   align-items: center;
   cursor: pointer;
   flex-direction: column;
+}
+@media screen and (max-width: 1300px) {
+  .landing-page-title {
+    font-size: 2.5rem;
+  }
+  .sub-header-section-landing-page-description {
+    font-size: 1.2rem;
+  }
+}
+@media screen and (max-width: 900px) {
+  .sub-header-section-landing-page-description {
+    font-size: 1rem;
+  }
 }
