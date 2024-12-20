@@ -202,7 +202,7 @@
   width: 100%;
   justify-content: center;
   align-items: center;
-  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 25px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
 }
 .home-landing-page-carousel-left-arrow {
   position: absolute;
@@ -318,5 +318,17 @@
   .home-landing-page-carousel-image {
     -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 20%, rgba(0, 0, 0, 1) 50%);
     mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 20%, rgba(0, 0, 0, 1) 50%);
+  }
+}
+@media screen and (max-width: 500px) {
+  .home-landing-page-carousel {
+    grid-template-rows: 1fr 1.8fr;
+    grid-template-areas: "img" "text";
+  }
+  .home-landing-page-carousel-bullet-title {
+    font-size: 1.1rem;
+  }
+  .home-landing-page-carousel-bullet {
+    font-size: 1rem;
   }
 }

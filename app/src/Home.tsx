@@ -262,9 +262,10 @@ const Carousel = observer(function Carousel() {
             {carouselContent.map((content, index) => (
               <Chip
                 sx={{
-                  background: index === activeIndex ? gradient.dark : "secondaryBackground.main",
+                  ...(index === activeIndex && { background: gradient.dark }),
+                  ...(index !== activeIndex && { backgroundColor: "secondaryBackground.main" }),
                   color: index === activeIndex ? "button.contrastText" : "secondaryBackground.contrastText",
-                  opacity: index === activeIndex ? 1 : 0.6,
+                  opacity: index === activeIndex ? 1 : 0.8,
                   ":hover": {
                     backgroundColor: "button.main",
                     color: "button.contrastText"
