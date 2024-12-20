@@ -243,16 +243,53 @@
   cursor: pointer;
   flex-direction: column;
 }
+.home-landing-page-carousel-title {
+  font-size: 2.75rem;
+  font-weight: 550;;
+}
+.home-landing-page-carousel-bullet-title {
+  padding-top: 20px;
+  font-weight: 600;
+  font-size: 1.75rem;
+}
+.home-landing-page-carousel-bullet {
+  font-size: 1.3rem;
+}
 @media screen and (max-width: 1300px) {
   .landing-page-title {
     font-size: 2.5rem;
   }
-  .sub-header-section-landing-page-description {
+}
+@media screen and (max-width: 1550px) {
+  .home-landing-page-carousel-title {
+    font-size: 2.25rem;
+  }
+  .home-landing-page-carousel-bullet-title {
+    font-size: 1.5rem;
+  }
+  .home-landing-page-carousel-bullet {
     font-size: 1.2rem;
   }
 }
-@media screen and (max-width: 900px) {
-  .sub-header-section-landing-page-description {
-    font-size: 1rem;
+@media screen and (max-width: 1250px) {
+  .home-landing-page-carousel-title {
+    font-size: 2rem;
+  }
+  .home-landing-page-carousel-bullet-title {
+    font-size: 1.4rem;
+  }
+  .home-landing-page-carousel-bullet {
+    font-size: 1.1rem;
+  }
+}
+@media screen and (max-width: 1050px) {
+  .home-landing-page-carousel-text {
+    grid-template-rows: 0.2fr 1px 1fr;
+  }
+  .home-landing-page-carousel-title {
+    font-size: 1.75rem;
+  }
+  .home-landing-page-carousel-bullet-title {
+    font-size: 1.25rem;
   }
 }
