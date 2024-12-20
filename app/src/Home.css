@@ -171,6 +171,34 @@
   display: grid;
   grid-template-rows: 70px 1px 1fr;
 }
+.home-landing-page-carousel-chips {
+  display: flex;
+  gap: 10px;
+  padding: 20px;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}
+.landing-page-carousel-chip {
+  font-size: 1.2rem;
+  padding: 0px 10px;
+  height: 100%;
+  transition:
+    background-color 0.5s ease-in-out,
+    opacity 0.5 ease-in-out,
+    background-image 0.5 ease-in-out;
+}
+.home-landing-page-carousel-chips-container {
+  display: flex;
+  position: relative;
+  height: 40px;
+  border-radius: 15px;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 25px;
+}
 .home-landing-page-carousel-left-arrow {
   position: absolute;
   left: 1%;
