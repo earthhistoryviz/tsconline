@@ -2847,6 +2847,7 @@ __metadata:
     react-number-format: "npm:^5.3.1"
     react-router: "npm:^6.8.1"
     react-router-dom: "npm:^6.8.1"
+    react-swipeable: "npm:^7.0.2"
     react-virtuoso: "npm:^4.7.11"
     react-zoom-pan-pinch: "npm:^3.3.0"
     simplebar-core: "npm:^1.2.4"
@@ -10221,6 +10222,15 @@ __metadata:
   peerDependencies:
     react: ">=16.8"
   checksum: 72747878fd851b8fc9a6c2f1ee7a3f3a69f18df0c45d7857851b57930d4f55686190f5df0b8d9064ce9e8594bd9ac6a6f479bd8c91552f0b825beb012fa5a770
+  languageName: node
+  linkType: hard
+
+"react-swipeable@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "react-swipeable@npm:7.0.2"
+  peerDependencies:
+    react: ^16.8.3 || ^17 || ^18 || ^19.0.0 || ^19.0.0-rc
+  checksum: c142190244865c321751b0ca5f14ac186cf8a5d49bd577b16b1d22ea4f673d1e85cd7ad1962736be4575df320a6081c2b2b36799236c777b1a3ffb8682f4993c
   languageName: node
   linkType: hard
 
