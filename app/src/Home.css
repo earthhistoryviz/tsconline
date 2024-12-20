@@ -154,7 +154,7 @@
 }
 .home-landing-page-carousel-container {
   position: relative;
-  height: 55vh;
+  height: 550px;
   display: flex;
   overflow: hidden;
 }
@@ -301,7 +301,7 @@
 
 @media screen and (max-width: 900px) {
   .home-landing-page-carousel-container {
-    height: 60vh;
+    height: 670px;
   }
   .home-landing-page-carousel {
     display: grid;
