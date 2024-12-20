@@ -6,7 +6,7 @@ import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChar
 import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton } from "@mui/material";
+import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton, Chip } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution, CustomDivider } from "./components";
 import "./Home.css";
@@ -16,6 +16,7 @@ import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
 import DownArrow from "./assets/icons/down-arrow.json";
 import { useTransition, animated } from "@react-spring/web";
+import { createGradient } from "./util/util";
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
@@ -108,6 +109,7 @@ const Carousel = observer(function Carousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState("right");
   const [isAnimating, setIsAnimating] = useState(false);
+  const theme = useTheme();
   const transitions = useTransition(activeIndex, {
     keys: activeIndex,
     from: {
@@ -196,16 +198,17 @@ const Carousel = observer(function Carousel() {
         {
           title: "Create Custom Datapacks",
           description:
-          "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
+            "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
         },
         {
           title: "Showcase Your Research",
           description:
-          "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
+            "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
         },
         {
           title: "Collaborate with Others",
-          description: "View other users' datapacks and collaborate on research projects to expand your knowledge and expertise."
+          description:
+            "View other users' datapacks and collaborate on research projects to expand your knowledge and expertise."
         }
       ],
       image: "cloud.png"
@@ -221,6 +224,15 @@ const Carousel = observer(function Carousel() {
     setDirection("left");
     setActiveIndex((activeIndex - 1 + carouselContent.length) % carouselContent.length);
   };
+  const jumpToIndex = (index: number) => {
+    if (isAnimating) return;
+    if (index < activeIndex) {
+      setDirection("left");
+    } else {
+      setDirection("right");
+    }
+    setActiveIndex(index);
+  };
   const buttonStyle = {
     backgroundColor: "dark.light",
     color: "dark.contrastText",
@@ -228,51 +240,78 @@ const Carousel = observer(function Carousel() {
       backgroundColor: "dark.main"
     }
   };
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   return (
-    <Box className="home-landing-page-carousel-container">
-      {transitions((style, index) => (
-        <animated.div
-          className="home-landing-page-carousel"
-          style={{
-            ...style,
-            position: "absolute",
-            width: "100%",
-            height: "100%"
-          }}>
-          <Box className="home-landing-page-carousel-text">
-            <Typography fontSize="2.75rem" fontWeight="550">
-              {carouselContent[index].title}
-            </Typography>
-            <CustomDivider />
-            <ul>
-              {carouselContent[index].bullets.map((bullet, index) => (
-                <li key={index}>
-                  <Typography variant="body1" fontSize="1.75rem" fontWeight="600" paddingTop="20px">
-                    {bullet.title}
-                  </Typography>
-                  <Typography variant="body2" fontSize="1.3rem">
-                    {bullet.description}
-                  </Typography>
-                </li>
-              ))}
-            </ul>
-          </Box>
-          <Box className="home-landing-page-carousel-image-container">
-            <img
-              loading="lazy"
-              className="home-landing-page-carousel-image"
-              src={devSafeUrl(`/public/website-images/${carouselContent[index].image}`)}
-              alt={carouselContent[index].title}
+    <Box display="flex" flexDirection="column">
+      <Box className="home-landing-page-carousel-chips">
+        <Box
+          className="home-landing-page-carousel-chips-container"
+          sx={{ backgroundColor: "secondaryBackground.main" }}>
+          {carouselContent.map((content, index) => (
+            <Chip
+              sx={{
+                background: index === activeIndex ? gradient.dark : "secondaryBackground.main",
+                color: index === activeIndex ? "button.contrastText" : "secondaryBackground.contrastText",
+                opacity: index === activeIndex ? 1 : 0.6,
+                ":hover": {
+                  backgroundColor: "button.main",
+                  color: "button.contrastText"
+                }
+              }}
+              className="landing-page-carousel-chip"
+              size="medium"
+              label={content.title}
+              key={index}
+              onClick={() => jumpToIndex(index)}
             />
-          </Box>
-        </animated.div>
-      ))}
-      <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
-        <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
-      </IconButton>
-      <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
-        <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
-      </IconButton>
+          ))}
+        </Box>
+      </Box>
+      <Box className="home-landing-page-carousel-container">
+        {transitions((style, index) => (
+          <animated.div
+            className="home-landing-page-carousel"
+            style={{
+              ...style,
+              position: "absolute",
+              width: "100%",
+              height: "100%"
+            }}>
+            <Box className="home-landing-page-carousel-text">
+              <Typography fontSize="2.75rem" fontWeight="550">
+                {carouselContent[index].title}
+              </Typography>
+              <CustomDivider />
+              <ul>
+                {carouselContent[index].bullets.map((bullet, index) => (
+                  <li key={index}>
+                    <Typography variant="body1" fontSize="1.75rem" fontWeight="600" paddingTop="20px">
+                      {bullet.title}
+                    </Typography>
+                    <Typography variant="body2" fontSize="1.3rem">
+                      {bullet.description}
+                    </Typography>
+                  </li>
+                ))}
+              </ul>
+            </Box>
+            <Box className="home-landing-page-carousel-image-container">
+              <img
+                loading="lazy"
+                className="home-landing-page-carousel-image"
+                src={devSafeUrl(`/public/website-images/${carouselContent[index].image}`)}
+                alt={carouselContent[index].title}
+              />
+            </Box>
+          </animated.div>
+        ))}
+        <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
+          <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
+        </IconButton>
+        <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
+          <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
+        </IconButton>
+      </Box>
     </Box>
   );
 });
