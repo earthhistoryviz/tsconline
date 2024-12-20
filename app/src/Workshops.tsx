@@ -124,7 +124,7 @@ const dummyWorkshops: Workshop[] = [
 type WorkshopsCategoryProps = {
   workshops: Workshop[];
   noDataMessage: string;
-  onClickHandler: (workshop: Workshop) => void; // Assuming this function is passed as a prop
+  onClickHandler: (workshop: Workshop) => void;
 };
 
 const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noDataMessage, onClickHandler }) => {
