@@ -28,6 +28,7 @@ import DownArrow from "./assets/icons/down-arrow.json";
 import { useTransition, animated } from "@react-spring/web";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
+import { useSwipeable } from "react-swipeable";
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
@@ -244,6 +245,11 @@ const Carousel = observer(function Carousel() {
     }
     setActiveIndex(index);
   };
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => onNext(),
+    onSwipedRight: () => onPrevious(),
+    trackTouch: true,
+  });
   const buttonStyle = {
     backgroundColor: "dark.light",
     color: "dark.contrastText",
@@ -253,7 +259,7 @@ const Carousel = observer(function Carousel() {
   };
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   return (
-    <Box display="flex" flexDirection="column">
+    <Box {...swipeHandlers} display="flex" flexDirection="column">
       {!isMobile && (
         <Box className="home-landing-page-carousel-chips">
           <Box
@@ -338,7 +344,7 @@ const Carousel = observer(function Carousel() {
           <TSCStepper
             amountOfSteps={carouselContent.length}
             activeStep={activeIndex}
-            size={15}
+            size={10}
             setActiveStep={jumpToIndex}
           />
         </Box>
