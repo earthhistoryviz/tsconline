@@ -67,8 +67,6 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
 
-const increment = 1;
-
 export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
     const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
@@ -113,19 +111,27 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   }
 });
 export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
-  const index = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
-  if (index > -1) {
-    state.datapacks.splice(index, 1); // Remove the matching datapack in place
+  const datapackIndex = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  console.log(datapackIndex)
+  if (datapackIndex > -1) {
+    console.log("Removing datapack", state.datapacks[datapackIndex]);
+    state.datapacks.splice(datapackIndex, 1); // Remove the matching datapack in place
+  }
+  const metadataIndex = state.datapackMetadata.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (metadataIndex > -1) {
+    state.datapackMetadata.splice(metadataIndex, 1); // Remove the matching metadata in place
   }
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
+  state.datapackMetadata = observable(state.datapackMetadata.filter((d) => !d.isPublic));
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
   fetchAllPublicDatapacksMetadata();
 });
-export const addDatapackOrMetadata = action("addDatapack", (datapack: DatapackMetadata | Datapack) => {
+export const addDatapack = action("addDatapack", (datapack: DatapackMetadata | Datapack) => {
   if ("columnInfo" in datapack && !doesDatapackAlreadyExist(datapack, state.datapacks)) {
     state.datapacks.push(observable(datapack));
-  } else if (!doesMetadataAlreadyExist(datapack, state.datapackMetadata)) {
+  }
+  if (!doesMetadataAlreadyExist(datapack, state.datapackMetadata)) {
     state.datapackMetadata.push(observable(datapack));
   }
 });
@@ -144,9 +150,9 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     const datapacks = await response.json();
     try {
       assertDatapackMetadataArray(datapacks);
-      runInAction(() => {
-        state.datapackMetadata = observable(datapacks);
-      });
+      for (const dp of datapacks) {
+        addDatapack(dp);
+      }
         if (index.datapacks[0]?.type === "official") {
           setOfficialDatapacksLoading(false);
         }
@@ -184,31 +190,6 @@ export const fetchPresets = action("fetchPresets", async () => {
   }
 });
 
-export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
-  try {
-    const response = await fetcher("/public/datapacks", {
-      method: "GET"
-    });
-    const data = await response.json();
-    try {
-      assertDatapackArray(data);
-      for (const dp of data) {
-        addDatapackOrMetadata(dp);
-      }
-      console.log("Public Datapacks loaded");
-    } catch (e) {
-      console.error(e);
-      displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-/**
- * This will grab the user datapacks AND the server datapacks from the server
- */
 export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", async () => {
   try {
     const response = await fetcher(`/user/metadata`, {
@@ -220,7 +201,7 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
       assertDatapackMetadataArray(data);
       // this does not check for duplicate keys
       for (const dp in data) {
-        addDatapackOrMetadata(data[dp]);
+        addDatapack(data[dp]);
       }
       console.log("User Datapacks loaded");
     } catch (e) {
@@ -303,7 +284,7 @@ export const uploadUserDatapack = action(
           pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
           return;
         }
-        addDatapackOrMetadata(datapack);
+        addDatapack(datapack);
         if (metadata.isPublic) {
           refreshPublicDatapacks();
         }

@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { loadRecaptcha } from "./util";
+import { loadRecaptcha, yieldControl } from "./util";
 import {
   Autocomplete,
   Avatar,
@@ -33,7 +33,8 @@ import {
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
-  isUserDatapack
+  isUserDatapack,
+  assertWorkshopDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -50,6 +51,7 @@ import {
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { toJS } from "mobx";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -59,40 +61,42 @@ export const DatapackProfile = observer(() => {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   const [datapack, setDatapack] = useState<Datapack | undefined>(state.datapacks.find((d) => d.title === id && d.type === queryType));
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
   const fetchDatapack = async () => {
     if (!id) return;
     if (!datapack) {
+      await loadRecaptcha();
       switch (queryType) {
         case "user":
           return await actions.fetchUserDatapack(id);
         case "official":
           return await actions.fetchOfficialDatapack(id);
         case "workshop":
-          // TODO: FILL THIS IN
-          break;
+          const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
+          if (!metadata) return;
+          assertWorkshopDatapack(metadata);
+          return await actions.fetchWorkshopDatapack(metadata.uuid, id);
       }
     }
   };
   useEffect(() => {
     const intializeDatapack = async () => {
       if (!datapack) {
-        setLoading(true);
         const fetchedDatapack = await fetchDatapack();
         if (fetchedDatapack) {
           actions.resetEditableDatapackMetadata(fetchedDatapack);
-          actions.addDatapackOrMetadata(fetchedDatapack);
+          actions.addDatapack(fetchedDatapack);
           setIsMetadataInitialized(true);
           setDatapack(fetchedDatapack);
         } 
-        setLoading(false);
       } else if (!isMetadataInitialized) {
         actions.resetEditableDatapackMetadata(datapack);
         setIsMetadataInitialized(true);
       }
+      setLoading(false);
     }
 
     intializeDatapack().catch((e) => {
@@ -107,7 +111,6 @@ export const DatapackProfile = observer(() => {
   }, []);
   if (loading) return <TSCDialogLoader headerText="Fetching Datapack" open={true} />;
   if (!datapack || !id) return <PageNotFound />;
-  if (state.datapackProfilePage.editMode) loadRecaptcha();
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {
@@ -186,13 +189,15 @@ export const DatapackProfile = observer(() => {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
       }
-      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      const editedDatapack = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      if (editedDatapack) setDatapack(editedDatapack);
+      actions.setDatapackProfilePageEditMode(false);
       // if the title has changed, navigate to the new title
-      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
+      if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(
           getNavigationRouteForDatapackProfile(
             state.datapackProfilePage.editableDatapackMetadata.title,
-            query.get("type")!
+            queryType!
           )
         );
       }

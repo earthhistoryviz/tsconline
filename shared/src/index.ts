@@ -1038,7 +1038,7 @@ export function assertPatterns(o: any): asserts o is Patterns {
   }
 }
 
-export function isDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
+export function isPartialDatapackMetadata(o: any): o is Partial<DatapackMetadata> {
   if (!o || typeof o !== "object") return false;
   const validKeys = [
     "description",
@@ -1095,7 +1095,7 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   for (const reference of o.references) {
     if (typeof reference !== "string") throwError("DatapackMetadata", "references", "array of strings", o.references);
   }
-  if ("contact" in o && typeof o.contact !== "string") throwError("DatapackMetadata", "contact", "string", o.contact);
+  if ("contact" in o && typeof o.contact !== "string") { console.log(o); throwError("DatapackMetadata", "contact", "string", o.contact); }
   if ("notes" in o && typeof o.notes !== "string") throwError("DatapackMetadata", "notes", "string", o.notes);
   if (typeof o.isPublic !== "boolean") throwError("DatapackMetadata", "isPublic", "boolean", o.isPublic);
   if ("datapackImage" in o && typeof o.datapackImage !== "string")

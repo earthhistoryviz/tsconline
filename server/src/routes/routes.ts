@@ -7,7 +7,7 @@ import {
   assertTimescale,
   DatapackMetadata,
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists, extractDatapackMetadataFromDatapack } from "../util.js";
+import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists, extractMetadataFromDatapack } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -47,7 +47,7 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
   const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
   const datapackArray = await loadPublicUserDatapacks(uuids);
   const datapackMetadata: DatapackMetadata[] = datapackArray.map((datapack) => {
-    return extractDatapackMetadataFromDatapack(datapack);
+    return extractMetadataFromDatapack(datapack);
   });
   reply.send(datapackMetadata);
 };

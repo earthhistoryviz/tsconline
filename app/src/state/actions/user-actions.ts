@@ -1,7 +1,7 @@
 import { action, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
-  addDatapackOrMetadata,
+  addDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -19,7 +19,8 @@ import {
   DatapackUniqueIdentifier,
   assertBatchUpdateServerPartialError,
   assertDatapack,
-  assertUserDatapack
+  assertUserDatapack,
+  assertWorkshopDatapack
 } from "@tsconline/shared";
 import { state } from "../state";
 import { doesDatapackExistInCurrentConfig } from "../non-action-util";
@@ -34,7 +35,7 @@ export const handleDatapackEdit = action(
       setEditRequestInProgress(true);
       if (!state.user.uuid) {
         pushError(ErrorCodes.NOT_LOGGED_IN);
-        return false;
+        return null;
       }
       const formData = new FormData();
       for (const key in editedDatapack) {
@@ -51,11 +52,11 @@ export const handleDatapackEdit = action(
       if (Array.from(formData.keys()).length === 0) {
         pushSnackbar("No changes made", "info");
         setDatapackProfilePageEditMode(false);
-        return false;
+        return null;
       }
       try {
         const recaptcha = await getRecaptchaToken("handleDatapackEdit");
-        if (!recaptcha) return false;
+        if (!recaptcha) return null;
         const response = await fetcher(`/user/datapack/${originalDatapack.title}`, {
           method: "PATCH",
           body: formData,
@@ -66,12 +67,11 @@ export const handleDatapackEdit = action(
         });
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
-          setDatapackProfilePageEditMode(false);
-          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid });
-          if (!datapack) return false;
+          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid }, { title: originalDatapack.title, type: "user", uuid: state.user.uuid });
+          if (!datapack) return null;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
-          return true;
+          return datapack;
         } else {
           try {
             const error = await response.json();
@@ -81,12 +81,12 @@ export const handleDatapackEdit = action(
             }
           } catch (e) {
             displayServerError(
-              response,
+              response.statusText,
               ErrorCodes.USER_EDIT_DATAPACK_FAILED,
               ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
             );
           }
-          return false;
+          return null;
         }
       } catch (e) {
         pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
@@ -94,14 +94,15 @@ export const handleDatapackEdit = action(
     } finally {
       setEditRequestInProgress(false);
     }
+    return null;
   }
 );
 
-export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier) => {
-  const userDatapack = await fetchUserDatapack(datapack.title);
+export const refetchDatapack = action(async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
+  const userDatapack = await fetchUserDatapack(editedDatapack.title);
   if (userDatapack) {
-    removeDatapack(datapack);
-    addDatapackOrMetadata(userDatapack);
+    removeDatapack(originalDatapack);
+    addDatapack(userDatapack);
     return userDatapack;
   } else {
     return null;
@@ -125,9 +126,36 @@ export const fetchUserDatapack = action(async (datapack: string) => {
       return data;
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_FETCH_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_FETCH_DATAPACK_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const fetchWorkshopDatapack = action(async (workshopUUID: string, datapack: string) => {
+  try {
+    const recaptcha = await getRecaptchaToken("fetchWorkshopDatapack");
+    if (!recaptcha) return;
+    const response = await fetcher(`/user/workshop/${workshopUUID}/datapack/${datapack}`, {
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      assertWorkshopDatapack(data);
+      assertDatapack(data);
+      return data;
+    } else {
+      displayServerError(
+        response.statusText,
+        ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED,
+        ErrorMessages[ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED]
       );
     }
   } catch (e) {
@@ -151,7 +179,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_DELETE_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_DELETE_DATAPACK_FAILED]
       );
@@ -179,7 +207,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     });
     if (response.ok) {
       pushSnackbar("File replaced", "success");
-      const datapack = await refetchDatapack(datapackUniqueIdentifier);
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       // if selected in the config, force a reprocess of the config
@@ -188,7 +216,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
       }
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED,
         ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_FILE_FAILED]
       );
@@ -221,13 +249,14 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
     });
     if (response.ok) {
       pushSnackbar("Image replaced", "success");
-      const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
+      const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       setDatapackProfilePageImageVersion(new Date().getTime());
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED,
         ErrorMessages[ErrorCodes.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED]
       );
