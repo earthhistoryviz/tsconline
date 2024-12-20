@@ -61,7 +61,7 @@ export const DatapackProfile = observer(() => {
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
   const [datapack, setDatapack] = useState<Datapack | undefined>(state.datapacks.find((d) => d.title === id && d.type === queryType));
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
@@ -75,11 +75,10 @@ export const DatapackProfile = observer(() => {
         case "official":
           return await actions.fetchOfficialDatapack(id);
         case "workshop":
-          const datapack = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
-          if (!datapack) return;
-          assertWorkshopDatapack(datapack);
-          const workshopUUID = datapack.uuid;
-          return await actions.fetchWorkshopDatapack(workshopUUID, id);
+          const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
+          if (!metadata) return;
+          assertWorkshopDatapack(metadata);
+          return await actions.fetchWorkshopDatapack(metadata.uuid, id);
       }
     }
   };
