@@ -121,6 +121,59 @@ const dummyWorkshops: Workshop[] = [
   }
 ];
 
+type WorkshopsCategoryProps = {
+  workshops: Workshop[];
+  noDataMessage: string;
+  onClickHandler: (workshop: Workshop) => void; // Assuming this function is passed as a prop
+}
+
+const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noDataMessage, onClickHandler }) => {
+  const { t } = useTranslation();
+  return (<StyledScrollbar>
+    <Box sx={{ display: "flex", padding: "5px 5px" }}>
+      {workshops.length > 0 ? (
+        workshops.map((workshop) => (
+          <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
+            <Card
+              sx={{
+                outline: "1px solid",
+                outlineColor: "divider",
+                bgcolor: "secondaryBackground.main"
+              }}
+              className="workshop-card"
+              onClick={() => onClickHandler(workshop)}
+            >
+              <CardContent>
+                <CardMedia
+                  component="img"
+                  height="140"
+                  image={workshop.imageLink}
+                  alt={workshop.title}
+                  sx={{ objectFit: "cover" }}
+                />
+                <Typography variant="h5" component="div" gutterBottom>
+                  {workshop.title}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {t("workshops.dates.start")}
+                  {workshop.start}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  {t("workshops.dates.end")}
+                  {workshop.end}
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+        ))
+      ) : (
+        <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
+      )}
+    </Box>
+  </StyledScrollbar>);
+}
+
+
 export const Workshops: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const theme = useTheme();
@@ -132,60 +185,12 @@ export const Workshops: React.FC = observer(() => {
   const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
   // TODO: change this when implement the backend
-  const setWorkshopAndNavigate = (workshop: Workshop) => {
+  function setWorkshopAndNavigate(workshop: Workshop) {
     navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
   };
-  const renderWorkshopsCategory = (workshops: Workshop[], noDataMessage: string) => (
-    <StyledScrollbar>
-      <Box
-        sx={{
-          display: "flex",
-          padding: "5px 5px"
-        }}>
-        {workshops.length > 0 ? (
-          workshops.map((workshop) => (
-            <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
-              <Card
-                sx={{
-                  outline: "1px solid",
-                  outlineColor: "divider",
-                  bgcolor: "secondaryBackground.main"
-                }}
-                className="workshop-card"
-                onClick={() => setWorkshopAndNavigate(workshop)} // Set selected workshop on click
-              >
-                <CardContent>
-                  <CardMedia
-                    component="img"
-                    height="140"
-                    image={workshop.imageLink} // Placeholder image
-                    alt={workshop.title}
-                    sx={{ objectFit: "cover" }} // Ensure the image fits well
-                  />
-                  <Typography variant="h5" component="div" gutterBottom>
-                    {workshop.title}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.start")}
-                    {workshop.start}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.end")}
-                    {workshop.end}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))
-        ) : (
-          <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
-        )}
-      </Box>
-    </StyledScrollbar>
-  );
 
   useEffect(() => {
-    actions.pushWorkshopToWorkshopsArray(dummyWorkshops);
+    actions.setWorkshopsArray(dummyWorkshops);
   }, []);
   return (
     <>
@@ -206,7 +211,7 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.active")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>{renderWorkshopsCategory(activeWorkshops, "active")}</AccordionDetails>
+            <AccordionDetails><WorkshopsCategory workshops={activeWorkshops} noDataMessage="active" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
           </Accordion>
 
           {/* Upcoming Workshops */}
@@ -219,7 +224,7 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.upcoming")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>{renderWorkshopsCategory(upcomingWorkshops, "upcoming")}</AccordionDetails>
+            <AccordionDetails><WorkshopsCategory workshops={upcomingWorkshops} noDataMessage="upcoming" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
           </Accordion>
 
           {/* Expired Workshops */}
@@ -232,7 +237,7 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.past")}</Typography>
             </AccordionSummary>
-            <AccordionDetails>{renderWorkshopsCategory(pastWorkshops, "past")}</AccordionDetails>
+            <AccordionDetails><WorkshopsCategory workshops={pastWorkshops} noDataMessage="past" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
           </Accordion>
         </Box>
       ) : (
