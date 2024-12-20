@@ -90,6 +90,14 @@ export function GenerateExternalChart() {
             "Microfossils"
           ];
           toggleSpecificColumns(columnNamesToToggle);
+
+          const parts = datapackHash.split("-");
+          const oldestTime = parseInt(parts[1], 10);
+          const newestTime = parseInt(parts[2], 10);
+          actions.setBaseStageAge(oldestTime, "Ma");
+          actions.setTopStageAge(newestTime, "Ma");
+          actions.setUnitsPerMY(0.1, "Ma");
+
           actions.initiateChartGeneration(navigate, location.pathname);
         } catch (error) {
           actions.pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
