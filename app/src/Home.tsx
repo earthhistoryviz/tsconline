@@ -194,7 +194,7 @@ const Carousel = observer(function Carousel() {
         {
           title: "Extend/Center Age Range",
           description:
-            "Once you find the column or event you're looking for, extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
+            "Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
         },
         {
           title: "View Specific Notes",
@@ -219,8 +219,7 @@ const Carousel = observer(function Carousel() {
         },
         {
           title: "Collaborate with Others",
-          description:
-            "View other users' datapacks and collaborate on research projects to expand your knowledge and expertise."
+          description: "View other users' datapacks and collaborate to expand your knowledge and expertise."
         }
       ],
       image: "cloud.png"
@@ -255,8 +254,8 @@ const Carousel = observer(function Carousel() {
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   return (
     <Box display="flex" flexDirection="column">
-      <Box className="home-landing-page-carousel-chips">
-        {!isMobile && (
+      {!isMobile && (
+        <Box className="home-landing-page-carousel-chips">
           <Box
             className="home-landing-page-carousel-chips-container"
             sx={{ backgroundColor: "secondaryBackground.main" }}>
@@ -279,8 +278,8 @@ const Carousel = observer(function Carousel() {
               />
             ))}
           </Box>
-        )}
-      </Box>
+        </Box>
+      )}
       <Box className="home-landing-page-carousel-container">
         {transitions((style, index) => (
           <animated.div
@@ -292,9 +291,7 @@ const Carousel = observer(function Carousel() {
               height: "100%"
             }}>
             <Box className="home-landing-page-carousel-text">
-              <Typography className="home-landing-page-carousel-title">
-                {carouselContent[index].title}
-              </Typography>
+              <Typography className="home-landing-page-carousel-title">{carouselContent[index].title}</Typography>
               <CustomDivider />
               <ul>
                 {carouselContent[index].bullets.map((bullet, index) => (
@@ -321,22 +318,29 @@ const Carousel = observer(function Carousel() {
         ))}
         {!isMobile && (
           <>
-            <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
-              <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
-            </IconButton>
-            <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
-              <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
-            </IconButton>
+            {activeIndex !== 0 && (
+              <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
+                <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
+              </IconButton>
+            )}
+            {activeIndex !== carouselContent.length - 1 && (
+              <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
+                <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
+              </IconButton>
+            )}
           </>
         )}
       </Box>
+      <CustomDivider />
       {isMobile && (
-        <TSCStepper
-          amountOfSteps={carouselContent.length}
-          activeStep={activeIndex}
-          size={15}
-          setActiveStep={jumpToIndex}
-        />
+        <Box className="home-landing-page-carousel-chips-mobile">
+          <TSCStepper
+            amountOfSteps={carouselContent.length}
+            activeStep={activeIndex}
+            size={15}
+            setActiveStep={jumpToIndex}
+          />
+        </Box>
       )}
     </Box>
   );

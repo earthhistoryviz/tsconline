@@ -19,13 +19,18 @@ export const TSCStepper: React.FC<TSCStepperProps> = function TSCStepper({
   const buttonDim = { width: buttonSize, height: buttonSize };
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
+  const isFirstIndex = activeStep === 0;
+  const isLastIndex = activeStep === amountOfSteps - 1;
   return (
     <Box
       className={styles.container}
       sx={{
         gap: size ? `${size * 1.2}px` : "15px"
       }}>
-      <IconButton sx={buttonDim} onClick={() => setActiveStep((activeStep - 1 + amountOfSteps) % amountOfSteps)}>
+      <IconButton
+        sx={{ ...buttonDim, opacity: isFirstIndex ? "0" : "1" }}
+        disabled={isFirstIndex}
+        onClick={() => setActiveStep((activeStep - 1 + amountOfSteps) % amountOfSteps)}>
         <ChevronLeft sx={buttonDim} />
       </IconButton>
       {[...Array(amountOfSteps)].map((val, index) => (
@@ -44,7 +49,10 @@ export const TSCStepper: React.FC<TSCStepperProps> = function TSCStepper({
             ...(activeStep === index ? { background: gradient.dark } : { backgroundColor: "disabled.main" })
           }}></Box>
       ))}
-      <IconButton sx={buttonDim} onClick={() => setActiveStep((activeStep + 1) % amountOfSteps)}>
+      <IconButton
+        sx={{ ...buttonDim, opacity: isLastIndex ? "0" : "1" }}
+        disabled={isLastIndex}
+        onClick={() => setActiveStep((activeStep + 1) % amountOfSteps)}>
         <ChevronRight sx={buttonDim} />
       </IconButton>
     </Box>
