@@ -130,6 +130,7 @@ export type Config = {
 
 export const SettingsMenuOptionLabels = {
   time: "Time",
+  preferences: "Preferences",
   column: "Column",
   search: "Search",
   font: "Font",

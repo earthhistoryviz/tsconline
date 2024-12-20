@@ -90,58 +90,61 @@
             "loading-datapacks": "Loading Datapacks",
             "time": "this could take more than a minute"
         },
-        "settingsTabs": {
-            "Time": "Time",
-            "Column": "Column",
-            "Search": "Search",
-            "Font": "Font",
-            "Map Points": "Map Points",
-            "Datapacks": "Datapacks",
-            "General": "General",
-            "Data Mining": "Data Mining",
-            "Curve Drawing": "Curve Drawing",
-            "About": "About",
-            "View Data": "View Data",
-            "Discussion": "Discussion",
-            "Warnings": "Warnings"
-        },
-        "settings": {
-            "settings-file": {
-                "load": "Load Settings",
-                "save": "Save Settings",
-                "load-dialog": {
+            "settingsTabs": {
+              "Time": "Time",
+              "Preferences": "Preferences",
+              "Column": "Column",
+              "Search": "Search",
+              "Font": "Font",
+              "Map Points": "Map Points",
+              "Datapacks": "Datapacks",
+              "General": "General",
+              "Data Mining": "Data Mining",
+              "Curve Drawing": "Curve Drawing",
+              "About": "About",
+              "View Data": "View Data",
+              "Discussion": "Discussion",
+              "Warnings": "Warnings"
+            },
+            "settings": {
+              "time": {
+                "interval": {
+                  "top": "Top of Interval",
+                  "base": "Base of Interval",
+                  "top-name": "Top Age/Stage Name",
+                  "base-name": "Base Age/Stage Name",
+                  "not-avaliable": "Not Available for this Unit",
+                  "vertical-scale": "Vertical Scale (cm per 1 ",
+                  "helper-text": "Base age should be older than top age"
+                }
+              },
+              "preferences": {
+                "checkboxs": {
+                  "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
+                  "mouse-over-info": "Add MouseOver info (popups)",
+                  "global-priority": "Enabled Global Priority Filtering for block columns",
+                  "stage-background": "Enabled stage background for event columns",
+                  "enable-legend": "Enable legend for the chart",
+                  "lithology-auto-indent": "Do not auto-indent lithology patterns",
+                  "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
+                  "hide-block-labels": "Hide block labels based on priority",
+                  "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
+                },
+                "settings-file":{
+                  "load": "Load Settings",
+                  "save": "Save Settings",
+                  "load-dialog": {
                     "message": "This will overwrite any changes you've made!",
                     "cancel": "Cancel",
                     "load": "Load"
-                },
-                "save-dialog": {
+                  },
+                  "save-dialog": {
                     "message": "Please enter the filename below.",
                     "cancel": "Cancel",
                     "save": "Save"
+                  }
                 }
-            },
-            "time": {
-                "interval": {
-                    "top": "Top of Interval",
-                    "base": "Base of Interval",
-                    "top-name": "Top Age/Stage Name",
-                    "base-name": "Base Age/Stage Name",
-                    "not-avaliable": "Not Available for this Unit",
-                    "vertical-scale": "Vertical Scale (cm per 1 ",
-                    "helper-text": "Base age should be older than top age"
-                },
-                "checkboxs": {
-                    "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
-                    "mouse-over-info": "Add MouseOver info (popups)",
-                    "global-priority": "Enabled Global Priority Filtering for block columns",
-                    "stage-background": "Enabled stage background for event columns",
-                    "enable-legend": "Enable legend for the chart",
-                    "lithology-auto-indent": "Do not auto-indent lithology patterns",
-                    "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
-                    "hide-block-labels": "Hide block labels based on priority",
-                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
-                }
-            },
+              },
             "column": {
                 "tooltip": {
                     "not-in-range": "Data not included in time range",

@@ -1,10 +1,13 @@
-.MuiSvgIcon-root.save-settings-button {
-  width: 25px;
-  height: 25px;
+.MuiButton-root.save-settings-button {
+  font-size: 14px;
+  padding: 8px 16px;
   margin: 0;
+  color: #ffffff;
+  background-color: #5e9ad3;
+  border: none;
+  border-radius: 4px;
 }
 
-.MuiIconButton-root.icon-save-settings-button {
-  width: 35px;
-  height: 35px;
+.MuiButton-root.save-settings-button:hover {
+  background-color: #457ec4;
 }

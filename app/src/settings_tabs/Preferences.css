@@ -1,86 +1,104 @@
-.time-settings-container {
-  display: flex;
-  flex-direction: column; /* Column layout for vertical alignment */
-  align-items: center;
-  justify-content: space-between; /* Add space between children */
-  border: 1px solid gray;
-  border-radius: 4px;
-  padding: 10px;
-  margin: 10px auto;
-  max-width: 50%; /* Adjust width if necessary */
-  min-height: 350px; /* Set a minimum height to make the container longer */
-}
-.time-settings-container > * {
-  width: 100%; /* Ensure child elements take full width */
-  flex: 1; /* Make children grow to fill the container */
-}
-.time-settings-age-container {
+.preferences-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 12px;
-  max-width: 700px;
-  margin: 10px 0px;
+  width: 100%;
 }
+
+.preferences-settings-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid gray;
+  border-radius: 4px;
+  padding: 10px;
+  margin: 10px auto;
+  max-width: 50%;
+  min-height: 550px;
+  background-color: #252e3c;
+}
+
+.preferences-settings-container > * {
+  width: 100%;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 20px;
+}
+
 .IntervalLabel {
   margin-bottom: 2px;
 }
+
 .MuiToggleButtonGroup-root.ToggleButtonGroup {
   margin-top: 10px;
   width: 100%;
   align-items: center;
   justify-content: center;
 }
+
 .FormControlIntervals {
   width: 100%;
 }
+
 .SelectTop {
   margin-bottom: 10px;
   width: 100%;
 }
-.top-interval-container {
-  margin-bottom: 20px; /* Add margin to create a gap */
-}
+
 .time-form-divider {
   margin-bottom: 10px;
 }
+
 .MuiTextField-root.UnitTextField {
   margin-bottom: 10px;
   width: 100%;
 }
+
 .SelectBase {
   margin-bottom: 10px;
   width: 100%;
 }
+
 .MuiTextField-root.VerticalScale {
   margin-bottom: 10px;
   width: 100%;
 }
+
 .Button {
   width: 100%;
   height: 75px;
   color: #ffffff;
   margin-top: "10px";
 }
+
 .generate-button {
   width: auto;
   height: auto;
   font-size: 0.85rem;
 }
+
 .generate-button-container {
   display: flex;
   justify-content: center;
   margin-bottom: 10px;
 }
+
 @media screen and (max-width: 600px) {
-  .time-settings-container {
+  .preferences-settings-container {
     flex-direction: column;
   }
-  .time-settings-container > * {
+
+  .preferences-settings-container > * {
     max-width: 100%;
   }
-  .time-settings-age-container {
+
+  .preferences-settings-age-container {
     margin: 20px 20px 0px 20px;
     width: 100%;
   }
