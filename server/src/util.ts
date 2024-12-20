@@ -288,36 +288,25 @@ export function makeTempFilename(filename: string) {
   return `temp__${uniqueHash}__${filename}`;
 }
 
-export function extractDatapackMetadataFromDatapack(datapack: Datapack) {
-  const baseMetadata: Partial<DatapackMetadata> = {
+export function extractMetadataFromDatapack(datapack: Datapack) {
+  const metadata: Partial<DatapackMetadata> = {
     description: datapack.description,
     title: datapack.title,
     originalFileName: datapack.originalFileName,
     storedFileName: datapack.storedFileName,
     size: datapack.size,
-    date: datapack.date,
     authoredBy: datapack.authoredBy,
     tags: datapack.tags,
     references: datapack.references,
     isPublic: datapack.isPublic,
-    contact: datapack.contact,
-    notes: datapack.notes,
-    datapackImage: datapack.datapackImage,
     priority: datapack.priority,
+    type: datapack.type,
+    ...(datapack.date ? { date: datapack.date } : {}),
+    ...(datapack.contact ? { contact: datapack.contact } : {}),
+    ...(datapack.notes ? { notes: datapack.notes } : {}),
+    ...(datapack.datapackImage ? { datapackImage: datapack.datapackImage } : {}),
+    ...(datapack.type === "user" || datapack.type === "workshop" ? { uuid: datapack.uuid } : {}),
   }
-
-  let typeMetadata: Partial<DatapackMetadata> = {};
-  switch (datapack.type) {
-    case "user":
-    case "workshop":
-      typeMetadata = { uuid: datapack.uuid, type: datapack.type };
-      break;
-    case "official":
-      typeMetadata = { type: "official" };
-      break;
-  }
-
-  const metadata = { ...baseMetadata, ...typeMetadata };
   assertDatapackMetadata(metadata);
   return metadata;
 }
