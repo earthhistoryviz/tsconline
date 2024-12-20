@@ -1256,6 +1256,6 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
 // TODO: Change this when the actual backend for rendering all workshops is implemented.
 // Maybe similar to how we handled datapacks.
 // For now, this just loads the selected dummy workshop into the state.
-export const pushWorkshopToWorkshopsArray = action((workshop: Workshop[]) => {
+export const setWorkshopsArray = action((workshop: Workshop[]) => {
   state.workshops = workshop;
 });
