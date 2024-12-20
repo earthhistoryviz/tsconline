@@ -154,7 +154,7 @@
 }
 .home-landing-page-carousel-container {
   position: relative;
-  height: 550px;
+  height: 570px;
   display: flex;
   overflow: hidden;
 }
@@ -263,6 +263,38 @@
 @media screen and (max-width: 1300px) {
   .landing-page-title {
     font-size: 2.5rem;
+  }
+  .sub-header-section-landing-page-description {
+    font-size: 1.25rem;
+  }
+}
+@media screen and (max-width: 900px) {
+  .sub-header-section-landing-page {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    padding-top: 10px;
+  }
+  .sub-header-section-landing-page-text {
+    padding: 0px;
+  }
+  .landing-page-title {
+    font-size: 2.25rem;
+    text-align: center;
+  }
+  .sub-header-section-landing-page-description {
+    font-size: 1.5rem;
+  }
+}
+@media screen and (max-width: 550px) {
+  .sub-header-section-landing-page-description {
+    font-size: 1rem;
+  }
+  .landing-page-title {
+    font-size: 2rem;
+  }
+  .sub-header-section-landing-page {
+    gap: 10px;
   }
 }
 @media screen and (max-width: 1550px) {
