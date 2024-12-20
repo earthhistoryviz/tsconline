@@ -2,14 +2,14 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import path from "path";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, extractDatapackMetadataFromDatapack, makeTempFilename } from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack, makeTempFilename } from "../util.js";
 import { MultipartFile } from "@fastify/multipart";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn, getWorkshopIfNotEnded, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -24,7 +24,7 @@ import {
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../constants.js";
 import { User, isOperationResult } from "../types.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
+import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId } from "../workshop-util.js";
 import { DatapackMetadata } from "@tsconline/shared";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
@@ -241,6 +241,12 @@ export const requestDownload = async function requestDownload(
   }
 };
 
+/**
+ * Will fetch both user and workshop metadatas
+ * @param request 
+ * @param reply 
+ * @returns 
+ */
 export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetadata(
   request: FastifyRequest,
   reply: FastifyReply
@@ -267,12 +273,51 @@ export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetada
     const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
 
     const metadatas: DatapackMetadata[] = allDatapacks.map((datapack) => {
-      return extractDatapackMetadataFromDatapack(datapack);
+      return extractMetadataFromDatapack(datapack);
     });
 
     reply.send(metadatas);
   } catch (e) {
+    console.error(e);
     reply.status(500).send({ error: "Failed to fetch metadatas" });
+  }
+}
+
+export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopUUID, datapackTitle } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+    const workshopId = getWorkshopIdFromUUID(workshopUUID);
+    if (!workshopId) {
+      reply.status(400).send({ error: "Invalid workshop UUID" });
+      return;
+    }
+    if (!isUserInWorkshopAndWorkshopIsActive(user[0].userId, workshopId)) {
+      reply.status(401).send({ error: "User does not have access to this workshop" });
+      return;
+    }
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    if (!datapack) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
+    }
+    reply.send(datapack);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown Error" });
+    return;
   }
 }
 

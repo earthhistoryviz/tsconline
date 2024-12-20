@@ -240,7 +240,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
           actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
           return;
         }
-        actions.addDatapackOrMetadata(datapack);
+        actions.addDatapack(datapack);
       }
       actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
         actions.setLoadingDatapack(false);

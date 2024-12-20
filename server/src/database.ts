@@ -353,7 +353,7 @@ export async function isUserInAnActiveWorkshop(userId: number): Promise<boolean>
 }
 
 /**
- * Check if user is in specified workshop and if the workshop is active
+ * Check if user is in specified workshop and if the workshop is active, handles if workshop does not exist
  * @param userId The user ID to check
  * @param workshopId The workshop ID to check
  * @returns True if user is in workshop and workshop is active, false otherwise
