@@ -6,7 +6,17 @@ import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChar
 import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
-import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box, IconButton, Chip } from "@mui/material";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Grid,
+  Typography,
+  Box,
+  IconButton,
+  Chip,
+  useMediaQuery
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution, CustomDivider } from "./components";
 import "./Home.css";
@@ -17,6 +27,7 @@ import { devSafeUrl } from "./util";
 import DownArrow from "./assets/icons/down-arrow.json";
 import { useTransition, animated } from "@react-spring/web";
 import { createGradient } from "./util/util";
+import { TSCStepper } from "./components/TSCStepper";
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
@@ -41,7 +52,7 @@ export const Home = observer(function Home() {
       <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
-            <Typography variant="h2" fontWeight="700">
+            <Typography className="landing-page-title" variant="h2" fontWeight="700">
               {"Welcome to TimeScale Creator!"}
             </Typography>
             <Typography className="sub-header-section-landing-page-description">
@@ -110,6 +121,7 @@ const Carousel = observer(function Carousel() {
   const [direction, setDirection] = useState("right");
   const [isAnimating, setIsAnimating] = useState(false);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const transitions = useTransition(activeIndex, {
     keys: activeIndex,
     from: {
@@ -244,28 +256,30 @@ const Carousel = observer(function Carousel() {
   return (
     <Box display="flex" flexDirection="column">
       <Box className="home-landing-page-carousel-chips">
-        <Box
-          className="home-landing-page-carousel-chips-container"
-          sx={{ backgroundColor: "secondaryBackground.main" }}>
-          {carouselContent.map((content, index) => (
-            <Chip
-              sx={{
-                background: index === activeIndex ? gradient.dark : "secondaryBackground.main",
-                color: index === activeIndex ? "button.contrastText" : "secondaryBackground.contrastText",
-                opacity: index === activeIndex ? 1 : 0.6,
-                ":hover": {
-                  backgroundColor: "button.main",
-                  color: "button.contrastText"
-                }
-              }}
-              className="landing-page-carousel-chip"
-              size="medium"
-              label={content.title}
-              key={index}
-              onClick={() => jumpToIndex(index)}
-            />
-          ))}
-        </Box>
+        {!isMobile && (
+          <Box
+            className="home-landing-page-carousel-chips-container"
+            sx={{ backgroundColor: "secondaryBackground.main" }}>
+            {carouselContent.map((content, index) => (
+              <Chip
+                sx={{
+                  background: index === activeIndex ? gradient.dark : "secondaryBackground.main",
+                  color: index === activeIndex ? "button.contrastText" : "secondaryBackground.contrastText",
+                  opacity: index === activeIndex ? 1 : 0.6,
+                  ":hover": {
+                    backgroundColor: "button.main",
+                    color: "button.contrastText"
+                  }
+                }}
+                className="landing-page-carousel-chip"
+                size="medium"
+                label={content.title}
+                key={index}
+                onClick={() => jumpToIndex(index)}
+              />
+            ))}
+          </Box>
+        )}
       </Box>
       <Box className="home-landing-page-carousel-container">
         {transitions((style, index) => (
@@ -305,13 +319,25 @@ const Carousel = observer(function Carousel() {
             </Box>
           </animated.div>
         ))}
-        <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
-          <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
-        </IconButton>
-        <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
-          <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
-        </IconButton>
+        {!isMobile && (
+          <>
+            <IconButton className="home-landing-page-carousel-left-arrow" onClick={onPrevious} sx={buttonStyle}>
+              <ChevronLeft className="home-landing-page-carousel-left-arrow-icon" />
+            </IconButton>
+            <IconButton className="home-landing-page-carousel-right-arrow" onClick={onNext} sx={buttonStyle}>
+              <ChevronRight className="home-landing-page-carousel-right-arrow-icon" />
+            </IconButton>
+          </>
+        )}
       </Box>
+      {isMobile && (
+        <TSCStepper
+          amountOfSteps={carouselContent.length}
+          activeStep={activeIndex}
+          size={15}
+          setActiveStep={jumpToIndex}
+        />
+      )}
     </Box>
   );
 });
