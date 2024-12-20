@@ -125,54 +125,54 @@ type WorkshopsCategoryProps = {
   workshops: Workshop[];
   noDataMessage: string;
   onClickHandler: (workshop: Workshop) => void; // Assuming this function is passed as a prop
-}
+};
 
 const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noDataMessage, onClickHandler }) => {
   const { t } = useTranslation();
-  return (<StyledScrollbar>
-    <Box sx={{ display: "flex", padding: "5px 5px" }}>
-      {workshops.length > 0 ? (
-        workshops.map((workshop) => (
-          <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
-            <Card
-              sx={{
-                outline: "1px solid",
-                outlineColor: "divider",
-                bgcolor: "secondaryBackground.main"
-              }}
-              className="workshop-card"
-              onClick={() => onClickHandler(workshop)}
-            >
-              <CardContent>
-                <CardMedia
-                  component="img"
-                  height="140"
-                  image={workshop.imageLink}
-                  alt={workshop.title}
-                  sx={{ objectFit: "cover" }}
-                />
-                <Typography variant="h5" component="div" gutterBottom>
-                  {workshop.title}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {t("workshops.dates.start")}
-                  {workshop.start}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                  {t("workshops.dates.end")}
-                  {workshop.end}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))
-      ) : (
-        <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
-      )}
-    </Box>
-  </StyledScrollbar>);
-}
-
+  return (
+    <StyledScrollbar>
+      <Box sx={{ display: "flex", padding: "5px 5px" }}>
+        {workshops.length > 0 ? (
+          workshops.map((workshop) => (
+            <Grid item key={workshop.workshopId} sx={{ padding: "0px 10px" }}>
+              <Card
+                sx={{
+                  outline: "1px solid",
+                  outlineColor: "divider",
+                  bgcolor: "secondaryBackground.main"
+                }}
+                className="workshop-card"
+                onClick={() => onClickHandler(workshop)}>
+                <CardContent>
+                  <CardMedia
+                    component="img"
+                    height="140"
+                    image={workshop.imageLink}
+                    alt={workshop.title}
+                    sx={{ objectFit: "cover" }}
+                  />
+                  <Typography variant="h5" component="div" gutterBottom>
+                    {workshop.title}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {t("workshops.dates.start")}
+                    {workshop.start}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {t("workshops.dates.end")}
+                    {workshop.end}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : (
+          <Typography className="no-data-message">{t(`workshops.messages.${noDataMessage}`)}</Typography>
+        )}
+      </Box>
+    </StyledScrollbar>
+  );
+};
 
 export const Workshops: React.FC = observer(() => {
   const { state, actions } = useContext(context);
@@ -187,7 +187,7 @@ export const Workshops: React.FC = observer(() => {
   // TODO: change this when implement the backend
   function setWorkshopAndNavigate(workshop: Workshop) {
     navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
-  };
+  }
 
   useEffect(() => {
     actions.setWorkshopsArray(dummyWorkshops);
@@ -211,7 +211,13 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.active")}</Typography>
             </AccordionSummary>
-            <AccordionDetails><WorkshopsCategory workshops={activeWorkshops} noDataMessage="active" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
+            <AccordionDetails>
+              <WorkshopsCategory
+                workshops={activeWorkshops}
+                noDataMessage="active"
+                onClickHandler={setWorkshopAndNavigate}
+              />
+            </AccordionDetails>
           </Accordion>
 
           {/* Upcoming Workshops */}
@@ -224,7 +230,13 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.upcoming")}</Typography>
             </AccordionSummary>
-            <AccordionDetails><WorkshopsCategory workshops={upcomingWorkshops} noDataMessage="upcoming" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
+            <AccordionDetails>
+              <WorkshopsCategory
+                workshops={upcomingWorkshops}
+                noDataMessage="upcoming"
+                onClickHandler={setWorkshopAndNavigate}
+              />
+            </AccordionDetails>
           </Accordion>
 
           {/* Expired Workshops */}
@@ -237,7 +249,13 @@ export const Workshops: React.FC = observer(() => {
               className="workshops-summary">
               <Typography>{t("workshops.titles.past")}</Typography>
             </AccordionSummary>
-            <AccordionDetails><WorkshopsCategory workshops={pastWorkshops} noDataMessage="past" onClickHandler={setWorkshopAndNavigate} /></AccordionDetails>
+            <AccordionDetails>
+              <WorkshopsCategory
+                workshops={pastWorkshops}
+                noDataMessage="past"
+                onClickHandler={setWorkshopAndNavigate}
+              />
+            </AccordionDetails>
           </Accordion>
         </Box>
       ) : (
