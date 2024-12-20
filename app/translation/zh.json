@@ -52,7 +52,37 @@
             "datapacks": "选择数据包",
             "settings": "设置",
             "help": "帮助",
-            "about": "关于"
+            "about": "关于",
+            "workshops": "工作坊"
+        },
+        "workshops": {
+            "login-first": "请登陆以查看您的工作坊",
+            "header": "您的工作坊",
+            "description-header": "点击工作坊以查看更多信息!",
+            "titles": {
+                "upcoming": "即将开始的工作坊",
+                "active": "正在进行的工作坊",
+                "past": "过去的工作坊"
+            },
+            "messages": {
+                "upcoming": "暂无即将开始的工作坊",
+                "active": "暂无正在进行的工作坊",
+                "past": "暂无过去的工作坊"
+            },
+            "dates": {
+                "start": "开始日期: ",
+                "end": "结束日期: "
+            },
+            "details-page": {
+                "datapacks": "数据包",
+                "files": "文件",
+                "download-button": "下载文件",
+                "description": "内容简介",
+                "messages": {
+                    "no-datapacks": "暂无数据包",
+                    "no-files": "暂无文件"
+                }
+            }
         },
         "loading": {
             "loading-chart": "加载图表...",
