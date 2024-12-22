@@ -1269,3 +1269,7 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
 export const setWorkshopsArray = action((workshop: Workshop[]) => {
   state.workshops = workshop;
 });
+
+export const setIsQsgOpen = action((openTour: boolean) => {
+  state.isQSGOpen = openTour;
+})
