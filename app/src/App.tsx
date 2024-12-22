@@ -8,7 +8,7 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
-import { useContext, useEffect } from "react";
+import { SetStateAction, useContext, useEffect } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
@@ -31,6 +31,8 @@ import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { Presets } from "./Presets";
 import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
+import Joyride, { CallBackProps, Step } from 'react-joyride';
+import { qsg } from "./tours";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -49,6 +51,13 @@ export default observer(function App() {
     };
   }, []);
 
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status } = data;
+    const finishedStatuses: string[] = ['finished', 'skipped'];
+    if (finishedStatuses.includes(status)) {
+      actions.setIsQsgOpen(false);
+    }
+  };
   // on theme change, update the background color
   const checkUnsavedChanges = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
@@ -62,6 +71,7 @@ export default observer(function App() {
     }
     return false;
   };
+
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -136,6 +146,20 @@ export default observer(function App() {
               severity={info.severity}
             />
           ))}
+          <Joyride
+            continuous
+            run={state.isQSGOpen}
+            steps={qsg}
+            callback={handleJoyrideCallback}
+            locale={{ skip: 'Quit Tour' }}
+            styles={{
+              options: {
+                zIndex: 10000,
+                primaryColor: '#6693C9',
+                beaconSize: 100,
+              }
+            }}
+          />
         </ThemeProvider>
       </LocalizationProvider>
     </StyledEngineProvider>

@@ -2,10 +2,18 @@ import { AccordionSummary, Typography, AccordionDetails } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { TSCButton } from "./components";
+import { useContext } from "react";
+import { context } from "./state";
+
 
 export const Help = observer(function Help() {
+  const { actions } = useContext(context);
   const background = { bgcolor: "secondaryBackground.main" };
-
+  // const { setIsOpen } = useTour();
+  const runTour = () => {
+    actions.setIsQsgOpen(true);
+  }
   return (
     <div
       style={{
@@ -28,7 +36,8 @@ export const Help = observer(function Help() {
             <Typography>Quick Start Guide</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography>Put QSG here</Typography>
+            <Typography style={{ marginBottom: '20px' }}>Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.</Typography>
+            <TSCButton buttonType="primary" onClick={runTour}>Start QSG</TSCButton>
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
