@@ -57,12 +57,12 @@ export const NavBar = observer(function Navbar() {
   const { t } = useTranslation();
   const menuItems = [
     { label: t("navBar.presets"), path: "/presets", icon: <Dataset /> },
-    { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset /> },
-    { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
-    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircle /> },
-    { label: t("navBar.help"), path: "/help", icon: <Help /> },
-    { label: t("navBar.workshops"), path: "/workshops", icon: <School /> },
-    { label: t("navBar.about"), path: "/about", icon: <Campaign /> }
+    { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset />, className: "qsg-datapacks" },
+    { label: t("navBar.chart"), path: "/chart", icon: <TableChart />, className: "qsg-chart" },
+    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircle />, className: "qsg-settings" },
+    { label: t("navBar.help"), path: "/help", icon: <Help />, className: "qsg-help" },
+    { label: t("navBar.workshops"), path: "/workshops", icon: <School />, className: "qsg-workshops" },
+    { label: t("navBar.about"), path: "/about", icon: <Campaign />, className: "qsg-about" }
   ];
   const onButtonClick = (path: string) => {
     navigate(path);
@@ -118,6 +118,7 @@ export const NavBar = observer(function Navbar() {
                   to={menuItem.path}
                   component={Link}
                   ref={menuItem.ref}
+                  className={menuItem.className}
                   {...menuItem.anchorProps}
                 />
               ))}

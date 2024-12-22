@@ -1295,3 +1295,9 @@ export const setPublicDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
+
+
+
+export const setIsQsgOpen = action((openTour: boolean) => {
+  state.isQSGOpen = openTour;
+})
