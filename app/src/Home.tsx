@@ -1,4 +1,4 @@
-import { createRef, useState } from "react";
+import { createRef, useState, useEffect } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -119,8 +119,17 @@ export const Home = observer(function Home() {
 const Carousel = observer(function Carousel() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [paused, setPaused] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  useEffect(() => {
+    if (!paused && activeIndex !== carouselContent.length - 1) {
+      const interval = setInterval(() => {
+        onNext();
+      }, 5000);
+      return () => clearInterval(interval);
+    } 
+  }, [paused, activeIndex]);
   const carouselContent = [
     {
       title: "Customize Your Chart",
@@ -210,6 +219,12 @@ const Carousel = observer(function Carousel() {
     setDirection(1);
     setActiveIndex((activeIndex + 1) % carouselContent.length);
   };
+  const pauseAutoSlide = () => {
+    setPaused(true);
+  };
+  const resumeAutoSlide = () => {
+    setPaused(false);
+  }
   const onPrevious = () => {
     if (activeIndex === 0) return;
     setDirection(-1);
@@ -239,16 +254,16 @@ const Carousel = observer(function Carousel() {
       x: 0,
       opacity: 1,
       transition: {
-        x: { type: "spring", stiffness: 250, damping: 30 },
-        opacity: { duration: 0.2 }
+        x: { type: "spring", stiffness: 150, damping: 30 },
+        opacity: { duration: 0.8 }
       }
     },
     exit: (direction: number) => ({
       x: direction > 0 ? "-100%" : "100%",
       opacity: 0,
       transition: {
-        x: { type: "spring", stiffness: 250, damping: 30 },
-        opacity: { duration: 0.2 }
+        x: { type: "spring", stiffness: 150, damping: 30 },
+        opacity: { duration: 0.8 }
       }
     })
   };
@@ -282,7 +297,7 @@ const Carousel = observer(function Carousel() {
           </Box>
         </Box>
       )}
-      <Box className="home-landing-page-carousel-container">
+      <Box className="home-landing-page-carousel-container" onClick={pauseAutoSlide} onMouseEnter={pauseAutoSlide} onMouseLeave={resumeAutoSlide}>
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             className="home-landing-page-carousel"
@@ -297,7 +312,7 @@ const Carousel = observer(function Carousel() {
             dragElastic={0.2}
             onDragEnd={(e, { offset, velocity }) => {
               const swipe = Math.abs(offset.x) * velocity.x;
-              const swipeConfidenceThreshold = 3000;
+              const swipeConfidenceThreshold = 5000;
               if (swipe < -swipeConfidenceThreshold) {
                 onNext();
               } else if (swipe > swipeConfidenceThreshold) {
