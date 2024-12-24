@@ -1,4 +1,4 @@
-import { createRef, useState, useEffect } from "react";
+import { createRef, useState, useEffect, cloneElement } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
@@ -6,7 +6,7 @@ import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChar
 import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "@mui/icons-material";
+import { ChevronLeft, ChevronRight, FolderCopy, HelpOutline, TableChart } from "@mui/icons-material";
 import {
   Accordion,
   AccordionSummary,
@@ -16,7 +16,8 @@ import {
   Box,
   IconButton,
   Chip,
-  useMediaQuery
+  useMediaQuery,
+  Divider
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, TSCCard, StyledScrollbar, Attribution, CustomDivider } from "./components";
@@ -94,6 +95,7 @@ export const Home = observer(function Home() {
       </Box>
       <CustomDivider />
       <Carousel />
+      <LandingPageCards />
       <Box ref={presetsRef}>
         {Object.entries(state.presets).map(([type, configArray]) => {
           return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
@@ -455,5 +457,64 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
         </AccordionDetails>
       </Accordion>
     </>
+  );
+});
+
+export const LandingPageCards = observer(function LandingPageCards() {
+  const [hoveredCard, setHoveredCard] = useState(-1);
+  const cards = [
+    {
+      title: "What Are Datapacks?",
+      description:
+        "Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events.",
+      icon: <FolderCopy />
+    },
+    {
+      title: "What Are Charts?",
+      description:
+        "Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings.",
+      icon: <TableChart />
+    },
+    {
+      title: "Need Help?",
+      description:
+        "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more.",
+      icon: <HelpOutline />
+    }
+  ];
+  return (
+    <Box className="landing-page-cards">
+      {cards.map((card, index) => (
+        <motion.div
+          key={index}
+          className="landing-page-card-container"
+          initial={{ scale: 1 }}
+          animate={{ scale: hoveredCard === index ? 1.02 : 1 }}
+          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+          onMouseEnter={() => setHoveredCard(index)}
+          onMouseLeave={() => setHoveredCard(-1)}>
+          <Box className="landing-page-card" sx={{ backgroundColor: "secondaryBackground.main" }}>
+            <Box className="landing-page-card-icon">{cloneElement(card.icon, { style: { fontSize: 50 } })}</Box>
+            <Typography className="landing-page-card-title" variant="h4">
+              {card.title}
+            </Typography>
+            <Divider
+              sx={{
+                width: "50%"
+              }}
+            />
+            <Typography className="landing-page-card-description" variant="body1">
+              {card.description}
+            </Typography>
+            <Box className="landing-page-card-see-more">
+              <ChevronRight className="landing-page-card-arrow" />
+              <Typography className="landing-page-card-see-more-text" variant="body1">
+                {"Explore More"}
+              </Typography>
+            </Box>
+          </Box>
+        </motion.div>
+      ))}
+    </Box>
   );
 });
