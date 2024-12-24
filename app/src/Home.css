@@ -113,6 +113,15 @@
 .landing-page-title {
   font-size: 3.75rem;
 }
+.get-started-button-landing-page {
+  display: flex;
+  margin-top: 4px;
+  rotate: 90deg;
+  justify-content: center;
+  align-items: center;
+  width: 50px;
+  height: 50px;
+}
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
@@ -125,6 +134,9 @@
   padding: 8%;
   padding-bottom: 0;
   position: relative;
+}
+.sub-header-section-landing-page {
+  gap: 20px;
 }
 .home-landing-page-carousel {
   padding-right: 0;
