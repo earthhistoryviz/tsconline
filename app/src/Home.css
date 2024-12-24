@@ -272,6 +272,57 @@
 .home-landing-page-carousel-chips-mobile {
   padding: 5px;
 }
+.landing-page-cards {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 80px;
+  padding: 5%;
+}
+.landing-page-card {
+  width: 400px;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  align-items: center;
+  gap: 20px;
+  padding: 0px 40px;
+  border-radius: 50px;
+  border: 2px solid rgba(0, 0, 0, 0.5);
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+.landing-page-card-container {
+  cursor: pointer;
+}
+.landing-page-card-see-more {
+  align-self: flex-start;
+  gap: 20px;
+  display: flex;
+  width: 90%;
+  flex-direction: row;
+  align-items: center;
+}
+.landing-page-card-see-more-text {
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-style: italic;
+}
+.landing-page-card-arrow {
+  width: 25px;
+  height: 25px;
+}
+.landing-page-card-icon {
+  margin-top: 30px;
+}
+.landing-page-card-title {
+  font-size: 2rem;
+  font-weight: 600;
+}
+.landing-page-card-description {
+  font-size: 1.4rem;
+}
 @media screen and (max-width: 1300px) {
   .landing-page-title {
     font-size: 2.5rem;
