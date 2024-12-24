@@ -286,7 +286,7 @@
   flex-direction: column;
   text-align: center;
   align-items: center;
-  gap: 20px;
+  gap: 10px;
   padding: 0px 40px;
   border-radius: 50px;
   border: 2px solid rgba(0, 0, 0, 0.5);
@@ -295,6 +295,7 @@
 }
 .landing-page-card-container {
   cursor: pointer;
+  display: flex;
 }
 .landing-page-card-see-more {
   align-self: flex-start;
@@ -322,6 +323,93 @@
 }
 .landing-page-card-description {
   font-size: 1.4rem;
+  overflow: hidden;
+  height: 270px;
+}
+.landing-page-card-icon-component {
+  font-size: 50px;
+}
+/* cards css */
+@media screen and (max-width: 1350px) {
+  .landing-page-cards {
+    gap: 40px;
+  }
+  .landing-page-card {
+    width: 350px;
+    height: 450px;
+  }
+  .landing-page-card-title {
+    font-size: 1.75rem;
+  }
+  .landing-page-card-description {
+    font-size: 1.2rem;
+  }
+  .landing-page-card-description {
+    height: 230px;
+  }
+}
+@media screen and (max-width: 1130px) {
+  .landing-page-card {
+    width: 300px;
+    height: 400px;
+  }
+  .landing-page-card-title {
+    font-size: 1.3rem;
+  }
+  .landing-page-card-description {
+    font-size: 1rem;
+    height: 200px;
+  }
+  .landing-page-card-see-more-text {
+    font-size: 1rem;
+  }
+  .landing-page-card-arrow {
+    width: 20px;
+    height: 20px;
+  }
+  .landing-page-card-icon-component {
+    font-size: 40px;
+  }
+}
+@media screen and (max-width: 1000px) {
+  .landing-page-cards {
+    gap: 10px;
+  }
+}
+@media screen and (max-width: 900px) {
+  .landing-page-cards {
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+  }
+  .landing-page-card {
+    width: 100%;
+    align-self: center;
+    justify-self: center;
+    height: fit-content;
+    padding: 20px 30px;
+  }
+  .landing-page-card-see-more-text {
+    font-size: 0.8rem;
+  }
+  .landing-page-card-arrow {
+    width: 15px;
+    height: 15px;
+  }
+  .landing-page-card-title {
+    font-size: 1.5rem;
+  }
+  .landing-page-card-description {
+    font-size: 1rem;
+    height: 100%;
+  }
+  .landing-page-card-icon-component {
+    font-size: 40px;
+  }
+  .landing-page-card-icon {
+    margin-top: 0px;
+  }
 }
 @media screen and (max-width: 1300px) {
   .landing-page-title {
@@ -360,6 +448,8 @@
     gap: 10px;
   }
 }
+/* end of cards css */
+/* carousel css */
 @media screen and (max-width: 1550px) {
   .home-landing-page-carousel-title {
     font-size: 2.25rem;
@@ -427,3 +517,4 @@
     font-size: 1rem;
   }
 }
+/* end of carousel css */
