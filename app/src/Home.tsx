@@ -494,7 +494,9 @@ export const LandingPageCards = observer(function LandingPageCards() {
           onMouseEnter={() => setHoveredCard(index)}
           onMouseLeave={() => setHoveredCard(-1)}>
           <Box className="landing-page-card" sx={{ backgroundColor: "secondaryBackground.main" }}>
-            <Box className="landing-page-card-icon">{cloneElement(card.icon, { style: { fontSize: 50 } })}</Box>
+            <Box className="landing-page-card-icon">
+              {cloneElement(card.icon, { className: "landing-page-card-icon-component" })}
+            </Box>
             <Typography className="landing-page-card-title" variant="h4">
               {card.title}
             </Typography>
