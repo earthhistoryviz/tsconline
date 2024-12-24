@@ -5,6 +5,7 @@ import { NavigateFunction, useNavigate } from "react-router-dom";
 import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "@mui/icons-material";
 import {
   Accordion,
@@ -25,10 +26,8 @@ import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
 import DownArrow from "./assets/icons/down-arrow.json";
-import { useTransition, animated } from "@react-spring/web";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
-import { useSwipeable } from "react-swipeable";
 
 export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
@@ -119,29 +118,9 @@ export const Home = observer(function Home() {
 });
 const Carousel = observer(function Carousel() {
   const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState("right");
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState(0);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const transitions = useTransition(activeIndex, {
-    keys: activeIndex,
-    from: {
-      opacity: 0,
-      transform: direction === "right" ? "translateX(100%)" : "translateX(-100%)"
-    },
-    enter: { opacity: 1, transform: "translateX(0%)" },
-    leave: {
-      opacity: 0,
-      transform: direction === "right" ? "translateX(-100%)" : "translateX(100%)"
-    },
-    config: { duration: 500 },
-    onStart: () => {
-      setIsAnimating(true);
-    },
-    onRest: () => {
-      setIsAnimating(false);
-    }
-  });
   const carouselContent = [
     {
       title: "Customize Your Chart",
@@ -227,29 +206,23 @@ const Carousel = observer(function Carousel() {
     }
   ];
   const onNext = () => {
-    if (isAnimating) return;
-    setDirection("right");
+    if (activeIndex === carouselContent.length - 1) return;
+    setDirection(1);
     setActiveIndex((activeIndex + 1) % carouselContent.length);
   };
   const onPrevious = () => {
-    if (isAnimating) return;
-    setDirection("left");
+    if (activeIndex === 0) return;
+    setDirection(-1);
     setActiveIndex((activeIndex - 1 + carouselContent.length) % carouselContent.length);
   };
   const jumpToIndex = (index: number) => {
-    if (isAnimating) return;
     if (index < activeIndex) {
-      setDirection("left");
+      setDirection(-1);
     } else {
-      setDirection("right");
+      setDirection(1);
     }
     setActiveIndex(index);
   };
-  const swipeHandlers = useSwipeable({
-    onSwipedLeft: () => onNext(),
-    onSwipedRight: () => onPrevious(),
-    trackTouch: true,
-  });
   const buttonStyle = {
     backgroundColor: "dark.light",
     color: "dark.contrastText",
@@ -257,9 +230,31 @@ const Carousel = observer(function Carousel() {
       backgroundColor: "dark.main"
     }
   };
+  const variants = {
+    enter: (direction: number) => ({
+      x: direction > 0 ? "100%" : "-100%",
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { type: "spring", stiffness: 250, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    },
+    exit: (direction: number) => ({
+      x: direction > 0 ? "-100%" : "100%",
+      opacity: 0,
+      transition: {
+        x: { type: "spring", stiffness: 250, damping: 30 },
+        opacity: { duration: 0.2 }
+      }
+    })
+  };
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   return (
-    <Box {...swipeHandlers} display="flex" flexDirection="column">
+    <Box display="flex" flexDirection="column">
       {!isMobile && (
         <Box className="home-landing-page-carousel-chips">
           <Box
@@ -288,20 +283,37 @@ const Carousel = observer(function Carousel() {
         </Box>
       )}
       <Box className="home-landing-page-carousel-container">
-        {transitions((style, index) => (
-          <animated.div
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
             className="home-landing-page-carousel"
+            key={activeIndex}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            drag="x"
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, { offset, velocity }) => {
+              const swipe = Math.abs(offset.x) * velocity.x;
+              const swipeConfidenceThreshold = 3000;
+              if (swipe < -swipeConfidenceThreshold) {
+                onNext();
+              } else if (swipe > swipeConfidenceThreshold) {
+                onPrevious();
+              }
+            }}
             style={{
-              ...style,
               position: "absolute",
               width: "100%",
               height: "100%"
             }}>
             <Box className="home-landing-page-carousel-text">
-              <Typography className="home-landing-page-carousel-title">{carouselContent[index].title}</Typography>
+              <Typography className="home-landing-page-carousel-title">{carouselContent[activeIndex].title}</Typography>
               <CustomDivider />
               <ul>
-                {carouselContent[index].bullets.map((bullet, index) => (
+                {carouselContent[activeIndex].bullets.map((bullet, index) => (
                   <li key={index}>
                     <Typography variant="body1" className="home-landing-page-carousel-bullet-title">
                       {bullet.title}
@@ -317,12 +329,12 @@ const Carousel = observer(function Carousel() {
               <img
                 loading="lazy"
                 className="home-landing-page-carousel-image"
-                src={devSafeUrl(`/public/website-images/${carouselContent[index].image}`)}
-                alt={carouselContent[index].title}
+                src={devSafeUrl(`/public/website-images/${carouselContent[activeIndex].image}`)}
+                alt={carouselContent[activeIndex].title}
               />
             </Box>
-          </animated.div>
-        ))}
+          </motion.div>
+        </AnimatePresence>
         {!isMobile && (
           <>
             {activeIndex !== 0 && (
