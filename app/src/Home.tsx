@@ -19,13 +19,12 @@ import {
   useMediaQuery
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCButton, TSCCard, StyledScrollbar, Lottie, Attribution, CustomDivider } from "./components";
+import { TSCButton, TSCCard, StyledScrollbar, Attribution, CustomDivider } from "./components";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
 import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
-import DownArrow from "./assets/icons/down-arrow.json";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
 
@@ -33,8 +32,8 @@ export const Home = observer(function Home() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
+  const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
-  const getStartedRef = createRef<HTMLDivElement>();
   const presetsRef = createRef<HTMLDivElement>();
   const handleScrollToPreset = () => {
     // accounts for navbar height
@@ -69,18 +68,27 @@ export const Home = observer(function Home() {
           />
         </Box>
         <Box className="get-started-landing-page">
-          <Box className="get-started-button-container" onClick={handleScrollToPreset}>
-            <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700" ref={getStartedRef}>
-              {"Get Started"}
-            </Typography>
-            <Lottie
-              animationData={DownArrow}
-              speed={1}
-              width={60}
-              height={60}
-              playOnHover
-              triggerOnRef={getStartedRef}
-            />
+          <Box
+            className="get-started-button-container"
+            onClick={handleScrollToPreset}
+            onMouseEnter={() => setHoveringGetStarted(true)}
+            onMouseLeave={() => setHoveringGetStarted(false)}>
+            <motion.div
+              animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 11 }}
+              style={{ display: "inline-block" }}>
+              <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
+                {"Get Started"}
+              </Typography>
+            </motion.div>
+            <motion.div
+              initial={{ y: 0 }}
+              whileHover={{ y: 10 }}
+              animate={{ y: hoveringGetStarted ? 10 : 0 }}
+              transition={{ type: "spring", stiffness: 300 }}
+              style={{ display: "inline-block" }}>
+              <ChevronRight className="get-started-button-landing-page" />
+            </motion.div>
           </Box>
         </Box>
       </Box>
@@ -128,7 +136,7 @@ const Carousel = observer(function Carousel() {
         onNext();
       }, 5000);
       return () => clearInterval(interval);
-    } 
+    }
   }, [paused, activeIndex]);
   const carouselContent = [
     {
@@ -224,7 +232,7 @@ const Carousel = observer(function Carousel() {
   };
   const resumeAutoSlide = () => {
     setPaused(false);
-  }
+  };
   const onPrevious = () => {
     if (activeIndex === 0) return;
     setDirection(-1);
@@ -297,7 +305,11 @@ const Carousel = observer(function Carousel() {
           </Box>
         </Box>
       )}
-      <Box className="home-landing-page-carousel-container" onClick={pauseAutoSlide} onMouseEnter={pauseAutoSlide} onMouseLeave={resumeAutoSlide}>
+      <Box
+        className="home-landing-page-carousel-container"
+        onClick={pauseAutoSlide}
+        onMouseEnter={pauseAutoSlide}
+        onMouseLeave={resumeAutoSlide}>
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             className="home-landing-page-carousel"
