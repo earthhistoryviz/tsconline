@@ -1,6 +1,7 @@
 {
     "translation": {
         "landing-page": {
+            "get-started": "Get Started",
             "carousel": {
                 "customize-chart": {
                     "title": "Customize Your Chart",
@@ -62,6 +63,21 @@
                         "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
                     }
                 }
+            },
+            "cards": {
+                "datapack": {
+                    "title": "What Are Datapacks?",
+                    "description": "Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events."
+                },
+                "charts": {
+                    "title": "What Are Charts?",
+                    "description": "Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings."
+                },
+                "help": {
+                    "title": "Need Help?",
+                    "description": "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more."
+                },
+                "more": "Explore More" 
             }
         },
         "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
