@@ -143,6 +143,7 @@ const Carousel = observer(
     const [direction, setDirection] = useState(0);
     const [paused, setPaused] = useState(false);
     const theme = useTheme();
+    const { t } = useTranslation();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     useEffect(() => {
       if (!paused && activeIndex !== carouselContent.length - 1) {
@@ -154,84 +155,73 @@ const Carousel = observer(
     }, [paused, activeIndex]);
     const carouselContent = [
       {
-        title: "Customize Your Chart",
-        description: "",
+        title: t("landing-page.carousel.customize-chart.title"),
         bullets: [
           {
-            title: "Customize Chart Appearance",
-            description:
-              "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+            title: t("landing-page.carousel.customize-chart.customize-chart-appearance.title"),
+            description: t("landing-page.carousel.customize-chart.customize-chart-appearance.description")
           },
           {
-            title: "Save Custom Settings",
-            description:
-              "Save your custom chart settings for future use and easy access to your preferred configurations."
+            title: t("landing-page.carousel.customize-chart.save-custom-settings.title"),
+            description: t("landing-page.carousel.customize-chart.save-custom-settings.description")
           },
           {
-            title: "Share Your Charts",
-            description:
-              "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+            title: t("landing-page.carousel.customize-chart.share-your-charts.title"),
+            description: t("landing-page.carousel.customize-chart.share-your-charts.description")
           }
         ],
         image: state.user.settings.darkMode ? "customization-example-dark.png" : "customization-example-light.png"
       },
       {
-        title: "Interactive Map Points",
-        description: "",
+        title: t("landing-page.carousel.interactive-map-points.title"),
         bullets: [
           {
-            title: "Toggle Columns Directly on the Map",
-            description: "Select specific areas to focus on by enabling or disabling chart columns directly on the map."
+            title: t("landing-page.carousel.interactive-map-points.toggle-columns.title"),
+            description: t("landing-page.carousel.interactive-map-points.toggle-columns.description")
           },
           {
-            title: "Dynamic Age Slider",
-            description: "Explore how rock formations and geologic events change over time with a simple slider."
+            title: t("landing-page.carousel.interactive-map-points.age-slider.title"),
+            description: t("landing-page.carousel.interactive-map-points.age-slider.description")
           },
           {
-            title: "Link Charts to Locations",
-            description: "Map points connect chart columns to real-world locations for intuitive visualization."
+            title: t("landing-page.carousel.interactive-map-points.link-charts.title"),
+            description: t("landing-page.carousel.interactive-map-points.link-charts.description")
           }
         ],
         image: "interactive-map-points-feature.png"
       },
       {
-        title: "Search Within Columns",
-        description: "",
+        title: t("landing-page.carousel.search-columns.title"),
         bullets: [
           {
-            title: "Find Columns/Events Quickly",
-            description:
-              "Search for specific columns or events within the chart to quickly locate and focus on relevant information."
+            title: t("landing-page.carousel.search-columns.find-columns.title"),
+            description: t("landing-page.carousel.search-columns.find-columns.description")
           },
           {
-            title: "Extend/Center Age Range",
-            description:
-              "Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
+            title: t("landing-page.carousel.search-columns.age-range.title"),
+            description: t("landing-page.carousel.search-columns.age-range.description")
           },
           {
-            title: "View Specific Notes",
-            description: "Access detailed notes and information about specific events directly from the chart."
+            title: t("landing-page.carousel.search-columns.notes.title"),
+            description: t("landing-page.carousel.search-columns.notes.description")
           }
         ],
         image: state.user.settings.darkMode ? "search-meso-dark.png" : "search-meso.png"
       },
       {
-        title: "Upload Your Own!",
-        description: "",
+        title: t("landing-page.carousel.upload.title"),
         bullets: [
           {
-            title: "Create Custom Datapacks",
-            description:
-              "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
+            title: t("landing-page.carousel.upload.custom.title"),
+            description: t("landing-page.carousel.upload.custom.description")
           },
           {
-            title: "Showcase Your Research",
-            description:
-              "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
+            title: t("landing-page.carousel.upload.showcase.title"),
+            description: t("landing-page.carousel.upload.showcase.description")
           },
           {
-            title: "Collaborate with Others",
-            description: "View other users' datapacks and collaborate to expand your knowledge and expertise."
+            title: t("landing-page.carousel.upload.collaborate.title"),
+            description: t("landing-page.carousel.upload.collaborate.description")
           }
         ],
         image: "cloud.png"
