@@ -89,7 +89,7 @@ export const Home = observer(function Home() {
               transition={{ type: "spring", stiffness: 300, damping: 11 }}
               style={{ display: "inline-block" }}>
               <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
-                {"Get Started"}
+                {t("landing-page.get-started")}
               </Typography>
             </motion.div>
             <motion.div
@@ -468,23 +468,21 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
 
 export const LandingPageCards = observer(function LandingPageCards() {
   const [hoveredCard, setHoveredCard] = useState(-1);
+  const { t } = useTranslation();
   const cards = [
     {
-      title: "What Are Datapacks?",
-      description:
-        "Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events.",
+      title: t("landing-page.cards.datapack.title"),
+      description: t("landing-page.cards.datapack.description"),
       icon: <FolderCopy />
     },
     {
-      title: "What Are Charts?",
-      description:
-        "Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings.",
+      title: t("landing-page.cards.charts.title"),
+      description: t("landing-page.cards.charts.description"),
       icon: <TableChart />
     },
     {
-      title: "Need Help?",
-      description:
-        "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more.",
+      title: t("landing-page.cards.help.title"),
+      description: t("landing-page.cards.help.description"),
       icon: <HelpOutline />
     }
   ];
@@ -517,7 +515,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
             <Box className="landing-page-card-see-more">
               <ChevronRight className="landing-page-card-arrow" />
               <Typography className="landing-page-card-see-more-text" variant="body1">
-                {"Explore More"}
+                {t("landing-page.cards.more")}
               </Typography>
             </Box>
           </Box>
