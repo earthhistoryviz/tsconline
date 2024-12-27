@@ -318,11 +318,11 @@
   margin-top: 30px;
 }
 .landing-page-card-title {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 600;
 }
 .landing-page-card-description {
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   overflow: hidden;
   height: 270px;
 }
@@ -528,10 +528,10 @@
     height: 450px;
   }
   .landing-page-card-title {
-    font-size: 1.75rem;
+    font-size: 1.6rem;
   }
   .landing-page-card-description {
-    font-size: 1.2rem;
+    font-size: 1.1rem;
   }
   .landing-page-card-description {
     height: 230px;
@@ -546,7 +546,7 @@
     font-size: 1.3rem;
   }
   .landing-page-card-description {
-    font-size: 1rem;
+    font-size: 0.9rem;
     height: 200px;
   }
   .landing-page-card-see-more-text {
