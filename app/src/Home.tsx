@@ -539,6 +539,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
 
 const ChartCreationSteps = observer(function ChartCreationSteps() {
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const steps = [
     {
       title: "Select any Datapack",
@@ -580,42 +581,79 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
           {"Chart Creation Steps"}
         </Typography>
       </Box>
-      <Box className="chart-creation-steps">
-        <Box
-          sx={{
-            position: "absolute",
-            top: "120px",
-            left: "15%",
-            right: "15%",
-            height: "4px",
-            background: gradient.dark,
-            zIndex: 0
-          }}></Box>
-        {steps.map((step, index) => (
-          <>
-            <Box key={index} className="chart-creation-step">
-              <Box className="chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
-                {cloneElement(step.icon, {
-                  className: "chart-creation-step-icon",
-                  sx: { color: "button.contrastText" }
-                })}
+      {!isMobile && (
+        <Box className="chart-creation-steps">
+          <Box
+            sx={{
+              position: "absolute",
+              top: "120px",
+              left: "15%",
+              right: "15%",
+              height: "4px",
+              background: gradient.dark,
+              zIndex: 0
+            }}></Box>
+          {steps.map((step, index) => (
+            <>
+              <Box key={index} className="chart-creation-step">
+                <Box className="chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
+                  {cloneElement(step.icon, {
+                    className: "chart-creation-step-icon",
+                    sx: { color: "button.contrastText" }
+                  })}
+                </Box>
+                <Typography className="chart-creation-step-title" variant="h4">
+                  {step.title}
+                </Typography>
+                <CustomDivider />
+                <Typography className="chart-creation-step-description" variant="body1">
+                  {step.description}
+                </Typography>
               </Box>
-              <Typography className="chart-creation-step-title" variant="h4">
-                {step.title}
-              </Typography>
-              <CustomDivider />
-              <Typography className="chart-creation-step-description" variant="body1">
-                {step.description}
-              </Typography>
-            </Box>
-            {index !== steps.length - 1 && (
-              <Box className="chart-creation-step-arrow">
-                <East />
+              {index !== steps.length - 1 && (
+                <Box className="chart-creation-step-arrow">
+                  <East />
+                </Box>
+              )}
+            </>
+          ))}
+        </Box>
+      )}
+      {isMobile && (
+        <Box className="mobile-chart-creation-steps">
+          <Box
+            className="mobile-chart-creation-steps-line"
+            sx={{
+              background: gradient.dark
+            }}></Box>
+          {steps.map((step, index) => (
+            <>
+              <Box key={index} className="mobile-chart-creation-step">
+                <Box className="mobile-chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
+                  {cloneElement(step.icon, {
+                    className: "mobile-chart-creation-step-icon",
+                    sx: { color: "button.contrastText" }
+                  })}
+                </Box>
+                <Box className="mobile-chart-creation-step-text-container">
+                  <Typography className="mobile-chart-creation-step-title" variant="h4">
+                    {step.title}
+                  </Typography>
+                  <CustomDivider className="mobile-chart-creation-step-divider" />
+                  <Typography className="mobile-chart-creation-step-description" variant="body1">
+                    {step.description}
+                  </Typography>
+                </Box>
               </Box>
-            )}
-          </>
-        ))}
-      </Box>
+              {index !== steps.length - 1 && (
+                <Box className="mobile-chart-creation-step-arrow">
+                  <East className="mobile-chart-creation-step-arrow-svg" />
+                </Box>
+              )}
+            </>
+          ))}
+        </Box>
+      )}
     </Box>
   );
 });
