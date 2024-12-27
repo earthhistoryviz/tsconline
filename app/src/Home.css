@@ -329,6 +329,11 @@
 .landing-page-card-icon-component {
   font-size: 50px;
 }
+.chart-creation-title {
+  font-size: 3.2rem;
+  text-align: center;
+  padding: 20px 20px;
+}
 .chart-creation-steps {
   display: grid;
   grid-template-columns: 1fr 24px 1fr 24px 1fr 24px 1fr;
@@ -377,6 +382,67 @@
 .chart-creation-step-description {
   font-size: 1.3rem;
 }
+.chart-creation-step-title,
+.mobile-chart-creation-step-title {
+  font-weight: 600;
+}
+.mobile-chart-creation-steps {
+  display: grid;
+  grid-template-rows: 1fr 100px 1fr 100px 1fr 100px 1fr;
+  width: 100%;
+  overflow: hidden;
+  position: relative;
+  padding: 70px;
+}
+.mobile-chart-creation-step {
+  display: flex;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 40px;
+}
+.mobilie-chart-creation-step-text-container {
+  display: flex;
+  flex-direction: row;
+}
+.mobile-chart-creation-step-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  z-index: 1;
+}
+.mobile-chart-creation-step-arrow {
+  align-self: center;
+  justify-self: center;
+}
+.mobile-chart-creation-step-arrow-svg {
+  rotate: 90deg;
+}
+.mobile-chart-creation-step-divider {
+  width: 80%;
+  margin: 10px;
+}
+.mobile-chart-creation-step-icon {
+  width: 100px;
+}
+.mobile-chart-creation-step-title {
+  text-align: left;
+}
+.mobile-chart-creation-step-icon {
+  font-size: 45px;
+}
+.mobile-chart-creation-steps-line {
+  position: absolute;
+  top: 15%;
+  left: 120px;
+  bottom: 15%;
+  width: 4px;
+  z-index: 0;
+}
 /* chart creation steps css */
 @media screen and (max-width: 1425px) {
   .chart-creation-steps {
@@ -417,7 +483,6 @@
 }
 @media screen and (max-width: 900px) {
   .chart-creation-steps {
-    flex-direction: column;
     gap: 40px;
     padding: 20px;
   }
@@ -432,6 +497,23 @@
   }
   .chart-creation-step-icon {
     font-size: 40px;
+  }
+}
+@media screen and (max-width: 600px) {
+  .mobile-chart-creation-steps {
+    padding: 20px;
+  }
+  .mobile-chart-creation-steps-line {
+    left: 70px;
+  }
+  .chart-creation-title {
+    font-size: 2.5rem;
+  }
+  .mobile-chart-creation-step-title {
+    font-size: 1.5rem;
+  }
+  .mobile-chart-creation-step-description {
+    font-size: 1rem;
   }
 }
 /* cards css */
