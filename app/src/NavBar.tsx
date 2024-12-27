@@ -92,7 +92,7 @@ export const NavBar = observer(function Navbar() {
               </IconButton>
             </Link>
             <Tabs
-              value={state.tab !== 0 ? state.tab : false}
+              value={state.tab}
               onChange={(_e, value) => {
                 if (value === 3) settingsMenuToggle(false);
                 actions.setTab(value);
@@ -114,7 +114,7 @@ export const NavBar = observer(function Navbar() {
               {menuItems.map((menuItem, index) => (
                 <Tab
                   key={index}
-                  value={index}
+                  value={index + 1}
                   disableRipple
                   label={menuItem.label}
                   to={menuItem.path}
@@ -123,8 +123,8 @@ export const NavBar = observer(function Navbar() {
                   {...menuItem.anchorProps}
                 />
               ))}
-              <LanguageMenu />
             </Tabs>
+            <LanguageMenu />
             <ControlledMenu
               {...hoverProps}
               {...settingsMenuState}
@@ -144,7 +144,7 @@ export const NavBar = observer(function Navbar() {
                   className="settings-sub-menu-item"
                   onClick={() => {
                     assertSettingsTabs(key);
-                    actions.setTab(2);
+                    actions.setTab(3);
                     actions.setSettingsTabsSelected(key);
                     navigate("/settings");
                     settingsMenuToggle(false);
