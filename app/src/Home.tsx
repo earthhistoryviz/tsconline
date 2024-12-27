@@ -548,7 +548,7 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
       icon: <FolderCopy />
     },
     {
-      title: "Choose Your Age Range",
+      title: "Select An Age Range",
       description: "Select the desired age range for your chart to focus on specific geologic events and formations.",
       icon: <DateRange />
     },
