@@ -6,7 +6,17 @@ import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChar
 import { context, state } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, FolderCopy, HelpOutline, TableChart } from "@mui/icons-material";
+import {
+  ChevronLeft,
+  ChevronRight,
+  DateRange,
+  East,
+  FolderCopy,
+  HelpOutline,
+  RocketLaunch,
+  TableChart,
+  Tune
+} from "@mui/icons-material";
 import {
   Accordion,
   AccordionSummary,
@@ -96,6 +106,7 @@ export const Home = observer(function Home() {
       <CustomDivider />
       <Carousel ref={scrollRef} />
       <LandingPageCards />
+      <ChartCreationSteps />
       <Box>
         {Object.entries(state.presets).map(([type, configArray]) => {
           return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
@@ -522,6 +533,89 @@ export const LandingPageCards = observer(function LandingPageCards() {
           </Box>
         </motion.div>
       ))}
+    </Box>
+  );
+});
+
+const ChartCreationSteps = observer(function ChartCreationSteps() {
+  const theme = useTheme();
+  const steps = [
+    {
+      title: "Select any Datapack",
+      description:
+        "Choose from a variety of official datapacks that contain information on global and regional geologic events.",
+      icon: <FolderCopy />
+    },
+    {
+      title: "Choose Your Age Range",
+      description: "Select the desired age range for your chart to focus on specific geologic events and formations.",
+      icon: <DateRange />
+    },
+    {
+      title: "Select/Edit Columns",
+      description: "Choose the columns you want to display on your chart and customize their appearance, colors",
+      icon: <Tune />
+    },
+    {
+      title: "Generate Your Chart",
+      description: "Generate your chart based on the selected datapack and customized settings.",
+      icon: <RocketLaunch />
+    }
+  ];
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
+  return (
+    <Box
+      display="flex"
+      flexDirection="column"
+      alignItems="center"
+      justifyContent="center"
+      position="relative"
+      sx={{
+        backgroundColor: "secondaryBackground.main",
+        padding: "50px 0",
+        color: "secondaryBackground.contrastText"
+      }}>
+      <Box>
+        <Typography className="chart-creation-title" variant="h3">
+          {"Chart Creation Steps"}
+        </Typography>
+      </Box>
+      <Box className="chart-creation-steps">
+        <Box
+          sx={{
+            position: "absolute",
+            top: "120px",
+            left: "15%",
+            right: "15%",
+            height: "4px",
+            background: gradient.dark,
+            zIndex: 0
+          }}></Box>
+        {steps.map((step, index) => (
+          <>
+            <Box key={index} className="chart-creation-step">
+              <Box className="chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
+                {cloneElement(step.icon, {
+                  className: "chart-creation-step-icon",
+                  sx: { color: "button.contrastText" }
+                })}
+              </Box>
+              <Typography className="chart-creation-step-title" variant="h4">
+                {step.title}
+              </Typography>
+              <CustomDivider />
+              <Typography className="chart-creation-step-description" variant="body1">
+                {step.description}
+              </Typography>
+            </Box>
+            {index !== steps.length - 1 && (
+              <Box className="chart-creation-step-arrow">
+                <East />
+              </Box>
+            )}
+          </>
+        ))}
+      </Box>
     </Box>
   );
 });

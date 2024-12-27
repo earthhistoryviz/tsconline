@@ -329,6 +329,111 @@
 .landing-page-card-icon-component {
   font-size: 50px;
 }
+.chart-creation-steps {
+  display: grid;
+  grid-template-columns: 1fr 24px 1fr 24px 1fr 24px 1fr;
+  justify-content: center;
+  gap: 20px;
+  padding: 70px;
+  position: relative;
+}
+.chart-creation-step {
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+}
+.chart-creation-step-icon {
+  font-size: 45px;
+}
+.chart-creation-step-title {
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  font-size: 1.7rem;
+  font-weight: 600;
+  -webkit-box-orient: vertical;
+  line-height: 1.2em;
+  display: -webkit-box;
+  justify-self: center;
+  text-align: center;
+  align-self: center;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-creation-step-icon-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+}
+.chart-creation-step-arrow {
+  align-self: center;
+}
+.chart-creation-step-description {
+  font-size: 1.3rem;
+}
+/* chart creation steps css */
+@media screen and (max-width: 1425px) {
+  .chart-creation-steps {
+    gap: 40px;
+  }
+  .chart-creation-step-title {
+    -webkit-line-clamp: 2;
+    font-size: 1.75rem;
+  }
+  .chart-creation-step-description {
+    font-size: 1.2rem;
+  }
+  .chart-creation-step-icon {
+    font-size: 40px;
+  }
+}
+@media screen and (max-width: 1275px) {
+  .chart-creation-step-title {
+    font-size: 1.5rem;
+  }
+  .chart-creation-step-description {
+    font-size: 1rem;
+  }
+  .chart-creation-step-icon {
+    font-size: 35px;
+  }
+}
+@media screen and (max-width: 1150px) {
+  .chart-creation-steps {
+    gap: 20px;
+  }
+  .chart-creation-step-description {
+    font-size: 1rem;
+  }
+  .chart-creation-step-icon {
+    font-size: 30px;
+  }
+}
+@media screen and (max-width: 900px) {
+  .chart-creation-steps {
+    flex-direction: column;
+    gap: 40px;
+    padding: 20px;
+  }
+  .chart-creation-step {
+    padding: 20px;
+  }
+  .chart-creation-step-title {
+    font-size: 1.5rem;
+  }
+  .chart-creation-step-description {
+    font-size: 1.25rem;
+  }
+  .chart-creation-step-icon {
+    font-size: 40px;
+  }
+}
 /* cards css */
 @media screen and (max-width: 1350px) {
   .landing-page-cards {
