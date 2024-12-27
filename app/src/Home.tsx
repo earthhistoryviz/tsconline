@@ -528,26 +528,26 @@ export const LandingPageCards = observer(function LandingPageCards() {
 const ChartCreationSteps = observer(function ChartCreationSteps() {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { t } = useTranslation();
   const steps = [
     {
-      title: "Select any Datapack",
-      description:
-        "Choose from a variety of official datapacks that contain information on global and regional geologic events.",
+      title: t("landing-page.chart-steps.select-datapack.title"),
+      description: t("landing-page.chart-steps.select-datapack.description"),
       icon: <FolderCopy />
     },
     {
-      title: "Select An Age Range",
-      description: "Select the desired age range for your chart to focus on specific geologic events and formations.",
+      title: t("landing-page.chart-steps.select-age-range.title"),
+      description: t("landing-page.chart-steps.select-age-range.description"),
       icon: <DateRange />
     },
     {
-      title: "Select/Edit Columns",
-      description: "Choose the columns you want to display on your chart and customize their appearance, colors",
+      title: t("landing-page.chart-steps.select-columns.title"),
+      description: t("landing-page.chart-steps.select-columns.description"),
       icon: <Tune />
     },
     {
-      title: "Generate Your Chart",
-      description: "Generate your chart based on the selected datapack and customized settings.",
+      title: t("landing-page.chart-steps.generate.title"),
+      description: t("landing-page.chart-steps.generate.description"),
       icon: <RocketLaunch />
     }
   ];
@@ -566,7 +566,7 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
       }}>
       <Box>
         <Typography className="chart-creation-title" variant="h3">
-          {"Chart Creation Steps"}
+          {t("landing-page.chart-steps.title")}
         </Typography>
       </Box>
       {!isMobile && (
