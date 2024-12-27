@@ -1,5 +1,69 @@
 {
     "translation": {
+        "landing-page": {
+            "carousel": {
+                "customize-chart": {
+                    "title": "Customize Your Chart",
+                    "customize-chart-appearance": {
+                        "title": "Customize Chart Appearance",
+                        "description": "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+                    },
+                    "save-custom-settings":{
+                        "title": "Save Custom Settings",
+                        "description": "Save your custom chart settings for future use and easy access to your preferred configurations."
+                    },
+                    "share-your-charts": {
+                        "title": "Share Your Charts",
+                        "description": "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+                    }
+                },
+                "interactive-map-points": {
+                    "title": "Interactive Map Points",
+                    "toggle-columns": {
+                        "title": "Toggle Columns Directly on the Map",
+                        "description": "Select specific areas to focus on by enabling or disabling chart columns directly on the map."
+                    },
+                    "age-slider": {
+                        "title": "Dynamic Age Slider",
+                        "description": "Explore how rock formations and geologic events change over time with a simple slider."
+                    },
+                    "link-charts": {
+                        "title": "Link Charts to Locations",
+                        "description": "Map points connect chart columns to real-world locations for intuitive visualization."
+                    }
+                },
+                "search-columns": {
+                    "title": "Search Within Columns",
+                    "find-columns": {
+                        "title": "Find Columns/Events Quickly",
+                        "description": "Search for specific columns or events within the chart to quickly locate and focus on relevant information."
+                    },
+                    "age-range": {
+                        "title": "Extend/Center Age Range",
+                        "description": "Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
+                    },
+                    "notes": {
+                        "title": "View Specific Notes",
+                        "description": "Access detailed notes and information about specific events directly from the chart."
+                    }
+                },
+                "upload": {
+                    "title": "Upload Your Own!",
+                    "custom": {
+                        "title": "Create Custom Datapacks",
+                        "description": "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
+                    },
+                    "showcase": {
+                        "title": "Showcase Your Research",
+                        "description": "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
+                    },
+                    "collaborate": {
+                        "title": "Collaborate with Others",
+                        "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
+                    }
+                }
+            }
+        },
         "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
         "login": {
             "signin": "Sign In",
