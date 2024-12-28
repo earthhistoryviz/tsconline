@@ -138,7 +138,7 @@ export const Home = observer(function Home() {
   );
 });
 const Carousel = observer(
-  forwardRef<HTMLDivElement>((props, ref) => {
+  forwardRef<HTMLDivElement>(function Carousel(props, ref) {
     const [activeIndex, setActiveIndex] = useState(0);
     const [direction, setDirection] = useState(0);
     const [paused, setPaused] = useState(false);
@@ -532,7 +532,7 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
   const steps = [
     {
       title: t("landing-page.chart-steps.select-datapack.title"),
-      description:  t("landing-page.chart-steps.select-datapack.description"),
+      description: t("landing-page.chart-steps.select-datapack.description"),
       icon: <FolderCopy />
     },
     {
@@ -559,6 +559,8 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
       alignItems="center"
       justifyContent="center"
       position="relative"
+      borderTop="1px solid black"
+      borderBottom="1px solid black"
       sx={{
         backgroundColor: "secondaryBackground.main",
         padding: "50px 0",
@@ -633,11 +635,6 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
                   </Typography>
                 </Box>
               </Box>
-              {index !== steps.length - 1 && (
-                <Box className="mobile-chart-creation-step-arrow">
-                  <East className="mobile-chart-creation-step-arrow-svg" />
-                </Box>
-              )}
             </>
           ))}
         </Box>
