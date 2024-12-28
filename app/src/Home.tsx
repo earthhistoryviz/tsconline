@@ -532,7 +532,7 @@ const ChartCreationSteps = observer(function ChartCreationSteps() {
   const steps = [
     {
       title: t("landing-page.chart-steps.select-datapack.title"),
-      description: t("landing-page.chart-steps.select-datapack.description"),
+      description:  t("landing-page.chart-steps.select-datapack.description"),
       icon: <FolderCopy />
     },
     {
