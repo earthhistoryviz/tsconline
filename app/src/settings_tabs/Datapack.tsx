@@ -55,6 +55,7 @@ export const Datapacks = observer(function Datapacks() {
         <CustomTooltip title="Deselect All" placement="top">
           <IconButton
             className={styles.ib}
+            data-tour="datapack-deselect-button"
             onClick={async () => {
               await actions.processDatapackConfig([]);
             }}>
@@ -67,6 +68,7 @@ export const Datapacks = observer(function Datapacks() {
         </div>
         <ToggleButtonGroup
           className={styles.display}
+          data-tour="datapack-display-button"
           value={state.settingsTabs.datapackDisplayType}
           onChange={(_event, val) => {
             if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
@@ -138,6 +140,7 @@ export const Datapacks = observer(function Datapacks() {
         )}
         <TSCButton
           className={styles.buttons}
+          data-tour="datapack-confirm-button"
           onClick={async () => {
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
           }}>
