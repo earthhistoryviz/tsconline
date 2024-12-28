@@ -137,6 +137,9 @@ export type State = {
   isProcessingDatapacks: boolean;
   unsavedDatapackConfig: DatapackConfigForChartRequest[];
   isQSGOpen: boolean;
+  isDatapacksTourOpen: boolean;
+  isSettingsTourOpen: boolean;
+  isWorkshopsTourOpen: boolean;
 };
 
 export const state = observable<State>({
@@ -266,5 +269,8 @@ export const state = observable<State>({
   snackbars: [],
   isProcessingDatapacks: false,
   unsavedDatapackConfig: [],
-  isQSGOpen: false
+  isQSGOpen: false,
+  isDatapacksTourOpen: false,
+  isSettingsTourOpen: false,
+  isWorkshopsTourOpen: false
 });
