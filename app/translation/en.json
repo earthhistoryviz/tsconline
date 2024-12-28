@@ -148,6 +148,7 @@
         },
         "navBar": {
             "home": "Home",
+            "presets": "Presets",
             "chart": "Chart",
             "datapacks": "Datapacks",
             "settings": "Settings",
