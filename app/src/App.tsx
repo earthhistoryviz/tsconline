@@ -8,7 +8,7 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
-import { SetStateAction, useContext, useEffect } from "react";
+import { SetStateAction, useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
@@ -32,13 +32,18 @@ import { Presets } from "./Presets";
 import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
 import Joyride, { CallBackProps, Step } from 'react-joyride';
-import { qsg } from "./tours";
+import { datapacksTour, qsg, settingsTour } from "./tours";
+import { FileFormatInfo } from "./FileFormatInfo";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+
+  const [settingsTourStepIndex, setSettingsTourStepIndex] = useState(0);  // 用于跟踪 Joyride 的当前步骤
+  const [settingsTourSequence, setSettingsTourSequence] = useState(["time", "column", "search", "font", "mappoints", "datapacks"]);
+  const [settingsTourCurrentComponent, setSettingsTourCurrentComponent] = useState("time");
   const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
   const backgroundColor = theme.palette.backgroundColor.main;
   document.documentElement.style.backgroundColor = backgroundColor;
@@ -51,11 +56,26 @@ export default observer(function App() {
     };
   }, []);
 
-  const handleJoyrideCallback = (data: CallBackProps) => {
+  const handleQSGCallback = (data: CallBackProps) => {
     const { status } = data;
     const finishedStatuses: string[] = ['finished', 'skipped'];
     if (finishedStatuses.includes(status)) {
-      actions.setIsQsgOpen(false);
+      actions.setTourOpen(false, "qsg");
+    }
+  };
+
+  const handleDatapackTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    const finishedStatuses: string[] = ['finished', 'skipped'];
+    if (finishedStatuses.includes(status)) {
+      actions.setTourOpen(false, "datapacks");
+    }
+  };
+  const handleSettingsTourCallback = (data: CallBackProps) => {
+    const { status } = data;
+    const finishedStatuses: string[] = ['finished', 'skipped'];
+    if (finishedStatuses.includes(status)) {
+      actions.setTourOpen(false, "settings");
     }
   };
   // on theme change, update the background color
@@ -96,6 +116,7 @@ export default observer(function App() {
             <Route path="/datapacks" element={<Datapacks />} />
             <Route path="/presets" element={<Presets />} />
             <Route path="/workshops" element={<Workshops />} />
+            <Route path="/file-format-info" element={<FileFormatInfo />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
@@ -150,11 +171,42 @@ export default observer(function App() {
             continuous
             run={state.isQSGOpen}
             steps={qsg}
-            callback={handleJoyrideCallback}
+            callback={handleQSGCallback}
             locale={{ skip: 'Quit Tour' }}
+            showProgress
             styles={{
               options: {
                 zIndex: 10000,
+                primaryColor: '#6693C9',
+                beaconSize: 100,
+              }
+            }}
+          />
+          <Joyride
+            continuous
+            run={state.isDatapacksTourOpen}
+            steps={datapacksTour}
+            callback={handleDatapackTourCallback}
+            locale={{ skip: 'Quit Tour' }}
+            showProgress
+            styles={{
+              options: {
+                zIndex: 200,
+                primaryColor: '#6693C9',
+                beaconSize: 100,
+              }
+            }}
+          />
+          <Joyride
+            continuous
+            run={state.isSettingsTourOpen}
+            steps={settingsTour}
+            callback={handleSettingsTourCallback}
+            locale={{ skip: 'Quit Tour' }}
+            showProgress
+            styles={{
+              options: {
+                zIndex: 200,
                 primaryColor: '#6693C9',
                 beaconSize: 100,
               }

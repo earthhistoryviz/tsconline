@@ -56,6 +56,8 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
       left: `${orientation === "vertical-left" ? "0" : `${width}px`}`
     };
     const { t } = useTranslation();
+    tabs.map((val, index) => (
+      console.log(val.id)));
     return (
       <div className="tsc-custom-tabs" {...props}>
         <div
@@ -69,6 +71,7 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
           {tabs.map((val, index) => (
             <Button
               key={val.id}
+              setting-tour={`setting-tour-${val.id}-tab`}
               tabIndex={0}
               sx={{
                 textTransform: "none",
