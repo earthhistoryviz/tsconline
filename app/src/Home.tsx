@@ -1,10 +1,7 @@
 import { createRef, useState, useEffect, cloneElement, forwardRef } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
-import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
 import { context, state } from "./state";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronLeft,
@@ -17,42 +14,29 @@ import {
   TableChart,
   Tune
 } from "@mui/icons-material";
-import {
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Grid,
-  Typography,
-  Box,
-  IconButton,
-  Chip,
-  useMediaQuery,
-  Divider
-} from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCButton, TSCCard, StyledScrollbar, Attribution, CustomDivider } from "./components";
+import { TSCButton, Attribution, CustomDivider } from "./components";
 import "./Home.css";
-import { ErrorCodes } from "./util/error-codes";
-import _ from "lodash";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
 
 export const Home = observer(function Home() {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
   const theme = useTheme();
-  const navigate = useNavigate();
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
   const handleScrollToPreset = () => {
-    // accounts for navbar height
     if (scrollRef?.current) {
       const elementTop = scrollRef.current.getBoundingClientRect().top;
+      const currentScroll = window.scrollY;
+      // accounts for navbar height
       const offset = 72;
       window.scrollTo({
-        top: elementTop - offset,
+        top: elementTop + currentScroll - offset,
         behavior: "smooth"
       });
     }
@@ -107,24 +91,21 @@ export const Home = observer(function Home() {
       <Carousel ref={scrollRef} />
       <LandingPageCards />
       <ChartCreationSteps />
-      <Box>
-        {Object.entries(state.presets).map(([type, configArray]) => {
-          return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
-        })}
-      </Box>
-      <div className="bottom-button">
-        <TSCButton
-          className="remove-cache-button"
-          style={{
-            fontSize: theme.typography.pxToRem(12)
-          }}
-          onClick={async () => {
-            actions.removeCache();
-            actions.resetState();
-          }}>
-          {t("button.remove-cache")}
-        </TSCButton>
-      </div>
+      {import.meta.env.DEV && (
+        <div className="bottom-button">
+          <TSCButton
+            className="remove-cache-button"
+            style={{
+              fontSize: theme.typography.pxToRem(12)
+            }}
+            onClick={async () => {
+              actions.removeCache();
+              actions.resetState();
+            }}>
+            {t("button.remove-cache")}
+          </TSCButton>
+        </div>
+      )}
       <Attribution>
         <a href="https://iconscout.com/lottie-animations/down-arrow" className="text-underline font-size-sm">
           Down Arrow
@@ -399,72 +380,6 @@ const Carousel = observer(
     );
   })
 );
-
-const TSCPresetHighlights = observer(function TSCPresetHighlights({
-  type,
-  navigate,
-  configArray
-}: {
-  type: string;
-  navigate: NavigateFunction;
-  configArray: ChartConfig[];
-}) {
-  const { actions, state } = useContext(context);
-  const theme = useTheme();
-  const [expanded, setExpanded] = useState(true);
-  const { t } = useTranslation();
-  const handleAccordionChange = () => {
-    setExpanded(!expanded);
-  };
-  return (
-    <>
-      <Accordion
-        className="preset-highlight"
-        sx={{ border: `1px solid ${theme.palette.divider}` }}
-        onChange={handleAccordionChange}
-        expanded={expanded}>
-        <AccordionSummary
-          expandIcon={<ExpandMoreIcon />}
-          aria-controls="panel1a-content"
-          id="panel1a-header"
-          className="preset-summary">
-          <Typography className="preset-type-title">{t(`presets.${type}`)}</Typography>
-        </AccordionSummary>
-        <AccordionDetails>
-          <StyledScrollbar>
-            <Grid className="presets" container>
-              {configArray.map((preset, index) => (
-                <Grid item key={index} className="preset-item">
-                  <TSCCard
-                    preset={preset}
-                    generateChart={async () => {
-                      let datapacks: DatapackConfigForChartRequest[] = [];
-                      try {
-                        datapacks = preset.datapacks.map((dp) => {
-                          const datapack = _.cloneDeep(
-                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
-                          );
-                          assertDatapackConfigForChartRequest(datapack);
-                          return datapack;
-                        });
-                      } catch (e) {
-                        actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
-                        return;
-                      }
-                      const success = await actions.processDatapackConfig(datapacks, preset.settings);
-                      if (!success) return;
-                      actions.initiateChartGeneration(navigate, "/home");
-                    }}
-                  />
-                </Grid>
-              ))}
-            </Grid>
-          </StyledScrollbar>
-        </AccordionDetails>
-      </Accordion>
-    </>
-  );
-});
 
 export const LandingPageCards = observer(function LandingPageCards() {
   const [hoveredCard, setHoveredCard] = useState(-1);
