@@ -127,7 +127,7 @@ export const settingsTour = [
     disableBeacon: true
   },
   {
-    target: '[setting-tour="load-settings"]',
+    target: ".load-settings",
     content:
       "Click here to load your settings from a file. This allows you to quickly apply previously saved configurations to your chart.",
     showSkipButton: true,
@@ -135,7 +135,7 @@ export const settingsTour = [
     disableBeacon: true
   },
   {
-    target: '[setting-tour="save-settings"]',
+    target: ".save-settings",
     content:
       "Click here to save your current settings to a file. This is useful for backing up your configurations or sharing them with others.",
     showSkipButton: true,
