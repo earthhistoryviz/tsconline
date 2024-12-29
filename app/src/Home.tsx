@@ -47,12 +47,10 @@ export const Home = observer(function Home() {
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
             <Typography className="landing-page-title" variant="h2" fontWeight="700">
-              {"Welcome to TimeScale Creator!"}
+              {t("landing-page.welcome")}
             </Typography>
             <Typography className="sub-header-section-landing-page-description">
-              {
-                "TimeScale Creator is an advanced online cloud service designed to help you explore and visualize the geologic time scale with ease. With access to a vast internal database of over 20,000 global and regional events—including biologic, geomagnetic, sea-level, and stable isotope data—TimeScale Creator is the ultimate tool for researchers, educators, and enthusiasts of Earth history."
-              }
+              {t("landing-page.welcome-desc")}
             </Typography>
           </Box>
           <img
