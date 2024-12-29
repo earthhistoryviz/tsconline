@@ -59,7 +59,14 @@ export const NavBar = observer(function Navbar() {
     { label: t("navBar.presets"), path: "/presets", icon: <Dataset /> },
     { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset />, className: "qsg-datapacks" },
     { label: t("navBar.chart"), path: "/chart", icon: <TableChart />, className: "qsg-chart" },
-    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircle />, className: "qsg-settings" },
+    {
+      label: t("navBar.settings"),
+      path: "/settings",
+      ref: settingsRef,
+      anchorProps,
+      icon: <AccountCircleIcon />,
+      className: "qsg-settings"
+    },
     { label: t("navBar.help"), path: "/help", icon: <Help />, className: "qsg-help" },
     { label: t("navBar.workshops"), path: "/workshops", icon: <School />, className: "qsg-workshops" },
     { label: t("navBar.about"), path: "/about", icon: <Campaign />, className: "qsg-about" }
