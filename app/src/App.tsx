@@ -28,6 +28,7 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { toJS } from "mobx";
 import { useTranslation } from "react-i18next";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { Presets } from "./Presets";
 import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
 
@@ -83,6 +84,7 @@ export default observer(function App() {
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/datapacks" element={<Datapacks />} />
+            <Route path="/presets" element={<Presets />} />
             <Route path="/workshops" element={<Workshops />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
           </Routes>
