@@ -2,6 +2,8 @@
     "translation": {
         "landing-page": {
             "get-started": "Get Started",
+            "welcome": "Welcome to TimeScale Creator!",
+            "welcome-desc": "TimeScale Creator is an advanced online cloud service designed to help you explore and visualize the geologic time scale with ease. With access to a vast internal database of over 20,000 global and regional events—including biologic, geomagnetic, sea-level, and stable isotope data—TimeScale Creator is the ultimate tool for researchers, educators, and enthusiasts of Earth history.",
             "carousel": {
                 "customize-chart": {
                     "title": "Customize Your Chart",
@@ -9,7 +11,7 @@
                         "title": "Customize Chart Appearance",
                         "description": "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
                     },
-                    "save-custom-settings":{
+                    "save-custom-settings": {
                         "title": "Save Custom Settings",
                         "description": "Save your custom chart settings for future use and easy access to your preferred configurations."
                     },
@@ -77,7 +79,7 @@
                     "title": "Need Help?",
                     "description": "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more."
                 },
-                "more": "Explore More" 
+                "more": "Explore More"
             },
             "chart-steps": {
                 "title": "Chart Creation Steps",
