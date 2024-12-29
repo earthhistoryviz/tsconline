@@ -48,7 +48,7 @@ export const Help = observer(function Help() {
           <AccordionDetails>
             <Typography style={{ marginBottom: "20px" }}>
               Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the
-              functions of each tab on the Nav bar. Click the `&apos;`Start QSG`&apos;` button to begin.
+              functions of each tab on the Nav bar. Click the &apos;Start QSG&apos; button to begin.
             </Typography>
             <TSCButton buttonType="primary" onClick={() => runTour("qsg")}>
               Start QSG
@@ -83,13 +83,12 @@ export const Help = observer(function Help() {
             <Typography>
               {/* TODO: this might need some change because it's for the java app. */}
               <strong>TSCreator Pro</strong> is copyright (c) of Geologic TimeScale Foundation, hereafter named the
-              `&apos;`Owner`&apos;`. All rights reserved, `&apos;`TSCreator`&apos;` and `&apos;`TSCreator Pro`&apos;`
-              are trademarks of the `&apos;`Owner`&apos;`.
+              &quot;Owner&quot;. All rights reserved, &quot;TSCreator&quot; and &quot;TSCreator Pro&quot; are trademarks
+              of the &quot;Owner&quot;.
               <p>
                 <strong>IMPORTANT - READ CAREFULLY:</strong> This license statement and limited warranty constitutes a
-                legal agreement (`&apos;`License Agreement`&apos;`) between you (either as an individual or a single
-                entity) and the Owner (`&apos;`Licensor`&apos;`) for TSCreator Pro. The Web Site referred to in this
-                agreement is{" "}
+                legal agreement (&quot;License Agreement&quot;) between you (either as an individual or a single entity)
+                and the Owner (&quot;Licensor&quot;) for TSCreator Pro. The Web Site referred to in this agreement is{" "}
                 <a href="https://timescalecreator.org" target="_blank" rel="noopener noreferrer">
                   https://timescalecreator.org
                 </a>
@@ -115,8 +114,8 @@ export const Help = observer(function Help() {
                 of copying the Software. You may not distribute the Software, single or as part of a larger package.
               </p>
               <p>
-                The Software is provided `&apos;`as is`&apos;`. In no event shall the Licensor or any of his affiliates
-                be liable for any consequential, special, incidental, or indirect damages of any kind arising out of the
+                The Software is provided &quot;as is&quot;. In no event shall the Licensor or any of his affiliates be
+                liable for any consequential, special, incidental, or indirect damages of any kind arising out of the
                 delivery, performance, or use of this Software, to the maximum extent permitted by applicable law. While
                 the Software has been developed with great care, it is not possible to warrant that the Software is
                 error-free.
