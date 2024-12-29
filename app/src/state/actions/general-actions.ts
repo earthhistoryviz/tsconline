@@ -1326,11 +1326,10 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.isSettingsTourOpen = false;
       break;
     default:
-      console.error('No such tour');
+      console.error("No such tour");
       state.isQSGOpen = false;
       state.isDatapacksTourOpen = false;
       state.isSettingsTourOpen = false;
       state.isWorkshopsTourOpen = false;
   }
-
-})
+});
