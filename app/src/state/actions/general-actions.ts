@@ -170,6 +170,7 @@ export const fetchPresets = action("fetchPresets", async () => {
     try {
       assertPresets(presets);
       loadPresets(presets);
+      setPresetsLoading(false);
       console.log("Presets loaded");
     } catch (e) {
       displayServerError(presets, ErrorCodes.INVALID_PRESET_INFO, ErrorMessages[ErrorCodes.INVALID_PRESET_INFO]);
@@ -642,7 +643,7 @@ export const resetState = action("resetState", () => {
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
-  state.presets = presets;
+  state.presets.presets = presets;
 });
 
 // Define settingOptions globally
@@ -1270,4 +1271,8 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
 // For now, this just loads the selected dummy workshop into the state.
 export const setWorkshopsArray = action((workshop: Workshop[]) => {
   state.workshops = workshop;
+});
+
+export const setPresetsLoading = action((loading: boolean) => {
+  state.presets.presetsLoading = loading;
 });

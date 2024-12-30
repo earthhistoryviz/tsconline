@@ -108,7 +108,10 @@ export type State = {
   };
   config: Config; // the active datapacks
   prevConfig: Config;
-  presets: Presets;
+  presets: {
+    presets: Presets;
+    presetsLoading: boolean;
+  };
   datapacks: Datapack[]; // all datapacks on the server
   workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
@@ -231,7 +234,10 @@ export const state = observable<State>({
     datapacks: [],
     settingsPath: ""
   },
-  presets: {},
+  presets: {
+    presets: {},
+    presetsLoading: true
+  },
   datapacks: [],
   workshops: [],
   mapPatterns: {

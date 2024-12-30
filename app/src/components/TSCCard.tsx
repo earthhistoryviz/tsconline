@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { styled } from "@mui/material/styles";
-import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText, Skeleton } from "@mui/material";
+import {
+  Grid,
+  Box,
+  Avatar,
+  CardMedia,
+  IconButton,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  Skeleton
+} from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
 import ReactCardFlip from "react-card-flip";
@@ -27,13 +38,14 @@ const ContrastTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary
 }));
 
-export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartConfig; generateChart?: () => void; isLoading: boolean }) => {
+// not providing preset will render a skeleton card
+export const TSCCard = ({ preset, generateChart }: { preset?: ChartConfig; generateChart?: () => void }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const { t } = useTranslation();
 
   function handleFlip() {
-    if (!isLoading) {
+    if (preset) {
       setIsFlipped(!isFlipped);
     }
   }
@@ -46,10 +58,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
       <Box className="front-card">
-      {isLoading ? (
-          <Box>
-          </Box>
-        ) : (
+        {preset && (
           <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
         )}
         <div className="card-content front-card-content">
@@ -57,14 +66,14 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
-                {isLoading ? (
+                {!preset ? (
                   <Skeleton variant="circular" width={40} height={40} />
                 ) : (
                   <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
                 )}
               </Grid>
               <Grid item xs>
-                {isLoading ? (
+                {!preset ? (
                   <Skeleton width="60%" />
                 ) : (
                   <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
@@ -78,7 +87,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
                 </IconButton>
               </Grid>
               <Grid item>
-                {isLoading ? (
+                {!preset ? (
                   <Skeleton width={80} height={35} />
                 ) : (
                   <TSCButton
@@ -95,7 +104,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
               </Grid>
               <Grid item xs onClick={handleFlip}>
                 <Box display="flex" justifyContent="flex-end">
-                  {isLoading ? <Skeleton width={50} /> : <Date className="date">{preset.date}</Date>}
+                  {!preset ? <Skeleton width={50} /> : <Date className="date">{preset.date}</Date>}
                 </Box>
               </Grid>
             </Grid>
@@ -104,7 +113,7 @@ export const TSCCard = ({ preset, generateChart, isLoading }: { preset: ChartCon
       </Box>
 
       {/* This is the back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
+      {preset && <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />}
     </ReactCardFlip>
   );
 };

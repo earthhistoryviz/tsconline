@@ -43,10 +43,6 @@
             "main": "Time Scale Creator 在线版",
             "settings": "设置"
         },
-        "presets": {
-            "BASIC": "基础预置数据包",
-            "MAP-PACK": "地图预置数据包"
-        },
         "navBar": {
             "chart": "图表",
             "datapacks": "选择数据包",

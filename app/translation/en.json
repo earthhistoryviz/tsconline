@@ -144,10 +144,6 @@
             "main": "Time Scale Creator Online",
             "settings": "Settings"
         },
-        "presets": {
-            "BASIC": "BASIC PRESETS",
-            "MAP-PACK": "MAP-PACK PRESETS"
-        },
         "navBar": {
             "home": "Home",
             "presets": "Presets",
