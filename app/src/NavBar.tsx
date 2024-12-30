@@ -31,7 +31,6 @@ import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
-import MenuItem from "@mui/material/MenuItem";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
 import Switch from "@mui/material/Switch";
@@ -239,7 +238,7 @@ const NonUserSettings: React.FC = () => {
         backgroundColor: theme.palette.dark.light,
         border: `1px solid ${theme.palette.divider}`
       }}>
-      <MenuItem>
+      <TSCMenuItem>
         <CustomFormControlLabel
           width={120}
           control={
@@ -252,20 +251,21 @@ const NonUserSettings: React.FC = () => {
           }
           label={t("login.dark-mode")}
         />
-      </MenuItem>
+      </TSCMenuItem>
       <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
       <MenuHeader style={{ color: theme.palette.dark.contrastText }}>{t(`LANGUAGES`)}</MenuHeader>
       <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
       {Object.entries(languageList).map(([key, value]) => (
-        <MenuItem
+        <TSCMenuItem
           key={key}
+          type="checkbox"
+          checked={i18next.language === value}
           className="non-user-settings-sub-menu-item"
           onClick={() => {
             i18next.changeLanguage(value);
-          }}
-          >
+          }}>
           <Typography>{t(`language-names.${value}`)}</Typography>
-        </MenuItem>
+        </TSCMenuItem>
       ))}
     </Menu>
   );
