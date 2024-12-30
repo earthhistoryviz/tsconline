@@ -91,7 +91,7 @@ export const Time = observer(function Time() {
             />
           </FormControl>
         </Box>
-        <Box className="time-settings-age-container top-interval-container">
+        <Box className="time-settings-age-container">
           <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
           <CustomDivider className="time-form-divider" />
           <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>

@@ -9,9 +9,8 @@ import { useContext } from "react";
 import { context } from "../state";
 import { xmlToJson } from "../state/parse-settings";
 import { CircularProgress } from "@mui/material";
-import { CustomTooltip, InputFileUpload } from "../components";
+import { InputFileUpload, TSCButton } from "../components";
 import { useTranslation } from "react-i18next";
-import "./LoadSettings.css";
 
 export default function LoadSettings() {
   const { actions } = useContext(context);
@@ -38,7 +37,7 @@ export default function LoadSettings() {
       return;
     }
     actions.pushSnackbar("Successfully loaded settings from " + file.name + "!", "success");
-    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4));
+    actions.setLoadSaveFilename(file.name.substring(0, file.name.length - 4)); //remove extension
   }
 
   const handleClickOpen = () => {
@@ -75,11 +74,7 @@ export default function LoadSettings() {
 
   return (
     <>
-      <CustomTooltip title={t("settings.preferences.settings-file.load")}>
-        <Button variant="contained" color="secondary" onClick={handleClickOpen} className="load-settings-button">
-          {t("settings.preferences.settings-file.load")}
-        </Button>
-      </CustomTooltip>
+      <TSCButton onClick={handleClickOpen}>{t("settings.preferences.settings-file.load")}</TSCButton>
 
       <Dialog
         open={open}

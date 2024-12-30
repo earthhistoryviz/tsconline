@@ -1,5 +1,4 @@
 import * as React from "react";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -14,9 +13,9 @@ import { ChartSettings } from "../types";
 import isValidFilename from "valid-filename";
 import { jsonToXml } from "../state/parse-settings";
 import { observer } from "mobx-react-lite";
-import { CustomTooltip } from "../components";
+import { TSCButton } from "../components";
 import { useTranslation } from "react-i18next";
-import "./SaveSettings.css";
+import { Button } from "@mui/material";
 
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
@@ -52,11 +51,9 @@ const SaveSettings = observer(() => {
 
   return (
     <React.Fragment>
-      <CustomTooltip title={t("settings.preferences.settings-file.save")}>
-        <Button variant="contained" color="primary" onClick={handleClickOpen} className="save-settings-button">
-          {t("settings.preferences.settings-file.save")}
-        </Button>
-      </CustomTooltip>
+      <TSCButton onClick={handleClickOpen} className="save-settings-button">
+        {t("settings.preferences.settings-file.save")}
+      </TSCButton>
       <Dialog
         open={open}
         onClose={handleClose}
@@ -91,9 +88,9 @@ const SaveSettings = observer(() => {
           <Button variant="outlined" onClick={handleClose}>
             {t("settings.preferences.settings-file.save-dialog.cancel")}
           </Button>
-          <Button variant="contained" type="submit" color="primary" className="save-settings-button">
+          <TSCButton variant="contained" type="submit" color="primary" className="save-settings-button">
             {t("settings.preferences.settings-file.save-dialog.save")}
-          </Button>
+          </TSCButton>
         </DialogActions>
       </Dialog>
     </React.Fragment>
