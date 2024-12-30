@@ -717,12 +717,17 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
       return 1;
     case "column":
       return 2;
+    case "search":
+      return 3;
     case "font":
       return 4;
     case "mappoints":
       return 5;
     case "datapacks":
       return 6;
+    default:
+      console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
+      return 0;
   }
 }
 
