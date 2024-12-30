@@ -6,8 +6,9 @@
   border: 1px solid gray;
   border-radius: 4px;
   padding: 10px;
-  margin: 10px auto;
-  width: 70%;
+  margin: 10px;
+  width: 50%;
+  justify-self: center;
 }
 .time-settings-container > * {
   width: 100%;
@@ -18,7 +19,6 @@
   align-items: center;
   justify-content: center;
   padding: 12px;
-  max-width: 700px;
   margin: 10px 0px;
 }
 .IntervalLabel {
