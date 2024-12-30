@@ -20,9 +20,8 @@ import {
 } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
-import { Menu as MenuIcon, AccountCircle, TableChart, Dataset, Help, Campaign, School } from "@mui/icons-material";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import { ControlledMenu, useHover, useMenuState } from "@szhsin/react-menu";
+import { Menu as MenuIcon, TableChart, Dataset, Help, Campaign, School, AccountCircle } from "@mui/icons-material";
+import { ControlledMenu, Menu, MenuDivider, MenuHeader, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
@@ -32,16 +31,12 @@ import { AccountMenu } from "./account_settings/AccountMenu";
 import { toJS } from "mobx";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
-import Button from "@mui/material/Button";
-import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import PopupState, { bindTrigger, bindMenu } from "material-ui-popup-state";
 import React from "react";
 import languageList from "../translation/avaliable-language.json";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
-import Divider from "@mui/material/Divider";
 
 const StyledAppBar = styled(AppBar)(({ theme }) => ({
   backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
@@ -64,7 +59,7 @@ export const NavBar = observer(function Navbar() {
   const menuItems = [
     { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset /> },
     { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
-    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircleIcon /> },
+    { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircle /> },
     { label: t("navBar.help"), path: "/help", icon: <Help /> },
     { label: t("navBar.workshops"), path: "/workshops", icon: <School /> },
     { label: t("navBar.about"), path: "/about", icon: <Campaign /> }
@@ -73,7 +68,6 @@ export const NavBar = observer(function Navbar() {
     navigate(path);
     setMenuDrawerOpen(false);
   };
-  const dropRef = useRef(null);
   return (
     <StyledAppBar position="fixed">
       <Toolbar>
@@ -127,7 +121,6 @@ export const NavBar = observer(function Navbar() {
                   {...menuItem.anchorProps}
                 />
               ))}
-              <LanguageMenu />
             </Tabs>
             <ControlledMenu
               {...hoverProps}
@@ -194,7 +187,6 @@ export const NavBar = observer(function Navbar() {
                   </ListItem>
                 ))}
               </List>
-              <LanguageMenu />
             </Drawer>
           </>
         )}
@@ -226,93 +218,55 @@ export const NavBar = observer(function Navbar() {
             }}
           />
         )}
-
-        <PopupState variant="popover">
-          {(popupState) => (
-            <React.Fragment>
-              <Button variant="text" {...bindTrigger(popupState)}>
-                <SettingsIcon />
-              </Button>
-              <Menu {...bindMenu(popupState)} className="lanuage-txt-break">
-                <MenuItem>
-                  <CustomFormControlLabel
-                    width={120}
-                    control={
-                      <Switch
-                        checked={state.user.settings.darkMode}
-                        size="medium"
-                        color="default"
-                        onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
-                      />
-                    }
-                    label={t("login.dark-mode")}
-                  />
-                </MenuItem>
-                <Divider className="div-bar-top" />
-                <MenuItem>
-                  <Typography>{t(`LANGUAGES`)}</Typography>
-                </MenuItem>
-                <Divider className="div-bar-bottom" />
-                {Object.entries(languageList).map(([key, value]) => (
-                  <MenuItem
-                    key={key}
-                    className="settings-sub-menu-item"
-                    onClick={() => {
-                      i18next.changeLanguage(value);
-                    }}
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "rgba(0, 0, 0, 0.08)",
-                        color: "primary.main"
-                      },
-                      transition: "background-color 0.2s ease"
-                    }}>
-                    <Typography>{t(`language-names.${value}`)}</Typography>
-                  </MenuItem>
-                ))}
-              </Menu>
-            </React.Fragment>
-          )}
-        </PopupState>
+        <NonUserSettings />
       </Toolbar>
     </StyledAppBar>
   );
 });
-
-const LanguageMenu = observer(function LanguageMenu() {
+const NonUserSettings: React.FC = () => {
+  const { state, actions } = useContext(context);
   const { t } = useTranslation();
-  const currentLanguage = i18next.language;
+  const theme = useTheme();
   return (
-    <PopupState variant="popover" popupId="demo-popup-menu">
-      {(popupState) => (
-        <React.Fragment>
-          <Button variant="text" {...bindTrigger(popupState)}>
-            <LanguageIcon />
-            <Typography>{t(`language-names.${currentLanguage}`)}</Typography>
-          </Button>
-          <Menu
-            anchorOrigin={{
-              vertical: "bottom",
-              horizontal: "center"
-            }}
-            transformOrigin={{
-              vertical: "top",
-              horizontal: "center"
-            }}
-            {...bindMenu(popupState)}>
-            {Object.entries(languageList).map(([key, value]) => (
-              <MenuItem
-                key={key}
-                className="settings-sub-menu-item"
-                onClick={() => {
-                  i18next.changeLanguage(value);
-                }}>
-                <Typography>{t(`language-names.${value}`)}</Typography>
-              </MenuItem>
-            ))}
-          </Menu>
-        </React.Fragment>
-      )}
-    </PopupState>
+    <Menu
+      menuButton={
+        <IconButton>
+          <SettingsIcon />
+        </IconButton>
+      }
+      menuStyle={{
+        color: theme.palette.dark.contrastText,
+        backgroundColor: theme.palette.dark.light,
+        border: `1px solid ${theme.palette.divider}`
+      }}>
+      <MenuItem>
+        <CustomFormControlLabel
+          width={120}
+          control={
+            <Switch
+              checked={state.user.settings.darkMode}
+              size="medium"
+              color="default"
+              onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
+            />
+          }
+          label={t("login.dark-mode")}
+        />
+      </MenuItem>
+      <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
+      <MenuHeader style={{ color: theme.palette.dark.contrastText }}>{t(`LANGUAGES`)}</MenuHeader>
+      <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
+      {Object.entries(languageList).map(([key, value]) => (
+        <MenuItem
+          key={key}
+          className="non-user-settings-sub-menu-item"
+          onClick={() => {
+            i18next.changeLanguage(value);
+          }}
+          sx={{}}>
+          <Typography>{t(`language-names.${value}`)}</Typography>
+        </MenuItem>
+      ))}
+    </Menu>
   );
-});
+};
