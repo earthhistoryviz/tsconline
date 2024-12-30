@@ -260,19 +260,6 @@ export async function verifyFilepath(filepath: string) {
   return true;
 }
 
-export function verifyFilepathSync(filepath: string) {
-  const root = process.cwd();
-  try {
-    filepath = path.resolve(filepath);
-    if (!filepath.startsWith(root)) {
-      return false;
-    }
-  } catch {
-    return false;
-  }
-  return true;
-}
-
 export async function verifyNonExistentFilepath(filepath: string) {
   try {
     filepath = path.resolve(filepath);
