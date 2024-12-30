@@ -21,6 +21,9 @@
 .szh-menu-container.settings-sub-menu > .szh-menu {
   min-width: 130px;
 }
+.settings-sub-menu-item {
+  justify-content: center;
+}
 
 .nav-bar-menu-mobile {
   width: 200px;

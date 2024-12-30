@@ -111,7 +111,7 @@ export const NavBar = observer(function Navbar() {
               {menuItems.map((menuItem, index) => (
                 <Tab
                   key={index}
-                  value={index}
+                  value={index + 1}
                   disableRipple
                   label={menuItem.label}
                   to={menuItem.path}
