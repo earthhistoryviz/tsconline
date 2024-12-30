@@ -96,7 +96,7 @@ export const NavBar = observer(function Navbar() {
               </IconButton>
             </Link>
             <Tabs
-              value={state.tab !== 0 ? state.tab : false}
+              value={state.tab || false}
               onChange={(_e, value) => {
                 if (value === 3) settingsMenuToggle(false);
                 actions.setTab(value);
