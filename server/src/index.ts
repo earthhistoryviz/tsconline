@@ -2,7 +2,7 @@ import fastify from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
-import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs, verifyFilepathSync } from "./util.js";
+import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from "./util.js";
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
@@ -18,7 +18,6 @@ import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.j
 import { sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
-import fs from "fs";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
@@ -121,51 +120,7 @@ server.register(fastifyStatic, {
   decorateReply: false // first registration above already added the decorator
 });
 
-interface Request {
-  session: {
-    get: (key: string) => string | undefined;
-  };
-}
-
-/* Utility to validate the path of mappoint images for public and private
- * Path must have 'MapImages' as second to last string in path and end with an image extension */
-const isValidMapImagePath = (pathName: string): boolean => {
-  const pathSegments = pathName.split("/");
-  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
-  const isSecondToLastSegment = pathSegments[pathSegments.length - 2] === "MapImages";
-  return isSecondToLastSegment && isImage;
-};
-
-// Utility to validate private access based on UUID
-const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: Request }): boolean => {
-  const uuid = req.session.get("uuid");
-  if (!uuid) return false;
-  const pathSegments = pathName.split("/");
-  const [uuidFolder] = pathSegments.slice(1); // Extract UUID folder
-  // Ensure UUID matches and path is valid
-  return uuidFolder === uuid && isValidMapImagePath(pathName);
-};
-
-const assetPaths = ["public", "private"];
-assetPaths.forEach((type) => {
-  server.register(fastifyStatic, {
-    root: path.join(process.cwd(), `assets/uploads/${type}`),
-    prefix: `/getMapImages/${type}`,
-    decorateReply: false,
-    allowedPath: (pathName, _root, req: Request) => {
-      const relativePath = pathName.replace(`/getMapImages`, "");
-      const fullPath = path.join(_root, relativePath);
-      // Verify the full path to prevent path traversal.
-      const isVerified = verifyFilepathSync(fullPath);
-      if (!isVerified) {
-        return false;
-      }
-      // Validate path based on route type | Private: Check UUID and path | Public: Only check path
-      const isAllowed = type === "private" ? isAllowedPrivatePath({ pathName, req }) : isValidMapImagePath(pathName);
-      return isAllowed && fs.existsSync(fullPath);
-    }
-  });
-});
+server.get("/getMapImages/:type/*", routes.fetchMapImages);
 
 server.register(fastifyStatic, {
   root: path.join(process.cwd(), assetconfigs.datapackImagesDirectory),

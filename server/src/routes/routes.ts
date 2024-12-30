@@ -469,3 +469,58 @@ export const fetchDatapackCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
+
+interface Request {
+  session: {
+    get: (key: string) => string | undefined;
+  };
+}
+
+/* Utility to validate the path of mappoint images for public and private
+ * Path must have 'MapImages' as second to last string in path and end with an image extension */
+const isValidMapImagePath = (pathName: string): boolean => {
+  const pathSegments = pathName.split("/");
+  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
+  const isSecondToLastSegment = pathSegments[pathSegments.length - 2] === "MapImages";
+  return isSecondToLastSegment && isImage;
+};
+
+// Utility to validate private access based on UUID
+const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: Request }): boolean => {
+  const uuid = req.session.get("uuid");
+  if (!uuid) return false;
+  const pathSegments = pathName.split("/");
+  console.log("pathSegments: ", pathSegments);
+  const [uuidFolder] = pathSegments.slice(3);
+  return uuidFolder === uuid && isValidMapImagePath(pathName);
+};
+
+export async function fetchMapImages(
+  request: FastifyRequest<{ Params: { type: string; "*": string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const { type } = request.params;
+    const rawPath = request.params["*"] as string;
+    const baseDir = path.join(process.cwd(), "assets", "uploads", type);
+    const fullPath = path.join(baseDir, rawPath);
+    const isVerified = await verifyFilepath(fullPath);
+    if (!isVerified) {
+      return reply.status(403).send({ error: "Forbidden: invalid path" });
+    }
+    const pathName = `/getMapImages/${type}/${rawPath}`;
+    const isAllowed =
+      type === "private" ? isAllowedPrivatePath({ pathName, req: request }) : isValidMapImagePath(pathName);
+
+    if (!isAllowed) {
+      return reply.status(403).send({ error: "Forbidden: not allowed" });
+    }
+    if (!fs.existsSync(fullPath)) {
+      return reply.status(404).send({ error: "File not found" });
+    }
+    return reply.sendFile(rawPath, baseDir);
+  } catch (err) {
+    request.log.error(err);
+    return reply.status(500).send({ error: "Internal Server Error" });
+  }
+}
