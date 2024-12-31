@@ -683,18 +683,21 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
       state.settingsTabs.selected = "time";
       break;
     case 1:
-      state.settingsTabs.selected = "column";
+      state.settingsTabs.selected = "preferences";
       break;
     case 2:
-      state.settingsTabs.selected = "search";
+      state.settingsTabs.selected = "column";
       break;
     case 3:
-      state.settingsTabs.selected = "font";
+      state.settingsTabs.selected = "search";
       break;
     case 4:
-      state.settingsTabs.selected = "mappoints";
+      state.settingsTabs.selected = "font";
       break;
     case 5:
+      state.settingsTabs.selected = "mappoints";
+      break;
+    case 6:
       state.settingsTabs.selected = "datapacks";
       break;
     default:
@@ -712,14 +715,21 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
   switch (tab) {
     case "time":
       return 0;
-    case "column":
+    case "preferences":
       return 1;
-    case "font":
+    case "column":
       return 2;
-    case "mappoints":
+    case "search":
       return 3;
-    case "datapacks":
+    case "font":
       return 4;
+    case "mappoints":
+      return 5;
+    case "datapacks":
+      return 6;
+    default:
+      console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
+      return 0;
   }
 }
 
