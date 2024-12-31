@@ -224,12 +224,12 @@ export function handleDualColCompColumns() {
       //skip the correct dcc
       //the add dcc function puts the correct dcc under the ref column
       //row order is handled later
-      if (parent.children[index].name.localeCompare(refCol.name)) {
+      if (parent.children[index].name.localeCompare(refCol.name) === 0) {
         index += 2;
         numOfDcc++;
         continue;
       }
-      if (parent.children[index].name.localeCompare(dualColumnName)) {
+      if (parent.children[index].name.localeCompare(dualColumnName) === 0) {
         parent.children.splice(index, 1);
         numOfDcc++;
         continue;
