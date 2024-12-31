@@ -208,17 +208,38 @@ export function handleDualColCompColumns() {
       continue;
     }
 
-    //remove any access dual col comp column (a column can only have one)
-    let checkDualCol = false;
-    state.settingsTabs.columnHashMap.forEach((value, key) => {
-      if (checkDualCol) {
-        //must be here since iterated over for each
-        removeDualColCompColumn(state.settingsTabs.columnHashMap.get(key)!);
+    //remove any duplicate dual col comp column (a column can only have one)
+    if (!refCol.parent) {
+      console.warn("WARNING: tried to add a dual col comp column to a column with no parent");
+      return;
+    }
+    const parent = state.settingsTabs.columnHashMap.get(refCol.parent);
+    if (!parent) {
+      console.warn("WARNING: tried to get", refCol.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+      return;
+    }
+    let index = 0;
+    let numOfDcc = 0;
+    while (index < parent.children.length) {
+      //skip the correct dcc
+      //the add dcc function puts the correct dcc under the ref column
+      //row order is handled later
+      if (parent.children[index].name.localeCompare(refCol.name)) {
+        index += 2;
+        numOfDcc++;
+        continue;
       }
-      if (key.includes(dualColumnName)) {
-        checkDualCol = true;
+      if (parent.children[index].name.localeCompare(dualColumnName)) {
+        parent.children.splice(index, 1);
+        numOfDcc++;
+        continue;
       }
-    });
+      index++;
+    }
+    //one from the app, one from loaded settings, more than that shouldn't be possible
+    if (numOfDcc > 2) {
+      console.warn("WARNING: found more than two dcc while loading settings");
+    }
     setColumnProperties(createdDualColumn, foundDualColumn);
   }
   //reset cache
@@ -631,7 +652,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     return;
   }
   if (!column.parent) {
-    console.warn("WARNING: tried to add a data mining column to a column with no parent");
+    console.warn("WARNING: tried to add a dual col comp column to a column with no parent");
     return;
   }
   const parent = state.settingsTabs.columnHashMap.get(column.parent);
@@ -641,7 +662,11 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
   }
   const index = parent.children.findIndex((child) => child.name === column.name);
   if (index === -1) {
-    console.warn("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
+    console.warn(
+      "WARNING: ",
+      column.name,
+      "not found in parent's children when attempting to add dual col comp column"
+    );
     return;
   }
   const dualColCompColumnName = prependDualColCompColumnName(column.editName);
@@ -684,7 +709,7 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const columnToRemove = prependDualColCompColumnName(parent.name);
+  const columnToRemove = prependDualColCompColumnName(column.name);
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
