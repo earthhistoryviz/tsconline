@@ -8,13 +8,12 @@ import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
 import { Typography } from "@mui/material";
-import SaveSettings from "./settings_tabs/SaveSettings";
-import LoadSettings from "./settings_tabs/LoadSettings";
 import "./Settings.css";
 import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { useTranslation } from "react-i18next";
+import { Preferences } from "./settings_tabs/Preferences";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -23,11 +22,9 @@ export const Settings = observer(function Settings() {
     const { t } = useTranslation();
     return (
       <div className="settings-header">
-        <LoadSettings />
         <Typography className="settings-header-title" variant="h3">
           {t("title.settings")}
         </Typography>
-        <SaveSettings />
       </div>
     );
   };
@@ -55,6 +52,8 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
   switch (tab) {
     case "time":
       return <Time />;
+    case "preferences":
+      return <Preferences />;
     case "column":
       return <Column />;
     case "search":
