@@ -1,7 +1,7 @@
 import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
-import { Box, IconButton, Typography, useTheme } from "@mui/material";
+import { Box, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
@@ -18,12 +18,13 @@ import {
 } from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
-  datapack: Datapack;
-  value: boolean;
-  onChange: (datapack: DatapackConfigForChartRequest) => void;
+  datapack?: Datapack;
+  value?: boolean;
+  onChange?: (datapack: DatapackConfigForChartRequest) => void;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value, onChange }) => {
+  const skeleton = !datapack || !onChange || value === undefined;
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { actions, state } = useContext(context);
@@ -42,7 +43,9 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
               : Color(theme.palette.secondaryBackground.main).lighten(0.26).string()
         }
       }}
-      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}>
+      onClick={
+        !skeleton ? () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type)) : () => {}
+      }>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
         borderRight="1px solid"
@@ -53,28 +56,56 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
             ? Color(theme.palette.button.light).alpha(0.4).string()
             : Color(theme.palette.secondaryBackground.light).alpha(0.5).string()
         }
-        onClick={async (e) => {
-          e.stopPropagation();
-          setLoading(true);
-          onChange(datapack);
-          setLoading(false);
-        }}>
-        {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
+        onClick={
+          !skeleton
+            ? async (e) => {
+                e.stopPropagation();
+                setLoading(true);
+                onChange(datapack);
+                setLoading(false);
+              }
+            : () => {}
+        }>
+        {skeleton ? (
+          <Skeleton variant="circular" width={22} height={22} />
+        ) : loading ? (
+          <Loader />
+        ) : value ? (
+          <CheckIcon />
+        ) : (
+          <span className="add-circle" />
+        )}
       </Box>
-      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
+      {skeleton ? (
+        <Skeleton className={styles.image} />
+      ) : (
+        <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
+      )}
       <div className={styles.middle}>
-        <Typography className={styles.header} color="textSecondary">
-          {datapack.title}
-        </Typography>
-        <Typography className={styles.fd} color="textSecondary">
-          {datapack.authoredBy}
-        </Typography>
-        <Typography className={styles.ci} color="textSecondary">
-          {datapack.totalColumns} Columns · {datapack.size} · {datapack.datapackImageCount} Images
-          {datapack.date && ` · Created ${datapack.date}`}
-        </Typography>
+        {skeleton ? (
+          <Skeleton className={styles.header} width="95%" />
+        ) : (
+          <Typography className={styles.header} color="textSecondary">
+            {datapack.title}
+          </Typography>
+        )}
+        {skeleton ? (
+          <Skeleton className={styles.fd} width="95%" />
+        ) : (
+          <Typography className={styles.fd} color="textSecondary">
+            {datapack.authoredBy}
+          </Typography>
+        )}
+        {skeleton ? (
+          <Skeleton className={styles.cs} width="95%" />
+        ) : (
+          <Typography className={styles.ci} color="textSecondary">
+            {datapack.totalColumns} Columns · {datapack.size} · {datapack.datapackImageCount} Images
+            {datapack.date && ` · Created ${datapack.date}`}
+          </Typography>
+        )}
       </div>
-      {isOwnedByUser(datapack, state.user?.uuid) && (
+      {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (
         <div
           className={styles.right}
           onClick={(e) => {
