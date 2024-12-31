@@ -19,9 +19,11 @@ import {
 import { FastifyReply } from "fastify";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes } from "./util.js";
-import path from "path";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import path, { extname, join } from "path";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsDatapackImage,
   decryptDatapack,
   deleteDatapackFileAndDecryptedCounterpart,
   doesDatapackFolderExistInAllUUIDDirectories
@@ -34,9 +36,11 @@ import {
   DECRYPTED_DIRECTORY_NAME
 } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
+import { tmpdir } from "os";
+import { OperationResult } from "./types.js";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -334,4 +338,77 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
     }
   }
   return null;
+}
+
+export async function uploadTemporaryDatapack(
+  uuid: string,
+  parts: AsyncIterableIterator<Multipart>
+): Promise<{ fields: { [key: string]: string }; file: MultipartFile } | OperationResult> {
+  let file: MultipartFile | undefined;
+  let filepath: string | undefined;
+  let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
+  let datapackImage: string | undefined;
+  const fields: { [key: string]: string } = {};
+  async function cleanupTempFiles() {
+    if (tempProfilePictureFilepath) {
+      await rm(tempProfilePictureFilepath, { force: true });
+    }
+    if (filepath) {
+      await rm(filepath, { force: true });
+    }
+  }
+  for await (const part of parts) {
+    if (part.type === "file") {
+      if (part.fieldname === "datapack") {
+        // DOWNLOAD FILE HERE AND SAVE TO FILE
+        file = part;
+        originalFileName = file.filename;
+        storedFileName = makeTempFilename(originalFileName);
+        // store it temporarily in the /tmp directory
+        // this is because we can't check if the file should overwrite the existing file until we verify it and we need workshopId
+        filepath = join(tmpdir(), storedFileName);
+        if (!checkFileTypeIsDatapack(file)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack file" };
+        }
+        const { code, message } = await uploadFileToFileSystem(file, filepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+        if (!checkFileTypeIsDatapackImage(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack image" };
+        }
+        datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
+        tempProfilePictureFilepath = join(tmpdir(), datapackImage);
+        const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
+    }
+  }
+  if (!file || !filepath || !originalFileName || !storedFileName) {
+    await cleanupTempFiles();
+    return { code: 400, message: "Missing required fields [datapack]" };
+  }
+  return {
+    file,
+    fields: {
+      ...fields,
+      filepath,
+      originalFileName,
+      storedFileName,
+      priority: "0",
+      ...(datapackImage && { datapackImage }),
+      ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
+    }
+  };
 }
