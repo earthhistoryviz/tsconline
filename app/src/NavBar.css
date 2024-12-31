@@ -15,11 +15,14 @@
 .login-tab .MuiTab-iconWrapper {
   margin-bottom: 0px;
 }
-.settings-sub-menu-item {
-  justify-content: center;
+.non-user-settings-sub-menu-item {
+  padding-left: 20px;
 }
 .szh-menu-container.settings-sub-menu > .szh-menu {
   min-width: 130px;
+}
+.settings-sub-menu-item {
+  justify-content: center;
 }
 
 .nav-bar-menu-mobile {
@@ -30,4 +33,11 @@
 .nav-bar-menu-list-item {
   padding-left: 0px;
   padding-right: 0px;
+}
+.lanuage-txt-break .MuiMenuItem-root {
+  display: flex;
+  justify-content: center;
+}
+.language-divider-settings-sub-menu {
+  background-color: #8d99ae !important;
 }

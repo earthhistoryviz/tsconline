@@ -1,26 +1,11 @@
 import React, { useState, useContext, useEffect, useRef } from "react";
-import {
-  Switch,
-  Typography,
-  Grid,
-  Container,
-  Paper,
-  Box,
-  TextField,
-  Avatar,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Button,
-  Badge
-} from "@mui/material";
+import { Typography, Grid, Container, Paper, Box, TextField, Avatar, Button, Badge } from "@mui/material";
 import { context } from "../state";
 import PersonIcon from "@mui/icons-material/Person";
 import { ErrorCodes, ErrorMessages } from "../util/error-codes";
 import { fetcher, loadRecaptcha, removeRecaptcha, executeRecaptcha } from "../util";
 import { displayServerError } from "../state/actions/util-actions";
-import { Lottie, TSCButton, TSCYesNoPopup, CustomFormControlLabel } from "../components";
+import { Lottie, TSCButton, TSCYesNoPopup } from "../components";
 import loader from "../assets/icons/loading.json";
 import { useNavigate } from "react-router";
 import { observer } from "mobx-react-lite";
@@ -430,34 +415,6 @@ export const Profile = observer(() => {
         </Grid>
         <Grid item xs={12} md={6}>
           <Paper elevation={3} sx={{ padding: 2, bgcolor: "secondaryBackground.main" }}>
-            <Typography variant="h5" component="h2" gutterBottom>
-              {t("login.settings")}
-            </Typography>
-            <CustomFormControlLabel
-              width={120}
-              control={
-                <Switch
-                  checked={state.user.settings.darkMode}
-                  size="medium"
-                  color="default"
-                  onChange={() => actions.setDarkMode(!state.user.settings.darkMode)}
-                />
-              }
-              label={t("login.dark-mode")}
-            />
-            <FormControl fullWidth variant="outlined" margin="normal">
-              <InputLabel>Language</InputLabel>
-              <Select
-                value={state.user.settings.language}
-                onChange={(e) => actions.setLanguage(e.target.value)}
-                label="Language"
-                name="language">
-                <MenuItem value="English">English</MenuItem>
-                <MenuItem value="Spanish">Spanish</MenuItem>
-                <MenuItem value="French">French</MenuItem>
-                <MenuItem value="German">German</MenuItem>
-              </Select>
-            </FormControl>
             <Box mt={2}>
               <Button variant="contained" color="error" fullWidth onClick={() => setPopupOpen(true)}>
                 {t("login.delete")}

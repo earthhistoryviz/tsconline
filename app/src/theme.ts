@@ -49,6 +49,9 @@ declare module "@mui/material/styles" {
     accordionLine?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
   }
+  interface PaletteColor {
+    divider?: string;
+  }
 }
 declare module "@mui/material/Button" {
   interface ButtonPropsColorOverrides {
@@ -303,12 +306,15 @@ baseTheme = createTheme(baseTheme, {
       },
       name: "error"
     }),
-    dark: baseTheme.palette.augmentColor({
-      color: {
-        main: "#0e1217"
-      },
-      name: "dark"
-    })
+    dark: {
+      ...baseTheme.palette.augmentColor({
+        color: {
+          main: "#0e1217"
+        },
+        name: "dark"
+      }),
+      divider: "#505c71"
+    }
   }
 });
 
