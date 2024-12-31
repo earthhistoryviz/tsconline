@@ -176,7 +176,6 @@ export const fetchPresets = action("fetchPresets", async () => {
     try {
       assertPresets(presets);
       loadPresets(presets);
-      setPresetsLoading(false);
       console.log("Presets loaded");
     } catch (e) {
       displayServerError(presets, ErrorCodes.INVALID_PRESET_INFO, ErrorMessages[ErrorCodes.INVALID_PRESET_INFO]);
@@ -184,6 +183,8 @@ export const fetchPresets = action("fetchPresets", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPresetsLoading(false);
   }
 });
 
