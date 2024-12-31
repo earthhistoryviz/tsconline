@@ -93,14 +93,14 @@ export const Datapacks = observer(function Datapacks() {
           datapacks={getPublicOfficialDatapacks(state.datapacks)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
-          loading={true}
+          loading={state.skeletonStates.officialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
-            loading={true}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (
@@ -108,7 +108,7 @@ export const Datapacks = observer(function Datapacks() {
             datapacks={getWorkshopDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.workshop")}
             HeaderIcon={School}
-            loading={true}
+            loading={state.skeletonStates.publicUserDatapacksLoading}
           />
         )}
         {state.isLoggedIn && state.user && (
@@ -116,14 +116,14 @@ export const Datapacks = observer(function Datapacks() {
             datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
             header={t("settings.datapacks.title.your")}
             HeaderIcon={Lock}
-            loading={true}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         <DatapackGroupDisplay
           datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
           header={t("settings.datapacks.title.contributed")}
           HeaderIcon={People}
-          loading={true}
+          loading={state.skeletonStates.publicUserDatapacksLoading}
         />
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
@@ -197,12 +197,13 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const { state, actions } = useContext(context);
     const { t } = useTranslation();
     const [showAll, setShowAll] = useState(false);
+    const extraLoadingSkeletons = loading ? 2 : 0;
     const isOfficial = header === t("settings.datapacks.title.public-official");
     const isPublicContributed = header === t("settings.datapacks.title.contributed");
     const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
     const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
-    if (loading) visibleDatapacks.push(...Array.from({ length: 2 }, () => null));
+    const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
     const onChange = (newDatapack: DatapackConfigForChartRequest) => {
       if (state.unsavedDatapackConfig.includes(newDatapack)) {
         actions.setUnsavedDatapackConfig(
@@ -212,7 +213,6 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
       }
     };
-    const extraLoadingSkeletons = loading ? 2 : 0;
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
     const shouldWrap = shouldSplitIntoTwoCol && state.settingsTabs.datapackDisplayType !== "cards";
     const officialRowLimit =
@@ -236,7 +236,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         <CustomDivider className={styles.divider} />
         {numberOfDatapacks !== 0 && (
           <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
-            {visibleDatapacks.map((datapack, index) => {
+            {[...visibleDatapacks, ...skeletons].map((datapack, index) => {
               const value = datapack
                 ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack))
                 : false;

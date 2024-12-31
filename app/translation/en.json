@@ -101,6 +101,7 @@
                 }
             }
         },
+        "languages": "LANGUAGES",
         "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
         "login": {
             "signin": "Sign In",

@@ -116,6 +116,7 @@ export type State = {
     presetsLoading: boolean;
     officialDatapacksLoading: boolean;
     publicUserDatapacksLoading: boolean;
+    privateUserDatapacksLoading: boolean;
   };
   workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
@@ -245,7 +246,8 @@ export const state = observable<State>({
   skeletonStates: {
     presetsLoading: true,
     officialDatapacksLoading: true,
-    publicUserDatapacksLoading: true
+    publicUserDatapacksLoading: true,
+    privateUserDatapacksLoading: true
   },
   workshops: [],
   mapPatterns: {

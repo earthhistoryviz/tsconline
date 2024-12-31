@@ -150,7 +150,7 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
           addDatapack(dp);
         }
         if (index.datapacks[0]?.type === "official") {
-          // setOfficialDatapacksLoading(false);
+          setOfficialDatapacksLoading(false);
         }
         if (total == -1) total = index.totalChunks;
         start += increment;
@@ -161,10 +161,12 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
     console.log("Datapacks loaded");
-    // setPublicDatapacksLoading(false);
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setOfficialDatapacksLoading(false);
+    setPublicDatapacksLoading(false);
   }
 });
 export const fetchPresets = action("fetchPresets", async () => {
@@ -231,6 +233,8 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPrivateUserDatapacksLoading(false);
   }
 });
 
@@ -1286,4 +1290,7 @@ export const setOfficialDatapacksLoading = action((fetching: boolean) => {
 });
 export const setPublicDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
+});
+export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
