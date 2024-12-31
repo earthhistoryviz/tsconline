@@ -14,6 +14,7 @@ import {
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
+  isOfficialDatapack,
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
@@ -41,6 +42,7 @@ import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
 import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
+import { findUser } from "./database.js";
 
 async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -359,6 +361,11 @@ export async function uploadTemporaryDatapack(
       await rm(filepath, { force: true });
     }
   }
+  const user = await findUser({ uuid });
+  if (!user || !user[0]) {
+    return { code: 404, message: "User not found" };
+  }
+  const isProOrAdmin = user[0].isAdmin || user[0].accountType === "pro";
   for await (const part of parts) {
     if (part.type === "file") {
       if (part.fieldname === "datapack") {
@@ -372,6 +379,10 @@ export async function uploadTemporaryDatapack(
         if (!checkFileTypeIsDatapack(file)) {
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack file" };
+        }
+        if (file.file.bytesRead > 3000 && !isProOrAdmin) {
+          await cleanupTempFiles();
+          return { code: 400, message: "File is too large" };
         }
         const { code, message } = await uploadFileToFileSystem(file, filepath);
         if (code !== 200) {
@@ -407,6 +418,7 @@ export async function uploadTemporaryDatapack(
       originalFileName,
       storedFileName,
       priority: "0",
+      ...(isOfficialDatapack(fields) && { uuid: "official" }),
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     }
