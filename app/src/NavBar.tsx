@@ -122,7 +122,6 @@ export const NavBar = observer(function Navbar() {
                 />
               ))}
             </Tabs>
-            <LanguageMenu />
             <ControlledMenu
               {...hoverProps}
               {...settingsMenuState}
