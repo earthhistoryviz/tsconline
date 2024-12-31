@@ -58,8 +58,10 @@ export const TSCCard = ({ preset, generateChart }: { preset?: ChartConfig; gener
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
       <Box className="front-card">
-        {preset && (
+        {preset ? (
           <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
+        ) : (
+          <Skeleton className="card-media-cover" variant="rectangular" />
         )}
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" />
@@ -67,7 +69,7 @@ export const TSCCard = ({ preset, generateChart }: { preset?: ChartConfig; gener
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
                 {!preset ? (
-                  <Skeleton variant="circular" width={40} height={40} />
+                  <Skeleton variant="rounded" width={100} height={100} />
                 ) : (
                   <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
                 )}
