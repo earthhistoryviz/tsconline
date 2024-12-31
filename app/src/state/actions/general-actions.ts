@@ -149,6 +149,9 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
         for (const dp of index.datapacks) {
           addDatapack(dp);
         }
+        if (index.datapacks[0]?.type === "official") {
+          // setOfficialDatapacksLoading(false);
+        }
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
@@ -158,6 +161,7 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
       await new Promise((resolve) => setTimeout(resolve, 0));
     }
     console.log("Datapacks loaded");
+    // setPublicDatapacksLoading(false);
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
@@ -1274,5 +1278,12 @@ export const setWorkshopsArray = action((workshop: Workshop[]) => {
 });
 
 export const setPresetsLoading = action((loading: boolean) => {
-  state.presets.presetsLoading = loading;
+  state.skeletonStates.presetsLoading = loading;
+});
+
+export const setOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.officialDatapacksLoading = fetching;
+});
+export const setPublicDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicUserDatapacksLoading = fetching;
 });
