@@ -38,11 +38,12 @@ import {
   assertWorkshopDatapack
 } from "@tsconline/shared";
 import {
+  processMultipartPartsForDatapackUpload,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { AccountType, isAccountType, NewUser } from "../types.js";
+import { AccountType, isAccountType, isOperationResult, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
@@ -278,22 +279,18 @@ export const adminUploadOfficialDatapack = async function adminUploadOfficialDat
   request: FastifyRequest,
   reply: FastifyReply
 ) {
+  const uuid = request.session.get("uuid");
   const parts = request.parts();
   let file: MultipartFile | undefined;
-  let filepath: string | undefined;
-  let originalFileName: string | undefined;
-  let storedFileName: string | undefined;
-  let tempProfilePictureFilepath: string | undefined;
-  const fields: { [fieldname: string]: string } = {};
-  const serverDir = await getPrivateUserUUIDDirectory("official");
+  let fields: { [fieldname: string]: string } = {};
   const cleanupTempFiles = async () => {
-    if (filepath) {
-      await rm(filepath, { force: true }).catch((e) => {
+    if (fields.filepath) {
+      await rm(fields.filepath, { force: true }).catch((e) => {
         console.error(e);
       });
     }
-    if (tempProfilePictureFilepath) {
-      await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
+    if (fields.tempProfilePictureFilepath) {
+      await rm(fields.tempProfilePictureFilepath, { force: true }).catch((e) => {
         console.error(e);
       });
     }
@@ -304,58 +301,24 @@ export const adminUploadOfficialDatapack = async function adminUploadOfficialDat
     }
   };
   try {
-    for await (const part of parts) {
-      if (part.type === "file") {
-        if (part.fieldname === "datapack") {
-          // DOWNLOAD FILE HERE AND SAVE TO FILE
-          file = part;
-          originalFileName = file.filename;
-          storedFileName = makeTempFilename(originalFileName);
-          filepath = join(serverDir, storedFileName);
-          // store it temporarily in the upload directory
-          // this is because we can't check if the file should overwrite the existing file until we verify it
-          if (!checkFileTypeIsDatapack(file)) {
-            reply.status(415).send({ error: "Invalid file type for datapack file" });
-            return;
-          }
-          const { code, message } = await uploadFileToFileSystem(file, filepath);
-          if (code !== 200) {
-            await cleanupTempFiles();
-            reply.status(code).send({ error: message });
-            return;
-          }
-        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (!checkFileTypeIsDatapackImage(part)) {
-            reply.status(415).send({ error: "Invalid file type for datapack image" });
-            return;
-          }
-          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
-          tempProfilePictureFilepath = join(serverDir, fields.datapackImage);
-          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
-          if (code !== 200) {
-            await cleanupTempFiles();
-            reply.status(code).send({ error: message });
-            return;
-          }
-        }
-      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        fields[part.fieldname] = part.value;
-      }
+    const result = await processMultipartPartsForDatapackUpload(uuid, parts);
+    if (isOperationResult(result)) {
+      reply.status(result.code).send({ error: result.message });
+      return;
     }
+    file = result.file;
+    fields = result.fields;
   } catch (error) {
     await cleanupTempFiles();
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
-  if (!file || !filepath || !originalFileName || !storedFileName) {
+  if (!file || !fields.filepath || !fields.originalFileName || !fields.storedFileName) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
   }
-  fields.filepath = filepath;
-  fields.storedFileName = storedFileName;
-  fields.originalFileName = originalFileName;
   fields.uuid = "official";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
@@ -379,10 +342,10 @@ export const adminUploadOfficialDatapack = async function adminUploadOfficialDat
   try {
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
       "official",
-      filepath,
+      fields.filepath,
       datapackMetadata,
       false,
-      tempProfilePictureFilepath
+      fields.tempProfilePictureFilepath
     );
     if (!datapackIndex[datapackMetadata.title]) {
       throw new Error("Datapack not found in index");
@@ -813,79 +776,41 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   request: FastifyRequest,
   reply: FastifyReply
 ) {
+  const uuid = request.session.get("uuid");
   const parts = request.parts();
   let file: MultipartFile | undefined;
-  let filepath: string | undefined;
-  let originalFileName: string | undefined;
-  let storedFileName: string | undefined;
-  let tempProfilePictureFilepath: string | undefined;
-  const fields: { [fieldname: string]: string } = {};
+  let fields: { [fieldname: string]: string } = {};
   const cleanupTempFiles = async () => {
-    if (filepath) {
-      await rm(filepath, { force: true }).catch((e) => {
+    if (fields.filepath) {
+      await rm(fields.filepath, { force: true }).catch((e) => {
         console.error(e);
       });
     }
-    if (tempProfilePictureFilepath) {
-      await rm(tempProfilePictureFilepath, { force: true }).catch((e) => {
+    if (fields.tempProfilePictureFilepath) {
+      await rm(fields.tempProfilePictureFilepath, { force: true }).catch((e) => {
         console.error(e);
       });
     }
   };
   try {
-    for await (const part of parts) {
-      if (part.type === "file") {
-        if (part.fieldname === "datapack") {
-          // DOWNLOAD FILE HERE AND SAVE TO FILE
-          file = part;
-          originalFileName = file.filename;
-          storedFileName = makeTempFilename(originalFileName);
-          // store it temporarily in the /tmp directory
-          // this is because we can't check if the file should overwrite the existing file until we verify it and we need workshopId
-          filepath = join(tmpdir(), storedFileName);
-          if (!checkFileTypeIsDatapack(file)) {
-            reply.status(415).send({ error: "Invalid file type for datapack file" });
-            return;
-          }
-          const { code, message } = await uploadFileToFileSystem(file, filepath);
-          if (code !== 200) {
-            await cleanupTempFiles();
-            reply.status(code).send({ error: message });
-            return;
-          }
-        } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
-          if (!checkFileTypeIsDatapackImage(part)) {
-            reply.status(415).send({ error: "Invalid file type for datapack image" });
-            return;
-          }
-          fields.datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
-          tempProfilePictureFilepath = join(tmpdir(), fields.datapackImage);
-          const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
-          if (code !== 200) {
-            await cleanupTempFiles();
-            reply.status(code).send({ error: message });
-            return;
-          }
-        }
-      } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-        fields[part.fieldname] = part.value;
-      }
+    const result = await processMultipartPartsForDatapackUpload(uuid, parts);
+    if (isOperationResult(result)) {
+      reply.status(result.code).send({ error: result.message });
+      return;
     }
+    file = result.file;
+    fields = result.fields;
   } catch (error) {
     await cleanupTempFiles();
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
     return;
   }
-  if (!file || !filepath || !originalFileName || !storedFileName) {
+  if (!file || !fields.filepath || !fields.originalFileName || !fields.storedFileName) {
     await cleanupTempFiles();
     reply.status(400).send({ error: "Missing file" });
     return;
   }
-  fields.filepath = filepath;
-  fields.storedFileName = storedFileName;
-  fields.originalFileName = originalFileName;
-  fields.priority = "0";
   const datapackMetadata = await uploadUserDatapackHandler(reply, fields, file.file.bytesRead).catch(async () => {
     // @eslint-disable-next-line
   });
@@ -926,10 +851,10 @@ export const adminUploadDatapackToWorkshop = async function adminUploadDatapackT
   try {
     const datapackIndex = await setupNewDatapackDirectoryInUUIDDirectory(
       datapackMetadata.uuid,
-      filepath,
+      fields.filepath,
       datapackMetadata,
       false,
-      tempProfilePictureFilepath
+      fields.tempProfilePictureFilepath
     );
     if (!datapackIndex[datapackMetadata.title]) {
       throw new Error("Datapack not found in index");
