@@ -1172,7 +1172,7 @@ export function isOfficialDatapack(o: any): o is OfficialDatapack {
   return o.type === "official";
 }
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
-  return o.type === "workshop";
+  return o.type === "workshop" && typeof o.uuid === "string";
 }
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";

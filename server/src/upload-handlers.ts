@@ -84,6 +84,7 @@ export async function uploadUserDatapackHandler(
     type,
     uuid,
     datapackImage,
+    tempProfilePictureFilepath,
     priority
   } = fields;
   let { references, tags } = fields;
@@ -342,8 +343,8 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
   return null;
 }
 
-export async function uploadTemporaryDatapack(
-  uuid: string,
+export async function processMultipartPartsForDatapackUpload(
+  uuid: string | undefined,
   parts: AsyncIterableIterator<Multipart>
 ): Promise<{ fields: { [key: string]: string }; file: MultipartFile } | OperationResult> {
   let file: MultipartFile | undefined;
@@ -362,7 +363,7 @@ export async function uploadTemporaryDatapack(
     }
   }
   const user = await findUser({ uuid });
-  if (!user || !user[0]) {
+  if (!uuid || !user || !user[0]) {
     return { code: 404, message: "User not found" };
   }
   const isProOrAdmin = user[0].isAdmin || user[0].accountType === "pro";
@@ -418,7 +419,6 @@ export async function uploadTemporaryDatapack(
       originalFileName,
       storedFileName,
       priority: "0",
-      ...(isOfficialDatapack(fields) && { uuid: "official" }),
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     }
