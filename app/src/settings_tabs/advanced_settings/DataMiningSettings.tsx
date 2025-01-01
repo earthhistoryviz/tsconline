@@ -73,6 +73,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
           <EventDataMiningOptions column={column} />
           <PointDataMiningOptions column={column} />
           <ChronDataMiningOptions column={column} />
+          <OverlaySettings column={column}/>
         </div>
       </Box>
     </StyledScrollbar>
@@ -178,4 +179,17 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       />
     </Box>
   );
+});
+
+export const OverlaySettings:React.FC<DataMiningSettingsProps> = observer((column) => {
+  const [overlayName, setOverlayName] = useState("overlay name");
+  const { t } = useTranslation();
+  return (
+    <Box>
+      <Typography>Dual Column Comparisons</Typography>
+      <Typography>{overlayName}</Typography>
+      <Button>Choose Second Column</Button>
+      <Box></Box>
+    </Box>
+  )
 });
