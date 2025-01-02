@@ -64,7 +64,7 @@ export const NavBar = observer(function Navbar() {
       path: "/settings",
       ref: settingsRef,
       anchorProps,
-      icon: <AccountCircleIcon />,
+      icon: <AccountCircle />,
       className: "qsg-settings"
     },
     { label: t("navBar.help"), path: "/help", icon: <Help />, className: "qsg-help" },

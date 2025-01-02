@@ -1,15 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
-import patternWidthExample from "./file_format_guide_images/patternWidthExample.png";
-import transect_ex1 from "./file_format_guide_images/transect_ex1.png";
-import transect_load_template_with_error from "./file_format_guide_images/transect_load_template_with_error.png";
-import transect_save_template from "./file_format_guide_images/transect_save_template.png";
-import transect_template_missing_point from "./file_format_guide_images/transect_template_missing_point.png";
-import transect_template_space_merged from "./file_format_guide_images/transect_template_space_merged.png";
-import transect_template_space from "./file_format_guide_images/transect_template_space.png";
-import transect_template_with_error from "./file_format_guide_images/transect_template_with_error.png";
-import transect_template from "./file_format_guide_images/transect_template.png";
 
+const serverURL = `${import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000"}/public/file_format_guide_images`;
 export const FileFormatInfo: React.FC = observer(() => {
   const htmlContent = `
         <!DOCTYPE html>
@@ -261,7 +253,7 @@ Newark Basin series		Series_Popup_text
  <h2>Facies column pattern widths</h2>
  <table border="0">
  <tr>
-	 <td><img src="${patternWidthExample}" alt="pattern width example" width="155" height="326" /><br />Example of pattern widths</td>
+	 <td><img src="${serverURL}/patternWidthExample.png" alt="pattern width example" width="155" height="326" /><br />Example of pattern widths</td>
     <td valign="top">
  <p>Facies columns show the grain size by varying the width of the box containing the pattern like in the example on the left. </p>
  <p> The patterns built into TSCreator already have widths associated with them. These widths are changeable by specifying them in the datafile. Note that pattern widths are global throughout TSCreator, so changing them in one datafile will also change them in all currently loaded columns.</p>
@@ -1133,7 +1125,7 @@ image	014.jpg	7	21
 </table>
 </td>
 <td>
-<img src="${transect_ex1}" alt="Transect ex1" width="246" height="585" />
+<img src="${serverURL}/transect_ex1.png" alt="Transect ex1" width="246" height="585" />
 </td>
 </tr>
 </table>
@@ -1153,22 +1145,22 @@ image	014.jpg	7	21
 This is done by creating a template which is then filled in with polygons in the drafting package. The filled-in template is the loaded back into TSC where the polygons are extracted and the user has tools to get rid of unwanted gaps/overlapping. The finished product can be added as a column to TSC or saved out as a datafile, which is a slight extension of the format above.
 </p>
 <p>The template can be generated using the &quot;Save Transect Template...&quot; option in the File menu of the Image Editor. A window like this appears:<br />
-  <img src="${transect_save_template}" width="543" height="331" /><br />
+  <img src="${serverURL}/transect_save_template.png" width="543" height="331" /><br />
 Enter the ages you are interested in working in and click Save Template As. Open the resulting SVG file in your drafting package and it should look similar to this: <br />
-<img src="${transect_template}" width="325" height="313" border="1"/><br />
+<img src="${serverURL}/transect_template.png" width="325" height="313" border="1"/><br />
 Also note that the patterns/swatches list has been filled with all the patterns loaded into TSC.</p>
 <p>Now fill the red box with polygons and fill the polygons with one of the included patterns/swatches. You can show unconformities or interfingering by taking the wavy/interfinger lines in the template, making a copy of them, and crossing them with whatever lines you want to be wavy/interfingered. Here is an example: <br />
-<img src="${transect_template_with_error}" width="334" height="297" border="1"/><br />
+<img src="${serverURL}/transect_template_with_error.png" width="334" height="297" border="1"/><br />
 Note that the Base Age has also been changed. You also do not have to cramp everything into the small box, you can make the box bigger by resizing it, even though it was kept small here to fit into the guide. </p>
-<p>Once the template is done, save it and load it into TSC using &quot;Load Transect Column from Template...&quot; from the File menu of the Image Editor. A window like this appears:<img src="${transect_load_template_with_error}" width="750" height="750" /></p>
+<p>Once the template is done, save it and load it into TSC using &quot;Load Transect Column from Template...&quot; from the File menu of the Image Editor. A window like this appears:<img src="${serverURL}/transect_load_template_with_error.png" width="750" height="750" /></p>
 <p>There are three main options to help with loading: point merge distance, and snap to grid for age and X. Point merge distance helps to make sure that points which are shared between two polygons are found correctly.<br />
   For example, here is what one part of the above template looks like when zoomed in 800%:<br />
-  <img src="${transect_template_space}" width="459" height="117" border="1" /><br />
+  <img src="${serverURL}/transect_template_space.png" width="459" height="117" border="1" /><br />
   Notice the two points in the lower left and the space between them. Those are intended to be coincident, so the points should be the same and there should be no gap. The points are within the  point merge distance so TSC merges them and there is no gap:<br />
-<img src="${transect_template_space_merged}" width="240" height="147" border="1" /></p>
+<img src="${serverURL}/transect_template_space_merged.png" width="240" height="147" border="1" /></p>
 <p>The grid simply forces all points to fall on the specified grid. This helps align everything. </p>
 <p>If you look closely, you will notice that there are some lines in the preview highlighted red. That means that there are intersections in the template, which is not allowed. One can play with the  point merge distance and grid and see if that takes care of the problem, but in this case it won't. Zooming in closely on the region of the template we notice that one polygon doesn't have a point where the neighboring polygons do:<br />
-  <img src="${transect_template_missing_point}" width="538" height="285" /><br />
+  <img src="${serverURL}/transect_template_missing_point.png" width="538" height="285" /><br />
 Note that there is no point in the blue polygon, while there are points in the brown and yellow polygons. This is the source of the gap and the intersection shown in the preview. Adding this missing vertex to the blue polygon in the drafting package and reloading the template fixes the problem.</p>
 <p>Once there are no problems in the template you can add the transect as a column to TSC or save it out to a datafile.<br />
   Note that this saved datafile stores lines and polygons separately from the point grid in a listed immediately following the point grid. This is to guarantee that the saved polygons are unambigous. When copying the saved column into your own datapack, be sure to copy the entire grid and polygon set. <br />
