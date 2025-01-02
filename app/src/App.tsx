@@ -208,7 +208,12 @@ export default observer(function App() {
             run={state.guides.isQSGOpen}
             steps={getQsg()}
             callback={handleQSGCallback}
-            locale={{ skip: "Quit Tour", last: "Finish Tour" }}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getQsg().length})`
+            }}
             stepIndex={stepIndex}
             showProgress
             styles={{
@@ -225,7 +230,13 @@ export default observer(function App() {
             stepIndex={stepIndex}
             disableScrolling
             callback={handleDatapackTourCallback}
-            locale={{ skip: "Quit Tour", last: "Finish Tour" }}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              next: t("tours.next"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getDatapackTour().length})`
+            }}
             showProgress
             styles={{
               options: {
@@ -240,7 +251,13 @@ export default observer(function App() {
             steps={getSettingsTour()}
             stepIndex={stepIndex}
             callback={handleSettingsTourCallback}
-            locale={{ skip: "Quit Tour", last: "Finish Tour" }}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              next: t("tours.next"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getSettingsTour().length})`
+            }}
             showProgress
             styles={{
               options: {
