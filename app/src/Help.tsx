@@ -6,9 +6,11 @@ import { TSCButton } from "./components";
 import { useContext } from "react";
 import { context } from "./state";
 import { useNavigate } from "react-router";
+import { useTranslation } from "react-i18next";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const background = { bgcolor: "secondaryBackground.main" };
   function runTour(tourName: string) {
@@ -43,41 +45,34 @@ export const Help = observer(function Help() {
         }}>
         <Accordion sx={background}>
           <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel1a-content">
-            <Typography>Quick Start Guide</Typography>
+            <Typography>{t("help.qsg.title")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography style={{ marginBottom: "20px" }}>
-              Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the
-              functions of each tab on the Nav bar. Click the &apos;Start QSG&apos; button to begin.
-            </Typography>
+            <Typography style={{ marginBottom: "20px" }}>{t("help.qsg.content")}</Typography>
             <TSCButton buttonType="primary" onClick={() => runTour("qsg")}>
-              Start QSG
+              {t("help.qsg.button")}
             </TSCButton>
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
           <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
-            <Typography>Tour</Typography>
+            <Typography>{t("help.tour.title")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Typography style={{ marginBottom: "20px" }}>
-              In the datapacks tour you will explore the Datapacks page in depth. Click the button to start your tour!
-            </Typography>
+            <Typography style={{ marginBottom: "20px" }}>{t("help.tour.content.datapacks")}</Typography>
             <TSCButton buttonType="primary" onClick={() => runTour("datapacks")}>
-              Start Datapacks Tour
+              {t("help.tour.button.datapacks")}
             </TSCButton>
             <Divider style={{ marginTop: "20px" }} variant="middle" />
-            <Typography style={{ marginBottom: "20px" }}>
-              In the settings tour you will explore the Settings page in depth. Click the button to start your tour!
-            </Typography>
+            <Typography style={{ marginBottom: "20px" }}>{t("help.tour.content.settings")}</Typography>
             <TSCButton buttonType="primary" onClick={() => runTour("settings")}>
-              Start Settings Tour
+              {t("help.tour.button.settings")}
             </TSCButton>
           </AccordionDetails>
         </Accordion>
         <Accordion sx={background}>
           <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
-            <Typography>Software License</Typography>
+            <Typography>{t("help.license")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>
@@ -134,12 +129,12 @@ export const Help = observer(function Help() {
         </Accordion>
         <Accordion sx={background}>
           <AccordionSummary expandIcon={<ExpandMoreIcon color="icon" />} aria-controls="panel2a-content">
-            <Typography>File Format Info</Typography>
+            <Typography>{t("help.file-format-info.title")}</Typography>
           </AccordionSummary>
           <AccordionDetails>
             <Typography>
               <a href="/file-format-info" target="_blank" rel="noopener noreferrer">
-                check file format info
+                {t("help.file-format-info.link")}
               </a>
             </Typography>
           </AccordionDetails>
