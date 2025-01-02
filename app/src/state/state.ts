@@ -130,10 +130,12 @@ export type State = {
   presetColors: string[];
   isProcessingDatapacks: boolean;
   unsavedDatapackConfig: DatapackConfigForChartRequest[];
-  isQSGOpen: boolean;
-  isDatapacksTourOpen: boolean;
-  isSettingsTourOpen: boolean;
-  isWorkshopsTourOpen: boolean;
+  guides: {
+    isQSGOpen: boolean;
+    isDatapacksTourOpen: boolean;
+    isSettingsTourOpen: boolean;
+    isWorkshopsTourOpen: boolean;
+  };
 };
 
 export const state = observable<State>({
@@ -257,8 +259,10 @@ export const state = observable<State>({
   snackbars: [],
   isProcessingDatapacks: false,
   unsavedDatapackConfig: [],
-  isQSGOpen: false,
-  isDatapacksTourOpen: false,
-  isSettingsTourOpen: false,
-  isWorkshopsTourOpen: false
+  guides: {
+    isQSGOpen: false,
+    isDatapacksTourOpen: false,
+    isSettingsTourOpen: false,
+    isWorkshopsTourOpen: false
+  }
 });
