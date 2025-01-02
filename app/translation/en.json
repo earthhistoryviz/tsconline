@@ -538,6 +538,10 @@
             "zh": "中文"
         },
         "tours": {
+            "quit": "Quit Tour",
+            "finish": "Finish Tour",
+            "next": "Next",
+            "back": "Back",
             "qsg": {
                 "step1": "In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the \"Tours\" section",
                 "step2": "In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.",
