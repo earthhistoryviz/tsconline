@@ -543,13 +543,14 @@
             "next": "Next",
             "back": "Back",
             "qsg": {
-                "step1": "In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the \"Tours\" section",
-                "step2": "In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.",
-                "step3": "In the Settings page, you can customize all aspects of your charts. This includes adjusting the scale and time range, selecting which rows to display, setting the background color and font style, etc. Tailor your charts to meet your specific needs and preferences to optimize your visual analysis. For more detailed guidance on Settings, please refer to the Settings Tour under the \"Tours\" section",
-                "step4": "In the Help Page, you can find detailed assistance and information on how to use the website.",
-                "step5": "In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.",
-                "step6": "The About Page provides information about our development team.",
-                "step7": "Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities."
+                "step1": "In the Presets page, we offer pre-configured settings that allow you to rapidly generate specific types of charts without configuring all options from the beginning. Each preset comes equipped with designated data packs, visual styles, and settings, enabling you to create charts with just a single click.",
+                "step2": "In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the \"Tours\" section",
+                "step3": "In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.",
+                "step4": "In the Settings page, you can customize all aspects of your charts. This includes adjusting the scale and time range, selecting which rows to display, setting the background color and font style, etc. Tailor your charts to meet your specific needs and preferences to optimize your visual analysis. For more detailed guidance on Settings, please refer to the Settings Tour under the \"Tours\" section",
+                "step5": "In the Help Page, you can find detailed assistance and information on how to use the website.",
+                "step6": "In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.",
+                "step7": "The About Page provides information about our development team.",
+                "step8": "Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities."
             },
             "datapack": {
                 "step1": "Switch between different display types for datapacks: rows, cards, or compact view.",
