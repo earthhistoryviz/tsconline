@@ -223,6 +223,8 @@ export function handleDualColCompColumns() {
     while (index < parent.children.length) {
       if (parent.children[index].name.localeCompare(dualColumnName) === 0) {
         numOfDcc++;
+        //the "add dcc function" inserts the dcc right after the reference column, so we can check for the correct dcc
+        //by checking if the previous column is the reference column (here we are checking the opposite to remove duplicate dcc)
         if (index === 0 || (index > 0 && parent.children[index - 1].name.localeCompare(refCol.name) !== 0)) {
           parent.children.splice(index, 1);
           continue;
