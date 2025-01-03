@@ -71,14 +71,29 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                     generateChart={async () => {
                       let datapacks: DatapackConfigForChartRequest[] = [];
                       try {
-                        datapacks = preset.datapacks.map((dp) => {
-                          const datapack = _.cloneDeep(
-                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
+                        for (const dp of preset.datapacks) {
+                          const stateDatapack = state.datapacks.find(
+                            (d) => d.title === dp.name && d.type === "official"
                           );
-                          assertDatapackConfigForChartRequest(datapack);
-                          return datapack;
-                        });
+                          if (stateDatapack) {
+                            datapacks.push(_.cloneDeep(stateDatapack));
+                            continue;
+                          }
+                          try {
+                            const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
+                            if (!fetchedDatapack) {
+                              actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+                              continue;
+                            }
+                            actions.addDatapack(fetchedDatapack);
+                            datapacks.push(_.cloneDeep(fetchedDatapack));
+                          } catch (fetchError) {
+                            console.error(`Error fetching datapack ${dp.name}:`, fetchError);
+                            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+                          }
+                        }
                       } catch (e) {
+                        console.error(e);
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
                       }
