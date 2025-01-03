@@ -5,7 +5,6 @@ import {
   adminDeleteUserDatapack,
   adminDeleteUser,
   getUsers,
-  adminUploadOfficialDatapack,
   adminDeleteOfficialDatapack,
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
@@ -15,8 +14,8 @@ import {
   adminDeleteWorkshop,
   adminModifyUser,
   adminEditDatapackPriorities,
-  adminUploadDatapackToWorkshop,
-  adminAddOfficialDatapackToWorkshop
+  adminAddOfficialDatapackToWorkshop,
+  adminUploadDatapack
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -195,7 +194,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteUserDatapack
   );
-  fastify.post("/official/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadOfficialDatapack);
+  fastify.post("/official/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapack);
   fastify.delete(
     "/official/datapack",
     {
@@ -240,7 +239,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     { config: { rateLimit: moderateRateLimit } },
     adminEditDatapackPriorities
   );
-  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapackToWorkshop);
+  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapack);
   fastify.post(
     "/workshop/official/datapack",
     { schema: { body: adminAddOfficialDatapackToWorkshopBody }, config: { rateLimit: moderateRateLimit } },

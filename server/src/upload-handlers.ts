@@ -11,13 +11,12 @@ import {
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
   assertDatapack,
+  assertDatapackMetadata,
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
-  isOfficialDatapack,
   isUserDatapack
 } from "@tsconline/shared";
-import { FastifyReply } from "fastify";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
@@ -44,9 +43,8 @@ import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
 
-async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
+async function userUploadHandler(filepath?: string) {
   filepath && (await rm(filepath, { force: true }));
-  reply.status(code).send({ error: message });
 }
 export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   if (!(await checkFileExists(cachedFilepath))) {
@@ -66,10 +64,9 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
  * @returns The metadata if valid, otherwise void
  */
 export async function uploadUserDatapackHandler(
-  reply: FastifyReply,
   fields: Record<string, string>,
   bytes: number
-): Promise<DatapackMetadata | void> {
+): Promise<DatapackMetadata | OperationResult> {
   const {
     title,
     description,
@@ -98,89 +95,83 @@ export async function uploadUserDatapackHandler(
     !originalFileName ||
     !storedFileName ||
     !isPublic ||
-    !type ||
-    !uuid
+    !type
   ) {
-    await userUploadHandler(
-      reply,
-      400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]",
-      filepath
-    );
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Missing required fields" };
   }
   if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
-    await userUploadHandler(reply, 400, "Invalid title", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Invalid title" };
   }
   if (title.length > MAX_DATAPACK_TITLE_LENGTH) {
-    await userUploadHandler(reply, 400, `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}` };
   }
   if (!bytes) {
-    await userUploadHandler(reply, 400, "File is empty", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "File is empty" };
   }
   if (!isDatapackTypeString(type)) {
-    await userUploadHandler(reply, 400, "Invalid datapack type", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Invalid datapack type" };
   }
   try {
     references = JSON.parse(references);
     tags = JSON.parse(tags);
   } catch {
-    await userUploadHandler(reply, 400, "References and tags must be valid arrays", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "References and tags must be valid arrays" };
   }
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
-    await userUploadHandler(reply, 400, "References must be an array of strings", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "References must be an array of strings" };
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
-    await userUploadHandler(reply, 400, "Tags must be an array of strings", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Tags must be an array of strings" };
   }
   if (tags.length > MAX_DATAPACK_TAGS_ALLOWED) {
-    await userUploadHandler(reply, 400, `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}` };
   }
   if (!tags.every((tag) => tag.length <= MAX_DATAPACK_TAG_LENGTH)) {
-    await userUploadHandler(reply, 400, `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}` };
   }
   if (authoredBy && authoredBy.length > MAX_AUTHORED_BY_LENGTH) {
-    await userUploadHandler(reply, 400, `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}` };
   }
   if (!priority || isNaN(parseInt(priority))) {
-    await userUploadHandler(reply, 400, "Priority must be a number", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Priority must be a number" };
   }
   if (date && !isDateValid(date)) {
-    await userUploadHandler(reply, 400, "Date must be a valid date string", filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: "Date must be a valid date string" };
   }
   if (description && description.length > MAX_DATAPACK_DESC_LENGTH) {
-    await userUploadHandler(reply, 400, `Max description length is ${MAX_DATAPACK_DESC_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max description length is ${MAX_DATAPACK_DESC_LENGTH}` };
   }
   if (notes && notes.length > MAX_DATAPACK_NOTES_LENGTH) {
-    await userUploadHandler(reply, 400, `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}` };
   }
   if (references.length > MAX_DATAPACK_REFERENCES_ALLOWED) {
-    await userUploadHandler(reply, 400, `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}` };
   }
   if (!references.every((reference) => reference.length <= MAX_DATAPACK_REFERENCE_LENGTH)) {
-    await userUploadHandler(reply, 400, `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}` };
   }
   if (contact && contact.length > MAX_DATAPACK_CONTACT_LENGTH) {
-    await userUploadHandler(reply, 400, `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}` };
   }
-  return {
+  const metadata = {
     originalFileName,
     storedFileName,
     description,
@@ -189,15 +180,18 @@ export async function uploadUserDatapackHandler(
     references,
     tags,
     type,
-    uuid,
     priority: parseInt(priority),
     isPublic: isPublic === "true",
     size: getBytes(bytes),
+    ...(uuid && { uuid }),
     ...(datapackImage && { datapackImage }),
+    ...(tempProfilePictureFilepath && { tempProfilePictureFilepath }),
     ...(contact && { contact }),
     ...(notes && { notes }),
     ...(date && { date })
   };
+  assertDatapackMetadata(metadata);
+  return metadata;
 }
 
 /**
@@ -375,7 +369,7 @@ export async function processMultipartPartsForDatapackUpload(
         originalFileName = file.filename;
         storedFileName = makeTempFilename(originalFileName);
         // store it temporarily in the /tmp directory
-        // this is because we can't check if the file should overwrite the existing file until we verify it and we need workshopId
+        // this is because we can't check if the file should overwrite the existing file until we verify it
         filepath = join(tmpdir(), storedFileName);
         if (!checkFileTypeIsDatapack(file)) {
           await cleanupTempFiles();
@@ -409,7 +403,7 @@ export async function processMultipartPartsForDatapackUpload(
   }
   if (!file || !filepath || !originalFileName || !storedFileName) {
     await cleanupTempFiles();
-    return { code: 400, message: "Missing required fields [datapack]" };
+    return { code: 400, message: "Missing file" };
   }
   return {
     file,

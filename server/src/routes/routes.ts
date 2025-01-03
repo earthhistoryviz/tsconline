@@ -3,7 +3,7 @@ import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
-import { getWorkshopIdFromUUID } from "../workshop-util.js";
+import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
