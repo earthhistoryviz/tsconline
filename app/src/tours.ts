@@ -3,50 +3,57 @@ import zhTranslation from "../translation/zh.json";
 
 export const enQsg = [
   {
-    target: ".qsg-datapacks",
+    target: ".qsg-presets",
     content: enTranslation.translation.tours.qsg.step1,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-chart",
+    target: ".qsg-datapacks",
     content: enTranslation.translation.tours.qsg.step2,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-settings",
+    target: ".qsg-chart",
     content: enTranslation.translation.tours.qsg.step3,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-help",
+    target: ".qsg-settings",
     content: enTranslation.translation.tours.qsg.step4,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
+    target: ".qsg-help",
+    content: enTranslation.translation.tours.qsg.step5,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  },
+  {
     target: ".qsg-workshops",
-    content: enTranslation.translation.tours.qsg.step5, // Holding off on the Workshops tour until we finish up the backend. Want to make sure it matches any changes we end up making to the page.
+    content: enTranslation.translation.tours.qsg.step6, // Holding off on the Workshops tour until we finish up the backend. Want to make sure it matches any changes we end up making to the page.
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
     target: ".qsg-about",
-    content: enTranslation.translation.tours.qsg.step6,
+    content: enTranslation.translation.tours.qsg.step7,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
     target: ".login-tab",
-    content: enTranslation.translation.tours.qsg.step7,
+    content: enTranslation.translation.tours.qsg.step8,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
@@ -54,50 +61,57 @@ export const enQsg = [
 ];
 export const zhQsg = [
   {
-    target: ".qsg-datapacks",
+    target: ".qsg-presets",
     content: zhTranslation.translation.tours.qsg.step1,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-chart",
+    target: ".qsg-datapacks",
     content: zhTranslation.translation.tours.qsg.step2,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-settings",
+    target: ".qsg-chart",
     content: zhTranslation.translation.tours.qsg.step3,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
-    target: ".qsg-help",
+    target: ".qsg-settings",
     content: zhTranslation.translation.tours.qsg.step4,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
+    target: ".qsg-help",
+    content: zhTranslation.translation.tours.qsg.step5,
+    showSkipButton: true,
+    hideCloseButton: true,
+    disableBeacon: true
+  },
+  {
     target: ".qsg-workshops",
-    content: zhTranslation.translation.tours.qsg.step5, // Holding off on the Workshops tour until we finish up the backend. Want to make sure it matches any changes we end up making to the page.
+    content: zhTranslation.translation.tours.qsg.step6, // Holding off on the Workshops tour until we finish up the backend. Want to make sure it matches any changes we end up making to the page.
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
     target: ".qsg-about",
-    content: zhTranslation.translation.tours.qsg.step6,
+    content: zhTranslation.translation.tours.qsg.step7,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
   },
   {
     target: ".login-tab",
-    content: zhTranslation.translation.tours.qsg.step7,
+    content: zhTranslation.translation.tours.qsg.step8,
     showSkipButton: true,
     hideCloseButton: true,
     disableBeacon: true
