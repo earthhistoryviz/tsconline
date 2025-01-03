@@ -694,7 +694,7 @@ export const adminUploadDatapack = async function adminUploadDatapack(request: F
       return;
     }
   } catch (e) {
-    reply.status(500).send({ error: "Unknown error" });
+    reply.status(500).send({ error: "Error uploading datapack" });
   }
   reply.send({ message: "Datapack uploaded" });
 };
