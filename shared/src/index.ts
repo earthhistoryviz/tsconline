@@ -777,7 +777,6 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
       "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
       o.dataMiningPointDataType
     );
-  if (typeof o.smoothed !== "boolean") throwError("PointSettings", "smoothed", "boolean", o.smoothed);
   assertDataMiningSettings(o);
 }
 
