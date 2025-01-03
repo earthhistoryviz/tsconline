@@ -24,7 +24,7 @@ export const Presets = () => {
           <TSCPresetHighlights navigate={navigate} configArray={[]} type="MAP" />
         </>
       ) : (
-        Object.entries(state.presets.presets).map(([type, configArray]) => {
+        Object.entries(state.presets).map(([type, configArray]) => {
           return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
         })
       )}

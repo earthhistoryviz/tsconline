@@ -113,19 +113,6 @@ export const Home = observer(function Home() {
           Venus
         </a>
       </Attribution>
-      <div className="bottom-button">
-        <TSCButton
-          className="remove-cache-button"
-          style={{
-            fontSize: theme.typography.pxToRem(12)
-          }}
-          onClick={async () => {
-            actions.removeCache();
-            actions.resetState();
-          }}>
-          {t("button.remove-cache")}
-        </TSCButton>
-      </div>
     </div>
   );
 });
