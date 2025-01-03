@@ -67,8 +67,7 @@ export const handleDatapackEdit = action(
         });
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
-          setDatapackProfilePageEditMode(false);
-          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid });
+          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid }, { title: originalDatapack.title, type: "user", uuid: state.user.uuid });
           if (!datapack) return null;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
@@ -93,16 +92,16 @@ export const handleDatapackEdit = action(
         pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
       }
     } finally {
-      // setEditRequestInProgress(false);
+      setEditRequestInProgress(false);
     }
     return null;
   }
 );
 
-export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier) => {
-  const userDatapack = await fetchUserDatapack(datapack.title);
+export const refetchDatapack = action(async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
+  const userDatapack = await fetchUserDatapack(editedDatapack.title);
   if (userDatapack) {
-    removeDatapack(datapack);
+    removeDatapack(originalDatapack);
     addDatapack(userDatapack);
     return userDatapack;
   } else {
@@ -208,7 +207,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     });
     if (response.ok) {
       pushSnackbar("File replaced", "success");
-      const datapack = await refetchDatapack(datapackUniqueIdentifier);
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       // if selected in the config, force a reprocess of the config
@@ -250,7 +249,8 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
     });
     if (response.ok) {
       pushSnackbar("Image replaced", "success");
-      const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
+      const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       setDatapackProfilePageImageVersion(new Date().getTime());

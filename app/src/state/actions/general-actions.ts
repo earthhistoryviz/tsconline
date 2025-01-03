@@ -130,7 +130,8 @@ export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () 
 export const addDatapack = action("addDatapack", (datapack: DatapackMetadata | Datapack) => {
   if ("columnInfo" in datapack && !doesDatapackAlreadyExist(datapack, state.datapacks)) {
     state.datapacks.push(observable(datapack));
-  } else if (!doesMetadataAlreadyExist(datapack, state.datapackMetadata)) {
+  }
+  if (!doesMetadataAlreadyExist(datapack, state.datapackMetadata)) {
     state.datapackMetadata.push(observable(datapack));
   }
 });
@@ -174,28 +175,6 @@ export const fetchPresets = action("fetchPresets", async () => {
       console.log("Presets loaded");
     } catch (e) {
       displayServerError(presets, ErrorCodes.INVALID_PRESET_INFO, ErrorMessages[ErrorCodes.INVALID_PRESET_INFO]);
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
-  try {
-    const response = await fetcher("/public/datapacks", {
-      method: "GET"
-    });
-    const data = await response.json();
-    try {
-      assertDatapackArray(data);
-      for (const dp of data) {
-        addDatapack(dp);
-      }
-      console.log("Public Datapacks loaded");
-    } catch (e) {
-      console.error(e);
-      displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
     }
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);

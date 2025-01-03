@@ -191,8 +191,7 @@ export const DatapackProfile = observer(() => {
       }
       const editedDatapack = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
       if (editedDatapack) setDatapack(editedDatapack);
-      await Promise.resolve(setTimeout(() => {}, 1000));
-      actions.setEditRequestInProgress(false);
+      actions.setDatapackProfilePageEditMode(false);
       // if the title has changed, navigate to the new title
       if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(
