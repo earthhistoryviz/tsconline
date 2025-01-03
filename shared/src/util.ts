@@ -1,5 +1,3 @@
-import { DatapackMetadata, isUserDatapack } from "./index.js";
-
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
   return Math.round(value * factor) / factor;

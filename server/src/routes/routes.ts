@@ -1,13 +1,14 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
+import { TimescaleItem, assertChartRequest, assertTimescale, DatapackMetadata } from "@tsconline/shared";
 import {
-  TimescaleItem,
-  assertChartRequest,
-  assertTimescale,
-  DatapackMetadata,
-} from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists, extractMetadataFromDatapack } from "../util.js";
+  deleteDirectory,
+  assetconfigs,
+  verifyFilepath,
+  checkFileExists,
+  extractMetadataFromDatapack
+} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -17,7 +18,7 @@ import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
@@ -44,8 +45,7 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
   _request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-  const datapackArray = await loadPublicUserDatapacks(uuids);
+  const datapackArray = await loadPublicUserDatapacks();
   const datapackMetadata: DatapackMetadata[] = datapackArray.map((datapack) => {
     return extractMetadataFromDatapack(datapack);
   });

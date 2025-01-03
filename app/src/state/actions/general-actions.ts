@@ -14,7 +14,6 @@ import {
   isOfficialDatapack,
   assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray,
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
@@ -32,7 +31,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher, yieldControl } from "../../util";
+import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -112,9 +111,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
 });
 export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
   const datapackIndex = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
-  console.log(datapackIndex)
   if (datapackIndex > -1) {
-    console.log("Removing datapack", state.datapacks[datapackIndex]);
     state.datapacks.splice(datapackIndex, 1); // Remove the matching datapack in place
   }
   const metadataIndex = state.datapackMetadata.findIndex((d) => compareExistingDatapacks(d, datapack));
@@ -153,9 +150,9 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
       for (const dp of datapacks) {
         addDatapack(dp);
       }
-        if (index.datapacks[0]?.type === "official") {
-          setOfficialDatapacksLoading(false);
-        }
+      if (index.datapacks[0]?.type === "official") {
+        setOfficialDatapacksLoading(false);
+      }
     } catch (e) {
       console.error(e);
       displayServerError(datapacks, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);

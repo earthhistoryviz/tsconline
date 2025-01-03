@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
+import { ChartConfig, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box } from "@mui/material";
@@ -69,7 +69,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      let datapacks: DatapackConfigForChartRequest[] = [];
+                      const datapacks: DatapackConfigForChartRequest[] = [];
                       try {
                         for (const dp of preset.datapacks) {
                           const stateDatapack = state.datapacks.find(
@@ -83,17 +83,17 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
                             if (!fetchedDatapack) {
                               actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
-                              continue;
+                              return;
                             }
                             actions.addDatapack(fetchedDatapack);
                             datapacks.push(_.cloneDeep(fetchedDatapack));
                           } catch (fetchError) {
                             console.error(`Error fetching datapack ${dp.name}:`, fetchError);
                             actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+                            return;
                           }
                         }
                       } catch (e) {
-                        console.error(e);
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
                       }
