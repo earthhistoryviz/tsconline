@@ -56,6 +56,7 @@ export const NavBar = observer(function Navbar() {
   const [menuDrawerOpen, setMenuDrawerOpen] = React.useState(false);
   const { t } = useTranslation();
   const menuItems = [
+    { label: t("navBar.presets"), path: "/presets", icon: <Dataset /> },
     { label: t("navBar.datapacks"), path: "/datapacks", icon: <Dataset /> },
     { label: t("navBar.chart"), path: "/chart", icon: <TableChart /> },
     { label: t("navBar.settings"), path: "/settings", ref: settingsRef, anchorProps, icon: <AccountCircle /> },

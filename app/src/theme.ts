@@ -182,6 +182,11 @@ function createThemeOverrides(theme: Theme, primary: string) {
           }
         }
       },
+      MuiButtonBase: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
       MuiButton: {
         variants: [
           {
