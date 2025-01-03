@@ -221,24 +221,18 @@ export function handleDualColCompColumns() {
     let index = 0;
     let numOfDcc = 0;
     while (index < parent.children.length) {
-      //skip the correct dcc
-      //the add dcc function puts the correct dcc under the ref column
-      //row order is handled later
-      if (parent.children[index].name.localeCompare(refCol.name) === 0) {
-        index += 2;
-        numOfDcc++;
-        continue;
-      }
       if (parent.children[index].name.localeCompare(dualColumnName) === 0) {
-        parent.children.splice(index, 1);
         numOfDcc++;
-        continue;
+        if (index === 0 || (index > 0 && parent.children[index - 1].name.localeCompare(refCol.name) !== 0)) {
+          parent.children.splice(index, 1);
+          continue;
+        }
       }
       index++;
     }
     //one from the app, one from loaded settings, more than that shouldn't be possible
     if (numOfDcc > 2) {
-      console.warn("WARNING: found more than two dcc while loading settings");
+      console.warn("WARNING: while handling dual col comp, found more than two dcc");
     }
     setColumnProperties(createdDualColumn, foundDualColumn);
   }
