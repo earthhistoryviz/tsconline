@@ -112,9 +112,7 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
 });
 export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
   const datapackIndex = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
-  console.log(datapackIndex)
   if (datapackIndex > -1) {
-    console.log("Removing datapack", state.datapacks[datapackIndex]);
     state.datapacks.splice(datapackIndex, 1); // Remove the matching datapack in place
   }
   const metadataIndex = state.datapackMetadata.findIndex((d) => compareExistingDatapacks(d, datapack));
@@ -196,29 +194,6 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
         addDatapack(data[dp]);
       }
       console.log("User Datapacks loaded");
-    } catch (e) {
-      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
-      console.error(e);
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-export const fetchUserDatapacksMetadataMetadata = action("fetchUserDatapacksMetadataMetadata", async () => {
-  try {
-    const response = await fetcher(`/user/metadata`, {
-      method: "GET",
-      credentials: "include"
-    });
-    const data = await response.json();
-    try {
-      assertDatapackMetadataArray(data);
-      runInAction(() => {
-        state.datapackMetadata = observable(data);
-      });
-      console.log("User Datapacks Metadata loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
       console.error(e);

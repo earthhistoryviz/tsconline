@@ -51,7 +51,6 @@ import {
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
-import { toJS } from "mobx";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);

@@ -44,8 +44,7 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
   _request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-  const datapackArray = await loadPublicUserDatapacks(uuids);
+  const datapackArray = await loadPublicUserDatapacks();
   const datapackMetadata: DatapackMetadata[] = datapackArray.map((datapack) => {
     return extractMetadataFromDatapack(datapack);
   });

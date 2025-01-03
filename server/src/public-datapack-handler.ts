@@ -16,11 +16,11 @@ import { isUUIDFolderAWorkshopFolder } from "./workshop-util.js";
 
 const mutex = new Mutex();
 
-export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
+export async function loadPublicUserDatapacks() {
   const release = await mutex.acquire();
   try {
     const datapacks: Datapack[] = [];
-    const uuids = uuidChunk ? uuidChunk : await getDirectories(assetconfigs.publicDatapacksDirectory);
+    const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
       if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {
@@ -67,32 +67,6 @@ export async function switchPrivacySettingsOfDatapack(
       await rename(newDatapackPath, oldDatapackPath);
       throw e;
     });
-  } finally {
-    release();
-  }
-}
-
-export async function loadPublicDatapacks() {
-  const release = await mutex.acquire();
-  try {
-    const datapacks: Datapack[] = [];
-    const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-    for (const uuid of uuids) {
-      try {
-        const datapackDirs = await getDirectories(await getPublicUserUUIDDirectory(uuid));
-        for (const datapack of datapackDirs) {
-          try {
-            const dp = await fetchUserDatapack(uuid, datapack);
-            datapacks.push(dp);
-          } catch (e) {
-            logger.error(`Error loading datapack ${datapack} with error ${e}`);
-          }
-        }
-      } catch (e) {
-        logger.error(`Error loading user ${uuid} with error ${e}`);
-      }
-    }
-    return datapacks;
   } finally {
     release();
   }
