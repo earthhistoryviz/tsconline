@@ -3,6 +3,14 @@
   text-align: center;
 }
 
+.rbc-calendar {
+  min-height: 650px;
+}
+
+.rbc-toolbar-label{
+  text-align: right !important;
+}
+
 .MuiAccordionSummary-root.workshops-summary {
   border-bottom: 1px solid rgba(0, 0, 0, 0.2);
   background-color: rgba(0, 0, 0, 0.04);

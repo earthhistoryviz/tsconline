@@ -26,6 +26,9 @@ import {
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
+import { Calendar as BigCalendar, CalendarProps, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
+import "react-big-calendar/lib/css/react-big-calendar.css";
 
 // TODO: change this when implement the backend
 
@@ -47,8 +50,8 @@ const dummyWorkshops: Workshop[] = [
   // Active Workshops
   {
     title: "React Basics",
-    start: "2024-11-20",
-    end: "2024-12-25",
+    start: "2024-12-20",
+    end: "2025-01-30",
     workshopId: 1,
     active: true,
     datapacks: ["React Overview", "JSX Basics"],
@@ -59,8 +62,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Advanced TypeScript",
-    start: "2024-11-18",
-    end: "2024-11-24",
+    start: "2024-12-18",
+    end: "2024-12-28",
     workshopId: 2,
     active: true,
     datapacks: ["Generics", "Decorators", "Type Inference"],
@@ -72,8 +75,8 @@ const dummyWorkshops: Workshop[] = [
   // Upcoming Workshops
   {
     title: "Node.js for Beginners",
-    start: "2024-12-01",
-    end: "2024-12-10",
+    start: "2025-01-01",
+    end: "2025-01-10",
     workshopId: 3,
     active: false,
     datapacks: ["Node Basics", "Express.js Overview"],
@@ -84,8 +87,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Fullstack Development",
-    start: "2024-12-05",
-    end: "2024-12-15",
+    start: "2025-01-05",
+    end: "2025-01-15",
     workshopId: 4,
     active: false,
     datapacks: ["Frontend-Backend Integration", "API Design"],
@@ -97,8 +100,8 @@ const dummyWorkshops: Workshop[] = [
   // Expired Workshops
   {
     title: "CSS in Depth",
-    start: "2024-11-01",
-    end: "2024-11-10",
+    start: "2024-12-01",
+    end: "2024-12-10",
     workshopId: 5,
     active: false,
     datapacks: ["Flexbox", "Grid Layout", "Animations"],
@@ -109,8 +112,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Python for Data Science",
-    start: "2024-10-15",
-    end: "2024-10-25",
+    start: "2024-11-15",
+    end: "2024-11-25",
     workshopId: 6,
     active: false,
     datapacks: ["Pandas", "NumPy", "Matplotlib"],
@@ -185,9 +188,55 @@ export const Workshops: React.FC = observer(() => {
   const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
   // TODO: change this when implement the backend
-  function setWorkshopAndNavigate(workshop: Workshop) {
-    navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+  function setWorkshopAndNavigate(event: { title: string }) {
+    const workshop = dummyWorkshops.find(w => w.title === event.title);
+    if (workshop) {
+      navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+    }
   }
+
+  const localizer = momentLocalizer(moment);
+  function Calendar(props: Omit<CalendarProps, "localizer">) {
+    return (
+      <BigCalendar
+      localizer={localizer}
+      {...props}
+      onSelectEvent={(event) => setWorkshopAndNavigate(event as { title: string })}
+      eventPropGetter={(event) => {
+        let newStyle = {
+        backgroundColor: "lightgrey",
+        color: 'black',
+        borderRadius: "0px",
+        border: "none"
+        };
+
+        // Past workshops
+        if (event.start && event.end && event.start < new Date() && event.end < new Date()) {
+        newStyle.backgroundColor = "#faf3dd";
+        } 
+        // Upcoming workshops
+        else if (event.start && event.start > new Date()) {
+        newStyle.backgroundColor = "#c8d5b9";
+        } 
+        // Active workshops
+        else {
+        newStyle.backgroundColor = "#8fc0a9";
+        }
+        return {
+        className: "",
+        style: newStyle
+        };
+      }}
+      />
+    );
+  }
+
+  const events = [...activeWorkshops, ...upcomingWorkshops, ...pastWorkshops]
+  .map((workshop) => ({
+    title: workshop.title,
+    start: new Date(workshop.start),
+    end: new Date(workshop.end),
+  }));
 
   useEffect(() => {
     actions.setWorkshopsArray(dummyWorkshops);
@@ -197,6 +246,7 @@ export const Workshops: React.FC = observer(() => {
       {state.isLoggedIn ? (
         <Box padding={4}>
           <Typography className="header">{t("workshops.header")}</Typography>
+          <Calendar events={events} views={["month"]}/>
           <Typography className="description-header" sx={{ marginBottom: 1 }}>
             {t("workshops.description-header")}
           </Typography>
