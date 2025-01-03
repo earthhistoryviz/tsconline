@@ -16,6 +16,7 @@ import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { context } from "../../state";
 import { useTranslation } from "react-i18next";
+import { dualColCompPrefix } from "../../util/constant";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
@@ -73,7 +74,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
           <EventDataMiningOptions column={column} />
           <PointDataMiningOptions column={column} />
           <ChronDataMiningOptions column={column} />
-          <OverlaySettings column={column}/>
+          <OverlaySettings column={column} />
         </div>
       </Box>
     </StyledScrollbar>
@@ -181,15 +182,45 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   );
 });
 
-export const OverlaySettings:React.FC<DataMiningSettingsProps> = observer((column) => {
-  const [overlayName, setOverlayName] = useState("overlay name");
+export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
+  const { state, actions } = useContext(context);
+  const [overlayName, setOverlayName] = useState("Miocene-Paleocene Oxy-18 events");
   const { t } = useTranslation();
   return (
     <Box>
       <Typography>Dual Column Comparisons</Typography>
       <Typography>{overlayName}</Typography>
-      <Button>Choose Second Column</Button>
+      <Button variant="outlined" onClick={() => {}}>
+        Choose Second Column
+      </Button>
+      <Button
+        variant="outlined"
+        onClick={() => {
+          if (column.columnDisplayType === "Point") {
+            assertPointSettings(column.columnSpecificSettings);
+          } else if (column.columnDisplayType === "Event") {
+            assertEventSettings(column.columnSpecificSettings);
+          } else {
+            console.warn("WARNING: Column that is not a Point or Event column has access to overlay");
+            return;
+          }
+          column.columnSpecificSettings.drawDualColCompColumn = overlayName;
+          if (!column.parent) {
+            console.warn("WARNING: While choosing overlay, reference column does not have a parent");
+            return;
+          }
+          const parent = state.settingsTabs.columnHashMap.get(column.parent);
+          if (!parent) {
+            console.warn("WARNING: While choosing overlay, parent column does not exist");
+            return;
+          }
+          if (!parent.children.some((child) => child.name === dualColCompPrefix + column.name)) {
+            actions.addDualColCompColumn(column);
+          }
+        }}>
+        Create Overlay
+      </Button>
       <Box></Box>
     </Box>
-  )
+  );
 });
