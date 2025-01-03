@@ -130,6 +130,7 @@
 .container.cards,
 .container.cards > .item {
   gap: 10px;
+  display: flex;
 }
 .container.cards {
   margin: 0px 20px 20px;

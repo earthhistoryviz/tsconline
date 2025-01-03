@@ -93,12 +93,14 @@ export const Datapacks = observer(function Datapacks() {
           datapacks={getPublicOfficialDatapacks(state.datapacks)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
+          loading={state.skeletonStates.officialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (
@@ -106,6 +108,7 @@ export const Datapacks = observer(function Datapacks() {
             datapacks={getWorkshopDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.workshop")}
             HeaderIcon={School}
+            loading={state.skeletonStates.publicUserDatapacksLoading}
           />
         )}
         {state.isLoggedIn && state.user && (
@@ -113,12 +116,14 @@ export const Datapacks = observer(function Datapacks() {
             datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
             header={t("settings.datapacks.title.your")}
             HeaderIcon={Lock}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         <DatapackGroupDisplay
           datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
           header={t("settings.datapacks.title.contributed")}
           HeaderIcon={People}
+          loading={state.skeletonStates.publicUserDatapacksLoading}
         />
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
@@ -185,70 +190,89 @@ type DatapackGroupDisplayProps = {
   datapacks: Datapack[];
   header: string;
   HeaderIcon: React.ElementType;
+  loading?: boolean;
 };
-const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ datapacks, header, HeaderIcon }) => {
-  const { state, actions } = useContext(context);
-  const { t } = useTranslation();
-  const [showAll, setShowAll] = useState(false);
-  const isOfficial = header === t("settings.datapacks.title.public-official");
-  const visibleLimit = isOfficial ? 12 : 6;
-  const visibleDatapacks = showAll ? datapacks : datapacks.slice(0, visibleLimit);
-  const onChange = (newDatapack: DatapackConfigForChartRequest) => {
-    if (state.unsavedDatapackConfig.includes(newDatapack)) {
-      actions.setUnsavedDatapackConfig(
-        state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
-      );
-    } else {
-      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
-    }
-  };
-  const numberOfDatapacks = datapacks.length;
-  const shouldWrap = isOfficial && state.settingsTabs.datapackDisplayType !== "cards";
-  const officialRowLimit =
-    isOfficial && (showAll || numberOfDatapacks <= visibleLimit)
-      ? { gridTemplateRows: `repeat(${(numberOfDatapacks / 2).toFixed(0)}, 1fr)` }
-      : {};
+const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
+  ({ datapacks, header, HeaderIcon, loading = false }) => {
+    const { state, actions } = useContext(context);
+    const { t } = useTranslation();
+    const [showAll, setShowAll] = useState(false);
+    const extraLoadingSkeletons = loading ? 2 : 0;
+    const isOfficial = header === t("settings.datapacks.title.public-official");
+    const isPublicContributed = header === t("settings.datapacks.title.contributed");
+    const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
+    const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
+    const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
+    const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
+    const onChange = (newDatapack: DatapackConfigForChartRequest) => {
+      if (state.unsavedDatapackConfig.includes(newDatapack)) {
+        actions.setUnsavedDatapackConfig(
+          state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
+        );
+      } else {
+        actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+      }
+    };
+    const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
+    const shouldWrap = shouldSplitIntoTwoCol && state.settingsTabs.datapackDisplayType !== "cards";
+    const officialRowLimit =
+      shouldSplitIntoTwoCol && (showAll || numberOfDatapacks <= visibleLimit)
+        ? { gridTemplateRows: `repeat(${(numberOfDatapacks / 2).toFixed(0)}, 1fr)` }
+        : {};
 
-  return (
-    <Box
-      className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""} ${isOfficial && styles.official}`}>
-      <Box className={styles.header}>
-        <SvgIcon className={styles.sdi}>
-          <HeaderIcon />
-        </SvgIcon>
-        <Typography
-          variant="h5"
-          fontWeight={700}
-          fontSize="1.2rem"
-          className={styles.idh}>{`${header} (${numberOfDatapacks})`}</Typography>
-      </Box>
-      <CustomDivider className={styles.divider} />
-      {numberOfDatapacks !== 0 && (
-        <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
-          {visibleDatapacks.map((datapack) => {
-            const value = state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack));
-            return state.settingsTabs.datapackDisplayType === "rows" ? (
-              <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-            ) : state.settingsTabs.datapackDisplayType === "compact" ? (
-              <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-            ) : (
-              <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
-            );
-          })}
+    return (
+      <Box
+        className={`${styles.container} ${state.settingsTabs.datapackDisplayType === "cards" ? styles.cards : ""} ${shouldSplitIntoTwoCol && styles.official}`}>
+        <Box className={styles.header}>
+          <SvgIcon className={styles.sdi}>
+            <HeaderIcon />
+          </SvgIcon>
+          <Typography
+            variant="h5"
+            fontWeight={700}
+            fontSize="1.2rem"
+            className={styles.idh}>{`${header} (${numberOfDatapacks - extraLoadingSkeletons})`}</Typography>
         </Box>
-      )}
-      {numberOfDatapacks > visibleLimit && (
-        <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
-          <Typography className={styles.show} variant="body2" color="primary">
-            {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+        <CustomDivider className={styles.divider} />
+        {numberOfDatapacks !== 0 && (
+          <Box className={`${styles.item} ${shouldWrap && styles.wrapItem}`} style={officialRowLimit}>
+            {[...visibleDatapacks, ...skeletons].map((datapack, index) => {
+              const value = datapack
+                ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack))
+                : false;
+              return state.settingsTabs.datapackDisplayType === "rows" ? (
+                datapack ? (
+                  <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                ) : (
+                  <TSCDatapackRow key={index} />
+                )
+              ) : state.settingsTabs.datapackDisplayType === "compact" ? (
+                datapack ? (
+                  <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                ) : (
+                  <TSCCompactDatapackRow key={index} />
+                )
+              ) : datapack ? (
+                <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+              ) : (
+                <TSCDatapackCard key={index} />
+              );
+            })}
+          </Box>
+        )}
+        {numberOfDatapacks > visibleLimit && (
+          <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
+            <Typography className={styles.show} variant="body2" color="primary">
+              {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
+            </Typography>
+          </Box>
+        )}
+        {numberOfDatapacks === 0 && (
+          <Typography>
+            {t("settings.datapacks.no")} {header} {t("settings.datapacks.avaliable")}
           </Typography>
-        </Box>
-      )}
-      {numberOfDatapacks === 0 && (
-        <Typography>
-          {t("settings.datapacks.no")} {header} {t("settings.datapacks.avaliable")}
-        </Typography>
-      )}
-    </Box>
-  );
-});
+        )}
+      </Box>
+    );
+  }
+);

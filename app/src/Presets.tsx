@@ -18,9 +18,16 @@ export const Presets = () => {
   const navigate = useNavigate();
   return (
     <Box>
-      {Object.entries(state.presets).map(([type, configArray]) => {
-        return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
-      })}
+      {state.skeletonStates.presetsLoading ? (
+        <>
+          <TSCPresetHighlights navigate={navigate} configArray={[]} type="BASIC" />
+          <TSCPresetHighlights navigate={navigate} configArray={[]} type="MAP" />
+        </>
+      ) : (
+        Object.entries(state.presets).map(([type, configArray]) => {
+          return <TSCPresetHighlights key={type} navigate={navigate} configArray={configArray} type={type} />;
+        })
+      )}
     </Box>
   );
 };

@@ -149,6 +149,9 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
         for (const dp of index.datapacks) {
           addDatapack(dp);
         }
+        if (index.datapacks[0]?.type === "official") {
+          setOfficialDatapacksLoading(false);
+        }
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
@@ -161,6 +164,9 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setOfficialDatapacksLoading(false);
+    setPublicDatapacksLoading(false);
   }
 });
 export const fetchPresets = action("fetchPresets", async () => {
@@ -177,6 +183,8 @@ export const fetchPresets = action("fetchPresets", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPresetsLoading(false);
   }
 });
 
@@ -226,6 +234,8 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPrivateUserDatapacksLoading(false);
   }
 });
 
@@ -1270,4 +1280,18 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
 // For now, this just loads the selected dummy workshop into the state.
 export const setWorkshopsArray = action((workshop: Workshop[]) => {
   state.workshops = workshop;
+});
+
+export const setPresetsLoading = action((loading: boolean) => {
+  state.skeletonStates.presetsLoading = loading;
+});
+
+export const setOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.officialDatapacksLoading = fetching;
+});
+export const setPublicDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicUserDatapacksLoading = fetching;
+});
+export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
