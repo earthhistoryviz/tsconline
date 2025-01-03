@@ -67,7 +67,10 @@ export const handleDatapackEdit = action(
         });
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
-          const datapack = await refetchDatapack({ title: editedDatapack.title, type: "user", uuid: state.user.uuid }, { title: originalDatapack.title, type: "user", uuid: state.user.uuid });
+          const datapack = await refetchDatapack(
+            { title: editedDatapack.title, type: "user", uuid: state.user.uuid },
+            { title: originalDatapack.title, type: "user", uuid: state.user.uuid }
+          );
           if (!datapack) return null;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
@@ -98,16 +101,18 @@ export const handleDatapackEdit = action(
   }
 );
 
-export const refetchDatapack = action(async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
-  const userDatapack = await fetchUserDatapack(editedDatapack.title);
-  if (userDatapack) {
-    removeDatapack(originalDatapack);
-    addDatapack(userDatapack);
-    return userDatapack;
-  } else {
-    return null;
+export const refetchDatapack = action(
+  async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
+    const userDatapack = await fetchUserDatapack(editedDatapack.title);
+    if (userDatapack) {
+      removeDatapack(originalDatapack);
+      addDatapack(userDatapack);
+      return userDatapack;
+    } else {
+      return null;
+    }
   }
-});
+);
 
 export const fetchUserDatapack = action(async (datapack: string) => {
   try {

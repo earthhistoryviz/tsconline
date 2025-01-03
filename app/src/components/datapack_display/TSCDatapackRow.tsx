@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { Box, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
@@ -101,8 +101,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
           <Skeleton className={styles.cs} width="95%" />
         ) : (
           <Typography className={styles.ci} color="textSecondary">
-            {datapack.totalColumns} Columns · {datapack.size} · {datapack.datapackImageCount} Images
-            {datapack.date && ` · Created ${datapack.date}`}
+              {datapack.date && ` Created ${datapack.date}`}
           </Typography>
         )}
       </div>

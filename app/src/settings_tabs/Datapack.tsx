@@ -18,7 +18,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
+import { Datapack, DatapackConfigForChartRequest, DatapackMetadata, assertWorkshopDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -226,9 +226,15 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
             case "official":
               datapack = await actions.fetchOfficialDatapack(newDatapack.title);
               break;
-            case "workshop":
-              // TODO: FILL THIS IN
+            case "workshop": {
+              const metadata = state.datapackMetadata.find(
+                (d) => d.title === newDatapack.title && d.type === "workshop"
+              );
+              if (!metadata) return;
+              assertWorkshopDatapack(metadata);
+              datapack = await actions.fetchWorkshopDatapack(metadata.uuid, newDatapack.title);
               break;
+            }
           }
         } catch (e) {
           actions.setLoadingDatapack(false);

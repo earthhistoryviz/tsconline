@@ -9,7 +9,7 @@ import {
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../upload-handlers.js";
-import { findUser, getActiveWorkshopsUserIsIn, getWorkshopIfNotEnded, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
+import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
@@ -243,9 +243,9 @@ export const requestDownload = async function requestDownload(
 
 /**
  * Will fetch both user and workshop metadatas
- * @param request 
- * @param reply 
- * @returns 
+ * @param request
+ * @param reply
+ * @returns
  */
 export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetadata(
   request: FastifyRequest,
@@ -281,7 +281,7 @@ export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetada
     console.error(e);
     reply.status(500).send({ error: "Failed to fetch metadatas" });
   }
-}
+};
 
 export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -319,7 +319,7 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
     reply.status(500).send({ error: "Unknown Error" });
     return;
   }
-}
+};
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
