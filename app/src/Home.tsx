@@ -1,4 +1,4 @@
-import { createRef, useState, useEffect, cloneElement, forwardRef, useEffect } from "react";
+import { createRef, useState, useEffect, cloneElement, forwardRef } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { context, state } from "./state";
@@ -453,7 +453,7 @@ export const LandingPageCards = observer(function LandingPageCards() {
 
 const ChartCreationSteps = observer(function ChartCreationSteps() {
   const theme = useTheme();
-  const [expanded, setExpanded] = useState(true);
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { t } = useTranslation();
   const steps = [
     {
