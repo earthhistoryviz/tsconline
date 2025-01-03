@@ -111,7 +111,7 @@ export type State = {
   prevConfig: Config;
   presets: Presets;
   loadingDatapacks: boolean;
-  datapackMetadata: DatapackMetadata[] // all datapacks on the server, loaded on page load
+  datapackMetadata: DatapackMetadata[]; // all datapacks on the server, loaded on page load
   datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
   workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {

@@ -7,7 +7,7 @@ import { constants } from "fs";
 import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
-import { Datapack, DatapackMetadata, assertDatapack, assertDatapackMetadata } from "@tsconline/shared";
+import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -305,8 +305,8 @@ export function extractMetadataFromDatapack(datapack: Datapack) {
     ...(datapack.contact ? { contact: datapack.contact } : {}),
     ...(datapack.notes ? { notes: datapack.notes } : {}),
     ...(datapack.datapackImage ? { datapackImage: datapack.datapackImage } : {}),
-    ...(datapack.type === "user" || datapack.type === "workshop" ? { uuid: datapack.uuid } : {}),
-  }
+    ...(datapack.type === "user" || datapack.type === "workshop" ? { uuid: datapack.uuid } : {})
+  };
   assertDatapackMetadata(metadata);
   return metadata;
 }

@@ -212,12 +212,15 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(({ da
             case "official":
               datapack = await actions.fetchOfficialDatapack(newDatapack.title);
               break;
-            case "workshop":
-              const metadata = state.datapackMetadata.find((d) => d.title === newDatapack.title && d.type === "workshop");
+            case "workshop": {
+              const metadata = state.datapackMetadata.find(
+                (d) => d.title === newDatapack.title && d.type === "workshop"
+              );
               if (!metadata) return;
               assertWorkshopDatapack(metadata);
               datapack = await actions.fetchWorkshopDatapack(metadata.uuid, newDatapack.title);
               break;
+            }
           }
         } catch (e) {
           actions.setLoadingDatapack(false);

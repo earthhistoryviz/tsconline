@@ -3,7 +3,7 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
-import { loadRecaptcha, yieldControl } from "./util";
+import { loadRecaptcha } from "./util";
 import {
   Autocomplete,
   Avatar,
@@ -59,7 +59,9 @@ export const DatapackProfile = observer(() => {
   const queryType = query.get("type");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
-  const [datapack, setDatapack] = useState<Datapack | undefined>(state.datapacks.find((d) => d.title === id && d.type === queryType));
+  const [datapack, setDatapack] = useState<Datapack | undefined>(
+    state.datapacks.find((d) => d.title === id && d.type === queryType)
+  );
   const [loading, setLoading] = useState(!datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
@@ -73,11 +75,12 @@ export const DatapackProfile = observer(() => {
           return await actions.fetchUserDatapack(id);
         case "official":
           return await actions.fetchOfficialDatapack(id);
-        case "workshop":
+        case "workshop": {
           const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
           if (!metadata) return;
           assertWorkshopDatapack(metadata);
           return await actions.fetchWorkshopDatapack(metadata.uuid, id);
+        }
       }
     }
   };
@@ -90,13 +93,13 @@ export const DatapackProfile = observer(() => {
           actions.addDatapack(fetchedDatapack);
           setIsMetadataInitialized(true);
           setDatapack(fetchedDatapack);
-        } 
+        }
       } else if (!isMetadataInitialized) {
         actions.resetEditableDatapackMetadata(datapack);
         setIsMetadataInitialized(true);
       }
       setLoading(false);
-    }
+    };
 
     intializeDatapack().catch((e) => {
       console.error("Error fetching datapack", e);
@@ -188,16 +191,16 @@ export const DatapackProfile = observer(() => {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
       }
-      const editedDatapack = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      const editedDatapack = await actions.handleDatapackEdit(
+        datapack,
+        state.datapackProfilePage.editableDatapackMetadata
+      );
       if (editedDatapack) setDatapack(editedDatapack);
       actions.setDatapackProfilePageEditMode(false);
       // if the title has changed, navigate to the new title
       if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(
-          getNavigationRouteForDatapackProfile(
-            state.datapackProfilePage.editableDatapackMetadata.title,
-            queryType!
-          )
+          getNavigationRouteForDatapackProfile(state.datapackProfilePage.editableDatapackMetadata.title, queryType!)
         );
       }
     }

@@ -14,7 +14,6 @@ import {
   isOfficialDatapack,
   assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray,
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
@@ -32,7 +31,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher, yieldControl } from "../../util";
+import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
