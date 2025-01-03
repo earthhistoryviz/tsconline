@@ -108,9 +108,7 @@ export type State = {
   };
   config: Config; // the active datapacks
   prevConfig: Config;
-  presets: {
-    presets: Presets;
-  };
+  presets: Presets;
   datapacks: Datapack[]; // all datapacks on the server
   skeletonStates: {
     presetsLoading: boolean;
@@ -239,9 +237,7 @@ export const state = observable<State>({
     datapacks: [],
     settingsPath: ""
   },
-  presets: {
-    presets: {}
-  },
+  presets: {},
   datapacks: [],
   skeletonStates: {
     presetsLoading: true,

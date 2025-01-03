@@ -652,7 +652,7 @@ export const resetState = action("resetState", () => {
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
-  state.presets.presets = presets;
+  state.presets = presets;
 });
 
 // Define settingOptions globally
