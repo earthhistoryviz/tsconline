@@ -18,12 +18,15 @@ export const Help = observer(function Help() {
     switch (tourName) {
       case "datapacks":
         navigate("/datapacks");
+        actions.setTab(2);
         break;
       case "settings":
         navigate("/settings");
+        actions.setTab(4);
         break;
       default:
         navigate("/help");
+        actions.setTab(5);
     }
   }
   return (
