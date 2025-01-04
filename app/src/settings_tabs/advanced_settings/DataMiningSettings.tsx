@@ -183,10 +183,15 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
 });
 
 export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
+  if (column.columnDisplayType === "Point") {
+    assertPointSettings(column.columnSpecificSettings);
+  } else if (column.columnDisplayType === "Event") {
+    assertEventSettings(column.columnSpecificSettings);
+  } else {
+    return;
+  }
   const { state, actions } = useContext(context);
-  const [overlayName, setOverlayName] = useState("Miocene-Paleocene Oxy-18 events");
   const { t } = useTranslation();
-
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -222,22 +227,15 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
     <Box sx={{ display: "flex", flexDirection: "row" }}>
       <Box>
         <Typography>Dual Column Comparisons</Typography>
-        <Typography>{overlayName}</Typography>
+        <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
+          {column.columnSpecificSettings.drawDualColCompColumn}
+        </Typography>
         <Button variant="outlined" onClick={() => {}}>
           Choose Second Column
         </Button>
         <Button
           variant="outlined"
           onClick={() => {
-            if (column.columnDisplayType === "Point") {
-              assertPointSettings(column.columnSpecificSettings);
-            } else if (column.columnDisplayType === "Event") {
-              assertEventSettings(column.columnSpecificSettings);
-            } else {
-              console.warn("WARNING: Column that is not a Point or Event column has access to overlay");
-              return;
-            }
-            column.columnSpecificSettings.drawDualColCompColumn = overlayName;
             if (!column.parent) {
               console.warn("WARNING: While choosing overlay, reference column does not have a parent");
               return;
@@ -330,9 +328,28 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     return (
       <div
         className={`column-leaf-row-container ${selectedClass}`}
-        //onClick={() => actions.setColumnSelected(details.name)}
+        onClick={() => {
+          if (!state.columnMenu.columnSelected) {
+            return;
+          }
+          const column = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+          if (!column) {
+            return;
+          }
+          if (column.columnDisplayType === "Point") {
+            assertPointSettings(column.columnSpecificSettings);
+          } else if (column.columnDisplayType === "Event") {
+            assertEventSettings(column.columnSpecificSettings);
+          } else {
+            return;
+          }
+          column.columnSpecificSettings.drawDualColCompColumn =
+            `class datastore.${details.columnDisplayType}Column:` + details.name;
+        }}
         tabIndex={0}>
-        <ColumnIcon column={details} />
+        <ColumnContainer className="column-row-container column-leaf">
+          <Typography className="column-display-name">{details.editName}</Typography>
+        </ColumnContainer>
       </div>
     );
   }
@@ -352,7 +369,22 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
         className="column-accordion">
         <MuiAccordionSummary
           onClick={() => {
-            //actions.setColumnSelected(details.name);
+            if (!state.columnMenu.columnSelected) {
+              return;
+            }
+            const column = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+            if (!column) {
+              return;
+            }
+            if (column.columnDisplayType === "Point") {
+              assertPointSettings(column.columnSpecificSettings);
+            } else if (column.columnDisplayType === "Event") {
+              assertEventSettings(column.columnSpecificSettings);
+            } else {
+              return;
+            }
+            column.columnSpecificSettings.drawDualColCompColumn =
+              `class datastore.${details.columnDisplayType}Column:` + details.name;
           }}
           tabIndex={0}
           expandIcon={
@@ -367,7 +399,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
-          <Typography className="column-display-name">{details.editName}</Typography>
+          <ColumnContainer className="column-row-container">
+            <Typography className="column-display-name">{details.editName}</Typography>
+          </ColumnContainer>
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
           {details.children &&
@@ -377,14 +411,5 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
         </MuiAccordionDetails>
       </Accordion>
     </div>
-  );
-});
-
-const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
-  const { state } = useContext(context);
-  return (
-    <ColumnContainer className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}>
-      <Typography className="column-display-name">{column.editName}</Typography>
-    </ColumnContainer>
   );
 });
