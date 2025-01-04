@@ -1,7 +1,8 @@
 import React from "react";
 import { observer } from "mobx-react-lite";
+import { devSafeUrl } from "./util";
 
-const serverURL = `${import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000"}/public/file_format_guide_images`;
+const serverURL = devSafeUrl("/public/file_format_guide_images");
 export const FileFormatInfo: React.FC = observer(() => {
   const htmlContent = `
         <!DOCTYPE html>
