@@ -219,7 +219,10 @@ export default observer(function App() {
             styles={{
               options: {
                 zIndex: 10000,
-                primaryColor: theme.palette.button.main
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
               }
             }}
           />
@@ -241,7 +244,10 @@ export default observer(function App() {
             styles={{
               options: {
                 zIndex: 200,
-                primaryColor: theme.palette.button.main
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
               }
             }}
           />
@@ -262,7 +268,10 @@ export default observer(function App() {
             styles={{
               options: {
                 zIndex: 200,
-                primaryColor: theme.palette.button.main
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
               }
             }}
           />
