@@ -714,5 +714,6 @@ export function jsonToXml(
   xml += parseSettings.columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
   xml += "    </column>\n";
   xml += "</TSCreator>";
+  console.log(xml);
   return xml;
 }
