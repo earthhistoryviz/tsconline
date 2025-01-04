@@ -661,7 +661,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     );
     return;
   }
-  const dualColCompColumnName = dualColCompPrefix + column.editName;
+  const dualColCompColumnName = dualColCompPrefix + column.name;
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
