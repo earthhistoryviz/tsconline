@@ -228,7 +228,7 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
       <Box>
         <Typography>Dual Column Comparisons</Typography>
         <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
-          {column.columnSpecificSettings.drawDualColCompColumn}
+          {column.columnSpecificSettings.drawDualColCompColumn?.split(":")[1]}
         </Typography>
         <Button variant="outlined" onClick={() => {}}>
           Choose Second Column
@@ -285,8 +285,8 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
           </CustomTooltip>
         </div>
         {state.settingsTabs.columns &&
-          Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
-            <ColumnAccordion key={childName} details={childDetails} />
+          Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
+            <ColumnAccordion key={childName} column={childColumn} />
           ))}
         {/* Button to take users to top of column menu when scrolling */}
 
@@ -311,20 +311,33 @@ import { Accordion, CustomTooltip, Lottie } from "../../components";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
+import { checkIfDataIsInRange } from "../../util/util";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 type ColumnAccordionProps = {
-  details: ColumnInfo;
+  column: ColumnInfo;
 };
 
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { actions, state } = useContext(context);
-  if (!details.show) {
+  const { t } = useTranslation();
+  const theme = useTheme();
+
+  if (!column.show) {
     return null;
   }
   //const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
   const selectedClass = "";
+
+  const dataInrange = checkIfDataIsInRange(
+    column.minAge,
+    column.maxAge,
+    state.settings.timeSettings[column.units].topStageAge,
+    state.settings.timeSettings[column.units].baseStageAge
+  );
+
   // if there are no children, don't make an accordion
-  if (details.children.length == 0) {
+  if (column.children.length == 0) {
     return (
       <div
         className={`column-leaf-row-container ${selectedClass}`}
@@ -344,11 +357,36 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
             return;
           }
           column.columnSpecificSettings.drawDualColCompColumn =
-            `class datastore.${details.columnDisplayType}Column:` + details.name;
+            `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
         <ColumnContainer className="column-row-container column-leaf">
-          <Typography className="column-display-name">{details.editName}</Typography>
+          {!dataInrange && !(column.name === "Ma" || column.name === "Root") && (
+            <Tooltip
+              title={t("settings.column.tooltip.not-in-range")}
+              placement="top"
+              arrow
+              slotProps={{
+                popper: {
+                  modifiers: [
+                    {
+                      name: "offset",
+                      options: {
+                        offset: [0, -10]
+                      }
+                    }
+                  ]
+                }
+              }}>
+              <ErrorOutlineIcon
+                className="column-error-icon"
+                style={{
+                  color: theme.palette.error.main
+                }}
+              />
+            </Tooltip>
+          )}
+          <Typography className="column-display-name">{column.editName}</Typography>
         </ColumnContainer>
       </div>
     );
@@ -360,31 +398,29 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   const containsSelectedChild = {};
   return (
     <div className="dcc-accordion-container">
-      {details.expanded && (
-        <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
-      )}
+      {column.expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
       <Accordion
         //checks if column name is in expand list
-        expanded={details.expanded}
+        expanded={column.expanded}
         className="column-accordion">
         <MuiAccordionSummary
           onClick={() => {
             if (!state.columnMenu.columnSelected) {
               return;
             }
-            const column = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-            if (!column) {
+            const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+            if (!refColumn) {
               return;
             }
-            if (column.columnDisplayType === "Point") {
-              assertPointSettings(column.columnSpecificSettings);
-            } else if (column.columnDisplayType === "Event") {
-              assertEventSettings(column.columnSpecificSettings);
+            if (refColumn.columnDisplayType === "Point") {
+              assertPointSettings(refColumn.columnSpecificSettings);
+            } else if (refColumn.columnDisplayType === "Event") {
+              assertEventSettings(refColumn.columnSpecificSettings);
             } else {
               return;
             }
-            column.columnSpecificSettings.drawDualColCompColumn =
-              `class datastore.${details.columnDisplayType}Column:` + details.name;
+            refColumn.columnSpecificSettings.drawDualColCompColumn =
+              `class datastore.${column.columnDisplayType}Column:` + column.name;
           }}
           tabIndex={0}
           expandIcon={
@@ -393,20 +429,20 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
-                actions.setExpanded(!details.expanded, details);
+                actions.setExpanded(!column.expanded, column);
               }}
             />
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
           <ColumnContainer className="column-row-container">
-            <Typography className="column-display-name">{details.editName}</Typography>
+            <Typography className="column-display-name">{column.editName}</Typography>
           </ColumnContainer>
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
+          {column.children &&
+            Object.entries(column.children).map(([childName, childColumn]) => (
+              <ColumnAccordion key={childName} column={childColumn} />
             ))}
         </MuiAccordionDetails>
       </Accordion>
