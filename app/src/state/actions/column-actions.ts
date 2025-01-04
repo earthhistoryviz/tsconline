@@ -7,6 +7,7 @@ import {
   DataMiningChronDataType,
   DataMiningPointDataType,
   DataMiningSettings,
+  EventColumnInfoTSC,
   EventFrequency,
   EventSettings,
   PointColumnInfoTSC,
@@ -30,6 +31,7 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
+  defaultEventSettings,
   defaultPointSettings,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
@@ -58,6 +60,11 @@ function extractName(text: string): string {
 function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
+
+function prependDualColCompColumnName(text: string): string {
+  return "Overlay for " + text;
+}
+
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
@@ -76,7 +83,11 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
       assertEventColumnInfoTSC(settings);
       assertEventSettings(column.columnSpecificSettings);
       if (column.columnSpecificSettings)
-        setEventColumnSettings(column.columnSpecificSettings, { type: settings.type, rangeSort: settings.rangeSort });
+        setEventColumnSettings(column.columnSpecificSettings, {
+          type: settings.type,
+          rangeSort: settings.rangeSort,
+          drawDualColCompColumn: settings.drawDualColCompColumn
+        });
       break;
     case "PointColumn":
       assertPointColumnInfoTSC(settings);
@@ -100,7 +111,8 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
         smoothed: settings.drawSmooth,
         lowerRange: settings.minWindow,
         upperRange: settings.maxWindow,
-        isDataMiningColumn: settings.isDataMiningColumn
+        isDataMiningColumn: settings.isDataMiningColumn,
+        drawDualColCompColumn: settings.drawDualColCompColumn
       });
       break;
     case "SequenceColumn":
@@ -117,11 +129,125 @@ function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
   }
 }
 
+//key: column name found in the loaded settings xml (Has "Overlay for" as prepend)
+//value: loaded settings for the found column
+const dualColCompFoundCache = new Map<string, PointColumnInfoTSC | EventColumnInfoTSC>();
+
+//key: column name (of column that has value in drawDualColComp tag)
+//value:  draw dual col comp value (the column to compare)
+const dualColCompRefCache = new Map<string, string>();
+
+export function addColumnToDualColCompCache(settings: ColumnInfoTSC) {
+  const columnName = extractName(settings._id);
+  switch (extractColumnType(settings._id)) {
+    case "PointColumn":
+      assertPointColumnInfoTSC(settings);
+      if (settings.isDualColCompColumn) {
+        dualColCompFoundCache.set(columnName, settings);
+      }
+      if (settings.drawDualColCompColumn) {
+        dualColCompRefCache.set(columnName, settings.drawDualColCompColumn);
+      }
+      break;
+    case "EventColumn":
+      assertEventColumnInfoTSC(settings);
+      if (settings.isDualColCompColumn) {
+        dualColCompFoundCache.set(columnName, settings);
+      }
+      if (settings.drawDualColCompColumn) {
+        dualColCompRefCache.set(columnName, settings.drawDualColCompColumn);
+      }
+      break;
+  }
+}
+
+export function handleDualColCompColumns() {
+  //shortest to largest name
+  const sortedRefNameList = Array.from(dualColCompRefCache.keys()).sort((a, b) => a.length - b.length);
+  for (const name of sortedRefNameList) {
+    const refCol = state.settingsTabs.columnHashMap.get(name);
+    const refInfo = dualColCompRefCache.get(name);
+    if (!refCol) {
+      //also could not be in selected datapacks, so commented since many of these columns could exist
+      //console.error("DualColComp reference column is not in state");
+      continue;
+    }
+    if (!refInfo) {
+      console.error("While handling dual col comp columns, failed to find refInfo for reference column");
+      continue;
+    }
+
+    switch (refCol.columnDisplayType) {
+      case "Event":
+        assertEventSettings(refCol.columnSpecificSettings);
+        refCol.columnSpecificSettings.drawDualColCompColumn = refInfo;
+        break;
+      case "Point":
+        assertPointSettings(refCol.columnSpecificSettings);
+        refCol.columnSpecificSettings.drawDualColCompColumn = refInfo;
+        break;
+      default:
+        console.error("while handling dual col comp columns, refCol did not have display type Event or Point");
+        continue;
+    }
+    const dualColumnName = addDualColCompColumn(refCol);
+    if (!dualColumnName) {
+      console.error("while handling dual col comp columns, failed to add dual col comp column");
+      continue;
+    }
+    const createdDualColumn = state.settingsTabs.columnHashMap.get(dualColumnName);
+    if (!createdDualColumn) {
+      console.error("while handling dual col comp columns, failed to access created dual col comp column from state");
+      continue;
+    }
+    const foundDualColumn = dualColCompFoundCache.get(dualColumnName);
+    if (!foundDualColumn) {
+      console.error(
+        "While handling dual col comp columns, name of created dcc column does not match any dcc columns in loaded settings"
+      );
+      continue;
+    }
+
+    //remove any duplicate dual col comp column (a column can only have one)
+    if (!refCol.parent) {
+      console.warn("WARNING: tried to add a dual col comp column to a column with no parent");
+      return;
+    }
+    const parent = state.settingsTabs.columnHashMap.get(refCol.parent);
+    if (!parent) {
+      console.warn("WARNING: tried to get", refCol.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+      return;
+    }
+    let index = 0;
+    let numOfDcc = 0;
+    while (index < parent.children.length) {
+      if (parent.children[index].name.localeCompare(dualColumnName) === 0) {
+        numOfDcc++;
+        //the "add dcc function" inserts the dcc right after the reference column, so we can check for the correct dcc
+        //by checking if the previous column is the reference column (here we are checking the opposite to remove duplicate dcc)
+        if (index === 0 || (index > 0 && parent.children[index - 1].name.localeCompare(refCol.name) !== 0)) {
+          parent.children.splice(index, 1);
+          continue;
+        }
+      }
+      index++;
+    }
+    //one from the app, one from loaded settings, more than that shouldn't be possible
+    if (numOfDcc > 2) {
+      console.warn("WARNING: while handling dual col comp, found more than two dcc");
+    }
+    setColumnProperties(createdDualColumn, foundDualColumn);
+  }
+  //reset cache
+  dualColCompFoundCache.clear();
+  dualColCompRefCache.clear();
+}
+
 const dataminingFoundCache = new Map<string, PointColumnInfoTSC>();
 
 //key: column name
-//currIdentifier: indicates the datamine column (if it exists) that references the key.
-//loadedIdentifier: the type of datamine column to draw according to the loaded settings
+//existingDataMiningType: indicates the datamining column (if it exists) that references the key.
+//loadedDataMiningType: the type of datamining column to draw according to the loaded settings
 const dataMiningRefCache = new Map<
   string,
   {
@@ -288,6 +414,8 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
   }
 
   addColumnToDataMiningCache(settings);
+
+  addColumnToDualColCompCache(settings);
 
   if (extractColumnType(settings._id) === "BlockSeriesMetaColumn") {
     for (let i = 0; i < settings.children.length; i++) {
@@ -500,6 +628,90 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     }
   }
   searchColumnsAbortController = null;
+});
+
+export const addDualColCompColumn = action((column: ColumnInfo) => {
+  if (column.columnDisplayType === "Event") {
+    assertEventSettings(column.columnSpecificSettings);
+    if (column.columnSpecificSettings.drawDualColCompColumn === null) {
+      console.warn("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      return;
+    }
+  } else if (column.columnDisplayType === "Point") {
+    assertPointSettings(column.columnSpecificSettings);
+    if (column.columnSpecificSettings.drawDualColCompColumn === null) {
+      console.warn("WARNING: tried to add a dual col comp column, but did not specify which column to compare");
+      return;
+    }
+  } else {
+    console.warn("WARNING: tried to add a dual col comp column to a column that is not an event or point column");
+    return;
+  }
+  if (!column.parent) {
+    console.warn("WARNING: tried to add a dual col comp column to a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.warn("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const index = parent.children.findIndex((child) => child.name === column.name);
+  if (index === -1) {
+    console.warn(
+      "WARNING: ",
+      column.name,
+      "not found in parent's children when attempting to add dual col comp column"
+    );
+    return;
+  }
+  const dualColCompColumnName = prependDualColCompColumnName(column.editName);
+  const dualColCompColumn: ColumnInfo = observable({
+    ...cloneDeep(column),
+    name: dualColCompColumnName,
+    editName: dualColCompColumnName,
+    enableTitle: true,
+    rgb: {
+      r: 255,
+      g: 255,
+      b: 255
+    }
+  });
+  if (column.columnDisplayType === "Event") {
+    dualColCompColumn.columnDisplayType = "Event";
+    dualColCompColumn.columnSpecificSettings = {
+      ...cloneDeep(defaultEventSettings),
+      dualColCompColumnRef: column.name
+    };
+  } else if (column.columnDisplayType === "Point") {
+    dualColCompColumn.columnDisplayType = "Point";
+    dualColCompColumn.columnSpecificSettings = {
+      ...cloneDeep(defaultPointSettings),
+      dualColCompColumnRef: column.name
+    };
+  }
+  parent.children.splice(index + 1, 0, dualColCompColumn);
+  state.settingsTabs.columnHashMap.set(dualColCompColumnName, dualColCompColumn);
+  return dualColCompColumnName;
+});
+
+export const removeDualColCompColumn = action((column: ColumnInfo) => {
+  if (!column.parent) {
+    console.log("WARNING: tried to remove a dual col comp column from a column with no parent");
+    return;
+  }
+  const parent = state.settingsTabs.columnHashMap.get(column.parent);
+  if (!parent) {
+    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
+  const columnToRemove = prependDualColCompColumnName(column.name);
+  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  if (index === -1) {
+    return;
+  }
+  parent.children.splice(index, 1);
+  state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
 export const addDataMiningColumn = action(
