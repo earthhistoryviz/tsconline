@@ -8,7 +8,7 @@ import { Chart } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { About } from "./About";
 import { Login } from "./Login";
@@ -31,12 +31,17 @@ import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { Presets } from "./Presets";
 import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
+import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
+import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
+import { FileFormatInfo } from "./FileFormatInfo";
+import i18n from "../i18n";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const [stepIndex, setStepIndex] = useState(0);
   const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
   const backgroundColor = theme.palette.backgroundColor.main;
   document.documentElement.style.backgroundColor = backgroundColor;
@@ -48,7 +53,67 @@ export default observer(function App() {
       cleanup();
     };
   }, []);
+  const getQsg = () => {
+    switch (i18n.language) {
+      case "en":
+        return enQsg;
+      case "zh":
+        return zhQsg;
+      default:
+        return enQsg;
+    }
+  };
+  const getDatapackTour = () => {
+    switch (i18n.language) {
+      case "en":
+        return enDpTour;
+      case "zh":
+        return zhDpTour;
+      default:
+        return enDpTour;
+    }
+  };
+  const getSettingsTour = () => {
+    switch (i18n.language) {
+      case "en":
+        return enSetTour;
+      case "zh":
+        return zhSetTour;
+      default:
+        return enSetTour;
+    }
+  };
+  const handleQSGCallback = (data: CallBackProps) => {
+    const { status, action, origin, index, type } = data;
+    const finishedStatuses: string[] = ["finished", "skipped"];
+    if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
+      actions.setTourOpen(false, "qsg");
+      setStepIndex(0);
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    }
+  };
 
+  const handleDatapackTourCallback = (data: CallBackProps) => {
+    const { status, action, origin, index, type } = data;
+    const finishedStatuses: string[] = ["finished", "skipped"];
+    if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
+      actions.setTourOpen(false, "datapacks");
+      setStepIndex(0);
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    }
+  };
+  const handleSettingsTourCallback = (data: CallBackProps) => {
+    const { status, action, origin, index, type } = data;
+    const finishedStatuses: string[] = ["finished", "skipped"];
+    if (finishedStatuses.includes(status) || (action === ACTIONS.CLOSE && origin === ORIGIN.OVERLAY)) {
+      actions.setTourOpen(false, "settings");
+      setStepIndex(0);
+    } else if (type === EVENTS.STEP_AFTER) {
+      setStepIndex(index + (action === ACTIONS.PREV ? -1 : 1));
+    }
+  };
   // on theme change, update the background color
   const checkUnsavedChanges = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
@@ -62,6 +127,7 @@ export default observer(function App() {
     }
     return false;
   };
+
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -86,6 +152,7 @@ export default observer(function App() {
             <Route path="/datapacks" element={<Datapacks />} />
             <Route path="/presets" element={<Presets />} />
             <Route path="/workshops" element={<Workshops />} />
+            <Route path="/file-format-info" element={<FileFormatInfo />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
@@ -136,6 +203,78 @@ export default observer(function App() {
               severity={info.severity}
             />
           ))}
+          <Joyride
+            continuous
+            run={state.guides.isQSGOpen}
+            steps={getQsg()}
+            callback={handleQSGCallback}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getQsg().length})`
+            }}
+            stepIndex={stepIndex}
+            showProgress
+            styles={{
+              options: {
+                zIndex: 10000,
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
+              }
+            }}
+          />
+          <Joyride
+            continuous
+            run={state.guides.isDatapacksTourOpen}
+            steps={getDatapackTour()}
+            stepIndex={stepIndex}
+            disableScrolling
+            callback={handleDatapackTourCallback}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              next: t("tours.next"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getDatapackTour().length})`
+            }}
+            showProgress
+            styles={{
+              options: {
+                zIndex: 200,
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
+              }
+            }}
+          />
+          <Joyride
+            continuous
+            run={state.guides.isSettingsTourOpen}
+            steps={getSettingsTour()}
+            stepIndex={stepIndex}
+            callback={handleSettingsTourCallback}
+            locale={{
+              skip: t("tours.quit"),
+              last: t("tours.finish"),
+              next: t("tours.next"),
+              back: t("tours.back"),
+              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getSettingsTour().length})`
+            }}
+            showProgress
+            styles={{
+              options: {
+                zIndex: 200,
+                primaryColor: theme.palette.button.main,
+                backgroundColor: theme.palette.secondaryBackground.main,
+                arrowColor: theme.palette.secondaryBackground.main,
+                textColor: theme.palette.text.primary
+              }
+            }}
+          />
         </ThemeProvider>
       </LocalizationProvider>
     </StyledEngineProvider>
