@@ -191,114 +191,116 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
-// Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
-const handleScroll = () => {
-  if (scrollRef.current && scrollRef.current.scrollTop > 200) {
-    setShowScroll(true);
-  } else {
-    setShowScroll(false);
-  }
-};
-
-const scrollToTop = () => {
-  if (scrollRef.current) {
-    scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
-  }
-};
-
-useEffect(() => {
-  const ref = scrollRef.current;
-  if (ref) {
-    ref.addEventListener("scroll", handleScroll);
-  }
-  return () => {
-    if (ref) {
-      ref.removeEventListener("scroll", handleScroll);
+  // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
+  const handleScroll = () => {
+    if (scrollRef.current && scrollRef.current.scrollTop > 200) {
+      setShowScroll(true);
+    } else {
+      setShowScroll(false);
     }
   };
-}, []);
+
+  const scrollToTop = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
+
+  useEffect(() => {
+    const ref = scrollRef.current;
+    if (ref) {
+      ref.addEventListener("scroll", handleScroll);
+    }
+    return () => {
+      if (ref) {
+        ref.removeEventListener("scroll", handleScroll);
+      }
+    };
+  }, []);
 
   return (
-    <Box>
-      <Typography>Dual Column Comparisons</Typography>
-      <Typography>{overlayName}</Typography>
-      <Button variant="outlined" onClick={() => {}}>
-        Choose Second Column
-      </Button>
-      <Button
-        variant="outlined"
-        onClick={() => {
-          if (column.columnDisplayType === "Point") {
-            assertPointSettings(column.columnSpecificSettings);
-          } else if (column.columnDisplayType === "Event") {
-            assertEventSettings(column.columnSpecificSettings);
-          } else {
-            console.warn("WARNING: Column that is not a Point or Event column has access to overlay");
-            return;
-          }
-          column.columnSpecificSettings.drawDualColCompColumn = overlayName;
-          if (!column.parent) {
-            console.warn("WARNING: While choosing overlay, reference column does not have a parent");
-            return;
-          }
-          const parent = state.settingsTabs.columnHashMap.get(column.parent);
-          if (!parent) {
-            console.warn("WARNING: While choosing overlay, parent column does not exist");
-            return;
-          }
-          if (!parent.children.some((child) => child.name === dualColCompPrefix + column.name)) {
-            actions.addDualColCompColumn(column);
-          }
-        }}>
-        Create Overlay
-      </Button>
+    <Box sx={{ display: "flex", flexDirection: "row" }}>
+      <Box>
+        <Typography>Dual Column Comparisons</Typography>
+        <Typography>{overlayName}</Typography>
+        <Button variant="outlined" onClick={() => {}}>
+          Choose Second Column
+        </Button>
+        <Button
+          variant="outlined"
+          onClick={() => {
+            if (column.columnDisplayType === "Point") {
+              assertPointSettings(column.columnSpecificSettings);
+            } else if (column.columnDisplayType === "Event") {
+              assertEventSettings(column.columnSpecificSettings);
+            } else {
+              console.warn("WARNING: Column that is not a Point or Event column has access to overlay");
+              return;
+            }
+            column.columnSpecificSettings.drawDualColCompColumn = overlayName;
+            if (!column.parent) {
+              console.warn("WARNING: While choosing overlay, reference column does not have a parent");
+              return;
+            }
+            const parent = state.settingsTabs.columnHashMap.get(column.parent);
+            if (!parent) {
+              console.warn("WARNING: While choosing overlay, parent column does not exist");
+              return;
+            }
+            if (!parent.children.some((child) => child.name === dualColCompPrefix + column.name)) {
+              actions.addDualColCompColumn(column);
+            }
+          }}>
+          Create Overlay
+        </Button>
+      </Box>
       <Box
-          id="ResizableColumnAccordionWrapper"
-          ref={scrollRef}
-          border={1}
-          borderColor="divider"
-          bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
-          position="relative">
-          <div className="column-filter-buttons">
-            <CustomTooltip title="Expand All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-                }}>
-                <ExpandIcon />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Collapse All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-                }}>
-                <CompressIcon />
-              </IconButton>
-            </CustomTooltip>
-          </div>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
-          {/* Button to take users to top of column menu when scrolling */}
+        id="DccColumnAccordionWrapper"
+        ref={scrollRef}
+        border={1}
+        borderColor="divider"
+        bgcolor="secondaryBackground.main"
+        className={`hide-scrollbar dcc-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+        position="relative">
+        <div className="column-filter-buttons">
+          <CustomTooltip title="Expand All" placement="top">
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.settingsTabs.columns) return;
+                actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+              }}>
+              <ExpandIcon />
+            </IconButton>
+          </CustomTooltip>
+          <CustomTooltip title="Collapse All" placement="top">
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.settingsTabs.columns) return;
+                actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+              }}>
+              <CompressIcon />
+            </IconButton>
+          </CustomTooltip>
+        </div>
+        {state.settingsTabs.columns &&
+          Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
+            <ColumnAccordion key={childName} details={childDetails} />
+          ))}
+        {/* Button to take users to top of column menu when scrolling */}
 
-          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-            <Lottie
-              key="settings-arrow-up"
-              style={{ width: "28px", height: "28px" }}
-              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-              playOnClick
-            />
-          </IconButton>
-        </Box>
+        <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+          <Lottie
+            key="settings-arrow-up"
+            style={{ width: "28px", height: "28px" }}
+            animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+            playOnClick
+          />
+        </IconButton>
+      </Box>
     </Box>
   );
 });
@@ -307,11 +309,10 @@ import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
-import {  Accordion, CustomTooltip, Lottie } from "../../components";
+import { Accordion, CustomTooltip, Lottie } from "../../components";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { checkIfDataIsInRange } from "../../util/util";
 
 type ColumnAccordionProps = {
   details: ColumnInfo;
@@ -322,7 +323,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
+  //const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
+  const selectedClass = "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -335,11 +337,12 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
     );
   }
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
-    ? { opacity: 1 }
-    : {};
+  // const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
+  //   ? { opacity: 1 }
+  //   : {};
+  const containsSelectedChild = {};
   return (
-    <div className="column-accordion-container">
+    <div className="dcc-accordion-container">
       {details.expanded && (
         <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
       )}
@@ -364,7 +367,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
-          <ColumnIcon column={details} />
+          <Typography className="column-display-name">{details.editName}</Typography>
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
           {details.children &&
@@ -378,16 +381,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 });
 
 const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
-  const { state, actions } = useContext(context);
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const dataInrange = checkIfDataIsInRange(
-    column.minAge,
-    column.maxAge,
-    state.settings.timeSettings[column.units].topStageAge,
-    state.settings.timeSettings[column.units].baseStageAge
-  );
-  
+  const { state } = useContext(context);
   return (
     <ColumnContainer className={`column-row-container ${column.children.length > 0 ? "" : "column-leaf"}`}>
       <Typography className="column-display-name">{column.editName}</Typography>
