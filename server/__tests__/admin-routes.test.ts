@@ -947,7 +947,7 @@ describe("adminDeleteUserDatapack", () => {
   });
 });
 
-describe("adminUploadOfficialDatapack", () => {
+describe("adminUploadDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   // let jsonOfFormData: Record<string, unknown>;
   const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
