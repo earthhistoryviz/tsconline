@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import {
   Accordion,
   AccordionDetails,
@@ -9,10 +9,15 @@ import {
   CardContent,
   CardMedia,
   Grid,
-  Typography
+  MenuItem,
+  Typography,
+  Select
 } from "@mui/material";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import IconButton from "@mui/material/IconButton";
+import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
+import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import { context } from "./state";
 import { StyledScrollbar } from "./components";
 import "./Workshops.css";
@@ -26,7 +31,8 @@ import {
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
-import { Calendar as BigCalendar, CalendarProps, momentLocalizer } from "react-big-calendar";
+import { Calendar as BigCalendar, CalendarProps, momentLocalizer, ToolbarProps } from "react-big-calendar";
+import { SelectChangeEvent } from "@mui/material/Select";
 import moment from "moment";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
@@ -50,8 +56,8 @@ const dummyWorkshops: Workshop[] = [
   // Active Workshops
   {
     title: "React Basics",
-    start: "2024-12-20",
-    end: "2025-01-30",
+    start: "2025-01-03",
+    end: "2025-01-07",
     workshopId: 1,
     active: true,
     datapacks: ["React Overview", "JSX Basics"],
@@ -62,8 +68,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Advanced TypeScript",
-    start: "2024-12-18",
-    end: "2024-12-28",
+    start: "2025-01-04",
+    end: "2025-01-08",
     workshopId: 2,
     active: true,
     datapacks: ["Generics", "Decorators", "Type Inference"],
@@ -75,8 +81,8 @@ const dummyWorkshops: Workshop[] = [
   // Upcoming Workshops
   {
     title: "Node.js for Beginners",
-    start: "2025-01-01",
-    end: "2025-01-10",
+    start: "2025-01-09",
+    end: "2025-01-11",
     workshopId: 3,
     active: false,
     datapacks: ["Node Basics", "Express.js Overview"],
@@ -87,8 +93,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Fullstack Development",
-    start: "2025-01-05",
-    end: "2025-01-15",
+    start: "2025-01-15",
+    end: "2025-01-17",
     workshopId: 4,
     active: false,
     datapacks: ["Frontend-Backend Integration", "API Design"],
@@ -100,8 +106,8 @@ const dummyWorkshops: Workshop[] = [
   // Expired Workshops
   {
     title: "CSS in Depth",
-    start: "2024-12-01",
-    end: "2024-12-10",
+    start: "2024-12-20",
+    end: "2024-12-22",
     workshopId: 5,
     active: false,
     datapacks: ["Flexbox", "Grid Layout", "Animations"],
@@ -112,8 +118,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Python for Data Science",
-    start: "2024-11-15",
-    end: "2024-11-25",
+    start: "2024-12-25",
+    end: "2024-12-27",
     workshopId: 6,
     active: false,
     datapacks: ["Pandas", "NumPy", "Matplotlib"],
@@ -187,55 +193,83 @@ export const Workshops: React.FC = observer(() => {
   const upcomingWorkshops = getUpcomingWorkshops(dummyWorkshops);
   const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
+  const [calendarWorkshops, setCalendarWorkshops] = useState("All");
+
   // TODO: change this when implement the backend
   function setWorkshopAndNavigate(event: { title: string }) {
-    const workshop = dummyWorkshops.find(w => w.title === event.title);
+    const workshop = dummyWorkshops.find((w) => w.title === event.title);
     if (workshop) {
       navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
     }
   }
 
   const localizer = momentLocalizer(moment);
-  function Calendar(props: Omit<CalendarProps, "localizer">) {
+
+  const CustomToolbar: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
+    return (
+      <div className="rbc-toolbar">
+        {/* Month select */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ padding: "0 16px" }}>
+          <IconButton size="large" sx={{ "&:hover": { opacity: 0.9 } }} onClick={() => onNavigate("PREV")}>
+            <KeyboardArrowLeftIcon sx={{ color: "button.light" }} />
+          </IconButton>
+          <Typography sx={{ flexGrow: 1, textAlign: "center" }}>
+            {`${t(`workshops.calendar.months.${new Date(label).getMonth() + 1}`)} ${label.split(" ")[1]}`}
+          </Typography>
+          <IconButton size="large" sx={{ "&:hover": { opacity: 0.9 } }} onClick={() => onNavigate("NEXT")}>
+            <KeyboardArrowRightIcon sx={{ color: "button.light" }} />
+          </IconButton>
+        </Box>
+
+        {/* Select dropdown */}
+        <Box display="flex" justifyContent="center" sx={{ padding: "8px 0" }}>
+          <Select
+            value={calendarWorkshops}
+            onChange={(event: SelectChangeEvent) => setCalendarWorkshops(event.target.value as string)}>
+            <MenuItem value="All">{t("workshops.titles.all")}</MenuItem>
+            <MenuItem value="Past">{t("workshops.titles.past")}</MenuItem>
+            <MenuItem value="Active">{t("workshops.titles.active")}</MenuItem>
+            <MenuItem value="Upcoming">{t("workshops.titles.upcoming")}</MenuItem>
+          </Select>
+        </Box>
+      </div>
+    );
+  };
+
+  const Calendar: React.FC<Omit<CalendarProps, "localizer">> = (props) => {
     return (
       <BigCalendar
-      localizer={localizer}
-      {...props}
-      onSelectEvent={(event) => setWorkshopAndNavigate(event as { title: string })}
-      eventPropGetter={(event) => {
-        let newStyle = {
-        backgroundColor: "lightgrey",
-        color: 'black',
-        borderRadius: "0px",
-        border: "none"
-        };
-
-        // Past workshops
-        if (event.start && event.end && event.start < new Date() && event.end < new Date()) {
-        newStyle.backgroundColor = "#faf3dd";
-        } 
-        // Upcoming workshops
-        else if (event.start && event.start > new Date()) {
-        newStyle.backgroundColor = "#c8d5b9";
-        } 
-        // Active workshops
-        else {
-        newStyle.backgroundColor = "#8fc0a9";
-        }
-        return {
-        className: "",
-        style: newStyle
-        };
-      }}
+        localizer={localizer}
+        {...props}
+        components={{ toolbar: CustomToolbar }}
+        onSelectEvent={(event) => setWorkshopAndNavigate(event as { title: string })}
+        dayPropGetter={(date) => {
+          const newStyle = {
+            backgroundColor: theme.palette.secondaryBackground.main,
+            borderRadius: "0px",
+            border: "none"
+          };
+          if (date.toDateString() === new Date().toDateString()) {
+            newStyle.backgroundColor = "#aecfeb";
+          }
+          const currentMonth = new Date().getMonth();
+          if (date.getMonth() !== currentMonth) {
+            newStyle.backgroundColor = theme.palette.backgroundColor.main;
+          }
+          return { className: "", style: newStyle };
+        }}
       />
     );
-  }
+  };
 
-  const events = [...activeWorkshops, ...upcomingWorkshops, ...pastWorkshops]
-  .map((workshop) => ({
+  const events = [
+    ...(calendarWorkshops === "All" || calendarWorkshops === "Active" ? activeWorkshops : []),
+    ...(calendarWorkshops === "All" || calendarWorkshops === "Upcoming" ? upcomingWorkshops : []),
+    ...(calendarWorkshops === "All" || calendarWorkshops === "Past" ? pastWorkshops : [])
+  ].map((workshop) => ({
     title: workshop.title,
     start: new Date(workshop.start),
-    end: new Date(workshop.end),
+    end: new Date(workshop.end)
   }));
 
   useEffect(() => {
@@ -246,11 +280,10 @@ export const Workshops: React.FC = observer(() => {
       {state.isLoggedIn ? (
         <Box padding={4}>
           <Typography className="header">{t("workshops.header")}</Typography>
-          <Calendar events={events} views={["month"]}/>
           <Typography className="description-header" sx={{ marginBottom: 1 }}>
             {t("workshops.description-header")}
           </Typography>
-
+          <Calendar events={events} views={["month"]} />
           {/* Active Workshops */}
           <Accordion
             defaultExpanded

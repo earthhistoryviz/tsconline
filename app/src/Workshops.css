@@ -4,11 +4,22 @@
 }
 
 .rbc-calendar {
-  min-height: 650px;
+  display: flex;
+  min-height: 500px;
 }
 
-.rbc-toolbar-label{
-  text-align: right !important;
+.rbc-event {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.rbc-row {
+  height: 22px;
+}
+
+.rbc-toolbar * {
+  border: 0px !important;
 }
 
 .MuiAccordionSummary-root.workshops-summary {
