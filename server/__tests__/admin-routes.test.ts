@@ -1000,44 +1000,45 @@ describe("adminUploadDatapack", () => {
     createForm();
     vi.clearAllMocks();
   });
-  describe.each([
-    "/admin/official/datapack",
-    "/admin/workshop/official/datapack",
-  ])(`should complete tests for route %s`, async (url) => {
-  it("should return 500 if processAndUploadDatapack throws error", async () => {
-    processAndUploadDatapack.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/official/datapack",
-      payload: formData.payload,
-      headers: formHeaders
-    });
-    expect(await response.json()).toEqual({ error: "Error uploading datapack" });
-    expect(response.statusCode).toBe(500);
-  });
-  it("should return code if processAndUploadDatapack returns a non-200 code", async () => {
-    processAndUploadDatapack.mockResolvedValueOnce({ code: 400, message: "message" });
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/official/datapack",
-      payload: formData.payload,
-      headers: formHeaders
-    });
-    expect(processAndUploadDatapack).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ error: "message" });
-    expect(response.statusCode).toBe(400);
-  });
-  it("should return 200 if successful", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/official/datapack",
-      payload: formData.payload,
-      headers: formHeaders
-    });
-    expect(processAndUploadDatapack).toHaveBeenCalledTimes(1);
-    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
-    expect(response.statusCode).toBe(200);
-  });})
+  describe.each(["/admin/official/datapack", "/admin/workshop/official/datapack"])(
+    `should complete tests for route %s`,
+    async (url) => {
+      it("should return 500 if processAndUploadDatapack throws error", async () => {
+        processAndUploadDatapack.mockRejectedValueOnce(new Error());
+        const response = await app.inject({
+          method: "POST",
+          url: "/admin/official/datapack",
+          payload: formData.payload,
+          headers: formHeaders
+        });
+        expect(await response.json()).toEqual({ error: "Error uploading datapack" });
+        expect(response.statusCode).toBe(500);
+      });
+      it("should return code if processAndUploadDatapack returns a non-200 code", async () => {
+        processAndUploadDatapack.mockResolvedValueOnce({ code: 400, message: "message" });
+        const response = await app.inject({
+          method: "POST",
+          url: "/admin/official/datapack",
+          payload: formData.payload,
+          headers: formHeaders
+        });
+        expect(processAndUploadDatapack).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "message" });
+        expect(response.statusCode).toBe(400);
+      });
+      it("should return 200 if successful", async () => {
+        const response = await app.inject({
+          method: "POST",
+          url: "/admin/official/datapack",
+          payload: formData.payload,
+          headers: formHeaders
+        });
+        expect(processAndUploadDatapack).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+        expect(response.statusCode).toBe(200);
+      });
+    }
+  );
 });
 describe("getUsers", () => {
   const findUser = vi.spyOn(database, "findUser");
