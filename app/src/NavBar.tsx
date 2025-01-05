@@ -254,7 +254,7 @@ const NonUserSettings: React.FC = () => {
         />
       </TSCMenuItem>
       <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
-      <MenuHeader style={{ color: theme.palette.dark.contrastText }}>{t(`LANGUAGES`)}</MenuHeader>
+      <MenuHeader style={{ color: theme.palette.dark.contrastText }}>{t(`languages`)}</MenuHeader>
       <MenuDivider style={{ backgroundColor: theme.palette.dark.divider }} />
       {Object.entries(languageList).map(([key, value]) => (
         <TSCMenuItem

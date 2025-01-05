@@ -1,7 +1,7 @@
 import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Skeleton, Typography } from "@mui/material";
 import styles from "./TSCCompactDatapackRow.module.css";
 import Color from "color";
 import { useTheme } from "@mui/material";
@@ -18,15 +18,16 @@ import {
 import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
-  datapack: Datapack;
-  value: boolean;
-  onChange: (datapack: DatapackConfigForChartRequest) => void;
+  datapack?: Datapack;
+  value?: boolean;
+  onChange?: (datapack: DatapackConfigForChartRequest) => void;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
   datapack,
   value,
   onChange
 }) {
+  const skeleton = !datapack || !onChange || value === undefined;
   const [loading, setLoading] = useState(false);
   const { actions, state } = useContext(context);
   const theme = useTheme();
@@ -35,7 +36,9 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
     <Box
       className={styles.rc}
       bgcolor="secondaryBackground.main"
-      onClick={() => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))}
+      onClick={
+        skeleton ? () => {} : () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))
+      }
       sx={{
         "&:hover": {
           bgcolor:
@@ -54,21 +57,29 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         onClick={async (e) => {
           e.stopPropagation();
           setLoading(true);
-          onChange(datapack);
+          !skeleton && onChange(datapack);
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
       </Box>
-      <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
+      {skeleton ? (
+        <Skeleton className={styles.image} />
+      ) : (
+        <img className={styles.image} src={getDatapackProfileImageUrl(datapack)} alt="datapack" />
+      )}
       <div className={styles.title}>
         <Box className={styles.titleHeader}>
-          <Typography className={styles.header} color="textSecondary">
-            {datapack.title}
-          </Typography>
-          {isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
+          {skeleton ? (
+            <Skeleton className={styles.header} width="90%" />
+          ) : (
+            <Typography className={styles.header} color="textSecondary">
+              {datapack.title}
+            </Typography>
+          )}
+          {!skeleton && isUserDatapack(datapack) && datapack.isPublic && <Public className={styles.publicIcon} />}
         </Box>
       </div>
-      {isOwnedByUser(datapack, state.user?.uuid) && (
+      {!skeleton && isOwnedByUser(datapack, state.user?.uuid) && (
         <Box
           onClick={async (e) => {
             e.stopPropagation();
