@@ -1295,3 +1295,39 @@ export const setPublicDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
+
+export const setTourOpen = action((openTour: boolean, tourName: string) => {
+  switch (tourName) {
+    case "qsg":
+      state.guides.isQSGOpen = openTour;
+      state.guides.isDatapacksTourOpen = false; // Close any other tours that might still be open to prevent multiple tours from running simultaneously.
+      state.guides.isSettingsTourOpen = false; //  ensures that starting a new tour will not lead to overlapping tours,
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "datapacks":
+      state.guides.isDatapacksTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "settings":
+      state.guides.isSettingsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+
+      break;
+    case "workshops":
+      state.guides.isWorkshopsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      break;
+    default:
+      console.error("No such tour");
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+  }
+});
