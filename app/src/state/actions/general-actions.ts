@@ -1296,8 +1296,6 @@ export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
 
-
-
 export const setTourOpen = action((openTour: boolean, tourName: string) => {
   switch (tourName) {
     case "qsg":
