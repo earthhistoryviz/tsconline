@@ -219,6 +219,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
       if (doesDatapackExistInCurrentConfig(datapackUniqueIdentifier, state.config.datapacks)) {
         await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
       }
+      return datapack;
     } else {
       displayServerError(
         response.statusText,

@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useRef, useState, createContext } from "react";
 import { context } from "./state";
 import { loadRecaptcha } from "./util";
 import {
@@ -52,6 +52,8 @@ import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 
+const SetDatapackContext = createContext<(datapack: Datapack) => void>(() => {});
+
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
@@ -69,13 +71,14 @@ export const DatapackProfile = observer(() => {
   const fetchDatapack = async () => {
     if (!id) return;
     if (!datapack) {
-      await loadRecaptcha();
       switch (queryType) {
         case "user":
+          await loadRecaptcha();
           return await actions.fetchUserDatapack(id);
         case "official":
           return await actions.fetchOfficialDatapack(id);
         case "workshop": {
+          await loadRecaptcha();
           const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
           if (!metadata) return;
           assertWorkshopDatapack(metadata);
@@ -133,7 +136,7 @@ export const DatapackProfile = observer(() => {
     }
   ];
   const Content: React.FC = observer(() => (
-    <>
+    <SetDatapackContext.Provider value={setDatapack}>
       <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
         <IconButton className={styles.back} onClick={() => navigate("/settings")}>
@@ -164,7 +167,7 @@ export const DatapackProfile = observer(() => {
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
       <DatapackProfileContent index={tabIndex} datapack={datapack} />
-    </>
+    </SetDatapackContext.Provider>
   ));
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -425,17 +428,19 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
     </>
   );
 });
+
 type DatapackFileProps = {
   fileName: string;
   id: string;
-};
-
+ };
 const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
   const { state, actions } = useContext(context);
+  const setDatapack = useContext(SetDatapackContext);
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
-    await actions.replaceUserDatapackFile(id, file);
+    const datapack = await actions.replaceUserDatapackFile(id, file);
+    if (datapack) setDatapack(datapack);
   };
   return (
     <>
