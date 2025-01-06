@@ -230,12 +230,21 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
         <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
           {column.columnSpecificSettings.drawDualColCompColumn?.split(":")[1]}
         </Typography>
-        <Button variant="outlined" onClick={() => {}}>
+        <Button variant="outlined" onClick={() => {
+            if (column.columnDisplayType === "Point") {
+              assertPointSettings(column.columnSpecificSettings);
+            } else if (column.columnDisplayType === "Event") {
+              assertEventSettings(column.columnSpecificSettings);
+            } else {
+              return;
+            }
+          column.columnSpecificSettings.drawDualColCompColumn = "class datastore.EventColumn:Miocene-Paleocene Oxy-18 events"}}>
           Choose Second Column
         </Button>
         <Button
           variant="outlined"
           onClick={() => {
+            console.log(column);
             if (!column.parent) {
               console.warn("WARNING: While choosing overlay, reference column does not have a parent");
               return;
@@ -345,18 +354,18 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           if (!state.columnMenu.columnSelected) {
             return;
           }
-          const column = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-          if (!column) {
+          const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+          if (!refColumn) {
             return;
           }
-          if (column.columnDisplayType === "Point") {
-            assertPointSettings(column.columnSpecificSettings);
-          } else if (column.columnDisplayType === "Event") {
-            assertEventSettings(column.columnSpecificSettings);
+          if (refColumn.columnDisplayType === "Point") {
+            assertPointSettings(refColumn.columnSpecificSettings);
+          } else if (refColumn.columnDisplayType === "Event") {
+            assertEventSettings(refColumn.columnSpecificSettings);
           } else {
             return;
           }
-          column.columnSpecificSettings.drawDualColCompColumn =
+          refColumn.columnSpecificSettings.drawDualColCompColumn =
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
