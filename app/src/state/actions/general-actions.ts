@@ -141,7 +141,7 @@ export const resetSettings = action("resetSettings", () => {
 
 export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMetadata", async () => {
   try {
-    const response = await fetcher("/public/datapacks/metadata", {
+    const response = await fetcher("/public/metadata", {
       method: "GET"
     });
     const datapacks = await response.json();
@@ -197,31 +197,6 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
         addDatapack(data[dp]);
       }
       console.log("User Datapacks loaded");
-    } catch (e) {
-      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
-      console.error(e);
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  } finally {
-    setPrivateUserDatapacksLoading(false);
-  }
-});
-
-export const fetchUserDatapacksMetadataMetadata = action("fetchUserDatapacksMetadataMetadata", async () => {
-  try {
-    const response = await fetcher(`/user/metadata`, {
-      method: "GET",
-      credentials: "include"
-    });
-    const data = await response.json();
-    try {
-      assertDatapackMetadataArray(data);
-      runInAction(() => {
-        state.datapackMetadata = observable(data);
-      });
-      console.log("User Datapacks Metadata loaded");
     } catch (e) {
       displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
       console.error(e);
@@ -458,22 +433,13 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 export const processDatapackConfig = action(
   "processDatapackConfig",
   async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
-    if (!force && state.isProcessingDatapacks) {
-      return;
-    }
-    setIsProcessingDatapacks(true);
-    while (state.loadingDatapacks) {
-      await new Promise((resolve) => setTimeout(resolve, 100));
-    }
     if (datapacks.length === 0) {
-      setIsProcessingDatapacks(false);
       setEmptyDatapackConfig();
-      return;
+      return false;
     }
-    if (!force && JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) {
-      setIsProcessingDatapacks(false);
-      return;
-    }
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
+      return true;
+    setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
         try {
