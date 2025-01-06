@@ -22,7 +22,6 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
   let file: MultipartFile | undefined;
   try {
     const result = await processMultipartPartsForDatapackUpload(uuid, parts);
-    console.log(result)
     if (isOperationResult(result)) {
       return result;
     }
@@ -101,7 +100,6 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
-    console.log(e)
     return { code: 500, message: "Unknown error" };
   }
 };
