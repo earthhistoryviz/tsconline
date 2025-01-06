@@ -207,7 +207,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const isPublicContributed = header === t("settings.datapacks.title.contributed");
     const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
-    const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
+    const visibleDatapacks: (DatapackMetadata | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
     const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
       if (state.unsavedDatapackConfig.some((datapack) => datapack.title === newDatapack.title)) {
@@ -216,41 +216,41 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         );
       } else {
         actions.setLoadingDatapack(true);
-      if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
-        let datapack: Datapack | undefined;
-        try {
-          switch (newDatapack.type) {
-            case "user":
-              datapack = await actions.fetchUserDatapack(newDatapack.title);
-              break;
-            case "official":
-              datapack = await actions.fetchOfficialDatapack(newDatapack.title);
-              break;
-            case "workshop": {
-              const metadata = state.datapackMetadata.find(
-                (d) => d.title === newDatapack.title && d.type === "workshop"
-              );
-              if (!metadata) return;
-              assertWorkshopDatapack(metadata);
-              datapack = await actions.fetchWorkshopDatapack(metadata.uuid, newDatapack.title);
-              break;
+        if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
+          let datapack: Datapack | undefined;
+          try {
+            switch (newDatapack.type) {
+              case "user":
+                datapack = await actions.fetchUserDatapack(newDatapack.title);
+                break;
+              case "official":
+                datapack = await actions.fetchOfficialDatapack(newDatapack.title);
+                break;
+              case "workshop": {
+                const metadata = state.datapackMetadata.find(
+                  (d) => d.title === newDatapack.title && d.type === "workshop"
+                );
+                if (!metadata) return;
+                assertWorkshopDatapack(metadata);
+                datapack = await actions.fetchWorkshopDatapack(metadata.uuid, newDatapack.title);
+                break;
+              }
             }
+          } catch (e) {
+            actions.setLoadingDatapack(false);
+            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+            return;
           }
-        } catch (e) {
-          actions.setLoadingDatapack(false);
-          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
-          return;
+          if (!datapack) {
+            actions.setLoadingDatapack(false);
+            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
+            return;
+          }
+          actions.addDatapack(datapack);
         }
-        if (!datapack) {
-          actions.setLoadingDatapack(false);
-          actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
-          return;
-        }
-        actions.addDatapack(datapack);
-      }
-      actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+        actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
         actions.setLoadingDatapack(false);
-    }
+      }
     };
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
     const shouldWrap = shouldSplitIntoTwoCol && state.settingsTabs.datapackDisplayType !== "cards";
@@ -279,8 +279,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
               const value = datapack
                 ? state.unsavedDatapackConfig.some((dp) => compareExistingDatapacks(dp, datapack))
                 : false;
-              if (datapack.title === "British Isles") console.log("value", value);
-            return state.settingsTabs.datapackDisplayType === "rows" ? (
+              return state.settingsTabs.datapackDisplayType === "rows" ? (
                 datapack ? (
                   <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
                 ) : (

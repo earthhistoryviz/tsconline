@@ -150,9 +150,6 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
       for (const dp of datapacks) {
         addDatapack(dp);
       }
-      if (index.datapacks[0]?.type === "official") {
-        setOfficialDatapacksLoading(false);
-      }
     } catch (e) {
       console.error(e);
       displayServerError(datapacks, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
@@ -196,7 +193,6 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     const data = await response.json();
     try {
       assertDatapackMetadataArray(data);
-      // this does not check for duplicate keys
       for (const dp in data) {
         addDatapack(data[dp]);
       }
