@@ -60,7 +60,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
           !skeleton
             ? async (e) => {
                 e.stopPropagation();
-          if (loading) return;
+                if (loading) return;
                 setLoading(true);
                 await onChange(datapack);
                 setLoading(false);
@@ -101,7 +101,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
           <Skeleton className={styles.cs} width="95%" />
         ) : (
           <Typography className={styles.ci} color="textSecondary">
-              {datapack.date && ` Created ${datapack.date}`}
+            {datapack.date && ` Created ${datapack.date}`}
           </Typography>
         )}
       </div>

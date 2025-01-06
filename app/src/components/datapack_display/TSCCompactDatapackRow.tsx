@@ -58,7 +58,7 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
           e.stopPropagation();
           if (loading) return;
           setLoading(true);
-          !skeleton && await onChange(datapack);
+          !skeleton && (await onChange(datapack));
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
