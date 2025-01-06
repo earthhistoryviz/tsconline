@@ -312,6 +312,7 @@ type ColumnAccordionProps = {
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { actions, state } = useContext(context);
+  const [expanded, setExpanded] = useState(column.expanded);
   const { t } = useTranslation();
   const theme = useTheme();
 
@@ -390,10 +391,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   const containsSelectedChild = {};
   return (
     <div className="dcc-accordion-container">
-      {column.expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
+      {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
       <Accordion
         //checks if column name is in expand list
-        expanded={column.expanded}
+        expanded={expanded}
         className="column-accordion">
         <MuiAccordionSummary
           onClick={() => {
@@ -421,7 +422,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
-                actions.setExpanded(!column.expanded, column);
+                setExpanded(!expanded);
               }}
             />
           }
