@@ -34,3 +34,11 @@
   height: 20vh;
   resize: horizontal;
 }
+
+.MuiTypography-root.dcc-not-allowed {
+  color: gray;
+  font-size: 0.97rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
