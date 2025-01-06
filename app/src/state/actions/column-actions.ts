@@ -675,14 +675,18 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
   });
   if (column.columnDisplayType === "Event") {
     dualColCompColumn.columnDisplayType = "Event";
+    assertEventSettings(column.columnSpecificSettings);
     dualColCompColumn.columnSpecificSettings = {
-      ...cloneDeep(defaultEventSettings),
+      ...cloneDeep(column.columnSpecificSettings),
+      drawDualColCompColumn: null,
       dualColCompColumnRef: column.name
     };
   } else if (column.columnDisplayType === "Point") {
     dualColCompColumn.columnDisplayType = "Point";
+    assertPointSettings(column.columnSpecificSettings);
     dualColCompColumn.columnSpecificSettings = {
-      ...cloneDeep(defaultPointSettings),
+      ...cloneDeep(column.columnSpecificSettings),
+      drawDualColCompColumn: null,
       dualColCompColumnRef: column.name
     };
   }
