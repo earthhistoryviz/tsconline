@@ -7,7 +7,7 @@ import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCCard, StyledScrollbar } from "./components";
+import { TSCCard, StyledScrollbar, TSCDialogLoader } from "./components";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
 import _ from "lodash";
@@ -43,12 +43,14 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const handleAccordionChange = () => {
     setExpanded(!expanded);
   };
   return (
     <>
+      <TSCDialogLoader open={loading} headerText="Fetching Datapacks" />
       <Accordion
         className="preset-highlight"
         sx={{ border: `1px solid ${theme.palette.divider}` }}
@@ -79,6 +81,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             datapacks.push(_.cloneDeep(stateDatapack));
                             continue;
                           }
+                          setLoading(true);
                           const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
                           if (!fetchedDatapack) {
                             actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
@@ -90,6 +93,8 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       } catch (e) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
+                      } finally {
+                        setLoading(false);
                       }
                       const success = await actions.processDatapackConfig(datapacks, preset.settings);
                       if (!success) return;
