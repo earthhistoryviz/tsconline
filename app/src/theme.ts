@@ -49,6 +49,9 @@ declare module "@mui/material/styles" {
     accordionLine?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
   }
+  interface PaletteColor {
+    divider?: string;
+  }
 }
 declare module "@mui/material/Button" {
   interface ButtonPropsColorOverrides {
@@ -179,6 +182,11 @@ function createThemeOverrides(theme: Theme, primary: string) {
           }
         }
       },
+      MuiButtonBase: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
       MuiButton: {
         variants: [
           {
@@ -298,12 +306,15 @@ baseTheme = createTheme(baseTheme, {
       },
       name: "error"
     }),
-    dark: baseTheme.palette.augmentColor({
-      color: {
-        main: "#0e1217"
-      },
-      name: "dark"
-    })
+    dark: {
+      ...baseTheme.palette.augmentColor({
+        color: {
+          main: "#0e1217"
+        },
+        name: "dark"
+      }),
+      divider: "#505c71"
+    }
   }
 });
 
@@ -528,7 +539,10 @@ export let originalLightTheme = createTheme(baseTheme, {
         main: "#27476E"
       },
       name: "cardBackground"
-    })
+    }),
+    tableContainer: {
+      main: "#FFFFFFB3"
+    }
   }
 });
 export let originalDarkTheme = createTheme(baseTheme, {
@@ -590,7 +604,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     action: {
       disabled,
-      disabledBackground: disabled,
+      disabledBackground: "#858585",
       hover: "#ababab1a"
     },
     outline: {
@@ -602,6 +616,9 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#b5b5b560"
+    },
+    tableContainer: {
+      main: "#1A222DB3"
     }
   }
 });

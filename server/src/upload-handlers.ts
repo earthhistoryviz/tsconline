@@ -1,5 +1,15 @@
 import {
+  Datapack,
   DatapackIndex,
+  MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_REFERENCES_ALLOWED,
+  MAX_DATAPACK_REFERENCE_LENGTH,
+  MAX_DATAPACK_TAGS_ALLOWED,
+  MAX_DATAPACK_TAG_LENGTH,
+  MAX_DATAPACK_TITLE_LENGTH,
   assertDatapack,
   assertUserDatapack,
   isDatapackTypeString,
@@ -7,14 +17,22 @@ import {
   isUserDatapack
 } from "@tsconline/shared";
 import { FastifyReply } from "fastify";
-import { copyFile, mkdir, readFile, rm, writeFile } from "fs/promises";
+import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes } from "./util.js";
 import path from "path";
-import { decryptDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
+import {
+  decryptDatapack,
+  deleteDatapackFileAndDecryptedCounterpart,
+  doesDatapackFolderExistInAllUUIDDirectories
+} from "./user/user-handler.js";
 import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { CACHED_USER_DATAPACK_FILENAME, DATAPACK_PROFILE_PICTURE_FILENAME } from "./constants.js";
+import {
+  CACHED_USER_DATAPACK_FILENAME,
+  DATAPACK_PROFILE_PICTURE_FILENAME,
+  DECRYPTED_DIRECTORY_NAME
+} from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -29,14 +47,18 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
     throw new Error("File does not exist");
   }
   const datapack = JSON.parse(await readFile(cachedFilepath, "utf-8"));
-  if (!datapack) {
-    throw new Error("File is empty");
-  }
   assertUserDatapack(datapack);
   assertDatapack(datapack);
   return datapack.storedFileName;
 }
 
+/**
+ * Validate the fields and return the metadata if valid
+ * @param reply
+ * @param fields
+ * @param bytes Bytes read
+ * @returns The metadata if valid, otherwise void
+ */
 export async function uploadUserDatapackHandler(
   reply: FastifyReply,
   fields: Record<string, string>,
@@ -55,7 +77,8 @@ export async function uploadUserDatapackHandler(
     isPublic,
     type,
     uuid,
-    datapackImage
+    datapackImage,
+    priority
   } = fields;
   let { references, tags } = fields;
   if (
@@ -79,8 +102,12 @@ export async function uploadUserDatapackHandler(
     );
     return;
   }
-  if (title === "__proto__" || title === "constructor" || title === "prototype") {
+  if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
     await userUploadHandler(reply, 400, "Invalid title", filepath);
+    return;
+  }
+  if (title.length > MAX_DATAPACK_TITLE_LENGTH) {
+    await userUploadHandler(reply, 400, `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}`, filepath);
     return;
   }
   if (!bytes) {
@@ -106,8 +133,44 @@ export async function uploadUserDatapackHandler(
     await userUploadHandler(reply, 400, "Tags must be an array of strings", filepath);
     return;
   }
+  if (tags.length > MAX_DATAPACK_TAGS_ALLOWED) {
+    await userUploadHandler(reply, 400, `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}`, filepath);
+    return;
+  }
+  if (!tags.every((tag) => tag.length <= MAX_DATAPACK_TAG_LENGTH)) {
+    await userUploadHandler(reply, 400, `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}`, filepath);
+    return;
+  }
+  if (authoredBy && authoredBy.length > MAX_AUTHORED_BY_LENGTH) {
+    await userUploadHandler(reply, 400, `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}`, filepath);
+    return;
+  }
+  if (!priority || isNaN(parseInt(priority))) {
+    await userUploadHandler(reply, 400, "Priority must be a number", filepath);
+    return;
+  }
   if (date && !isDateValid(date)) {
     await userUploadHandler(reply, 400, "Date must be a valid date string", filepath);
+    return;
+  }
+  if (description && description.length > MAX_DATAPACK_DESC_LENGTH) {
+    await userUploadHandler(reply, 400, `Max description length is ${MAX_DATAPACK_DESC_LENGTH}`, filepath);
+    return;
+  }
+  if (notes && notes.length > MAX_DATAPACK_NOTES_LENGTH) {
+    await userUploadHandler(reply, 400, `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}`, filepath);
+    return;
+  }
+  if (references.length > MAX_DATAPACK_REFERENCES_ALLOWED) {
+    await userUploadHandler(reply, 400, `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}`, filepath);
+    return;
+  }
+  if (!references.every((reference) => reference.length <= MAX_DATAPACK_REFERENCE_LENGTH)) {
+    await userUploadHandler(reply, 400, `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}`, filepath);
+    return;
+  }
+  if (contact && contact.length > MAX_DATAPACK_CONTACT_LENGTH) {
+    await userUploadHandler(reply, 400, `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}`, filepath);
     return;
   }
   return {
@@ -120,6 +183,7 @@ export async function uploadUserDatapackHandler(
     tags,
     type,
     uuid,
+    priority: parseInt(priority),
     isPublic: isPublic === "true",
     size: getBytes(bytes),
     ...(datapackImage && { datapackImage }),
@@ -127,6 +191,34 @@ export async function uploadUserDatapackHandler(
     ...(notes && { notes }),
     ...(date && { date })
   };
+}
+
+/**
+ * ONLY REPLACES, does not write to cache
+ * @param uuid
+ * @param sourceFilePath
+ * @param metadata
+ */
+export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: Datapack) {
+  const datapackDirectory = await fetchUserDatapackDirectory(uuid, metadata.title);
+  const filename = path.basename(sourceFilePath);
+  const decryptionFilepath = path.join(datapackDirectory, DECRYPTED_DIRECTORY_NAME);
+  const datapackFilepath = path.join(datapackDirectory, filename);
+  await copyFile(sourceFilePath, datapackFilepath);
+  if (sourceFilePath !== datapackFilepath) {
+    await rm(sourceFilePath, { force: true });
+  }
+  await decryptDatapack(datapackFilepath, decryptionFilepath);
+  const datapackIndex: DatapackIndex = {};
+  const success = await loadDatapackIntoIndex(datapackIndex, decryptionFilepath, metadata);
+  // will delete the whole directory if the file.
+  // otherwise we would have a directory with no valid file, this makes it easier to manage (no dangling directories)
+  if (!success || !datapackIndex[metadata.title]) {
+    await rm(datapackDirectory, { recursive: true, force: true });
+    throw new Error("Failed to load datapack into index, please reupload the file");
+  }
+  await deleteDatapackFileAndDecryptedCounterpart(uuid, metadata.title);
+  return datapackIndex[metadata.title]!;
 }
 
 /**
@@ -156,6 +248,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   const decryptDestination = path.join(datapackFolder, "decrypted");
   await copyFile(sourceFilePath, sourceFileDestination);
   if (!manual && sourceFilePath !== sourceFileDestination) {
+    // remove the original file if it was copied from a temp file
     await rm(sourceFilePath, { force: true });
   }
   await decryptDatapack(sourceFileDestination, decryptDestination);
@@ -170,7 +263,10 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(datapackImageFilepath)
     );
     await copyFile(datapackImageFilepath, datapackImageFilepathDest);
-    await rm(datapackImageFilepath, { force: true });
+    // remove the original file if it was copied from a temp file
+    if (!manual && datapackImageFilepath !== datapackImageFilepathDest) {
+      await rm(datapackImageFilepath, { force: true });
+    }
   }
   await writeFile(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
@@ -180,6 +276,30 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   }
   return datapackIndex;
+}
+export async function getTemporaryFilepath(uuid: string, filename: string) {
+  const directory = await getUserUUIDDirectory(uuid, false);
+  return path.join(directory, filename);
+}
+
+/**
+ * only updates the image, does not update the json cache
+ * @param uuid
+ * @param datapack
+ * @param sourceFile
+ */
+export async function changeProfilePicture(uuid: string, datapack: string, sourceFile: string) {
+  const origFilepath = await fetchDatapackProfilePictureFilepath(uuid, datapack);
+  const imageName = DATAPACK_PROFILE_PICTURE_FILENAME + path.extname(sourceFile);
+  if (!origFilepath) {
+    const directory = await fetchUserDatapackDirectory(uuid, datapack);
+    await rename(sourceFile, path.join(directory, imageName));
+  } else {
+    const dir = path.dirname(origFilepath);
+    const imagePath = path.join(dir, imageName);
+    await rm(origFilepath, { force: true });
+    await rename(sourceFile, imagePath);
+  }
 }
 
 export async function uploadFileToFileSystem(
@@ -197,7 +317,7 @@ export async function uploadFileToFileSystem(
   }
   if (file.file.bytesRead === 0) {
     await rm(filepath, { force: true });
-    return { code: 400, message: "Empty file" };
+    return { code: 400, message: "File is empty" };
   }
   return { code: 200, message: "File uploaded" };
 }
@@ -213,5 +333,5 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
       return profilePicturePath;
     }
   }
-  throw new Error("Profile picture does not exist");
+  return null;
 }

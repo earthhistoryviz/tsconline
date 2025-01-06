@@ -22,12 +22,13 @@
     "syncpack": "^12.3.0",
     "ts-node": "^10.9.2",
     "typescript": "5.2.2",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "wait-on": "^8.0.1"
   },
   "packageManager": "yarn@4.0.2",
   "private": true,
   "scripts": {
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' && echo \"Cleaning all workspaces...\" && yarn clean && echo \"Building all workspaces...\" && yarn workspace @tsconline/shared run build && echo \"@tsconline/shared successfully built... \" && yarn workspaces foreach -A --parallel --exclude @tsconline/shared --exclude tsconline/mono-repo run build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' && echo \"Cleaning all workspaces...\" && yarn clean && echo \"Building all workspaces...\" && yarn workspaces foreach -A --topological-dev --parallel run build",
     "check-quality": "yarn prettier-format && yarn lint-check",
     "install": "echo \"Installing packages of all workspaces...\" && yarn workspaces foreach -A --exclude tsconline/mono-repo -p -v run install",
     "install:prod": "echo \"Installing production packages of specified workspaces...\" && yarn workspaces focus @tsconline/server @tsconline/app --production",
@@ -37,13 +38,14 @@
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css}\"",
     "setup": "yarn && yarn build",
     "start": "yarn workspace @tsconline/server start",
-    "dev": "yarn dev:config --overwrite && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
+    "dev": "yarn dev:config --overwrite && yarn workspace @tsconline/server run migrate-datapacks && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:case": "vitest run -t",
     "coverage:ci": "vitest run --coverage --no-color",
+    "coverage:ci:exclude-encryption": "vitest run --coverage --no-color --exclude **/encryption.test.ts",
     "coverage": "vitest run --coverage",
     "clean": "yarn workspaces foreach -A --parallel run clean"
   },

@@ -6,6 +6,7 @@ export interface Database {
   verification: VerificationTable;
   ip: IpTable;
   workshop: WorkshopTable;
+  usersWorkshops: UsersWorkshopsTable;
 }
 
 export type AccountType = "pro" | "default";
@@ -20,7 +21,6 @@ export interface UserTable {
   emailVerified: number;
   invalidateSession: number;
   isAdmin: number;
-  workshopId: number;
   accountType: AccountType;
 }
 
@@ -30,6 +30,11 @@ export interface VerificationTable {
   expiresAt: string;
   reason: "password" | "invalidate" | "verify";
 }
+
+export type OperationResult = {
+  code: number;
+  message: string;
+};
 
 export interface IpTable {
   id: Generated<number>;
@@ -44,12 +49,20 @@ export interface WorkshopTable {
   end: string;
 }
 
+export interface UsersWorkshopsTable {
+  workshopId: number;
+  userId: number;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
 
 export type Verification = Selectable<VerificationTable>;
 export type NewVerification = Insertable<VerificationTable>;
+
+export type UsersWorkshops = Selectable<UsersWorkshopsTable>;
+export type NewUsersWorkshops = Insertable<UsersWorkshopsTable>;
 
 export type Ip = Selectable<IpTable>;
 export type NewIp = Insertable<IpTable>;
@@ -158,4 +171,8 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
 
 export function isAccountType(o: any): o is AccountType {
   return o === "pro" || o === "default";
+}
+
+export function isOperationResult(o: any): o is OperationResult {
+  return typeof o.code === "number" && typeof o.message === "string";
 }

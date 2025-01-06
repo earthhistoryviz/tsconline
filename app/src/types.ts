@@ -14,7 +14,10 @@ import {
 } from "@tsconline/shared";
 import { State } from "./state";
 
-export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+export type EditableDatapackMetadata = Omit<
+  DatapackMetadata,
+  "originalFileName" | "storedFileName" | "size" | "datapackImage"
+>;
 
 export type UploadDatapackMethodType = (
   file: File,
@@ -127,6 +130,7 @@ export type Config = {
 
 export const SettingsMenuOptionLabels = {
   time: "Time",
+  preferences: "Preferences",
   column: "Column",
   search: "Search",
   font: "Font",
@@ -162,6 +166,13 @@ export type ChartSettings = {
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
   useDatapackSuggestedAge: boolean;
+};
+
+export type EditableUserProperties = {
+  username: string;
+  email: string;
+  isAdmin: boolean;
+  pictureUrl: string | undefined;
 };
 
 export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {

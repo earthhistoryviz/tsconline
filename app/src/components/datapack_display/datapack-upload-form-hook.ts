@@ -5,18 +5,20 @@ import { context } from "../../state";
 import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
-import { getDatapackFromArray } from "../../state/non-action-util";
+import { getDatapackFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
+import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
   upload: UploadDatapackMethodType;
   type: DatapackType;
+  forcePublic?: boolean;
 };
 const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
-  const { upload, type } = props;
+  const { upload, type, forcePublic } = props;
   const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(forcePublic || false);
   const [currentId, setCurrentId] = useState(0);
   const [authoredBy, setAuthoredBy] = useState(state.user.username);
   const [notes, setNotes] = useState("");
@@ -26,6 +28,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
   const filename = file?.name || "";
@@ -38,6 +41,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     authoredBy,
     references: references.map((reference) => reference.reference),
     tags,
+    priority,
     size: "0", // placeholder, this will get set after the file is uploaded
     ...type,
     ...(contact && { contact }),
@@ -50,6 +54,10 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     if (form.checkValidity() === false) {
       event.stopPropagation();
       actions.pushError(ErrorCodes.INVALID_FORM);
+      return;
+    }
+    if (hasLeadingTrailingWhiteSpace(title)) {
+      actions.pushError(ErrorCodes.DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE);
       return;
     }
     if (dateError) {
@@ -91,21 +99,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   };
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
-    if (!file) {
-      return;
-    }
-    if (file.name.length > 50) {
-      actions.pushError(ErrorCodes.DATAPACK_FILE_NAME_TOO_LONG);
-      return;
-    }
-    const ext = file.name.split(".").pop();
-    // either an unencoded file (text file) or an encoded file that we have no type for
-    if (file.type !== "text/plain" && file.type !== "") {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_FILE);
-      return;
-    }
-    if (!ext || !/^(dpk|mdpk|txt|map)$/.test(ext)) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_DATAPACK_EXTENSION);
+    if (!file || !checkDatapackValidity(file)) {
       return;
     }
     actions.removeAllErrors();
@@ -145,7 +139,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
-      profileImageRef
+      profileImageRef,
+      priority
     },
     setters: {
       setTitle,
@@ -157,7 +152,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setTags,
       setReferences,
       setDate,
-      setFile
+      setFile,
+      setPriority
     },
     handlers: {
       resetForm,

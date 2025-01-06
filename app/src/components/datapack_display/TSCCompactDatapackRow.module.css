@@ -37,6 +37,17 @@
   cursor: pointer;
   margin: 5px;
 }
+.titleHeader {
+  align-items: center;
+  justify-content: left;
+  flex-direction: row;
+  display: flex;
+  gap: 5px;
+}
+.publicIcon {
+  width: 20px;
+  height: 20px;
+}
 
 .header {
   font-weight: 600;
@@ -52,7 +63,6 @@
   margin: 0px 5px;
   width: 30px;
   height: 30px;
-  background-color: white;
   border-radius: 15%;
   object-fit: cover;
   object-position: center;

@@ -13,10 +13,12 @@ import {
   Datapack,
   DatapackConfigForChartRequest,
   isUserDatapack,
-  isServerDatapack,
-  assertServerDatapack,
+  isOfficialDatapack,
+  assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray
+  assertDatapackArray,
+  DatapackUniqueIdentifier,
+  isWorkshopDatapack
 } from "@tsconline/shared";
 
 import {
@@ -35,6 +37,7 @@ import {
   applyChartColumnSettings,
   applyRowOrder,
   handleDataMiningColumns,
+  handleDualColCompColumns,
   initializeColumnHashMap,
   searchColumns,
   searchEvents
@@ -54,19 +57,25 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray } from "../non-action-util";
+import {
+  compareExistingDatapacks,
+  doesDatapackAlreadyExist,
+  getDatapackFromArray,
+  isOwnedByUser
+} from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
+import { Workshop } from "../../Workshops";
 
 const increment = 1;
 
-export const fetchServerDatapack = action("fetchServerDatapack", async (datapack: string) => {
+export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
     const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET"
     });
     const data = await response.json();
     if (response.ok) {
-      assertServerDatapack(data);
+      assertOfficialDatapack(data);
       assertDatapack(data);
       return data;
     } else {
@@ -103,8 +112,11 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
-  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
+  const index = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (index > -1) {
+    state.datapacks.splice(index, 1); // Remove the matching datapack in place
+  }
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
@@ -137,6 +149,9 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
         for (const dp of index.datapacks) {
           addDatapack(dp);
         }
+        if (index.datapacks[0]?.type === "official") {
+          setOfficialDatapacksLoading(false);
+        }
         if (total == -1) total = index.totalChunks;
         start += increment;
       } catch (e) {
@@ -149,6 +164,9 @@ export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async (
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setOfficialDatapacksLoading(false);
+    setPublicDatapacksLoading(false);
   }
 });
 export const fetchPresets = action("fetchPresets", async () => {
@@ -165,6 +183,8 @@ export const fetchPresets = action("fetchPresets", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPresetsLoading(false);
   }
 });
 
@@ -214,6 +234,8 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPrivateUserDatapacksLoading(false);
   }
 });
 
@@ -242,6 +264,7 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",
@@ -265,7 +288,15 @@ export const uploadUserDatapack = action(
         }
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
-        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+        if (response.status === 403) {
+          pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+        } else {
+          displayServerError(
+            data,
+            ErrorCodes.INVALID_DATAPACK_UPLOAD,
+            ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]
+          );
+        }
       }
     } catch (e) {
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -319,6 +350,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
+  handleDualColCompColumns();
   await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
@@ -430,12 +462,13 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return;
     }
-    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
+      return;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
@@ -660,18 +693,21 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
       state.settingsTabs.selected = "time";
       break;
     case 1:
-      state.settingsTabs.selected = "column";
+      state.settingsTabs.selected = "preferences";
       break;
     case 2:
-      state.settingsTabs.selected = "search";
+      state.settingsTabs.selected = "column";
       break;
     case 3:
-      state.settingsTabs.selected = "font";
+      state.settingsTabs.selected = "search";
       break;
     case 4:
-      state.settingsTabs.selected = "mappoints";
+      state.settingsTabs.selected = "font";
       break;
     case 5:
+      state.settingsTabs.selected = "mappoints";
+      break;
+    case 6:
       state.settingsTabs.selected = "datapacks";
       break;
     default:
@@ -689,14 +725,21 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
   switch (tab) {
     case "time":
       return 0;
-    case "column":
+    case "preferences":
       return 1;
-    case "font":
+    case "column":
       return 2;
-    case "mappoints":
+    case "search":
       return 3;
-    case "datapacks":
+    case "font":
       return 4;
+    case "mappoints":
+      return 5;
+    case "datapacks":
+      return 6;
+    default:
+      console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
+      return 0;
   }
 }
 
@@ -794,7 +837,7 @@ export const fetchImage = action("fetchImage", async (datapack: DatapackConfigFo
       datapackTitle: title,
       datapackFilename: storedFileName,
       imageName,
-      uuid: isUserDatapack(datapack) ? datapack.uuid : isServerDatapack(datapack) ? "server" : "",
+      uuid: isUserDatapack(datapack) ? datapack.uuid : isOfficialDatapack(datapack) ? "official" : "",
       isPublic: datapack.isPublic
     })
   });
@@ -934,7 +977,6 @@ export const sessionCheck = action("sessionCheck", async () => {
 });
 
 export const setDefaultUserState = action(() => {
-  removeUserDatapacks(state.user.uuid);
   state.user = {
     username: "",
     email: "",
@@ -944,12 +986,15 @@ export const setDefaultUserState = action(() => {
     uuid: "",
     settings: {
       darkMode: false,
-      language: "en"
+      language: "English"
     }
   };
+  removeUnauthorizedDatapacks();
 });
-export const removeUserDatapacks = action((uuid: string) => {
-  state.datapacks = state.datapacks.filter((d) => !isUserDatapack(d) || d.uuid !== uuid);
+export const removeUnauthorizedDatapacks = action(() => {
+  state.datapacks = observable(
+    state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
+  );
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
@@ -1011,7 +1056,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 });
 export const setTab = action("setTab", (newval: number) => {
   if (
-    newval == 1 &&
+    newval == 2 &&
     state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
@@ -1197,9 +1242,23 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
 });
-export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
-  state.datapackProfilePage.editableDatapackMetadata = metadata;
+  if (!metadata) {
+    state.datapackProfilePage.editableDatapackMetadata = null;
+    return;
+  }
+  // so we don't include any extra fields (since destructuring includes all fields)
+  state.datapackProfilePage.editableDatapackMetadata = {
+    description: metadata.description,
+    title: metadata.title,
+    isPublic: metadata.isPublic,
+    tags: metadata.tags,
+    type: metadata.type,
+    authoredBy: metadata.authoredBy,
+    priority: metadata.priority,
+    references: metadata.references
+  };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;
@@ -1214,4 +1273,25 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
+});
+
+// TODO: Change this when the actual backend for rendering all workshops is implemented.
+// Maybe similar to how we handled datapacks.
+// For now, this just loads the selected dummy workshop into the state.
+export const setWorkshopsArray = action((workshop: Workshop[]) => {
+  state.workshops = workshop;
+});
+
+export const setPresetsLoading = action((loading: boolean) => {
+  state.skeletonStates.presetsLoading = loading;
+});
+
+export const setOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.officialDatapacksLoading = fetching;
+});
+export const setPublicDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicUserDatapacksLoading = fetching;
+});
+export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateUserDatapacksLoading = fetching;
 });

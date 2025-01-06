@@ -9,7 +9,7 @@ import {
   deleteVerification,
   deleteUser,
   checkForUsersWithUsernameOrEmail,
-  getAndHandleWorkshopEnd
+  getActiveWorkshopsUserIsIn
 } from "../database.js";
 import { compare, hash } from "bcrypt-ts";
 import { OAuth2Client } from "google-auth-library";
@@ -207,21 +207,16 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword, isAdmin, workshopId } = user;
-    let workshopTitle = "";
-    if (workshopId) {
-      const workshop = await getAndHandleWorkshopEnd(workshopId);
-      if (workshop && new Date(workshop.start) <= new Date()) {
-        workshopTitle = workshop.title;
-      }
-    }
+    const { email, username, pictureUrl, hashedPassword, isAdmin, userId } = user;
+    const workshopIds: number[] = [];
+    workshopIds.push(...(await getActiveWorkshopsUserIsIn(userId)).map((workshop) => workshop.workshopId));
     const sharedUser: SharedUser = {
       email,
       username,
       pictureUrl,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
-      ...(workshopTitle && { workshopTitle }),
+      ...(workshopIds.length > 0 && { workshopIds }),
       uuid
     };
     assertSharedUser(sharedUser);
@@ -677,7 +672,6 @@ export const signup = async function signup(
       emailVerified: 0,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(newUser);
@@ -803,7 +797,6 @@ export const googleLogin = async function googleLogin(
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 0,
-      workshopId: 0,
       accountType: "default"
     };
     await createUser(user);

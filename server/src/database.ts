@@ -6,8 +6,10 @@ import {
   Verification,
   NewVerification,
   NewWorkshop,
+  NewUsersWorkshops,
   Workshop,
-  UpdatedWorkshop
+  UpdatedWorkshop,
+  UsersWorkshops
 } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
@@ -30,7 +32,6 @@ Database Schema Details (Post-Migration):
   - emailVerified (integer): Non-nullable, default is 0, indicates if the user's email has been verified.
   - invalidateSession (integer): Non-nullable, default is 0, flag for invalidating user sessions.
   - isAdmin (integer): Non-nullable, default is 0, indicates if the user is an admin.
-  - workshopId (integer): Non-nullable, default is 0. Links to the workshop table. If this field is not 0, the user is associated with a workshop.
   - accountType (text): Non-nullable, default is "default", indicates user account type.
 
 - verification Table:
@@ -50,6 +51,10 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+
+- usersWorkshops Table:
+  - workshopId (integer): Non-nullable, links to the workshop table.
+  - userId (integer): Non-nullable, links to the users table.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -119,7 +124,6 @@ export async function initializeDatabase() {
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 1,
-      workshopId: 0,
       accountType: "default"
     });
   }
@@ -142,7 +146,7 @@ export async function findUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.selectAll().execute();
 }
@@ -158,7 +162,6 @@ export async function updateUser(criteria: Partial<User>, updatedUser: UpdatedUs
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
@@ -174,7 +177,6 @@ export async function deleteUser(criteria: Partial<User>) {
   if (criteria.emailVerified) query = query.where("emailVerified", "=", criteria.emailVerified);
   if (criteria.invalidateSession) query = query.where("invalidateSession", "=", criteria.invalidateSession);
   if (criteria.hashedPassword) query = query.where("hashedPassword", "=", criteria.hashedPassword);
-  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
   if (criteria.accountType) query = query.where("accountType", "=", criteria.accountType);
   return await query.execute();
 }
@@ -235,6 +237,41 @@ export async function checkForUsersWithUsernameOrEmail(username: string, email: 
     .execute();
 }
 
+export async function checkWorkshopHasUser(userId: number, workshopId: number) {
+  return await db
+    .selectFrom("usersWorkshops")
+    .selectAll()
+    .where((eb) => eb("userId", "=", userId).and("workshopId", "=", workshopId))
+    .execute();
+}
+
+export async function findUsersWorkshops(criteria: Partial<UsersWorkshops>) {
+  let query = db.selectFrom("usersWorkshops").selectAll();
+
+  if (criteria.workshopId) query = query.where("workshopId", "=", criteria.workshopId);
+  if (criteria.userId) query = query.where("userId", "=", criteria.userId);
+
+  return await query.execute();
+}
+
+export async function deleteFromUsersWorkshops(criteria: Partial<UsersWorkshops>) {
+  let query = db.deleteFrom("usersWorkshops");
+
+  if (criteria.workshopId) {
+    query = query.where("workshopId", "=", criteria.workshopId);
+  }
+
+  if (criteria.userId) {
+    query = query.where("userId", "=", criteria.userId);
+  }
+
+  return await query.execute();
+}
+
+export async function createUsersWorkshops(newUsersWorkshops: NewUsersWorkshops) {
+  return await db.insertInto("usersWorkshops").values(newUsersWorkshops).execute();
+}
+
 export async function createWorkshop(criteria: NewWorkshop): Promise<number | undefined> {
   const result = await db.insertInto("workshop").values(criteria).returning("workshopId").executeTakeFirst();
   return result?.workshopId;
@@ -267,22 +304,61 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
   return await query.execute();
 }
 
-//TODO: The functionality of this function needs to be changed in Jacqui's PR
 /**
- * Checks if a workshop has ended and performs necessary cleanup.
- * @param workshopId The workshop ID to check if it has ended
+ * Checks if a workshop has ended
+ * @param workshopId The workshop ID to check
  * @returns The workshop if it has not ended, null if it has ended
  */
-export async function getAndHandleWorkshopEnd(workshopId: number): Promise<Workshop | null> {
+export async function getWorkshopIfNotEnded(workshopId: number): Promise<Workshop | null> {
   const workshop = (await findWorkshop({ workshopId }))[0];
   if (!workshop) {
-    await updateUser({ workshopId }, { workshopId: 0 });
     return null;
   }
   const end = new Date(workshop.end);
   if (end < new Date()) {
-    await updateUser({ workshopId }, { workshopId: 0 });
     return null;
   }
   return workshop;
+}
+
+/**
+ * Get all active workshops user is in
+ * @param userId The user ID to check
+ * @returns The active workshops the user is in
+ */
+export async function getActiveWorkshopsUserIsIn(userId: number): Promise<Workshop[]> {
+  const usersWorkshops = await findUsersWorkshops({ userId });
+  const activeWorkshops = [];
+  for (const userWorkshop of usersWorkshops) {
+    const workshop = (await findWorkshop({ workshopId: userWorkshop.workshopId }))[0];
+    if (workshop) {
+      const start = new Date(workshop.start);
+      const end = new Date(workshop.end);
+      if (start <= new Date() && end > new Date()) {
+        activeWorkshops.push(workshop);
+      }
+    }
+  }
+  return activeWorkshops;
+}
+
+/**
+ * Check if user is in an active workshop
+ * @param userId The user ID to check
+ * @returns True if user is in an active workshop, false otherwise
+ */
+export async function isUserInAnActiveWorkshop(userId: number): Promise<boolean> {
+  const activeWorkshops = await getActiveWorkshopsUserIsIn(userId);
+  return activeWorkshops.length > 0;
+}
+
+/**
+ * Check if user is in specified workshop and if the workshop is active
+ * @param userId The user ID to check
+ * @param workshopId The workshop ID to check
+ * @returns True if user is in workshop and workshop is active, false otherwise
+ */
+export async function isUserInWorkshopAndWorkshopIsActive(userId: number, workshopId: number): Promise<boolean> {
+  const workshop = await getActiveWorkshopsUserIsIn(userId);
+  return workshop.some((workshop) => workshop.workshopId === workshopId);
 }

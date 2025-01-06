@@ -36,7 +36,8 @@ try {
               title: datapack,
               storedFileName: file,
               isPublic: directory.includes("public"),
-              ...(!/workshop|server/.test(user) ? { uuid: user, type: "user" } : {})
+              ...(/workshop/.test(user) ? { uuid: user, type: "workshop" } : {}),
+              ...(!/workshop|official/.test(user) ? { uuid: user, type: "user" } : {})
             });
             const datapackIndex: DatapackIndex = {};
             const successful = await loadDatapackIntoIndex(
@@ -73,12 +74,13 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     references: "references" in datapack ? datapack.references : [],
     tags: "tags" in datapack ? datapack.tags : [],
     isPublic: "isPublic" in datapack ? datapack.isPublic : false,
-    type: "type" in datapack ? datapack.type : "server",
+    type: "type" in datapack ? datapack.type : "official",
     description: "description" in datapack ? datapack.description : "",
     size: "size" in datapack ? datapack.size : 0,
     originalFileName: "originalFileName" in datapack ? datapack.originalFileName : "",
     storedFileName: "storedFileName" in datapack ? datapack.storedFileName : "",
     datapackImage: "datapackImage" in datapack ? datapack.datapackImage : "",
+    priority: "priority" in datapack ? datapack.priority : 0,
     ...partial
   };
   assertDatapackMetadata(metadata);

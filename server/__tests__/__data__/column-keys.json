@@ -508,6 +508,7 @@
     "defaultChronostrat": "UNESCO",
     "formatVersion": 1.5,
     "originalFileName": "AfricaBight.map",
+    "priority": 0,
     "storedFileName": "tempFileName",
     "description": "Africa Bight Map",
     "title": "Africa Bight",
@@ -534,7 +535,7 @@
     "totalColumns": 8,
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   },
   "general-parse-datapacks-test-2-key": {
     "columnInfo": {
@@ -889,7 +890,9 @@
                 "rangeSort": "first occurrence",
                 "frequency": null,
                 "stepSize": 1,
-                "windowSize": 2
+                "windowSize": 2,
+                "dualColCompColumnRef": null,
+                "drawDualColCompColumn": null
               },
               "fontOptions": [
                 "Column Header",
@@ -1218,7 +1221,9 @@
                 "dataMiningPointDataType": null,
                 "windowSize": 2,
                 "stepSize": 1,
-                "isDataMiningColumn": false
+                "isDataMiningColumn": false,
+                "dualColCompColumnRef": null,
+                "drawDualColCompColumn": null
               }
             },
             {
@@ -1432,6 +1437,7 @@
     "verticalScale": 6,
     "date": "2015-03-15",
     "originalFileName": "file.dpk",
+    "priority": 0,
     "storedFileName": "tempFileName",
     "description": "description",
     "title": "Title",
@@ -1458,7 +1464,7 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -1988,7 +1994,9 @@
         "rangeSort": "first occurrence",
         "frequency": null,
         "stepSize": 1,
-        "windowSize": 2
+        "windowSize": 2,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "units": "Ma",
       "subInfo": [
@@ -2035,7 +2043,9 @@
         "rangeSort": "first occurrence",
         "frequency": null,
         "stepSize": 1,
-        "windowSize": 2
+        "windowSize": 2,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "fontOptions": [
         "Column Header",
@@ -2319,7 +2329,9 @@
         "stepSize": 1,
         "windowSize": 2,
         "isDataMiningColumn": false,
-        "dataMiningPointDataType": null
+        "dataMiningPointDataType": null,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "minAge": 7,
       "maxAge": 8,
@@ -2409,7 +2421,9 @@
         "stepSize": 1,
         "windowSize": 2,
         "isDataMiningColumn": false,
-        "dataMiningPointDataType": null
+        "dataMiningPointDataType": null,
+        "dualColCompColumnRef": null,
+        "drawDualColCompColumn": null
       },
       "minAge": 1,
       "maxAge": 1000,
@@ -2762,6 +2776,7 @@
     "defaultChronostrat": "UNESCO",
     "formatVersion": 1.5,
     "originalFileName": "file.dpk",
+    "priority": 0,
     "storedFileName": "tempFileName",
     "description": "description",
     "title": "Title",
@@ -2788,6 +2803,6 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "server"
+    "type": "official"
   }
 }
