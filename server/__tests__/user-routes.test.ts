@@ -29,7 +29,7 @@ vi.mock("../src/upload-handlers", async () => {
 
 vi.mock("@tsconline/shared", async () => {
   return {
-    isDatapackMetadata: vi.fn().mockReturnValue(true)
+    isPartialDatapackMetadata: vi.fn().mockReturnValue(true)
   };
 });
 

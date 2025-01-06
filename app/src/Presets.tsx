@@ -79,19 +79,13 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             datapacks.push(_.cloneDeep(stateDatapack));
                             continue;
                           }
-                          try {
-                            const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
-                            if (!fetchedDatapack) {
-                              actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
-                              return;
-                            }
-                            actions.addDatapack(fetchedDatapack);
-                            datapacks.push(_.cloneDeep(fetchedDatapack));
-                          } catch (fetchError) {
-                            console.error(`Error fetching datapack ${dp.name}:`, fetchError);
+                          const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
+                          if (!fetchedDatapack) {
                             actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
                             return;
                           }
+                          actions.addDatapack(fetchedDatapack);
+                          datapacks.push(_.cloneDeep(fetchedDatapack));
                         }
                       } catch (e) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);

@@ -170,7 +170,7 @@ server.get("/presets", async (_request, reply) => {
 });
 
 server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
-server.get("/public/datapacks/metadata", routes.fetchPublicDatapacksMetadata);
+server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {

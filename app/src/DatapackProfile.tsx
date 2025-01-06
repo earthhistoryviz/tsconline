@@ -432,7 +432,7 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
 type DatapackFileProps = {
   fileName: string;
   id: string;
- };
+};
 const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
   const { state, actions } = useContext(context);
   const setDatapack = useContext(SetDatapackContext);
