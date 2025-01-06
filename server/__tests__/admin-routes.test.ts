@@ -22,7 +22,6 @@ import * as adminHandler from "../src/admin/admin-handler";
 import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import { cloneDeep } from "lodash";
 import * as uploadDatapack from "../src/upload-datapack";
 
 vi.mock("../src/upload-datapack", async () => {
