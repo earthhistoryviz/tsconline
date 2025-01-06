@@ -11,7 +11,7 @@ import { DatapackMetadata, isOfficialDatapack, isWorkshopDatapack } from "@tscon
 import { grabAndVerifyWorkshopUUID } from "./workshop/workshop-handler.js";
 import { findUser } from "./database.js";
 
-const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
+export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
   uuid: string,
   parts: AsyncIterableIterator<Multipart>
 ): Promise<
@@ -32,7 +32,6 @@ const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
     return { code: 500, message: "Failed to process multipart parts" };
   }
   if (!file || !fields.filepath || !fields.originalFileName || !fields.storedFileName) {
-    console.log(fields);
     return { code: 400, message: "No file uploaded" };
   }
   const datapackMetadata = await uploadUserDatapackHandler(fields, file.file.bytesRead).catch(async (e) => {
@@ -50,9 +49,11 @@ const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
   };
 };
 export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>) => {
-  const user = await findUser({ uuid });
+  const user = await findUser({ uuid }).catch(() => {
+    return [];
+  });
   if (!uuid || !user || !user[0]) {
-    return { code: 404, message: "User not found" };
+    return { code: 404, message: "Error finding user" };
   }
   const isAdmin = !!user[0].isAdmin;
   const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(uuid, parts);
