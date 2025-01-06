@@ -230,36 +230,19 @@ export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ co
         <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
           {column.columnSpecificSettings.drawDualColCompColumn?.split(":")[1]}
         </Typography>
-        <Button variant="outlined" onClick={() => {
-            if (column.columnDisplayType === "Point") {
-              assertPointSettings(column.columnSpecificSettings);
-            } else if (column.columnDisplayType === "Event") {
-              assertEventSettings(column.columnSpecificSettings);
-            } else {
-              return;
-            }
-          column.columnSpecificSettings.drawDualColCompColumn = "class datastore.EventColumn:Miocene-Paleocene Oxy-18 events"}}>
-          Choose Second Column
-        </Button>
-        <Button
-          variant="outlined"
-          onClick={() => {
-            console.log(column);
-            if (!column.parent) {
-              console.warn("WARNING: While choosing overlay, reference column does not have a parent");
-              return;
-            }
-            const parent = state.settingsTabs.columnHashMap.get(column.parent);
-            if (!parent) {
-              console.warn("WARNING: While choosing overlay, parent column does not exist");
-              return;
-            }
-            if (!parent.children.some((child) => child.name === dualColCompPrefix + column.name)) {
-              actions.addDualColCompColumn(column);
-            }
-          }}>
-          Create Overlay
-        </Button>
+        <TSCCheckbox
+        checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
+        className="overlay-checkbox"
+        onClick={(event) => {
+          if (!state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name)) {
+            actions.addDualColCompColumn(column);
+          }
+          else {
+            actions.removeDualColCompColumn(column);
+          }
+        }}
+      />
+      <Typography>Overlay</Typography>
       </Box>
       <Box
         id="DccColumnAccordionWrapper"
