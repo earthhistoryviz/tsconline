@@ -22,34 +22,3 @@
 .generic-data-mining-settings {
   height: 10px;
 }
-
-.dcc-accordion-wrapper {
-  min-width: 10vw;
-  width: 30vw;
-  max-width: 70vw;
-  overflow: auto;
-  border-radius: 4px;
-  z-index: 0;
-  padding-left: 10px;
-  height: 20vh;
-  resize: horizontal;
-}
-
-.MuiTypography-root.dcc-not-allowed {
-  color: gray;
-  font-size: 0.97rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  cursor: default;
-}
-
-.dcc-column-leaf {
-  margin-left: 23.2px;
-  cursor: pointer;
-}
-
-.dcc-column-leaf-not-allowed {
-  margin-left: 23.2px;
-  cursor: default;
-}
