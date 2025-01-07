@@ -181,15 +181,10 @@ describe("processAndUploadDatapack", () => {
   const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
   const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
   const rm = vi.spyOn(fsPromises, "rm");
-  let currentJson: Record<
-    string,
-    string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }
-  >;
   let formData: AsyncIterableIterator<Multipart>;
   function createFormData(
     json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
   ) {
-    currentJson = cloneDeep(json);
     formData = {
       async *[Symbol.asyncIterator]() {
         yield* Object.entries(json).map(([name, value]) => {

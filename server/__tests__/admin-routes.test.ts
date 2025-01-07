@@ -127,7 +127,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -224,7 +224,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => { });
+    file.on("data", () => {});
     file.on("end", () => {
       resolve();
     });
@@ -265,7 +265,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -999,7 +999,7 @@ describe("adminUploadDatapack", () => {
     createForm();
     vi.clearAllMocks();
   });
-  describe.each(["/admin/official/datapack", "/admin/workshop/official/datapack"])(
+  describe.each(["/admin/official/datapack", "/admin/workshop/datapack"])(
     `should complete tests for route %s`,
     async (url) => {
       it("should return 500 if processAndUploadDatapack throws error", async () => {
