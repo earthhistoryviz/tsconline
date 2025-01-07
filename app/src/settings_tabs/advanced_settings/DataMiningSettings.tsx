@@ -8,9 +8,9 @@ import {
   assertChronSettings,
   isDataMiningChronDataType
 } from "@tsconline/shared";
-import { CustomDivider, GenericTextField, StyledScrollbar,  } from "../../components";
-import { Box, Button, Dialog,Typography} from "@mui/material";
-import { useContext,  useState } from "react";
+import { CustomDivider, GenericTextField, StyledScrollbar } from "../../components";
+import { Box, Button, Dialog, Typography } from "@mui/material";
+import { useContext, useState } from "react";
 import { observer } from "mobx-react-lite";
 import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
@@ -181,4 +181,3 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
     </Box>
   );
 });
-

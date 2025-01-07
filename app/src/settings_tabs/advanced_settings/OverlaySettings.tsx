@@ -1,7 +1,7 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie  } from "../../components";
-import { Box, Tooltip, Typography, useTheme, IconButton  } from "@mui/material";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../../components";
+import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { checkIfDataIsInRange, checkIfDccColumn, checkIfDccDataIsInRange } from "../../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn, checkIfDccDataIsInRange, discardTscPrefix } from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
 type OverlaySettingsProps = {
@@ -65,7 +65,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
       <Box sx={{ width: "300px" }}>
         <Typography>Dual Column Comparisons</Typography>
         <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
-          {column.columnSpecificSettings.drawDualColCompColumn?.split(":")[1]}
+          {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
           <TSCCheckbox
@@ -149,8 +149,26 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   if (!column.show) {
     return null;
   }
-  //const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
-  const selectedClass = "";
+  function getSelectedOverlayColumn(): string | null {
+    if (!state.columnMenu.columnSelected) {
+        return null;
+    }
+    const selectedColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+    if (!selectedColumn) {
+      return null;
+    }
+    if (selectedColumn.columnDisplayType === "Point") {
+      assertPointSettings(selectedColumn.columnSpecificSettings);
+    } else if (selectedColumn.columnDisplayType === "Event") {
+      assertEventSettings(selectedColumn.columnSpecificSettings);
+    } else {
+      return null;
+    }
+    return discardTscPrefix(selectedColumn.columnSpecificSettings.drawDualColCompColumn);
+  }
+
+  const selectedClass = column.name === getSelectedOverlayColumn() ? "selected-column" : "";
+
 
   const dataInRange = checkIfDccColumn(column)
     ? checkIfDccDataIsInRange(
@@ -194,7 +212,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         tabIndex={0}>
         <ColumnContainer
           className={
-            column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point"
+            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") || column.name === state.columnMenu.columnSelected
               ? "dcc-column-leaf-not-allowed"
               : "dcc-column-leaf"
           }>
@@ -265,6 +283,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           <ColumnContainer
             className="column-row-container"
             sx={{
+                opacity:1,
               cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
             }}
             onClick={() => setExpanded(!expanded)}>
