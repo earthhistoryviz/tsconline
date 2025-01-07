@@ -3,6 +3,14 @@ import Color from "color";
 import { useContext } from "react";
 import { context } from "../state";
 
+
+export function discardTscPrefix(name: string | null) {
+  if (!name) {
+    return "";
+  }
+  return name.split(":")[1];
+}
+
 /**
  * Returns if the datapoint range (minDataAge, maxDataAge) is inside the user selected range of (userTopAge, userBaseAge)
  * @param minDataAge
