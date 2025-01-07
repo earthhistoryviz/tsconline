@@ -3,7 +3,6 @@ import Color from "color";
 import { useContext } from "react";
 import { context } from "../state";
 
-
 export function discardTscPrefix(name: string | null) {
   if (!name) {
     return "";
