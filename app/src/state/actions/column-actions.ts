@@ -31,7 +31,6 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
-  defaultEventSettings,
   defaultPointSettings,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
@@ -625,6 +624,10 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   }
   searchColumnsAbortController = null;
 });
+
+/**
+ * adds a dual col comp / overlay column. The properties of the given column are copied over.
+ */
 
 export const addDualColCompColumn = action((column: ColumnInfo) => {
   if (column.columnDisplayType === "Event") {

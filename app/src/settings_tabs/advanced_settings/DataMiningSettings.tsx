@@ -182,6 +182,8 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   );
 });
 
+
+
 export const OverlaySettings: React.FC<DataMiningSettingsProps> = observer(({ column }) => {
   if (column.columnDisplayType === "Point") {
     assertPointSettings(column.columnSpecificSettings);
@@ -307,7 +309,7 @@ import { Accordion, CustomTooltip, Lottie } from "../../components";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { checkIfDataIsInRange } from "../../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn, checkIfDccDataIsInRange } from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 
 type ColumnAccordionProps = {
@@ -326,12 +328,20 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   //const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
   const selectedClass = "";
 
-  const dataInrange = checkIfDataIsInRange(
-    column.minAge,
-    column.maxAge,
-    state.settings.timeSettings[column.units].topStageAge,
-    state.settings.timeSettings[column.units].baseStageAge
-  );
+  
+
+  const dataInRange = checkIfDccColumn(column)
+    ? checkIfDccDataIsInRange(
+        column,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
+    : checkIfDataIsInRange(
+        column.minAge,
+        column.maxAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      );
 
   // if there are no children, don't make an accordion
   if (column.children.length == 0) {
@@ -360,8 +370,13 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
-        <ColumnContainer className={(column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ? "dcc-column-leaf-not-allowed" : "dcc-column-leaf"} sx={{cursor: "default"}}>
-          {!dataInrange && !(column.name === "Ma" || column.name === "Root") && (
+        <ColumnContainer
+          className={
+            column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point"
+              ? "dcc-column-leaf-not-allowed"
+              : "dcc-column-leaf"
+          }>
+          {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
             <Tooltip
               title={t("settings.column.tooltip.not-in-range")}
               placement="top"
@@ -425,7 +440,12 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
-          <ColumnContainer className="column-row-container" sx={{cursor: (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ? "default" : "" }} onClick={() => setExpanded(!expanded)}>
+          <ColumnContainer
+            className="column-row-container"
+            sx={{
+              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
+            }}
+            onClick={() => setExpanded(!expanded)}>
             <Typography className="column-display-name">{column.editName}</Typography>
           </ColumnContainer>
         </MuiAccordionSummary>
