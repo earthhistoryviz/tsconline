@@ -28,7 +28,6 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
     return;
   }
   const { state, actions } = useContext(context);
-  const { t } = useTranslation();
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -71,7 +70,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
           <TSCCheckbox
             checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
             className="overlay-checkbox"
-            onClick={(event) => {
+            onClick={() => {
               if (!state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name)) {
                 actions.addDualColCompColumn(column);
               } else {
@@ -141,7 +140,7 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
-  const { actions, state } = useContext(context);
+  const { state } = useContext(context);
   const [expanded, setExpanded] = useState(column.expanded);
   const { t } = useTranslation();
   const theme = useTheme();
@@ -151,7 +150,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   }
   function getSelectedOverlayColumn(): string | null {
     if (!state.columnMenu.columnSelected) {
-        return null;
+      return null;
     }
     const selectedColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
     if (!selectedColumn) {
@@ -168,7 +167,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   }
 
   const selectedClass = column.name === getSelectedOverlayColumn() ? "selected-column" : "";
-
 
   const dataInRange = checkIfDccColumn(column)
     ? checkIfDccDataIsInRange(
@@ -210,12 +208,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
-        <ColumnContainer
-          className={
-            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") || column.name === state.columnMenu.columnSelected
-              ? "dcc-column-leaf-not-allowed"
-              : "dcc-column-leaf"
-          }>
+        <ColumnContainer className="dcc-column-leaf">
           {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
             <Tooltip
               title={t("settings.column.tooltip.not-in-range")}
@@ -243,7 +236,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           )}
           <Typography
             className={
-              column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point"
+              (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+              column.name === state.columnMenu.columnSelected
                 ? "dcc-not-allowed"
                 : "column-display-name"
             }>
@@ -253,11 +247,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       </div>
     );
   }
-  // for keeping the selected column hierarchy line highlighted
-  // const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
-  //   ? { opacity: 1 }
-  //   : {};
-  const containsSelectedChild = {};
+  //for keeping the selected column hierarchy line highlighted
+  const containsSelectedChild = column.children.some((column) => column.name === getSelectedOverlayColumn())
+    ? { opacity: 1 }
+    : {};
   return (
     <div className="dcc-accordion-container">
       {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
@@ -283,7 +276,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           <ColumnContainer
             className="column-row-container"
             sx={{
-                opacity:1,
+              opacity: 1,
               cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
             }}
             onClick={() => setExpanded(!expanded)}>
