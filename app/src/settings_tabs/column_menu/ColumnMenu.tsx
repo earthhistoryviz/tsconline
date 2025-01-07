@@ -26,6 +26,7 @@ import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings"
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
+import { OverlaySettings } from "../advanced_settings/OverlaySettings";
 
 export const ColumnMenu = observer(() => {
   const { state } = useContext(context);
@@ -150,6 +151,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       return <DataMiningSettings column={column} />;
     case "Curve Drawing":
       return <PointSettingsDisplay column={column} />;
+      case "Overlay":
+        return <OverlaySettings column={column} />;
     default:
       return null;
   }
