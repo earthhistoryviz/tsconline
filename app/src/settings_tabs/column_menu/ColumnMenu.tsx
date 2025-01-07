@@ -151,8 +151,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       return <DataMiningSettings column={column} />;
     case "Curve Drawing":
       return <PointSettingsDisplay column={column} />;
-      case "Overlay":
-        return <OverlaySettings column={column} />;
+    case "Overlay":
+      return <OverlaySettings column={column} />;
     default:
       return null;
   }
