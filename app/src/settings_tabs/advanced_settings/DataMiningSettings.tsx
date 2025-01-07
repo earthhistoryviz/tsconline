@@ -339,6 +339,9 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       <div
         className={`column-leaf-row-container ${selectedClass}`}
         onClick={() => {
+          if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
+            return;
+          }
           if (!state.columnMenu.columnSelected) {
             return;
           }
@@ -357,7 +360,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
-        <ColumnContainer className="column-row-container column-leaf">
+        <ColumnContainer className={(column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ? "dcc-column-leaf-not-allowed" : "dcc-column-leaf"} sx={{cursor: "default"}}>
           {!dataInrange && !(column.name === "Ma" || column.name === "Root") && (
             <Tooltip
               title={t("settings.column.tooltip.not-in-range")}
@@ -422,7 +425,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
           }
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
-          <ColumnContainer className="column-row-container" onClick={() => setExpanded(!expanded)}>
+          <ColumnContainer className="column-row-container" sx={{cursor: (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ? "default" : "" }} onClick={() => setExpanded(!expanded)}>
             <Typography className="column-display-name">{column.editName}</Typography>
           </ColumnContainer>
         </MuiAccordionSummary>
