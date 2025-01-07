@@ -13,6 +13,7 @@ import * as userHandler from "../src/user/user-handler";
 import * as fsPromises from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { User } from "../src/types";
+import { fileURLToPath } from "url";
 vi.mock("fs/promises", () => {
   return {
     rm: vi.fn().mockResolvedValue({})
@@ -134,12 +135,14 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   });
   it("should return 500 if uploadUserDatapackHandler throws an error", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
-      file: {} as MultipartFile,
-      fields: { filepath: "", originalFileName: "", storedFileName: "" }
+      file: { file: { bytesRead: 1 } } as MultipartFile,
+      fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
+    uploadUserDatapackHandler.mockRejectedValueOnce(new Error("error"));
     const val = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack("uuid", formData);
-    expect(isOperationResult).toHaveBeenCalledTimes(1);
-    expect(val).toEqual({ code: 400, message: "No file uploaded" });
+    expect(uploadUserDatapackHandler).toHaveBeenCalledOnce();
+    expect(isOperationResult).toHaveBeenCalledTimes(2);
+    expect(val).toEqual({ code: 500, message: "Failed to upload datapack and parse metadata" });
   });
   it("should return operation code if uploadUserDatapackHandler returns operation result", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
@@ -245,6 +248,12 @@ describe("processAndUploadDatapack", () => {
     expect(findUser).toHaveBeenCalledOnce();
     expect(val).toEqual({ code: 404, message: "Error finding user" });
   });
+  it("should return 404 if findUser throws error", async () => {
+    findUser.mockRejectedValueOnce(new Error("error"));
+    const val = await processAndUploadDatapack("uuid", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(val).toEqual({ code: 404, message: "Error finding user" });
+  });
   it("should return operation result if getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack returns operation result", async () => {
     processMultipartPartsForDatapackUpload.mockReset();
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({ code: 999, message: "error" });
@@ -303,6 +312,12 @@ describe("processAndUploadDatapack", () => {
     expect(val).toEqual({ code: 500, message: "Failed to setup new datapack directory" });
   });
   it("should return 200 if successful", async () => {
+    const val = await processAndUploadDatapack("uuid", formData);
+    expect(val).toEqual({ code: 200, message: "Datapack uploaded successfully" });
+  });
+  it("should return 200 if successful if admin and official", async () => {
+    isOfficialDatapack.mockReturnValueOnce(true).mockReturnValueOnce(true);
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
     const val = await processAndUploadDatapack("uuid", formData);
     expect(val).toEqual({ code: 200, message: "Datapack uploaded successfully" });
   });
