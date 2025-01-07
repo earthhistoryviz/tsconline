@@ -28,14 +28,13 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     file = result.file;
     fields = result.fields;
   } catch (error) {
-    console.error(error);
     return { code: 500, message: "Failed to process multipart parts" };
   }
   if (!file || !fields.filepath || !fields.originalFileName || !fields.storedFileName) {
     return { code: 400, message: "No file uploaded" };
   }
-  const datapackMetadata = await uploadUserDatapackHandler(fields, file.file.bytesRead).catch(async (e) => {
-    const result: OperationResult = { code: 500, message: "Failed to upload datapack with error " + e };
+  const datapackMetadata = await uploadUserDatapackHandler(fields, file.file.bytesRead).catch(async () => {
+    const result: OperationResult = { code: 500, message: "Failed to upload datapack and parse metadata" };
     return result;
   });
   if (isOperationResult(datapackMetadata)) {
