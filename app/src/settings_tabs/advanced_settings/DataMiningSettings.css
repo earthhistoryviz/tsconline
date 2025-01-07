@@ -44,11 +44,9 @@
   cursor: default;
 }
 
-
-
 .dcc-column-leaf {
   margin-left: 23.2px;
-  cursor:pointer;
+  cursor: pointer;
 }
 
 .dcc-column-leaf-not-allowed {
