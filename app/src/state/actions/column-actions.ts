@@ -562,12 +562,21 @@ export const setColumnSelected = action((name: string) => {
   const column = state.settingsTabs.columnHashMap.get(name);
   setColumnMenuTabValue(0);
   setColumnMenuTabs(["General", "Font"]);
-  if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Chron")) {
-    setColumnMenuTabs(["General", "Font", "Data Mining"]);
-  } else if (column && column.columnDisplayType === "Point") {
-    setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
-  } else setColumnMenuTabs(["General", "Font"]);
-  if (!column) {
+  if (column) {
+    switch (column.columnDisplayType) {
+      case "Chron":
+        setColumnMenuTabs(["General", "Font", "Data Mining"]);
+        break;
+      case "Event":
+        setColumnMenuTabs(["General", "Font", "Data Mining", "Overlay"]);
+        break;
+      case "Point":
+        setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining", "Overlay"]);
+        break;
+      default:
+        setColumnMenuTabs(["General", "Font"]);
+    }
+  } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
 });
