@@ -681,14 +681,13 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
 };
 
 export const adminUploadDatapack = async function adminUploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const parts = request.parts();
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "Unauthorized access" });
     return;
   }
   try {
-    const result = await processAndUploadDatapack(uuid, parts);
+    const result = await processAndUploadDatapack(uuid, request.parts());
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;

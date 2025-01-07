@@ -400,7 +400,7 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     url: "/admin/official/datapack/priority",
     body: [{ uuid: "test", id: "test", priority: 1 }]
   },
-  { method: "POST", url: "/admin/workshop/datapack", body: { datapack: "test" } },
+  { method: "POST", url: "/admin/workshop/datapack" },
   { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
@@ -948,31 +948,7 @@ describe("adminDeleteUserDatapack", () => {
 
 describe("adminUploadDatapack", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  // let jsonOfFormData: Record<string, unknown>;
   const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-  // const checkFieldInFormData = (field: string) => {
-  //   return field in jsonOfFormData;
-  // };
-  // const checkCleanupTempFiles = (maxCalls: number = 2) => {
-  //   const maxRMCalls =
-  //     checkFieldInFormData("datapack") && checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)
-  //       ? maxCalls
-  //       : checkFieldInFormData("datapack") || checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)
-  //         ? 1
-  //         : 0;
-  //   expect(rm).toHaveBeenCalledTimes(maxRMCalls);
-  //   if (checkFieldInFormData("datapack")) {
-  //     expect(rm).toHaveBeenNthCalledWith(1, `test-private/tempFilename`, { force: true });
-  //   }
-  //   if (checkFieldInFormData(DATAPACK_PROFILE_PICTURE_FILENAME)) {
-  //     expect(rm).toHaveBeenNthCalledWith(maxRMCalls, `test-private/${DATAPACK_PROFILE_PICTURE_FILENAME}.jpg`, {
-  //       force: true
-  //     });
-  //   }
-  //   if (checkFieldInFormData("title")) {
-  //     expect(deleteOfficialDatapack).toHaveBeenCalledTimes(1);
-  //   }
-  // };
   const createForm = (json: Record<string, unknown> = {}) => {
     if (!("datapack" in json)) {
       json.datapack = {

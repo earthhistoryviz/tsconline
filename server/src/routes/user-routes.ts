@@ -267,15 +267,14 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const parts = request.parts();
   try {
-    const result = await processAndUploadDatapack(uuid, parts);
+    const result = await processAndUploadDatapack(uuid, request.parts());
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
   } catch (e) {
-    reply.status(500).send({ error: "Unknown error" });
+    reply.status(500).send({ error: "Error uploading datapack" });
   }
   reply.send({ message: "Datapack uploaded" });
 };

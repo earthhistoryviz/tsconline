@@ -10,11 +10,18 @@ import { userRoutes } from "../src/routes/user-auth";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as types from "../src/types";
+import * as uploadDatapack from "../src/upload-datapack";
 import formAutoContent from "form-auto-content";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
 import fastifyMultipart from "@fastify/multipart";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 
+vi.mock("../src/upload-datapack", async () => {
+  return {
+    processAndUploadDatapack: vi.fn().mockResolvedValue({ code: 200, message: "success" })
+  };
+});
 vi.mock("../src/types", async () => {
   return {
     isOperationResult: vi.fn().mockReturnValue(false)
@@ -925,5 +932,72 @@ describe("userDeleteDatapack tests", () => {
     expect(await response.json()).toEqual({ message: `Datapack deleted` });
     expect(response.statusCode).toBe(200);
     expect(deleteUserDatapack).toHaveBeenCalledOnce();
+  });
+});
+
+describe("uploadDatapack tests", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("datapack" in json)) {
+      json.datapack = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.dpk",
+          contentType: "text/plain"
+        }
+      };
+    }
+    if (!(DATAPACK_PROFILE_PICTURE_FILENAME in json)) {
+      json[DATAPACK_PROFILE_PICTURE_FILENAME] = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.jpg",
+          contentType: "image/jpeg"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should reply with non-200 if processAndUploadDatapack returns an operation result", async () => {
+    const operationResult = { code: 500, message: "Error" };
+    processAndUploadDatapack.mockResolvedValueOnce(operationResult);
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect(await response.json().error).toBe(operationResult.message);
+    expect(response.statusCode).toBe(operationResult.code);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+  it("should return 500 if an error occurred in processAndUploadDatapack", async () => {
+    processAndUploadDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect(await response.json().error).toBe("Error uploading datapack");
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+  it("should return 200 if the datapack is successfully uploaded", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack",
+      headers: formHeaders,
+      payload: formData.body
+    });
+    expect(await response.json()).toEqual({ message: "Datapack uploaded" });
+    expect(response.statusCode).toBe(200);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
   });
 });
