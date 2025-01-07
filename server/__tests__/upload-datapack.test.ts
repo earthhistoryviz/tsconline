@@ -1,5 +1,4 @@
 import { Multipart, MultipartFile } from "@fastify/multipart";
-import { cloneDeep } from "lodash";
 import { vi, it, describe, beforeEach, expect, afterEach } from "vitest";
 import {
   getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack,
