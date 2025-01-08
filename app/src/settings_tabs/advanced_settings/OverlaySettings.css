@@ -6,7 +6,7 @@
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
-  height: 20vh;
+  height: 45vh;
   resize: horizontal;
 }
 
@@ -27,4 +27,10 @@
 .dcc-column-leaf-not-allowed {
   margin-left: 23.2px;
   cursor: default;
+}
+
+.test {
+  white-space: nowrap;
+  overflow:hidden;
+  text-overflow: ellipsis;
 }

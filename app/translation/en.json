@@ -364,6 +364,9 @@
                     "curve-gradient": "Curve Gradient",
                     "start": "Start",
                     "end": "End"
+                },
+                "overlay-menu": {
+                    "title": "Overlay Settings"
                 }
             },
             "search": {
