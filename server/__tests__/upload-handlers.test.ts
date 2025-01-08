@@ -3,6 +3,7 @@ import {
   changeProfilePicture,
   getFileNameFromCachedDatapack,
   getTemporaryFilepath,
+  processMultipartPartsForDatapackUpload,
   replaceDatapackFile,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
@@ -15,9 +16,16 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
 import * as loadPacks from "../src/load-packs";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
-import { assertOperationResult, isOperationResult } from "../src/types";
+import * as database from "../src/database";
+import { User, assertOperationResult, isOperationResult } from "../src/types";
+vi.mock("os", () => ({
+  tmpdir: () => "tmpdir"
+}));
+vi.mock("../src/database", () => ({
+  findUser: vi.fn().mockResolvedValue([{ isAdmin: 1 }])
+}));
 vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
   getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory")
@@ -54,6 +62,7 @@ vi.mock("../src/load-packs", () => ({
   loadDatapackIntoIndex: vi.fn().mockResolvedValue(true)
 }));
 vi.mock("../src/user/user-handler", () => ({
+  checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
   deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
   doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
@@ -69,6 +78,7 @@ vi.mock("fs/promises", () => ({
 vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
+  makeTempFilename: vi.fn().mockReturnValue("filename"),
   assetconfigs: {
     fileMetadata: "fileMetadata"
   }
@@ -600,4 +610,133 @@ it("should return the directory and filename", async () => {
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
   expect(await getTemporaryFilepath("uuid", "filename")).toEqual("uuid-directory/filename");
   expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+});
+describe("processMultipartPartsForDatapackUpload tests", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const rm = vi.spyOn(fsPromises, "rm");
+  let formData: AsyncIterableIterator<Multipart>;
+  function createFormData(
+    json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
+  ) {
+    formData = {
+      async *[Symbol.asyncIterator]() {
+        yield* Object.entries(json).map(([name, value]) => {
+          if (typeof value === "object") {
+            return {
+              name,
+              type: "file",
+              mimetype: value.mimetype,
+              filename: value.filename,
+              fieldname: value.fieldname,
+              bytesRead: value.bytesRead,
+              file: {
+                truncated: false,
+                bytesRead: value.bytesRead ?? 0,
+                pipe: vi.fn(),
+                on: vi.fn(),
+                resume: vi.fn(),
+                pause: vi.fn(),
+                destroy: vi.fn(),
+                destroySoon: vi.fn(),
+                unpipe: vi.fn(),
+                unshift: vi.fn(),
+                wrap: vi.fn(),
+                [Symbol.asyncIterator]: vi.fn()
+              }
+            };
+          }
+          return {
+            name,
+            type: "field",
+            data: Buffer.from(value.toString())
+          };
+        });
+      }
+    } as AsyncIterableIterator<Multipart>;
+  }
+  beforeEach(() => {
+    createFormData();
+    vi.clearAllMocks();
+  });
+  it("should return a 404 if user is not found", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(404);
+    expect(data.message).toBe("User not found");
+  });
+  it("should return 404 if findUser throws an error", async () => {
+    findUser.mockRejectedValueOnce(new Error("error"));
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(404);
+    expect(data.message).toBe("User not found");
+  });
+  it("should return a 400 error if no parts are found", async () => {
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(400);
+    expect(data.message).toBe("Missing file");
+  });
+  it("should return a 415 error if invalid file type for datapack", async () => {
+    checkFileTypeIsDatapack.mockReturnValueOnce(false);
+    createFormData({
+      datapack: {
+        mimetype: "text/plain",
+        filename: "filename",
+        fieldname: "datapack"
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapack).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack file");
+  });
+  it("should return a 400 error if bytesRead > 3000 and is not pro or admin", async () => {
+    findUser.mockResolvedValueOnce([{ isAdmin: 0 } as User]);
+    createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "filename",
+        fieldname: "datapack",
+        bytesRead: 3001
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(data.code).toBe(400);
+    expect(data.message).toBe("File is too large");
+  });
+  it("should return a non-200 error if uploadFileToFileSystem fails", async () => {
+    pipeline.mockRejectedValueOnce(new Error("error"));
+    createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "filename",
+        fieldname: "datapack"
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(pipeline).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(data.code).toBe(500);
+    expect(data.message).toBe("Failed to save file");
+  });
 });

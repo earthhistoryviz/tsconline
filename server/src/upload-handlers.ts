@@ -362,7 +362,7 @@ export async function processMultipartPartsForDatapackUpload(
       await rm(filepath, { force: true });
     }
   }
-  const user = await findUser({ uuid });
+  const user = await findUser({ uuid }).catch(() => []);
   if (!uuid || !user || !user[0]) {
     return { code: 404, message: "User not found" };
   }

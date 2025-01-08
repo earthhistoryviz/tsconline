@@ -13,7 +13,6 @@ import * as userHandler from "../src/user/user-handler";
 import * as fsPromises from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { User } from "../src/types";
-import { fileURLToPath } from "url";
 vi.mock("fs/promises", () => {
   return {
     rm: vi.fn().mockResolvedValue({})
