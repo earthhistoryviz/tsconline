@@ -1,6 +1,14 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../../components";
+import {
+  ColumnContainer,
+  TSCCheckbox,
+  Accordion,
+  CustomTooltip,
+  Lottie,
+  StyledScrollbar,
+  CustomDivider
+} from "../../components";
 import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
@@ -28,6 +36,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
     return;
   }
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -58,80 +67,97 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
       }
     };
   }, []);
-
   return (
-    <Box sx={{ display: "flex", flexDirection: "row" }}>
-      <Box sx={{ width: "300px" }}>
-        <Typography>Dual Column Comparisons</Typography>
-        <Typography sx={{ maxWidth: "300px", overflowY: "auto" }}>
-          {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
+    <StyledScrollbar>
+      <Box className="data-mining-settings-container">
+        <Typography className="advanced-settings-header" variant="h6">
+          {t("settings.column.overlay-menu.title")}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-          <TSCCheckbox
-            checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
-            className="overlay-checkbox"
-            onClick={() => {
-              if (!state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name)) {
-                actions.addDualColCompColumn(column);
-              } else {
-                actions.removeDualColCompColumn(column);
-              }
-            }}
-          />
-          <Typography>Overlay</Typography>
-        </Box>
-      </Box>
-      <Box sx={{ display: "flex", flexDirection: "column" }}>
-        <Typography>Choose Second Column</Typography>
-        <Box
-          id="DccColumnAccordionWrapper"
-          ref={scrollRef}
-          border={1}
-          borderColor="divider"
-          bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar dcc-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
-          position="relative">
-          <div className="column-filter-buttons">
-            <CustomTooltip title="Expand All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-                }}>
-                <ExpandIcon />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Collapse All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-                }}>
-                <CompressIcon />
-              </IconButton>
-            </CustomTooltip>
-          </div>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
-              <ColumnAccordion key={childName} column={childColumn} />
-            ))}
-          {/* Button to take users to top of column menu when scrolling */}
+        <CustomDivider className="settings-header-divider" />
+        <div className="data-mining-settings-content">
+          <Box sx={{ display: "flex", flexDirection: "row" }}>
+            <Box sx={{ width: "300px" }}>
+              <Typography>Current Overlay</Typography>
+              {column.columnSpecificSettings.drawDualColCompColumn ? (
+                <Typography className="test" sx={{ maxWidth: "300px", margin: 1 }}>
+                {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
+              </Typography>
+                
+              ) : (
+                <Typography className="test" sx={{ opacity: "0.5", borderRadius: "5px", background: "white", margin: 1 }}>
+                  Choose Column {">>>"}
+                </Typography>
+              )}
 
-          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-            <Lottie
-              key="settings-arrow-up"
-              style={{ width: "28px", height: "28px" }}
-              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-              playOnClick
-            />
-          </IconButton>
-        </Box>
+              <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+                <TSCCheckbox
+                  checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
+                  className="overlay-checkbox"
+                  onClick={() => {
+                    if (!state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name)) {
+                      actions.addDualColCompColumn(column);
+                    } else {
+                      actions.removeDualColCompColumn(column);
+                    }
+                  }}
+                />
+                <Typography>Display Overlay</Typography>
+              </Box>
+            </Box>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+              <Typography>Choose Second Column</Typography>
+              <Box
+                id="DccColumnAccordionWrapper"
+                ref={scrollRef}
+                border={1}
+                borderColor="divider"
+                bgcolor="secondaryBackground.main"
+                className={`hide-scrollbar dcc-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+                position="relative">
+                <div className="column-filter-buttons">
+                  <CustomTooltip title="Expand All" placement="top">
+                    <IconButton
+                      disableRipple
+                      className="expand-collapse-column-buttons"
+                      onClick={() => {
+                        if (!state.settingsTabs.columns) return;
+                        actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+                      }}>
+                      <ExpandIcon />
+                    </IconButton>
+                  </CustomTooltip>
+                  <CustomTooltip title="Collapse All" placement="top">
+                    <IconButton
+                      disableRipple
+                      className="expand-collapse-column-buttons"
+                      onClick={() => {
+                        if (!state.settingsTabs.columns) return;
+                        actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+                      }}>
+                      <CompressIcon />
+                    </IconButton>
+                  </CustomTooltip>
+                </div>
+                {state.settingsTabs.columns &&
+                  Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
+                    <ColumnAccordion key={childName} column={childColumn} />
+                  ))}
+                {/* Button to take users to top of column menu when scrolling */}
+
+                <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+                  <Lottie
+                    key="settings-arrow-up"
+                    style={{ width: "28px", height: "28px" }}
+                    animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+                    playOnClick
+                  />
+                </IconButton>
+              </Box>
+            </Box>
+          </Box>
+        </div>
       </Box>
-    </Box>
+    </StyledScrollbar>
   );
 });
 
@@ -187,7 +213,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       <div
         className={`column-leaf-row-container ${selectedClass}`}
         onClick={() => {
-          if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") {
+          if (
+            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+            column.name === state.columnMenu.columnSelected
+          ) {
             return;
           }
           if (!state.columnMenu.columnSelected) {
