@@ -3,6 +3,7 @@ import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
   convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
+  deleteAllUserDatapacks,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
   fetchAllUsersDatapacks,
@@ -31,13 +32,13 @@ vi.mock("../src/public-datapack-handler", () => {
     switchPrivacySettingsOfDatapack: vi.fn(async () => {})
   };
 });
-vi.mock("../src/database", () => {
+vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(async () => [Promise.resolve(testUser)])
   };
 });
 
-vi.mock("../src/upload-handlers", () => {
+vi.mock("../src/upload-handlers", async () => {
   return {
     changeProfilePicture: vi.fn(async () => {}),
     getTemporaryFilepath: vi.fn().mockResolvedValue("test"),
@@ -46,9 +47,10 @@ vi.mock("../src/upload-handlers", () => {
   };
 });
 
-vi.mock("../src/file-metadata-handler", () => {
+vi.mock("../src/file-metadata-handler", async () => {
   return {
-    changeFileMetadataKey: vi.fn(async () => {})
+    changeFileMetadataKey: vi.fn(async () => {}),
+    deleteDatapackFoundInMetadata: vi.fn(async () => {})
   };
 });
 
@@ -541,6 +543,18 @@ describe("editDatapack tests", async () => {
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
     expect(writeFile).not.toHaveBeenCalled();
+  });
+});
+
+describe("deleteAllUserDatapacks test", async () => {
+  const getAllUserDatapackDirectories = vi.spyOn(fetchUserFiles, "getAllUserDatapackDirectories");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
+  const loggerError = vi.spyOn(logger.default, "error");
+  it("should do nothing if no uuid directories are found", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce([]);
+    await expect(deleteAllUserDatapacks("test")).resolves.toBeUndefined();
+    expect(rm).not.toHaveBeenCalled();
   });
 });
 
