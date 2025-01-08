@@ -16,7 +16,6 @@ import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { context } from "../../state";
 import { useTranslation } from "react-i18next";
-import { OverlaySettings } from "./OverlaySettings";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
@@ -74,7 +73,6 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
           <EventDataMiningOptions column={column} />
           <PointDataMiningOptions column={column} />
           <ChronDataMiningOptions column={column} />
-          <OverlaySettings column={column} />
         </div>
       </Box>
     </StyledScrollbar>
