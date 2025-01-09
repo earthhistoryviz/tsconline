@@ -313,9 +313,8 @@ export async function processEditDatapackRequest(
   formData: AsyncIterableIterator<Multipart>,
   uuid: string
 ): Promise<OperationResult | { code: number; fields: Record<string, string>; tempFiles: string[] }> {
-  const users = await findUser({ uuid });
-  const user = users[0];
-  if (!user) {
+  const user = (await findUser({ uuid }))[0];
+  if (!user && uuid !== "official") {
     return { code: 401, message: "User not found" };
   }
   const fields: Record<string, string> = {};
@@ -335,7 +334,9 @@ export async function processEditDatapackRequest(
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack" };
         }
-        if (!canUserUploadThisFile(user, part)) {
+        // if the user is not an admin or pro, they can only upload files that are less than 3kb
+        // if the uuid is official, it is a general admin account and can upload any size
+        if (uuid !== "official" && !canUserUploadThisFile(user!, part)) {
           await cleanupTempFiles();
           return { code: 413, message: "File is too large" };
         }

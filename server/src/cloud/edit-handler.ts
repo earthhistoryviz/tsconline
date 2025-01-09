@@ -1,10 +1,10 @@
-import { DatapackMetadata } from "@tsconline/shared";
+import { DatapackMetadata, isUserDatapack } from "@tsconline/shared";
 import _ from "lodash";
-import logger from "../error-logger";
-import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler";
-import { getTemporaryFilepath, replaceDatapackFile, changeProfilePicture } from "../upload-handlers";
-import { fetchUserDatapack, renameUserDatapack, writeUserDatapack } from "../user/user-handler";
-import { verifyFilepath } from "../util";
+import logger from "../error-logger.js";
+import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
+import { getTemporaryFilepath, replaceDatapackFile, changeProfilePicture } from "../upload-handlers.js";
+import { fetchUserDatapack, renameUserDatapack, writeUserDatapack } from "../user/user-handler.js";
+import { verifyFilepath } from "../util.js";
 
 /**
  * TODO: write tests
@@ -72,7 +72,7 @@ export async function editDatapack(
     }
   }
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
+    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic, isUserDatapack(metadata)).catch(
       (e) => {
         logger.error(e);
         metadata.isPublic = originalMetadata.isPublic;

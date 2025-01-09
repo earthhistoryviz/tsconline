@@ -279,6 +279,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
   );
+  // could change when we want to allow users make workshops
   if (isUserDatapack(metadata)) {
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   }
