@@ -33,7 +33,6 @@ import {
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
-  isUserDatapack,
   isWorkshopDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
@@ -47,13 +46,11 @@ import {
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile,
-  hasLeadingTrailingWhiteSpace,
-  isOwnedByUser
+  hasLeadingTrailingWhiteSpace
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
-import { BooleanDataTypeDefinition } from "ag-grid-community";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -329,7 +326,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
-          <PublicField isPublic={datapack.isPublic} disabled={isWorkshopDatapack(datapack)}/>
+          <PublicField isPublic={datapack.isPublic} disabled={isWorkshopDatapack(datapack)} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>

@@ -135,7 +135,12 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
  * @param oldDatapack the old datapack title
  * @param datapack the new datapack object
  */
-export async function renameUserDatapack(uuid: string, oldDatapack: string, newDatapack: string): Promise<void> {
+export async function renameUserDatapack(
+  uuid: string,
+  oldDatapack: string,
+  newDatapack: string,
+  isTemporaryFile?: boolean
+): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
   const newDatapackPath = path.join(path.dirname(oldDatapackPath), newDatapack);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
@@ -145,10 +150,12 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, newD
     throw new Error("Datapack with that title already exists");
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
-    await rename(newDatapackPath, oldDatapackPath);
-    throw e;
-  });
+  if (isTemporaryFile) {
+    await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+      await rename(newDatapackPath, oldDatapackPath);
+      throw e;
+    });
+  }
 }
 
 /**

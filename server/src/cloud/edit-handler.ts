@@ -20,9 +20,10 @@ export async function editDatapack(
   let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
   const originalMetadata = _.cloneDeep(metadata);
   Object.assign(metadata, newDatapack);
+  const isTemporaryFile = isUserDatapack(metadata);
   const errors: string[] = [];
   if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!).catch((e) => {
+    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!, isTemporaryFile).catch((e) => {
       logger.error(e);
       metadata.title = oldDatapackTitle;
       errors.push("Error renaming datapack to a different title");
@@ -72,13 +73,17 @@ export async function editDatapack(
     }
   }
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic, isUserDatapack(metadata)).catch(
-      (e) => {
-        logger.error(e);
-        metadata.isPublic = originalMetadata.isPublic;
-        errors.push("Error switching privacy settings");
-      }
-    );
+    await switchPrivacySettingsOfDatapack(
+      uuid,
+      metadata.title,
+      originalMetadata.isPublic!,
+      metadata.isPublic,
+      isTemporaryFile
+    ).catch((e) => {
+      logger.error(e);
+      metadata.isPublic = originalMetadata.isPublic;
+      errors.push("Error switching privacy settings");
+    });
   }
   if (JSON.stringify(metadata) !== JSON.stringify(originalMetadata)) {
     await writeUserDatapack(uuid, metadata).catch((e) => {

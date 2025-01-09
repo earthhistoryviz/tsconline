@@ -7,19 +7,15 @@ import {
   pushSnackbar,
   removeAllErrors,
   removeDatapack,
-  setDatapackProfilePageEditMode,
-  resetEditableDatapackMetadata,
   processDatapackConfig,
   fetchOfficialDatapack,
   fetchAllPublicDatapacks
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { EditableDatapackMetadata } from "../../types";
 import {
   Datapack,
   DatapackUniqueIdentifier,
-  assertBatchUpdateServerPartialError,
   assertDatapack,
   assertUserDatapack,
   isOfficialDatapack,
@@ -33,24 +29,26 @@ export const setEditRequestInProgress = action((inProgress: boolean) => {
   state.datapackProfilePage.editRequestInProgress = inProgress;
 });
 
-export const refetchDatapack = action(async (datapack: DatapackUniqueIdentifier) => {
-  let fetchedDatapack;
-  if (isWorkshopDatapack(datapack)) {
-    // change this in @Aditya's PR (he makes the workshop fetcher)
-    fetchAllPublicDatapacks();
-  } else if (isUserDatapack(datapack)) {
-    fetchedDatapack = await fetchUserDatapack(datapack.title);
-  } else if (isOfficialDatapack(datapack)) {
-    fetchedDatapack = await fetchOfficialDatapack(datapack.title);
+export const refetchDatapack = action(
+  async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
+    let fetchedDatapack;
+    if (isWorkshopDatapack(editedDatapack)) {
+      // change this in @Aditya's PR (he makes the workshop fetcher)
+      fetchAllPublicDatapacks();
+    } else if (isUserDatapack(editedDatapack)) {
+      fetchedDatapack = await fetchUserDatapack(editedDatapack.title);
+    } else if (isOfficialDatapack(editedDatapack)) {
+      fetchedDatapack = await fetchOfficialDatapack(editedDatapack.title);
+    }
+    if (fetchedDatapack) {
+      removeDatapack(originalDatapack);
+      addDatapack(fetchedDatapack);
+      return fetchedDatapack;
+    } else {
+      return null;
+    }
   }
-  if (fetchedDatapack) {
-    removeDatapack(datapack);
-    addDatapack(fetchedDatapack);
-    return fetchedDatapack;
-  } else {
-    return null;
-  }
-});
+);
 
 export const fetchUserDatapack = action(async (datapack: string) => {
   try {
@@ -123,7 +121,7 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     });
     if (response.ok) {
       pushSnackbar("File replaced", "success");
-      const datapack = await refetchDatapack(datapackUniqueIdentifier);
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       // if selected in the config, force a reprocess of the config
@@ -165,7 +163,8 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
     });
     if (response.ok) {
       pushSnackbar("Image replaced", "success");
-      const datapack = await refetchDatapack({ title: id, type: "user", uuid: state.user.uuid });
+      const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
       if (!datapack) return;
       removeAllErrors();
       setDatapackProfilePageImageVersion(new Date().getTime());
