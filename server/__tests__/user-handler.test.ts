@@ -4,6 +4,7 @@ import {
   checkFileTypeIsDatapackImage,
   convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   deleteAllUserDatapacks,
+  deleteUserDatapack,
   doesDatapackFolderExistInAllUUIDDirectories,
   editDatapack,
   fetchAllUsersDatapacks,
@@ -82,12 +83,6 @@ vi.mock("path", async (importOriginal) => {
     }
   };
 });
-vi.mock("../src/file-metadata-handler", () => {
-  return {
-    changeFileMetadataKey: vi.fn(async () => {})
-  };
-});
-
 vi.mock("../src/error-logger", () => {
   return {
     default: {
@@ -551,10 +546,75 @@ describe("deleteAllUserDatapacks test", async () => {
   const rm = vi.spyOn(fsPromises, "rm");
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
   const loggerError = vi.spyOn(logger.default, "error");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
   it("should do nothing if no uuid directories are found", async () => {
     getAllUserDatapackDirectories.mockResolvedValueOnce([]);
     await expect(deleteAllUserDatapacks("test")).resolves.toBeUndefined();
+    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
+    expect(loggerError).not.toHaveBeenCalled();
     expect(rm).not.toHaveBeenCalled();
+  });
+  it("should log error if error occurs when removing", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test"]);
+    rm.mockRejectedValueOnce(new Error("rm error"));
+    await deleteAllUserDatapacks("test");
+    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
+    expect(loggerError).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should remove directories and call deleteDatapackFoundInMetadata", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test"]);
+    await deleteAllUserDatapacks("test");
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
+    expect(loggerError).not.toHaveBeenCalled();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+  it("should remove one directory and log an error if one fails", async () => {
+    getAllUserDatapackDirectories.mockResolvedValueOnce(["test", "test2"]);
+    rm.mockRejectedValueOnce(new Error("rm error"));
+    await deleteAllUserDatapacks("test");
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
+    expect(loggerError).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("deleteUserDatapack tests", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const loggerError = vi.spyOn(logger.default, "error");
+  const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if verify filepath is false", async () => {
+    verifyFilepath.mockResolvedValueOnce(false);
+    await expect(deleteUserDatapack("uuid", "datapack")).rejects.toThrow("Invalid filepath");
+  });
+  it("should log error if rm fails", async () => {
+    rm.mockRejectedValueOnce(new Error("rm error"));
+    await deleteUserDatapack("uuid", "datapack");
+    expect(loggerError).toHaveBeenCalledOnce();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
+  });
+  it("should log error if deleteDatapackFoundInMetadata", async () => {
+    deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("deleteDatapackFoundInMetadata error"));
+    await deleteUserDatapack("uuid", "datapack");
+    expect(loggerError).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+  });
+  it("should log two errors if both rm and deleteDatapackInMetadata fail", async () => {
+    rm.mockRejectedValueOnce(new Error("rm error"));
+    deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("deleteDatapackFoundInMetadata error"));
+    await deleteUserDatapack("uuid", "datapack");
+    expect(loggerError).toHaveBeenCalledTimes(2);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
   });
 });
 
