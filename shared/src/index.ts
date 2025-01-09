@@ -47,14 +47,14 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-type OfficialDatapack = {
+export type OfficialDatapack = {
   type: "official";
 };
-type WorkshopDatapack = {
+export type WorkshopDatapack = {
   type: "workshop";
   uuid: string;
 };
-type UserDatapack = {
+export type UserDatapack = {
   type: "user";
   uuid: string;
 };
@@ -1528,8 +1528,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }
@@ -1799,5 +1799,23 @@ export function assertTimescale(val: any): asserts val is TimescaleItem {
   }
   if (typeof val.key !== "string" || typeof val.value !== "number") {
     throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
+  }
+}
+
+export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUniqueIdentifier {
+  if (!o || typeof o !== "object") throw new Error("DatapackUniqueIdentifier must be a non-null object");
+  if (typeof o.title !== "string") throwError("DatapackUniqueIdentifier", "title", "string", o.title);
+  switch (o.type) {
+    case "official":
+      assertOfficialDatapack(o);
+      break;
+    case "workshop":
+      assertWorkshopDatapack(o);
+      break;
+    case "user":
+      assertUserDatapack(o);
+      break;
+    default:
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }

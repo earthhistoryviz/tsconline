@@ -1,11 +1,11 @@
 import { Multipart } from "@fastify/multipart";
 import { rm } from "fs/promises";
-import { OperationResult, isOperationResult } from "../types";
+import { OperationResult, isOperationResult } from "../types.js";
 import {
   convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   processEditDatapackRequest
-} from "../user/user-handler";
-import { editDatapack } from "./edit-handler";
+} from "../user/user-handler.js";
+import { editDatapack } from "./edit-handler.js";
 
 export const editDatapackMetadataRequestHandler = async function editDatapackMetadataRequestHandler(
   parts: AsyncIterableIterator<Multipart>,
@@ -25,6 +25,7 @@ export const editDatapackMetadataRequestHandler = async function editDatapackMet
     const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
     const errors = await editDatapack(uuid, datapack, partial);
     if (errors.length > 0) {
+      console.log(errors)
       return { code: 422, message: "There were errors updating the datapack" };
     }
   } catch (e) {

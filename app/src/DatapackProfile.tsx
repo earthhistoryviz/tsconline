@@ -33,7 +33,8 @@ import {
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
-  isUserDatapack
+  isUserDatapack,
+  isWorkshopDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -42,14 +43,17 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes } from "./util/error-codes";
 import {
+  canEditDatapack,
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile,
-  hasLeadingTrailingWhiteSpace
+  hasLeadingTrailingWhiteSpace,
+  isOwnedByUser
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { BooleanDataTypeDefinition } from "ag-grid-community";
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
@@ -311,7 +315,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
+        {canEditDatapack(datapack, state.user) && (
           <EditButtons
             unsavedChanges={state.datapackProfilePage.unsavedChanges}
             resetForm={() => actions.resetEditableDatapackMetadata(datapack)}
@@ -325,7 +329,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
-          <PublicField isPublic={datapack.isPublic} />
+          <PublicField isPublic={datapack.isPublic} disabled={isWorkshopDatapack(datapack)}/>
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -354,8 +358,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
 });
 type PublicFieldProps = {
   isPublic: boolean;
+  disabled: boolean;
 };
-const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
+const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic, disabled }) => {
   const { state, actions } = useContext(context);
   const PrivateComp = () => (
     <>
@@ -376,6 +381,7 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
         <Box className={styles.privacyContainer}>
           <PrivateComp />
           <TSCSwitch
+            disabled={disabled}
             checked={state.datapackProfilePage.editableDatapackMetadata?.isPublic}
             onChange={(e) => {
               actions.updateEditableDatapackMetadata({ isPublic: e.target.checked });
