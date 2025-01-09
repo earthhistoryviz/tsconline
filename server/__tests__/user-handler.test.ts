@@ -35,7 +35,7 @@ vi.mock("../src/database", async () => {
 vi.mock("../src/upload-handlers", async () => {
   return {
     uploadFileToFileSystem: vi.fn(async () => ({ code: 200, message: "success" })),
-    getTemporaryFilepath: vi.fn(async () => "test"),
+    getTemporaryFilepath: vi.fn(async () => "test")
   };
 });
 

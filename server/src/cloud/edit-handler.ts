@@ -34,7 +34,6 @@ export async function editDatapack(
     if (await verifyFilepath(sourceFilepath)) {
       // this changes the storedFileName as well so we need to update the metadata
       metadata = await replaceDatapackFile(uuid, sourceFilepath, metadata).catch((e) => {
-        console.error(e);
         logger.error(e);
         errors.push("Error replacing datapack file");
         return {
@@ -75,7 +74,6 @@ export async function editDatapack(
   if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
     await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
       (e) => {
-        console.error(e);
         logger.error(e);
         metadata.isPublic = originalMetadata.isPublic;
         errors.push("Error switching privacy settings");
@@ -88,6 +86,5 @@ export async function editDatapack(
       errors.push("Error writing metadata");
     });
   }
-  console.log(errors)
   return errors;
 }
