@@ -4,7 +4,7 @@ import logger from "../error-logger.js";
 import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
 import { getTemporaryFilepath, replaceDatapackFile, changeProfilePicture } from "../upload-handlers.js";
 import { fetchUserDatapack, renameUserDatapack, writeUserDatapack } from "../user/user-handler.js";
-import { verifyFilepath } from "../util.js";
+import { extractMetadataFromDatapack, verifyFilepath } from "../util.js";
 
 /**
  * TODO: write tests
@@ -34,7 +34,7 @@ export async function editDatapack(
     // check to see if a temp file was uploaded
     if (await verifyFilepath(sourceFilepath)) {
       // this changes the storedFileName as well so we need to update the metadata
-      metadata = await replaceDatapackFile(uuid, sourceFilepath, metadata).catch((e) => {
+      metadata = await replaceDatapackFile(uuid, sourceFilepath, extractMetadataFromDatapack(metadata)).catch((e) => {
         logger.error(e);
         errors.push("Error replacing datapack file");
         return {
