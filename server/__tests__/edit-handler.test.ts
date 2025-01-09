@@ -1,9 +1,8 @@
 import { describe, beforeEach, afterEach, expect, it, vi } from "vitest";
 import { editDatapack } from "../src/cloud/edit-handler";
-import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
-import * as fsPromises from "fs/promises";
 import * as uploadHandler from "../src/upload-handlers";
+import * as userHandler from "../src/user/user-handler"
 import * as publicDatapackHandler from "../src/public-datapack-handler";
 import * as shared from "@tsconline/shared";
 import * as logger from "../src/error-logger";
@@ -12,21 +11,17 @@ vi.mock("../src/public-datapack-handler", () => {
     switchPrivacySettingsOfDatapack: vi.fn(async () => {})
   };
 });
-vi.mock("../src/user/fetch-user-files", () => {
-  return {
-    fetchUserDatapackDirectory: vi.fn(async () => "test/test")
-  };
+vi.mock("../src/user/user-handler", () => {
+    return {
+        fetchUserDatapack: vi.fn(async () => {}),
+        renameUserDatapack: vi.fn(async () => {}),
+        writeUserDatapack: vi.fn(async () => {})
+    };
 });
 vi.mock("../src/util", () => {
   return {
-    verifyFilepath: vi.fn(async () => true)
-  };
-});
-vi.mock("fs/promises", () => {
-  return {
-    rename: vi.fn(async () => {}),
-    writeFile: vi.fn(async () => {}),
-    readFile: vi.fn(async () => {})
+    verifyFilepath: vi.fn(async () => true),
+    makeTempFilename: vi.fn(() => "tempFileName")
   };
 });
 vi.mock("../src/upload-handlers", () => {
@@ -43,43 +38,41 @@ vi.mock("../src/error-logger", () => {
     }
   };
 });
+vi.mock("@tsconline/shared", () => {
+    return {
+        assertDatapack: vi.fn(() => {})
+    };
+});
 describe("editDatapack tests", async () => {
-  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const readFile = vi.spyOn(fsPromises, "readFile");
-  const rename = vi.spyOn(fsPromises, "rename");
-  const writeFile = vi.spyOn(fsPromises, "writeFile");
   const getTemporaryFilepath = vi.spyOn(uploadHandler, "getTemporaryFilepath");
   const replaceDatapackFile = vi.spyOn(uploadHandler, "replaceDatapackFile");
   const changeProfilePicture = vi.spyOn(uploadHandler, "changeProfilePicture");
+  const metadata = { title: "test", isPublic: false };
   const switchPrivacySettingsOfDatapack = vi.spyOn(publicDatapackHandler, "switchPrivacySettingsOfDatapack");
-  const readFileMockReturn = { title: "test", isPublic: false };
+  const renameUserDatapack = vi.spyOn(userHandler, "renameUserDatapack");
+  const writeUserDatapack = vi.spyOn(userHandler, "writeUserDatapack")
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack").mockResolvedValue(metadata as shared.Datapack);
   const loggerError = vi.spyOn(logger.default, "error");
-  // TODO: make these into method mocks where it mocks and expects for other methods that use fetchUserDatapackFilepath or fetchUserDatapack
   beforeEach(() => {
-    fetchUserDatapackDirectory.mockResolvedValueOnce("test");
-    verifyFilepath.mockResolvedValueOnce(true);
-    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
     vi.clearAllMocks();
   });
   afterEach(() => {
-    expect(fetchUserDatapackDirectory).toHaveNthReturnedWith(1, "test");
-    expect(verifyFilepath).toHaveNthReturnedWith(1, true);
-    expect(readFile).toHaveNthReturnedWith(1, JSON.stringify(readFileMockReturn));
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
   });
   it("should call renameUserDatapack if the newDatapack has a title", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { title: "new-title" };
-    await editDatapack("test", readFileMockReturn.title, newDatapack);
-    expect(rename).toHaveBeenCalledOnce();
-    expect(writeFile).toHaveBeenCalledOnce();
+    await editDatapack("test", metadata.title, newDatapack);
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
     expect(replaceDatapackFile).not.toHaveBeenCalled();
   });
   it("should call replaceDatapackFile if file change requested for datapack", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { originalFileName: "new-file" };
     replaceDatapackFile.mockResolvedValueOnce(newDatapack as shared.Datapack);
-    await editDatapack("test", readFileMockReturn.title, newDatapack);
-    expect(rename).not.toHaveBeenCalled();
-    expect(writeFile).toHaveBeenCalledOnce();
+    await editDatapack("test", metadata.title, newDatapack);
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
     expect(replaceDatapackFile).toHaveBeenCalledOnce();
     expect(getTemporaryFilepath).toHaveBeenCalledOnce();
   });
@@ -87,11 +80,11 @@ describe("editDatapack tests", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { originalFileName: "new-file" };
     getTemporaryFilepath.mockResolvedValueOnce("");
     verifyFilepath.mockResolvedValueOnce(false);
-    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
-    expect(verifyFilepath).toHaveBeenCalledTimes(2);
+    const errors = await editDatapack("test", metadata.title, newDatapack);
+    expect(verifyFilepath).toHaveBeenCalledTimes(1);
     expect(errors.length).toBe(1);
-    expect(rename).not.toHaveBeenCalled();
-    expect(writeFile).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).not.toHaveBeenCalled();
     expect(replaceDatapackFile).not.toHaveBeenCalled();
     expect(getTemporaryFilepath).toHaveBeenCalledOnce();
   });
@@ -99,27 +92,27 @@ describe("editDatapack tests", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { datapackImage: "new-image" };
     getTemporaryFilepath.mockResolvedValueOnce("");
     verifyFilepath.mockResolvedValueOnce(false);
-    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    const errors = await editDatapack("test", metadata.title, newDatapack);
     expect(errors.length).toBe(1);
-    expect(rename).not.toHaveBeenCalled();
-    expect(writeFile).not.toHaveBeenCalled();
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).not.toHaveBeenCalled();
     expect(replaceDatapackFile).not.toHaveBeenCalled();
     expect(changeProfilePicture).not.toHaveBeenCalled();
     expect(getTemporaryFilepath).toHaveBeenCalledOnce();
   });
   it("should call changeProfilePicture and write to datapack if image change requested", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { datapackImage: "new-image" };
-    await editDatapack("test", readFileMockReturn.title, newDatapack);
-    expect(rename).not.toHaveBeenCalled();
-    expect(writeFile).toHaveBeenCalledOnce();
+    await editDatapack("test", metadata.title, newDatapack);
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(replaceDatapackFile).not.toHaveBeenCalled();
   });
   it("should call switchPrivacySettingsOfDatapack", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { isPublic: true };
-    await editDatapack("test", readFileMockReturn.title, newDatapack);
-    expect(rename).not.toHaveBeenCalled();
-    expect(writeFile).toHaveBeenCalledOnce();
+    await editDatapack("test", metadata.title, newDatapack);
+    expect(renameUserDatapack).not.toHaveBeenCalled();
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
     expect(replaceDatapackFile).not.toHaveBeenCalled();
   });
@@ -131,21 +124,21 @@ describe("editDatapack tests", async () => {
       isPublic: true,
       description: "new-description"
     };
-    rename.mockRejectedValueOnce(new Error("rename error"));
+    renameUserDatapack.mockRejectedValueOnce(new Error("rename error"));
     replaceDatapackFile.mockRejectedValueOnce(new Error("replaceDatapackFile error"));
     changeProfilePicture.mockRejectedValueOnce(new Error("changeProfilePicture error"));
     switchPrivacySettingsOfDatapack.mockRejectedValueOnce(new Error("switchPrivacySettingsOfDatapack error"));
-    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    const errors = await editDatapack("test", metadata.title, newDatapack);
     expect(errors.length).toBe(4);
-    expect(rename).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
     expect(loggerError).toHaveBeenCalledTimes(4);
     expect(replaceDatapackFile).toHaveBeenCalledOnce();
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
-    expect(writeFile).toHaveBeenCalledOnce();
-    expect(writeFile).toHaveBeenCalledWith(
-      "test/test/test-cached-filename",
-      JSON.stringify({ ...readFileMockReturn, description: newDatapack.description }, null, 2)
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
+    expect(writeUserDatapack).toHaveBeenCalledWith(
+        "test",
+      metadata
     );
   });
   it("should not write if all properties fail and no non-file access properties are present", async () => {
@@ -155,17 +148,17 @@ describe("editDatapack tests", async () => {
       isPublic: true,
       datapackImage: "new-image"
     };
-    rename.mockRejectedValueOnce(new Error("rename error"));
+    renameUserDatapack.mockRejectedValueOnce(new Error("rename error"));
     replaceDatapackFile.mockRejectedValueOnce(new Error("replaceDatapackFile error"));
     changeProfilePicture.mockRejectedValueOnce(new Error("changeProfilePicture error"));
     switchPrivacySettingsOfDatapack.mockRejectedValueOnce(new Error("switchPrivacySettingsOfDatapack error"));
-    const errors = await editDatapack("test", readFileMockReturn.title, newDatapack);
+    const errors = await editDatapack("test", metadata.title, newDatapack);
     expect(errors.length).toBe(4);
-    expect(rename).toHaveBeenCalledOnce();
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
     expect(loggerError).toHaveBeenCalledTimes(4);
     expect(replaceDatapackFile).toHaveBeenCalledOnce();
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
-    expect(writeFile).not.toHaveBeenCalled();
+    expect(writeUserDatapack).not.toHaveBeenCalled();
   });
 });
