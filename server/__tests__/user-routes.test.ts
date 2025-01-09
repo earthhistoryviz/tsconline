@@ -9,13 +9,16 @@ import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
-import * as types from "../src/types";
-import * as uploadDatapack from "../src/upload-datapack";
-import * as editHandler from "../src/cloud/edit-handler";
-import formAutoContent from "form-auto-content";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
+import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
 import fastifyMultipart from "@fastify/multipart";
+
+vi.mock("../src/cloud/general-cloud-requests", async () => {
+  return {
+    editDatapackMetadataRequestHandler: vi.fn(async () => { })
+  };
+});
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 
 vi.mock("../src/upload-datapack", async () => {
@@ -378,131 +381,37 @@ describe("verifyRecaptcha tests", () => {
 });
 
 describe("editDatapackMetadata", () => {
-  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const processEditDatapackRequest = vi.spyOn(userHandler, "processEditDatapackRequest");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
-  const editDatapack = vi.spyOn(editHandler, "editDatapack");
-  const convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest = vi.spyOn(
-    userHandler,
-    "convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest"
-  );
-  const rm = vi.spyOn(fspModule, "rm");
-  const id = "test";
-  const createForm = (json: Record<string, unknown> = {}) => {
-    if ("example" in json) {
-      json.example = {
-        value: Buffer.from("test"),
-        options: {
-          filename: "test.txt",
-          contentType: "text/plain"
-        }
-      };
-    }
-    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
-    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
-  };
-  beforeEach(() => {
-    createForm();
-    vi.clearAllMocks();
-  });
-  it("should reply 400 if no datapack is provided", async () => {
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
+  it("should return 400 if datapack is not provided", async () => {
     const response = await app.inject({
       method: "PATCH",
       url: "/user/datapack/",
       headers
     });
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(response.json().error).toBe("Missing datapack");
     expect(response.statusCode).toBe(400);
-  });
-  it(`should reply 400 if bad body (DatapackMetadata props)`, async () => {
-    processEditDatapackRequest.mockRejectedValueOnce(new Error("Invalid body"));
-    createForm({ example: "test" });
+    expect(await response.json().error).toBe("Missing datapack");
+  })
+  it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
+    editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
+      url: "/user/datapack/test",
+      headers
     });
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
-    expect(await response.json().error).toBe("Failed to process request");
-  });
-  it("should return response code if operation result is returned from processEditDatapackRequest", async () => {
-    const operationResult = { code: 500, message: "Error" };
-    isOperationResult.mockReturnValueOnce(true);
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(await response.json().error).toBe(operationResult.message);
-    expect(isOperationResult).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(operationResult.code);
-  });
-  it("should reply 500 if an error occurred in editDatapack", async () => {
-    editDatapack.mockRejectedValueOnce(new Error("Database error"));
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
     expect(await response.json().error).toBe("Failed to edit metadata");
-    expect(convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest).toHaveBeenCalledOnce();
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(500);
   });
-  it("should return 422 if there were partial or mitigated errors in editDatapack function", async () => {
-    const errors = ["error1", "error2"];
-    editDatapack.mockResolvedValueOnce(errors);
+  it("should return operation result that editDatapackMetadataRequestHandler returns", async () => {
+    editDatapackMetadataRequestHandler.mockResolvedValueOnce({ code: 200, message: "Success" });
     const response = await app.inject({
       method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
+      url: "/user/datapack/test",
+      headers
     });
-    expect(await response.json()).toEqual({ error: "There were errors updating the datapack", errors });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(422);
-  });
-  it("should reply 200 if the datapack is successfully edited and remove temp files", async () => {
-    const operationResult = { code: 200, fields: { id }, tempFiles: ["test.jpg"] };
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(await response.json()).toEqual({ message: `Successfully updated ${id}` });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledWith("test.jpg", { force: true });
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
-  });
-  it("should still reply 200 even if removing temp files failed", async () => {
-    const operationResult = { code: 200, fields: { id }, tempFiles: ["test.jpg"] };
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    rm.mockRejectedValueOnce(new Error("Error"));
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(response.json()).toEqual({ message: `Successfully updated ${id}` });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledWith("test.jpg", { force: true });
-    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ code: 200, message: "Success" });
   });
 });
 
