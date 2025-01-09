@@ -9,14 +9,14 @@ import * as logger from "../src/error-logger";
 import { cloneDeep } from "lodash";
 vi.mock("../src/public-datapack-handler", () => {
   return {
-    switchPrivacySettingsOfDatapack: vi.fn(async () => { })
+    switchPrivacySettingsOfDatapack: vi.fn(async () => {})
   };
 });
 vi.mock("../src/user/user-handler", () => {
   return {
-    fetchUserDatapack: vi.fn(async () => { }),
-    renameUserDatapack: vi.fn(async () => { }),
-    writeUserDatapack: vi.fn(async () => { })
+    fetchUserDatapack: vi.fn(async () => {}),
+    renameUserDatapack: vi.fn(async () => {}),
+    writeUserDatapack: vi.fn(async () => {})
   };
 });
 vi.mock("../src/util", () => {
@@ -28,9 +28,9 @@ vi.mock("../src/util", () => {
 });
 vi.mock("../src/upload-handlers", () => {
   return {
-    changeProfilePicture: vi.fn(async () => { }),
+    changeProfilePicture: vi.fn(async () => {}),
     getTemporaryFilepath: vi.fn().mockResolvedValue("test"),
-    replaceDatapackFile: vi.fn(async () => { })
+    replaceDatapackFile: vi.fn(async () => {})
   };
 });
 vi.mock("../src/error-logger", () => {
@@ -42,7 +42,7 @@ vi.mock("../src/error-logger", () => {
 });
 vi.mock("@tsconline/shared", () => {
   return {
-    assertDatapack: vi.fn(() => { }),
+    assertDatapack: vi.fn(() => {}),
     isUserDatapack: vi.fn(() => true)
   };
 });
@@ -160,5 +160,14 @@ describe("editDatapack tests", async () => {
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
     expect(writeUserDatapack).not.toHaveBeenCalled();
+  });
+  it("should push error if writeUserDatapack fails", async () => {
+    writeUserDatapack.mockRejectedValueOnce(new Error("writeUserDatapack error"));
+    const newDatapack: Partial<shared.DatapackMetadata> = { title: "new-title" };
+    const errors = await editDatapack("test", metadata.title, newDatapack);
+    expect(errors.length).toBe(1);
+    expect(renameUserDatapack).toHaveBeenCalledOnce();
+    expect(loggerError).toHaveBeenCalledTimes(1);
+    expect(writeUserDatapack).toHaveBeenCalledOnce();
   });
 });

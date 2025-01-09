@@ -108,7 +108,9 @@ const getEditDatapackRoute = (datapack: DatapackUniqueIdentifier) => {
     case "official": {
       return `/admin/official/datapack/${datapack.title}`;
     }
-    case "workshop":
+    case "workshop": {
+      return `/workshop/${datapack.uuid}/datapack/${datapack.title}`;
+    }
     case "user": {
       return `/user/datapack/${datapack.title}`;
     }

@@ -6,7 +6,8 @@ import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
   deleteUserDatapack,
   fetchAllUsersDatapacks,
-  fetchUserDatapack
+  fetchUserDatapack,
+  verifyWorkshopValidity
 } from "../user/user-handler.js";
 import { isOperationResult } from "../types.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
@@ -229,6 +230,40 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Database or processing error" });
+  }
+};
+
+export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopUUID, datapackTitle } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    if (result.code !== 200) {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    if (!datapack) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
+    }
+    reply.send(datapack);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown Error" });
+    return;
   }
 };
 
