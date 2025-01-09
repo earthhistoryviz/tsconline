@@ -88,5 +88,6 @@ export async function editDatapack(
       errors.push("Error writing metadata");
     });
   }
+  console.log(errors)
   return errors;
 }

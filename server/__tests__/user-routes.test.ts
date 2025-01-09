@@ -11,6 +11,7 @@ import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as types from "../src/types";
 import * as uploadDatapack from "../src/upload-datapack";
+import * as editHandler from "../src/cloud/edit-handler"
 import formAutoContent from "form-auto-content";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
@@ -104,9 +105,9 @@ vi.mock("../src/util", async (importOriginal) => {
     ...actual,
     verifyFilepath: vi.fn().mockResolvedValue(true),
     assetconfigs: { uploadDirectory: "uploadDirectory" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
-    deleteDirectory: vi.fn().mockImplementation(() => {}),
-    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
+    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
+    deleteDirectory: vi.fn().mockImplementation(() => { }),
+    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -120,10 +121,15 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    editDatapack: vi.fn().mockResolvedValue({}),
     deleteUserDatapack: vi.fn().mockResolvedValue({})
   };
 });
+
+vi.mock("../src/cloud/edit-handler.ts", async () => {
+  return {
+    editDatapack: vi.fn().mockResolvedValue({}),
+  }
+})
 
 vi.mock("path", async (importOriginal) => {
   const actual = await importOriginal<typeof pathModule>();
@@ -375,7 +381,7 @@ describe("edit datapack tests", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   const processEditDatapackRequest = vi.spyOn(userHandler, "processEditDatapackRequest");
   const isOperationResult = vi.spyOn(types, "isOperationResult");
-  const editDatapack = vi.spyOn(userHandler, "editDatapack");
+  const editDatapack = vi.spyOn(editHandler, "editDatapack");
   const convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest = vi.spyOn(
     userHandler,
     "convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest"
