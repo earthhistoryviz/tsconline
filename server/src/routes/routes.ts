@@ -1,7 +1,13 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
-import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
+import {
+  DatapackInfoChunk,
+  TimescaleItem,
+  assertChartRequest,
+  assertTimescale,
+  isUserDatapack
+} from "@tsconline/shared";
 import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
@@ -236,6 +242,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       return;
     }
     const datapackDir = await fetchUserDatapackDirectory(uuidFolder, datapack.title);
+    if (isUserDatapack(datapack)) {
+      usedUserDatapackFilepaths.push(datapackDir);
+    }
     datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
   }
   try {

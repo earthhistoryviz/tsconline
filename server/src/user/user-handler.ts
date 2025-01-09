@@ -415,6 +415,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "originalFileName":
       case "storedFileName":
       case "datapackImage":
+      case "size":
         partial[key] = value;
         break;
       case "references":
