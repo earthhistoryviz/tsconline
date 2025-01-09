@@ -28,7 +28,9 @@ export default defineConfig({
         "shared/src/util.ts": thresholdConfig,
         "server/src/upload-handlers.ts": thresholdConfig,
         "server/src/upload-datapack.ts": thresholdConfig,
-        "server/src/user/user-handler.ts": thresholdConfig
+        "server/src/user-auth.ts": thresholdConfig,
+        // "server/src/user-routes.ts": thresholdConfig,
+        // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true
     },
