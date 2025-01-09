@@ -19,10 +19,17 @@ import * as excel from "../src/parse-excel-file";
 import * as userHandlers from "../src/user/user-handler";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as adminHandler from "../src/admin/admin-handler";
+import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
 import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
+
+vi.mock("../src/cloud/general-cloud-requests", async () => {
+  return {
+    editDatapackMetadataRequestHandler: vi.fn(async () => { })
+  };
+});
 
 vi.mock("../src/upload-datapack", async () => {
   return {
@@ -127,7 +134,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -224,7 +231,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => {});
+    file.on("data", () => { });
     file.on("end", () => {
       resolve();
     });
@@ -265,7 +272,7 @@ beforeAll(async () => {
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -401,7 +408,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     body: [{ uuid: "test", id: "test", priority: 1 }]
   },
   { method: "POST", url: "/admin/workshop/datapack" },
-  { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } }
+  { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
+  { method: "PATCH", url: "/admin/official/datapack/test" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -2327,9 +2335,6 @@ describe("adminAddOfficialDatapackToWorkshop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  afterAll(() => {
-    vi.restoreAllMocks();
-  });
   it("should return 400 if workshopId is null", async () => {
     const response = await app.inject({
       method: "POST",
@@ -2422,6 +2427,43 @@ describe("adminAddOfficialDatapackToWorkshop", () => {
     expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledTimes(1);
     expect(doesDatapackFolderExistInAllUUIDDirectories).toHaveBeenCalledWith("workshop-1", body.datapackTitle);
     expect(await response.json()).toEqual({ message: "Datapack added to workshop" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+describe("adminEditDatapackMetadata", () => {
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if datapack is not provided", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/",
+      headers
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await response.json().error).toBe("Missing datapack");
+  });
+  it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
+    editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/test",
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json().error).toBe("Failed to edit metadata");
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
+  });
+  it("should return operation result that editDatapackMetadataRequestHandler returns", async () => {
+    editDatapackMetadataRequestHandler.mockResolvedValueOnce({ code: 200, message: "Success" });
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/official/datapack/test",
+      headers
+    });
+    expect(await response.json()).toEqual({ message: "Success" });
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
   });
 });
