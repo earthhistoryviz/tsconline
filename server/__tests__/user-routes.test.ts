@@ -411,7 +411,7 @@ describe("editDatapackMetadata", () => {
     });
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
-    expect(await response.json()).toEqual({ code: 200, message: "Success" });
+    expect(await response.json()).toEqual({ message: "Success" });
   });
 });
 
