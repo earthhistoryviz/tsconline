@@ -95,14 +95,14 @@ export const Datapacks = observer(function Datapacks() {
           datapacks={getPublicOfficialDatapacks(state.datapacks)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
-          loading={state.skeletonStates.officialDatapacksLoading}
+          loading={state.skeletonStates.publicOfficialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapacks(state.datapacks)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
-            loading={state.skeletonStates.privateUserDatapacksLoading}
+            loading={state.skeletonStates.privateOfficialDatapacksLoading}
           />
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (

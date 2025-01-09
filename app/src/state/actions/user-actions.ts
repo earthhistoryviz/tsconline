@@ -7,7 +7,6 @@ import {
   pushSnackbar,
   removeDatapack,
   fetchOfficialDatapack,
-  fetchAllPublicDatapacks,
   fetchUserDatapacks
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
