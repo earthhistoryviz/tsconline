@@ -30,7 +30,7 @@ export const refetchDatapack = action(
   async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
     let fetchedDatapack;
     if (isWorkshopDatapack(editedDatapack)) {
-      // change this in @Aditya's PR (he makes the workshop fetcher)
+      // TODO change this in @Aditya's PR (he makes the workshop fetcher)
       fetchAllPublicDatapacks();
     } else if (isUserDatapack(editedDatapack)) {
       fetchedDatapack = await fetchUserDatapack(editedDatapack.title);
