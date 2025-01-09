@@ -16,7 +16,7 @@ import fastifyMultipart from "@fastify/multipart";
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => { })
+    editDatapackMetadataRequestHandler: vi.fn(async () => {})
   };
 });
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
@@ -108,9 +108,9 @@ vi.mock("../src/util", async (importOriginal) => {
     ...actual,
     verifyFilepath: vi.fn().mockResolvedValue(true),
     assetconfigs: { uploadDirectory: "uploadDirectory" },
-    loadAssetConfigs: vi.fn().mockImplementation(() => { }),
-    deleteDirectory: vi.fn().mockImplementation(() => { }),
-    resetUploadDirectory: vi.fn().mockImplementation(() => { }),
+    loadAssetConfigs: vi.fn().mockImplementation(() => {}),
+    deleteDirectory: vi.fn().mockImplementation(() => {}),
+    resetUploadDirectory: vi.fn().mockImplementation(() => {}),
     checkHeader: vi.fn().mockReturnValue(true)
   };
 });
@@ -390,7 +390,7 @@ describe("editDatapackMetadata", () => {
     });
     expect(response.statusCode).toBe(400);
     expect(await response.json().error).toBe("Missing datapack");
-  })
+  });
   it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
     editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
