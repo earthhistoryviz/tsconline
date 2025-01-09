@@ -761,7 +761,6 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
   }
   try {
     const response = await editDatapackMetadataRequestHandler(request.parts(), "official", datapack);
-    console.log(response);
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });

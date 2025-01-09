@@ -25,7 +25,6 @@ export const editDatapackMetadataRequestHandler = async function editDatapackMet
     const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
     const errors = await editDatapack(uuid, datapack, partial);
     if (errors.length > 0) {
-      console.log(errors);
       return { code: 422, message: "There were errors updating the datapack" };
     }
   } catch (e) {

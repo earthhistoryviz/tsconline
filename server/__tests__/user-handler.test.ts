@@ -255,12 +255,20 @@ describe("renameUserDatapack test", () => {
   });
   it("should clean up and throw error if changeFileMetadataKey fails", async () => {
     changeFileMetadataKey.mockRejectedValueOnce(new Error("changeFileMetadataKey error"));
-    await expect(renameUserDatapack("test", "test", title)).rejects.toThrow("changeFileMetadataKey error");
+    await expect(renameUserDatapack("test", "test", title, true)).rejects.toThrow("changeFileMetadataKey error");
     expect(rename).toHaveBeenCalledTimes(2);
   });
   it("should rename the datapack", async () => {
     await renameUserDatapack("test", "test", title);
     expect(rename).toHaveBeenCalledTimes(1);
+    expect(changeFileMetadataKey).not.toHaveBeenCalled();
+    // once in the method and twice when writing
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
+  });
+  it("should rename the datapack and change file metadata if isTemporaryFile is true", async () => {
+    await renameUserDatapack("test", "test", title, true);
+    expect(rename).toHaveBeenCalledTimes(1);
+    expect(changeFileMetadataKey).toHaveBeenCalledTimes(1);
     // once in the method and twice when writing
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
   });
