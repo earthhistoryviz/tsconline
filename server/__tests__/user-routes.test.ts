@@ -377,7 +377,7 @@ describe("verifyRecaptcha tests", () => {
   });
 });
 
-describe("edit datapack tests", () => {
+describe("editDatapackMetadata", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   const processEditDatapackRequest = vi.spyOn(userHandler, "processEditDatapackRequest");
   const isOperationResult = vi.spyOn(types, "isOperationResult");

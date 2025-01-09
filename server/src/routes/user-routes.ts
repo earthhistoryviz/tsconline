@@ -2,14 +2,11 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader } from "../util.js";
-import { editDatapack } from "../cloud/edit-handler.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
-  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   deleteUserDatapack,
   fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  processEditDatapackRequest
+  fetchUserDatapack
 } from "../user/user-handler.js";
 import { isOperationResult } from "../types.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
@@ -29,37 +26,12 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const response = await processEditDatapackRequest(request.parts(), uuid).catch(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  });
-  if (!response) {
-    reply.status(500).send({ error: "Failed to process request" });
-    return;
-  }
-  if (isOperationResult(response)) {
-    reply.status(response.code).send({ error: response.message });
-    return;
-  }
   try {
-    const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
-    const errors = await editDatapack(uuid, datapack, partial);
-    if (errors.length > 0) {
-      reply.status(422).send({ error: "There were errors updating the datapack", errors });
-      return;
-    }
+    const response = await editDatapackMetadataRequestHandler(request.parts(), uuid, datapack);
+    reply.send(response);
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
-    return;
-  } finally {
-    // remove temp files; files should be removed normally, but if there is an error, we should remove them here
-    for (const file of response.tempFiles) {
-      await rm(file, { force: true }).catch(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      });
-    }
   }
-  reply.send({ message: `Successfully updated ${datapack}` });
 };
 
 export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
