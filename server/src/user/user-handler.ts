@@ -6,7 +6,14 @@ import {
   DECRYPTED_DIRECTORY_NAME
 } from "../constants.js";
 import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
-import { Datapack, DatapackMetadata, assertDatapack, isDateValid } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackMetadata,
+  assertDatapack,
+  isDateValid,
+  isOfficialUUID,
+  isWorkshopUUID
+} from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -17,9 +24,10 @@ import {
   getPrivateUserUUIDDirectory
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
-import { findUser } from "../database.js";
+import { findUser, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { OperationResult, User } from "../types.js";
 import { getTemporaryFilepath, uploadFileToFileSystem } from "../upload-handlers.js";
+import { getWorkshopIdFromUUID } from "../workshop-util.js";
 
 /**
  * looks for a specific datapack in all the user directories
@@ -321,7 +329,8 @@ export async function processEditDatapackRequest(
   uuid: string
 ): Promise<OperationResult | { code: number; fields: Record<string, string>; tempFiles: string[] }> {
   const user = (await findUser({ uuid }))[0];
-  if (!user && uuid !== "official") {
+  const isNotWorkshopOrOfficial = !isOfficialUUID(uuid) && !isWorkshopUUID(uuid);
+  if (!user && isNotWorkshopOrOfficial) {
     return { code: 401, message: "User not found" };
   }
   const fields: Record<string, string> = {};
@@ -343,7 +352,7 @@ export async function processEditDatapackRequest(
         }
         // if the user is not an admin or pro, they can only upload files that are less than 3kb
         // if the uuid is official, it is a general admin account and can upload any size
-        if (uuid !== "official" && !canUserUploadThisFile(user!, part)) {
+        if (isNotWorkshopOrOfficial && !canUserUploadThisFile(user!, part)) {
           await cleanupTempFiles();
           return { code: 413, message: "File is too large" };
         }
@@ -430,4 +439,15 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
     }
   }
   return partial;
+}
+
+export function verifyWorkshopValidity(workshopUUID: string, userId: number): OperationResult {
+  const workshopId = getWorkshopIdFromUUID(workshopUUID);
+  if (!workshopId) {
+    return { code: 400, message: "Invalid workshop UUID" };
+  }
+  if (!isUserInWorkshopAndWorkshopIsActive(workshopId, userId)) {
+    return { code: 401, message: "User does not have access to this workshop" };
+  }
+  return { code: 200, message: "Success" };
 }

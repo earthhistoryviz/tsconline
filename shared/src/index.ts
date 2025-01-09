@@ -611,6 +611,14 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function isOfficialUUID(uuid: string): boolean {
+  return uuid === "official";
+}
+export function isWorkshopUUID(uuid: string): boolean {
+  const workshopPrefix = "workshop-";
+  return uuid.startsWith(workshopPrefix) && !isNaN(Number(uuid.slice(workshopPrefix.length)));
+}
+
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
   if (typeof o.message !== "string") throwError("DatapackPriorityUpdateSuccess", "message", "string", o.message);

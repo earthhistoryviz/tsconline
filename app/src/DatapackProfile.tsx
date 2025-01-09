@@ -376,7 +376,11 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic, disabled }
     <>
       <Typography className={styles.aih}>Privacy</Typography>
       {state.datapackProfilePage.editMode ? (
-        <Box className={styles.privacyContainer}>
+        <Box
+          className={styles.privacyContainer}
+          sx={{
+            opacity: disabled ? 0.5 : 1
+          }}>
           <PrivateComp />
           <TSCSwitch
             disabled={disabled}

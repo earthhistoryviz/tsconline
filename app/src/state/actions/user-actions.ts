@@ -7,7 +7,8 @@ import {
   pushSnackbar,
   removeDatapack,
   fetchOfficialDatapack,
-  fetchAllPublicDatapacks
+  fetchAllPublicDatapacks,
+  fetchUserDatapacks
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -16,6 +17,7 @@ import {
   DatapackUniqueIdentifier,
   assertDatapack,
   assertUserDatapack,
+  assertWorkshopDatapack,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
@@ -31,7 +33,9 @@ export const refetchDatapack = action(
     let fetchedDatapack;
     if (isWorkshopDatapack(editedDatapack)) {
       // TODO change this in @Aditya's PR (he makes the workshop fetcher)
-      fetchAllPublicDatapacks();
+      // until then, we cannot navigate since we can't find the workshop datapack through fetching specifically
+      await fetchUserDatapacks();
+      removeDatapack(originalDatapack);
     } else if (isUserDatapack(editedDatapack)) {
       fetchedDatapack = await fetchUserDatapack(editedDatapack.title);
     } else if (isOfficialDatapack(editedDatapack)) {
@@ -67,6 +71,33 @@ export const fetchUserDatapack = action(async (datapack: string) => {
         response,
         ErrorCodes.USER_FETCH_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_FETCH_DATAPACK_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const fetchWorkshopDatapack = action(async (workshopUUID: string, datapack: string) => {
+  try {
+    const recaptcha = await getRecaptchaToken("fetchWorkshopDatapack");
+    if (!recaptcha) return;
+    const response = await fetcher(`/user/workshop/${workshopUUID}/datapack/${datapack}`, {
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptcha
+      }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      assertWorkshopDatapack(data);
+      assertDatapack(data);
+      return data;
+    } else {
+      displayServerError(
+        response.statusText,
+        ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED,
+        ErrorMessages[ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED]
       );
     }
   } catch (e) {
