@@ -11,7 +11,7 @@ import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as types from "../src/types";
 import * as uploadDatapack from "../src/upload-datapack";
-import * as editHandler from "../src/cloud/edit-handler"
+import * as editHandler from "../src/cloud/edit-handler";
 import formAutoContent from "form-auto-content";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
@@ -127,9 +127,9 @@ vi.mock("../src/user/user-handler", () => {
 
 vi.mock("../src/cloud/edit-handler.ts", async () => {
   return {
-    editDatapack: vi.fn().mockResolvedValue({}),
-  }
-})
+    editDatapack: vi.fn().mockResolvedValue({})
+  };
+});
 
 vi.mock("path", async (importOriginal) => {
   const actual = await importOriginal<typeof pathModule>();

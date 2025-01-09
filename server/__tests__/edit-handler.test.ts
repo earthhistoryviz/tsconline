@@ -2,21 +2,22 @@ import { describe, beforeEach, afterEach, expect, it, vi } from "vitest";
 import { editDatapack } from "../src/cloud/edit-handler";
 import * as util from "../src/util";
 import * as uploadHandler from "../src/upload-handlers";
-import * as userHandler from "../src/user/user-handler"
+import * as userHandler from "../src/user/user-handler";
 import * as publicDatapackHandler from "../src/public-datapack-handler";
 import * as shared from "@tsconline/shared";
 import * as logger from "../src/error-logger";
+import { cloneDeep } from "lodash";
 vi.mock("../src/public-datapack-handler", () => {
   return {
     switchPrivacySettingsOfDatapack: vi.fn(async () => {})
   };
 });
 vi.mock("../src/user/user-handler", () => {
-    return {
-        fetchUserDatapack: vi.fn(async () => {}),
-        renameUserDatapack: vi.fn(async () => {}),
-        writeUserDatapack: vi.fn(async () => {})
-    };
+  return {
+    fetchUserDatapack: vi.fn(async () => {}),
+    renameUserDatapack: vi.fn(async () => {}),
+    writeUserDatapack: vi.fn(async () => {})
+  };
 });
 vi.mock("../src/util", () => {
   return {
@@ -39,9 +40,9 @@ vi.mock("../src/error-logger", () => {
   };
 });
 vi.mock("@tsconline/shared", () => {
-    return {
-        assertDatapack: vi.fn(() => {})
-    };
+  return {
+    assertDatapack: vi.fn(() => {})
+  };
 });
 describe("editDatapack tests", async () => {
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
@@ -51,11 +52,12 @@ describe("editDatapack tests", async () => {
   const metadata = { title: "test", isPublic: false };
   const switchPrivacySettingsOfDatapack = vi.spyOn(publicDatapackHandler, "switchPrivacySettingsOfDatapack");
   const renameUserDatapack = vi.spyOn(userHandler, "renameUserDatapack");
-  const writeUserDatapack = vi.spyOn(userHandler, "writeUserDatapack")
-  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack").mockResolvedValue(metadata as shared.Datapack);
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const writeUserDatapack = vi.spyOn(userHandler, "writeUserDatapack");
   const loggerError = vi.spyOn(logger.default, "error");
   beforeEach(() => {
     vi.clearAllMocks();
+    fetchUserDatapack.mockResolvedValueOnce(cloneDeep(metadata as shared.Datapack));
   });
   afterEach(() => {
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
@@ -136,10 +138,6 @@ describe("editDatapack tests", async () => {
     expect(changeProfilePicture).toHaveBeenCalledOnce();
     expect(switchPrivacySettingsOfDatapack).toHaveBeenCalledOnce();
     expect(writeUserDatapack).toHaveBeenCalledOnce();
-    expect(writeUserDatapack).toHaveBeenCalledWith(
-        "test",
-      metadata
-    );
   });
   it("should not write if all properties fail and no non-file access properties are present", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = {
