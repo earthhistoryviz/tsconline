@@ -194,7 +194,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -760,13 +760,10 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
     return;
   }
   try {
-    console.log(datapack);
-    console.log(request.parts());
     const response = await editDatapackMetadataRequestHandler(request.parts(), "official", datapack);
     console.log(response);
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
-    console.log(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
   }
 };

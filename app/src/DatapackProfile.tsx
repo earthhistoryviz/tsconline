@@ -104,7 +104,7 @@ export const DatapackProfile = observer(() => {
     <>
       <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
-        <IconButton className={styles.back} onClick={() => navigate("/settings")}>
+        <IconButton className={styles.back} onClick={() => navigate(-1)}>
           <ArrowBackIcon className={styles.icon} />
         </IconButton>
         {state.datapackProfilePage.editMode ? (
