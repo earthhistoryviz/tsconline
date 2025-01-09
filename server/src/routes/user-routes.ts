@@ -2,11 +2,11 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader } from "../util.js";
+import { editDatapack } from "../cloud/edit-handler.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
   convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
   deleteUserDatapack,
-  editDatapack,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   processEditDatapackRequest
