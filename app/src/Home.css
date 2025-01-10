@@ -316,6 +316,7 @@
 
 .landing-page-cards {
   display: flex;
+  border-bottom: 1px solid black;
   justify-content: center;
   align-items: center;
   gap: 80px;
@@ -392,7 +393,8 @@
   grid-template-columns: 1fr 24px 1fr 24px 1fr 24px 1fr;
   justify-content: center;
   gap: 20px;
-  padding: 70px;
+  padding: 40px;
+  padding-top: 20px;
   position: relative;
 }
 
@@ -454,7 +456,7 @@
   overflow: hidden;
   position: relative;
   gap: 40px;
-  padding: 70px;
+  padding: 40px;
 }
 
 .mobile-chart-creation-step {
@@ -500,7 +502,7 @@
 .mobile-chart-creation-steps-line {
   position: absolute;
   top: 15%;
-  left: 120px;
+  left: 90px;
   bottom: 15%;
   width: 4px;
   z-index: 0;
