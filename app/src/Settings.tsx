@@ -14,6 +14,7 @@ import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { useTranslation } from "react-i18next";
 import { Preferences } from "./settings_tabs/Preferences";
+import LoadSave from "./settings_tabs/LoadSave";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -64,5 +65,7 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
       return <MapPoints />;
     case "datapacks":
       return <Datapacks />;
+    case "loadsave":
+      return <LoadSave />;
   }
 });
