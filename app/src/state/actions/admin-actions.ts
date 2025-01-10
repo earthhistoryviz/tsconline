@@ -849,3 +849,47 @@ export const resetAdminConfigTempState = action(() => {
   state.admin.datapackConfig.rowPriorityUpdates = [];
   state.admin.datapackConfig.tempRowData = null;
 });
+
+/**
+ * Upload files to a workshop
+ * @param Files The uploaded files
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddFilesToWorkshop = action(async (workshopId: number, files: File[]) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append(`file`, file);
+  });
+  try {
+    const response = await fetcher(`/admin/workshop/files`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+    const data = await response.json();
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
