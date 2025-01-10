@@ -6,8 +6,7 @@ import {
   pushError,
   pushSnackbar,
   removeDatapack,
-  fetchOfficialDatapack,
-  fetchUserDatapacks
+  fetchOfficialDatapack
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -33,8 +32,7 @@ export const refetchDatapack = action(
     if (isWorkshopDatapack(editedDatapack)) {
       // TODO change this in @Aditya's PR (he makes the workshop fetcher)
       // until then, we cannot navigate since we can't find the workshop datapack through fetching specifically
-      await fetchUserDatapacks();
-      removeDatapack(originalDatapack);
+      fetchedDatapack = await fetchWorkshopDatapack(editedDatapack.uuid, editedDatapack.title);
     } else if (isUserDatapack(editedDatapack)) {
       fetchedDatapack = await fetchUserDatapack(editedDatapack.title);
     } else if (isOfficialDatapack(editedDatapack)) {
