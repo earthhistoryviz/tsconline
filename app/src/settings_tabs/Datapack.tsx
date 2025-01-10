@@ -265,7 +265,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         )}
         {numberOfDatapacks > visibleLimit && (
           <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
-            <Typography className={styles.show} variant="body2" color="primary">
+            <Typography className={styles.show} variant="body2" color="theme.palette.backgroundColor.contrastText">
               {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
             </Typography>
           </Box>
