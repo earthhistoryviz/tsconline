@@ -1,7 +1,6 @@
 import {
   Datapack,
   assertBatchUpdateServerPartialError,
-  isOfficialDatapack,
   assertDatapackUniqueIdentifier,
   DatapackUniqueIdentifier
 } from "@tsconline/shared";
@@ -62,13 +61,13 @@ export const handleDatapackEdit = action(
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
           setDatapackProfilePageEditMode(false);
-          const editedDatapackUniqueIdentifier = {
+          const datapackUniqueIdentifier = {
             title: editedDatapack.title,
             type: editedDatapack.type,
-            ...(!isOfficialDatapack(originalDatapack) && { uuid: state.user.uuid })
+            ...("uuid" in originalDatapack && { uuid: originalDatapack.uuid })
           };
-          assertDatapackUniqueIdentifier(editedDatapackUniqueIdentifier);
-          const datapack = await refetchDatapack(editedDatapackUniqueIdentifier, originalDatapack);
+          assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+          const datapack = await refetchDatapack(datapackUniqueIdentifier, originalDatapack);
           if (!datapack) return false;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
