@@ -9,12 +9,13 @@ import {
   InputLabel,
   ListItemText,
   SelectChangeEvent,
-  FormControl
+  FormControl,
+  Divider
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader } from "../components";
+import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader, CustomDivider } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -133,14 +134,16 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [startDate, setStartDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.start) : null);
   const [endDate, setEndDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.end) : null);
   const [emails, setEmails] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null);
+  const [emailFile, setEmailFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
     setStartDate(null);
     setEndDate(null);
     setEmails("");
-    setFile(null);
+    setEmailFile(null);
+    setFiles(null);
     setWorkshop(null);
     onClose();
   };
@@ -201,16 +204,16 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           edited = true;
           setWorkshop(newWorkshop);
         }
-        if (isWorkshopUnchanged && !file && !emails) {
+        if (isWorkshopUnchanged && !emailFile && !emails) {
           actions.pushSnackbar("No changes made", "info");
           return;
         }
       }
 
-      if (file || emails) {
+      if (emailFile || emails) {
         const form = new FormData();
         if (emails) form.append("emails", emails);
-        if (file) form.append("file", file);
+        if (emailFile) form.append("file", emailFile);
         form.append("workshopId", workshopId.toString());
         const response = await actions.adminAddUsersToWorkshop(form);
         if (!response.success) {
@@ -232,6 +235,30 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           }
           actions.pushSnackbar(message, "success");
         }
+      }
+
+      // handling files
+      if (files && files.length != 0) {
+        const response = await actions.adminAddFilesToWorkshop(workshopId, files);
+        if (!response) {
+          if (created || edited)
+            actions.pushSnackbar(
+              `Workshop ${created ? "created" : "edited"} successfully but files could not be uploaded`,
+              "warning"
+            );
+          if (created) handleDialogClose();
+          return;
+        } else {
+          actions.removeAllErrors();
+          let message = "";
+          if (created || edited) {
+            message = `Workshop ${created ? "created" : "edited"} successfully and files uploaded`;
+          } else {
+            message = "Files uploaded successfully";
+          }
+          actions.pushSnackbar(message, "success");
+        }
+
       } else {
         actions.removeAllErrors();
         actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
@@ -248,7 +275,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
     if (!file) {
       return;
@@ -266,8 +293,18 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
       return;
     }
-    setFile(file);
+    setEmailFile(file);
   };
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFiles = event.target.files;
+    if (!uploadedFiles) {
+      return;
+    }
+
+    const filesArray = Array.from(uploadedFiles);
+    setFiles((prevFiles) => (prevFiles ? [...prevFiles, ...filesArray] : filesArray));
+  };
+
 
   return (
     <>
@@ -373,12 +410,47 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
                   <InputFileUpload
                     text="Upload Excel File of Emails"
-                    onChange={handleFileUpload}
+                    onChange={handleEmailFileUpload}
                     accept=".xls,.xlsx"
                     startIcon={<CloudUploadIcon />}
                   />
-                  <Typography ml="10px">{file?.name || "No file selected"}</Typography>
+                  <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
                 </Box>
+                <Divider style={{
+                  height: "0.05px",
+                  width: "100%",
+                  backgroundColor: theme.palette.outline.main
+                }} />
+                <Box textAlign="center" width="100%">
+                  <Typography variant="h5" mb="5px">
+                    Add Files
+                  </Typography>
+                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+                    <Typography ml="10px"> {files && files.length > 0 ? (
+                      <ul>
+                        {files.map((file, index) => (
+                          <li key={index}>{file.name}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      "No file selected"
+                    )}</Typography>
+                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+                      <InputFileUpload
+                        text="Upload Files for the workshop"
+                        onChange={handleFileUpload}
+                        startIcon={<CloudUploadIcon />}
+                        multiple
+                      />
+
+                    </Box>
+                  </Box>
+                </Box>
+                <Divider style={{
+                  height: "0.05px",
+                  width: "100%",
+                  backgroundColor: theme.palette.outline.main
+                }} />
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
                   {editMode && (
                     <>
@@ -388,7 +460,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setStartDate(dayjs(workshop?.start));
                           setEndDate(dayjs(workshop?.end));
                           setEmails("");
-                          setFile(null);
+                          setEmailFile(null);
+                          setFiles(null);
                         }}>
                         Reset Form
                       </TSCButton>
