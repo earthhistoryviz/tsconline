@@ -166,7 +166,8 @@ export const DatapackProfile = observer(() => {
           getNavigationRouteForDatapackProfile(
             state.datapackProfilePage.editableDatapackMetadata.title,
             query.get("type")!
-          )
+          ),
+          { replace: true }
         );
       }
     }
