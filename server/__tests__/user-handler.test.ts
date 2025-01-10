@@ -596,23 +596,15 @@ describe("deleteUserDatapack tests", () => {
   });
   it("should log error if rm fails", async () => {
     rm.mockRejectedValueOnce(new Error("rm error"));
-    await deleteUserDatapack("uuid", "datapack");
+    await expect(deleteUserDatapack("uuid", "datapack")).rejects.toThrow("rm error");
     expect(loggerError).toHaveBeenCalledOnce();
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
-    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
+    expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
   });
-  it("should log error if deleteDatapackFoundInMetadata", async () => {
+  it("should log error if deleteDatapackFoundInMetadata fails", async () => {
     deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("deleteDatapackFoundInMetadata error"));
     await deleteUserDatapack("uuid", "datapack");
     expect(loggerError).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
-    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
-  });
-  it("should log two errors if both rm and deleteDatapackInMetadata fail", async () => {
-    rm.mockRejectedValueOnce(new Error("rm error"));
-    deleteDatapackFoundInMetadata.mockRejectedValueOnce(new Error("deleteDatapackFoundInMetadata error"));
-    await deleteUserDatapack("uuid", "datapack");
-    expect(loggerError).toHaveBeenCalledTimes(2);
     expect(rm).toHaveBeenCalledOnce();
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
   });

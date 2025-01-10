@@ -276,6 +276,7 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   }
   await rm(datapackPath, { recursive: true, force: true }).catch((e) => {
     logger.error(e);
+    throw e;
   });
   await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
     logger.error(e);
