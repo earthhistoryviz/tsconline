@@ -59,7 +59,7 @@ export function getDatapackProfileImageUrl(datapack: Datapack) {
   if (datapack.datapackImage) {
     return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);
   } else {
-    return devSafeUrl(`/datapack-images/default/${uuid}`);
+    return devSafeUrl(`/datapack-images//${uuid}`);
   }
 }
 export function getNavigationRouteForWorkshopDetails(id: number) {

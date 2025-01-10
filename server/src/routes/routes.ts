@@ -463,7 +463,7 @@ export const fetchDatapackCoverImage = async function (
   const { title, uuid } = request.params;
   const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "default.png");
   try {
-    if (title === "default") {
+    if (title === "") {
       if (!(await checkFileExists(defaultFilepath))) {
         reply.status(404).send({ error: "Default image not found" });
         return;
