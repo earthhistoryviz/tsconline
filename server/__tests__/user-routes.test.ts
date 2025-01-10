@@ -43,7 +43,8 @@ vi.mock("../src/error-logger", async () => {
 
 vi.mock("../src/database", async () => {
   return {
-    findUser: vi.fn(() => Promise.resolve([testUser]))
+    findUser: vi.fn(() => Promise.resolve([testUser])),
+    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true)
   };
 });
 
@@ -208,7 +209,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/user/datapack" },
   { method: "DELETE", url: `/user/datapack/${filename}` },
   { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
-  { method: "GET", url: `/user/datapack/${filename}` }
+  { method: "GET", url: `/user/datapack/${filename}` },
+  { method: "GET", url: `/user/workshop/workshop-1/datapack/test` }
 ];
 
 describe("get a single user datapack", () => {
@@ -925,5 +927,77 @@ describe("userDeleteDatapack tests", () => {
     expect(await response.json()).toEqual({ message: `Datapack deleted` });
     expect(response.statusCode).toBe(200);
     expect(deleteUserDatapack).toHaveBeenCalledOnce();
+  });
+});
+
+describe("fetchWorkshopDatapack tests", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 when the user is not logged in", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers: { "mock-uuid": "" }
+    });
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 401 if user is not found in database", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 400 if workshopUUID is invalid", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Invalid workshop UUID" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 401 if workshop is not active", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "User does not have access to this workshop" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 404 if the datapack is not found", async () => {
+    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    findUser.mockResolvedValueOnce([testUser as User]);
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Datapack does not exist or cannot be found"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should reply 200 when the datapack is successfully fetched", async () => {
+    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    findUser.mockResolvedValueOnce([testUser as User]);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ title: "test" });
   });
 });

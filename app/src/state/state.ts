@@ -110,6 +110,7 @@ export type State = {
   config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
+  showLoadingDatapacksLoader: boolean;
   loadingDatapacks: boolean;
   datapackMetadata: DatapackMetadata[]; // all datapacks on the server, loaded on page load
   datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
@@ -247,6 +248,7 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  showLoadingDatapacksLoader: false,
   loadingDatapacks: false,
   datapackMetadata: [],
   datapacks: [],

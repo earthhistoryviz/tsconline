@@ -3,7 +3,6 @@ import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
 import React, { ChangeEvent, useContext, useEffect, useRef, useState, createContext } from "react";
 import { context } from "./state";
-import { loadRecaptcha } from "./util";
 import {
   Autocomplete,
   Avatar,
@@ -34,7 +33,7 @@ import {
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
   isUserDatapack,
-  assertWorkshopDatapack
+  isDatapackTypeString
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -70,40 +69,27 @@ export const DatapackProfile = observer(() => {
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
   const fetchDatapack = async () => {
     if (!id) return;
+    if (!queryType || !isDatapackTypeString(queryType)) return;
     if (!datapack) {
-      switch (queryType) {
-        case "user":
-          await loadRecaptcha();
-          return await actions.fetchUserDatapack(id);
-        case "official":
-          return await actions.fetchOfficialDatapack(id);
-        case "workshop": {
-          await loadRecaptcha();
-          const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === "workshop");
-          if (!metadata) return;
-          assertWorkshopDatapack(metadata);
-          return await actions.fetchWorkshopDatapack(metadata.uuid, id);
-        }
-      }
+      return await actions.fetchDatapack(queryType, id, true);
     }
   };
-  useEffect(() => {
-    const intializeDatapack = async () => {
-      if (!datapack) {
-        const fetchedDatapack = await fetchDatapack();
-        if (fetchedDatapack) {
-          actions.resetEditableDatapackMetadata(fetchedDatapack);
-          actions.addDatapack(fetchedDatapack);
-          setIsMetadataInitialized(true);
-          setDatapack(fetchedDatapack);
-        }
-      } else if (!isMetadataInitialized) {
-        actions.resetEditableDatapackMetadata(datapack);
+  const intializeDatapack = async () => {
+    if (!datapack) {
+      const fetchedDatapack = await fetchDatapack();
+      if (fetchedDatapack) {
+        actions.resetEditableDatapackMetadata(fetchedDatapack);
+        actions.addDatapack(fetchedDatapack);
         setIsMetadataInitialized(true);
+        setDatapack(fetchedDatapack);
       }
-      setLoading(false);
-    };
-
+    } else if (!isMetadataInitialized) {
+      actions.resetEditableDatapackMetadata(datapack);
+      setIsMetadataInitialized(true);
+    }
+    setLoading(false);
+  };
+  useEffect(() => {
     intializeDatapack().catch((e) => {
       console.error("Error fetching datapack", e);
       displayServerError(e, ErrorCodes.UNABLE_TO_FETCH_DATAPACKS, ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_DATAPACKS]);
@@ -198,8 +184,10 @@ export const DatapackProfile = observer(() => {
         datapack,
         state.datapackProfilePage.editableDatapackMetadata
       );
-      if (editedDatapack) setDatapack(editedDatapack);
-      actions.setDatapackProfilePageEditMode(false);
+      if (editedDatapack) {
+        setDatapack(editedDatapack);
+        actions.setDatapackProfilePageEditMode(false);
+      }
       // if the title has changed, navigate to the new title
       if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(

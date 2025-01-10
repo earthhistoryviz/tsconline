@@ -17,7 +17,9 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray
+  assertDatapackMetadataArray,
+  DatapackTypeString,
+  assertWorkshopDatapack
 } from "@tsconline/shared";
 
 import {
@@ -31,7 +33,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher } from "../../util";
+import { executeRecaptcha, fetcher, loadRecaptcha } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -65,6 +67,31 @@ import {
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
+
+export const fetchDatapack = action(
+  "fetchDatapack",
+  async (type: DatapackTypeString, title: string, useRecaptcha?: boolean) => {
+    let datapack: Datapack | undefined;
+    switch (type) {
+      case "user":
+        if (useRecaptcha) await loadRecaptcha();
+        datapack = await actions.fetchUserDatapack(title);
+        break;
+      case "official":
+        datapack = await actions.fetchOfficialDatapack(title);
+        break;
+      case "workshop": {
+        if (useRecaptcha) await loadRecaptcha();
+        const metadata = state.datapackMetadata.find((d) => d.title === title && d.type === "workshop");
+        if (!metadata) return;
+        assertWorkshopDatapack(metadata);
+        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, title);
+        break;
+      }
+    }
+    return datapack;
+  }
+);
 
 export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
   try {
@@ -435,7 +462,7 @@ export const processDatapackConfig = action(
   async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
-      return false;
+      return true;
     }
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
@@ -1001,7 +1028,10 @@ export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enable
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
 });
-export const setLoadingDatapack = action("setLoadingDatapack", (loading: boolean) => {
+export const setshowLoadingDatapacksLoader = action("setshowLoadingDatapacksLoader", (loading: boolean) => {
+  state.showLoadingDatapacksLoader = loading;
+});
+export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
   state.loadingDatapacks = loading;
 });
 export const setUser = action("setUser", (user: SharedUser) => {
