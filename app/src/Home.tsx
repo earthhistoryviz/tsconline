@@ -125,7 +125,7 @@ const Carousel = observer(
     const { t } = useTranslation();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     useEffect(() => {
-      if (!paused && activeIndex !== carouselContent.length - 1) {
+      if (!paused) {
         const interval = setInterval(() => {
           onNext();
         }, 5000);
@@ -207,7 +207,6 @@ const Carousel = observer(
       }
     ];
     const onNext = () => {
-      if (activeIndex === carouselContent.length - 1) return;
       setDirection(1);
       setActiveIndex((activeIndex + 1) % carouselContent.length);
     };
