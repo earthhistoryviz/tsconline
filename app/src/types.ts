@@ -135,7 +135,8 @@ export const SettingsMenuOptionLabels = {
   search: "Search",
   font: "Font",
   mappoints: "Map Points",
-  datapacks: "Datapacks"
+  datapacks: "Datapacks",
+  loadsave: "Load/Save"
 };
 
 export type SettingsTabs = keyof typeof SettingsMenuOptionLabels;
