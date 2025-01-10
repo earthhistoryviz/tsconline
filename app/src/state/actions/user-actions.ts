@@ -9,7 +9,8 @@ import {
   removeDatapack,
   setDatapackProfilePageEditMode,
   resetEditableDatapackMetadata,
-  processDatapackConfig
+  processDatapackConfig,
+  fetchDatapack
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -103,11 +104,11 @@ export const handleDatapackEdit = action(
 
 export const refetchDatapack = action(
   async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
-    const userDatapack = await fetchUserDatapack(editedDatapack.title);
-    if (userDatapack) {
+    const datapack = await fetchDatapack(editedDatapack.type, editedDatapack.title);
+    if (datapack) {
       removeDatapack(originalDatapack);
-      addDatapack(userDatapack);
-      return userDatapack;
+      addDatapack(datapack);
+      return datapack;
     } else {
       return null;
     }

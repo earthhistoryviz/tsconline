@@ -127,7 +127,12 @@ export default observer(function App() {
     }
     return false;
   };
-
+  const checkLoadingDatapacks = () => {
+    const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
+    const isOnDatapackPath = location.pathname === "/datapacks";
+    if (state.loadingDatapacks && !(isOnDatapackPath || isOnDatapacksTab)) return true;
+    return false;
+  };
   return (
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -178,8 +183,12 @@ export default observer(function App() {
             headerText={t("loading.loading-datapacks")}
             subHeaderText={t("loading.time")}
           />
+          <TSCDialogLoader
+            open={state.showLoadingDatapacksLoader || checkLoadingDatapacks()}
+            headerText={t("loading.fetching-datapacks")}
+          />
           <TSCYesNoPopup
-            open={checkUnsavedChanges()}
+            open={checkUnsavedChanges() && !checkLoadingDatapacks()}
             title={t("dialogs.confirm-datapack-change.title")}
             message={t("dialogs.confirm-datapack-change.message")}
             onNo={async () => {

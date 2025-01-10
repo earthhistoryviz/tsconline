@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { DatapackUploadForm, TSCButton, CustomTooltip, CustomDivider, TSCDialogLoader } from "../components";
+import { DatapackUploadForm, TSCButton, CustomTooltip, CustomDivider } from "../components";
 import { context } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -18,7 +18,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest, DatapackMetadata, assertWorkshopDatapack } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -36,7 +36,6 @@ import { ErrorCodes } from "../util/error-codes";
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
 
   useEffect(() => {
@@ -54,15 +53,14 @@ export const Datapacks = observer(function Datapacks() {
 
   return (
     <>
-      <TSCDialogLoader open={loading} headerText="Fetching Datapacks" />
       <div className={styles.dc}>
         <div className={styles.hdc}>
           <CustomTooltip title="Deselect All" placement="top">
             <IconButton
               className={styles.ib}
-            data-tour="datapack-deselect-button"
+              data-tour="datapack-deselect-button"
               onClick={async () => {
-                await actions.processDatapackConfig([]);
+                actions.setUnsavedDatapackConfig([]);
               }}>
               <DeselectIcon />
             </IconButton>
@@ -73,7 +71,7 @@ export const Datapacks = observer(function Datapacks() {
           </div>
           <ToggleButtonGroup
             className={styles.display}
-          data-tour="datapack-display-button"
+            data-tour="datapack-display-button"
             value={state.settingsTabs.datapackDisplayType}
             onChange={(_event, val) => {
               if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
@@ -145,13 +143,9 @@ export const Datapacks = observer(function Datapacks() {
           )}
           <TSCButton
             className={styles.buttons}
-          data-tour="datapack-confirm-button"
+            data-tour="datapack-confirm-button"
+            disabled={state.loadingDatapacks}
             onClick={async () => {
-              setLoading(true);
-              while (state.loadingDatapacks) {
-                await new Promise((resolve) => setTimeout(resolve, 100));
-              }
-              setLoading(false);
               await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             }}>
             {t("button.confirm-selection")}
@@ -219,46 +213,23 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const visibleDatapacks: (DatapackMetadata | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
     const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
-      if (state.unsavedDatapackConfig.some((datapack) => datapack.title === newDatapack.title)) {
+      if (state.unsavedDatapackConfig.some((datapack) => compareExistingDatapacks(datapack, newDatapack))) {
         actions.setUnsavedDatapackConfig(
-          state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
+          state.unsavedDatapackConfig.filter((datapack) => !compareExistingDatapacks(datapack, newDatapack))
         );
       } else {
-        actions.setLoadingDatapack(true);
+        actions.setLoadingDatapacks(true);
         if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
-          let datapack: Datapack | undefined;
-          try {
-            switch (newDatapack.type) {
-              case "user":
-                datapack = await actions.fetchUserDatapack(newDatapack.title);
-                break;
-              case "official":
-                datapack = await actions.fetchOfficialDatapack(newDatapack.title);
-                break;
-              case "workshop": {
-                const metadata = state.datapackMetadata.find(
-                  (d) => d.title === newDatapack.title && d.type === "workshop"
-                );
-                if (!metadata) return;
-                assertWorkshopDatapack(metadata);
-                datapack = await actions.fetchWorkshopDatapack(metadata.uuid, newDatapack.title);
-                break;
-              }
-            }
-          } catch (e) {
-            actions.setLoadingDatapack(false);
-            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
-            return;
-          }
+          const datapack = await actions.fetchDatapack(newDatapack.type, newDatapack.title);
           if (!datapack) {
-            actions.setLoadingDatapack(false);
+            actions.setLoadingDatapacks(false);
             actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
             return;
           }
           actions.addDatapack(datapack);
         }
         actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
-        actions.setLoadingDatapack(false);
+        actions.setLoadingDatapacks(false);
       }
     };
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;

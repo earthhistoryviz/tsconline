@@ -304,13 +304,15 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
       reply.status(400).send({ error: "Invalid workshop UUID" });
       return;
     }
-    if (!isUserInWorkshopAndWorkshopIsActive(user[0].userId, workshopId)) {
+    if (!(await isUserInWorkshopAndWorkshopIsActive(user[0].userId, workshopId))) {
       reply.status(401).send({ error: "User does not have access to this workshop" });
       return;
     }
-    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
     if (!datapack) {
-      reply.status(404).send({ error: "Datapack not found" });
+      reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
       return;
     }
     reply.send(datapack);
