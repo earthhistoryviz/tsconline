@@ -1,4 +1,4 @@
-import { DatapackMetadata, isUserDatapack } from "@tsconline/shared";
+import { DatapackMetadata, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import _ from "lodash";
 import logger from "../error-logger.js";
 import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
@@ -72,7 +72,11 @@ export async function editDatapack(
       errors.push("No file uploaded with edit request");
     }
   }
-  if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
+  if (
+    "isPublic" in newDatapack &&
+    originalMetadata.isPublic !== newDatapack.isPublic &&
+    !isWorkshopDatapack(metadata)
+  ) {
     await switchPrivacySettingsOfDatapack(
       uuid,
       metadata.title,

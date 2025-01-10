@@ -43,11 +43,13 @@ vi.mock("../src/error-logger", () => {
 vi.mock("@tsconline/shared", () => {
   return {
     assertDatapack: vi.fn(() => {}),
-    isUserDatapack: vi.fn(() => true)
+    isUserDatapack: vi.fn(() => true),
+    isWorkshopDatapack: vi.fn(() => true)
   };
 });
 describe("editDatapack tests", async () => {
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const isWorkshopDatapack = vi.spyOn(shared, "isWorkshopDatapack");
   const getTemporaryFilepath = vi.spyOn(uploadHandler, "getTemporaryFilepath");
   const replaceDatapackFile = vi.spyOn(uploadHandler, "replaceDatapackFile");
   const changeProfilePicture = vi.spyOn(uploadHandler, "changeProfilePicture");
@@ -114,6 +116,7 @@ describe("editDatapack tests", async () => {
   });
   it("should call switchPrivacySettingsOfDatapack", async () => {
     const newDatapack: Partial<shared.DatapackMetadata> = { isPublic: true };
+    isWorkshopDatapack.mockReturnValueOnce(false);
     await editDatapack("test", metadata.title, newDatapack);
     expect(renameUserDatapack).not.toHaveBeenCalled();
     expect(writeUserDatapack).toHaveBeenCalledOnce();
@@ -132,6 +135,7 @@ describe("editDatapack tests", async () => {
     replaceDatapackFile.mockRejectedValueOnce(new Error("replaceDatapackFile error"));
     changeProfilePicture.mockRejectedValueOnce(new Error("changeProfilePicture error"));
     switchPrivacySettingsOfDatapack.mockRejectedValueOnce(new Error("switchPrivacySettingsOfDatapack error"));
+    isWorkshopDatapack.mockReturnValueOnce(false);
     const errors = await editDatapack("test", metadata.title, newDatapack);
     expect(errors.length).toBe(4);
     expect(renameUserDatapack).toHaveBeenCalledOnce();
@@ -152,6 +156,7 @@ describe("editDatapack tests", async () => {
     replaceDatapackFile.mockRejectedValueOnce(new Error("replaceDatapackFile error"));
     changeProfilePicture.mockRejectedValueOnce(new Error("changeProfilePicture error"));
     switchPrivacySettingsOfDatapack.mockRejectedValueOnce(new Error("switchPrivacySettingsOfDatapack error"));
+    isWorkshopDatapack.mockReturnValueOnce(false);
     const errors = await editDatapack("test", metadata.title, newDatapack);
     expect(errors.length).toBe(4);
     expect(renameUserDatapack).toHaveBeenCalledOnce();
