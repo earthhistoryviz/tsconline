@@ -47,7 +47,7 @@ export const Datapacks = observer(function Datapacks() {
         removeRecaptcha();
       }
     };
-  }, []);
+  }, [state.isLoggedIn, state.user.isAdmin]);
 
   return (
     <div className={styles.dc}>

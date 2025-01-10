@@ -9,10 +9,6 @@ export const editWorkshopDatapackMetadata = async function editWorkshopDatapackM
 ) {
   const { workshopUUID, datapackTitle } = request.params;
   const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
   try {
     const user = await findUser({ uuid });
     if (!user || user.length !== 1 || !user[0]) {
