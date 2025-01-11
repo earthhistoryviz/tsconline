@@ -777,6 +777,12 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
       "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
       o.dataMiningPointDataType
     );
+  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
+    throwError("PointSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  }
+  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
+    throwError("PointSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  }
   assertDataMiningSettings(o);
 }
 
@@ -831,6 +837,12 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
     );
   if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
     throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
+  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
+    throwError("EventSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  }
+  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
+    throwError("EventSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  }
   assertDataMiningSettings(o);
 }
 

@@ -267,9 +267,9 @@ export function assertEventColumnInfoTSC(o: any): asserts o is EventColumnInfoTS
   if (o.drawExtraColumn != null && (typeof o.drawExtraColumn !== "string" || !isEventFrequency(o.drawExtraColumn)))
     throwError("EventColumnInfoTSC", "drawExtraColumn", "string", o.drawExtraColumn);
   if (typeof o.isDualColCompColumn !== "boolean")
-    throwError("PointSettings", "isDualColCompColumn", "boolean", o.isDualColCompColumn);
-  if (o.drawDualColCompColumn !== null && typeof o.drawDualColCompColumn !== "string")
-    throwError("PointSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+    throwError("EventColumnInfoTSC", "isDualColCompColumn", "boolean", o.isDualColCompColumn);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string")
+    throwError("EventColumnInfoTSC", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
 
   assertColumnBasicInfoTSC(o);
 }
@@ -332,9 +332,9 @@ export function assertPointColumnInfoTSC(o: any): asserts o is PointColumnInfoTS
   if (typeof o.isDataMiningColumn !== "boolean")
     throwError("PointColumnInfoTSC", "isDataMiningColumn", "boolean", o.isDataMiningColumn);
   if (typeof o.isDualColCompColumn !== "boolean")
-    throwError("PointSettings", "isDualColCompColumn", "boolean", o.isDualColCompColumn);
-  if (o.drawDualColCompColumn !== null && typeof o.drawDualColCompColumn !== "string")
-    throwError("PointSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+    throwError("PointColumnInfoTSC", "isDualColCompColumn", "boolean", o.isDualColCompColumn);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string")
+    throwError("PointColumnInfoTSC", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
   assertColumnBasicInfoTSC(o);
 }
 export function assertColumnBasicInfoTSC(o: any): asserts o is ColumnBasicInfoTSC {
