@@ -39,94 +39,38 @@ export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: numbe
   if (userBaseAge <= userTopAge) {
     return false;
   }
-  if (dccColumn.columnDisplayType === "Event") {
-    assertEventSettings(dccColumn.columnSpecificSettings);
-  } else if (dccColumn.columnDisplayType === "Point") {
-    assertPointSettings(dccColumn.columnSpecificSettings);
-  } else {
-    return false;
+  let reachedFirstRef = false;
+  while (!reachedFirstRef) {
+    if (
+      !(
+        (dccColumn.minAge <= userTopAge && dccColumn.maxAge >= userBaseAge) ||
+        (dccColumn.minAge > userTopAge && dccColumn.minAge < userBaseAge) ||
+        (dccColumn.maxAge < userBaseAge && dccColumn.maxAge > userTopAge)
+      )
+    ) {
+      return false;
+    }
+    if (dccColumn.columnDisplayType === "Event") {
+      assertEventSettings(dccColumn.columnSpecificSettings);
+    } else if (dccColumn.columnDisplayType === "Point") {
+      assertPointSettings(dccColumn.columnSpecificSettings);
+    } else {
+      console.warn("WARNING: dccColumn is not a valid column type");
+      return false;
+    }
+    //reached end of ref list
+    if (!dccColumn.columnSpecificSettings.dualColCompColumnRef) {
+      reachedFirstRef = true;
+      break;
+    }
+    const refCol = state.settingsTabs.columnHashMap.get(dccColumn.columnSpecificSettings.dualColCompColumnRef);
+    if (!refCol) {
+      console.log("WARNING: tried to get reference while checking dcc column, but is undefined");
+      return false;
+    }
+    dccColumn = refCol;
   }
-
-  if (!dccColumn.columnSpecificSettings.dualColCompColumnRef) {
-    return false;
-  }
-
-  const refColumn = state.settingsTabs.columnHashMap.get(dccColumn.columnSpecificSettings.dualColCompColumnRef);
-  if (!refColumn) {
-    return false;
-  }
-
-  if (refColumn.columnDisplayType === "Point") {
-    assertPointSettings(refColumn.columnSpecificSettings);
-  } else if (refColumn.columnDisplayType === "Event") {
-    assertEventSettings(refColumn.columnSpecificSettings);
-  } else {
-    return false;
-  }
-  if (!refColumn.columnSpecificSettings.drawDualColCompColumn) {
-    return false;
-  }
-
-  const overlayColumn = state.settingsTabs.columnHashMap.get(
-    refColumn.columnSpecificSettings.drawDualColCompColumn.split(":")[1]
-  );
-  if (!overlayColumn) {
-    return false;
-  }
-  //cases where data doesn't overlap
-  if (refColumn.maxAge < overlayColumn.minAge) {
-    return (
-      (userTopAge <= refColumn.minAge || (refColumn.minAge < userTopAge && userTopAge < refColumn.maxAge)) &&
-      (overlayColumn.maxAge <= userBaseAge ||
-        (overlayColumn.minAge < userBaseAge && userBaseAge < overlayColumn.maxAge))
-    );
-  } else if (overlayColumn.maxAge < overlayColumn.minAge) {
-    return (
-      (userTopAge <= overlayColumn.minAge ||
-        (overlayColumn.minAge < userTopAge && userTopAge < overlayColumn.maxAge)) &&
-      (refColumn.maxAge <= userBaseAge || (refColumn.minAge < userBaseAge && userBaseAge < refColumn.maxAge))
-    );
-  }
-
-  //cases where data overlaps
-  if (
-    refColumn.minAge <= overlayColumn.minAge &&
-    overlayColumn.minAge < refColumn.minAge &&
-    refColumn.maxAge < overlayColumn.maxAge
-  ) {
-    return (
-      (userTopAge < overlayColumn.minAge && overlayColumn.minAge < userBaseAge) ||
-      (userTopAge < refColumn.maxAge && refColumn.maxAge < userBaseAge) ||
-      (overlayColumn.minAge < userTopAge && userTopAge < refColumn.maxAge) ||
-      (overlayColumn.minAge < userTopAge && userTopAge < refColumn.maxAge)
-    );
-  }
-  if (
-    overlayColumn.minAge <= refColumn.minAge &&
-    refColumn.minAge < overlayColumn.minAge &&
-    overlayColumn.maxAge < refColumn.maxAge
-  ) {
-    return (
-      (userTopAge < refColumn.minAge && refColumn.minAge < userBaseAge) ||
-      (userTopAge < overlayColumn.maxAge && overlayColumn.maxAge < userBaseAge) ||
-      (refColumn.minAge < userTopAge && userTopAge < overlayColumn.maxAge) ||
-      (refColumn.minAge < userTopAge && userTopAge < overlayColumn.maxAge)
-    );
-  }
-
-  //cases where age range of one data is inside range of the other data
-  if (refColumn.minAge >= overlayColumn.minAge && refColumn.maxAge <= overlayColumn.maxAge) {
-    return (
-      (refColumn.minAge < userTopAge && userTopAge < refColumn.maxAge) ||
-      (refColumn.minAge < userBaseAge && userBaseAge < refColumn.maxAge)
-    );
-  }
-  if (overlayColumn.minAge >= refColumn.minAge && overlayColumn.maxAge <= refColumn.maxAge) {
-    return (
-      (overlayColumn.minAge < userTopAge && userTopAge < overlayColumn.maxAge) ||
-      (overlayColumn.minAge < userBaseAge && userBaseAge < overlayColumn.maxAge)
-    );
-  }
+  return true;
 }
 
 export function checkIfDccColumn(column: ColumnInfo) {
