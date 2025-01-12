@@ -291,6 +291,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "-d",
       ...datapacksToSendToCommandLine,
       // Tell it where to save chart
+      "-cross",
       "-o",
       chartFilePath,
       // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
