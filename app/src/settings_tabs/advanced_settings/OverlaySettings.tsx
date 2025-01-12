@@ -75,22 +75,18 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
         </Typography>
         <CustomDivider className="settings-header-divider" />
         <div className="data-mining-settings-content">
-          <Box sx={{ display: "flex", flexDirection: "row" }}>
-            <Box sx={{ width: "300px" }}>
+          <Box className="overlay-settings-container">
+            <Box className="overlay-name-and-checkbox">
               <Typography>Current Overlay</Typography>
               {column.columnSpecificSettings.drawDualColCompColumn ? (
-                <Typography className="test" sx={{ maxWidth: "300px", margin: 1 }}>
+                <Typography className="overlay-name">
                   {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
                 </Typography>
               ) : (
-                <Typography
-                  className="test"
-                  sx={{ opacity: "0.5", borderRadius: "5px", background: "white", margin: 1 }}>
-                  Choose Column {">>>"}
-                </Typography>
+                <Typography className="empty-overlay-name">Choose Column {">>>"}</Typography>
               )}
 
-              <Box sx={{ display: "flex", flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
+              <Box className="overlay-checkbox-container">
                 <TSCCheckbox
                   checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
                   className="overlay-checkbox"
@@ -105,7 +101,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 <Typography>Display Overlay</Typography>
               </Box>
             </Box>
-            <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Box>
               <Typography>Choose Second Column</Typography>
               <Box
                 id="DccColumnAccordionWrapper"

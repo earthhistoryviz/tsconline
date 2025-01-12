@@ -29,8 +29,33 @@
   cursor: default;
 }
 
-.test {
+.overlay-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 300px;
+  margin: 1;
+}
+
+.empty-overlay-name {
+  opacity: 0.5;
+  border-radius: 5px;
+  background: gray;
+  margin: 1;
+}
+
+.overlay-checkbox-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-settings-container {
+  display: flex;
+  flex-direction: row;
+}
+
+.overlay-name-and-checkbox {
+  width: 300;
 }
