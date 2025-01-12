@@ -51,7 +51,7 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix, dualColCompPrefix } from "../../util/constant";
-import { findSerialNum } from "../../util/util";
+import { discardTscPrefix, findSerialNum } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -636,6 +636,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
 
 /**
  * adds a dual col comp / overlay column. The properties of the given column are copied over.
+ * the minAge and maxAge are set to the minAge and maxAge of the overlay for time checking purposes.
  */
 
 export const addDualColCompColumn = action((column: ColumnInfo) => {
@@ -673,11 +674,24 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     );
     return;
   }
+  const overlayColumn = state.settingsTabs.columnHashMap.get(
+    discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)
+  );
+  if (!overlayColumn) {
+    console.warn(
+      "WARNING: tried to get",
+      discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn),
+      "in state.settingsTabs.columnHashMap, but is undefined"
+    );
+    return;
+  }
   const dualColCompColumnName = dualColCompPrefix + column.name;
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
     editName: dualColCompColumnName,
+    minAge: overlayColumn.minAge,
+    maxAge: overlayColumn.maxAge,
     enableTitle: true,
     rgb: {
       r: 255,
