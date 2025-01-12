@@ -80,11 +80,12 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
               <Typography>Current Overlay</Typography>
               {column.columnSpecificSettings.drawDualColCompColumn ? (
                 <Typography className="test" sx={{ maxWidth: "300px", margin: 1 }}>
-                {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
-              </Typography>
-                
+                  {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
+                </Typography>
               ) : (
-                <Typography className="test" sx={{ opacity: "0.5", borderRadius: "5px", background: "white", margin: 1 }}>
+                <Typography
+                  className="test"
+                  sx={{ opacity: "0.5", borderRadius: "5px", background: "white", margin: 1 }}>
                   Choose Column {">>>"}
                 </Typography>
               )}
