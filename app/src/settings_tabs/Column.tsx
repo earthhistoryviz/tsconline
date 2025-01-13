@@ -13,7 +13,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
-import { checkIfDataIsInRange, checkIfDccColumn, checkIfDccDataIsInRange } from "../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
 import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
@@ -21,6 +21,7 @@ import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
+import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
