@@ -21,7 +21,7 @@ import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { checkIfDataIsInRange, checkIfDccColumn, checkIfDccDataIsInRange, discardTscPrefix } from "../../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn, discardTscPrefix } from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
 type OverlaySettingsProps = {
@@ -161,6 +161,45 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
 type ColumnAccordionProps = {
   column: ColumnInfo;
 };
+
+function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, userBaseAge: number) {
+  const { state } = useContext(context);
+  if (userBaseAge <= userTopAge) {
+    return false;
+  }
+  let reachedFirstRef = false;
+  while (!reachedFirstRef) {
+    if (
+      !(
+        (dccColumn.minAge <= userTopAge && dccColumn.maxAge >= userBaseAge) ||
+        (dccColumn.minAge > userTopAge && dccColumn.minAge < userBaseAge) ||
+        (dccColumn.maxAge < userBaseAge && dccColumn.maxAge > userTopAge)
+      )
+    ) {
+      return false;
+    }
+    if (dccColumn.columnDisplayType === "Event") {
+      assertEventSettings(dccColumn.columnSpecificSettings);
+    } else if (dccColumn.columnDisplayType === "Point") {
+      assertPointSettings(dccColumn.columnSpecificSettings);
+    } else {
+      console.warn("WARNING: dccColumn is not a valid column type");
+      return false;
+    }
+    //reached end of ref list
+    if (!dccColumn.columnSpecificSettings.dualColCompColumnRef) {
+      reachedFirstRef = true;
+      break;
+    }
+    const refCol = state.settingsTabs.columnHashMap.get(dccColumn.columnSpecificSettings.dualColCompColumnRef);
+    if (!refCol) {
+      console.log("WARNING: tried to get reference while checking dcc column, but is undefined");
+      return false;
+    }
+    dccColumn = refCol;
+  }
+  return true;
+}
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
