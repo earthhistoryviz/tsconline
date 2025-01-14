@@ -68,7 +68,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
           {t("settings.column.overlay-menu.title")}
         </Typography>
         <CustomDivider className="settings-header-divider" />
-        <div className="data-mining-settings-content">
+        <div className="overlay-settings-content">
           <Box className="overlay-settings-container">
             <Box className="overlay-name-and-checkbox">
               <Typography>{t("settings.column.overlay-menu.current-overlay")}</Typography>
@@ -102,6 +102,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
             <Box>
               <Typography>{t("settings.column.overlay-menu.choose-second-column")}</Typography>
               <TextField
+                className="overlay-search-bar"
                 variant="outlined"
                 size="small"
                 label={t("settings.column.overlay-menu.search-bar")}
