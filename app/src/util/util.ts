@@ -1,11 +1,23 @@
 import { ColumnInfo, RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import Color from "color";
+import { dualColCompPrefix } from "./constant";
+
+/**
+ * removes the prefix of a column id in the tsc format
+ * ex. "class datastore.EventColumn:Miocene-Paleocene Oxy-18 events" -> "Miocene-Paleocene Oxy-18 events"
+ * @param name
+ * @returns
+ */
 
 export function discardTscPrefix(name: string | null) {
   if (!name) {
     return "";
   }
   return name.split(":")[1];
+}
+
+export function prependDualColCompColumnName(text: string): string {
+  return dualColCompPrefix + text;
 }
 
 /**

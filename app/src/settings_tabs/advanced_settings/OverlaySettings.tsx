@@ -13,7 +13,6 @@ import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
-import { dualColCompPrefix } from "../../util/constant";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../../assets/icons/dark-arrow-up.json";
@@ -21,7 +20,12 @@ import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { checkIfDataIsInRange, checkIfDccColumn, discardTscPrefix } from "../../util/util";
+import {
+  checkIfDataIsInRange,
+  checkIfDccColumn,
+  discardTscPrefix,
+  prependDualColCompColumnName
+} from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
 type OverlaySettingsProps = {
@@ -77,32 +81,36 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
         <div className="data-mining-settings-content">
           <Box className="overlay-settings-container">
             <Box className="overlay-name-and-checkbox">
-              <Typography>Current Overlay</Typography>
+              <Typography>{t("settings.column.overlay-menu.current-overlay}")}</Typography>
               {column.columnSpecificSettings.drawDualColCompColumn ? (
                 <Typography className="overlay-name">
                   {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
                 </Typography>
               ) : (
-                <Typography className="empty-overlay-name">Choose Column {">>>"}</Typography>
+                <Typography className="empty-overlay-name">
+                  {t("settings.column.overlay-menu.choose-column-empty")}
+                </Typography>
               )}
 
               <Box className="overlay-checkbox-container">
                 <TSCCheckbox
-                  checked={state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name) !== undefined}
+                  checked={
+                    state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name)) !== undefined
+                  }
                   className="overlay-checkbox"
                   onClick={() => {
-                    if (!state.settingsTabs.columnHashMap.get(dualColCompPrefix + column.name)) {
+                    if (!state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name))) {
                       actions.addDualColCompColumn(column);
                     } else {
                       actions.removeDualColCompColumn(column);
                     }
                   }}
                 />
-                <Typography>Display Overlay</Typography>
+                <Typography>{t("settings.column.overlay-menu.display-overlay")}</Typography>
               </Box>
             </Box>
             <Box>
-              <Typography>Choose Second Column</Typography>
+              <Typography>{t("settings.column.overlay-menu.choose-second-column")}</Typography>
               <Box
                 id="DccColumnAccordionWrapper"
                 ref={scrollRef}
