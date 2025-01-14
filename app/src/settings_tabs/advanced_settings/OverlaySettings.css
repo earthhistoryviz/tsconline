@@ -54,8 +54,18 @@
 .overlay-settings-container {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
 }
 
 .overlay-name-and-checkbox {
   width: 300px;
+}
+
+.overlay-settings-content {
+  align-self: flex-start;
+}
+
+.overlay-search-bar {
+  width: 20lh;
+  margin: 10px;
 }
