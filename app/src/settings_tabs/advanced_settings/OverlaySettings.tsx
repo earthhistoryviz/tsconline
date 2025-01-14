@@ -1,7 +1,7 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import { ColumnContainer, TSCCheckbox, Lottie, StyledScrollbar, CustomDivider } from "../../components";
-import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
+import { Box, Tooltip, Typography, useTheme, IconButton, TextField } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
@@ -16,6 +16,7 @@ import {
 } from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
+import { getRegex } from "../../util";
 type OverlaySettingsProps = {
   column: ColumnInfo;
 };
@@ -30,6 +31,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const [showScroll, setShowScroll] = useState(false);
+  const [overlaySearchTerm, setOverlaySearchTerm] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
@@ -99,6 +101,13 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
             </Box>
             <Box>
               <Typography>{t("settings.column.overlay-menu.choose-second-column")}</Typography>
+              <TextField
+                variant="outlined"
+                size="small"
+                label={t("settings.column.overlay-menu.search-bar")}
+                onChange={(e) => setOverlaySearchTerm(e.target.value)}
+                value={overlaySearchTerm}
+              />
               <Box
                 id="DccColumnAccordionWrapper"
                 ref={scrollRef}
@@ -109,7 +118,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 position="relative">
                 {state.settingsTabs.columns &&
                   Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
-                    <ColumnAccordion key={childName} column={childColumn} />
+                    <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
                   ))}
                 {/* Button to take users to top of column menu when scrolling */}
 
@@ -132,6 +141,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
 
 type ColumnAccordionProps = {
   column: ColumnInfo;
+  overlaySearchTerm: string;
 };
 
 function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, userBaseAge: number) {
@@ -173,26 +183,35 @@ function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, user
   return true;
 }
 
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, overlaySearchTerm }) => {
   const { state } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
+  //don't display inner columns
   if (column.children.length > 0) {
     return (
       <div>
         {column.children &&
           Object.entries(column.children).map(([childName, childColumn]) => (
-            <ColumnAccordion key={childName} column={childColumn} />
+            <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
           ))}
       </div>
     );
   }
+  //don't display columns that are not events or points
   if (
     (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
     column.name === state.columnMenu.columnSelected
   ) {
     return;
   }
+
+  //for search
+  const regExp = getRegex(overlaySearchTerm);
+  if (!regExp.test(column.name) || !regExp.test(column.editName)) {
+    return;
+  }
+
   function getSelectedOverlayColumn(): string | null {
     if (!state.columnMenu.columnSelected) {
       return null;
@@ -225,8 +244,6 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         state.settings.timeSettings[column.units].topStageAge,
         state.settings.timeSettings[column.units].baseStageAge
       );
-
-  // if there are no children, don't make an accordion
 
   return (
     <div
