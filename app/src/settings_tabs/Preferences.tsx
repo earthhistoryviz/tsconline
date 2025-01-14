@@ -4,8 +4,6 @@ import { useContext } from "react";
 import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
 import { TSCCheckbox } from "../components";
-import SaveSettings from "../settings_tabs/SaveSettings";
-import LoadSettings from "../settings_tabs/LoadSettings";
 import "./Preferences.css";
 
 export const Preferences = observer(function Preferences() {
@@ -114,10 +112,6 @@ export const Preferences = observer(function Preferences() {
             }
             label={t("settings.preferences.checkboxs.use-suggested-age-spans")}
           />
-          <Box className="load-save-settings-actions">
-            <LoadSettings />
-            <SaveSettings />
-          </Box>
         </FormGroup>
       </Box>
     </div>
