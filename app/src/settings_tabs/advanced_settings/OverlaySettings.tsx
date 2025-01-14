@@ -1,25 +1,13 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
-import {
-  ColumnContainer,
-  TSCCheckbox,
-  Accordion,
-  CustomTooltip,
-  Lottie,
-  StyledScrollbar,
-  CustomDivider
-} from "../../components";
+import { ColumnContainer, TSCCheckbox, Lottie, StyledScrollbar, CustomDivider } from "../../components";
 import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
-import ExpandIcon from "@mui/icons-material/Expand";
-import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
-import MuiAccordionDetails from "@mui/material/AccordionDetails";
-import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-import MuiAccordionSummary from "@mui/material/AccordionSummary";
+
 import {
   checkIfDataIsInRange,
   checkIfDccColumn,
@@ -81,7 +69,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
         <div className="data-mining-settings-content">
           <Box className="overlay-settings-container">
             <Box className="overlay-name-and-checkbox">
-              <Typography>{t("settings.column.overlay-menu.current-overlay}")}</Typography>
+              <Typography>{t("settings.column.overlay-menu.current-overlay")}</Typography>
               {column.columnSpecificSettings.drawDualColCompColumn ? (
                 <Typography className="overlay-name">
                   {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
@@ -119,30 +107,6 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 bgcolor="secondaryBackground.main"
                 className={`hide-scrollbar dcc-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
                 position="relative">
-                <div className="column-filter-buttons">
-                  <CustomTooltip title="Expand All" placement="top">
-                    <IconButton
-                      disableRipple
-                      className="expand-collapse-column-buttons"
-                      onClick={() => {
-                        if (!state.settingsTabs.columns) return;
-                        actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-                      }}>
-                      <ExpandIcon />
-                    </IconButton>
-                  </CustomTooltip>
-                  <CustomTooltip title="Collapse All" placement="top">
-                    <IconButton
-                      disableRipple
-                      className="expand-collapse-column-buttons"
-                      onClick={() => {
-                        if (!state.settingsTabs.columns) return;
-                        actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-                      }}>
-                      <CompressIcon />
-                    </IconButton>
-                  </CustomTooltip>
-                </div>
                 {state.settingsTabs.columns &&
                   Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
                     <ColumnAccordion key={childName} column={childColumn} />
@@ -211,12 +175,23 @@ function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, user
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
-  const [expanded, setExpanded] = useState(column.expanded);
   const { t } = useTranslation();
   const theme = useTheme();
-
-  if (!column.show) {
-    return null;
+  if (column.children.length > 0) {
+    return (
+      <div>
+        {column.children &&
+          Object.entries(column.children).map(([childName, childColumn]) => (
+            <ColumnAccordion key={childName} column={childColumn} />
+          ))}
+      </div>
+    );
+  }
+  if (
+    (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+    column.name === state.columnMenu.columnSelected
+  ) {
+    return;
   }
   function getSelectedOverlayColumn(): string | null {
     if (!state.columnMenu.columnSelected) {
@@ -252,117 +227,65 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       );
 
   // if there are no children, don't make an accordion
-  if (column.children.length == 0) {
-    return (
-      <div
-        className={`column-leaf-row-container ${selectedClass}`}
-        onClick={() => {
-          if (
-            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-            column.name === state.columnMenu.columnSelected
-          ) {
-            return;
-          }
-          if (!state.columnMenu.columnSelected) {
-            return;
-          }
-          const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-          if (!refColumn) {
-            return;
-          }
-          if (refColumn.columnDisplayType === "Point") {
-            assertPointSettings(refColumn.columnSpecificSettings);
-          } else if (refColumn.columnDisplayType === "Event") {
-            assertEventSettings(refColumn.columnSpecificSettings);
-          } else {
-            return;
-          }
-          refColumn.columnSpecificSettings.drawDualColCompColumn =
-            `class datastore.${column.columnDisplayType}Column:` + column.name;
-        }}
-        tabIndex={0}>
-        <ColumnContainer className="dcc-column-leaf">
-          {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
-            <Tooltip
-              title={t("settings.column.tooltip.not-in-range")}
-              placement="top"
-              arrow
-              slotProps={{
-                popper: {
-                  modifiers: [
-                    {
-                      name: "offset",
-                      options: {
-                        offset: [0, -10]
-                      }
-                    }
-                  ]
-                }
-              }}>
-              <ErrorOutlineIcon
-                className="column-error-icon"
-                style={{
-                  color: theme.palette.error.main
-                }}
-              />
-            </Tooltip>
-          )}
-          <Typography
-            className={
-              (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-              column.name === state.columnMenu.columnSelected
-                ? "dcc-not-allowed"
-                : "column-display-name"
-            }>
-            {column.editName}
-          </Typography>
-        </ColumnContainer>
-      </div>
-    );
-  }
-  //for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = column.children.some((column) => column.name === getSelectedOverlayColumn())
-    ? { opacity: 1 }
-    : {};
+
   return (
-    <div className="dcc-accordion-container">
-      {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
-      <Accordion
-        //checks if column name is in expand list
-        expanded={expanded}
-        className="column-accordion">
-        <MuiAccordionSummary
-          onClick={() => {}}
-          tabIndex={0}
-          expandIcon={
-            <ArrowForwardIosSharpIcon
-              color="icon"
-              sx={{ fontSize: "0.9rem" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(!expanded);
+    <div
+      className={`column-leaf-row-container ${selectedClass}`}
+      onClick={() => {
+        if (!state.columnMenu.columnSelected) {
+          return;
+        }
+        const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+        if (!refColumn) {
+          return;
+        }
+        if (refColumn.columnDisplayType === "Point") {
+          assertPointSettings(refColumn.columnSpecificSettings);
+        } else if (refColumn.columnDisplayType === "Event") {
+          assertEventSettings(refColumn.columnSpecificSettings);
+        } else {
+          return;
+        }
+        refColumn.columnSpecificSettings.drawDualColCompColumn =
+          `class datastore.${column.columnDisplayType}Column:` + column.name;
+      }}
+      tabIndex={0}>
+      <ColumnContainer className="dcc-column-leaf">
+        {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
+          <Tooltip
+            title={t("settings.column.tooltip.not-in-range")}
+            placement="top"
+            arrow
+            slotProps={{
+              popper: {
+                modifiers: [
+                  {
+                    name: "offset",
+                    options: {
+                      offset: [0, -10]
+                    }
+                  }
+                ]
+              }
+            }}>
+            <ErrorOutlineIcon
+              className="column-error-icon"
+              style={{
+                color: theme.palette.error.main
               }}
             />
-          }
-          aria-controls="panel-content"
-          className={`column-accordion-summary ${selectedClass}`}>
-          <ColumnContainer
-            className="column-row-container"
-            sx={{
-              opacity: 1,
-              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
-            }}
-            onClick={() => setExpanded(!expanded)}>
-            <Typography className="column-display-name">{column.editName}</Typography>
-          </ColumnContainer>
-        </MuiAccordionSummary>
-        <MuiAccordionDetails className="column-accordion-details">
-          {column.children &&
-            Object.entries(column.children).map(([childName, childColumn]) => (
-              <ColumnAccordion key={childName} column={childColumn} />
-            ))}
-        </MuiAccordionDetails>
-      </Accordion>
+          </Tooltip>
+        )}
+        <Typography
+          className={
+            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+            column.name === state.columnMenu.columnSelected
+              ? "dcc-not-allowed"
+              : "column-display-name"
+          }>
+          {column.editName}
+        </Typography>
+      </ColumnContainer>
     </div>
   );
 });
