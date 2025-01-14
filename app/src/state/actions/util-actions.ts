@@ -91,13 +91,7 @@ export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: numbe
   }
   let reachedFirstRef = false;
   while (!reachedFirstRef) {
-    if (
-      !(
-        (dccColumn.minAge <= userTopAge && dccColumn.maxAge >= userBaseAge) ||
-        (dccColumn.minAge > userTopAge && dccColumn.minAge < userBaseAge) ||
-        (dccColumn.maxAge < userBaseAge && dccColumn.maxAge > userTopAge)
-      )
-    ) {
+    if (dccColumn.maxAge < userTopAge || dccColumn.minAge > userBaseAge) {
       return false;
     }
     if (dccColumn.columnDisplayType === "Event") {
