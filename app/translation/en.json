@@ -204,7 +204,8 @@
             "About": "About",
             "View Data": "View Data",
             "Discussion": "Discussion",
-            "Warnings": "Warnings"
+            "Warnings": "Warnings",
+            "Load/Save": "Load/Save"
         },
         "settings": {
             "time": {
