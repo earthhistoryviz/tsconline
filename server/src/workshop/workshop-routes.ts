@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { editDatapackMetadataRequestHandler } from "../cloud/general-cloud-requests.js";
 import { findUser } from "../database.js";
-import { verifyWorkshopValidity } from "../workshop-util.js";
+import { verifyWorkshopValidity } from "./workshop-util.js";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,

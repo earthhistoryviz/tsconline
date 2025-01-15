@@ -3,14 +3,10 @@ import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
-import {
-  deleteUserDatapack,
-  fetchAllUsersDatapacks,
-  fetchUserDatapack
-} from "../user/user-handler.js";
-import { isOperationResult } from "../types.js";
+import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+import { editDatapackMetadataRequestHandler } from "../cloud/general-cloud-requests.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
