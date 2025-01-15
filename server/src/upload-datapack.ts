@@ -81,7 +81,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       }
     }
     if (await doesDatapackFolderExistInAllUUIDDirectories(uuidDirectoryToDownloadTo, datapackMetadata.title)) {
-      return { code: 500, message: "Datapack with the same title already exists" };
+      return { code: 409, message: "Datapack with the same title already exists" };
     }
     try {
       await setupNewDatapackDirectoryInUUIDDirectory(

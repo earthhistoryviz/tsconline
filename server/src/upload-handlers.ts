@@ -320,7 +320,7 @@ export async function uploadFileToFileSystem(
   }
   if (file.file.truncated) {
     await rm(filepath, { force: true });
-    return { code: 400, message: "File is too large" };
+    return { code: 413, message: "File is too large" };
   }
   if (file.file.bytesRead === 0) {
     await rm(filepath, { force: true });
@@ -383,7 +383,7 @@ export async function processMultipartPartsForDatapackUpload(
         }
         if (file.file.bytesRead > 3000 && !isProOrAdmin) {
           await cleanupTempFiles();
-          return { code: 400, message: "File is too large" };
+          return { code: 413, message: "File is too large" };
         }
         const { code, message } = await uploadFileToFileSystem(file, filepath);
         if (code !== 200) {
