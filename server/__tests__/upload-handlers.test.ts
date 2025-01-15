@@ -415,7 +415,7 @@ describe("uploadFileToFileSystem tests", () => {
   });
   it("should return a 500 error if the file is truncated", async () => {
     const truncated = { ...multipartFile, file: { truncated: true } } as unknown as MultipartFile;
-    expect(await uploadFileToFileSystem(truncated, "filepath")).toEqual({ code: 400, message: "File is too large" });
+    expect(await uploadFileToFileSystem(truncated, "filepath")).toEqual({ code: 413, message: "File is too large" });
     expect(rm).toHaveBeenCalledOnce();
   });
   it("should return a 400 if the file is empty", async () => {
@@ -718,7 +718,7 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     expect(isOperationResult(data)).toBe(true);
     assertOperationResult(data);
     expect(rm).toHaveBeenCalledOnce();
-    expect(data.code).toBe(400);
+    expect(data.code).toBe(413);
     expect(data.message).toBe("File is too large");
   });
   it("should return a non-200 error if uploadFileToFileSystem fails", async () => {

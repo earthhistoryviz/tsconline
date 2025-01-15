@@ -302,7 +302,7 @@ describe("processAndUploadDatapack", () => {
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     const val = await processAndUploadDatapack("uuid", formData);
-    expect(val).toEqual({ code: 500, message: "Datapack with the same title already exists" });
+    expect(val).toEqual({ code: 409, message: "Datapack with the same title already exists" });
   });
   it("should return 500 if setupNewDatapackDirectoryInUUIDDirectory throws an error", async () => {
     setupNewDatapackDirectoryInUUIDDirectory.mockRejectedValueOnce(new Error("error"));
