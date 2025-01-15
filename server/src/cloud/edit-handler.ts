@@ -58,11 +58,7 @@ export async function editDatapack(
     const sourceFilepath = await getTemporaryFilepath(uuid, newDatapack.datapackImage!);
     // check to see if a temp file was uploaded
     if (await verifyFilepath(sourceFilepath)) {
-      await changeProfilePicture(
-        uuid,
-        oldDatapackTitle,
-        await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
-      ).catch((e) => {
+      await changeProfilePicture(uuid, oldDatapackTitle, sourceFilepath).catch((e) => {
         logger.error(e);
         metadata.datapackImage = originalMetadata.datapackImage;
         errors.push("Error changing profile picture");
