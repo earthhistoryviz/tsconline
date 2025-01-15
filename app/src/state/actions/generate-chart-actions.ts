@@ -204,7 +204,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       generalActions.setUnsafeChartContent(content);
       // the display version
       generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(false);
+      generalActions.setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
       generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
     } catch (e) {
