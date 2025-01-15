@@ -616,7 +616,9 @@ export function isOfficialUUID(uuid: string): boolean {
 }
 export function isWorkshopUUID(uuid: string): boolean {
   const workshopPrefix = "workshop-";
-  return uuid.startsWith(workshopPrefix) && !isNaN(Number(uuid.slice(workshopPrefix.length)));
+  if (uuid === workshopPrefix) return false;
+  const workshopId = Number(uuid.slice(workshopPrefix.length));
+  return uuid.startsWith(workshopPrefix) && !isNaN(workshopId);
 }
 
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {

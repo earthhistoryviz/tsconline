@@ -122,6 +122,10 @@ const getEditDatapackRoute = (datapack: DatapackUniqueIdentifier) => {
 export const replaceDatapackFile = action(async (datapackUniqueIdentifier: DatapackUniqueIdentifier, file: File) => {
   try {
     setEditRequestInProgress(true);
+    if (!state.user.uuid) {
+      pushError(ErrorCodes.NOT_LOGGED_IN);
+      return false;
+    }
     const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
     if (!recaptcha) return;
     const formData = new FormData();
@@ -166,6 +170,10 @@ export const replaceProfileImageFile = action(
   async (datapackUniqueIdentifier: DatapackUniqueIdentifier, file: File) => {
     try {
       setEditRequestInProgress(true);
+      if (!state.user.uuid) {
+        pushError(ErrorCodes.NOT_LOGGED_IN);
+        return false;
+      }
       const recaptcha = await getRecaptchaToken("replaceUserProfileImageFile");
       if (!recaptcha) return;
       const formData = new FormData();
