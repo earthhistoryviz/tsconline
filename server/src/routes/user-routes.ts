@@ -6,11 +6,10 @@ import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import {
   deleteUserDatapack,
   fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  verifyWorkshopValidity
+  fetchUserDatapack
 } from "../user/user-handler.js";
 import { isOperationResult } from "../types.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(

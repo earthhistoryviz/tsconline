@@ -24,10 +24,9 @@ import {
   getPrivateUserUUIDDirectory
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
-import { findUser, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
+import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
 import { getTemporaryFilepath, uploadFileToFileSystem } from "../upload-handlers.js";
-import { getWorkshopIdFromUUID } from "../workshop-util.js";
 
 /**
  * looks for a specific datapack in all the user directories
@@ -439,15 +438,4 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
     }
   }
   return partial;
-}
-
-export function verifyWorkshopValidity(workshopUUID: string, userId: number): OperationResult {
-  const workshopId = getWorkshopIdFromUUID(workshopUUID);
-  if (!workshopId) {
-    return { code: 400, message: "Invalid workshop UUID" };
-  }
-  if (!isUserInWorkshopAndWorkshopIsActive(workshopId, userId)) {
-    return { code: 401, message: "User does not have access to this workshop" };
-  }
-  return { code: 200, message: "Success" };
 }

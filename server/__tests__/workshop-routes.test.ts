@@ -5,7 +5,7 @@ import { beforeAll, vi, afterAll, expect, describe, it, beforeEach } from "vites
 import * as workshopAuth from "../src/workshop/workshop-auth";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
-import * as userHandler from "../src/user/user-handler";
+import * as workshopUtil from "../src/workshop-util";
 import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
 import { User } from "../src/types";
 
@@ -14,7 +14,7 @@ vi.mock("../src/cloud/general-cloud-requests", async () => {
     editDatapackMetadataRequestHandler: vi.fn().mockResolvedValue({ code: 200, message: "success" })
   };
 });
-vi.mock("../src/user/user-handler", async () => {
+vi.mock("../src/workshop-util", async () => {
   return {
     verifyWorkshopValidity: vi.fn().mockReturnValue({ code: 200, message: "success" })
   };
@@ -182,7 +182,7 @@ describe("verifyRecaptcha tests", () => {
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
   const findUser = vi.spyOn(database, "findUser");
-  const verifyWorkshopValidity = vi.spyOn(userHandler, "verifyWorkshopValidity");
+  const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
   const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
