@@ -229,7 +229,9 @@ export const Workshops: React.FC = observer(() => {
   //calendar default off unless an event is a week away
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
-    return dummyWorkshops.some((workshop) => (dayjs(workshop.start).isBefore(oneWeekFromNow) && dayjs(workshop.start).isAfter(dayjs())));
+    return dummyWorkshops.some(
+      (workshop) => dayjs(workshop.start).isBefore(oneWeekFromNow) && dayjs(workshop.start).isAfter(dayjs())
+    );
   });
 
   //Use day view with smaller screen sizes
@@ -266,8 +268,7 @@ export const Workshops: React.FC = observer(() => {
       <Box
         className="calendar-toolbar"
         sx={{ display: "flex", alignItems: "center", flexDirection: { xs: "column", md: "row" } }}>
-        <Box
-          className="calendar-toolbar-navigation">
+        <Box className="calendar-toolbar-navigation">
           <IconButton onClick={() => onNavigate("PREV")}>
             <KeyboardArrowLeftIcon sx={{ color: "button.light" }} />
           </IconButton>
@@ -280,7 +281,7 @@ export const Workshops: React.FC = observer(() => {
           className="calendar-toolbar-customization"
           sx={{
             justifyContent: { xs: "center", md: "flex-end" },
-            flexDirection: { xs: "column", md: "row" },
+            flexDirection: { xs: "column", md: "row" }
           }}>
           <Select
             value={calendarWorkshopFilter}
@@ -327,9 +328,10 @@ export const Workshops: React.FC = observer(() => {
 
     const overlappingEvent = !events.every(
       (e) =>
-        e === event || !(e.start && e.end && new Date(e.start!) <= new Date(event.end!) && new Date(e.end!) >= new Date(event.start!))
+        e === event ||
+        !(e.start && e.end && new Date(e.start!) <= new Date(event.end!) && new Date(e.end!) >= new Date(event.start!))
     );
-    
+
     const longOverlappingEvent = dayjs(event.end).diff(dayjs(event.start), "day") > 0 && overlappingEvent;
 
     return (
@@ -349,7 +351,6 @@ export const Workshops: React.FC = observer(() => {
         onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}>
-
         {/* timing details on card */}
         <Typography sx={{ fontSize: ".85rem" }}>{event.title}</Typography>
         {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
