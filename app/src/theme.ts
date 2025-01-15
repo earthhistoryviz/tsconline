@@ -24,6 +24,7 @@ declare module "@mui/material/styles" {
     iconContrastBackground: Palette["primary"];
     accordionLine: Palette["primary"];
     cardBackground: Palette["primary"];
+    calendarCurrentDay: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -542,6 +543,9 @@ export let originalLightTheme = createTheme(baseTheme, {
     }),
     tableContainer: {
       main: "#FFFFFFB3"
+    },
+    calendarCurrentDay: {
+      main: "#bedefa"
     }
   }
 });
@@ -619,6 +623,9 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     tableContainer: {
       main: "#1A222DB3"
+    },
+    calendarCurrentDay: {
+      main: "#32495c "
     }
   }
 });

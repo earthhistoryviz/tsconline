@@ -185,6 +185,18 @@
                 }
             },
             "calendar": {
+                "switchLabel": "Toggle calendar",
+                "month": "Month",
+                "week": "Week",
+                "days": {
+                    "sunday": "Sun",
+                    "monday": "Mon",
+                    "tuesday": "Tue",
+                    "wednesday": "Wed",
+                    "thursday": "Thu",
+                    "friday": "Fri",
+                    "saturday": "Sat"
+                },
                 "months": 
                 {
                     "1": "January",
