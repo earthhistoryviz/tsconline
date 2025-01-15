@@ -1,25 +1,73 @@
 .header {
   font-size: 2rem;
   text-align: center;
-}
-
-.rbc-calendar {
-  display: flex;
-  min-height: 500px;
-}
-
-.rbc-event {
   display: flex;
   align-items: center;
-  height: 100%;
+  justify-content: center;
 }
 
-.rbc-row {
-  height: 22px;
+.rbc-custom-event {
+  outline-color: divider;
+  cursor: pointer;
+  transition: background-color 0.1s;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 2px;
+  opacity: 0.85;
+  color: white;
 }
 
-.rbc-toolbar * {
-  border: 0px !important;
+.calendar-toolbar-customization {
+  display: flex;
+  align-items: center;
+  gap: 2;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.calendar-toolbar-navigation {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rbc-row-segment {
+  padding: 0;
+}
+
+.rbc-events-container {
+  width: 100%;
+}
+
+.rbc-day-slot .rbc-tim-slot:after {
+  border-top: 10px solid black;
+  width: 100%;
+}
+
+.rbc-month-view {
+  display: flex !important;
+  min-height: 426px !important;
+}
+
+.rbc-time-content {
+  display: flex !important;
+  max-height: 500px !important;
+}
+
+.rbc-events-container {
+  display: flex !important;
+  flex-grow: 1 !important;
+}
+
+.rbc-toolbar {
+  display: "flex";
+  align-items: "center";
+  justify-content: "space-between";
+  position: "relative";
+  gap: "10px";
 }
 
 .MuiAccordionSummary-root.workshops-summary {
@@ -28,7 +76,6 @@
 }
 
 .description-header {
-  flex-grow: 1;
   text-align: center;
   font-weight: bold;
 }
@@ -48,7 +95,6 @@
 
 .workshop-card {
   width: 250px;
-  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

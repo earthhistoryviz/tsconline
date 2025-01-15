@@ -11,13 +11,19 @@ import {
   Grid,
   MenuItem,
   Typography,
-  Select
+  Select,
+  ToggleButton,
+  ToggleButtonGroup,
+  FormControlLabel,
+  Switch
 } from "@mui/material";
 import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
+import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
+import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
 import { context } from "./state";
 import { StyledScrollbar } from "./components";
 import "./Workshops.css";
@@ -31,9 +37,16 @@ import {
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
-import { Calendar as BigCalendar, CalendarProps, momentLocalizer, ToolbarProps } from "react-big-calendar";
+import {
+  Calendar as BigCalendar,
+  CalendarProps,
+  dayjsLocalizer,
+  ToolbarProps,
+  Views,
+  EventWrapperProps
+} from "react-big-calendar";
 import { SelectChangeEvent } from "@mui/material/Select";
-import moment from "moment";
+import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 
 // TODO: change this when implement the backend
@@ -56,8 +69,8 @@ const dummyWorkshops: Workshop[] = [
   // Active Workshops
   {
     title: "React Basics",
-    start: "2025-01-03",
-    end: "2025-01-07",
+    start: "2025-01-14T09:00:00",
+    end: "2025-01-17T18:00:00",
     workshopId: 1,
     active: true,
     datapacks: ["React Overview", "JSX Basics"],
@@ -68,8 +81,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Advanced TypeScript",
-    start: "2025-01-04",
-    end: "2025-01-08",
+    start: "2025-01-14T09:00:00",
+    end: "2025-01-16T16:00:00",
     workshopId: 2,
     active: true,
     datapacks: ["Generics", "Decorators", "Type Inference"],
@@ -81,8 +94,8 @@ const dummyWorkshops: Workshop[] = [
   // Upcoming Workshops
   {
     title: "Node.js for Beginners",
-    start: "2025-01-09",
-    end: "2025-01-11",
+    start: "2025-01-20T09:00:00",
+    end: "2025-01-21T12:00:00",
     workshopId: 3,
     active: false,
     datapacks: ["Node Basics", "Express.js Overview"],
@@ -93,8 +106,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Fullstack Development",
-    start: "2025-01-15",
-    end: "2025-01-17",
+    start: "2025-02-17T13:00:00",
+    end: "2025-02-18T16:00:00",
     workshopId: 4,
     active: false,
     datapacks: ["Frontend-Backend Integration", "API Design"],
@@ -106,8 +119,8 @@ const dummyWorkshops: Workshop[] = [
   // Expired Workshops
   {
     title: "CSS in Depth",
-    start: "2024-12-20",
-    end: "2024-12-22",
+    start: "2024-12-03T09:00:00",
+    end: "2024-12-03T18:00:00",
     workshopId: 5,
     active: false,
     datapacks: ["Flexbox", "Grid Layout", "Animations"],
@@ -118,8 +131,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Python for Data Science",
-    start: "2024-12-25",
-    end: "2024-12-27",
+    start: "2025-01-01T10:00:00",
+    end: "2025-01-01T13:00:00",
     workshopId: 6,
     active: false,
     datapacks: ["Pandas", "NumPy", "Matplotlib"],
@@ -133,10 +146,25 @@ const dummyWorkshops: Workshop[] = [
 type WorkshopsCategoryProps = {
   workshops: Workshop[];
   noDataMessage: string;
+  imageSize: number;
+  includeTime: boolean;
   onClickHandler: (workshop: Workshop) => void;
 };
 
-const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noDataMessage, onClickHandler }) => {
+type Event = {
+  title: string;
+  start: Date;
+  end: Date;
+  workshopId: number;
+};
+
+const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
+  workshops,
+  noDataMessage,
+  imageSize,
+  includeTime,
+  onClickHandler
+}) => {
   const { t } = useTranslation();
   return (
     <StyledScrollbar>
@@ -148,14 +176,15 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noData
                 sx={{
                   outline: "1px solid",
                   outlineColor: "divider",
-                  bgcolor: "secondaryBackground.main"
+                  bgcolor: "secondaryBackground.main",
+                  height: `${imageSize + 100 + (includeTime ? 50 : 0)}px`
                 }}
                 className="workshop-card"
                 onClick={() => onClickHandler(workshop)}>
                 <CardContent>
                   <CardMedia
                     component="img"
-                    height="140"
+                    height={imageSize}
                     image={workshop.imageLink}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
@@ -163,14 +192,16 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({ workshops, noData
                   <Typography variant="h5" component="div" gutterBottom>
                     {workshop.title}
                   </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.start")}
-                    {workshop.start}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">
-                    {t("workshops.dates.end")}
-                    {workshop.end}
-                  </Typography>
+                  {includeTime && (
+                    <>
+                      <Typography variant="body2" color="textSecondary">
+                        {t("workshops.dates.start")} {workshop.start}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {t("workshops.dates.end")} {workshop.end}
+                      </Typography>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </Grid>
@@ -193,84 +224,230 @@ export const Workshops: React.FC = observer(() => {
   const upcomingWorkshops = getUpcomingWorkshops(dummyWorkshops);
   const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
-  const [calendarWorkshops, setCalendarWorkshops] = useState("All");
+  const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
+  const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 600 ? "day" : "month"));
+  //calendar default off unless an event is a week away
+  const [calendarState, setCalendarState] = useState(() => {
+    const oneWeekFromNow = dayjs().add(1, "week");
+    return dummyWorkshops.some((workshop) => (dayjs(workshop.start).isBefore(oneWeekFromNow) && dayjs(workshop.start).isAfter(dayjs())));
+  });
 
-  // TODO: change this when implement the backend
-  function setWorkshopAndNavigate(event: { title: string }) {
-    const workshop = dummyWorkshops.find((w) => w.title === event.title);
+  //Use day view with smaller screen sizes
+  useEffect(() => {
+    const handleResize = () => {
+      setCalendarView(window.innerWidth < 600 ? "day" : "month");
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const setWorkshopAndNavigate = (event: { workshopId: number }) => {
+    const workshop = dummyWorkshops.find((w) => w.workshopId === event.workshopId);
     if (workshop) {
       navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
     }
-  }
+  };
 
-  const localizer = momentLocalizer(moment);
+  const localizer = dayjsLocalizer(dayjs);
 
   const CustomToolbar: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
+    const getLabel = () => {
+      const [month, year] = label.split(" ");
+      const monthIndex = new Date(`${month} 1, ${year}`).getMonth() + 1;
+      return calendarView === "month"
+        ? `${t(`workshops.calendar.months.${monthIndex}`)} ${year}`
+        : calendarView === "week"
+          ? `${t(`workshops.calendar.months.${monthIndex}`)} ${label.split(" ")[1]} - ${label.split(" ")[3]}`
+          : `${t(`workshops.calendar.days.${label.split(" ")[0].toLowerCase()}`)}, ${t(`workshops.calendar.months.${monthIndex}`)} ${label.split(" ")[2]}`;
+    };
+
     return (
-      <div className="rbc-toolbar">
-        {/* Month select */}
-        <Box display="flex" justifyContent="space-between" alignItems="center" sx={{ padding: "0 16px" }}>
-          <IconButton size="large" sx={{ "&:hover": { opacity: 0.9 } }} onClick={() => onNavigate("PREV")}>
+      <Box
+        className="calendar-toolbar"
+        sx={{ display: "flex", alignItems: "center", flexDirection: { xs: "column", md: "row" } }}>
+        <Box
+          className="calendar-toolbar-navigation">
+          <IconButton onClick={() => onNavigate("PREV")}>
             <KeyboardArrowLeftIcon sx={{ color: "button.light" }} />
           </IconButton>
-          <Typography sx={{ flexGrow: 1, textAlign: "center" }}>
-            {`${t(`workshops.calendar.months.${new Date(label).getMonth() + 1}`)} ${label.split(" ")[1]}`}
-          </Typography>
-          <IconButton size="large" sx={{ "&:hover": { opacity: 0.9 } }} onClick={() => onNavigate("NEXT")}>
+          <Typography sx={{ textAlign: "center", margin: "0 16px", minWidth: "120px" }}>{getLabel()}</Typography>
+          <IconButton onClick={() => onNavigate("NEXT")}>
             <KeyboardArrowRightIcon sx={{ color: "button.light" }} />
           </IconButton>
         </Box>
-
-        {/* Select dropdown */}
-        <Box display="flex" justifyContent="center" sx={{ padding: "8px 0" }}>
+        <Box
+          className="calendar-toolbar-customization"
+          sx={{
+            justifyContent: { xs: "center", md: "flex-end" },
+            flexDirection: { xs: "column", md: "row" },
+          }}>
           <Select
-            value={calendarWorkshops}
-            onChange={(event: SelectChangeEvent) => setCalendarWorkshops(event.target.value as string)}>
+            value={calendarWorkshopFilter}
+            onChange={(event: SelectChangeEvent) => {
+              event.stopPropagation();
+              setCalendarWorkshopFilter(event.target.value as string);
+            }}
+            sx={{
+              "& .MuiOutlinedInput-notchedOutline": { border: 0 },
+              "&:hover": { backgroundColor: theme.palette.action.hover },
+              minWidth: "150px",
+              borderRadius: "4px"
+            }}>
             <MenuItem value="All">{t("workshops.titles.all")}</MenuItem>
             <MenuItem value="Past">{t("workshops.titles.past")}</MenuItem>
             <MenuItem value="Active">{t("workshops.titles.active")}</MenuItem>
             <MenuItem value="Upcoming">{t("workshops.titles.upcoming")}</MenuItem>
           </Select>
+          <ToggleButtonGroup
+            value={calendarView}
+            exclusive
+            onChange={(_, value: string) => value !== null && setCalendarView(value)}
+            sx={{ display: { xs: "none", sm: "flex" } }}>
+            <ToggleButton value="month" sx={{ padding: "0 8px", width: 40 }}>
+              <CalendarViewMonthIcon />
+            </ToggleButton>
+            <ToggleButton value="week" sx={{ padding: "0 8px", width: 40 }}>
+              <CalendarViewWeekIcon />
+            </ToggleButton>
+          </ToggleButtonGroup>
         </Box>
-      </div>
+      </Box>
     );
   };
 
-  const Calendar: React.FC<Omit<CalendarProps, "localizer">> = (props) => {
+  const EventWrapper: React.FC<EventWrapperProps> = ({ event }) => {
+    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.currentTarget.style.backgroundColor = theme.palette.button.dark;
+    };
+
+    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
+      e.currentTarget.style.backgroundColor = theme.palette.button.main;
+    };
+
+    const overlappingEvent = !events.every(
+      (e) =>
+        e === event || !(e.start && e.end && new Date(e.start!) <= new Date(event.end!) && new Date(e.end!) >= new Date(event.start!))
+    );
+    
+    const longOverlappingEvent = dayjs(event.end).diff(dayjs(event.start), "day") > 0 && overlappingEvent;
+
     return (
-      <BigCalendar
-        localizer={localizer}
-        {...props}
-        components={{ toolbar: CustomToolbar }}
-        onSelectEvent={(event) => setWorkshopAndNavigate(event as { title: string })}
-        dayPropGetter={(date) => {
-          const newStyle = {
-            backgroundColor: theme.palette.secondaryBackground.main,
-            borderRadius: "0px",
-            border: "none"
-          };
-          if (date.toDateString() === new Date().toDateString()) {
-            newStyle.backgroundColor = "#aecfeb";
-          }
-          const currentMonth = new Date().getMonth();
-          if (date.getMonth() !== currentMonth) {
-            newStyle.backgroundColor = theme.palette.backgroundColor.main;
-          }
-          return { className: "", style: newStyle };
+      <Card
+        className="rbc-custom-event"
+        sx={{
+          bgcolor: theme.palette.button.main,
+          "&:hover": { backgroundColor: theme.palette.button.dark },
+          height: overlappingEvent ? "auto" : "150%",
+          flexDirection: longOverlappingEvent ? "row" : "column",
+          //Fits events when in week and day view
+          ...(calendarView !== "month" && {
+            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+          })
         }}
-      />
+        onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}>
+
+        {/* timing details on card */}
+        <Typography sx={{ fontSize: ".85rem" }}>{event.title}</Typography>
+        {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
+          <Typography
+            sx={{
+              fontSize: ".75rem",
+              marginLeft: longOverlappingEvent ? "4px" : "0"
+            }}>
+            {new Date(event.start!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+            {new Date(event.end!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </Typography>
+        )}
+      </Card>
     );
   };
 
+  // Fits custome calendar background
+  const dayPropGetter = (date: Date, events: Event[]) => {
+    const newStyle: React.CSSProperties = {
+      border: `1px solid ${theme.palette.accordionLine}`,
+      backgroundColor: theme.palette.secondaryBackground.main,
+      borderRadius: "0px"
+    };
+    if (date.toDateString() === new Date().toDateString()) {
+      newStyle.backgroundColor = theme.palette.calendarCurrentDay.main;
+    }
+    if (
+      calendarView === "month" &&
+      events.some(
+        (event) =>
+          new Date(event.start).toDateString() === date.toDateString() ||
+          (new Date(event.start) < date && new Date(event.end) >= date)
+      )
+    ) {
+      newStyle.backgroundImage = `url(${dummyWorkshops.find((workshop) => new Date(workshop.start).toDateString() === date.toDateString() || (new Date(workshop.start) < date && new Date(workshop.end) >= date))?.imageLink})`;
+      newStyle.backgroundSize = "cover";
+      newStyle.backgroundPosition = "center";
+      newStyle.opacity = 0.3;
+    }
+    if (date.getMonth() !== new Date().getMonth()) {
+      newStyle.backgroundColor = theme.palette.backgroundColor.main;
+    }
+    return { className: "", style: newStyle };
+  };
+
+  const Calendar: React.FC<Omit<CalendarProps, "localizer">> = (props) => (
+    <BigCalendar
+      min={new Date(new Date().setHours(9, 0, 0, 0))}
+      max={new Date(new Date().setHours(18, 0, 0, 0))}
+      localizer={localizer}
+      {...props}
+      startAccessor="start"
+      endAccessor="end"
+      view={calendarView as (typeof Views)[keyof typeof Views]}
+      components={{ toolbar: CustomToolbar, eventWrapper: EventWrapper }}
+      onSelectEvent={(event) => setWorkshopAndNavigate(event as { workshopId: number })}
+      dayPropGetter={(date) => dayPropGetter(date, events)}
+    />
+  );
+
+  //Standard event list for month view
   const events = [
-    ...(calendarWorkshops === "All" || calendarWorkshops === "Active" ? activeWorkshops : []),
-    ...(calendarWorkshops === "All" || calendarWorkshops === "Upcoming" ? upcomingWorkshops : []),
-    ...(calendarWorkshops === "All" || calendarWorkshops === "Past" ? pastWorkshops : [])
+    ...(calendarWorkshopFilter === "All"
+      ? dummyWorkshops
+      : calendarWorkshopFilter === "Active"
+        ? activeWorkshops
+        : calendarWorkshopFilter === "Upcoming"
+          ? upcomingWorkshops
+          : pastWorkshops)
   ].map((workshop) => ({
     title: workshop.title,
-    start: new Date(workshop.start),
-    end: new Date(workshop.end)
+    start: dayjs(workshop.start).toDate(),
+    end: dayjs(workshop.end).toDate(),
+    workshopId: workshop.workshopId
   }));
+
+  //Seperate event list stretching multi day events for week view as react-big-calendar does not support multi day events
+  //Splits multi day events into individual day events with the same details
+  const weekAndDayEvents = events.flatMap((event) => {
+    const days = [];
+    let current = dayjs(event.start);
+    const end = dayjs(event.end);
+    const startTime = dayjs(event.start).format("HH:mm");
+    const endTime = dayjs(event.end).format("HH:mm");
+
+    while (current.isBefore(end) || current.isSame(end, "day")) {
+      days.push({
+        ...event,
+        start: current.isSame(event.start, "day")
+          ? event.start
+          : dayjs(current.format("YYYY-MM-DD") + " " + startTime).toDate(),
+        end: current.isSame(event.end, "day") ? event.end : dayjs(current.format("YYYY-MM-DD") + " " + endTime).toDate()
+      });
+      current = current.add(1, "day").startOf("day");
+    }
+
+    return days;
+  });
 
   useEffect(() => {
     actions.setWorkshopsArray(dummyWorkshops);
@@ -279,11 +456,28 @@ export const Workshops: React.FC = observer(() => {
     <>
       {state.isLoggedIn ? (
         <Box padding={4}>
-          <Typography className="header">{t("workshops.header")}</Typography>
-          <Typography className="description-header" sx={{ marginBottom: 1 }}>
-            {t("workshops.description-header")}
+          <Typography className="header" sx={{ textAlign: "center" }}>
+            {t("workshops.header")}
           </Typography>
-          <Calendar events={events} views={["month"]} />
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+            <Typography className="description-header" sx={{}}>
+              {t("workshops.description-header")}
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  color="default"
+                  checked={calendarState}
+                  onClick={() => setCalendarState((prevState) => !prevState)}
+                />
+              }
+              label={t("workshops.calendar.switchLabel")}
+            />
+          </Box>
+          {calendarState && (
+            <Calendar events={calendarView === "month" ? events : weekAndDayEvents} views={["month", "week", "day"]} />
+          )}
+
           {/* Active Workshops */}
           <Accordion
             defaultExpanded
@@ -298,6 +492,8 @@ export const Workshops: React.FC = observer(() => {
               <WorkshopsCategory
                 workshops={activeWorkshops}
                 noDataMessage="active"
+                imageSize={140}
+                includeTime={true}
                 onClickHandler={setWorkshopAndNavigate}
               />
             </AccordionDetails>
@@ -317,6 +513,8 @@ export const Workshops: React.FC = observer(() => {
               <WorkshopsCategory
                 workshops={upcomingWorkshops}
                 noDataMessage="upcoming"
+                imageSize={140}
+                includeTime={true}
                 onClickHandler={setWorkshopAndNavigate}
               />
             </AccordionDetails>
@@ -324,7 +522,7 @@ export const Workshops: React.FC = observer(() => {
 
           {/* Expired Workshops */}
           <Accordion
-            defaultExpanded
+            defaultExpanded={false}
             sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
@@ -336,6 +534,8 @@ export const Workshops: React.FC = observer(() => {
               <WorkshopsCategory
                 workshops={pastWorkshops}
                 noDataMessage="past"
+                imageSize={80}
+                includeTime={false}
                 onClickHandler={setWorkshopAndNavigate}
               />
             </AccordionDetails>
