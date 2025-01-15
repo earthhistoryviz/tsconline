@@ -274,7 +274,10 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
   if (!(await verifyFilepath(datapackPath))) {
     throw new Error("Invalid filepath");
   }
-  await rm(datapackPath, { recursive: true, force: true });
+  await rm(datapackPath, { recursive: true, force: true }).catch((e) => {
+    logger.error(e);
+    throw e;
+  });
   await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
     logger.error(e);
   });

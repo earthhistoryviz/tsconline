@@ -12,7 +12,7 @@ import { assetconfigs, verifyNonExistentFilepath } from "./util.js";
 import { rename } from "fs/promises";
 import { changeFileMetadataKey } from "./file-metadata-handler.js";
 import { join } from "path";
-import { isUUIDFolderAWorkshopFolder } from "./workshop-util.js";
+import { isUUIDFolderAWorkshopFolder } from "./workshop/workshop-util.js";
 
 const mutex = new Mutex();
 

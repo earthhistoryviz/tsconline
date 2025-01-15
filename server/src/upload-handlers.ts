@@ -11,17 +11,19 @@ import {
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
   assertDatapack,
+  assertDatapackMetadata,
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
   isUserDatapack
 } from "@tsconline/shared";
-import { FastifyReply } from "fastify";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes } from "./util.js";
-import path from "path";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import path, { extname, join } from "path";
 import {
+  checkFileTypeIsDatapack,
+  checkFileTypeIsDatapackImage,
   decryptDatapack,
   deleteDatapackFileAndDecryptedCounterpart,
   doesDatapackFolderExistInAllUUIDDirectories
@@ -34,13 +36,16 @@ import {
   DECRYPTED_DIRECTORY_NAME
 } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
 import { pipeline } from "stream/promises";
+import { tmpdir } from "os";
+import { OperationResult } from "./types.js";
+import { findUser } from "./database.js";
 
-async function userUploadHandler(reply: FastifyReply, code: number, message: string, filepath?: string) {
+async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
-  reply.status(code).send({ error: message });
+  tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
 }
 export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
   if (!(await checkFileExists(cachedFilepath))) {
@@ -60,10 +65,9 @@ export async function getFileNameFromCachedDatapack(cachedFilepath: string) {
  * @returns The metadata if valid, otherwise void
  */
 export async function uploadUserDatapackHandler(
-  reply: FastifyReply,
   fields: Record<string, string>,
   bytes: number
-): Promise<DatapackMetadata | void> {
+): Promise<DatapackMetadata | OperationResult> {
   const {
     title,
     description,
@@ -78,6 +82,7 @@ export async function uploadUserDatapackHandler(
     type,
     uuid,
     datapackImage,
+    tempProfilePictureFilepath,
     priority
   } = fields;
   let { references, tags } = fields;
@@ -91,106 +96,108 @@ export async function uploadUserDatapackHandler(
     !originalFileName ||
     !storedFileName ||
     !isPublic ||
-    !type ||
-    !uuid
+    !type
   ) {
-    await userUploadHandler(
-      reply,
-      400,
-      "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]",
-      filepath
-    );
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Missing required fields" };
   }
   if (title === "__proto__" || title === "constructor" || title === "prototype" || title.trim() !== title) {
-    await userUploadHandler(reply, 400, "Invalid title", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Invalid title" };
   }
   if (title.length > MAX_DATAPACK_TITLE_LENGTH) {
-    await userUploadHandler(reply, 400, `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath);
+    return { code: 400, message: `Max title length is ${MAX_DATAPACK_TITLE_LENGTH}` };
   }
   if (!bytes) {
-    await userUploadHandler(reply, 400, "File is empty", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "File is empty" };
   }
   if (!isDatapackTypeString(type)) {
-    await userUploadHandler(reply, 400, "Invalid datapack type", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Invalid datapack type" };
   }
   try {
     references = JSON.parse(references);
     tags = JSON.parse(tags);
   } catch {
-    await userUploadHandler(reply, 400, "References and tags must be valid arrays", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "References and tags must be valid arrays" };
   }
   if (!Array.isArray(references) || !references.every((ref) => typeof ref === "string")) {
-    await userUploadHandler(reply, 400, "References must be an array of strings", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "References must be an array of strings" };
   }
   if (!Array.isArray(tags) || !tags.every((tag) => typeof tag === "string")) {
-    await userUploadHandler(reply, 400, "Tags must be an array of strings", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Tags must be an array of strings" };
   }
   if (tags.length > MAX_DATAPACK_TAGS_ALLOWED) {
-    await userUploadHandler(reply, 400, `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max tags allowed is ${MAX_DATAPACK_TAGS_ALLOWED}` };
   }
   if (!tags.every((tag) => tag.length <= MAX_DATAPACK_TAG_LENGTH)) {
-    await userUploadHandler(reply, 400, `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max tag length is ${MAX_DATAPACK_TAG_LENGTH}` };
   }
   if (authoredBy && authoredBy.length > MAX_AUTHORED_BY_LENGTH) {
-    await userUploadHandler(reply, 400, `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max authored by length is ${MAX_AUTHORED_BY_LENGTH}` };
   }
   if (!priority || isNaN(parseInt(priority))) {
-    await userUploadHandler(reply, 400, "Priority must be a number", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Priority must be a number" };
   }
   if (date && !isDateValid(date)) {
-    await userUploadHandler(reply, 400, "Date must be a valid date string", filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Date must be a valid date string" };
   }
   if (description && description.length > MAX_DATAPACK_DESC_LENGTH) {
-    await userUploadHandler(reply, 400, `Max description length is ${MAX_DATAPACK_DESC_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max description length is ${MAX_DATAPACK_DESC_LENGTH}` };
   }
   if (notes && notes.length > MAX_DATAPACK_NOTES_LENGTH) {
-    await userUploadHandler(reply, 400, `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max notes length is ${MAX_DATAPACK_NOTES_LENGTH}` };
   }
   if (references.length > MAX_DATAPACK_REFERENCES_ALLOWED) {
-    await userUploadHandler(reply, 400, `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max references allowed is ${MAX_DATAPACK_REFERENCES_ALLOWED}` };
   }
   if (!references.every((reference) => reference.length <= MAX_DATAPACK_REFERENCE_LENGTH)) {
-    await userUploadHandler(reply, 400, `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max references length is ${MAX_DATAPACK_REFERENCE_LENGTH}` };
   }
   if (contact && contact.length > MAX_DATAPACK_CONTACT_LENGTH) {
-    await userUploadHandler(reply, 400, `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}`, filepath);
-    return;
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: `Max contact length is ${MAX_DATAPACK_CONTACT_LENGTH}` };
   }
-  return {
-    originalFileName,
-    storedFileName,
-    description,
-    title,
-    authoredBy,
-    references,
-    tags,
-    type,
-    uuid,
-    priority: parseInt(priority),
-    isPublic: isPublic === "true",
-    size: getBytes(bytes),
-    ...(datapackImage && { datapackImage }),
-    ...(contact && { contact }),
-    ...(notes && { notes }),
-    ...(date && { date })
-  };
+  try {
+    const metadata = {
+      originalFileName,
+      storedFileName,
+      description,
+      title,
+      authoredBy,
+      references,
+      tags,
+      type,
+      priority: parseInt(priority),
+      isPublic: isPublic === "true",
+      size: getBytes(bytes),
+      ...(uuid && { uuid }),
+      ...(datapackImage && { datapackImage }),
+      ...(tempProfilePictureFilepath && { tempProfilePictureFilepath }),
+      ...(contact && { contact }),
+      ...(notes && { notes }),
+      ...(date && { date })
+    };
+    assertDatapackMetadata(metadata);
+    return metadata;
+  } catch (e) {
+    await userUploadHandler(filepath, tempProfilePictureFilepath);
+    return { code: 400, message: "Invalid metadata received/processed" };
+  }
 }
 
 /**
@@ -313,7 +320,7 @@ export async function uploadFileToFileSystem(
   }
   if (file.file.truncated) {
     await rm(filepath, { force: true });
-    return { code: 400, message: "File is too large" };
+    return { code: 413, message: "File is too large" };
   }
   if (file.file.bytesRead === 0) {
     await rm(filepath, { force: true });
@@ -334,4 +341,86 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
     }
   }
   return null;
+}
+
+export async function processMultipartPartsForDatapackUpload(
+  uuid: string | undefined,
+  parts: AsyncIterableIterator<Multipart>
+): Promise<{ fields: { [key: string]: string }; file: MultipartFile } | OperationResult> {
+  let file: MultipartFile | undefined;
+  let filepath: string | undefined;
+  let originalFileName: string | undefined;
+  let storedFileName: string | undefined;
+  let tempProfilePictureFilepath: string | undefined;
+  let datapackImage: string | undefined;
+  const fields: { [key: string]: string } = {};
+  async function cleanupTempFiles() {
+    if (tempProfilePictureFilepath) {
+      await rm(tempProfilePictureFilepath, { force: true });
+    }
+    if (filepath) {
+      await rm(filepath, { force: true });
+    }
+  }
+  const user = await findUser({ uuid }).catch(() => []);
+  if (!uuid || !user || !user[0]) {
+    return { code: 404, message: "User not found" };
+  }
+  const isProOrAdmin = user[0].isAdmin || user[0].accountType === "pro";
+  for await (const part of parts) {
+    if (part.type === "file") {
+      if (part.fieldname === "datapack") {
+        // DOWNLOAD FILE HERE AND SAVE TO FILE
+        file = part;
+        originalFileName = file.filename;
+        storedFileName = makeTempFilename(originalFileName);
+        // store it temporarily in the /tmp directory
+        // this is because we can't check if the file should overwrite the existing file until we verify it
+        filepath = join(tmpdir(), storedFileName);
+        if (!checkFileTypeIsDatapack(file)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack file" };
+        }
+        if (file.file.bytesRead > 3000 && !isProOrAdmin) {
+          await cleanupTempFiles();
+          return { code: 413, message: "File is too large" };
+        }
+        const { code, message } = await uploadFileToFileSystem(file, filepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      } else if (part.fieldname === DATAPACK_PROFILE_PICTURE_FILENAME) {
+        if (!checkFileTypeIsDatapackImage(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack image" };
+        }
+        datapackImage = DATAPACK_PROFILE_PICTURE_FILENAME + extname(part.filename);
+        tempProfilePictureFilepath = join(tmpdir(), datapackImage);
+        const { code, message } = await uploadFileToFileSystem(part, tempProfilePictureFilepath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
+      fields[part.fieldname] = part.value;
+    }
+  }
+  if (!file || !filepath || !originalFileName || !storedFileName) {
+    await cleanupTempFiles();
+    return { code: 400, message: "Missing file" };
+  }
+  return {
+    file,
+    fields: {
+      ...fields,
+      filepath,
+      originalFileName,
+      storedFileName,
+      priority: "0",
+      ...(datapackImage && { datapackImage }),
+      ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
+    }
+  };
 }
