@@ -10,7 +10,8 @@ import {
   SettingsTabs,
   User,
   GroupedEventSearchInfo,
-  EditableDatapackMetadata
+  EditableDatapackMetadata,
+  CrossplotSettingsTabs
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -39,10 +40,10 @@ export type State = {
   chartTab: {
     chartTimelineEnabled: boolean;
     chartTimelineLocked: boolean;
-    crossPlot: {
+    crossplot: {
       lockX: boolean;
       lockY: boolean;
-      isCrossPlot: boolean;
+      isCrossplot: boolean;
     };
     scale: number;
     zoomFitScale: number;
@@ -71,6 +72,11 @@ export type State = {
     columnSelected: string | null;
     tabs: string[];
     tabValue: number;
+  };
+  crossplotSettingsTabs: {
+    selected: CrossplotSettingsTabs;
+    chartX: ColumnInfo | undefined;
+    chartY: ColumnInfo | undefined;
   };
   settingsTabs: {
     selected: SettingsTabs;
@@ -157,7 +163,7 @@ export const state = observable<State>({
   chartTab: {
     chartTimelineEnabled: false,
     chartTimelineLocked: false,
-    crossPlot: {
+    crossplot: {
       lockX: false,
       lockY: false,
       isCrossPlot: false
@@ -218,6 +224,11 @@ export const state = observable<State>({
     columnSelected: null,
     tabs: ["General", "Font"],
     tabValue: 0
+  },
+  crossplotSettingsTabs: {
+    selected: "time",
+    chartX: undefined,
+    chartY: undefined
   },
   settingsTabs: {
     selected: "time",

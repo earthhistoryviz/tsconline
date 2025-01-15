@@ -46,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  CrossplotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -684,6 +685,23 @@ export const settingOptions = [
   }
 ];
 
+export const setCrossplotSettingsTabsSelected = action((newtab: number | CrossplotSettingsTabs) => {
+  if (typeof newtab === "string") {
+    state.crossplotSettingsTabs.selected = newtab;
+    return;
+  }
+  switch (newtab) {
+    case 0:
+      state.crossplotSettingsTabs.selected = "time";
+      break;
+    case 1:
+      state.crossplotSettingsTabs.selected = "column";
+      break;
+    default:
+      console.log("WARNING: setCrossplotSettingsTabsSelected: received index number that is unknown: ", newtab);
+      state.crossplotSettingsTabs.selected = "time";
+  }
+});
 /**
  * set the settings tab based on a string or number
  */
@@ -1347,11 +1365,18 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
 });
 
 export const setIsCrossPlot = action((isCrossPlot: boolean) => {
-  state.chartTab.crossPlot.isCrossPlot = isCrossPlot;
+  state.chartTab.crossplot.isCrossplot = isCrossPlot;
 });
 export const setCrossPlotLockX = action((lockX: boolean) => {
-  state.chartTab.crossPlot.lockX = lockX;
+  state.chartTab.crossplot.lockX = lockX;
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
-  state.chartTab.crossPlot.lockY = lockY;
+  state.chartTab.crossplot.lockY = lockY;
+});
+
+export const setCrossplotChartX = action((chart: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartX = chart;
+});
+export const setCrossplotChartY = action((chart: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartY = chart;
 });

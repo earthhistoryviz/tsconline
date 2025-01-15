@@ -134,6 +134,13 @@ export type Config = {
   settingsPath: string;
 };
 
+export const CrossplotSettingsTabs = {
+  time: "Time",
+  column: "Column"
+};
+
+export type CrossplotSettingsTabs = keyof typeof CrossplotSettingsTabs;
+
 export const SettingsMenuOptionLabels = {
   time: "Time",
   preferences: "Preferences",

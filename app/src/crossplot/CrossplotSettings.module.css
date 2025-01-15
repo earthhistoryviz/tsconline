@@ -1,0 +1,16 @@
+.crossplotSettingsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  text-align: center;
+}
+.crossplotSettingsTitle {
+  font-size: 48px;
+  margin-top: 1vh;
+}
+.crossplotSettingsContainer {
+  display: flex;
+  flex-direction: column;
+  word-spacing: 1;
+}

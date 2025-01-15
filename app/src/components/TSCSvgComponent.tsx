@@ -156,20 +156,20 @@ const showCurrAgeY = (
 
 export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef, chartContent }) => {
   const { state, actions } = useContext(context);
-  const [crossPlotTimeLineElements, setCrossPlotTimeLineElements] = React.useState<CrossPlotTimeLineElements | null>(
+  const [crossplotTimeLineElements, setCrossPlotTimeLineElements] = React.useState<CrossPlotTimeLineElements | null>(
     null
   );
   const [nonCrossPlotTimeLineElements, setNonCrossPlotTimeLineElements] =
     React.useState<NonCrossPlotTimeLineElements | null>(null);
 
   const getLabelWidth = () => {
-    if (!crossPlotTimeLineElements) return 0;
-    const { timeLabelX } = crossPlotTimeLineElements;
+    if (!crossplotTimeLineElements) return 0;
+    const { timeLabelX } = crossplotTimeLineElements;
     return timeLabelX.getBoundingClientRect().width;
   };
   const getLabelHeight = () => {
-    if (!crossPlotTimeLineElements) return 0;
-    const { timeLabelX } = crossPlotTimeLineElements;
+    if (!crossplotTimeLineElements) return 0;
+    const { timeLabelX } = crossplotTimeLineElements;
     return timeLabelX.getBoundingClientRect().height;
   };
   /**
@@ -278,10 +278,10 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       timeLinesGroup: svg.getElementById("CrossPlotTimeLines"),
       timeLabelsGroup: svg.getElementById("CrossPlotTimeLabels")
     });
-    if (!crossPlotTimeLineElements) {
+    if (!crossplotTimeLineElements) {
       return;
     }
-    const { timeLineX, timeLineY, timeLabelX, timeLabelY, limitingBox } = crossPlotTimeLineElements;
+    const { timeLineX, timeLineY, timeLabelX, timeLabelY, limitingBox } = crossplotTimeLineElements;
     const minX = getMinX(timeLineX);
     const maxX = getMaxX(timeLineX);
     const topLimitX = getTopLimit(timeLineX);
@@ -396,10 +396,10 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
    * @returns
    */
   const handleTimeLineCrossPlot = (evt: MouseEvent, svg: SVGSVGElement) => {
-    if (!crossPlotTimeLineElements) {
+    if (!crossplotTimeLineElements) {
       return;
     }
-    const { timeLineX, timeLineY, timeLabelX, timeLabelY } = crossPlotTimeLineElements;
+    const { timeLineX, timeLineY, timeLabelX, timeLabelY } = crossplotTimeLineElements;
     const maxX = getMaxX(timeLineX);
     const minX = getMinX(timeLineX);
     const topAgeX = getTopAge(timeLineX);
@@ -422,11 +422,11 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     const currX = keepInBounds(point.x, minX, maxX);
     const currY = keepInBounds(point.y, minY, maxY);
     //move timeline vertically if not locked
-    if (!state.chartTab.crossPlot.lockY) {
+    if (!state.chartTab.crossplot.lockY) {
       timeLineY.setAttribute("y1", String(currY));
       timeLineY.setAttribute("y2", String(currY));
     }
-    if (!state.chartTab.crossPlot.lockX) {
+    if (!state.chartTab.crossplot.lockX) {
       timeLineX.setAttribute("x1", String(currX));
       timeLineX.setAttribute("x2", String(currX));
     }
@@ -457,10 +457,10 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
   };
 
   const hideOrShowTimelineCrossPlot = (show: boolean) => {
-    if (!crossPlotTimeLineElements) {
+    if (!crossplotTimeLineElements) {
       return;
     }
-    const { timeLinesGroup, timeLabelsGroup, limitingBox } = crossPlotTimeLineElements!;
+    const { timeLinesGroup, timeLabelsGroup, limitingBox } = crossplotTimeLineElements!;
     timeLinesGroup.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 0.5;" : "stroke-opacity: 0;");
     timeLabelsGroup.setAttributeNS(null, "style", show ? "fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
     limitingBox.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 1;" : "stroke-opacity: 0;");
@@ -493,7 +493,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     if (!container) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
-    if (state.chartTab.crossPlot.isCrossPlot) {
+    if (state.chartTab.crossplot.isCrossplot) {
       setupTimelineAndLabelCrossPlot(svg);
       hideOrShowTimelineCrossPlot(state.chartTab.chartTimelineEnabled);
     } else {
@@ -503,7 +503,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     // either timeline or popups
     if (state.chartTab.chartTimelineEnabled) {
       // crossplot or non crossplot
-      if (!state.chartTab.crossPlot.isCrossPlot) {
+      if (!state.chartTab.crossplot.isCrossplot) {
         const eventListenerWrapper = (evt: MouseEvent) => handleTimelineNonCrossPlot(evt, svg);
         const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTab.chartTimelineLocked);
         container.addEventListener("mousemove", eventListenerWrapper);
@@ -514,8 +514,8 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
         };
       } else {
         const eventListenerWrapper = (evt: MouseEvent) => handleTimeLineCrossPlot(evt, svg);
-        const lockX = () => actions.setCrossPlotLockX(!state.chartTab.crossPlot.lockX);
-        const lockY = () => actions.setCrossPlotLockY(!state.chartTab.crossPlot.lockY);
+        const lockX = () => actions.setCrossPlotLockX(!state.chartTab.crossplot.lockX);
+        const lockY = () => actions.setCrossPlotLockY(!state.chartTab.crossplot.lockY);
         const keydownListener = (evt: KeyboardEvent) => {
           if (!state.chartTab.chartTimelineEnabled) return;
           if (evt.key === "x") {
@@ -547,7 +547,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     state.chartTab.chartTimelineEnabled,
     state.chartTab.chartTimelineLocked,
     state.prevSettings.mouseOverPopupsEnabled,
-    state.chartTab.crossPlot.isCrossPlot
+    state.chartTab.crossplot.isCrossplot
   ]);
 
   return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
