@@ -41,8 +41,8 @@ vi.mock("../src/upload-handlers", async () => {
 
 vi.mock("../src/file-metadata-handler", async () => {
   return {
-    changeFileMetadataKey: vi.fn(async () => { }),
-    deleteDatapackFoundInMetadata: vi.fn(async () => { })
+    changeFileMetadataKey: vi.fn(async () => {}),
+    deleteDatapackFoundInMetadata: vi.fn(async () => {})
   };
 });
 
@@ -84,9 +84,9 @@ vi.mock("../src/error-logger", () => {
 
 vi.mock("fs/promises", () => {
   return {
-    rm: vi.fn(async () => { }),
-    rename: vi.fn(async () => { }),
-    writeFile: vi.fn(async () => { }),
+    rm: vi.fn(async () => {}),
+    rename: vi.fn(async () => {}),
+    writeFile: vi.fn(async () => {}),
     readFile: vi.fn(async () => Promise.resolve(JSON.stringify(readFileMockReturn)))
   };
 });
@@ -124,7 +124,7 @@ const testUser = {
 const readFileMockReturn = { title: "test" };
 
 beforeAll(() => {
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 describe("fetchAllUsersDatapacks test", () => {

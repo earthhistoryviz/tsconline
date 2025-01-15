@@ -1,5 +1,6 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import formAutoContent from "form-auto-content";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
@@ -9,6 +10,7 @@ import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
+import * as uploadDatapack from "../src/upload-datapack";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
 import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
