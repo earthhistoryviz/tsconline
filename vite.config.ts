@@ -21,12 +21,15 @@ export default defineConfig({
       thresholds: {
         "server/src/admin/admin-auth.ts": thresholdConfig,
         "server/src/admin/admin-routes.ts": thresholdConfig,
-        // "server/src/encryption.ts": thresholdConfig,
+        "server/src/encryption.ts": thresholdConfig,
         "server/src/routes/login-routes.ts": thresholdConfig,
         "server/src/parse-datapacks.ts": thresholdConfig,
         "server/src/parse-map-packs.ts": thresholdConfig,
         "shared/src/util.ts": thresholdConfig,
-        "server/src/upload-handlers.ts": thresholdConfig
+        "server/src/upload-handlers.ts": thresholdConfig,
+        "server/src/upload-datapack.ts": thresholdConfig,
+        "server/src/user-auth.ts": thresholdConfig
+        // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true
