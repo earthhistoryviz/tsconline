@@ -323,6 +323,25 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
   }
 };
 
+export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
+  request: FastifyRequest<{ Params: { uuid: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { uuid, datapackTitle } = request.params;
+  const datapack = await fetchUserDatapack(uuid, datapackTitle).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack or user does not exist or cannot be found" });
+    return;
+  }
+  if (!datapack.isPublic) {
+    reply.status(401).send({ error: "Datapack is not public" });
+    return;
+  }
+  reply.send(datapack);
+};
+
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");

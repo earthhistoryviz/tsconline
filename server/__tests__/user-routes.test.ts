@@ -7,6 +7,7 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
+import { fetchPublicUserDatapack } from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as types from "../src/types";
@@ -177,6 +178,7 @@ beforeAll(async () => {
     };
   });
   await app.register(userRoutes, { prefix: "/user" });
+  app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   // vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
@@ -210,7 +212,7 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "DELETE", url: `/user/datapack/${filename}` },
   { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
   { method: "GET", url: `/user/datapack/${filename}` },
-  { method: "GET", url: `/user/workshop/workshop-1/datapack/test` }
+  { method: "GET", url: "/user/workshop/workshop-1/datapack/test" }
 ];
 
 describe("get a single user datapack", () => {
@@ -999,5 +1001,45 @@ describe("fetchWorkshopDatapack tests", () => {
     });
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual({ title: "test" });
+  });
+});
+
+describe("fetchPublicUserDatapack tests", () => {
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 404 if the datapack is not found", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(await response.json()).toEqual({ error: "Datapack or user does not exist or cannot be found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should reply 401 if datapack is private", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(await response.json()).toEqual({ error: "Datapack is not public" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 200 when the datapack is successfully fetched", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test", isPublic: true } as Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ title: "test", isPublic: true });
   });
 });

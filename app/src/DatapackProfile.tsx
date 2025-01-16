@@ -33,7 +33,8 @@ import {
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
   isUserDatapack,
-  isDatapackTypeString
+  isDatapackTypeString,
+  isWorkshopDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -50,6 +51,7 @@ import {
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { loadRecaptcha, removeRecaptcha } from "./util";
 
 const SetDatapackContext = createContext<(datapack: Datapack) => void>(() => {});
 
@@ -63,20 +65,17 @@ export const DatapackProfile = observer(() => {
   const [datapack, setDatapack] = useState<Datapack | undefined>(
     state.datapacks.find((d) => d.title === id && d.type === queryType)
   );
-  const [loading, setLoading] = useState(!datapack);
+  const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === queryType);
+  const [loading, setLoading] = useState(metadata && !datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
-  const fetchDatapack = async () => {
-    if (!id) return;
-    if (!queryType || !isDatapackTypeString(queryType)) return;
+  const shouldLoadRecaptcha =
+    !datapack && metadata && ((isUserDatapack(metadata) && !metadata.isPublic) || isWorkshopDatapack(metadata));
+  const intializeDatapack = async (controller: AbortController) => {
+    if (!id || !queryType || !isDatapackTypeString(queryType) || !metadata) return;
     if (!datapack) {
-      return await actions.fetchDatapack(queryType, id, true);
-    }
-  };
-  const intializeDatapack = async () => {
-    if (!datapack) {
-      const fetchedDatapack = await fetchDatapack();
+      const fetchedDatapack = await actions.fetchDatapack(queryType, id, { signal: controller.signal });
       if (fetchedDatapack) {
         actions.resetEditableDatapackMetadata(fetchedDatapack);
         actions.addDatapack(fetchedDatapack);
@@ -89,19 +88,36 @@ export const DatapackProfile = observer(() => {
     }
     setLoading(false);
   };
+  const initializePage = async (controller: AbortController) => {
+    if (shouldLoadRecaptcha) {
+      await loadRecaptcha();
+    }
+    await intializeDatapack(controller);
+  };
   useEffect(() => {
-    intializeDatapack().catch((e) => {
+    const controller = new AbortController();
+    initializePage(controller).catch((e) => {
       console.error("Error fetching datapack", e);
       displayServerError(e, ErrorCodes.UNABLE_TO_FETCH_DATAPACKS, ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_DATAPACKS]);
     });
-  }, [queryType, id, isMetadataInitialized, datapack]);
+    return () => {
+      if (shouldLoadRecaptcha) {
+        removeRecaptcha();
+      }
+      // if the user navigates away from the page quickly, the recaptcha script will be removed but the fetch will still be in progress causing an error as well as a zombie fetch request so we need to abort the fetch request
+      // a second issue is that due to strict mode the initial fetch will be aborted because React will call the cleanup before fetching is done causing the page to flicker to the 404 page for a split second
+      // the second fetch in the second useEffect will be successful and the page will render correctly
+      // this is not an issue in prod since strict mode is disabled
+      controller.abort();
+    };
+  }, [queryType, id, isMetadataInitialized]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
   }, []);
-  if (loading) return <TSCDialogLoader headerText="Fetching Datapack" open={true} />;
-  if (!datapack || !id) return <PageNotFound />;
+  if (loading) return <TSCDialogLoader open={true} />;
+  if (!metadata || !datapack || !id) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {

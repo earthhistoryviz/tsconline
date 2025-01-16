@@ -78,10 +78,9 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             datapacks.push(stateDatapack);
                             continue;
                           }
-                          actions.setshowLoadingDatapacksLoader(true);
+                          actions.setLoadingDatapacks(true);
                           const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
                           if (!fetchedDatapack) {
-                            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
                             return;
                           }
                           actions.addDatapack(fetchedDatapack);
@@ -91,7 +90,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
                       } finally {
-                        actions.setshowLoadingDatapacksLoader(false);
+                        actions.setLoadingDatapacks(false);
                       }
                       const success = await actions.processDatapackConfig(datapacks, preset.settings);
                       if (!success) return;
