@@ -116,3 +116,20 @@ export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: numbe
   }
   return true;
 }
+
+export function attachTscPrefix(name: string): string {
+  const column = state.settingsTabs.columnHashMap.get(name);
+  if (!column) {
+    console.warn("WARNING: could not find column while attaching tsc prefix");
+    return name;
+  }
+  switch (column.columnDisplayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${column.columnDisplayType}:` + name;
+      break;
+    default:
+      return `class datastore.${column.columnDisplayType}Column:` + column.name;
+  }
+}
