@@ -42,7 +42,7 @@ import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
-import { attachTscPrefix, changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
+import { attachTscPrefixToName, changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 
 /**
  * casts a string to a specified type
@@ -499,7 +499,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
   }
-  column._id = attachTscPrefix(state.name);
+  column._id = attachTscPrefixToName(state.name, state.columnDisplayType);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
