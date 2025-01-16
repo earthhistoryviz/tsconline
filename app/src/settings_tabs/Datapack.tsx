@@ -18,7 +18,7 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -31,138 +31,140 @@ import {
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
-import { ErrorCodes } from "../util/error-codes";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
   const { t } = useTranslation();
-
+  const shouldLoadRecaptcha =
+    state.isLoggedIn &&
+    (state.user.isAdmin ||
+      state.datapackMetadata.some((dp) => isWorkshopDatapack(dp) || (isUserDatapack(dp) && !dp.isPublic)));
   useEffect(() => {
-    if (state.isLoggedIn && state.user.isAdmin) {
+    if (shouldLoadRecaptcha) {
       loadRecaptcha().then(async () => {
-        await actions.adminFetchPrivateOfficialDatapacks();
+        if (state.user.isAdmin) {
+          await actions.adminFetchPrivateOfficialDatapacks();
+        }
       });
     }
     return () => {
-      if (state.isLoggedIn && state.user.isAdmin) {
+      if (shouldLoadRecaptcha) {
         removeRecaptcha();
       }
     };
-  }, []);
+  }, [shouldLoadRecaptcha]);
 
   return (
-    <>
-      <div className={styles.dc}>
-        <div className={styles.hdc}>
-          <CustomTooltip title="Deselect All" placement="top">
-            <IconButton
-              className={styles.ib}
-              data-tour="datapack-deselect-button"
-              onClick={async () => {
-                actions.setUnsavedDatapackConfig([]);
-              }}>
-              <DeselectIcon />
-            </IconButton>
-          </CustomTooltip>
-          <div>
-            <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
-            <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
-          </div>
-          <ToggleButtonGroup
-            className={styles.display}
-            data-tour="datapack-display-button"
-            value={state.settingsTabs.datapackDisplayType}
-            onChange={(_event, val) => {
-              if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
-              actions.setDatapackDisplayType(val);
-            }}
-            exclusive>
-            <ToggleButton className={styles.tb} disableRipple value="compact">
-              {" "}
-              <ViewCompactIcon className={styles.icon} />{" "}
-            </ToggleButton>
-            <ToggleButton className={styles.tb} disableRipple value="rows">
-              {" "}
-              <TableRowsIcon className={styles.icon} />{" "}
-            </ToggleButton>
-            <ToggleButton className={styles.tb} disableRipple value="cards">
-              {" "}
-              <DashboardIcon className={styles.icon} />{" "}
-            </ToggleButton>
-          </ToggleButtonGroup>
+    <div className={styles.dc}>
+      <div className={styles.hdc}>
+        <CustomTooltip title="Deselect All" placement="top">
+          <IconButton
+            className={styles.ib}
+            data-tour="datapack-deselect-button"
+            onClick={async () => {
+              actions.setUnsavedDatapackConfig([]);
+            }}>
+            <DeselectIcon />
+          </IconButton>
+        </CustomTooltip>
+        <div>
+          <Typography className={styles.h}>{t("settings.datapacks.see-info-guidance")}</Typography>
+          <Typography className={styles.dh}>{t("settings.datapacks.add-datapack-guidance")}</Typography>
         </div>
-        <Box
-          className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
+        <ToggleButtonGroup
+          className={styles.display}
+          data-tour="datapack-display-button"
+          value={state.settingsTabs.datapackDisplayType}
+          onChange={(_event, val) => {
+            if (val === state.settingsTabs.datapackDisplayType || !/^(rows|cards|compact)$/.test(val)) return;
+            actions.setDatapackDisplayType(val);
+          }}
+          exclusive>
+          <ToggleButton className={styles.tb} disableRipple value="compact">
+            {" "}
+            <ViewCompactIcon className={styles.icon} />{" "}
+          </ToggleButton>
+          <ToggleButton className={styles.tb} disableRipple value="rows">
+            {" "}
+            <TableRowsIcon className={styles.icon} />{" "}
+          </ToggleButton>
+          <ToggleButton className={styles.tb} disableRipple value="cards">
+            {" "}
+            <DashboardIcon className={styles.icon} />{" "}
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </div>
+      <Box
+        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
+        <DatapackGroupDisplay
+          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
+          header={t("settings.datapacks.title.public-official")}
+          HeaderIcon={Verified}
+          loading={state.skeletonStates.officialDatapacksLoading}
+        />
+        {state.user.isAdmin && (
           <DatapackGroupDisplay
-            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
-            header={t("settings.datapacks.title.public-official")}
-            HeaderIcon={Verified}
-            loading={state.skeletonStates.officialDatapacksLoading}
+            datapacks={getPrivateOfficialDatapackMetadatas(state.datapackMetadata)}
+            header={t("settings.datapacks.title.private-official")}
+            HeaderIcon={Security}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
           />
-          {state.user.isAdmin && (
-            <DatapackGroupDisplay
-              datapacks={getPrivateOfficialDatapackMetadatas(state.datapackMetadata)}
-              header={t("settings.datapacks.title.private-official")}
-              HeaderIcon={Security}
-              loading={state.skeletonStates.privateUserDatapacksLoading}
-            />
-          )}
-          {(state.user.workshopIds?.length ?? 0) > 0 && (
-            <DatapackGroupDisplay
-              datapacks={getWorkshopDatapacksMetadata(state.datapackMetadata)}
-              header={t("settings.datapacks.title.workshop")}
-              HeaderIcon={School}
-              loading={state.skeletonStates.publicUserDatapacksLoading}
-            />
-          )}
-          {state.isLoggedIn && state.user && (
-            <DatapackGroupDisplay
-              datapacks={getCurrentUserDatapacksMetadata(state.user.uuid, state.datapackMetadata)}
-              header={t("settings.datapacks.title.your")}
-              HeaderIcon={Lock}
-              loading={state.skeletonStates.privateUserDatapacksLoading}
-            />
-          )}
+        )}
+        {(state.user.workshopIds?.length ?? 0) > 0 && (
           <DatapackGroupDisplay
-            datapacks={getPublicDatapacksMetadataWithoutCurrentUser(state.datapackMetadata, state.user?.uuid)}
-            header={t("settings.datapacks.title.contributed")}
-            HeaderIcon={People}
+            datapacks={getWorkshopDatapacksMetadata(state.datapackMetadata)}
+            header={t("settings.datapacks.title.workshop")}
+            HeaderIcon={School}
             loading={state.skeletonStates.publicUserDatapacksLoading}
           />
-        </Box>
-        <Box className={`${styles.container} ${styles.buttonContainer}`}>
-          {state.isLoggedIn && (
-            <TSCButton
-              className={styles.buttons}
-              onClick={() => {
-                setFormOpen(!formOpen);
-              }}>
-              {t("settings.datapacks.upload")}
-            </TSCButton>
-          )}
+        )}
+        {state.isLoggedIn && state.user && (
+          <DatapackGroupDisplay
+            datapacks={getCurrentUserDatapacksMetadata(state.user.uuid, state.datapackMetadata)}
+            header={t("settings.datapacks.title.your")}
+            HeaderIcon={Lock}
+            loading={state.skeletonStates.privateUserDatapacksLoading}
+          />
+        )}
+        <DatapackGroupDisplay
+          datapacks={getPublicDatapacksMetadataWithoutCurrentUser(state.datapackMetadata, state.user?.uuid)}
+          header={t("settings.datapacks.title.contributed")}
+          HeaderIcon={People}
+          loading={state.skeletonStates.publicUserDatapacksLoading}
+        />
+      </Box>
+      <Box className={`${styles.container} ${styles.buttonContainer}`}>
+        {state.isLoggedIn && (
           <TSCButton
             className={styles.buttons}
-            data-tour="datapack-confirm-button"
-            disabled={state.loadingDatapacks}
-            onClick={async () => {
-              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+            onClick={() => {
+              setFormOpen(!formOpen);
             }}>
-            {t("button.confirm-selection")}
+            {t("settings.datapacks.upload")}
           </TSCButton>
-        </Box>
-        <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
-          <DatapackUploadForm
-            close={() => setFormOpen(false)}
-            upload={actions.uploadUserDatapack}
-            type={{
-              type: "user",
-              uuid: state.user?.uuid
-            }}
-          />
-        </Dialog>
-      </div>
-    </>
+        )}
+        <TSCButton
+          className={styles.buttons}
+          data-tour="datapack-confirm-button"
+          disabled={state.loadingDatapacks}
+          onClick={async () => {
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+          }}>
+          {t("button.confirm-selection")}
+        </TSCButton>
+      </Box>
+      <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
+        <DatapackUploadForm
+          close={() => setFormOpen(false)}
+          upload={actions.uploadUserDatapack}
+          type={{
+            type: "user",
+            uuid: state.user?.uuid
+          }}
+        />
+      </Dialog>
+    </div>
   );
 });
 type DatapackMenuProps = {
@@ -223,7 +225,6 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
           const datapack = await actions.fetchDatapack(newDatapack.type, newDatapack.title);
           if (!datapack) {
             actions.setLoadingDatapacks(false);
-            actions.pushError(ErrorCodes.UNABLE_TO_FETCH_DATAPACKS);
             return;
           }
           actions.addDatapack(datapack);

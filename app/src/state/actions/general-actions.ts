@@ -19,7 +19,8 @@ import {
   Datapack,
   assertDatapackMetadataArray,
   DatapackTypeString,
-  assertWorkshopDatapack
+  assertWorkshopDatapack,
+  assertUserDatapack
 } from "@tsconline/shared";
 
 import {
@@ -33,7 +34,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher, loadRecaptcha } from "../../util";
+import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -68,24 +69,37 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
 
+/**
+ * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ */
 export const fetchDatapack = action(
   "fetchDatapack",
-  async (type: DatapackTypeString, title: string, useRecaptcha?: boolean) => {
+  async (type: DatapackTypeString, title: string, options?: { signal?: AbortSignal }) => {
     let datapack: Datapack | undefined;
     switch (type) {
-      case "user":
-        if (useRecaptcha) await loadRecaptcha();
-        datapack = await actions.fetchUserDatapack(title);
+      case "user": {
+        const metadata = state.datapackMetadata.find((d) => d.title === title && d.type === "user");
+        if (metadata) {
+          assertUserDatapack(metadata);
+          if (metadata.isPublic) {
+            datapack = await actions.fetchPublicUserDatapack(title, metadata.uuid, options);
+          } else {
+            datapack = await actions.fetchUserDatapack(title, options);
+          }
+        } else {
+          // if the datapack title is being edited then it won't exist in metadata yet, but it will be the user's datapack
+          datapack = await actions.fetchUserDatapack(title, options);
+        }
         break;
+      }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(title);
+        datapack = await actions.fetchOfficialDatapack(title, options);
         break;
       case "workshop": {
-        if (useRecaptcha) await loadRecaptcha();
         const metadata = state.datapackMetadata.find((d) => d.title === title && d.type === "workshop");
         if (!metadata) return;
         assertWorkshopDatapack(metadata);
-        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, title);
+        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, title, options);
         break;
       }
     }
@@ -93,28 +107,30 @@ export const fetchDatapack = action(
   }
 );
 
-export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
-  try {
-    const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
-      method: "GET"
-    });
-    const data = await response.json();
-    if (response.ok) {
-      assertOfficialDatapack(data);
-      assertDatapack(data);
-      return data;
-    } else {
-      displayServerError(
-        data,
-        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
-        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
-      );
+export const fetchOfficialDatapack = action(
+  "fetchOfficialDatapack",
+  async (datapack: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const data = await response.json();
+      if (response.ok) {
+        assertOfficialDatapack(data);
+        assertDatapack(data);
+        return data;
+      } else {
+        displayServerError(
+          data,
+          ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+          ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+        );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
   }
-});
+);
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -1032,9 +1048,6 @@ export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enable
 
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
-});
-export const setshowLoadingDatapacksLoader = action("setshowLoadingDatapacksLoader", (loading: boolean) => {
-  state.showLoadingDatapacksLoader = loading;
 });
 export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
   state.loadingDatapacks = loading;

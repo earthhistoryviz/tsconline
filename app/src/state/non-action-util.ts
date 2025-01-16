@@ -12,7 +12,11 @@ import { Workshop } from "../Workshops";
 
 export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: DatapackUniqueIdentifier) {
   return (
-    a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
+    a.title === b.title &&
+    a.type === b.type &&
+    ((isUserDatapack(a) && isUserDatapack(b)) || (isWorkshopDatapack(a) && isWorkshopDatapack(b))
+      ? a.uuid === b.uuid
+      : true)
   );
 }
 export function getMetadataFromArray(datapack: DatapackUniqueIdentifier, datapacks: DatapackMetadata[]) {

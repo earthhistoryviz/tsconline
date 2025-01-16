@@ -127,6 +127,7 @@ export default observer(function App() {
     }
     return false;
   };
+  // triggered in two cases, if the user switches away from the datapacks page/tab while fetching datapacks or if fetching datapacks on the presets page
   const checkLoadingDatapacks = () => {
     const isOnDatapacksTab = location.pathname === "/settings" && state.settingsTabs.selected === "datapacks";
     const isOnDatapackPath = location.pathname === "/datapacks";
@@ -183,10 +184,7 @@ export default observer(function App() {
             headerText={t("loading.loading-datapacks")}
             subHeaderText={t("loading.time")}
           />
-          <TSCDialogLoader
-            open={state.showLoadingDatapacksLoader || checkLoadingDatapacks()}
-            headerText={t("loading.fetching-datapacks")}
-          />
+          <TSCDialogLoader open={checkLoadingDatapacks()} headerText={t("loading.fetching-datapacks")} />
           <TSCYesNoPopup
             open={checkUnsavedChanges() && !checkLoadingDatapacks()}
             title={t("dialogs.confirm-datapack-change.title")}

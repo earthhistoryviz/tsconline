@@ -34,7 +34,7 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
     return;
   }
   const officialDatapack = await fetchUserDatapack("official", name);
-  if (!officialDatapack) {
+  if (!officialDatapack || !officialDatapack.isPublic) {
     reply.status(404).send({ error: "Datapack not found" });
     return;
   }
