@@ -46,7 +46,8 @@ import {
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile,
-  hasLeadingTrailingWhiteSpace
+  hasLeadingTrailingWhiteSpace,
+  isOwnedByUser
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
@@ -70,8 +71,7 @@ export const DatapackProfile = observer(() => {
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
-  const shouldLoadRecaptcha =
-    !datapack && metadata && ((isUserDatapack(metadata) && !metadata.isPublic) || isWorkshopDatapack(metadata));
+  const shouldLoadRecaptcha = metadata && ((isUserDatapack(metadata) && !metadata.isPublic) || isWorkshopDatapack(metadata));
   const intializeDatapack = async (controller: AbortController) => {
     if (!id || !queryType || !isDatapackTypeString(queryType) || !metadata) return;
     if (!datapack) {
