@@ -17,7 +17,7 @@ import {
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
 import { getRegex } from "../../util";
-import { attachTscPrefix } from "../../state/actions/util-actions";
+import { attachTscPrefixToName } from "../../state/actions/util-actions";
 type OverlaySettingsProps = {
   column: ColumnInfo;
 };
@@ -265,7 +265,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, over
         } else {
           return;
         }
-        refColumn.columnSpecificSettings.drawDualColCompColumn = attachTscPrefix(column.name);
+        refColumn.columnSpecificSettings.drawDualColCompColumn = attachTscPrefixToName(column.name, column.columnDisplayType);
       }}
       tabIndex={0}>
       <ColumnContainer className="dcc-column-leaf">
