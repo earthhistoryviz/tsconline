@@ -3,12 +3,12 @@ import {
   changeProfilePicture,
   getFileNameFromCachedDatapack,
   getTemporaryFilepath,
+  processMultipartPartsForDatapackUpload,
   replaceDatapackFile,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
   uploadUserDatapackHandler
 } from "../src/upload-handlers";
-import { FastifyReply } from "fastify";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 import * as streamPromises from "stream/promises";
@@ -16,8 +16,16 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
 import * as loadPacks from "../src/load-packs";
-import { MultipartFile } from "@fastify/multipart";
+import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
+import * as database from "../src/database";
+import { User, assertOperationResult, isOperationResult } from "../src/types";
+vi.mock("os", () => ({
+  tmpdir: () => "tmpdir"
+}));
+vi.mock("../src/database", () => ({
+  findUser: vi.fn().mockResolvedValue([{ isAdmin: 1 }])
+}));
 vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
   getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory")
@@ -35,6 +43,7 @@ vi.mock("@tsconline/shared", () => ({
   isDatapackTypeString: vi.fn().mockReturnValue(true),
   isUserDatapack: vi.fn().mockReturnValue(true),
   assertDatapack: vi.fn().mockReturnValue(undefined),
+  assertDatapackMetadata: vi.fn().mockReturnValue(true),
   assertUserDatapack: vi.fn().mockReturnValue(undefined),
   MAX_DATAPACK_TAG_LENGTH: 20,
   MAX_DATAPACK_TITLE_LENGTH: 100,
@@ -53,6 +62,7 @@ vi.mock("../src/load-packs", () => ({
   loadDatapackIntoIndex: vi.fn().mockResolvedValue(true)
 }));
 vi.mock("../src/user/user-handler", () => ({
+  checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
   deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
   doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
@@ -68,6 +78,7 @@ vi.mock("fs/promises", () => ({
 vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
+  makeTempFilename: vi.fn().mockReturnValue("filename"),
   assetconfigs: {
     fileMetadata: "fileMetadata"
   }
@@ -78,7 +89,6 @@ vi.mock("fs", async () => {
   };
 });
 describe("uploadUserDatapackHandler", () => {
-  let reply: FastifyReply;
   const rm = vi.spyOn(fsPromises, "rm");
   const isDateValid = vi.spyOn(shared, "isDateValid");
   const fields = {
@@ -97,19 +107,17 @@ describe("uploadUserDatapackHandler", () => {
     priority: "1"
   };
   beforeEach(async () => {
-    reply = {
-      status: vi.fn().mockReturnThis(),
-      send: vi.fn().mockReturnThis()
-    } as Partial<FastifyReply> as FastifyReply;
     vi.clearAllMocks();
   });
   it("should return a 400 error if bytes are 0", async () => {
     const bytes = 0;
-    const val = await uploadUserDatapackHandler(reply, fields, bytes);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "File is empty" });
+    const val = await uploadUserDatapackHandler(fields, bytes);
+
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("File is empty");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   test.each([
     { tags: "" },
@@ -120,92 +128,104 @@ describe("uploadUserDatapackHandler", () => {
     { originalFileName: "" },
     { storedFileName: "" },
     { isPublic: "" },
-    { type: "" },
-    { type: "user", uuid: "" }
+    { type: "" }
   ])(`should return a 400 error if %p is missing`, async (field) => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, ...field }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error:
-        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]"
-    });
+    const val = await uploadUserDatapackHandler({ ...fields, ...field }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Missing required fields");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if title is a reserved word", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, title: "__proto__" }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid title" });
+    const val = await uploadUserDatapackHandler({ ...fields, title: "__proto__" }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Invalid title");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error but not call rm if filepath is missing", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, filepath: "" }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error:
-        "Missing required fields [title, description, authoredBy, references, tags, filepath, originalFileName, storedFileName, isPublic]"
-    });
+    const val = await uploadUserDatapackHandler({ ...fields, filepath: "" }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Missing required fields");
     expect(rm).not.toHaveBeenCalled();
-    expect(val).toBeUndefined();
   });
   it("should return 400 if bytes is 0", async () => {
-    const val = await uploadUserDatapackHandler(reply, fields, 0);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "File is empty" });
+    const val = await uploadUserDatapackHandler(fields, 0);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("File is empty");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return 400 if incorrect datapack type", async () => {
     const isDatapackTypeString = vi.spyOn(shared, "isDatapackTypeString");
     isDatapackTypeString.mockReturnValueOnce(false);
-    const val = await uploadUserDatapackHandler(reply, fields, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "Invalid datapack type" });
+    const val = await uploadUserDatapackHandler(fields, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Invalid datapack type");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   test.each([{ references: "[hi]" }, { tags: "[hi" }, { references: "{3" }, { tags: '[3"]' }])(
     `should return a 400 error if %p is not a valid JSON string`,
     async (field) => {
-      const val = await uploadUserDatapackHandler(reply, { ...fields, ...field }, 1);
-      expect(reply.status).toHaveBeenCalledWith(400);
-      expect(reply.send).toHaveBeenCalledWith({ error: "References and tags must be valid arrays" });
+      const val = await uploadUserDatapackHandler({ ...fields, ...field }, 1);
+      expect(isOperationResult(val)).toBe(true);
+      assertOperationResult(val);
+      expect(val.code).toBe(400);
+      expect(val.message).toBe("References and tags must be valid arrays");
       expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-      expect(val).toBeUndefined();
     }
   );
   it("should return a 400 error if references is not a valid array", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, references: '{"ref": "hi"}' }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "References must be an array of strings" });
+    const val = await uploadUserDatapackHandler({ ...fields, references: '{"ref": "hi"}' }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("References must be an array of strings");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if tags is not a valid array", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, tags: '{"tag": "hi"}' }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "Tags must be an array of strings" });
+    const val = await uploadUserDatapackHandler({ ...fields, tags: '{"tag": "hi"}' }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Tags must be an array of strings");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if date is not a valid date string", async () => {
     isDateValid.mockReturnValueOnce(false);
-    const val = await uploadUserDatapackHandler(reply, fields, 1);
+    const val = await uploadUserDatapackHandler(fields, 1);
     expect(isDateValid).toHaveBeenCalledWith(fields.date);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: "Date must be a valid date string" });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Date must be a valid date string");
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
+  });
+  it("should return a 400 error if assertDatapackMetadata fails", async () => {
+    const assertDatapackMetadata = vi.spyOn(shared, "assertDatapackMetadata");
+    assertDatapackMetadata.mockImplementationOnce(() => {
+      throw new Error("error");
+    });
+    const val = await uploadUserDatapackHandler(fields, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe("Invalid metadata received/processed");
+    expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
   });
   it("should return a DatapackMetadata object on success", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       { ...fields, notes: "notes", contact: "contact", datapackImage: "datapackImage" },
       1
     );
-    expect(reply.send).not.toHaveBeenCalled();
-    expect(reply.status).not.toHaveBeenCalled();
+    expect(isOperationResult(val)).toBe(false);
     expect(val).toEqual({
       originalFileName: fields.originalFileName,
       storedFileName: fields.storedFileName,
@@ -227,42 +247,42 @@ describe("uploadUserDatapackHandler", () => {
   });
   it("should return a 400 error if title is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         title: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque rutrum ex nisi, at consequat ligula."
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max title length is ${shared.MAX_DATAPACK_TITLE_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max title length is ${shared.MAX_DATAPACK_TITLE_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if tags array is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         tags: '["tag", "hi", "test3", "tag4", "tag5", "tag6", "tag7", "tag8", "tag9", "tag10", "tag11", "tag12", "tag13", "tag14", "tag15", "tag16", "tag17", "tag18", "tag19", "tag20", "tag21", "tag22", "tag23", "tag24", "tag25", "tag26", "tag27", "tag28", "tag29", "tag30", "tag31"]'
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max tags allowed is ${shared.MAX_DATAPACK_TAGS_ALLOWED}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max tags allowed is ${shared.MAX_DATAPACK_TAGS_ALLOWED}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if a tag is too long", async () => {
-    const val = await uploadUserDatapackHandler(reply, { ...fields, tags: '["tag", "Lorem ipsum dolor at. "]' }, 1);
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max tag length is ${shared.MAX_DATAPACK_TAG_LENGTH}` });
+    const val = await uploadUserDatapackHandler({ ...fields, tags: '["tag", "Lorem ipsum dolor at. "]' }, 1);
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max tag length is ${shared.MAX_DATAPACK_TAG_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if authored by length is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         authoredBy:
@@ -270,14 +290,14 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max authored by length is ${shared.MAX_AUTHORED_BY_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max authored by length is ${shared.MAX_AUTHORED_BY_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if description length is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         description:
@@ -285,14 +305,14 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max description length is ${shared.MAX_DATAPACK_DESC_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max description length is ${shared.MAX_DATAPACK_DESC_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if notes length is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         notes:
@@ -300,14 +320,14 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if notes length is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         notes:
@@ -315,14 +335,14 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max notes length is ${shared.MAX_DATAPACK_NOTES_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if references array is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         references:
@@ -330,16 +350,14 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: `Max references allowed is ${shared.MAX_DATAPACK_REFERENCES_ALLOWED}`
-    });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max references allowed is ${shared.MAX_DATAPACK_REFERENCES_ALLOWED}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if a reference is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         references:
@@ -347,26 +365,25 @@ describe("uploadUserDatapackHandler", () => {
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({
-      error: `Max references length is ${shared.MAX_DATAPACK_REFERENCE_LENGTH}`
-    });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max references length is ${shared.MAX_DATAPACK_REFERENCE_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
   it("should return a 400 error if contact length is too long", async () => {
     const val = await uploadUserDatapackHandler(
-      reply,
       {
         ...fields,
         contact: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed et metus maximus, venenatis velit a leo."
       },
       1
     );
-    expect(reply.status).toHaveBeenCalledWith(400);
-    expect(reply.send).toHaveBeenCalledWith({ error: `Max contact length is ${shared.MAX_DATAPACK_CONTACT_LENGTH}` });
+    expect(isOperationResult(val)).toBe(true);
+    assertOperationResult(val);
+    expect(val.code).toBe(400);
+    expect(val.message).toBe(`Max contact length is ${shared.MAX_DATAPACK_CONTACT_LENGTH}`);
     expect(rm).toHaveBeenCalledWith(fields.filepath, { force: true });
-    expect(val).toBeUndefined();
   });
 });
 
@@ -398,7 +415,7 @@ describe("uploadFileToFileSystem tests", () => {
   });
   it("should return a 500 error if the file is truncated", async () => {
     const truncated = { ...multipartFile, file: { truncated: true } } as unknown as MultipartFile;
-    expect(await uploadFileToFileSystem(truncated, "filepath")).toEqual({ code: 400, message: "File is too large" });
+    expect(await uploadFileToFileSystem(truncated, "filepath")).toEqual({ code: 413, message: "File is too large" });
     expect(rm).toHaveBeenCalledOnce();
   });
   it("should return a 400 if the file is empty", async () => {
@@ -593,4 +610,133 @@ it("should return the directory and filename", async () => {
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
   expect(await getTemporaryFilepath("uuid", "filename")).toEqual("uuid-directory/filename");
   expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+});
+describe("processMultipartPartsForDatapackUpload tests", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  const rm = vi.spyOn(fsPromises, "rm");
+  let formData: AsyncIterableIterator<Multipart>;
+  function createFormData(
+    json: Record<string, string | { mimetype: string; filename: string; fieldname: string; bytesRead?: number }> = {}
+  ) {
+    formData = {
+      async *[Symbol.asyncIterator]() {
+        yield* Object.entries(json).map(([name, value]) => {
+          if (typeof value === "object") {
+            return {
+              name,
+              type: "file",
+              mimetype: value.mimetype,
+              filename: value.filename,
+              fieldname: value.fieldname,
+              bytesRead: value.bytesRead,
+              file: {
+                truncated: false,
+                bytesRead: value.bytesRead ?? 0,
+                pipe: vi.fn(),
+                on: vi.fn(),
+                resume: vi.fn(),
+                pause: vi.fn(),
+                destroy: vi.fn(),
+                destroySoon: vi.fn(),
+                unpipe: vi.fn(),
+                unshift: vi.fn(),
+                wrap: vi.fn(),
+                [Symbol.asyncIterator]: vi.fn()
+              }
+            };
+          }
+          return {
+            name,
+            type: "field",
+            data: Buffer.from(value.toString())
+          };
+        });
+      }
+    } as AsyncIterableIterator<Multipart>;
+  }
+  beforeEach(() => {
+    createFormData();
+    vi.clearAllMocks();
+  });
+  it("should return a 404 if user is not found", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(404);
+    expect(data.message).toBe("User not found");
+  });
+  it("should return 404 if findUser throws an error", async () => {
+    findUser.mockRejectedValueOnce(new Error("error"));
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(404);
+    expect(data.message).toBe("User not found");
+  });
+  it("should return a 400 error if no parts are found", async () => {
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(400);
+    expect(data.message).toBe("Missing file");
+  });
+  it("should return a 415 error if invalid file type for datapack", async () => {
+    checkFileTypeIsDatapack.mockReturnValueOnce(false);
+    createFormData({
+      datapack: {
+        mimetype: "text/plain",
+        filename: "filename",
+        fieldname: "datapack"
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapack).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack file");
+  });
+  it("should return a 400 error if bytesRead > 3000 and is not pro or admin", async () => {
+    findUser.mockResolvedValueOnce([{ isAdmin: 0 } as User]);
+    createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "filename",
+        fieldname: "datapack",
+        bytesRead: 3001
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(data.code).toBe(413);
+    expect(data.message).toBe("File is too large");
+  });
+  it("should return a non-200 error if uploadFileToFileSystem fails", async () => {
+    pipeline.mockRejectedValueOnce(new Error("error"));
+    createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "filename",
+        fieldname: "datapack"
+      }
+    });
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(pipeline).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(rm).toHaveBeenCalledOnce();
+    expect(data.code).toBe(500);
+    expect(data.message).toBe("Failed to save file");
+  });
 });

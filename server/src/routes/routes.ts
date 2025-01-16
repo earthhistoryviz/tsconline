@@ -9,7 +9,7 @@ import {
   checkFileExists,
   extractMetadataFromDatapack
 } from "../util.js";
-import { getWorkshopIdFromUUID } from "../workshop-util.js";
+import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
 import fs, { realpathSync } from "fs";
