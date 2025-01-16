@@ -1,12 +1,12 @@
 .dcc-accordion-wrapper {
   min-width: 10vw;
-  width: 30vw;
+  width: 45vw;
   max-width: 70vw;
   overflow: auto;
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
-  height: 45vh;
+  height: 40vh;
   resize: horizontal;
 }
 
@@ -35,6 +35,8 @@
   text-overflow: ellipsis;
   max-width: 300px;
   margin: 1;
+  border-radius: 5px;
+  background-color:#767bb3
 }
 
 .empty-overlay-name {
@@ -66,6 +68,6 @@
 }
 
 .overlay-search-bar {
-  width: 20lh;
+  width: 40vw;
   margin: 10px;
 }
