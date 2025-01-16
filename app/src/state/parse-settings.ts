@@ -42,7 +42,7 @@ import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
-import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
+import { attachTscPrefix, changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 
 /**
  * casts a string to a specified type
@@ -499,15 +499,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
   }
-  switch (state.columnDisplayType) {
-    case "RootColumn":
-    case "MetaColumn":
-    case "BlockSeriesMetaColumn":
-      column._id = `class datastore.${state.columnDisplayType}:` + state.name;
-      break;
-    default:
-      column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
-  }
+  column._id = attachTscPrefix(state.name);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;
