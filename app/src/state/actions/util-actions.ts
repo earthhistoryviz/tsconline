@@ -1,7 +1,7 @@
 import { action } from "mobx";
 import { ErrorCodes } from "../../util/error-codes";
 import { pushError, pushSnackbar } from "./general-actions";
-import { ColumnInfo, assertEventSettings, assertPointSettings, isServerResponseError } from "@tsconline/shared";
+import { ColumnInfo, DisplayedColumnTypes, assertEventSettings, assertPointSettings, isServerResponseError } from "@tsconline/shared";
 import { state } from "../state";
 /**
  * Since we hash by name only to allow consistency between facies maps and
@@ -117,19 +117,13 @@ export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: numbe
   return true;
 }
 
-export function attachTscPrefix(name: string): string {
-  const column = state.settingsTabs.columnHashMap.get(name);
-  if (!column) {
-    console.warn("WARNING: could not find column while attaching tsc prefix");
-    return name;
-  }
-  switch (column.columnDisplayType) {
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
     case "RootColumn":
     case "MetaColumn":
     case "BlockSeriesMetaColumn":
-      return `class datastore.${column.columnDisplayType}:` + name;
-      break;
+      return `class datastore.${displayType}:` + name;
     default:
-      return `class datastore.${column.columnDisplayType}Column:` + column.name;
+      return `class datastore.${displayType}Column:` + name;
   }
 }
