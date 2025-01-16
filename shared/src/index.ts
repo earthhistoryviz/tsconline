@@ -1175,7 +1175,7 @@ export function isOfficialDatapack(o: any): o is OfficialDatapack {
   return o.type === "official";
 }
 export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
-  return o.type === "workshop";
+  return o.type === "workshop" && typeof o.uuid === "string";
 }
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";
@@ -1211,7 +1211,7 @@ export function assertUserDatapack(o: any): asserts o is UserDatapack {
   if (!o || typeof o !== "object") throw new Error("UserDatapack must be a non-null object");
   if (typeof o.type !== "string") throwError("UserDatapack", "type", "string", o.type);
   if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
-  if (typeof o.uuid !== "string") throwError("PublicUserDatapack", "uuid", "string", o.uuid);
+  if (typeof o.uuid !== "string" || o.uuid.length == 0) throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
 
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
