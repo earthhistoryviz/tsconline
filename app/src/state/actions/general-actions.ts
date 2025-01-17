@@ -710,6 +710,9 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
     case 6:
       state.settingsTabs.selected = "datapacks";
       break;
+    case 7:
+      state.settingsTabs.selected = "loadsave";
+      break;
     default:
       console.log("WARNING: setSettingTabsSelected: received index number that is unknown: ", newtab);
       state.settingsTabs.selected = "time";
@@ -737,6 +740,8 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
       return 5;
     case "datapacks":
       return 6;
+    case "loadsave":
+      return 7;
     default:
       console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
       return 0;
@@ -1294,4 +1299,40 @@ export const setPublicDatapacksLoading = action((fetching: boolean) => {
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
+});
+
+export const setTourOpen = action((openTour: boolean, tourName: string) => {
+  switch (tourName) {
+    case "qsg":
+      state.guides.isQSGOpen = openTour;
+      state.guides.isDatapacksTourOpen = false; // Close any other tours that might still be open to prevent multiple tours from running simultaneously.
+      state.guides.isSettingsTourOpen = false; //  ensures that starting a new tour will not lead to overlapping tours,
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "datapacks":
+      state.guides.isDatapacksTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "settings":
+      state.guides.isSettingsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+
+      break;
+    case "workshops":
+      state.guides.isWorkshopsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      break;
+    default:
+      console.error("No such tour");
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+  }
 });
