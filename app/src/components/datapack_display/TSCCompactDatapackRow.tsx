@@ -12,6 +12,7 @@ import Lottie from "../TSCLottie";
 import { context } from "../../state";
 import {
   getDatapackProfileImageUrl,
+  getDatapackUUID,
   getNavigationRouteForDatapackProfile,
   isOwnedByUser
 } from "../../state/non-action-util";
@@ -37,7 +38,10 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
       className={styles.rc}
       bgcolor="secondaryBackground.main"
       onClick={
-        skeleton ? () => {} : () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))
+        skeleton
+          ? () => {}
+          : () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
       }
       sx={{
         "&:hover": {

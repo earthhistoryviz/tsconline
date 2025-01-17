@@ -5,7 +5,11 @@ import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
-import { getDatapackProfileImageUrl, getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
+import {
+  getDatapackProfileImageUrl,
+  getDatapackUUID,
+  getNavigationRouteForDatapackProfile
+} from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
   datapack?: DatapackMetadata;
@@ -22,7 +26,10 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
       onClick={
-        skeleton ? () => {} : () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))
+        skeleton
+          ? () => {}
+          : () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
       }>
       {skeleton ? (
         <Skeleton height="140px" />

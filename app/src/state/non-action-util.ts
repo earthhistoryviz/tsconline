@@ -55,8 +55,11 @@ export function getWorkshopDatapacksMetadata(datapacks: DatapackMetadata[]) {
 export function isOwnedByUser(datapack: DatapackMetadata, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
-export function getNavigationRouteForDatapackProfile(title: string, type: string) {
-  return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
+export function getNavigationRouteForDatapackProfile(uuid: string, title: string, type: string) {
+  return `/datapack/${encodeURIComponent(title)}/?uuid=${uuid}&type=${type}`;
+}
+export function getDatapackUUID(datapack: DatapackUniqueIdentifier) {
+  return isUserDatapack(datapack) || isWorkshopDatapack(datapack) ? datapack.uuid : datapack.type;
 }
 export function getDatapackProfileImageUrl(datapack: DatapackMetadata) {
   const uuid = isUserDatapack(datapack) || isWorkshopDatapack(datapack) ? datapack.uuid : datapack.type;

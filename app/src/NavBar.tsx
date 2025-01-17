@@ -149,7 +149,7 @@ export const NavBar = observer(function Navbar() {
                   className="settings-sub-menu-item"
                   onClick={() => {
                     assertSettingsTabs(key);
-                    actions.setTab(3);
+                    actions.setTab(4);
                     actions.setSettingsTabsSelected(key);
                     navigate("/settings");
                     settingsMenuToggle(false);

@@ -14,7 +14,7 @@ import {
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { EditableDatapackMetadata } from "../../types";
+import { DatapackFetchParams, EditableDatapackMetadata, assertDatapackFetchParams } from "../../types";
 import {
   Datapack,
   DatapackUniqueIdentifier,
@@ -24,7 +24,7 @@ import {
   assertWorkshopDatapack
 } from "@tsconline/shared";
 import { state } from "../state";
-import { doesDatapackExistInCurrentConfig } from "../non-action-util";
+import { doesDatapackExistInCurrentConfig, getMetadataFromArray } from "../non-action-util";
 
 export const setEditRequestInProgress = action((inProgress: boolean) => {
   state.datapackProfilePage.editRequestInProgress = inProgress;
@@ -68,10 +68,14 @@ export const handleDatapackEdit = action(
         });
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
-          const datapack = await refetchDatapack(
-            { title: editedDatapack.title, type: "user", uuid: state.user.uuid },
-            { title: originalDatapack.title, type: "user", uuid: state.user.uuid }
-          );
+          const datapackFetchParams = {
+            title: editedDatapack.title,
+            type: editedDatapack.type,
+            isPublic: editedDatapack.isPublic,
+            ...("uuid" in originalDatapack && { uuid: originalDatapack.uuid })
+          };
+          assertDatapackFetchParams(datapackFetchParams);
+          const datapack = await refetchDatapack(datapackFetchParams, originalDatapack);
           if (!datapack) return null;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
@@ -107,8 +111,8 @@ export const handleDatapackEdit = action(
  * Refetches the datapack from the server and replaces the original datapack with the new one. If used to refetch private user datapacks or workshop datapacks, you must make sure recaptcha is loaded before calling this function.
  */
 export const refetchDatapack = action(
-  async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
-    const datapack = await fetchDatapack(editedDatapack.type, editedDatapack.title);
+  async (editedMetadata: DatapackFetchParams, originalDatapack: DatapackUniqueIdentifier) => {
+    const datapack = await fetchDatapack(editedMetadata);
     if (datapack) {
       removeDatapack(originalDatapack);
       addDatapack(datapack);
@@ -229,7 +233,11 @@ export const userDeleteDatapack = action(async (datapack: string) => {
 });
 
 export const replaceUserDatapackFile = action(async (id: string, file: File) => {
-  const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
+  const metadata = getMetadataFromArray({ title: id, type: "user", uuid: state.user.uuid }, state.datapackMetadata);
+  if (!metadata) {
+    pushError(ErrorCodes.METADATA_NOT_FOUND);
+    return;
+  }
   try {
     setEditRequestInProgress(true);
     const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
@@ -246,11 +254,11 @@ export const replaceUserDatapackFile = action(async (id: string, file: File) => 
     });
     if (response.ok) {
       pushSnackbar("File replaced", "success");
-      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
+      const datapack = await refetchDatapack(metadata, metadata);
       if (!datapack) return;
       removeAllErrors();
       // if selected in the config, force a reprocess of the config
-      if (doesDatapackExistInCurrentConfig(datapackUniqueIdentifier, state.config.datapacks)) {
+      if (doesDatapackExistInCurrentConfig(metadata, state.config.datapacks)) {
         await processDatapackConfig(toJS(state.config.datapacks), undefined, true);
       }
       return datapack;
@@ -289,8 +297,12 @@ export const replaceUserProfileImageFile = action(async (id: string, file: File)
     });
     if (response.ok) {
       pushSnackbar("Image replaced", "success");
-      const datapackUniqueIdentifier: DatapackUniqueIdentifier = { title: id, type: "user", uuid: state.user.uuid };
-      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
+      const metadata = getMetadataFromArray({ title: id, type: "user", uuid: state.user.uuid }, state.datapackMetadata);
+      if (!metadata) {
+        pushError(ErrorCodes.METADATA_NOT_FOUND);
+        return;
+      }
+      const datapack = await refetchDatapack(metadata, metadata);
       if (!datapack) return;
       removeAllErrors();
       setDatapackProfilePageImageVersion(new Date().getTime());
