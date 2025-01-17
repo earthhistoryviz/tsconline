@@ -23,7 +23,6 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
   Datapack,
-  DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_DESC_LENGTH,
@@ -34,7 +33,8 @@ import {
   MAX_DATAPACK_TITLE_LENGTH,
   isUserDatapack,
   isDatapackTypeString,
-  isWorkshopDatapack
+  isWorkshopDatapack,
+  DatapackUniqueIdentifier
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -43,10 +43,14 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import {
-  doesDatapackAlreadyExist,
+  doesMetadataAlreadyExist,
+  getDatapackFromArray,
   getDatapackProfileImageUrl,
+  getDatapackUUID,
+  getMetadataFromArray,
   getNavigationRouteForDatapackProfile,
-  hasLeadingTrailingWhiteSpace
+  hasLeadingTrailingWhiteSpace,
+  isOwnedByUser
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
@@ -60,22 +64,28 @@ export const DatapackProfile = observer(() => {
   const { id } = useParams();
   const query = new URLSearchParams(useLocation().search);
   const queryType = query.get("type");
+  const uuid = query.get("uuid");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
-  const [datapack, setDatapack] = useState<Datapack | undefined>(
-    state.datapacks.find((d) => d.title === id && d.type === queryType)
+  const areParamsValid = !!id && isDatapackTypeString(queryType) && !!uuid;
+  const [datapack, setDatapack] = useState<Datapack | null>(
+    areParamsValid ? getDatapackFromArray({ title: id, type: queryType, uuid }, state.datapacks) : null
   );
-  const metadata = state.datapackMetadata.find((d) => d.title === id && d.type === queryType);
+  const metadata = areParamsValid
+    ? getMetadataFromArray({ title: id, type: queryType, uuid }, state.datapackMetadata)
+    : null;
   const [loading, setLoading] = useState(metadata && !datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
   const shouldLoadRecaptcha =
-    metadata && ((isUserDatapack(metadata) && !metadata.isPublic) || isWorkshopDatapack(metadata));
-  const intializeDatapack = async (controller: AbortController) => {
-    if (!id || !queryType || !isDatapackTypeString(queryType) || !metadata) return;
+    !!metadata &&
+    ((isUserDatapack(metadata) && state.user.uuid && isOwnedByUser(metadata, state.user.uuid)) ||
+      isWorkshopDatapack(metadata));
+  const initializeDatapack = async (controller: AbortController) => {
+    if (!areParamsValid || !metadata) return;
     if (!datapack) {
-      const fetchedDatapack = await actions.fetchDatapack(queryType, id, { signal: controller.signal });
+      const fetchedDatapack = await actions.fetchDatapack(metadata, { signal: controller.signal });
       if (fetchedDatapack) {
         actions.resetEditableDatapackMetadata(fetchedDatapack);
         actions.addDatapack(fetchedDatapack);
@@ -92,7 +102,7 @@ export const DatapackProfile = observer(() => {
     if (shouldLoadRecaptcha) {
       await loadRecaptcha();
     }
-    await intializeDatapack(controller);
+    await initializeDatapack(controller);
   };
   useEffect(() => {
     const controller = new AbortController();
@@ -108,7 +118,11 @@ export const DatapackProfile = observer(() => {
       // a second issue is that due to strict mode the initial fetch will be aborted because React will call the cleanup before fetching is done causing the page to flicker to the 404 page for a split second
       // the second fetch in the second useEffect will be successful and the page will render correctly
       // this is not an issue in prod since strict mode is disabled
-      controller.abort();
+      if (import.meta.env.MODE !== "development") {
+        // if we're in prod, we do want to abort to prevent errors and zombie fetch requests
+        // but if we're in dev, skip aborting so we don’t see that flicker
+        controller.abort();
+      }
     };
   }, [queryType, id, isMetadataInitialized]);
   useEffect(() => {
@@ -116,7 +130,7 @@ export const DatapackProfile = observer(() => {
       actions.setDatapackProfilePageEditMode(false);
     };
   }, []);
-  if (loading) return <TSCDialogLoader open={true} />;
+  if (loading) return <TSCDialogLoader open={true} transparentBackground />;
   if (!metadata || !datapack || !id) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
@@ -187,11 +201,11 @@ export const DatapackProfile = observer(() => {
       // types are really odd so I have decided to cast here, any other opinions are welcome
       const tempDatapackConfig = {
         ...state.datapackProfilePage.editableDatapackMetadata,
-        storedFileName: ""
-      } as DatapackConfigForChartRequest;
+        ...(isUserDatapack(metadata) || isWorkshopDatapack(metadata) ? { uuid: metadata.uuid } : {})
+      } as DatapackUniqueIdentifier;
       if (
         state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title &&
-        doesDatapackAlreadyExist(tempDatapackConfig, state.datapacks)
+        doesMetadataAlreadyExist(tempDatapackConfig, state.datapackMetadata)
       ) {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
@@ -207,7 +221,11 @@ export const DatapackProfile = observer(() => {
       // if the title has changed, navigate to the new title
       if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(
-          getNavigationRouteForDatapackProfile(state.datapackProfilePage.editableDatapackMetadata.title, queryType!)
+          getNavigationRouteForDatapackProfile(
+            getDatapackUUID(datapack),
+            state.datapackProfilePage.editableDatapackMetadata.title,
+            queryType!
+          )
         );
       }
     }

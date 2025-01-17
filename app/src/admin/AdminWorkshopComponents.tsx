@@ -79,7 +79,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
                     setDatapack(event.target.value as string);
                   }}
                   autoWidth>
-                  {Array.from(state.datapacks)
+                  {Array.from(state.datapackMetadata)
                     .filter((datapack) => isOfficialDatapack(datapack))
                     .map((datapack) => (
                       <MenuItem key={datapack.title} value={datapack.title}>

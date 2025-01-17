@@ -17,10 +17,7 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray,
-  DatapackTypeString,
-  assertWorkshopDatapack,
-  assertUserDatapack
+  assertDatapackMetadataArray
 } from "@tsconline/shared";
 
 import {
@@ -49,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
@@ -63,7 +61,7 @@ import {
   compareExistingDatapacks,
   doesDatapackAlreadyExist,
   doesMetadataAlreadyExist,
-  getDatapackFromArray,
+  getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
@@ -71,35 +69,28 @@ import { Workshop } from "../../Workshops";
 
 /**
  * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * @param title
+ * @param metadata
+ * @param options - Optional signal for aborting the fetch request
  */
 export const fetchDatapack = action(
   "fetchDatapack",
-  async (type: DatapackTypeString, title: string, options?: { signal?: AbortSignal }) => {
+  async (metadata: DatapackFetchParams, options?: { signal?: AbortSignal }) => {
     let datapack: Datapack | undefined;
-    switch (type) {
+    switch (metadata.type) {
       case "user": {
-        const metadata = state.datapackMetadata.find((d) => d.title === title && d.type === "user");
-        if (metadata) {
-          assertUserDatapack(metadata);
-          if (metadata.isPublic) {
-            datapack = await actions.fetchPublicUserDatapack(title, metadata.uuid, options);
-          } else {
-            datapack = await actions.fetchUserDatapack(title, options);
-          }
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicUserDatapack(metadata.title, metadata.uuid, options);
         } else {
-          // if the datapack title is being edited then it won't exist in metadata yet, but it will be the user's datapack
-          datapack = await actions.fetchUserDatapack(title, options);
+          datapack = await actions.fetchUserDatapack(metadata.title, options);
         }
         break;
       }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(title, options);
+        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
         break;
       case "workshop": {
-        const metadata = state.datapackMetadata.find((d) => d.title === title && d.type === "workshop");
-        if (!metadata) return;
-        assertWorkshopDatapack(metadata);
-        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, title, options);
+        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
         break;
       }
     }
@@ -255,7 +246,7 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
-    if (getDatapackFromArray(metadata, state.datapacks)) {
+    if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -1012,6 +1003,9 @@ export const setDefaultUserState = action(() => {
 export const removeUnauthorizedDatapacks = action(() => {
   state.datapacks = observable(
     state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
+  );
+  state.datapackMetadata = observable(
+    state.datapackMetadata.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
   );
 });
 

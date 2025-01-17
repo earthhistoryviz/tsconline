@@ -41,10 +41,11 @@ export const Datapacks = observer(function Datapacks() {
     (state.user.isAdmin ||
       state.datapackMetadata.some((dp) => isWorkshopDatapack(dp) || (isUserDatapack(dp) && !dp.isPublic)));
   useEffect(() => {
+    const controller = new AbortController();
     if (shouldLoadRecaptcha) {
       loadRecaptcha().then(async () => {
         if (state.user.isAdmin) {
-          await actions.adminFetchPrivateOfficialDatapacks();
+          await actions.adminFetchPrivateOfficialDatapacks({ signal: controller.signal });
         }
       });
     }
@@ -52,6 +53,7 @@ export const Datapacks = observer(function Datapacks() {
       if (shouldLoadRecaptcha) {
         removeRecaptcha();
       }
+      controller.abort();
     };
   }, [shouldLoadRecaptcha]);
 
@@ -222,7 +224,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
       } else {
         actions.setLoadingDatapacks(true);
         if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
-          const datapack = await actions.fetchDatapack(newDatapack.type, newDatapack.title);
+          const datapack = await actions.fetchDatapack(newDatapack);
           if (!datapack) {
             actions.setLoadingDatapacks(false);
             return;
@@ -262,18 +264,18 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
                 : false;
               return state.settingsTabs.datapackDisplayType === "rows" ? (
                 datapack ? (
-                  <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                  <TSCDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
                 ) : (
                   <TSCDatapackRow key={index} />
                 )
               ) : state.settingsTabs.datapackDisplayType === "compact" ? (
                 datapack ? (
-                  <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                  <TSCCompactDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
                 ) : (
                   <TSCCompactDatapackRow key={index} />
                 )
               ) : datapack ? (
-                <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                <TSCDatapackCard key={index} datapack={datapack} value={value} onChange={onChange} />
               ) : (
                 <TSCDatapackCard key={index} />
               );

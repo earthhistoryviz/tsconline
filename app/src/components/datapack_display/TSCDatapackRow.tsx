@@ -13,6 +13,7 @@ import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import { context } from "../../state";
 import {
   getDatapackProfileImageUrl,
+  getDatapackUUID,
   getNavigationRouteForDatapackProfile,
   isOwnedByUser
 } from "../../state/non-action-util";
@@ -44,7 +45,10 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
         }
       }}
       onClick={
-        !skeleton ? () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type)) : () => {}
+        !skeleton
+          ? () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
+          : () => {}
       }>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
