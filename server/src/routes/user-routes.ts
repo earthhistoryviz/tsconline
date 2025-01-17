@@ -6,7 +6,7 @@ import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { editDatapackMetadataRequestHandler } from "../cloud/general-cloud-requests.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,

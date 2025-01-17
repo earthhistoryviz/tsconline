@@ -1,5 +1,5 @@
 import { describe, beforeEach, afterEach, expect, it, vi } from "vitest";
-import { editDatapack } from "../src/cloud/edit-handler";
+import { editDatapack } from "../src/file-handlers/edit-handler";
 import * as util from "../src/util";
 import * as uploadHandler from "../src/upload-handlers";
 import * as userHandler from "../src/user/user-handler";

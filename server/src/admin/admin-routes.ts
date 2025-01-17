@@ -54,7 +54,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { editDatapackMetadataRequestHandler } from "../cloud/general-cloud-requests.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,

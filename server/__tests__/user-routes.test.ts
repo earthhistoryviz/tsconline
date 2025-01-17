@@ -13,10 +13,10 @@ import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
 import { Datapack } from "@tsconline/shared";
 import { User } from "../src/types";
-import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
+import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 
-vi.mock("../src/cloud/general-cloud-requests", async () => {
+vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
     editDatapackMetadataRequestHandler: vi.fn(async () => {})
   };
@@ -383,7 +383,7 @@ describe("verifyRecaptcha tests", () => {
 });
 
 describe("editDatapackMetadata", () => {
-  const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   it("should return 400 if datapack is not provided", async () => {
     const response = await app.inject({
       method: "PATCH",
