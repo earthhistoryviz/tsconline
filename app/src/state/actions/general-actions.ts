@@ -69,7 +69,6 @@ import { Workshop } from "../../Workshops";
 
 /**
  * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
- * @param title
  * @param metadata
  * @param options - Optional signal for aborting the fetch request
  */

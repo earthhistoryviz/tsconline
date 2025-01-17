@@ -131,7 +131,7 @@ export const DatapackProfile = observer(() => {
     };
   }, []);
   if (loading) return <TSCDialogLoader open={true} transparentBackground />;
-  if (!metadata || !datapack || !id) return <PageNotFound />;
+  if (!metadata || !datapack || !areParamsValid) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {
