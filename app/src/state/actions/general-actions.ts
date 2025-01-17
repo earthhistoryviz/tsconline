@@ -1374,9 +1374,9 @@ export const setCrossPlotLockY = action((lockY: boolean) => {
   state.chartTab.crossplot.lockY = lockY;
 });
 
-export const setCrossplotChartX = action((chart: ColumnInfo) => {
+export const setCrossplotChartX = action((chart?: ColumnInfo) => {
   state.crossplotSettingsTabs.chartX = chart;
 });
-export const setCrossplotChartY = action((chart: ColumnInfo) => {
+export const setCrossplotChartY = action((chart?: ColumnInfo) => {
   state.crossplotSettingsTabs.chartY = chart;
 });
