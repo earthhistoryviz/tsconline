@@ -69,10 +69,10 @@ const dummyWorkshops: Workshop[] = [
   // Active Workshops
   {
     title: "React Basics",
-    start: "2025-01-14T09:00:00",
-    end: "2025-01-17T18:00:00",
+    start: "2025-01-29T09:00:00",
+    end: "2025-01-30T18:00:00",
     workshopId: 1,
-    active: true,
+    active: false,
     datapacks: ["React Overview", "JSX Basics"],
     description:
       "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
@@ -81,8 +81,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Advanced TypeScript",
-    start: "2025-01-14T09:00:00",
-    end: "2025-01-16T16:00:00",
+    start: "2025-01-07T09:00:00",
+    end: "2025-01-07T16:00:00",
     workshopId: 2,
     active: true,
     datapacks: ["Generics", "Decorators", "Type Inference"],
@@ -94,10 +94,10 @@ const dummyWorkshops: Workshop[] = [
   // Upcoming Workshops
   {
     title: "Node.js for Beginners",
-    start: "2025-01-20T09:00:00",
-    end: "2025-01-21T12:00:00",
+    start: "2025-01-17T09:00:00",
+    end: "2025-01-17T15:00:00",
     workshopId: 3,
-    active: false,
+    active: true,
     datapacks: ["Node Basics", "Express.js Overview"],
     description:
       "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
@@ -106,8 +106,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Fullstack Development",
-    start: "2025-02-17T13:00:00",
-    end: "2025-02-18T16:00:00",
+    start: "2025-01-07T13:00:00",
+    end: "2025-01-08T16:00:00",
     workshopId: 4,
     active: false,
     datapacks: ["Frontend-Backend Integration", "API Design"],
@@ -131,8 +131,8 @@ const dummyWorkshops: Workshop[] = [
   },
   {
     title: "Python for Data Science",
-    start: "2025-01-01T10:00:00",
-    end: "2025-01-01T13:00:00",
+    start: "2025-01-12T10:00:00",
+    end: "2025-01-13T13:00:00",
     workshopId: 6,
     active: false,
     datapacks: ["Pandas", "NumPy", "Matplotlib"],
@@ -225,7 +225,7 @@ export const Workshops: React.FC = observer(() => {
   const pastWorkshops = getPastWorkshops(dummyWorkshops);
 
   const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
-  const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 600 ? "day" : "month"));
+  const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 500 ? "day" : "month"));
   //calendar default off unless an event is a week away
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
@@ -237,7 +237,7 @@ export const Workshops: React.FC = observer(() => {
   //Use day view with smaller screen sizes
   useEffect(() => {
     const handleResize = () => {
-      setCalendarView(window.innerWidth < 600 ? "day" : "month");
+      setCalendarView((prevView) => (window.innerWidth < 450 ? "day" : prevView === "day" ? "month" : prevView));
     };
 
     window.addEventListener("resize", handleResize);
@@ -255,19 +255,22 @@ export const Workshops: React.FC = observer(() => {
 
   const CustomToolbar: React.FC<ToolbarProps> = ({ label, onNavigate }) => {
     const getLabel = () => {
-      const [month, year] = label.split(" ");
-      const monthIndex = new Date(`${month} 1, ${year}`).getMonth() + 1;
-      return calendarView === "month"
-        ? `${t(`workshops.calendar.months.${monthIndex}`)} ${year}`
-        : calendarView === "week"
-          ? `${t(`workshops.calendar.months.${monthIndex}`)} ${label.split(" ")[1]} - ${label.split(" ")[3]}`
-          : `${t(`workshops.calendar.days.${label.split(" ")[0].toLowerCase()}`)}, ${t(`workshops.calendar.months.${monthIndex}`)} ${label.split(" ")[2]}`;
+      const parts = label.split(" ");
+      const monthIndex = new Date(`${parts[0]} 1, ${parts[parts.length - 1]}`).getMonth() + 1;
+
+      if (calendarView === "month") {
+        return `${t(`workshops.calendar.months.${monthIndex}`)} ${parts[1]}`;
+      } else if (calendarView === "week") {
+        const [startDay, endDay] = parts.length === 5 ? [parts[1], parts[4]] : [parts[1], parts[3]];
+        const endMonthIndex = parts.length === 5 ? new Date(`${parts[3]} 1, ${parts[4]}`).getMonth() + 1 : monthIndex;
+        return `${t(`workshops.calendar.months.${monthIndex}`)} ${startDay} - ${t(`workshops.calendar.months.${endMonthIndex}`)} ${endDay}`;
+      } else {
+        return `${t(`workshops.calendar.days.${parts[0].toLowerCase()}`)}, ${t(`workshops.calendar.months.${monthIndex}`)} ${parts[2]}`;
+      }
     };
 
     return (
-      <Box
-        className="calendar-toolbar"
-        sx={{ display: "flex", alignItems: "center", flexDirection: { xs: "column", md: "row" } }}>
+      <Box className="calendar-toolbar" sx={{ flexDirection: { xs: "column", md: "row" } }}>
         <Box className="calendar-toolbar-navigation">
           <IconButton onClick={() => onNavigate("PREV")}>
             <KeyboardArrowLeftIcon sx={{ color: "button.light" }} />
@@ -318,46 +321,42 @@ export const Workshops: React.FC = observer(() => {
   };
 
   const EventWrapper: React.FC<EventWrapperProps> = ({ event }) => {
-    const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement>) => {
-      e.currentTarget.style.backgroundColor = theme.palette.button.dark;
-    };
-
-    const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement>) => {
-      e.currentTarget.style.backgroundColor = theme.palette.button.main;
-    };
-
     const overlappingEvent = !events.every(
       (e) =>
         e === event ||
         !(e.start && e.end && new Date(e.start!) <= new Date(event.end!) && new Date(e.end!) >= new Date(event.start!))
     );
 
-    const longOverlappingEvent = dayjs(event.end).diff(dayjs(event.start), "day") > 0 && overlappingEvent;
+    const longEvent = dayjs(event.end).diff(dayjs(event.start), "day") > 0;
+
+    const longOverlappingEvent = longEvent && overlappingEvent;
 
     return (
       <Card
         className="rbc-custom-event"
         sx={{
+          justifyContent: "center",
           bgcolor: theme.palette.button.main,
           "&:hover": { backgroundColor: theme.palette.button.dark },
-          height: overlappingEvent ? "auto" : "150%",
-          flexDirection: longOverlappingEvent ? "row" : "column",
+          height: overlappingEvent || (calendarView !== "month" && longEvent) ? "auto" : "140%",
+          flexDirection: longOverlappingEvent || (calendarView !== "month" && longEvent) ? "row" : "column",
+          alignItems: calendarView === "week" ? "center" : "flex-start",
+          flex: "display",
           //Fits events when in week and day view
-          ...(calendarView !== "month" && {
-            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-          })
+          ...(calendarView !== "month" &&
+            !longEvent && {
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+            })
         }}
-        onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}>
+        onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}>
         {/* timing details on card */}
-        <Typography sx={{ fontSize: ".85rem" }}>{event.title}</Typography>
+        <Typography className="custom-event-label">{event.title}</Typography>
         {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
           <Typography
+            className="custom-event-label"
             sx={{
-              fontSize: ".75rem",
-              marginLeft: longOverlappingEvent ? "4px" : "0"
+              marginLeft: longOverlappingEvent || longEvent ? "4px" : "0"
             }}>
             {new Date(event.start!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
             {new Date(event.end!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -427,29 +426,6 @@ export const Workshops: React.FC = observer(() => {
     workshopId: workshop.workshopId
   }));
 
-  //Seperate event list stretching multi day events for week view as react-big-calendar does not support multi day events
-  //Splits multi day events into individual day events with the same details
-  const weekAndDayEvents = events.flatMap((event) => {
-    const days = [];
-    let current = dayjs(event.start);
-    const end = dayjs(event.end);
-    const startTime = dayjs(event.start).format("HH:mm");
-    const endTime = dayjs(event.end).format("HH:mm");
-
-    while (current.isBefore(end) || current.isSame(end, "day")) {
-      days.push({
-        ...event,
-        start: current.isSame(event.start, "day")
-          ? event.start
-          : dayjs(current.format("YYYY-MM-DD") + " " + startTime).toDate(),
-        end: current.isSame(event.end, "day") ? event.end : dayjs(current.format("YYYY-MM-DD") + " " + endTime).toDate()
-      });
-      current = current.add(1, "day").startOf("day");
-    }
-
-    return days;
-  });
-
   useEffect(() => {
     actions.setWorkshopsArray(dummyWorkshops);
   }, []);
@@ -457,12 +433,10 @@ export const Workshops: React.FC = observer(() => {
     <>
       {state.isLoggedIn ? (
         <Box padding={4}>
-          <Typography className="header" sx={{ textAlign: "center" }}>
-            {t("workshops.header")}
-          </Typography>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-            <Typography className="description-header" sx={{}}>
-              {t("workshops.description-header")}
+          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+            <Box sx={{ width: "200px" }}></Box>
+            <Typography className="header" sx={{ textAlign: "center" }}>
+              {t("workshops.header")}
             </Typography>
             <FormControlLabel
               control={
@@ -473,11 +447,15 @@ export const Workshops: React.FC = observer(() => {
                 />
               }
               label={t("workshops.calendar.switchLabel")}
+              sx={{ marginLeft: 2 }}
             />
           </Box>
-          {calendarState && (
-            <Calendar events={calendarView === "month" ? events : weekAndDayEvents} views={["month", "week", "day"]} />
-          )}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+            <Typography className="description-header" sx={{}}>
+              {t("workshops.description-header")}
+            </Typography>
+          </Box>
+          {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
 
           {/* Active Workshops */}
           <Accordion

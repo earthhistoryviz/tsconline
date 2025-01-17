@@ -6,17 +6,47 @@
   justify-content: center;
 }
 
+.custom-event-label {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1em;
+  margin: 1px;
+}
+
+.rbc-label {
+  font-size: 0.8rem;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid dimgrey !important; /* Vertical lines */
+}
+
+.rbc-day-slot {
+  border-right: 1px solid dimgrey !important;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid dimgrey !important; /* Horizontal lines */
+}
+
 .rbc-custom-event {
-  outline-color: divider;
   cursor: pointer;
   transition: background-color 0.1s;
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  border-radius: 2px;
+  border-radius: 3px;
   opacity: 0.85;
   color: white;
+}
+
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
 }
 
 .calendar-toolbar-customization {

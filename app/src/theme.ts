@@ -625,7 +625,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
       main: "#1A222DB3"
     },
     calendarCurrentDay: {
-      main: "#32495c "
+      main: "#313a42"
     }
   }
 });
