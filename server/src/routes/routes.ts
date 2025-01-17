@@ -518,7 +518,6 @@ export async function fetchMapImages(
     const { type } = request.params;
     const rawPath = request.params["*"] as string;
     const baseDir = path.join(process.cwd(), "assets", "uploads", type);
-    // const fullPath = path.join(baseDir, rawPath);
     const fullPath = path.join(baseDir, path.normalize(rawPath));
     const isVerified = await verifyFilepath(fullPath);
     if (!isVerified) {
