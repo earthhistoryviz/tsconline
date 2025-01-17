@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { TimeSettings } from "../types";
-import { MenuItem, Select, TextField } from "@mui/material";
+import { Button, MenuItem, Select, TextField } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
@@ -53,7 +53,7 @@ export const CrossplotTimeSelector = observer(function CrossplotTime({ unit, set
         type="number"
         size="small"
         disabled={!settings}
-        value={settings?.unitsPerMY}
+        value={settings?.unitsPerMY || ""}
         onChange={(event) => {
           if (!settings || !unit) return;
           actions.setUnitsPerMY(parseFloat(event.target.value), unit);
@@ -67,8 +67,10 @@ export const CrossplotTime = observer(function CrossplotTime() {
   const { state, actions } = useContext(context);
   return (
     <div className={styles.timeSettingsContainer}>
+      <Button onClick={() => { actions.setCrossplotChartX(undefined)}}>Clear</Button>
       <Select
-        value={state.crossplotSettingsTabs.chartX?.units}
+
+        value={state.crossplotSettingsTabs.chartX?.units || 0}
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
           if (!col) return;
@@ -80,13 +82,16 @@ export const CrossplotTime = observer(function CrossplotTime() {
               {`${column.name} (${column.units})`}
             </MenuItem>
           ))}
+          <MenuItem value={0}>
+            <em>None</em>
+          </MenuItem>
       </Select>
       <CrossplotTimeSelector
         unit={state.crossplotSettingsTabs.chartX?.units}
         settings={state.settings.timeSettings[state.crossplotSettingsTabs.chartX?.units || ""]}
       />
       <Select
-        value={state.crossplotSettingsTabs.chartY}
+        value={state.crossplotSettingsTabs.chartY?.units || 0}
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
           if (!col) return;
@@ -94,10 +99,13 @@ export const CrossplotTime = observer(function CrossplotTime() {
         }}>
         {state.settingsTabs.columns &&
           Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
-            <MenuItem key={index} value={index}>
+            <MenuItem key={index} value={column.units}>
               {`${column.name} (${column.units})`}
             </MenuItem>
           ))}
+          <MenuItem value={0}>
+            <em>None</em>
+          </MenuItem>
       </Select>
     </div>
   );
