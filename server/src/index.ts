@@ -212,7 +212,7 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
 
-server.get("/assets/uploads/:type/*", looseRateLimit, routes.fetchMapImages);
+server.get("/assets/uploads/:type/*", moderateRateLimit, routes.fetchMapImages);
 
 server.get<{ Params: { title: string; uuid: string } }>(
   "/datapack-images/:title/:uuid",
