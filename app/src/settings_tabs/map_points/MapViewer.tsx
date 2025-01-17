@@ -79,7 +79,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapStyle = {
     height: mapHeight
   };
-
   return (
     <div ref={mapViewerRef}>
       <HeaderBar isFacies={isFacies} name={name} />
@@ -99,7 +98,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     id="map"
                     ref={imageRef}
                     style={mapStyle}
-                    src={devSafeUrl(mapData.img.replace("/assets/uploads", "/getMapImages"))}
+                    src={devSafeUrl(mapData.img)}
                     alt="Map"
                     className="map"
                     onLoad={() => {

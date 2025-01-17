@@ -516,8 +516,7 @@ const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: Reques
   const uuid = req.session.get("uuid");
   if (!uuid) return false;
   const pathSegments = pathName.split("/");
-  console.log("pathSegments: ", pathSegments);
-  const [uuidFolder] = pathSegments.slice(3);
+  const [uuidFolder] = pathSegments.slice(4);
   return uuidFolder === uuid && isValidMapImagePath(pathName);
 };
 
@@ -534,14 +533,16 @@ export async function fetchMapImages(
     if (!isVerified) {
       return reply.status(403).send({ error: "Forbidden: invalid path" });
     }
-    const pathName = `/getMapImages/${type}/${rawPath}`;
+    const pathName = `/assets/uploads/${type}/${rawPath}`;
     const isAllowed =
       type === "private" ? isAllowedPrivatePath({ pathName, req: request }) : isValidMapImagePath(pathName);
 
     if (!isAllowed) {
       return reply.status(403).send({ error: "Forbidden: not allowed" });
     }
-    if (!fs.existsSync(fullPath)) {
+    try {
+      await access(fullPath);
+    } catch {
       return reply.status(404).send({ error: "File not found" });
     }
     return reply.sendFile(rawPath, baseDir);
