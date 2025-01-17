@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { editDatapackMetadataRequestHandler } from "../cloud/general-cloud-requests.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findUser } from "../database.js";
 import { verifyWorkshopValidity } from "./workshop-util.js";
 

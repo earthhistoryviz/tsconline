@@ -6,10 +6,10 @@ import * as workshopAuth from "../src/workshop/workshop-auth";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as workshopUtil from "../src/workshop/workshop-util";
-import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
+import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import { User } from "../src/types";
 
-vi.mock("../src/cloud/general-cloud-requests", async () => {
+vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
     editDatapackMetadataRequestHandler: vi.fn().mockResolvedValue({ code: 200, message: "success" })
   };
@@ -183,7 +183,7 @@ describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
   const findUser = vi.spyOn(database, "findUser");
   const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
-  const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
   });

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, vi, it } from "vitest";
-import * as editHandler from "../src/cloud/edit-handler";
+import * as editHandler from "../src/file-handlers/edit-handler";
 import * as userHandler from "../src/user/user-handler";
 import * as fs from "fs/promises";
 import * as types from "../src/types";
-import { editDatapackMetadataRequestHandler } from "../src/cloud/general-cloud-requests";
+import { editDatapackMetadataRequestHandler } from "../src/file-handlers/general-file-handler-requests";
 import { Multipart } from "@fastify/multipart";
 
 vi.mock("../src/user/user-handler", () => {
@@ -13,7 +13,7 @@ vi.mock("../src/user/user-handler", () => {
   };
 });
 
-vi.mock("../src/cloud/edit-handler", () => {
+vi.mock("../src/file-handlers/edit-handler", () => {
   return {
     editDatapack: vi.fn(async () => [])
   };

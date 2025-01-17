@@ -19,7 +19,7 @@ import * as excel from "../src/parse-excel-file";
 import * as userHandlers from "../src/user/user-handler";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as adminHandler from "../src/admin/admin-handler";
-import * as generalCloudRequests from "../src/cloud/general-cloud-requests";
+import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
@@ -2431,7 +2431,7 @@ describe("adminAddOfficialDatapackToWorkshop", () => {
   });
 });
 describe("adminEditDatapackMetadata", () => {
-  const editDatapackMetadataRequestHandler = vi.spyOn(generalCloudRequests, "editDatapackMetadataRequestHandler");
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
   });

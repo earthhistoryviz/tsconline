@@ -1,6 +1,6 @@
 import { isWorkshopUUID } from "@tsconline/shared";
-import { OperationResult } from "../types";
-import { isUserInWorkshopAndWorkshopIsActive } from "../database";
+import { OperationResult } from "../types.js";
+import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 /**
  * Extracts the workshop ID from a workshop UUID
  * @param uuid
