@@ -33,7 +33,9 @@ import {
   MAX_DATAPACK_TITLE_LENGTH,
   isWorkshopDatapack,
   DatapackUniqueIdentifier,
-  isDatapackTypeString
+  isDatapackTypeString,
+  isUserDatapack,
+  isOfficialDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -81,7 +83,8 @@ export const DatapackProfile = observer(() => {
   const shouldLoadRecaptcha =
     !!metadata &&
     ((isUserDatapack(metadata) && state.user.uuid && isOwnedByUser(metadata, state.user.uuid)) ||
-      isWorkshopDatapack(metadata));
+      isWorkshopDatapack(metadata) ||
+      (state.user.isAdmin && isOfficialDatapack(metadata)));
   const initializeDatapack = async (controller: AbortController) => {
     if (!areParamsValid || !metadata) return;
     if (!datapack) {
@@ -120,7 +123,7 @@ export const DatapackProfile = observer(() => {
       // this is not an issue in prod since strict mode is disabled
       if (import.meta.env.MODE !== "development") {
         // if we're in prod, we do want to abort to prevent errors and zombie fetch requests
-        // but if we're in dev, skip aborting so we don’t see that flicker
+        // but if we're in dev, skip aborting so we don’t see that flicker, will see occasional recaptcha errors
         controller.abort();
       }
     };
@@ -468,8 +471,8 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ datapack, fileName
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
-    const datapack = await actions.replaceDatapackFile(datapack, file);
-    if (datapack) setDatapack(datapack);
+    const newDatapack = await actions.replaceDatapackFile(datapack, file);
+    if (newDatapack) setDatapack(newDatapack);
   };
   return (
     <>
