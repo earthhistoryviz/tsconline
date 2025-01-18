@@ -62,15 +62,16 @@
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "5.2.2",
     "vite": "^5.4.11",
+    "vite-plugin-checker": "^0.8.0",
     "vitest": "^1.6.0"
   },
   "private": true,
   "scripts": {
-    "build": "tsc && vite build",
+    "build": "vite build",
     "build-watch": "vite build --watch",
     "dev": "vite",
     "preview": "vite preview",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist .tsbuildinfo"
   },
   "type": "module"
 }
