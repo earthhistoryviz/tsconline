@@ -863,6 +863,7 @@ export const adminAddFilesToWorkshop = action(async (workshopId: number, files: 
   files.forEach((file) => {
     formData.append(`file`, file);
   });
+  formData.append("workshopId", workshopId.toString());
   try {
     const response = await fetcher(`/admin/workshop/files`, {
       method: "POST",
@@ -872,12 +873,55 @@ export const adminAddFilesToWorkshop = action(async (workshopId: number, files: 
         "recaptcha-token": recaptchaToken
       }
     });
-    const data = await response.json();
 
     if (response.ok) {
       return true;
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+/**
+ * Upload cover picture to a workshop
+ * @param coverPicture The uploaded cover picture
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddCoverPicToWorkshop = action(async (workshopId: number, coverPicture: File) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+
+  formData.append("file", coverPicture);
+  formData.append("workshopId", workshopId.toString());
+  try {
+    const response = await fetcher(`/admin/workshop/cover`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED;
       switch (response.status) {
         case 400:
           errorCode = ErrorCodes.INVALID_FORM;

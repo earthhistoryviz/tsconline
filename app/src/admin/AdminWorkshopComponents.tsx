@@ -10,12 +10,14 @@ import {
   ListItemText,
   SelectChangeEvent,
   FormControl,
-  Divider
+  Divider,
+  IconButton,
+  Avatar
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader, CustomDivider } from "../components";
+import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader, CustomDivider, CustomTooltip } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -23,6 +25,7 @@ import { SharedWorkshop, isOfficialDatapack } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
+import { FileUpload } from "@mui/icons-material";
 
 type AddDatapacksToWorkshopFormProps = {
   currentWorkshop: SharedWorkshop;
@@ -136,6 +139,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emails, setEmails] = useState<string>("");
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
+  const [coverPicture, setCoverPicture] = useState<File | null>(null);
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
@@ -237,6 +241,33 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
       }
 
+      if (coverPicture) {
+        const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
+        console.log("here");
+        if (!response) {
+          if (created || edited)
+            actions.pushSnackbar(
+              `Workshop ${created ? "created" : "edited"} successfully but cover picture could not be uploaded`,
+              "warning"
+            );
+          if (created) handleDialogClose();
+          return;
+        } else {
+          actions.removeAllErrors();
+          let message = "";
+          if (created || edited) {
+            message = `Workshop ${created ? "created" : "edited"} successfully and cover picture uploaded`;
+          } else {
+            message = "Cover picture uploaded successfully";
+          }
+          actions.pushSnackbar(message, "success");
+        }
+
+      } else {
+        actions.removeAllErrors();
+        actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
+      }
+
       // handling files
       if (files && files.length != 0) {
         const response = await actions.adminAddFilesToWorkshop(workshopId, files);
@@ -304,6 +335,13 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     const filesArray = Array.from(uploadedFiles);
     setFiles((prevFiles) => (prevFiles ? [...prevFiles, ...filesArray] : filesArray));
   };
+  const handleCoverPictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedCoverPicture = event.target.files![0];
+    if (!uploadedCoverPicture) {
+      return;
+    }
+    setCoverPicture(uploadedCoverPicture);
+  }
 
 
   return (
@@ -444,6 +482,41 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                       />
 
                     </Box>
+                  </Box>
+
+                  <Typography variant="h5" mb="5px" mt="15px">
+                    Add Cover Picture
+                  </Typography>
+                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+                    {coverPicture ? (
+                      // 显示上传的封面图片
+                      <Avatar
+                        variant="square"
+                        src={URL.createObjectURL(coverPicture)}
+                        alt="Cover Picture"
+                        sx={{ width: 100, height: 100 }}
+                      />
+                    ) : editMode && currentWorkshop?.coverPictureUrl ? (
+                      // workshop has a old cover picture
+                      <Avatar
+                        variant="square"
+                        src={currentWorkshop?.coverPictureUrl} //use safeurl
+                        alt="Workshop Avatar"
+                        sx={{ width: 100, height: 100 }}
+                      />
+                    ) : (
+                      <Typography>No cover picture for this workshop</Typography>
+                    )}
+                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+                      <InputFileUpload
+                        text="Upload a Cover Picture for the workshop"
+                        onChange={handleCoverPictureUpload}
+                        startIcon={<CloudUploadIcon />}
+                        multiple
+                      />
+
+                    </Box>
+
                   </Box>
                 </Box>
                 <Divider style={{

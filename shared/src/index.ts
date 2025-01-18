@@ -13,6 +13,8 @@ export type SharedWorkshop = {
   end: string;
   workshopId: number;
   active: boolean;
+  coverPictureUrl?: string;
+  description?: string;
 };
 
 export type ConvertCrossPlotRequest = {
@@ -697,6 +699,8 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
   if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
+  if (o.coverPictureUrl != undefined && typeof o.coverPictureUrl != "string") throwError("Workshop", "coverPictureUrl", "string", o.coverPictureUrl);
+  if (o.description != undefined && typeof o.description != "string") throwError("Workshop", "description", "string", o.description)
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
@@ -1563,8 +1567,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }

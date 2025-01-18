@@ -16,7 +16,7 @@ import {
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import { resolve, extname, relative, join } from "path";
+import path, { resolve, extname, relative, join } from "path";
 import { assetconfigs, extractMetadataFromDatapack } from "../util.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
@@ -36,7 +36,13 @@ import {
   assertSharedWorkshop,
   assertSharedWorkshopArray
 } from "@tsconline/shared";
-import { setupNewDatapackDirectoryInUUIDDirectory } from "../upload-handlers.js";
+import {
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadCoverPicToWorkshop,
+  uploadFileToFileSystem,
+  uploadFilesToWorkshop,
+  uploadUserDatapackHandler
+} from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
@@ -50,7 +56,7 @@ import {
   fetchAllUsersDatapacks,
   fetchUserDatapack
 } from "../user/user-handler.js";
-import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
@@ -242,7 +248,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -812,5 +818,88 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
+  }
+};
+
+export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorkshop(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const parts = request.parts();
+
+  const files: MultipartFile[] | undefined = [];
+  let workshopId: number | undefined;
+
+  try {
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "file") {
+        files.push(part);
+
+      }
+      else if (part.type === "field" && part.fieldname === "workshopId" && typeof part.value === "string") {
+        workshopId = Number(part.value);
+      }
+    }
+    if (!workshopId || !files) {
+      reply.status(400).send({ error: "Missing workshopId or files" });
+      return;
+    }
+    const workshop = await getWorkshopIfNotEnded(workshopId);
+    if (!workshop) {
+      reply.status(404).send({ error: "Workshop not found or has ended" });
+      return;
+    }
+
+    const result = await uploadFilesToWorkshop(workshopId, files);
+    if (result.length !== 0) {
+      const errorMessage = result.join("\n");
+      console.error(errorMessage);
+      reply.status(400).send({ error: errorMessage })
+    }
+    reply.send({ message: "Files added to workshop" });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Error uploading files to workshop" })
+  }
+
+};
+
+export const adminUploadCoverPictureToWorkshop = async function adminUploadCoverPictureToWorkshop(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const parts = request.parts();
+
+  let coverPicture: MultipartFile | undefined;
+  let workshopId: number | undefined;
+  try {
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "file") {
+        coverPicture = part;
+
+      }
+      else if (part.type === "field" && part.fieldname === "workshopId" && typeof part.value === "string") {
+        workshopId = Number(part.value);
+      }
+    }
+    if (!workshopId || !coverPicture) {
+      reply.status(400).send({ error: "Missing workshopId or cover picture" });
+      return;
+    }
+    const workshop = await getWorkshopIfNotEnded(workshopId);
+    if (!workshop) {
+      reply.status(404).send({ error: "Workshop not found or has ended" });
+      return;
+    }
+
+    const { code, message } = await uploadCoverPicToWorkshop(workshopId, coverPicture);
+    if (code !== 200) {
+      reply.status(code).send({ error: message });
+      return;
+    }
+    reply.send({ message: "Cover picture added to workshop" });
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Error uploading cover picture to workshop" })
   }
 };
