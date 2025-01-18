@@ -33,7 +33,8 @@ import {
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
-  isUserDatapack
+  isWorkshopDatapack,
+  DatapackUniqueIdentifier
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -42,6 +43,7 @@ import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes } from "./util/error-codes";
 import {
+  canEditDatapack,
   doesDatapackAlreadyExist,
   getDatapackProfileImageUrl,
   getNavigationRouteForDatapackProfile,
@@ -102,7 +104,7 @@ export const DatapackProfile = observer(() => {
     <>
       <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
-        <IconButton className={styles.back} onClick={() => navigate("/settings")}>
+        <IconButton className={styles.back} onClick={() => navigate(-1)}>
           <ArrowBackIcon className={styles.icon} />
         </IconButton>
         {state.datapackProfilePage.editMode ? (
@@ -125,7 +127,7 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <DatapackImage id={datapack.title} image={image} />
+        <DatapackImage datapack={datapack} image={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
@@ -164,7 +166,8 @@ export const DatapackProfile = observer(() => {
           getNavigationRouteForDatapackProfile(
             state.datapackProfilePage.editableDatapackMetadata.title,
             query.get("type")!
-          )
+          ),
+          { replace: true }
         );
       }
     }
@@ -187,15 +190,15 @@ export const DatapackProfile = observer(() => {
 
 type DatapackImageProps = {
   image: string;
-  id: string;
+  datapack: DatapackUniqueIdentifier;
 };
-const DatapackImage: React.FC<DatapackImageProps> = observer(({ id, image }) => {
+const DatapackImage: React.FC<DatapackImageProps> = observer(({ datapack, image }) => {
   const { state, actions } = useContext(context);
   const profileImageRef = useRef<HTMLInputElement>(null);
   const handleDatapackImageChange = async () => {
     if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
       const file = profileImageRef.current.files[0];
-      await actions.replaceUserProfileImageFile(id, file);
+      await actions.replaceProfileImageFile(datapack, file);
     }
   };
   // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
@@ -311,7 +314,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
+        {canEditDatapack(datapack, state.user) && (
           <EditButtons
             unsavedChanges={state.datapackProfilePage.unsavedChanges}
             resetForm={() => actions.resetEditableDatapackMetadata(datapack)}
@@ -325,7 +328,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
-          <PublicField isPublic={datapack.isPublic} />
+          <PublicField isPublic={datapack.isPublic} disabled={isWorkshopDatapack(datapack)} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -333,7 +336,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <DatapackFile id={datapack.title} fileName={datapack.originalFileName} />
+          <DatapackFile datapack={datapack} fileName={datapack.originalFileName} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
@@ -354,8 +357,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
 });
 type PublicFieldProps = {
   isPublic: boolean;
+  disabled: boolean;
 };
-const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
+const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic, disabled }) => {
   const { state, actions } = useContext(context);
   const PrivateComp = () => (
     <>
@@ -373,9 +377,14 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
     <>
       <Typography className={styles.aih}>Privacy</Typography>
       {state.datapackProfilePage.editMode ? (
-        <Box className={styles.privacyContainer}>
+        <Box
+          className={styles.privacyContainer}
+          sx={{
+            opacity: disabled ? 0.5 : 1
+          }}>
           <PrivateComp />
           <TSCSwitch
+            disabled={disabled}
             checked={state.datapackProfilePage.editableDatapackMetadata?.isPublic}
             onChange={(e) => {
               actions.updateEditableDatapackMetadata({ isPublic: e.target.checked });
@@ -391,15 +400,15 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
 });
 type DatapackFileProps = {
   fileName: string;
-  id: string;
+  datapack: DatapackUniqueIdentifier;
 };
 
-const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
+const DatapackFile: React.FC<DatapackFileProps> = observer(({ datapack, fileName }) => {
   const { state, actions } = useContext(context);
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
-    await actions.replaceUserDatapackFile(id, file);
+    await actions.replaceDatapackFile(datapack, file);
   };
   return (
     <>

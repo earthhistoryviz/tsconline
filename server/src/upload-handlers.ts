@@ -1,5 +1,4 @@
 import {
-  Datapack,
   DatapackIndex,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_CONTACT_LENGTH,
@@ -204,9 +203,9 @@ export async function uploadUserDatapackHandler(
  * ONLY REPLACES, does not write to cache
  * @param uuid
  * @param sourceFilePath
- * @param metadata
+ * @param metadata MAKE SURE THIS IS ONLY DATAPACK METADATA @WARNING
  */
-export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: Datapack) {
+export async function replaceDatapackFile(uuid: string, sourceFilePath: string, metadata: DatapackMetadata) {
   const datapackDirectory = await fetchUserDatapackDirectory(uuid, metadata.title);
   const filename = path.basename(sourceFilePath);
   const decryptionFilepath = path.join(datapackDirectory, DECRYPTED_DIRECTORY_NAME);
@@ -279,6 +278,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
   );
+  // could change when we want to allow users make workshops
   if (isUserDatapack(metadata)) {
     await writeFileMetadata(assetconfigs.fileMetadata, metadata.storedFileName, datapackFolder, uuid);
   }
