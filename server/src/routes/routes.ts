@@ -2,13 +2,19 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
-  DatapackInfoChunk,
   TimescaleItem,
   assertChartRequest,
   assertTimescale,
+  DatapackMetadata,
   isUserDatapack
 } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
+import {
+  deleteDirectory,
+  assetconfigs,
+  verifyFilepath,
+  checkFileExists,
+  extractMetadataFromDatapack
+} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -18,7 +24,7 @@ import path from "path";
 import { updateFileMetadata } from "../file-metadata-handler.js";
 import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
-import { fetchUserDatapackDirectory, getDirectories } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
@@ -41,31 +47,15 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   reply.send(officialDatapack);
 };
 
-export const fetchPublicDatapackChunk = async function fetchPublicDatapackChunk(
-  request: FastifyRequest<{ Querystring: { start?: string; increment?: string } }>,
+export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksMetadata(
+  _request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const { start, increment } = request.query;
-  const startIndex = start === undefined ? 0 : Number(start);
-  let incrementValue = increment === undefined ? 1 : Number(increment);
-  if (
-    (start !== undefined && isNaN(startIndex)) ||
-    (increment !== undefined && isNaN(incrementValue)) ||
-    startIndex < 0 ||
-    incrementValue <= 0
-  ) {
-    reply.status(400).send({ error: "Invalid range" });
-    return;
-  }
-  const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
-  if (startIndex + incrementValue > uuids.length) {
-    incrementValue = uuids.length - startIndex;
-  }
-  const undefinedIndexes = start === undefined && increment === undefined;
-  const chunk = undefinedIndexes ? uuids : uuids.slice(startIndex, startIndex + incrementValue);
-  const datapackArray = await loadPublicUserDatapacks(chunk);
-  const datapackInfoChunk: DatapackInfoChunk = { datapacks: datapackArray, totalChunks: uuids.length };
-  reply.status(200).send(datapackInfoChunk);
+  const datapackArray = await loadPublicUserDatapacks();
+  const datapackMetadata: DatapackMetadata[] = datapackArray.map((datapack) => {
+    return extractMetadataFromDatapack(datapack);
+  });
+  reply.send(datapackMetadata);
 };
 
 export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {

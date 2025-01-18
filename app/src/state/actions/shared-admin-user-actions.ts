@@ -1,11 +1,6 @@
-import {
-  Datapack,
-  assertBatchUpdateServerPartialError,
-  assertDatapackUniqueIdentifier,
-  DatapackUniqueIdentifier
-} from "@tsconline/shared";
+import { Datapack, assertBatchUpdateServerPartialError, DatapackUniqueIdentifier } from "@tsconline/shared";
 import { action, toJS } from "mobx";
-import { EditableDatapackMetadata } from "../../types";
+import { EditableDatapackMetadata, assertDatapackFetchParams } from "../../types";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { state } from "../state";
@@ -20,7 +15,7 @@ import {
 } from "./general-actions";
 import { setEditRequestInProgress, refetchDatapack } from "./user-actions";
 import { displayServerError } from "./util-actions";
-import { compareExistingDatapacks, doesDatapackExistInCurrentConfig } from "../non-action-util";
+import { compareExistingDatapacks, doesDatapackExistInCurrentConfig, getMetadataFromArray } from "../non-action-util";
 
 export const handleDatapackEdit = action(
   async (originalDatapack: Datapack, editedDatapack: EditableDatapackMetadata) => {
@@ -28,7 +23,7 @@ export const handleDatapackEdit = action(
       setEditRequestInProgress(true);
       if (!state.user.uuid) {
         pushError(ErrorCodes.NOT_LOGGED_IN);
-        return false;
+        return;
       }
       const formData = new FormData();
       for (const key in editedDatapack) {
@@ -45,11 +40,11 @@ export const handleDatapackEdit = action(
       if (Array.from(formData.keys()).length === 0) {
         pushSnackbar("No changes made", "info");
         setDatapackProfilePageEditMode(false);
-        return false;
+        return;
       }
       try {
         const recaptcha = await getRecaptchaToken("handleDatapackEdit");
-        if (!recaptcha) return false;
+        if (!recaptcha) return;
         const response = await fetcher(getEditDatapackRoute(originalDatapack), {
           method: "PATCH",
           body: formData,
@@ -61,17 +56,18 @@ export const handleDatapackEdit = action(
         if (response.ok) {
           pushSnackbar("Datapack updated", "success");
           setDatapackProfilePageEditMode(false);
-          const datapackUniqueIdentifier = {
+          const datapackFetchParams = {
             title: editedDatapack.title,
             type: editedDatapack.type,
+            isPublic: editedDatapack.isPublic,
             ...("uuid" in originalDatapack && { uuid: originalDatapack.uuid })
           };
-          assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
-          const datapack = await refetchDatapack(datapackUniqueIdentifier, originalDatapack);
-          if (!datapack) return false;
+          assertDatapackFetchParams(datapackFetchParams);
+          const datapack = await refetchDatapack(datapackFetchParams, originalDatapack);
+          if (!datapack) return;
           resetEditableDatapackMetadata(datapack);
           removeAllErrors();
-          return true;
+          return datapack;
         } else {
           try {
             const error = await response.json();
@@ -86,7 +82,6 @@ export const handleDatapackEdit = action(
               ErrorMessages[ErrorCodes.USER_EDIT_DATAPACK_FAILED]
             );
           }
-          return false;
         }
       } catch (e) {
         pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
@@ -122,9 +117,14 @@ const getEditDatapackRoute = (datapack: DatapackUniqueIdentifier) => {
 export const replaceDatapackFile = action(async (datapackUniqueIdentifier: DatapackUniqueIdentifier, file: File) => {
   try {
     setEditRequestInProgress(true);
+    const metadata = getMetadataFromArray(datapackUniqueIdentifier, state.datapackMetadata);
+    if (!metadata) {
+      pushError(ErrorCodes.METADATA_NOT_FOUND);
+      return;
+    }
     if (!state.user.uuid) {
       pushError(ErrorCodes.NOT_LOGGED_IN);
-      return false;
+      return;
     }
     const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
     if (!recaptcha) return;
@@ -140,7 +140,7 @@ export const replaceDatapackFile = action(async (datapackUniqueIdentifier: Datap
     });
     if (response.ok) {
       pushSnackbar("File replaced", "success");
-      const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
+      const datapack = await refetchDatapack(metadata, metadata);
       if (!datapack) return;
       removeAllErrors();
       // if selected in the config, force a reprocess of the config
@@ -152,6 +152,7 @@ export const replaceDatapackFile = action(async (datapackUniqueIdentifier: Datap
         );
         pushSnackbar("Datapack must be reselected to generate a chart", "info");
       }
+      return datapack;
     } else {
       displayServerError(
         response,
@@ -168,8 +169,13 @@ export const replaceDatapackFile = action(async (datapackUniqueIdentifier: Datap
 
 export const replaceProfileImageFile = action(
   async (datapackUniqueIdentifier: DatapackUniqueIdentifier, file: File) => {
+    setEditRequestInProgress(true);
+    const metadata = getMetadataFromArray(datapackUniqueIdentifier, state.datapackMetadata);
+    if (!metadata) {
+      pushError(ErrorCodes.METADATA_NOT_FOUND);
+      return;
+    }
     try {
-      setEditRequestInProgress(true);
       if (!state.user.uuid) {
         pushError(ErrorCodes.NOT_LOGGED_IN);
         return false;
@@ -188,7 +194,7 @@ export const replaceProfileImageFile = action(
       });
       if (response.ok) {
         pushSnackbar("Image replaced", "success");
-        const datapack = await refetchDatapack(datapackUniqueIdentifier, datapackUniqueIdentifier);
+        const datapack = await refetchDatapack(metadata, metadata);
         if (!datapack) return;
         removeAllErrors();
         setDatapackProfilePageImageVersion(new Date().getTime());

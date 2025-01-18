@@ -39,8 +39,7 @@ export default defineConfig({
         // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true
-    },
-    outputFile: "coverage/sonar-report.xml"
+    }
   },
   resolve: {
     alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url)) }]

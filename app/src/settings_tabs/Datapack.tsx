@@ -18,16 +18,17 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
   compareExistingDatapacks,
-  getCurrentUserDatapacks,
-  getPrivateOfficialDatapacks,
-  getPublicDatapacksWithoutCurrentUser,
-  getPublicOfficialDatapacks,
-  getWorkshopDatapacks,
+  doesDatapackAlreadyExist,
+  getCurrentUserDatapacksMetadata,
+  getPrivateOfficialDatapackMetadatas,
+  getPublicDatapacksMetadataWithoutCurrentUser,
+  getPublicOfficialDatapacksMetadata,
+  getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
 
@@ -35,19 +36,26 @@ export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
   const { t } = useTranslation();
-
+  const shouldLoadRecaptcha =
+    state.isLoggedIn &&
+    (state.user.isAdmin ||
+      state.datapackMetadata.some((dp) => isWorkshopDatapack(dp) || (isUserDatapack(dp) && !dp.isPublic)));
   useEffect(() => {
-    if (state.isLoggedIn && state.user.isAdmin) {
+    const controller = new AbortController();
+    if (shouldLoadRecaptcha) {
       loadRecaptcha().then(async () => {
-        await actions.adminFetchPrivateOfficialDatapacks();
+        if (state.user.isAdmin) {
+          await actions.adminFetchPrivateOfficialDatapacks({ signal: controller.signal });
+        }
       });
     }
     return () => {
-      if (state.isLoggedIn && state.user.isAdmin) {
+      if (shouldLoadRecaptcha) {
         removeRecaptcha();
       }
+      controller.abort();
     };
-  }, [state.isLoggedIn, state.user.isAdmin]);
+  }, [shouldLoadRecaptcha]);
 
   return (
     <div className={styles.dc}>
@@ -57,7 +65,7 @@ export const Datapacks = observer(function Datapacks() {
             className={styles.ib}
             data-tour="datapack-deselect-button"
             onClick={async () => {
-              await actions.processDatapackConfig([]);
+              actions.setUnsavedDatapackConfig([]);
             }}>
             <DeselectIcon />
           </IconButton>
@@ -92,14 +100,14 @@ export const Datapacks = observer(function Datapacks() {
       <Box
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
         <DatapackGroupDisplay
-          datapacks={getPublicOfficialDatapacks(state.datapacks)}
+          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
           loading={state.skeletonStates.publicOfficialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
-            datapacks={getPrivateOfficialDatapacks(state.datapacks)}
+            datapacks={getPrivateOfficialDatapackMetadatas(state.datapackMetadata)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
             loading={state.skeletonStates.privateOfficialDatapacksLoading}
@@ -107,7 +115,7 @@ export const Datapacks = observer(function Datapacks() {
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (
           <DatapackGroupDisplay
-            datapacks={getWorkshopDatapacks(state.datapacks)}
+            datapacks={getWorkshopDatapacksMetadata(state.datapackMetadata)}
             header={t("settings.datapacks.title.workshop")}
             HeaderIcon={School}
             loading={state.skeletonStates.publicUserDatapacksLoading}
@@ -115,14 +123,14 @@ export const Datapacks = observer(function Datapacks() {
         )}
         {state.isLoggedIn && state.user && (
           <DatapackGroupDisplay
-            datapacks={getCurrentUserDatapacks(state.user.uuid, state.datapacks)}
+            datapacks={getCurrentUserDatapacksMetadata(state.user.uuid, state.datapackMetadata)}
             header={t("settings.datapacks.title.your")}
             HeaderIcon={Lock}
             loading={state.skeletonStates.privateUserDatapacksLoading}
           />
         )}
         <DatapackGroupDisplay
-          datapacks={getPublicDatapacksWithoutCurrentUser(state.datapacks, state.user?.uuid)}
+          datapacks={getPublicDatapacksMetadataWithoutCurrentUser(state.datapackMetadata, state.user?.uuid)}
           header={t("settings.datapacks.title.contributed")}
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
@@ -141,6 +149,7 @@ export const Datapacks = observer(function Datapacks() {
         <TSCButton
           className={styles.buttons}
           data-tour="datapack-confirm-button"
+          disabled={state.loadingDatapacks}
           onClick={async () => {
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
           }}>
@@ -161,7 +170,7 @@ export const Datapacks = observer(function Datapacks() {
   );
 });
 type DatapackMenuProps = {
-  datapack: Datapack;
+  datapack: DatapackMetadata;
   button?: JSX.Element;
 };
 export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) => {
@@ -190,7 +199,7 @@ export const DatapackMenu: React.FC<DatapackMenuProps> = ({ datapack, button }) 
 };
 
 type DatapackGroupDisplayProps = {
-  datapacks: Datapack[];
+  datapacks: DatapackMetadata[];
   header: string;
   HeaderIcon: React.ElementType;
   loading?: boolean;
@@ -205,15 +214,25 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
     const isPublicContributed = header === t("settings.datapacks.title.contributed");
     const shouldSplitIntoTwoCol = isOfficial || isPublicContributed;
     const visibleLimit = shouldSplitIntoTwoCol ? 12 : 6;
-    const visibleDatapacks: (Datapack | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
+    const visibleDatapacks: (DatapackMetadata | null)[] = showAll ? datapacks : datapacks.slice(0, visibleLimit);
     const skeletons = Array.from({ length: extraLoadingSkeletons }, () => null);
-    const onChange = (newDatapack: DatapackConfigForChartRequest) => {
-      if (state.unsavedDatapackConfig.includes(newDatapack)) {
+    const onChange = async (newDatapack: DatapackConfigForChartRequest) => {
+      if (state.unsavedDatapackConfig.some((datapack) => compareExistingDatapacks(datapack, newDatapack))) {
         actions.setUnsavedDatapackConfig(
-          state.unsavedDatapackConfig.filter((datapack) => datapack.title !== newDatapack.title)
+          state.unsavedDatapackConfig.filter((datapack) => !compareExistingDatapacks(datapack, newDatapack))
         );
       } else {
+        actions.setLoadingDatapacks(true);
+        if (!doesDatapackAlreadyExist(newDatapack, state.datapacks)) {
+          const datapack = await actions.fetchDatapack(newDatapack);
+          if (!datapack) {
+            actions.setLoadingDatapacks(false);
+            return;
+          }
+          actions.addDatapack(datapack);
+        }
         actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, newDatapack]);
+        actions.setLoadingDatapacks(false);
       }
     };
     const numberOfDatapacks = datapacks.length + extraLoadingSkeletons;
@@ -245,18 +264,18 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
                 : false;
               return state.settingsTabs.datapackDisplayType === "rows" ? (
                 datapack ? (
-                  <TSCDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                  <TSCDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
                 ) : (
                   <TSCDatapackRow key={index} />
                 )
               ) : state.settingsTabs.datapackDisplayType === "compact" ? (
                 datapack ? (
-                  <TSCCompactDatapackRow key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                  <TSCCompactDatapackRow key={index} datapack={datapack} value={value} onChange={onChange} />
                 ) : (
                   <TSCCompactDatapackRow key={index} />
                 )
               ) : datapack ? (
-                <TSCDatapackCard key={datapack.title} datapack={datapack} value={value} onChange={onChange} />
+                <TSCDatapackCard key={index} datapack={datapack} value={value} onChange={onChange} />
               ) : (
                 <TSCDatapackCard key={index} />
               );

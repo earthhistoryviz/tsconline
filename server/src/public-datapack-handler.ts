@@ -16,11 +16,11 @@ import { isUUIDFolderAWorkshopFolder } from "./workshop/workshop-util.js";
 
 const mutex = new Mutex();
 
-export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
+export async function loadPublicUserDatapacks() {
   const release = await mutex.acquire();
   try {
     const datapacks: Datapack[] = [];
-    const uuids = uuidChunk ? uuidChunk : await getDirectories(assetconfigs.publicDatapacksDirectory);
+    const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
       if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {

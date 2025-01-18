@@ -1,12 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader } from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { DatapackMetadata } from "@tsconline/shared";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -197,9 +198,16 @@ export const requestDownload = async function requestDownload(
   }
 };
 
-// NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
-export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  // for test usage: const uuid = "username";
+/**
+ * Will fetch both user and workshop metadatas
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
@@ -221,11 +229,34 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     const workshopDatapacks = await Promise.all(workshopDatapacksPromises);
     const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
 
-    reply.send(allDatapacks);
+    const metadatas: DatapackMetadata[] = allDatapacks.map((datapack) => {
+      return extractMetadataFromDatapack(datapack);
+    });
+
+    reply.send(metadatas);
   } catch (e) {
     console.error(e);
-    reply.status(500).send({ error: "Database or processing error" });
+    reply.status(500).send({ error: "Failed to fetch metadatas" });
   }
+};
+
+export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
+  request: FastifyRequest<{ Params: { uuid: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { uuid, datapackTitle } = request.params;
+  const datapack = await fetchUserDatapack(uuid, datapackTitle).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack or user does not exist or cannot be found" });
+    return;
+  }
+  if (!datapack.isPublic) {
+    reply.status(401).send({ error: "Datapack is not public" });
+    return;
+  }
+  reply.send(datapack);
 };
 
 export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
@@ -244,12 +275,14 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
-    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
     if (!datapack) {
       reply.status(404).send({ error: "Datapack not found" });
       return;

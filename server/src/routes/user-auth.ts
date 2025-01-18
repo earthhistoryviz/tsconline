@@ -2,10 +2,10 @@ import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "
 import {
   editDatapackMetadata,
   fetchSingleUserDatapack,
-  fetchWorkshopDatapack,
   requestDownload,
   uploadDatapack,
-  userDeleteDatapack
+  userDeleteDatapack,
+  fetchWorkshopDatapack
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";

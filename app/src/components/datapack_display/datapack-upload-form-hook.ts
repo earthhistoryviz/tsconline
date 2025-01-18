@@ -5,7 +5,7 @@ import { context } from "../../state";
 import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
-import { getDatapackFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
+import { getMetadataFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
 import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
@@ -67,7 +67,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
       return;
     }
-    if (getDatapackFromArray(metadata, state.datapacks)) {
+    if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }

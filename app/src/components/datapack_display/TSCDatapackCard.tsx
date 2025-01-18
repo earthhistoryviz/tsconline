@@ -1,16 +1,20 @@
 import { Card, CardActions, CardContent, CardMedia, IconButton, Skeleton, Typography } from "@mui/material";
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import { useState } from "react";
 import styles from "./TSCDatapackCard.module.css";
 import { CheckIcon, CustomFormControlLabel, Loader } from "../TSCComponents";
 import { useNavigate } from "react-router";
 import { DatapackMenu } from "../../settings_tabs/Datapack";
-import { getDatapackProfileImageUrl, getNavigationRouteForDatapackProfile } from "../../state/non-action-util";
+import {
+  getDatapackProfileImageUrl,
+  getDatapackUUID,
+  getNavigationRouteForDatapackProfile
+} from "../../state/non-action-util";
 
 type TSCDatapackCardProps = {
-  datapack?: Datapack;
+  datapack?: DatapackMetadata;
   value?: boolean;
-  onChange?: (datapack: DatapackConfigForChartRequest) => void;
+  onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
 export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, value, onChange }) => {
   const navigate = useNavigate();
@@ -22,7 +26,10 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
       className={styles.card}
       sx={{ outline: "1px solid", outlineColor: "divider", bgcolor: "secondaryBackground.main" }}
       onClick={
-        skeleton ? () => {} : () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))
+        skeleton
+          ? () => {}
+          : () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
       }>
       {skeleton ? (
         <Skeleton height="140px" />
@@ -74,8 +81,9 @@ export const TSCDatapackCard: React.FC<TSCDatapackCardProps> = ({ datapack, valu
                   className={styles.checkContainer}
                   onClick={async (e) => {
                     e.stopPropagation();
+                    if (loading) return;
                     setLoading(true);
-                    !skeleton && onChange(datapack);
+                    !skeleton && (await onChange(datapack));
                     setLoading(false);
                   }}>
                   {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}
