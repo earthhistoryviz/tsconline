@@ -34,7 +34,6 @@ export default defineConfig({
       },
       ignoreEmptyLines: true
     },
-    outputFile: "coverage/sonar-report.xml"
   },
   resolve: {
     alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url)) }]
