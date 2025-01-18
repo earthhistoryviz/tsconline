@@ -1,6 +1,7 @@
 import { isWorkshopUUID } from "@tsconline/shared";
 import { OperationResult } from "../types.js";
 import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
+
 /**
  * Extracts the workshop ID from a workshop UUID
  * @param uuid
@@ -22,6 +23,7 @@ export function getWorkshopIdFromUUID(uuid: string): number | null {
 export function extractWorkshopIdFromFolderName(folderName: string): number | null {
   return getWorkshopIdFromUUID(folderName);
 }
+
 /**
  * Gets the workshop UUID from a workshop ID
  * @param workshopId
@@ -37,21 +39,22 @@ export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
  * @returns
  */
 export function isUUIDFolderAWorkshopFolder(folderName: string): boolean {
-  return folderName.startsWith("workshop-") && getWorkshopIdFromUUID(folderName) !== null;
+  return getWorkshopIdFromUUID(folderName) !== null;
 }
+
 /**
  * Checks to make sure the user is in the workshop and the workshop is active
  * @param workshopUUID the workshop's UUID
  * @param userId the user's userId
  * @returns
  */
-export function verifyWorkshopValidity(workshopUUID: string, userId: number): OperationResult {
+export async function verifyWorkshopValidity(workshopUUID: string, userId: number): Promise<OperationResult> {
   const workshopId = getWorkshopIdFromUUID(workshopUUID);
   if (!workshopId) {
     return { code: 400, message: "Invalid workshop UUID" };
   }
-  if (!isUserInWorkshopAndWorkshopIsActive(workshopId, userId)) {
-    return { code: 401, message: "User does not have access to this workshop" };
+  if (!(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
+    return { code: 403, message: "User does not have access to this workshop" };
   }
   return { code: 200, message: "Success" };
 }

@@ -275,12 +275,14 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
-    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
     if (!datapack) {
       reply.status(404).send({ error: "Datapack not found" });
       return;
