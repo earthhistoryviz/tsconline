@@ -9,6 +9,7 @@ import {
   SharedUser,
   assertColumnInfo,
   assertDatapackConfigForChartRequest,
+  assertDatapackUniqueIdentifier,
   assertMapHierarchy,
   assertMapInfo,
   throwError
@@ -184,8 +185,7 @@ export type EditableUserProperties = {
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
   if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");
   if (typeof o.isPublic !== "boolean") throwError("DatapackFetchParams", "isPublic", "boolean", o.isPublic);
-  if (typeof o.uuid !== "string") throwError("DatapackFetchParams", "uuid", "string", o.uuid);
-  if (typeof o.type !== "string") throwError("DatapackFetchParams", "type", "string", o.type);
+  assertDatapackUniqueIdentifier(o);
 }
 
 export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {

@@ -39,7 +39,7 @@ export default defineConfig({
         // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true
-    },
+    }
   },
   resolve: {
     alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url)) }]
