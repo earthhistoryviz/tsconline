@@ -17,6 +17,9 @@ const StyledSwitch = styled(Switch)(
     .MuiSwitch-switchBase.Mui-checked > .MuiSwitch-thumb {
         color: ${theme.palette.button.main};
     }
+    .MuiSwitch-switchBase.Mui-disabled.Mui-checked > .MuiSwitch-thumb{
+        background-color: ${theme.palette.disabled.main};
+    }
 `
 );
 

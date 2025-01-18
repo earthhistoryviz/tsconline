@@ -6,7 +6,14 @@ import {
   DECRYPTED_DIRECTORY_NAME
 } from "../constants.js";
 import { assetconfigs, getBytes, makeTempFilename, verifyFilepath } from "../util.js";
-import { Datapack, DatapackMetadata, assertDatapack, isDateValid } from "@tsconline/shared";
+import {
+  Datapack,
+  DatapackMetadata,
+  assertDatapack,
+  isDateValid,
+  isOfficialUUID,
+  isWorkshopUUID
+} from "@tsconline/shared";
 import logger from "../error-logger.js";
 import { changeFileMetadataKey, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
 import { spawn } from "child_process";
@@ -19,14 +26,7 @@ import {
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
-import {
-  changeProfilePicture,
-  getTemporaryFilepath,
-  replaceDatapackFile,
-  uploadFileToFileSystem
-} from "../upload-handlers.js";
-import { switchPrivacySettingsOfDatapack } from "../public-datapack-handler.js";
-import _ from "lodash";
+import { getTemporaryFilepath, uploadFileToFileSystem } from "../upload-handlers.js";
 
 /**
  * looks for a specific datapack in all the user directories
@@ -142,7 +142,12 @@ export async function fetchUserDatapack(uuid: string, datapack: string): Promise
  * @param oldDatapack the old datapack title
  * @param datapack the new datapack object
  */
-export async function renameUserDatapack(uuid: string, oldDatapack: string, newDatapack: string): Promise<void> {
+export async function renameUserDatapack(
+  uuid: string,
+  oldDatapack: string,
+  newDatapack: string,
+  isTemporaryFile?: boolean
+): Promise<void> {
   const oldDatapackPath = await fetchUserDatapackDirectory(uuid, oldDatapack);
   const newDatapackPath = path.join(path.dirname(oldDatapackPath), newDatapack);
   if (!path.resolve(newDatapackPath).startsWith(path.resolve(path.dirname(oldDatapackPath)))) {
@@ -152,95 +157,12 @@ export async function renameUserDatapack(uuid: string, oldDatapack: string, newD
     throw new Error("Datapack with that title already exists");
   }
   await rename(oldDatapackPath, newDatapackPath);
-  await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
-    await rename(newDatapackPath, oldDatapackPath);
-    throw e;
-  });
-}
-
-/**
- * TODO: write tests
- * @param uuid
- * @param oldDatapackTitle
- * @param newDatapack
- */
-export async function editDatapack(
-  uuid: string,
-  oldDatapackTitle: string,
-  newDatapack: Partial<DatapackMetadata>
-): Promise<string[]> {
-  let metadata = await fetchUserDatapack(uuid, oldDatapackTitle);
-  const originalMetadata = _.cloneDeep(metadata);
-  Object.assign(metadata, newDatapack);
-  const errors: string[] = [];
-  if ("title" in newDatapack && oldDatapackTitle !== newDatapack.title) {
-    await renameUserDatapack(uuid, oldDatapackTitle, newDatapack.title!).catch((e) => {
-      logger.error(e);
-      metadata.title = oldDatapackTitle;
-      errors.push("Error renaming datapack to a different title");
+  if (isTemporaryFile) {
+    await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+      await rename(newDatapackPath, oldDatapackPath);
+      throw e;
     });
   }
-  if ("originalFileName" in newDatapack) {
-    const sourceFilepath = await getTemporaryFilepath(uuid, metadata.storedFileName);
-    // check to see if a temp file was uploaded
-    if (await verifyFilepath(sourceFilepath)) {
-      // this changes the storedFileName as well so we need to update the metadata
-      metadata = await replaceDatapackFile(uuid, sourceFilepath, metadata).catch((e) => {
-        console.error(e);
-        logger.error(e);
-        errors.push("Error replacing datapack file");
-        return {
-          ...metadata,
-          originalFileName: originalMetadata.originalFileName,
-          size: originalMetadata.size,
-          storedFileName: originalMetadata.storedFileName
-        };
-      });
-    } else {
-      metadata = {
-        ...metadata,
-        originalFileName: originalMetadata.originalFileName,
-        size: originalMetadata.size,
-        storedFileName: originalMetadata.storedFileName
-      };
-      errors.push("No file uploaded with edit request");
-    }
-  }
-  if ("datapackImage" in newDatapack) {
-    const sourceFilepath = await getTemporaryFilepath(uuid, newDatapack.datapackImage!);
-    // check to see if a temp file was uploaded
-    if (await verifyFilepath(sourceFilepath)) {
-      await changeProfilePicture(
-        uuid,
-        oldDatapackTitle,
-        await getTemporaryFilepath(uuid, newDatapack.datapackImage!)
-      ).catch((e) => {
-        logger.error(e);
-        metadata.datapackImage = originalMetadata.datapackImage;
-        errors.push("Error changing profile picture");
-      });
-    } else {
-      metadata.datapackImage = originalMetadata.datapackImage;
-      errors.push("No file uploaded with edit request");
-    }
-  }
-  if ("isPublic" in newDatapack && originalMetadata.isPublic !== newDatapack.isPublic) {
-    await switchPrivacySettingsOfDatapack(uuid, metadata.title, originalMetadata.isPublic!, metadata.isPublic).catch(
-      (e) => {
-        console.error(e);
-        logger.error(e);
-        metadata.isPublic = originalMetadata.isPublic;
-        errors.push("Error switching privacy settings");
-      }
-    );
-  }
-  if (JSON.stringify(metadata) !== JSON.stringify(originalMetadata)) {
-    await writeUserDatapack(uuid, metadata).catch((e) => {
-      logger.error(e);
-      errors.push("Error writing metadata");
-    });
-  }
-  return errors;
 }
 
 /**
@@ -405,9 +327,9 @@ export async function processEditDatapackRequest(
   formData: AsyncIterableIterator<Multipart>,
   uuid: string
 ): Promise<OperationResult | { code: number; fields: Record<string, string>; tempFiles: string[] }> {
-  const users = await findUser({ uuid });
-  const user = users[0];
-  if (!user) {
+  const user = (await findUser({ uuid }))[0];
+  const isNotWorkshopOrOfficial = !isOfficialUUID(uuid) && !isWorkshopUUID(uuid);
+  if (!user && isNotWorkshopOrOfficial) {
     return { code: 401, message: "User not found" };
   }
   const fields: Record<string, string> = {};
@@ -427,7 +349,9 @@ export async function processEditDatapackRequest(
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack" };
         }
-        if (!canUserUploadThisFile(user, part)) {
+        // if the user is not an admin or pro, they can only upload files that are less than 3kb
+        // if the uuid is official, it is a general admin account and can upload any size
+        if (isNotWorkshopOrOfficial && !canUserUploadThisFile(user!, part)) {
           await cleanupTempFiles();
           return { code: 413, message: "File is too large" };
         }
@@ -499,6 +423,7 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
       case "originalFileName":
       case "storedFileName":
       case "datapackImage":
+      case "size":
         partial[key] = value;
         break;
       case "references":

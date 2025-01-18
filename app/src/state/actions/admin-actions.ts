@@ -26,7 +26,8 @@ import {
   pushError,
   pushSnackbar,
   removeAllErrors,
-  removeDatapack
+  removeDatapack,
+  setPrivateOfficialDatapacksLoading
 } from "./general-actions";
 import { State } from "../state";
 import { getMetadataFromArray } from "../non-action-util";
@@ -340,6 +341,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
 );
 
 export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
+  setPrivateOfficialDatapacksLoading(true);
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
@@ -373,6 +375,8 @@ export const adminFetchPrivateOfficialDatapacks = action(async (options?: { sign
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
+  } finally {
+    setPrivateOfficialDatapacksLoading(false);
   }
 });
 

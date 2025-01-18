@@ -47,7 +47,8 @@ export async function switchPrivacySettingsOfDatapack(
   uuid: string,
   datapack: string,
   formerIsPublic: boolean,
-  newIsPublic: boolean
+  newIsPublic: boolean,
+  isTemporaryFile?: boolean
 ) {
   if (formerIsPublic === newIsPublic) {
     return;
@@ -63,10 +64,12 @@ export async function switchPrivacySettingsOfDatapack(
       throw new Error("Invalid datapack path");
     }
     await rename(oldDatapackPath, newDatapackPath);
-    await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
-      await rename(newDatapackPath, oldDatapackPath);
-      throw e;
-    });
+    if (isTemporaryFile) {
+      await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+        await rename(newDatapackPath, oldDatapackPath);
+        throw e;
+      });
+    }
   } finally {
     release();
   }

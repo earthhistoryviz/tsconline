@@ -23,6 +23,7 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
+import { workshopRoutes } from "./workshop/workshop-auth.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -225,6 +226,7 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+server.register(workshopRoutes, { prefix: "/workshop" });
 
 server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they doesn't require recaptcha

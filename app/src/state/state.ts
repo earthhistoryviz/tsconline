@@ -115,7 +115,8 @@ export type State = {
   datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
   skeletonStates: {
     presetsLoading: boolean;
-    officialDatapacksLoading: boolean;
+    publicOfficialDatapacksLoading: boolean;
+    privateOfficialDatapacksLoading: boolean;
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
@@ -252,7 +253,8 @@ export const state = observable<State>({
   datapacks: [],
   skeletonStates: {
     presetsLoading: true,
-    officialDatapacksLoading: true,
+    publicOfficialDatapacksLoading: true,
+    privateOfficialDatapacksLoading: true,
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },
