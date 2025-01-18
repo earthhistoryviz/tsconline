@@ -21,7 +21,7 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchUserDatapacks } from "./routes/user-routes.js";
+import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 
@@ -171,8 +171,7 @@ server.get("/presets", async (_request, reply) => {
 });
 
 server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
-
-server.get("/public/datapacks", routes.fetchPublicDatapackChunk);
+server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -230,8 +229,9 @@ server.register(adminRoutes, { prefix: "/admin" });
 server.register(workshopRoutes, { prefix: "/workshop" });
 
 server.register(userRoutes, { prefix: "/user" });
-// this is seperate from the user routes because it doesn't require recaptcha
-server.get("/user/datapacks", looseRateLimit, fetchUserDatapacks);
+// these are seperate from the user routes because they doesn't require recaptcha
+server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
+server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

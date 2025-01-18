@@ -15,7 +15,7 @@ export const editWorkshopDatapackMetadata = async function editWorkshopDatapackM
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;

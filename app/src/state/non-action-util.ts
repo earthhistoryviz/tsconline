@@ -1,5 +1,6 @@
 import {
   Datapack,
+  DatapackMetadata,
   DatapackUniqueIdentifier,
   SharedUser,
   isOfficialDatapack,
@@ -16,11 +17,26 @@ export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: Shared
     (user.isAdmin && (isOfficialDatapack(datapack) || isWorkshopDatapack(datapack)))
   );
 }
+export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: DatapackUniqueIdentifier) {
+  return (
+    a.title === b.title &&
+    a.type === b.type &&
+    ((isUserDatapack(a) && isUserDatapack(b)) || (isWorkshopDatapack(a) && isWorkshopDatapack(b))
+      ? a.uuid === b.uuid
+      : true)
+  );
+}
+export function getMetadataFromArray(datapack: DatapackUniqueIdentifier, datapacks: DatapackMetadata[]) {
+  return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
+}
 export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
 export function doesDatapackAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return !!getDatapackFromArray(datapack, datapacks);
+}
+export function doesMetadataAlreadyExist(datapack: DatapackUniqueIdentifier, datapacks: DatapackMetadata[]) {
+  return !!getMetadataFromArray(datapack, datapacks);
 }
 export function doesDatapackExistInCurrentConfig(
   datapack: DatapackUniqueIdentifier,
@@ -28,33 +44,31 @@ export function doesDatapackExistInCurrentConfig(
 ) {
   return !!datapacks.find((d) => compareExistingDatapacks(d, datapack));
 }
-export function compareExistingDatapacks(a: DatapackUniqueIdentifier, b: DatapackUniqueIdentifier) {
-  return (
-    a.title === b.title && a.type === b.type && (isUserDatapack(a) && isUserDatapack(b) ? a.uuid === b.uuid : true)
-  );
-}
-export function getCurrentUserDatapacks(uuid: string, datapacks: Datapack[]) {
+export function getCurrentUserDatapacksMetadata(uuid: string, datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid === uuid);
 }
-export function getPublicDatapacksWithoutCurrentUser(datapacks: Datapack[], uuid?: string) {
+export function getPublicDatapacksMetadataWithoutCurrentUser(datapacks: DatapackMetadata[], uuid?: string) {
   return datapacks.filter((d) => isUserDatapack(d) && d.uuid !== uuid && d.isPublic);
 }
-export function getPublicOfficialDatapacks(datapacks: Datapack[]) {
+export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && d.isPublic).sort((a, b) => a.priority - b.priority);
 }
-export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
+export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
-export function getWorkshopDatapacks(datapacks: Datapack[]) {
+export function getWorkshopDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
 export function isOwnedByUser(datapack: DatapackUniqueIdentifier, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
-export function getNavigationRouteForDatapackProfile(title: string, type: string) {
-  return `/datapack/${encodeURIComponent(title)}/?type=${type}`;
+export function getNavigationRouteForDatapackProfile(uuid: string, title: string, type: string) {
+  return `/datapack/${encodeURIComponent(title)}/?uuid=${uuid}&type=${type}`;
 }
-export function getDatapackProfileImageUrl(datapack: Datapack) {
+export function getDatapackUUID(datapack: DatapackUniqueIdentifier) {
+  return isUserDatapack(datapack) || isWorkshopDatapack(datapack) ? datapack.uuid : datapack.type;
+}
+export function getDatapackProfileImageUrl(datapack: DatapackMetadata) {
   const uuid = isUserDatapack(datapack) || isWorkshopDatapack(datapack) ? datapack.uuid : datapack.type;
   if (datapack.datapackImage) {
     return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);

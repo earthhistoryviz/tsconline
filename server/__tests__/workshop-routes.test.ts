@@ -16,7 +16,7 @@ vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
 });
 vi.mock("../src/workshop/workshop-util", async () => {
   return {
-    verifyWorkshopValidity: vi.fn().mockReturnValue({ code: 200, message: "success" })
+    verifyWorkshopValidity: vi.fn().mockResolvedValue({ code: 200, message: "success" })
   };
 });
 vi.mock("../src/verify", async () => {
@@ -199,7 +199,7 @@ describe("editWorkshopDatapackMetadata", async () => {
     expect(response.statusCode).toBe(401);
   });
   it("should return non-200 code if verifyWorkshopValidity doesn't return 200", async () => {
-    verifyWorkshopValidity.mockReturnValueOnce({ code: 400, message: "error" });
+    verifyWorkshopValidity.mockResolvedValueOnce({ code: 400, message: "error" });
     const response = await app.inject({
       method: "PATCH",
       url: route,

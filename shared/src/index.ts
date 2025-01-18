@@ -36,10 +36,6 @@ export type SuccessfulServerResponse = {
   message: string;
 };
 
-export type DatapackInfoChunk = {
-  datapacks: Datapack[];
-  totalChunks: number;
-};
 export type MapPackInfoChunk = {
   mapPackIndex: MapPackIndex;
   totalChunks: number;
@@ -885,11 +881,6 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
   assertMapPackIndex(o.mapPackIndex);
 }
 
-export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
-  if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
-  if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackArray(o.datapacks);
-}
 export function assertDatapackArray(o: any): asserts o is Datapack[] {
   if (!Array.isArray(o)) throw new Error("Datapack must be an array");
   for (const datapack of o) {

@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest, isUserDatapack } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, isUserDatapack, DatapackMetadata } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { Box, Skeleton, Typography } from "@mui/material";
@@ -12,15 +12,16 @@ import Lottie from "../TSCLottie";
 import { context } from "../../state";
 import {
   getDatapackProfileImageUrl,
+  getDatapackUUID,
   getNavigationRouteForDatapackProfile,
   isOwnedByUser
 } from "../../state/non-action-util";
 import { Public } from "@mui/icons-material";
 
 type TSCCompactDatapackRowProps = {
-  datapack?: Datapack;
+  datapack?: DatapackMetadata;
   value?: boolean;
-  onChange?: (datapack: DatapackConfigForChartRequest) => void;
+  onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
 export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = observer(function TSCCompactDatapackRow({
   datapack,
@@ -37,7 +38,10 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
       className={styles.rc}
       bgcolor="secondaryBackground.main"
       onClick={
-        skeleton ? () => {} : () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type))
+        skeleton
+          ? () => {}
+          : () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
       }
       sx={{
         "&:hover": {
@@ -56,8 +60,9 @@ export const TSCCompactDatapackRow: React.FC<TSCCompactDatapackRowProps> = obser
         }
         onClick={async (e) => {
           e.stopPropagation();
+          if (loading) return;
           setLoading(true);
-          !skeleton && onChange(datapack);
+          !skeleton && (await onChange(datapack));
           setLoading(false);
         }}>
         {loading ? <Loader /> : value ? <CheckIcon /> : <span className="add-circle" />}

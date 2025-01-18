@@ -14,7 +14,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
-  const rowData = Object.values(state.datapacks)
+  const rowData = Object.values(state.datapackMetadata)
     .filter((datapack) => datapack.type === "official")
     .sort((a, b) => a.priority - b.priority);
   const gridRef = useRef<AgGridReact<Datapack>>(null);

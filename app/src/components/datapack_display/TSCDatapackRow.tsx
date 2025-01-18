@@ -1,4 +1,4 @@
-import { Datapack, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, DatapackMetadata } from "@tsconline/shared";
 import styles from "./TSCDatapackRow.module.css";
 import { useContext, useState } from "react";
 import { Box, IconButton, Skeleton, Typography, useTheme } from "@mui/material";
@@ -13,14 +13,15 @@ import TrashCanIcon from "../../assets/icons/trash-icon.json";
 import { context } from "../../state";
 import {
   getDatapackProfileImageUrl,
+  getDatapackUUID,
   getNavigationRouteForDatapackProfile,
   isOwnedByUser
 } from "../../state/non-action-util";
 
 type TSCDatapackRowProps = {
-  datapack?: Datapack;
+  datapack?: DatapackMetadata;
   value?: boolean;
-  onChange?: (datapack: DatapackConfigForChartRequest) => void;
+  onChange?: (datapack: DatapackConfigForChartRequest) => Promise<void>;
 };
 
 export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value, onChange }) => {
@@ -44,7 +45,10 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
         }
       }}
       onClick={
-        !skeleton ? () => navigate(getNavigationRouteForDatapackProfile(datapack.title, datapack.type)) : () => {}
+        !skeleton
+          ? () =>
+              navigate(getNavigationRouteForDatapackProfile(getDatapackUUID(datapack), datapack.title, datapack.type))
+          : () => {}
       }>
       <Box
         className={`${styles.cc} ${loading ? styles.loading : ""}`}
@@ -60,8 +64,9 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
           !skeleton
             ? async (e) => {
                 e.stopPropagation();
+                if (loading) return;
                 setLoading(true);
-                onChange(datapack);
+                await onChange(datapack);
                 setLoading(false);
               }
             : () => {}
@@ -100,8 +105,7 @@ export const TSCDatapackRow: React.FC<TSCDatapackRowProps> = ({ datapack, value,
           <Skeleton className={styles.cs} width="95%" />
         ) : (
           <Typography className={styles.ci} color="textSecondary">
-            {datapack.totalColumns} Columns · {datapack.size} · {datapack.datapackImageCount} Images
-            {datapack.date && ` · Created ${datapack.date}`}
+            {datapack.date && ` Created ${datapack.date}`}
           </Typography>
         )}
       </div>

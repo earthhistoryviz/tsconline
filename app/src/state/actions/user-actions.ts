@@ -6,19 +6,17 @@ import {
   pushError,
   pushSnackbar,
   removeDatapack,
-  fetchOfficialDatapack
+  fetchDatapack
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
+import { DatapackFetchParams } from "../../types";
 import {
   Datapack,
   DatapackUniqueIdentifier,
   assertDatapack,
   assertUserDatapack,
-  assertWorkshopDatapack,
-  isOfficialDatapack,
-  isUserDatapack,
-  isWorkshopDatapack
+  assertWorkshopDatapack
 } from "@tsconline/shared";
 import { state } from "../state";
 
@@ -26,29 +24,46 @@ export const setEditRequestInProgress = action((inProgress: boolean) => {
   state.datapackProfilePage.editRequestInProgress = inProgress;
 });
 
+/**
+ * Refetches the datapack from the server and replaces the original datapack with the new one. If used to refetch private user datapacks or workshop datapacks, you must make sure recaptcha is loaded before calling this function.
+ */
 export const refetchDatapack = action(
-  async (editedDatapack: DatapackUniqueIdentifier, originalDatapack: DatapackUniqueIdentifier) => {
-    let fetchedDatapack;
-    if (isWorkshopDatapack(editedDatapack)) {
-      // TODO change this in @Aditya's PR (he makes the workshop fetcher)
-      // until then, we cannot navigate since we can't find the workshop datapack through fetching specifically
-      fetchedDatapack = await fetchWorkshopDatapack(editedDatapack.uuid, editedDatapack.title);
-    } else if (isUserDatapack(editedDatapack)) {
-      fetchedDatapack = await fetchUserDatapack(editedDatapack.title);
-    } else if (isOfficialDatapack(editedDatapack)) {
-      fetchedDatapack = await fetchOfficialDatapack(editedDatapack.title);
-    }
-    if (fetchedDatapack) {
+  async (editedMetadata: DatapackFetchParams, originalDatapack: DatapackUniqueIdentifier) => {
+    const datapack = await fetchDatapack(editedMetadata);
+    if (datapack) {
       removeDatapack(originalDatapack);
-      addDatapack(fetchedDatapack);
-      return fetchedDatapack;
+      addDatapack(datapack);
+      return datapack;
     } else {
       return null;
     }
   }
 );
 
-export const fetchUserDatapack = action(async (datapack: string) => {
+export const fetchPublicUserDatapack = action(
+  async (datapack: string, uuid: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const response = await fetcher(`/user/uuid/${uuid}/datapack/${datapack}`, options);
+      if (response.ok) {
+        const data = await response.json();
+        assertUserDatapack(data);
+        assertDatapack(data);
+        return data;
+      } else {
+        displayServerError(
+          response.statusText,
+          ErrorCodes.USER_FETCH_DATAPACK_FAILED,
+          ErrorMessages[ErrorCodes.USER_FETCH_DATAPACK_FAILED]
+        );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+);
+
+export const fetchUserDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
   try {
     const recaptcha = await getRecaptchaToken("fetchUserDatapack");
     if (!recaptcha) return;
@@ -56,7 +71,8 @@ export const fetchUserDatapack = action(async (datapack: string) => {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptcha
-      }
+      },
+      ...options
     });
     if (response.ok) {
       const data = await response.json();
@@ -65,42 +81,47 @@ export const fetchUserDatapack = action(async (datapack: string) => {
       return data;
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_FETCH_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_FETCH_DATAPACK_FAILED]
       );
     }
   } catch (e) {
+    if ((e as Error).name === "AbortError") return;
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
 });
 
-export const fetchWorkshopDatapack = action(async (workshopUUID: string, datapack: string) => {
-  try {
-    const recaptcha = await getRecaptchaToken("fetchWorkshopDatapack");
-    if (!recaptcha) return;
-    const response = await fetcher(`/user/workshop/${workshopUUID}/datapack/${datapack}`, {
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptcha
+export const fetchWorkshopDatapack = action(
+  async (workshopUUID: string, datapack: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const recaptcha = await getRecaptchaToken("fetchWorkshopDatapack");
+      if (!recaptcha) return;
+      const response = await fetcher(`/user/workshop/${workshopUUID}/datapack/${datapack}`, {
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptcha
+        },
+        ...options
+      });
+      if (response.ok) {
+        const data = await response.json();
+        assertWorkshopDatapack(data);
+        assertDatapack(data);
+        return data;
+      } else {
+        displayServerError(
+          response.statusText,
+          ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED,
+          ErrorMessages[ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED]
+        );
       }
-    });
-    if (response.ok) {
-      const data = await response.json();
-      assertWorkshopDatapack(data);
-      assertDatapack(data);
-      return data;
-    } else {
-      displayServerError(
-        response.statusText,
-        ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED,
-        ErrorMessages[ErrorCodes.WORKSHOP_FETCH_DATAPACK_FAILED]
-      );
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
-  } catch (e) {
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
-});
+);
 
 export const userDeleteDatapack = action(async (datapack: string) => {
   try {
@@ -118,7 +139,7 @@ export const userDeleteDatapack = action(async (datapack: string) => {
       pushSnackbar(`Datapack ${datapack} deleted`, "success");
     } else {
       displayServerError(
-        response,
+        response.statusText,
         ErrorCodes.USER_DELETE_DATAPACK_FAILED,
         ErrorMessages[ErrorCodes.USER_DELETE_DATAPACK_FAILED]
       );
