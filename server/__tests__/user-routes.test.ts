@@ -12,7 +12,7 @@ import { fetchPublicUserDatapack } from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
-import { Datapack } from "@tsconline/shared";
+import * as shared from "@tsconline/shared";
 import { User } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
@@ -41,8 +41,10 @@ vi.mock("../src/upload-handlers", async () => {
   };
 });
 
-vi.mock("@tsconline/shared", async () => {
+vi.mock("@tsconline/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof shared>();
   return {
+    ...actual,
     isPartialDatapackMetadata: vi.fn().mockReturnValue(true)
   };
 });
@@ -276,7 +278,7 @@ describe("get a single user datapack", () => {
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
   it("should reply 500 if no metadata is found", async () => {
-    fetchUserDatapack.mockResolvedValueOnce("" as unknown as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce("" as unknown as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -288,7 +290,7 @@ describe("get a single user datapack", () => {
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
   it("should reply 200 if the datapack is successfully retrieved", async () => {
-    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -958,7 +960,7 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(await response.json()).toEqual({ error: "Invalid workshop UUID" });
     expect(response.statusCode).toBe(400);
   });
-  it("should reply 401 if workshop is not active", async () => {
+  it("should reply 403 if workshop is not active", async () => {
     findUser.mockResolvedValueOnce([testUser as User]);
     isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
     const response = await app.inject({
@@ -967,24 +969,24 @@ describe("fetchWorkshopDatapack tests", () => {
       headers
     });
     expect(await response.json()).toEqual({ error: "User does not have access to this workshop" });
-    expect(response.statusCode).toBe(401);
+    expect(response.statusCode).toBe(403);
   });
   it("should reply 404 if the datapack is not found", async () => {
     const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
     findUser.mockResolvedValueOnce([testUser as User]);
-    fetchUserDatapack.mockRejectedValueOnce(new Error("Datapack does not exist or cannot be found"));
+    fetchUserDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/workshop-1/datapack/test`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
+    expect(await response.json()).toEqual({ error: "Datapack not found" });
     expect(response.statusCode).toBe(404);
   });
   it("should reply 200 when the datapack is successfully fetched", async () => {
     const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
     findUser.mockResolvedValueOnce([testUser as User]);
-    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/workshop-1/datapack/test`,
@@ -1012,7 +1014,7 @@ describe("fetchPublicUserDatapack tests", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should reply 401 if datapack is private", async () => {
-    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
@@ -1023,7 +1025,7 @@ describe("fetchPublicUserDatapack tests", () => {
     expect(response.statusCode).toBe(401);
   });
   it("should reply 200 when the datapack is successfully fetched", async () => {
-    fetchUserDatapack.mockResolvedValueOnce({ title: "test", isPublic: true } as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test", isPublic: true } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
