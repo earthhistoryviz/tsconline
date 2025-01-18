@@ -16,7 +16,9 @@ import {
   adminEditDatapackPriorities,
   adminAddOfficialDatapackToWorkshop,
   adminEditDatapackMetadata,
-  adminUploadDatapack
+  adminUploadDatapack,
+  adminUploadFilesToWorkshop,
+  adminUploadCoverPictureToWorkshop
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -258,4 +260,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     { config: { rateLimit: moderateRateLimit }, schema: { params: adminEditDatapackMetadataBody } },
     adminEditDatapackMetadata
   );
+  fastify.post("/workshop/files", { config: { rateLimit: moderateRateLimit } }, adminUploadFilesToWorkshop);
+  fastify.post("/workshop/cover", { config: { rateLimit: moderateRateLimit } }, adminUploadCoverPictureToWorkshop);
 };
