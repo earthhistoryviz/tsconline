@@ -54,6 +54,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -746,5 +747,22 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
     console.error(error);
     reply.status(500).send({ error: "Error setting up datapack directory" });
     return;
+  }
+};
+
+export const adminEditDatapackMetadata = async function adminEditDatapackMetadata(
+  request: FastifyRequest<{ Params: { datapack: string } }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.params;
+  if (!datapack) {
+    reply.status(400).send({ error: "Missing datapack" });
+    return;
+  }
+  try {
+    const response = await editDatapackMetadataRequestHandler(request.parts(), "official", datapack);
+    reply.status(response.code).send({ message: response.message });
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to edit metadata" });
   }
 };

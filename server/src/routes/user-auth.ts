@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "
 import {
   editDatapackMetadata,
   fetchSingleUserDatapack,
+  fetchWorkshopDatapack,
   requestDownload,
   uploadDatapack,
   userDeleteDatapack,

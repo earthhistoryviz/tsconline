@@ -3,17 +3,10 @@ import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
-import {
-  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
-  deleteUserDatapack,
-  editDatapack,
-  fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  processEditDatapackRequest
-} from "../user/user-handler.js";
-import { isOperationResult } from "../types.js";
-import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
+import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
@@ -30,37 +23,12 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const response = await processEditDatapackRequest(request.parts(), uuid).catch(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  });
-  if (!response) {
-    reply.status(500).send({ error: "Failed to process request" });
-    return;
-  }
-  if (isOperationResult(response)) {
-    reply.status(response.code).send({ error: response.message });
-    return;
-  }
   try {
-    const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
-    const errors = await editDatapack(uuid, datapack, partial);
-    if (errors.length > 0) {
-      reply.status(422).send({ error: "There were errors updating the datapack", errors });
-      return;
-    }
+    const response = await editDatapackMetadataRequestHandler(request.parts(), uuid, datapack);
+    reply.status(response.code).send({ message: response.message });
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
-    return;
-  } finally {
-    // remove temp files; files should be removed normally, but if there is an error, we should remove them here
-    for (const file of response.tempFiles) {
-      await rm(file, { force: true }).catch(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      });
-    }
   }
-  reply.send({ message: `Successfully updated ${datapack}` });
 };
 
 export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
@@ -272,46 +240,6 @@ export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetada
   }
 };
 
-export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
-  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
-  reply: FastifyReply
-) {
-  const { workshopUUID, datapackTitle } = request.params;
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-  try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
-      return;
-    }
-    const workshopId = getWorkshopIdFromUUID(workshopUUID);
-    if (!workshopId) {
-      reply.status(400).send({ error: "Invalid workshop UUID" });
-      return;
-    }
-    if (!(await isUserInWorkshopAndWorkshopIsActive(user[0].userId, workshopId))) {
-      reply.status(401).send({ error: "User does not have access to this workshop" });
-      return;
-    }
-    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle).catch(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    });
-    if (!datapack) {
-      reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
-      return;
-    }
-    reply.send(datapack);
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: "Unknown Error" });
-    return;
-  }
-};
-
 export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
   request: FastifyRequest<{ Params: { uuid: string; datapackTitle: string } }>,
   reply: FastifyReply
@@ -329,6 +257,40 @@ export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
     return;
   }
   reply.send(datapack);
+};
+
+export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopUUID, datapackTitle } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    if (result.code !== 200) {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    if (!datapack) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
+    }
+    reply.send(datapack);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown Error" });
+    return;
+  }
 };
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions

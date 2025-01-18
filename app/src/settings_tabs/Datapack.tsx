@@ -103,14 +103,14 @@ export const Datapacks = observer(function Datapacks() {
           datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
-          loading={state.skeletonStates.officialDatapacksLoading}
+          loading={state.skeletonStates.publicOfficialDatapacksLoading}
         />
         {state.user.isAdmin && (
           <DatapackGroupDisplay
             datapacks={getPrivateOfficialDatapackMetadatas(state.datapackMetadata)}
             header={t("settings.datapacks.title.private-official")}
             HeaderIcon={Security}
-            loading={state.skeletonStates.privateUserDatapacksLoading}
+            loading={state.skeletonStates.privateOfficialDatapacksLoading}
           />
         )}
         {(state.user.workshopIds?.length ?? 0) > 0 && (
@@ -284,7 +284,7 @@ const DatapackGroupDisplay: React.FC<DatapackGroupDisplayProps> = observer(
         )}
         {numberOfDatapacks > visibleLimit && (
           <Box className={styles.showBox} onClick={() => setShowAll(!showAll)}>
-            <Typography className={styles.show} variant="body2" color="primary">
+            <Typography className={styles.show} variant="body2" color="theme.palette.backgroundColor.contrastText">
               {!showAll ? t("settings.datapacks.seeMore") : t("settings.datapacks.seeLess")}
             </Typography>
           </Box>

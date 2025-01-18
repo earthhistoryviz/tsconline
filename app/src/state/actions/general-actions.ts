@@ -183,6 +183,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
       for (const dp of datapacks) {
         addDatapack(dp);
       }
+      setPublicOfficialDatapacksLoading(false);
     } catch (e) {
       console.error(e);
       displayServerError(datapacks, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
@@ -193,7 +194,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
   } finally {
-    setOfficialDatapacksLoading(false);
+    setPublicOfficialDatapacksLoading(false);
     setPublicDatapacksLoading(false);
   }
 });
@@ -1299,8 +1300,11 @@ export const setPresetsLoading = action((loading: boolean) => {
   state.skeletonStates.presetsLoading = loading;
 });
 
-export const setOfficialDatapacksLoading = action((fetching: boolean) => {
-  state.skeletonStates.officialDatapacksLoading = fetching;
+export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicOfficialDatapacksLoading = fetching;
+});
+export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateOfficialDatapacksLoading = fetching;
 });
 export const setPublicDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
