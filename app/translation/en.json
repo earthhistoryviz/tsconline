@@ -523,7 +523,8 @@
             "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance.",
             "ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add official datapack to workshop. Please try again later.",
             "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
-            "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it."
+            "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
+            "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later."
         },
         "button": {
             "generate": "Generate",

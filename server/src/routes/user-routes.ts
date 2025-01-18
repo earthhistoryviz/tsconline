@@ -3,17 +3,10 @@ import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import { assetconfigs, checkHeader } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
-import {
-  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
-  deleteUserDatapack,
-  editDatapack,
-  fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  processEditDatapackRequest
-} from "../user/user-handler.js";
-import { isOperationResult } from "../types.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
+import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -29,37 +22,12 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const response = await processEditDatapackRequest(request.parts(), uuid).catch(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  });
-  if (!response) {
-    reply.status(500).send({ error: "Failed to process request" });
-    return;
-  }
-  if (isOperationResult(response)) {
-    reply.status(response.code).send({ error: response.message });
-    return;
-  }
   try {
-    const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
-    const errors = await editDatapack(uuid, datapack, partial);
-    if (errors.length > 0) {
-      reply.status(422).send({ error: "There were errors updating the datapack", errors });
-      return;
-    }
+    const response = await editDatapackMetadataRequestHandler(request.parts(), uuid, datapack);
+    reply.status(response.code).send({ message: response.message });
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
-    return;
-  } finally {
-    // remove temp files; files should be removed normally, but if there is an error, we should remove them here
-    for (const file of response.tempFiles) {
-      await rm(file, { force: true }).catch(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      });
-    }
   }
-  reply.send({ message: `Successfully updated ${datapack}` });
 };
 
 export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
@@ -257,6 +225,40 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Database or processing error" });
+  }
+};
+
+export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopUUID, datapackTitle } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+    const result = verifyWorkshopValidity(workshopUUID, user[0].userId);
+    if (result.code !== 200) {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle);
+    if (!datapack) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
+    }
+    reply.send(datapack);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown Error" });
+    return;
   }
 };
 

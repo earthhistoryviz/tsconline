@@ -47,14 +47,14 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-type OfficialDatapack = {
+export type OfficialDatapack = {
   type: "official";
 };
-type WorkshopDatapack = {
+export type WorkshopDatapack = {
   type: "workshop";
   uuid: string;
 };
-type UserDatapack = {
+export type UserDatapack = {
   type: "user";
   uuid: string;
 };
@@ -610,6 +610,16 @@ export type DatapackPriorityUpdateSuccess = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function isOfficialUUID(uuid: string): boolean {
+  return uuid === "official";
+}
+export function isWorkshopUUID(uuid: string): boolean {
+  const workshopPrefix = "workshop-";
+  if (uuid === workshopPrefix) return false;
+  const workshopId = Number(uuid.slice(workshopPrefix.length));
+  return uuid.startsWith(workshopPrefix) && !isNaN(workshopId) && Number.isInteger(workshopId) && workshopId > 0;
+}
 
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
@@ -1799,5 +1809,23 @@ export function assertTimescale(val: any): asserts val is TimescaleItem {
   }
   if (typeof val.key !== "string" || typeof val.value !== "number") {
     throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
+  }
+}
+
+export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUniqueIdentifier {
+  if (!o || typeof o !== "object") throw new Error("DatapackUniqueIdentifier must be a non-null object");
+  if (typeof o.title !== "string") throwError("DatapackUniqueIdentifier", "title", "string", o.title);
+  switch (o.type) {
+    case "official":
+      assertOfficialDatapack(o);
+      break;
+    case "workshop":
+      assertWorkshopDatapack(o);
+      break;
+    case "user":
+      assertUserDatapack(o);
+      break;
+    default:
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }

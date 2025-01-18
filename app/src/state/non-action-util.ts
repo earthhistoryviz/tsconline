@@ -1,6 +1,7 @@
 import {
   Datapack,
   DatapackUniqueIdentifier,
+  SharedUser,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
@@ -9,6 +10,12 @@ import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
 
+export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {
+  return (
+    isOwnedByUser(datapack, user.uuid) ||
+    (user.isAdmin && (isOfficialDatapack(datapack) || isWorkshopDatapack(datapack)))
+  );
+}
 export function getDatapackFromArray(datapack: DatapackUniqueIdentifier, datapacks: Datapack[]) {
   return datapacks.find((d) => compareExistingDatapacks(d, datapack)) ?? null;
 }
@@ -41,7 +48,7 @@ export function getPrivateOfficialDatapacks(datapacks: Datapack[]) {
 export function getWorkshopDatapacks(datapacks: Datapack[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
-export function isOwnedByUser(datapack: Datapack, uuid: string) {
+export function isOwnedByUser(datapack: DatapackUniqueIdentifier, uuid: string) {
   return isUserDatapack(datapack) && datapack.uuid === uuid;
 }
 export function getNavigationRouteForDatapackProfile(title: string, type: string) {
@@ -52,7 +59,7 @@ export function getDatapackProfileImageUrl(datapack: Datapack) {
   if (datapack.datapackImage) {
     return devSafeUrl(`/datapack-images/${datapack.title}/${uuid}`);
   } else {
-    return devSafeUrl(`/datapack-images/default/${uuid}`);
+    return devSafeUrl(`/datapack-images//${uuid}`);
   }
 }
 export function getNavigationRouteForWorkshopDetails(id: number) {
