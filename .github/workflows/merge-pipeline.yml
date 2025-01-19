@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - main
+      - TSC-577-send-artifacts-to-the-server-instead-of-deployments
 
 jobs:
   check-files:
@@ -183,26 +183,55 @@ jobs:
           echo "Jar Date: $JAR_DATE"
           echo "main_jar_date=$JAR_DATE" >> $GITHUB_OUTPUT
 
+      - name: Validate JAR Name
+        run: |
+          if [[ -z "${{ steps.pr_jar_date.outputs.pr_jar_date }}" ]]; then
+            echo "Error: pr_jar_date is empty. Check config.json format."
+            exit 1
+          fi
+          if [[ -z "${{ steps.main_jar_date.outputs.main_jar_date }}" ]]; then
+            echo "Error: main_jar_date is empty. Check config.json format."
+            exit 1
+          fi
+
       - name: Check if Jar Artifact Exists
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: check_jar_artifact
         run: |
-          artifact_name="${{ steps.main_jar_date.outputs.main_jar_date }}"
-          echo "Attempting to download artifact: $artifact_name"
-          if curl --fail -s -I "${{ github.server_url }}/repos/${{ github.repository }}/actions/artifacts" | grep -q "$artifact_name"; then
-            echo "jar_artifact_exists=true" >> $GITHUB_OUTPUT
+          # Check for PR artifact
+          pr_artifact_name="${{ steps.pr_jar_date.outputs.pr_jar_date }}"
+          echo "Checking for PR artifact: $pr_artifact_name"
+          if gh api repos/${{ github.repository }}/actions/artifacts \
+            --paginate -q '.artifacts[].name' | grep -q "$pr_artifact_name"; then
+            echo "pr_jar_artifact_exists=true" >> $GITHUB_OUTPUT
           else
-            echo "jar_artifact_exists=false" >> $GITHUB_OUTPUT
+            echo "pr_jar_artifact_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+          # Check for main branch artifact
+          main_artifact_name="${{ steps.main_jar_date.outputs.main_jar_date }}"
+          echo "Checking for Main branch artifact: $main_artifact_name"
+          if gh api repos/${{ github.repository }}/actions/artifacts \
+            --paginate -q '.artifacts[].name' | grep -q "$main_artifact_name"; then
+            echo "main_jar_artifact_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "main_jar_artifact_exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Download Existing Jar Artifact
-        if: steps.check_jar_artifact.outputs.jar_artifact_exists == 'true'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.main_jar_date.outputs.main_jar_date }}
+          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
           path: ${{ github.workspace }}/server/assets/jars/
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Rename Jar Artifact
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
+        run: mv ${{ github.workspace }}/server/assets/jars/${{ steps.pr_jar_date.outputs.pr_jar_date }}.jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
 
       - name: Set up SSH key
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
         run: |
           eval $(ssh-agent)
           mkdir -p ~/.ssh
@@ -213,12 +242,12 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
       - name: Set up jdk
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -226,7 +255,7 @@ jobs:
           java-package: "jdk"
 
       - name: Build and compile TSCreator Jar for tests
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
@@ -239,7 +268,7 @@ jobs:
             exit 1
           fi
 
-      - name: Upload Jar Artifact
+      - name: Upload PR Jar Artifact if different from main branch
         if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.pr_jar_date.outputs.pr_jar_date != steps.main_jar_date.outputs.main_jar_date
         uses: actions/upload-artifact@v4
         with:
@@ -247,10 +276,14 @@ jobs:
           path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
           retention-days: 90
 
-      - name: Check if there is a Jar artifact
+      - name: Upload Jar Artifact if it doesn't exist
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.main_jar_artifact_exists == 'false'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
+          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+          retention-days: 90
         
-
-
       - name: Run Tests
         id: run_tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
