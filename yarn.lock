@@ -2548,7 +2548,7 @@ __metadata:
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
     dayjs: "npm:^1.11.12"
-    dompurify: "npm:^3.0.11"
+    dompurify: "npm:^3.1.3"
     file-saver: "npm:^2.0.5"
     framer-motion: "npm:^11.15.0"
     i18next: "npm:^23.14.0"
@@ -2600,7 +2600,7 @@ __metadata:
     "@types/dompurify": "npm:^3"
     "@types/js-levenshtein": "npm:^1"
     "@types/jsdom": "npm:^21.1.6"
-    "@types/lodash": "npm:^4"
+    "@types/lodash": "npm:^4.17.4"
     "@types/md5": "npm:^2.3.5"
     "@types/nearest-color": "npm:^0.4.1"
     "@types/node": "npm:^20.11.28"
@@ -2616,7 +2616,7 @@ __metadata:
     cors: "npm:^2.8.5"
     dompurify: "npm:^3.1.3"
     dotenv: "npm:^16.4.5"
-    fastify: "npm:^4.17.0"
+    fastify: "npm:^4.27.0"
     form-auto-content: "npm:^3.2.1"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
@@ -3131,7 +3131,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/lodash@npm:*, @types/lodash@npm:^4, @types/lodash@npm:^4.17.4":
+"@types/lodash@npm:*, @types/lodash@npm:^4.17.4":
   version: 4.17.4
   resolution: "@types/lodash@npm:4.17.4"
   checksum: 3ec19f9fc48200006e71733e08bcb1478b0398673657fcfb21a8643d41a80bcce09a01000077c3b23a3c6d86b9b314abe0672a8fdfc0fd66b893bd41955cfab8
@@ -5545,7 +5545,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.0.11, dompurify@npm:^3.1.3":
+"dompurify@npm:^3.1.3":
   version: 3.1.4
   resolution: "dompurify@npm:3.1.4"
   checksum: be036d5c10bda3ca9cc8069f26f3e586ac0379fc2a2499df7c362eeee53de49594ead3cc7e82e012eadcb071cf7327001fca33751682882e42da87618b10a4e6
@@ -6399,7 +6399,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify@npm:^4.17.0, fastify@npm:^4.27.0":
+"fastify@npm:^4.27.0":
   version: 4.27.0
   resolution: "fastify@npm:4.27.0"
   dependencies:
