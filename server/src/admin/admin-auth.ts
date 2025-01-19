@@ -121,9 +121,12 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     properties: {
       title: { type: "string" },
       start: { type: "string" },
-      end: { type: "string" }
+      end: { type: "string" },
+      regRestrict: { type: "number" },
+      creatorUUID: { type: "string" },
+      regLink: { type: "string" }
     },
-    required: ["title", "start", "end"]
+    required: ["title", "start", "end", "regRestrict", "creatorUUID"]
   };
   const adminEditWorkshopBody = {
     type: "object",
