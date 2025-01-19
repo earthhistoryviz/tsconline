@@ -540,11 +540,12 @@ export const adminFetchWorkshops = action(async () => {
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
-  async (title: string, start: string, end: string): Promise<number | undefined> => {
+  async (title: string, start: string, end: string, regRestrict: number, creatorUUID: string, regLink?: string): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      const body: Record<string, string> = { title, start, end };
+      console.error(regRestrict);
+      const body: Record<string, string | number | undefined> = { title, start, end, regRestrict, creatorUUID, regLink };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
         headers: {
