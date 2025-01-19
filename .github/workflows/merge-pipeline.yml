@@ -160,6 +160,47 @@ jobs:
         if: steps.build.outputs.build_failed == 'true'
         run: exit 1
 
+      - name: Parse Jar date from config file
+        id: pr_jar_date
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          JAR_DATE=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json)
+          echo "Jar Date: $JAR_DATE"
+          echo "pr_jar_date=$JAR_DATE" >> $GITHUB_OUTPUT
+
+      - name: Checkout config file from main branch
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          sparse-checkout: ${{ github.workspace }}/server/assets/config.json
+  
+      - name: Parse Jar date from main branch config file
+        id: main_jar_date
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          JAR_DATE=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json)
+          echo "Jar Date: $JAR_DATE"
+          echo "main_jar_date=$JAR_DATE" >> $GITHUB_OUTPUT
+
+      - name: Check if Jar Artifact Exists
+        id: check_jar_artifact
+        run: |
+          artifact_name="${{ steps.main_jar_date.outputs.main_jar_date }}"
+          echo "Attempting to download artifact: $artifact_name"
+          if curl --fail -s -I "${{ github.server_url }}/repos/${{ github.repository }}/actions/artifacts" | grep -q "$artifact_name"; then
+            echo "jar_artifact_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "jar_artifact_exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download Existing Jar Artifact
+        if: steps.check_jar_artifact.outputs.jar_artifact_exists == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.main_jar_date.outputs.main_jar_date }}
+          path: ${{ github.workspace }}/server/assets/jars/
+
       - name: Set up SSH key
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
@@ -175,6 +216,7 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
+
       - name: Set up jdk
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: actions/setup-java@v4
@@ -196,6 +238,19 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
+
+      - name: Upload Jar Artifact
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.pr_jar_date.outputs.pr_jar_date != steps.main_jar_date.outputs.main_jar_date
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
+          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+          retention-days: 90
+
+      - name: Check if there is a Jar artifact
+        
+
+
       - name: Run Tests
         id: run_tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
