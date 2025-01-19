@@ -161,199 +161,208 @@ jobs:
         if: steps.build.outputs.build_failed == 'true'
         run: exit 1
 
-      - name: Parse Jar date from config file
-        id: pr_jar_name
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: |
-          JAR_DATE=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json)
-          JAR_NAME=$(basename "$JAR_PATH")
-          echo "Jar Name: $JAR_NAME"
-          echo "pr_jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
+      # - name: Set up SSH key
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   run: |
+      #     eval $(ssh-agent)
+      #     mkdir -p ~/.ssh
+      #     echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+      #     chmod 600 ~/.ssh/id_rsa
+      #     echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+      #     ssh-add ~/.ssh/id_rsa
+      #     ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
-      - name: Read config file from main branch
-        id: main_config
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        uses: jaywcjlove/github-action-read-file@main
-        with:
-          branch: Main
-          path: server/assets/config.json
+      # - name: Checkout code from Bitbucket
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   run: |
+      #     git clone git@bitbucket.org:strat/tscreator.git
 
-      - name: Parse Jar date from main branch config file
-        id: main_jar_name
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: |
-          JAR_DATE=$(jq -r '.activeJar' ${{ steps.main_config.outputs.content }})
-          JAR_NAME=$(basename "$JAR_PATH")
-          echo "Jar Name: $JAR_NAME"
-          echo "main_jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
+      # - name: Set up jdk
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   uses: actions/setup-java@v4
+      #   with:
+      #     distribution: "temurin"
+      #     java-version: "8"
+      #     java-package: "jdk"
 
-      - name: Validate JAR Names
-        run: |
-          if [[ -z "${{ steps.pr_jar_name.outputs.pr_jar_name }}" ]]; then
-            echo "Error: pr_jar_name is empty. Check config.json format."
-            exit 1
-          fi
-          if [[ -z "${{ steps.main_jar_name.outputs.main_jar_name }}" ]]; then
-            echo "Error: main_jar_name is empty. Check config.json format."
-            exit 1
-          fi
-
-      - name: Check if Jar Artifact Exists
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        id: check_jar_artifact
-        run: |
-          # Check for PR artifact
-          pr_artifact_name="${{ steps.pr_jar_name.outputs.pr_jar_name }}"
-          echo "Checking for PR artifact: $pr_artifact_name"
-          if gh api repos/${{ github.repository }}/actions/artifacts \
-            --paginate -q '.artifacts[].name' | grep -q "$pr_artifact_name"; then
-            echo "pr_jar_artifact_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "pr_jar_artifact_exists=false" >> $GITHUB_OUTPUT
-          fi
-          main_artifact_name="${{ steps.main_jar_name.outputs.main_jar_name }}"
-          echo "Checking for Main branch artifact: $main_artifact_name"
-          if gh api repos/${{ github.repository }}/actions/artifacts \
-            --paginate -q '.artifacts[].name' | grep -q "$main_artifact_name"; then
-            echo "main_jar_artifact_exists=true" >> $GITHUB_OUTPUT
-          else
-            echo "main_jar_artifact_exists=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Download Existing Jar Artifact
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
-          path: ${{ github.workspace }}/server/assets/jars/
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Rename Jar Artifact
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
-        run: mv ${{ github.workspace }}/server/assets/jars/${{ steps.pr_jar_name.outputs.pr_jar_name }}.jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
-
-      - name: Set up SSH key
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
-        run: |
-          eval $(ssh-agent)
-          mkdir -p ~/.ssh
-          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
-
-      - name: Checkout code from Bitbucket
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
-        run: |
-          git clone git@bitbucket.org:strat/tscreator.git
-
-      - name: Set up jdk
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "8"
-          java-package: "jdk"
-
-      - name: Build and compile TSCreator Jar for tests
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
-        run: |
-          cd ${{ github.workspace }}/tscreator/devel
-          make
-          make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
-          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
-            echo "Successfully made jar."
-          else
-            echo "Failed to make jar."
-            exit 1
-          fi
-
-      - name: Upload PR Jar Artifact if different from main branch
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.pr_jar_name.outputs.pr_jar_name != steps.main_jar_name.outputs.main_jar_name
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
-          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
-          retention-days: 90
-
-      - name: Upload Jar Artifact if it doesn't exist
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.main_jar_artifact_exists == 'false'
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
-          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
-          retention-days: 90
+      # - name: Build and compile TSCreator Jar for tests
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   run: |
+      #     cd ${{ github.workspace }}/tscreator/devel
+      #     make
+      #     make jar
+      #     find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
+      #     if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
+      #       echo "Successfully made jar."
+      #     else
+      #       echo "Failed to make jar."
+      #       exit 1
+      #     fi
         
-      - name: Run Tests
-        id: run_tests
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
+      # - name: Run Tests
+      #   id: run_tests
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   run: |
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
+      #     yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+      #   continue-on-error: true
 
-      - name: Run Tests and Coverage (Exclude Encryption)
-        id: run_tests_exclude_encryption
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: | 
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
+      # - name: Run Tests and Coverage (Exclude Encryption)
+      #   id: run_tests_exclude_encryption
+      #   if: github.event.pull_request.user.login == 'dependabot[bot]'
+      #   run: | 
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
+      #     yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+      #   continue-on-error: true
 
-      - name: Post Coverage Comment
-        if: steps.run_tests.outputs.coverage_failed == 'true'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const log = fs.readFileSync('test_output.log', 'utf8');
-            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
+      # - name: Post Coverage Comment
+      #   if: steps.run_tests.outputs.coverage_failed == 'true'
+      #   uses: actions/github-script@v6
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     script: |
+      #       const fs = require('fs');
+      #       const log = fs.readFileSync('test_output.log', 'utf8');
+      #       const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
   
-            const commentBody = `
-            ## :x: Coverage Thresholds Not Met
+      #       const commentBody = `
+      #       ## :x: Coverage Thresholds Not Met
   
-            The following coverage thresholds were not met:
+      #       The following coverage thresholds were not met:
             
-            \`\`\`
-            ${coverageErrors.join('\n')}
-            \`\`\`
+      #       \`\`\`
+      #       ${coverageErrors.join('\n')}
+      #       \`\`\`
   
-            Please review the coverage report and improve the tests to meet the thresholds.
-            `;
+      #       Please review the coverage report and improve the tests to meet the thresholds.
+      #       `;
   
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody
-            });
+      #       github.rest.issues.createComment({
+      #         issue_number: context.issue.number,
+      #         owner: context.repo.owner,
+      #         repo: context.repo.repo,
+      #         body: commentBody
+      #       });
 
-      - name: Report Test Errors
-        if: steps.run_tests.outputs.test_failed == 'true'
-        uses: actions/github-script@v5
+      # - name: Report Test Errors
+      #   if: steps.run_tests.outputs.test_failed == 'true'
+      #   uses: actions/github-script@v5
+      #   with:
+      #     script: |
+      #       const fs = require('fs');
+      #       const testLog = fs.readFileSync('test_output.log', 'utf8');
+      #       const prNumber = context.payload.pull_request?.number;
+      #       if (prNumber) {
+      #         const message = `🚨 Vitest tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
+      #         github.rest.issues.createComment({
+      #           ...context.repo,
+      #           issue_number: prNumber,
+      #           body: message,
+      #         });
+      #       }
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Check for any test failures
+      #   if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
+      #   run: exit 1
+
+      # - name: Parse JAR Names
+      #   id: parse_jar_names
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+      #     main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
+      #     main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
+
+      #     if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
+      #       echo "Error: pr_jar or main_jar is empty. Check config.json format."
+      #       exit 1
+      #     fi
+
+      #     echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
+      #     echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
+      #     echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
+  
+      # - name: Check Artifact Existence
+      #   id: check_artifacts
+      #   env:
+      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   run: |
+      #     pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.pr_jar_name }}\") | .id" | head -n 1)
+      #     main_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.main_jar_name }}\") | .id" | head -n 1)
+
+      #     if [[ -z "$pr_exists" && -z "$main_exists" ]]; then
+      #       echo "Error: No artifacts found for either PR or main branch."
+      #       exit 1
+      #     fi
+  
+      #     echo "Found artifacts: PR: $pr_exists, Main: $main_exists"
+      #     echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+      #     echo "main_jar_exists=$([ -n "$main_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+      #     echo "pr_jar_id=$pr_exists" >> $GITHUB_OUTPUT
+      #     echo "main_jar_id=$main_exists" >> $GITHUB_OUTPUT
+
+      # - name: Determine if Upload is Necessary
+      #   id: upload_artifacts
+      #   run: |
+      #     upload_needed=false
+      #     jar_name=""
+      #     jar_id=""
+      
+      #     main_jar_exists="${{ steps.check_artifacts.outputs.main_jar_exists }}"
+      #     pr_jar_exists="${{ steps.check_artifacts.outputs.pr_jar_exists }}"
+      #     main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
+      #     pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
+      #     pr_jar_id="${{ steps.check_artifacts.outputs.pr_jar_id }}"
+      #     main_jar_id="${{ steps.check_artifacts.outputs.main_jar_id }}"
+      
+      #     if [[ "$main_jar_exists" != "true" ]]; then
+      #       upload_needed=true
+      #       if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
+      #         jar_name="$pr_jar_name"
+      #         jar_id="$pr_jar_id"
+      #       else
+      #         jar_name="$main_jar_name"
+      #         jar_id="$main_jar_id"
+      #       fi
+      #     fi
+      
+      #     echo "Upload needed: $upload_needed"
+      #     echo "Jar name: $jar_name"
+      #     echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
+      #     echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+      #     echo "jar_id=$jar_id" >> $GITHUB_OUTPUT
+
+      # - name: Upload Artifacts if needed
+      #   if: steps.upload_artifacts.outputs.upload_needed == 'true'
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: ${{ steps.upload_artifacts.outputs.jar_name }}
+      #     path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+
+      - name: Delete old artifacts with the same name
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-309") | .id')
+          for ID in $ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          script: |
-            const fs = require('fs');
-            const testLog = fs.readFileSync('test_output.log', 'utf8');
-            const prNumber = context.payload.pull_request?.number;
-            if (prNumber) {
-              const message = `🚨 Vitest tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
-              github.rest.issues.createComment({
-                ...context.repo,
-                issue_number: prNumber,
-                body: message,
-              });
-            }
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
-        run: exit 1
+          name: build-artifacts-${{ github.event.number }}
+          path: |
+            app/dist
+            shared/dist
+            server/dist
+          overwrite: true
+          retention-days: 90
 
   wait-for-checks:
     runs-on: ubuntu-latest
@@ -392,23 +401,35 @@ jobs:
             exit 1
           fi
 
-      - name: Checkout
+      - name: Determine Download URL
         if: github.event.pull_request.merged == false
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Set up SSH key
-        if: github.event.pull_request.merged == false
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_KEY }}
-
-      - name: Add known hosts
-        if: github.event.pull_request.merged == false
+        id: determine_download_url
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H dev.geolex.org >> ~/.ssh/known_hosts
+          DOWNLOAD_URL=$(gh api repos/earthhistoryviz/tsconline/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-309") | .archive_download_url' | head -n 1)
+          echo "Download URL: $DOWNLOAD_URL"
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+
+      - name: Download build artifacts
+        if: github.event.pull_request.merged == false
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts.zip
+
+      - name: Verify artifact contents
+        run: |
+          ls -R /home/runner/work/tsconline/tsconline
+
+      - name: Send build artifacts to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: dev.geolex.org
+          username: deployuser
+          key: ${{ secrets.SSH_KEY }}
+          source: build-artifacts.zip
+          target: /home/aaron/tsconline/pr-preview-${{ github.event.number }}
 
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
@@ -436,8 +457,7 @@ jobs:
             
             cd "$PR_PREVIEW_DIR"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
-              echo "Container for PR ${PR_NUMBER} is already running. Rebuilding..."
-              docker-compose -f docker-compose-preview.yml up pr-preview-build
+              echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
               docker-compose -f docker-compose-preview.yml restart pr-preview-run
               MAX_WAIT=180
               INTERVAL=5
@@ -462,5 +482,4 @@ jobs:
               cp ../server/.env ./server
               cp ../app/.env ./app
               sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' ./server/.env
-              docker-compose -f docker-compose-preview.yml up pr-preview-build
             fi
