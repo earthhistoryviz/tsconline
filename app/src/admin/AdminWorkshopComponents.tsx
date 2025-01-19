@@ -129,7 +129,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   onClose
 }) {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const [loading, setLoading] = useState(false);
   const [workshop, setWorkshop] = useState<SharedWorkshop | null>(currentWorkshop);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
@@ -140,6 +140,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>(null);
+  const [regLink, setRegLink] = useState<string | undefined>(undefined);
+  const [regRestrict, setRegRestrict] = useState(0);
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
@@ -176,7 +178,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       let created = false;
 
       if (!editMode) {
-        const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end);
+        console.error(regRestrict);
+        const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end, regRestrict, state.user.uuid, regLink);
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
           return;
@@ -243,7 +246,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
 
       if (coverPicture) {
         const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
-        console.log("here");
         if (!response) {
           if (created || edited)
             actions.pushSnackbar(
@@ -342,8 +344,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
     setCoverPicture(uploadedCoverPicture);
   }
-
-
   return (
     <>
       <TSCPopup
@@ -429,6 +429,22 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 disablePast
               />
             </Box>
+            <TextField
+              label="Workshop Registration Link"
+              name="WorkshopRegLink"
+              placeholder="Enter a registration link for the workshop"
+              fullWidth
+              size="small"
+              value={regLink ? regLink : ""}
+              onChange={(event) => setRegLink(event.target.value)}
+            />
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
+              <Typography>Open for public registration?</Typography>
+              <Select value={regRestrict == 1 ? "Yes" : "No"} sx={{ height: '30px' }} onChange={() => { setRegRestrict(regRestrict === 0 ? 1 : 0) }}>
+                <MenuItem sx={{ height: '30px' }} value="Yes">Yes</MenuItem>
+                <MenuItem sx={{ height: '30px' }} value="No">No</MenuItem>
+              </Select>
+            </Box>
             <Box textAlign="center" width="100%">
               <Typography variant="h5" mb="5px">
                 Add Users
@@ -489,7 +505,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   </Typography>
                   <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
                     {coverPicture ? (
-                      // 显示上传的封面图片
+
                       <Avatar
                         variant="square"
                         src={URL.createObjectURL(coverPicture)}
@@ -546,7 +562,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             </Box>
           </Box>
         </Box>
-      </Dialog>
+      </Dialog >
     </>
   );
 });
