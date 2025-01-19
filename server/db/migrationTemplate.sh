@@ -40,7 +40,7 @@ increment_version() {
 latest_version="0.0.0"
 for file in "$migration_directory"/*.ts; do
   # Extract the SemVer prefix from the filename
-  [[ $(basename "$file") =~ ^([0-9]+\.[0-9]+\.[0-9]+)- ]] && current_version="${BASH_REMATCH[1]}"
+  [[ $(basename "$file") =~ ^v([0-9]+\.[0-9]+\.[0-9]+)- ]] && current_version="${BASH_REMATCH[1]}"
   if [[ -n "$current_version" ]] && [[ "$(printf '%s\n' "$latest_version" "$current_version" | sort -V | tail -n 1)" == "$current_version" ]]; then
     latest_version="$current_version"
   fi
@@ -53,7 +53,7 @@ segment_to_increment=${2:-patch}
 next_version=$(increment_version "$latest_version" "$segment_to_increment")
 
 # Create the new migration file
-filename="$migration_directory/$next_version-$1.ts"
+filename="$migration_directory/v$next_version-$1.ts"
 cat > "$filename" <<EOL
 import { type Kysely } from "kysely"
 
