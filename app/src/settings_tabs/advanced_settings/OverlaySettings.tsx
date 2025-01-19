@@ -1,12 +1,15 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
-import { ColumnContainer, TSCCheckbox, Lottie, StyledScrollbar, CustomDivider } from "../../components";
+import { ColumnContainer, TSCCheckbox, Lottie, StyledScrollbar, CustomDivider, Accordion } from "../../components";
 import { Box, Tooltip, Typography, useTheme, IconButton, TextField } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
 import DarkArrowUpIcon from "../../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
+import MuiAccordionSummary from "@mui/material/AccordionSummary";
+import MuiAccordionDetails from "@mui/material/AccordionDetails";
+import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 
 import {
   checkIfDataIsInRange,
@@ -189,24 +192,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, over
   const { state } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
-  //don't display inner columns
-  if (column.children.length > 0) {
-    return (
-      <div>
-        {column.children &&
-          Object.entries(column.children).map(([childName, childColumn]) => (
-            <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
-          ))}
-      </div>
-    );
-  }
-  //don't display columns that are not events or points
-  if (
-    (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-    column.name === state.columnMenu.columnSelected
-  ) {
-    return;
-  }
+  const [expanded, setExpanded] = useState(false);
 
   //for search
   const regExp = getRegex(overlaySearchTerm);
@@ -246,6 +232,121 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, over
         state.settings.timeSettings[column.units].topStageAge,
         state.settings.timeSettings[column.units].baseStageAge
       );
+
+      // if there are no children, don't make an accordion
+  if (column.children.length == 0) {
+    return (
+      <div
+        className={`column-leaf-row-container ${selectedClass}`}
+        onClick={() => {
+          if (
+            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+            column.name === state.columnMenu.columnSelected
+          ) {
+            return;
+          }
+          if (!state.columnMenu.columnSelected) {
+            return;
+          }
+          const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+          if (!refColumn) {
+            return;
+          }
+          if (refColumn.columnDisplayType === "Point") {
+            assertPointSettings(refColumn.columnSpecificSettings);
+          } else if (refColumn.columnDisplayType === "Event") {
+            assertEventSettings(refColumn.columnSpecificSettings);
+          } else {
+            return;
+          }
+          refColumn.columnSpecificSettings.drawDualColCompColumn =
+            `class datastore.${column.columnDisplayType}Column:` + column.name;
+        }}
+        tabIndex={0}>
+        <ColumnContainer className="dcc-column-leaf">
+          {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
+            <Tooltip
+              title={t("settings.column.tooltip.not-in-range")}
+              placement="top"
+              arrow
+              slotProps={{
+                popper: {
+                  modifiers: [
+                    {
+                      name: "offset",
+                      options: {
+                        offset: [0, -10]
+                      }
+                    }
+                  ]
+                }
+              }}>
+              <ErrorOutlineIcon
+                className="column-error-icon"
+                style={{
+                  color: theme.palette.error.main
+                }}
+              />
+            </Tooltip>
+          )}
+          <Typography
+            className={
+              (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
+              column.name === state.columnMenu.columnSelected
+                ? "dcc-not-allowed"
+                : "column-display-name"
+            }>
+            {column.editName}
+          </Typography>
+        </ColumnContainer>
+      </div>
+    );
+  }
+  //for keeping the selected column hierarchy line highlighted
+  const containsSelectedChild = column.children.some((column) => column.name === getSelectedOverlayColumn())
+    ? { opacity: 1 }
+    : {};
+  return (
+    <div className="dcc-accordion-container">
+      {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
+      <Accordion
+        //checks if column name is in expand list
+        expanded={expanded}
+        className="column-accordion">
+        <MuiAccordionSummary
+          onClick={() => {}}
+          tabIndex={0}
+          expandIcon={
+            <ArrowForwardIosSharpIcon
+              color="icon"
+              sx={{ fontSize: "0.9rem" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setExpanded(!expanded);
+              }}
+            />
+          }
+          aria-controls="panel-content"
+          className={`column-accordion-summary ${selectedClass}`}>
+          <ColumnContainer
+            className="column-row-container"
+            sx={{
+              opacity: 1,
+              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
+            }}
+            onClick={() => setExpanded(!expanded)}>
+            <Typography className="column-display-name">{column.editName}</Typography>
+          </ColumnContainer>
+        </MuiAccordionSummary>
+        <MuiAccordionDetails className="column-accordion-details">
+          {column.children &&
+            Object.entries(column.children).map(([childName, childColumn]) => (
+              <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
+            ))}
+        </MuiAccordionDetails>
+      </Accordion>
+    </div>
+  )
 
   return (
     <div
