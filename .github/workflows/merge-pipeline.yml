@@ -117,7 +117,8 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.head_ref }}
 
@@ -161,36 +162,39 @@ jobs:
         run: exit 1
 
       - name: Parse Jar date from config file
-        id: pr_jar_date
+        id: pr_jar_name
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           JAR_DATE=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json)
-          echo "Jar Date: $JAR_DATE"
-          echo "pr_jar_date=$JAR_DATE" >> $GITHUB_OUTPUT
+          JAR_NAME=$(basename "$JAR_PATH")
+          echo "Jar Name: $JAR_NAME"
+          echo "pr_jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
 
-      - name: Checkout config file from main branch
+      - name: Read config file from main branch
+        id: main_config
         if: github.event.pull_request.user.login != 'dependabot[bot]'
-        uses: actions/checkout@v4
+        uses: jaywcjlove/github-action-read-file@main
         with:
-          ref: main
-          sparse-checkout: ${{ github.workspace }}/server/assets/config.json
-  
+          branch: Main
+          path: server/assets/config.json
+
       - name: Parse Jar date from main branch config file
-        id: main_jar_date
+        id: main_jar_name
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
-          JAR_DATE=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json)
-          echo "Jar Date: $JAR_DATE"
-          echo "main_jar_date=$JAR_DATE" >> $GITHUB_OUTPUT
+          JAR_DATE=$(jq -r '.activeJar' ${{ steps.main_config.outputs.content }})
+          JAR_NAME=$(basename "$JAR_PATH")
+          echo "Jar Name: $JAR_NAME"
+          echo "main_jar_name=$JAR_NAME" >> $GITHUB_OUTPUT
 
-      - name: Validate JAR Name
+      - name: Validate JAR Names
         run: |
-          if [[ -z "${{ steps.pr_jar_date.outputs.pr_jar_date }}" ]]; then
-            echo "Error: pr_jar_date is empty. Check config.json format."
+          if [[ -z "${{ steps.pr_jar_name.outputs.pr_jar_name }}" ]]; then
+            echo "Error: pr_jar_name is empty. Check config.json format."
             exit 1
           fi
-          if [[ -z "${{ steps.main_jar_date.outputs.main_jar_date }}" ]]; then
-            echo "Error: main_jar_date is empty. Check config.json format."
+          if [[ -z "${{ steps.main_jar_name.outputs.main_jar_name }}" ]]; then
+            echo "Error: main_jar_name is empty. Check config.json format."
             exit 1
           fi
 
@@ -199,7 +203,7 @@ jobs:
         id: check_jar_artifact
         run: |
           # Check for PR artifact
-          pr_artifact_name="${{ steps.pr_jar_date.outputs.pr_jar_date }}"
+          pr_artifact_name="${{ steps.pr_jar_name.outputs.pr_jar_name }}"
           echo "Checking for PR artifact: $pr_artifact_name"
           if gh api repos/${{ github.repository }}/actions/artifacts \
             --paginate -q '.artifacts[].name' | grep -q "$pr_artifact_name"; then
@@ -207,9 +211,7 @@ jobs:
           else
             echo "pr_jar_artifact_exists=false" >> $GITHUB_OUTPUT
           fi
-
-          # Check for main branch artifact
-          main_artifact_name="${{ steps.main_jar_date.outputs.main_jar_date }}"
+          main_artifact_name="${{ steps.main_jar_name.outputs.main_jar_name }}"
           echo "Checking for Main branch artifact: $main_artifact_name"
           if gh api repos/${{ github.repository }}/actions/artifacts \
             --paginate -q '.artifacts[].name' | grep -q "$main_artifact_name"; then
@@ -222,13 +224,13 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
         uses: actions/download-artifact@v4
         with:
-          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
+          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
           path: ${{ github.workspace }}/server/assets/jars/
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Rename Jar Artifact
         if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'true'
-        run: mv ${{ github.workspace }}/server/assets/jars/${{ steps.pr_jar_date.outputs.pr_jar_date }}.jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+        run: mv ${{ github.workspace }}/server/assets/jars/${{ steps.pr_jar_name.outputs.pr_jar_name }}.jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
 
       - name: Set up SSH key
         if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.pr_jar_artifact_exists == 'false'
@@ -269,10 +271,10 @@ jobs:
           fi
 
       - name: Upload PR Jar Artifact if different from main branch
-        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.pr_jar_date.outputs.pr_jar_date != steps.main_jar_date.outputs.main_jar_date
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.pr_jar_name.outputs.pr_jar_name != steps.main_jar_name.outputs.main_jar_name
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
+          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
           path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
           retention-days: 90
 
@@ -280,7 +282,7 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.check_jar_artifact.outputs.main_jar_artifact_exists == 'false'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.pr_jar_date.outputs.pr_jar_date }}
+          name: ${{ steps.pr_jar_name.outputs.pr_jar_name }}
           path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
           retention-days: 90
         
