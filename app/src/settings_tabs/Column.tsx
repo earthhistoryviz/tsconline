@@ -139,6 +139,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       </div>
     );
   }
+  
   // for keeping the selected column hierarchy line highlighted
   const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
     ? { opacity: 1 }
