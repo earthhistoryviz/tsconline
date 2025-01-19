@@ -521,7 +521,10 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         start: start.toISOString(),
         end: end.toISOString(),
         workshopId: workshop.workshopId,
-        active: start <= now && now <= end
+        active: start <= now && now <= end,
+        regRestrict: workshop.regRestrict,
+        creatorUUID: workshop.creatorUUID,
+        regLink: workshop.regLink
       };
     });
     assertSharedWorkshopArray(workshops);
@@ -539,11 +542,11 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
+  request: FastifyRequest<{ Body: { title: string; start: string; end: string, regRestrict: number, creatorUUID: string, regLink?: string } }>,
   reply: FastifyReply
 ) {
-  const { title, start, end } = request.body;
-  if (!title || !start || !end) {
+  const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
+  if (!title || !start || !end || !regRestrict || !creatorUUID) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -567,7 +570,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString()
+      end: endDate.toISOString(),
+      creatorUUID: creatorUUID,
+      regRestrict: regRestrict,
+      regLink: regLink
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
@@ -577,7 +583,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       workshopId,
-      active: false
+      active: false,
+      creatorUUID: creatorUUID,
+      regRestrict: regRestrict,
+      regLink: regLink
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });

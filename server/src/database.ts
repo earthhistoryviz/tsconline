@@ -292,6 +292,7 @@ export async function findWorkshop(criteria: Partial<Workshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
+  if (criteria.creatorUUID) query = query.where("creatorUUID", "=", criteria.creatorUUID);
   return await query.selectAll().execute();
 }
 
