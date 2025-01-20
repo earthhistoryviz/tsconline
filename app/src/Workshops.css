@@ -13,6 +13,7 @@
   text-overflow: ellipsis;
   line-height: 1em;
   margin: 1px;
+  min-width: auto;
 }
 
 .rbc-label {

@@ -229,9 +229,15 @@ export const Workshops: React.FC = observer(() => {
   //calendar default off unless an event is a week away
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
-    return dummyWorkshops.some(
-      (workshop) => dayjs(workshop.start).isBefore(oneWeekFromNow) && dayjs(workshop.start).isAfter(dayjs())
-    );
+    const now = dayjs();
+    return dummyWorkshops.some((workshop) => {
+      const startDate = dayjs(workshop.start);
+      const endDate = dayjs(workshop.end);
+      return (
+        (startDate.isAfter(now) && startDate.isBefore(oneWeekFromNow)) ||
+        (endDate.isAfter(now) && endDate.isBefore(oneWeekFromNow))
+      );
+    });
   });
 
   //Use day view with smaller screen sizes
@@ -324,7 +330,14 @@ export const Workshops: React.FC = observer(() => {
     const overlappingEvent = !events.every(
       (e) =>
         e === event ||
-        !(e.start && e.end && new Date(e.start!) <= new Date(event.end!) && new Date(e.end!) >= new Date(event.start!))
+        !(
+          e.start &&
+          e.end &&
+          event.start &&
+          event.end &&
+          new Date(e.start) <= new Date(event.end) &&
+          new Date(e.end) >= new Date(event.start)
+        )
     );
 
     const longEvent = dayjs(event.end).diff(dayjs(event.start), "day") > 0;
@@ -335,17 +348,17 @@ export const Workshops: React.FC = observer(() => {
       <Card
         className="rbc-custom-event"
         sx={{
-          justifyContent: "center",
+          justifyContent: calendarView !== "month" && !longEvent ? "center" : "flex-start",
           bgcolor: theme.palette.button.main,
           "&:hover": { backgroundColor: theme.palette.button.dark },
           height: overlappingEvent || (calendarView !== "month" && longEvent) ? "auto" : "140%",
           flexDirection: longOverlappingEvent || (calendarView !== "month" && longEvent) ? "row" : "column",
           alignItems: calendarView === "week" ? "center" : "flex-start",
-          flex: "display",
+          display: "flex",
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              // marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
               height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
             })
         }}
@@ -358,8 +371,10 @@ export const Workshops: React.FC = observer(() => {
             sx={{
               marginLeft: longOverlappingEvent || longEvent ? "4px" : "0"
             }}>
-            {new Date(event.start!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
-            {new Date(event.end!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {new Date(event.start!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            {((calendarView !== "month" && !longEvent) || calendarView === "month") && (
+              <>- {new Date(event.end!).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>
+            )}
           </Typography>
         )}
       </Card>
