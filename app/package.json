@@ -67,7 +67,7 @@
   },
   "private": true,
   "scripts": {
-    "build": "vite build",
+    "build": "tsc && vite build",
     "build-watch": "vite build --watch",
     "dev": "vite",
     "preview": "vite preview",

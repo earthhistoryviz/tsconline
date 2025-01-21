@@ -4,7 +4,7 @@ import checker from "vite-plugin-checker";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), checker({ typescript: true })],
+  plugins: [react()],
   server: {
     open: process.env.VITE_OPEN_SCREEN !== undefined ? process.env.VITE_OPEN_SCREEN === "true" : true,
     port: 5173,
