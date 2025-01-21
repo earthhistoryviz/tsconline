@@ -3,6 +3,7 @@ import BetterSqlite3 from "better-sqlite3";
 import { promises as fs } from "fs";
 import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
 import { Database } from "../dist/types.js";
+import logger from "../src/error-logger.js";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
@@ -27,6 +28,14 @@ This will apply all the migrations that haven't been applied yet.  You don't nee
 To roll back the migrations, you can run `yarn tsx migrate.ts down`. The up command will apply all the migrations, and the down command will roll back the last migration.
 4. Make sure to update the Database types in server/src/types.ts to match the new schema as well as documenting the change in database.ts. This will ensure that the queries in the server code are type-safe.
 */
+
+function getMajorVersion(migrationName: string | null): number {
+  if (!migrationName) {
+    return 0;
+  }
+  const match = migrationName.match(/^v?(\d+)\.\d+\.\d+-/); // Account for 'v' prefix
+  return match ? parseInt(match[1], 10) : 0;
+}
 
 async function migrateToLatest(force: boolean = false) {
   const db = new Kysely<Database>({
@@ -56,14 +65,7 @@ async function migrateToLatest(force: boolean = false) {
   // Get the latest applied migration (if any)
   const lastAppliedMigration = appliedMigrations?.[appliedMigrations.length - 1] || null;
 
-  let lastMajorVersion = 0;
-
-  if (lastAppliedMigration) {
-    const match = lastAppliedMigration.match(/^v?(\d+)\.\d+\.\d+-/); // Account for optional 'v' prefix
-    if (match) {
-      lastMajorVersion = parseInt(match[1], 10); // Extract the major version
-    }
-  }
+  const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
   const nextMigration = migrations.find((migration) => {
     const migrationNameWithoutExtension = migration.replace(/\.ts$/, ""); // Remove .ts extension
@@ -71,15 +73,11 @@ async function migrateToLatest(force: boolean = false) {
   });
 
   if (nextMigration) {
-    const match = nextMigration.match(/^v(\d+)\.\d+\.\d+-/); // Account for optional 'v' prefix
-    if (match) {
-      const nextMajorVersion = parseInt(match[1], 10); // Extract the major version of the next migration
-
-      if (nextMajorVersion > lastMajorVersion && !force) {
-        console.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
-        console.error("Please review the migration and apply it manually with flag --force.");
-        process.exit(1); // Exit the process to enforce manual migration
-      }
+    const nextMajorVersion = getMajorVersion(nextMigration); // Extract the major version of the next migration
+    if (nextMajorVersion > lastMajorVersion && !force) {
+      logger.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
+      logger.error("Please review the migration and apply it manually with flag --force.");
+      process.exit(1); // Exit the process to enforce manual migration
     }
   }
 
@@ -127,46 +125,37 @@ async function rollback() {
 
   // Get the latest applied migration
   const lastAppliedMigration = appliedMigrations[appliedMigrations.length - 1];
+  const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
-  if (lastAppliedMigration) {
-    // Extract the major version from the last applied migration
-    const match = lastAppliedMigration.match(/^v?(\d+)\.\d+\.\d+-/); // Account for 'v' prefix
-    const lastMajorVersion = match ? parseInt(match[1], 10) : 0;
+  const previousMigration = appliedMigrations[appliedMigrations.length - 2] || null;
 
-    // Ensure no major version downgrade would occur
-    const previousMigration = appliedMigrations[appliedMigrations.length - 2] || null;
+  if (previousMigration) {
+    const previousMajorVersion = getMajorVersion(previousMigration);
 
-    if (previousMigration) {
-      const previousMatch = previousMigration.match(/^v?(\d+)\.\d+\.\d+-/);
-      const previousMajorVersion = previousMatch ? parseInt(previousMatch[1], 10) : 0;
-
-      if (previousMajorVersion < lastMajorVersion) {
-        console.error(
-          `Rollback involves a major version downgrade: ${lastMajorVersion} -> ${previousMajorVersion}. Operation aborted.`
-        );
-        process.exit(1); // Prevent rollback
-      }
+    if (previousMajorVersion < lastMajorVersion) {
+      logger.error(
+        `Rollback involves a major version downgrade: ${lastMajorVersion} -> ${previousMajorVersion}. Operation aborted.`
+      );
+      process.exit(1); // Prevent rollback
     }
-
-    // Proceed with rollback
-    const { results, error } = await migrator.migrateDown();
-
-    if (error) {
-      console.error("Failed to rollback:");
-      console.error(error);
-      process.exit(1);
-    }
-
-    results?.forEach((it) => {
-      if (it.status === "Success") {
-        console.log(`Rollback of migration "${it.migrationName}" was executed successfully.`);
-      } else if (it.status === "Error") {
-        console.error(`Failed to rollback migration "${it.migrationName}".`);
-      }
-    });
-  } else {
-    console.log("No applied migrations to roll back.");
   }
+
+  // Proceed with rollback
+  const { results, error } = await migrator.migrateDown();
+
+  if (error) {
+    logger.error("Failed to rollback:");
+    logger.error(error);
+    process.exit(1);
+  }
+
+  results?.forEach((it) => {
+    if (it.status === "Success") {
+      console.log(`Rollback of migration "${it.migrationName}" was executed successfully.`);
+    } else if (it.status === "Error") {
+      logger.error(`Failed to rollback migration "${it.migrationName}".`);
+    }
+  });
 
   await db.destroy();
 }
