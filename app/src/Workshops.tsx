@@ -43,7 +43,7 @@ import {
   dayjsLocalizer,
   ToolbarProps,
   Views,
-  EventWrapperProps
+  EventWrapperProps,
 } from "react-big-calendar";
 import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
@@ -94,8 +94,8 @@ const dummyWorkshops: Workshop[] = [
   // Upcoming Workshops
   {
     title: "Node.js for Beginners",
-    start: "2025-01-17T09:00:00",
-    end: "2025-01-17T15:00:00",
+    start: "2025-01-28T10:00:00",
+    end: "2025-01-29T15:00:00",
     workshopId: 3,
     active: true,
     datapacks: ["Node Basics", "Express.js Overview"],
@@ -194,11 +194,11 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   </Typography>
                   {includeTime && (
                     <>
-                      <Typography variant="body2" color="textSecondary">
-                        {t("workshops.dates.start")} {workshop.start}
+                      <Typography variant="body2" color="textSecondary" fontSize="0.85rem">
+                      {t("workshops.dates.start")} {dayjs(workshop.start).format("MMMM D, YYYY h:mm A")}
                       </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        {t("workshops.dates.end")} {workshop.end}
+                      <Typography variant="body2" color="textSecondary" fontSize="0.85rem">
+                      {t("workshops.dates.end")} {dayjs(workshop.end).format("MMMM D, YYYY h:mm A")}
                       </Typography>
                     </>
                   )}
@@ -354,11 +354,12 @@ export const Workshops: React.FC = observer(() => {
           height: overlappingEvent || (calendarView !== "month" && longEvent) ? "auto" : "140%",
           flexDirection: longOverlappingEvent || (calendarView !== "month" && longEvent) ? "row" : "column",
           alignItems: calendarView === "week" ? "center" : "flex-start",
+          marginTop:  calendarView === "week" && longEvent ? "4px" : "0",
           display: "flex",
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-              // marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
               height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
             })
         }}
@@ -418,6 +419,7 @@ export const Workshops: React.FC = observer(() => {
       {...props}
       startAccessor="start"
       endAccessor="end"
+      onView={(view) => setCalendarView(view)}
       view={calendarView as (typeof Views)[keyof typeof Views]}
       components={{ toolbar: CustomToolbar, eventWrapper: EventWrapper }}
       onSelectEvent={(event) => setWorkshopAndNavigate(event as { workshopId: number })}
@@ -425,7 +427,6 @@ export const Workshops: React.FC = observer(() => {
     />
   );
 
-  //Standard event list for month view
   const events = [
     ...(calendarWorkshopFilter === "All"
       ? dummyWorkshops
