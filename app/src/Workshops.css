@@ -6,6 +6,10 @@
   justify-content: center;
 }
 
+.rbc-time-view .rbc-row {
+  min-height: auto !important;
+}
+
 .custom-event-label {
   font-size: 0.8rem;
   white-space: nowrap;
@@ -80,7 +84,7 @@
 
 .rbc-month-view {
   display: flex !important;
-  min-height: 426px !important;
+  min-height: 386px !important;
 }
 
 .rbc-time-content {
