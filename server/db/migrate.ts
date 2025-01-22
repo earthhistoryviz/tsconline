@@ -3,7 +3,7 @@ import BetterSqlite3 from "better-sqlite3";
 import { promises as fs } from "fs";
 import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
 import { Database } from "../dist/types.js";
-import logger from "../src/error-logger.js";
+import logger from "../dist/error-logger.js";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
@@ -34,7 +34,7 @@ function getMajorVersion(migrationName: string | null): number {
     return 0;
   }
   const match = migrationName.match(/^v?(\d+)\.\d+\.\d+-/); // Account for 'v' prefix
-  return match ? parseInt(match[1], 10) : 0;
+  return match && match[1] ? parseInt(match[1], 10) : 0;
 }
 
 async function migrateToLatest(force: boolean = false) {
@@ -46,7 +46,7 @@ async function migrateToLatest(force: boolean = false) {
 
   const migrationFolder = new URL("migrations", import.meta.url).pathname;
 
-  const migrations = await fs.readdir(migrationFolder);
+  const migrations = (await fs.readdir(migrationFolder)).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
 
   const migrator = new Migrator({
     db,
@@ -67,34 +67,46 @@ async function migrateToLatest(force: boolean = false) {
 
   const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
-  const nextMigration = migrations.find((migration) => {
-    const migrationNameWithoutExtension = migration.replace(/\.ts$/, ""); // Remove .ts extension
-    return !appliedMigrations.some((applied) => applied === migrationNameWithoutExtension);
-  });
+  // Find unapplied migrations grouped by major version
+  const unappliedMigrations = migrations
+    .map((migration) => migration.replace(/\.ts$/, "")) // Remove .ts extension
+    .filter((migration) => !appliedMigrations.includes(migration));
 
-  if (nextMigration) {
-    const nextMajorVersion = getMajorVersion(nextMigration); // Extract the major version of the next migration
-    if (nextMajorVersion > lastMajorVersion && !force) {
-      logger.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
-      logger.error("Please review the migration and apply it manually with flag --force.");
-      process.exit(1); // Exit the process to enforce manual migration
+  const migrationsToApply: string[] = [];
+  for (const migration of unappliedMigrations) {
+    const nextMajorVersion = getMajorVersion(migration);
+
+    if (nextMajorVersion > lastMajorVersion) {
+      if (!force) {
+        logger.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
+        logger.error(
+          `Skipping migration "${migration}". Please review the migration and apply it manually with flag --force.`
+        );
+        break;
+      }
+    }
+
+    // Collect migrations within the same major version or with force
+    if (nextMajorVersion === lastMajorVersion || force) {
+      migrationsToApply.push(migration);
     }
   }
 
-  const { error, results } = await migrator.migrateToLatest();
+  if (migrationsToApply.length === 0) {
+    console.log("No compatible migrations to apply.");
+    await db.destroy();
+    return;
+  }
 
-  results?.forEach((it) => {
-    if (it.status === "Success") {
-      console.log(`migration "${it.migrationName}" was executed successfully`);
-    } else if (it.status === "Error") {
-      console.error(`failed to execute migration "${it.migrationName}"`);
+  for (const migration of migrationsToApply) {
+    const { error } = await migrator.migrateUp(); // Migrate one step up
+    if (error) {
+      console.error(`failed to execute migration "${migration}"`);
+      console.error(error);
+      process.exit(1);
+    } else {
+      console.log(`migration "${migration}" was executed successfully`);
     }
-  });
-
-  if (error) {
-    console.error("failed to migrate");
-    console.error(error);
-    process.exit(1);
   }
 
   await db.destroy();
@@ -124,7 +136,7 @@ async function rollback() {
     .map((migration) => migration.name);
 
   // Get the latest applied migration
-  const lastAppliedMigration = appliedMigrations[appliedMigrations.length - 1];
+  const lastAppliedMigration = appliedMigrations[appliedMigrations.length - 1] || null;
   const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
   const previousMigration = appliedMigrations[appliedMigrations.length - 2] || null;
