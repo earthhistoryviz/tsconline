@@ -34,9 +34,26 @@ export const CrossplotSettings = observer(() => {
 });
 
 const SettingsTab = observer(function SettingsTab({ tab }: { tab: CrossplotSettingsTabs }) {
+  const { state, actions } = useContext(context);
   switch (tab) {
-    case "time":
-      return <CrossplotTime />;
+    case "xAxis":
+      return (
+        <CrossplotTime
+          settings={state.crossplotSettingsTabs.chartXTimeSettings}
+          column={state.crossplotSettingsTabs.chartX}
+          setTimeSettings={actions.setCrossplotChartXTimeSettings}
+          setCrossplotChart={actions.setCrossplotChartX}
+        />
+      );
+    case "yAxis":
+      return (
+        <CrossplotTime
+          settings={state.crossplotSettingsTabs.chartYTimeSettings}
+          column={state.crossplotSettingsTabs.chartY}
+          setTimeSettings={actions.setCrossplotChartYTimeSettings}
+          setCrossplotChart={actions.setCrossplotChartY}
+        />
+      );
     case "column":
       return <Column />;
   }

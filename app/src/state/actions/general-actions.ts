@@ -692,14 +692,17 @@ export const setCrossplotSettingsTabsSelected = action((newtab: number | Crosspl
   }
   switch (newtab) {
     case 0:
-      state.crossplotSettingsTabs.selected = "time";
+      state.crossplotSettingsTabs.selected = "xAxis";
       break;
     case 1:
+      state.crossplotSettingsTabs.selected = "yAxis";
+      break;
+    case 2:
       state.crossplotSettingsTabs.selected = "column";
       break;
     default:
       console.log("WARNING: setCrossplotSettingsTabsSelected: received index number that is unknown: ", newtab);
-      state.crossplotSettingsTabs.selected = "time";
+      state.crossplotSettingsTabs.selected = "xAxis";
   }
 });
 /**
