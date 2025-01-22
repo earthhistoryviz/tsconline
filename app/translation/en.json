@@ -248,7 +248,8 @@
                     "base-name": "Base Age/Stage Name",
                     "not-avaliable": "Not Available for this Unit",
                     "vertical-scale": "Vertical Scale (cm per 1 ",
-                    "helper-text": "Base age should be older than top age"
+                    "helper-text": "Base age should be older than top age",
+                    "vertical-scale-header": "Vertical Scale"
                 }
             },
             "preferences": {

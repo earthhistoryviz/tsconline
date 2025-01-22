@@ -61,18 +61,22 @@ export const CrossplotTimeSelector = observer(function CrossplotTime({
           FormHelperTextProps={{ style: { fontSize: "13px" } }}
         />
       </Box>
-      <TextField
-        className="VerticalScale"
-        label={`${unit ? t("settings.time.interval.vertical-scale") + unit + "):" : pleaseSelectAUnit}`}
-        type="number"
-        size="small"
-        disabled={!unit}
-        value={unit ? settings.unitsPerMY : ""}
-        onChange={(event) => {
-          if (!settings || !unit) return;
-          setTimeSettings({ unitsPerMY: parseFloat(event.target.value) });
-        }}
-      />
+      <Box>
+        <Typography className="IntervalLabel">{t("settings.time.interval.vertical-scale-header")}</Typography>
+        <CustomDivider className="time-form-divider" />
+        <TextField
+          className="VerticalScale"
+          label={`${unit ? t("settings.time.interval.vertical-scale") + unit + "):" : pleaseSelectAUnit}`}
+          type="number"
+          size="small"
+          disabled={!unit}
+          value={unit ? settings.unitsPerMY : ""}
+          onChange={(event) => {
+            if (!settings || !unit) return;
+            setTimeSettings({ unitsPerMY: parseFloat(event.target.value) });
+          }}
+        />
+      </Box>
     </Box>
   );
 });
@@ -92,7 +96,7 @@ export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function Cro
 }: CrossplotTimeProps) {
   const { state } = useContext(context);
   return (
-    <div className={styles.timeSettingsContainer}>
+    <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
       <Select
         value={column?.units || 0}
         onChange={(evt) => {
@@ -117,6 +121,6 @@ export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function Cro
         }}>
         Clear
       </Button>
-    </div>
+    </Box>
   );
 });
