@@ -1,6 +1,108 @@
 .header {
   font-size: 2rem;
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rbc-time-view .rbc-row {
+  min-height: auto !important;
+}
+
+.custom-event-label {
+  font-size: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1em;
+  margin: 1px;
+  min-width: auto;
+}
+
+.rbc-label {
+  font-size: 0.8rem;
+}
+
+.rbc-timeslot-group {
+  border-bottom: 1px solid dimgrey !important; /* Vertical lines */
+}
+
+.rbc-day-slot {
+  border-right: 1px solid dimgrey !important;
+}
+
+.rbc-time-slot {
+  border-top: 1px solid dimgrey !important; /* Horizontal lines */
+}
+
+.rbc-custom-event {
+  cursor: pointer;
+  transition: background-color 0.1s;
+  width: 100%;
+  border-radius: 3px;
+  opacity: 0.85;
+  color: white;
+}
+
+.calendar-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.calendar-toolbar-customization {
+  display: flex;
+  align-items: center;
+  gap: 2;
+  flex-grow: 1;
+  min-width: 200px;
+}
+
+.calendar-toolbar-navigation {
+  position: static;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rbc-row-segment {
+  padding: 0;
+}
+
+.rbc-events-container {
+  width: 100%;
+}
+
+.rbc-day-slot .rbc-tim-slot:after {
+  border-top: 10px solid black;
+  width: 100%;
+}
+
+.rbc-month-view {
+  display: flex !important;
+  min-height: 386px !important;
+}
+
+.rbc-time-content {
+  display: flex !important;
+  max-height: 500px !important;
+}
+
+.rbc-events-container {
+  display: flex !important;
+  flex-grow: 1 !important;
+}
+
+.rbc-toolbar {
+  display: "flex";
+  align-items: "center";
+  justify-content: "space-between";
+  position: "relative";
+  gap: "10px";
 }
 
 .MuiAccordionSummary-root.workshops-summary {
@@ -9,7 +111,6 @@
 }
 
 .description-header {
-  flex-grow: 1;
   text-align: center;
   font-weight: bold;
 }
@@ -29,7 +130,6 @@
 
 .workshop-card {
   width: 250px;
-  height: 300px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
