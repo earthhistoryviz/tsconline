@@ -43,7 +43,7 @@ import {
   dayjsLocalizer,
   ToolbarProps,
   Views,
-  EventWrapperProps,
+  EventWrapperProps
 } from "react-big-calendar";
 import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
@@ -195,10 +195,10 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   {includeTime && (
                     <>
                       <Typography variant="body2" color="textSecondary" fontSize="0.85rem">
-                      {t("workshops.dates.start")} {dayjs(workshop.start).format("MMMM D, YYYY h:mm A")}
+                        {t("workshops.dates.start")} {dayjs(workshop.start).format("MMMM D, YYYY h:mm A")}
                       </Typography>
                       <Typography variant="body2" color="textSecondary" fontSize="0.85rem">
-                      {t("workshops.dates.end")} {dayjs(workshop.end).format("MMMM D, YYYY h:mm A")}
+                        {t("workshops.dates.end")} {dayjs(workshop.end).format("MMMM D, YYYY h:mm A")}
                       </Typography>
                     </>
                   )}
@@ -354,7 +354,7 @@ export const Workshops: React.FC = observer(() => {
           height: overlappingEvent || (calendarView !== "month" && longEvent) ? "auto" : "140%",
           flexDirection: longOverlappingEvent || (calendarView !== "month" && longEvent) ? "row" : "column",
           alignItems: calendarView === "week" ? "center" : "flex-start",
-          marginTop:  calendarView === "week" && longEvent ? "4px" : "0",
+          marginTop: calendarView === "week" && longEvent ? "4px" : "0",
           display: "flex",
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
