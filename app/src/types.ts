@@ -135,7 +135,8 @@ export type Config = {
 };
 
 export const CrossplotSettingsTabs = {
-  time: "Time",
+  xAxis: "xAxis",
+  yAxis: "yAxis",
   column: "Column"
 };
 
@@ -169,6 +170,11 @@ export type TimeSettings = {
     unitsPerMY: number;
     skipEmptyColumns: boolean;
   };
+};
+export type CrossplotTimeSettings = {
+  topStageAge: number;
+  baseStageAge: number;
+  unitsPerMY: number;
 };
 export type ChartSettings = {
   timeSettings: TimeSettings;

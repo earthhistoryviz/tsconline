@@ -1,80 +1,104 @@
 import { observer } from "mobx-react-lite";
-import { TimeSettings } from "../types";
-import { Button, MenuItem, Select, TextField } from "@mui/material";
+import { CrossplotTimeSettings } from "../types";
+import { Box, Button, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./CrossplotTime.module.css";
+import { CustomDivider } from "../components";
+import { ColumnInfo } from "@tsconline/shared";
 
 type CrossplotTimeSelectorProps = {
   unit: string | undefined;
-  settings: TimeSettings[string] | undefined;
+  settings: CrossplotTimeSettings;
+  setTimeSettings: (crossPlotSettings: Partial<CrossplotTimeSettings>) => void;
 };
-export const CrossplotTimeSelector = observer(function CrossplotTime({ unit, settings }: CrossplotTimeSelectorProps) {
-  const { actions } = useContext(context);
+export const CrossplotTimeSelector = observer(function CrossplotTime({
+  unit,
+  settings,
+  setTimeSettings
+}: CrossplotTimeSelectorProps) {
   const { t } = useTranslation();
   const checkAgeRange = () => settings && settings.topStageAge > settings.baseStageAge;
   const pleaseSelectAUnit = "Please select a unit";
   return (
-    <>
-      <TextField
-        size="small"
-        className="UnitTextField"
-        disabled={!settings}
-        label={`${unit || pleaseSelectAUnit}`}
-        type="number"
-        value={!settings || isNaN(settings.topStageAge) ? "" : settings.topStageAge}
-        onChange={(event) => {
-          if (!settings || !unit) return;
-          actions.setTopStageAge(parseFloat(event.target.value), unit);
-        }}
-        error={checkAgeRange()}
-        helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
-        FormHelperTextProps={{ style: { fontSize: "13px" } }}
-      />
-      <TextField
-        size="small"
-        className="UnitTextField"
-        label={`${unit || pleaseSelectAUnit}`}
-        type="number"
-        disabled={!settings}
-        value={!settings || isNaN(settings.baseStageAge) ? "" : settings.baseStageAge}
-        onChange={(event) => {
-          if (!settings || !unit) return;
-          actions.setBaseStageAge(parseFloat(event.target.value), unit);
-        }}
-        error={checkAgeRange()}
-        helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
-        FormHelperTextProps={{ style: { fontSize: "13px" } }}
-      />
+    <Box display="flex" gap="30px" flexDirection="column" width="100%" textAlign="center">
+      <Box>
+        <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
+        <CustomDivider className="time-form-divider" />
+        <TextField
+          size="small"
+          className="UnitTextField"
+          disabled={!unit}
+          label={`${unit || pleaseSelectAUnit}`}
+          type="number"
+          value={unit ? settings.topStageAge : ""}
+          onChange={(event) => {
+            if (!settings || !unit) return;
+            setTimeSettings({ topStageAge: parseFloat(event.target.value) });
+          }}
+          error={checkAgeRange()}
+          helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
+          FormHelperTextProps={{ style: { fontSize: "13px" } }}
+        />
+      </Box>
+      <Box>
+        <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
+        <CustomDivider className="time-form-divider" />
+        <TextField
+          size="small"
+          className="UnitTextField"
+          label={`${unit || pleaseSelectAUnit}`}
+          type="number"
+          disabled={!unit}
+          value={unit ? settings.baseStageAge : ""}
+          onChange={(event) => {
+            if (!settings || !unit) return;
+            setTimeSettings({ baseStageAge: parseFloat(event.target.value) });
+          }}
+          error={checkAgeRange()}
+          helperText={checkAgeRange() ? t("settings.time.interval.helper-text") : ""}
+          FormHelperTextProps={{ style: { fontSize: "13px" } }}
+        />
+      </Box>
       <TextField
         className="VerticalScale"
         label={`${unit ? t("settings.time.interval.vertical-scale") + unit + "):" : pleaseSelectAUnit}`}
         type="number"
         size="small"
-        disabled={!settings}
-        value={settings?.unitsPerMY || ""}
+        disabled={!unit}
+        value={unit ? settings.unitsPerMY : ""}
         onChange={(event) => {
           if (!settings || !unit) return;
-          actions.setUnitsPerMY(parseFloat(event.target.value), unit);
+          setTimeSettings({ unitsPerMY: parseFloat(event.target.value) });
         }}
       />
-    </>
+    </Box>
   );
 });
 
-export const CrossplotTime = observer(function CrossplotTime() {
-  const { state, actions } = useContext(context);
+type CrossplotTimeProps = {
+  settings: CrossplotTimeSettings;
+  column: ColumnInfo | undefined;
+  setTimeSettings: (crossPlotSettings: Partial<CrossplotTimeSettings>) => void;
+  setCrossplotChart: (crossPlotSettings: ColumnInfo | undefined) => void;
+};
+
+export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function CrossplotTime({
+  settings,
+  setTimeSettings,
+  setCrossplotChart,
+  column
+}: CrossplotTimeProps) {
+  const { state } = useContext(context);
   return (
     <div className={styles.timeSettingsContainer}>
-      <Button onClick={() => { actions.setCrossplotChartX(undefined)}}>Clear</Button>
       <Select
-
-        value={state.crossplotSettingsTabs.chartX?.units || 0}
+        value={column?.units || 0}
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
           if (!col) return;
-          actions.setCrossplotChartX(col);
+          setCrossplotChart(col);
         }}>
         {state.settingsTabs.columns &&
           Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
@@ -82,31 +106,17 @@ export const CrossplotTime = observer(function CrossplotTime() {
               {`${column.name} (${column.units})`}
             </MenuItem>
           ))}
-          <MenuItem value={0}>
-            <em>None</em>
-          </MenuItem>
+        <MenuItem value={0}>
+          <em>None</em>
+        </MenuItem>
       </Select>
-      <CrossplotTimeSelector
-        unit={state.crossplotSettingsTabs.chartX?.units}
-        settings={state.settings.timeSettings[state.crossplotSettingsTabs.chartX?.units || ""]}
-      />
-      <Select
-        value={state.crossplotSettingsTabs.chartY?.units || 0}
-        onChange={(evt) => {
-          const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
-          if (!col) return;
-          actions.setCrossplotChartY(col);
+      <CrossplotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
+      <Button
+        onClick={() => {
+          setCrossplotChart(undefined);
         }}>
-        {state.settingsTabs.columns &&
-          Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
-            <MenuItem key={index} value={column.units}>
-              {`${column.name} (${column.units})`}
-            </MenuItem>
-          ))}
-          <MenuItem value={0}>
-            <em>None</em>
-          </MenuItem>
-      </Select>
+        Clear
+      </Button>
     </div>
   );
 });

@@ -235,7 +235,9 @@
             "View Data": "View Data",
             "Discussion": "Discussion",
             "Warnings": "Warnings",
-            "Load/Save": "Load/Save"
+            "Load/Save": "Load/Save",
+            "xAxis": "X Axis",
+            "yAxis": "Y Axis"
         },
         "settings": {
             "time": {
