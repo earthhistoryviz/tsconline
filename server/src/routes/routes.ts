@@ -1,8 +1,22 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath, access } from "fs/promises";
-import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale, DatapackMetadata, isUserDatapack } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists, extractMetadataFromDatapack, isValidMapImagePath, isAllowedPrivatePath } from "../util.js";
+import {
+  TimescaleItem,
+  assertChartRequest,
+  assertTimescale,
+  DatapackMetadata,
+  isUserDatapack
+} from "@tsconline/shared";
+import {
+  deleteDirectory,
+  assetconfigs,
+  verifyFilepath,
+  checkFileExists,
+  extractMetadataFromDatapack,
+  isValidMapImagePath,
+  isAllowedPrivatePath
+} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
