@@ -44,72 +44,74 @@ async function migrateToLatest(force: boolean = false) {
     })
   });
 
-  const migrationFolder = new URL("migrations", import.meta.url).pathname;
+  try {
+    const migrationFolder = new URL("migrations", import.meta.url).pathname;
 
-  const migrations = (await fs.readdir(migrationFolder)).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
+    const migrations = (await fs.readdir(migrationFolder)).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
 
-  const migrator = new Migrator({
-    db,
-    provider: new FileMigrationProvider({
-      fs,
-      path,
-      migrationFolder
-    })
-  });
+    const migrator = new Migrator({
+      db,
+      provider: new FileMigrationProvider({
+        fs,
+        path,
+        migrationFolder
+      })
+    });
 
-  // Get the applied migrations
-  const appliedMigrations = (await migrator.getMigrations())
-    .filter((migration) => migration.executedAt !== undefined)
-    .map((migration) => migration.name);
+    // Get the applied migrations
+    const appliedMigrations = (await migrator.getMigrations())
+      .filter((migration) => migration.executedAt !== undefined)
+      .map((migration) => migration.name);
 
-  // Get the latest applied migration (if any)
-  const lastAppliedMigration = appliedMigrations?.[appliedMigrations.length - 1] || null;
+    // Get the latest applied migration (if any)
+    const lastAppliedMigration = appliedMigrations?.[appliedMigrations.length - 1] || null;
 
-  const lastMajorVersion = getMajorVersion(lastAppliedMigration);
+    const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
-  // Find unapplied migrations grouped by major version
-  const unappliedMigrations = migrations
-    .map((migration) => migration.replace(/\.ts$/, "")) // Remove .ts extension
-    .filter((migration) => !appliedMigrations.includes(migration));
+    // Find unapplied migrations grouped by major version
+    const unappliedMigrations = migrations
+      .map((migration) => migration.replace(/\.ts$/, "")) // Remove .ts extension
+      .filter((migration) => !appliedMigrations.includes(migration));
 
-  const migrationsToApply: string[] = [];
-  for (const migration of unappliedMigrations) {
-    const nextMajorVersion = getMajorVersion(migration);
+    const migrationsToApply: string[] = [];
+    for (const migration of unappliedMigrations) {
+      const nextMajorVersion = getMajorVersion(migration);
 
-    if (nextMajorVersion > lastMajorVersion) {
-      if (!force) {
-        logger.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
-        logger.error(
-          `Skipping migration "${migration}". Please review the migration and apply it manually with flag --force.`
-        );
-        break;
+      if (nextMajorVersion > lastMajorVersion) {
+        if (!force) {
+          logger.error(`Major version change detected: ${lastMajorVersion} -> ${nextMajorVersion}`);
+          logger.error(
+            `Skipping migration "${migration}". Please review the migration and apply it manually with flag --force.`
+          );
+          break;
+        }
+      }
+
+      // Collect migrations within the same major version or with force
+      if (nextMajorVersion === lastMajorVersion || force) {
+        migrationsToApply.push(migration);
       }
     }
 
-    // Collect migrations within the same major version or with force
-    if (nextMajorVersion === lastMajorVersion || force) {
-      migrationsToApply.push(migration);
+    if (migrationsToApply.length === 0) {
+      console.log("No compatible migrations to apply.");
+      await db.destroy();
+      return;
     }
-  }
 
-  if (migrationsToApply.length === 0) {
-    console.log("No compatible migrations to apply.");
+    for (const migration of migrationsToApply) {
+      const { error } = await migrator.migrateUp(); // Migrate one step up
+      if (error) {
+        console.error(`failed to execute migration "${migration}"`);
+        console.error(error);
+        process.exit(1);
+      } else {
+        console.log(`migration "${migration}" was executed successfully`);
+      }
+    }
+  } finally {
     await db.destroy();
-    return;
   }
-
-  for (const migration of migrationsToApply) {
-    const { error } = await migrator.migrateUp(); // Migrate one step up
-    if (error) {
-      console.error(`failed to execute migration "${migration}"`);
-      console.error(error);
-      process.exit(1);
-    } else {
-      console.log(`migration "${migration}" was executed successfully`);
-    }
-  }
-
-  await db.destroy();
 }
 
 async function rollback() {
@@ -118,58 +120,59 @@ async function rollback() {
       database: new BetterSqlite3("TSC.db")
     })
   });
+  try {
+    const migrationFolder = new URL("migrations", import.meta.url).pathname;
 
-  const migrationFolder = new URL("migrations", import.meta.url).pathname;
+    const migrator = new Migrator({
+      db,
+      provider: new FileMigrationProvider({
+        fs,
+        path,
+        migrationFolder
+      })
+    });
 
-  const migrator = new Migrator({
-    db,
-    provider: new FileMigrationProvider({
-      fs,
-      path,
-      migrationFolder
-    })
-  });
+    // Get applied migrations
+    const appliedMigrations = (await migrator.getMigrations())
+      .filter((migration) => migration.executedAt !== undefined)
+      .map((migration) => migration.name);
 
-  // Get applied migrations
-  const appliedMigrations = (await migrator.getMigrations())
-    .filter((migration) => migration.executedAt !== undefined)
-    .map((migration) => migration.name);
+    // Get the latest applied migration
+    const lastAppliedMigration = appliedMigrations[appliedMigrations.length - 1] || null;
+    const lastMajorVersion = getMajorVersion(lastAppliedMigration);
 
-  // Get the latest applied migration
-  const lastAppliedMigration = appliedMigrations[appliedMigrations.length - 1] || null;
-  const lastMajorVersion = getMajorVersion(lastAppliedMigration);
+    const previousMigration = appliedMigrations[appliedMigrations.length - 2] || null;
 
-  const previousMigration = appliedMigrations[appliedMigrations.length - 2] || null;
+    if (previousMigration) {
+      const previousMajorVersion = getMajorVersion(previousMigration);
 
-  if (previousMigration) {
-    const previousMajorVersion = getMajorVersion(previousMigration);
-
-    if (previousMajorVersion < lastMajorVersion) {
-      logger.error(
-        `Rollback involves a major version downgrade: ${lastMajorVersion} -> ${previousMajorVersion}. Operation aborted.`
-      );
-      process.exit(1); // Prevent rollback
+      if (previousMajorVersion < lastMajorVersion) {
+        logger.error(
+          `Rollback involves a major version downgrade: ${lastMajorVersion} -> ${previousMajorVersion}. Operation aborted.`
+        );
+        process.exit(1); // Prevent rollback
+      }
     }
-  }
 
-  // Proceed with rollback
-  const { results, error } = await migrator.migrateDown();
+    // Proceed with rollback
+    const { results, error } = await migrator.migrateDown();
 
-  if (error) {
-    logger.error("Failed to rollback:");
-    logger.error(error);
-    process.exit(1);
-  }
-
-  results?.forEach((it) => {
-    if (it.status === "Success") {
-      console.log(`Rollback of migration "${it.migrationName}" was executed successfully.`);
-    } else if (it.status === "Error") {
-      logger.error(`Failed to rollback migration "${it.migrationName}".`);
+    if (error) {
+      logger.error("Failed to rollback:");
+      logger.error(error);
+      process.exit(1);
     }
-  });
 
-  await db.destroy();
+    results?.forEach((it) => {
+      if (it.status === "Success") {
+        console.log(`Rollback of migration "${it.migrationName}" was executed successfully.`);
+      } else if (it.status === "Error") {
+        logger.error(`Failed to rollback migration "${it.migrationName}".`);
+      }
+    });
+  } finally {
+    await db.destroy();
+  }
 }
 
 const command = process.argv[2];
