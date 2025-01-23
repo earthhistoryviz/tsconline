@@ -2,7 +2,14 @@ import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath, access } from "fs/promises";
 import { DatapackInfoChunk, TimescaleItem, assertChartRequest, assertTimescale } from "@tsconline/shared";
-import { deleteDirectory, assetconfigs, verifyFilepath, checkFileExists } from "../util.js";
+import {
+  deleteDirectory,
+  assetconfigs,
+  verifyFilepath,
+  checkFileExists,
+  isValidMapImagePath,
+  isAllowedPrivatePath
+} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -486,30 +493,6 @@ export const fetchDatapackCoverImage = async function (
   }
 };
 
-interface Request {
-  session: {
-    get: (key: string) => string | undefined;
-  };
-}
-
-/* Utility to validate the path of mappoint images for public and private
- * Path must have 'MapImages' as second to last string in path and end with an image extension */
-const isValidMapImagePath = (pathName: string): boolean => {
-  const pathSegments = pathName.split("/");
-  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
-  const isSecondToLastSegment = pathSegments[pathSegments.length - 2] === "MapImages";
-  return isSecondToLastSegment && isImage;
-};
-
-// Utility to validate private access based on UUID
-const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: Request }): boolean => {
-  const uuid = req.session.get("uuid");
-  if (!uuid) return false;
-  const pathSegments = pathName.split("/");
-  const [uuidFolder] = pathSegments.slice(4);
-  return uuidFolder === uuid && isValidMapImagePath(pathName);
-};
-
 export async function fetchMapImages(
   request: FastifyRequest<{ Params: { type: string; "*": string } }>,
   reply: FastifyReply
@@ -523,7 +506,7 @@ export async function fetchMapImages(
     if (!isVerified) {
       return reply.status(403).send({ error: "Forbidden: invalid path" });
     }
-    const pathName = `/assets/uploads/${type}/${rawPath}`;
+    const pathName = `${assetconfigs.uploadDirectory}/${type}/${rawPath}`;
     const isAllowed =
       type === "private" ? isAllowedPrivatePath({ pathName, req: request }) : isValidMapImagePath(pathName);
 
