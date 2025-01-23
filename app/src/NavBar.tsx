@@ -149,7 +149,7 @@ export const NavBar = observer(function Navbar() {
                   className="settings-sub-menu-item"
                   onClick={() => {
                     assertSettingsTabs(key);
-                    actions.setTab(3);
+                    actions.setTab(4);
                     actions.setSettingsTabsSelected(key);
                     navigate("/settings");
                     settingsMenuToggle(false);
@@ -201,6 +201,7 @@ export const NavBar = observer(function Navbar() {
         <div style={{ flexGrow: 1 }} />
         <TSCButton
           buttonType="gradient"
+          disabled={state.loadingDatapacks}
           onClick={async () => {
             await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
             actions.initiateChartGeneration(navigate, location.pathname);

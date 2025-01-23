@@ -1,19 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader } from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
-import {
-  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
-  deleteUserDatapack,
-  editDatapack,
-  fetchAllUsersDatapacks,
-  fetchUserDatapack,
-  processEditDatapackRequest
-} from "../user/user-handler.js";
-import { isOperationResult } from "../types.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
+import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { DatapackMetadata } from "@tsconline/shared";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -29,37 +23,12 @@ export const editDatapackMetadata = async function editDatapackMetadata(
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
-  const response = await processEditDatapackRequest(request.parts(), uuid).catch(() => {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  });
-  if (!response) {
-    reply.status(500).send({ error: "Failed to process request" });
-    return;
-  }
-  if (isOperationResult(response)) {
-    reply.status(response.code).send({ error: response.message });
-    return;
-  }
   try {
-    const partial = convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(response.fields);
-    const errors = await editDatapack(uuid, datapack, partial);
-    if (errors.length > 0) {
-      reply.status(422).send({ error: "There were errors updating the datapack", errors });
-      return;
-    }
+    const response = await editDatapackMetadataRequestHandler(request.parts(), uuid, datapack);
+    reply.status(response.code).send({ message: response.message });
   } catch (e) {
-    console.error(e);
     reply.status(500).send({ error: "Failed to edit metadata" });
-    return;
-  } finally {
-    // remove temp files; files should be removed normally, but if there is an error, we should remove them here
-    for (const file of response.tempFiles) {
-      await rm(file, { force: true }).catch(() => {
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-      });
-    }
   }
-  reply.send({ message: `Successfully updated ${datapack}` });
 };
 
 export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
@@ -229,9 +198,16 @@ export const requestDownload = async function requestDownload(
   }
 };
 
-// NOTE: this is not used in user-auth.ts since it does not require recaptcha verification
-export const fetchUserDatapacks = async function fetchUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  // for test usage: const uuid = "username";
+/**
+ * Will fetch both user and workshop metadatas
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
   const uuid = request.session.get("uuid");
   if (!uuid) {
     reply.status(401).send({ error: "User not logged in" });
@@ -253,10 +229,69 @@ export const fetchUserDatapacks = async function fetchUserDatapacks(request: Fas
     const workshopDatapacks = await Promise.all(workshopDatapacksPromises);
     const allDatapacks = [...userDatapacks, ...workshopDatapacks.flat()];
 
-    reply.send(allDatapacks);
+    const metadatas: DatapackMetadata[] = allDatapacks.map((datapack) => {
+      return extractMetadataFromDatapack(datapack);
+    });
+
+    reply.send(metadatas);
   } catch (e) {
     console.error(e);
-    reply.status(500).send({ error: "Database or processing error" });
+    reply.status(500).send({ error: "Failed to fetch metadatas" });
+  }
+};
+
+export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
+  request: FastifyRequest<{ Params: { uuid: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { uuid, datapackTitle } = request.params;
+  const datapack = await fetchUserDatapack(uuid, datapackTitle).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack or user does not exist or cannot be found" });
+    return;
+  }
+  if (!datapack.isPublic) {
+    reply.status(401).send({ error: "Datapack is not public" });
+    return;
+  }
+  reply.send(datapack);
+};
+
+export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopUUID, datapackTitle } = request.params;
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0]) {
+      reply.status(401).send({ error: "Unauthorized access" });
+      return;
+    }
+    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
+    if (result.code !== 200) {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+    const datapack = await fetchUserDatapack(workshopUUID, datapackTitle).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
+    if (!datapack) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
+    }
+    reply.send(datapack);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown Error" });
+    return;
   }
 };
 

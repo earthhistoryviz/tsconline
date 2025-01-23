@@ -1,5 +1,6 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import formAutoContent from "form-auto-content";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
@@ -7,14 +8,20 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
+import { fetchPublicUserDatapack } from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
-import * as types from "../src/types";
 import * as uploadDatapack from "../src/upload-datapack";
-import formAutoContent from "form-auto-content";
-import { Datapack } from "@tsconline/shared";
+import * as shared from "@tsconline/shared";
 import { User } from "../src/types";
+import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
+
+vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
+  return {
+    editDatapackMetadataRequestHandler: vi.fn(async () => {})
+  };
+});
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 
 vi.mock("../src/upload-datapack", async () => {
@@ -34,8 +41,10 @@ vi.mock("../src/upload-handlers", async () => {
   };
 });
 
-vi.mock("@tsconline/shared", async () => {
+vi.mock("@tsconline/shared", async (importOriginal) => {
+  const actual = await importOriginal<typeof shared>();
   return {
+    ...actual,
     isPartialDatapackMetadata: vi.fn().mockReturnValue(true)
   };
 });
@@ -50,7 +59,8 @@ vi.mock("../src/error-logger", async () => {
 
 vi.mock("../src/database", async () => {
   return {
-    findUser: vi.fn(() => Promise.resolve([testUser]))
+    findUser: vi.fn(() => Promise.resolve([testUser])),
+    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true)
   };
 });
 
@@ -120,8 +130,13 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    editDatapack: vi.fn().mockResolvedValue({}),
     deleteUserDatapack: vi.fn().mockResolvedValue({})
+  };
+});
+
+vi.mock("../src/cloud/edit-handler.ts", async () => {
+  return {
+    editDatapack: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -183,6 +198,7 @@ beforeAll(async () => {
     };
   });
   await app.register(userRoutes, { prefix: "/user" });
+  app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   // vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
@@ -215,7 +231,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/user/datapack" },
   { method: "DELETE", url: `/user/datapack/${filename}` },
   { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
-  { method: "GET", url: `/user/datapack/${filename}` }
+  { method: "GET", url: `/user/datapack/${filename}` },
+  { method: "GET", url: "/user/workshop/workshop-1/datapack/test" }
 ];
 
 describe("get a single user datapack", () => {
@@ -261,7 +278,7 @@ describe("get a single user datapack", () => {
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
   it("should reply 500 if no metadata is found", async () => {
-    fetchUserDatapack.mockResolvedValueOnce("" as unknown as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce("" as unknown as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -273,7 +290,7 @@ describe("get a single user datapack", () => {
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
   it("should reply 200 if the datapack is successfully retrieved", async () => {
-    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as Datapack);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
@@ -371,132 +388,38 @@ describe("verifyRecaptcha tests", () => {
   });
 });
 
-describe("edit datapack tests", () => {
-  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
-  const processEditDatapackRequest = vi.spyOn(userHandler, "processEditDatapackRequest");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
-  const editDatapack = vi.spyOn(userHandler, "editDatapack");
-  const convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest = vi.spyOn(
-    userHandler,
-    "convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest"
-  );
-  const rm = vi.spyOn(fspModule, "rm");
-  const id = "test";
-  const createForm = (json: Record<string, unknown> = {}) => {
-    if ("example" in json) {
-      json.example = {
-        value: Buffer.from("test"),
-        options: {
-          filename: "test.txt",
-          contentType: "text/plain"
-        }
-      };
-    }
-    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
-    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
-  };
-  beforeEach(() => {
-    createForm();
-    vi.clearAllMocks();
-  });
-  it("should reply 400 if no datapack is provided", async () => {
+describe("editDatapackMetadata", () => {
+  const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
+  it("should return 400 if datapack is not provided", async () => {
     const response = await app.inject({
       method: "PATCH",
       url: "/user/datapack/",
       headers
     });
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(response.json().error).toBe("Missing datapack");
     expect(response.statusCode).toBe(400);
+    expect(await response.json().error).toBe("Missing datapack");
   });
-  it(`should reply 400 if bad body (DatapackMetadata props)`, async () => {
-    processEditDatapackRequest.mockRejectedValueOnce(new Error("Invalid body"));
-    createForm({ example: "test" });
+  it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
+    editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
+      url: "/user/datapack/test",
+      headers
     });
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
-    expect(await response.json().error).toBe("Failed to process request");
-  });
-  it("should return response code if operation result is returned from processEditDatapackRequest", async () => {
-    const operationResult = { code: 500, message: "Error" };
-    isOperationResult.mockReturnValueOnce(true);
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(await response.json().error).toBe(operationResult.message);
-    expect(isOperationResult).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(editDatapack).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(operationResult.code);
-  });
-  it("should reply 500 if an error occurred in editDatapack", async () => {
-    editDatapack.mockRejectedValueOnce(new Error("Database error"));
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
     expect(await response.json().error).toBe("Failed to edit metadata");
-    expect(convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest).toHaveBeenCalledOnce();
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(500);
   });
-  it("should return 422 if there were partial or mitigated errors in editDatapack function", async () => {
-    const errors = ["error1", "error2"];
-    editDatapack.mockResolvedValueOnce(errors);
+  it("should return operation result that editDatapackMetadataRequestHandler returns", async () => {
+    editDatapackMetadataRequestHandler.mockResolvedValueOnce({ code: 200, message: "Success" });
     const response = await app.inject({
       method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
+      url: "/user/datapack/test",
+      headers
     });
-    expect(await response.json()).toEqual({ error: "There were errors updating the datapack", errors });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(response.statusCode).toBe(422);
-  });
-  it("should reply 200 if the datapack is successfully edited and remove temp files", async () => {
-    const operationResult = { code: 200, fields: { id }, tempFiles: ["test.jpg"] };
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(await response.json()).toEqual({ message: `Successfully updated ${id}` });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledWith("test.jpg", { force: true });
+    expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
-  });
-  it("should still reply 200 even if removing temp files failed", async () => {
-    const operationResult = { code: 200, fields: { id }, tempFiles: ["test.jpg"] };
-    processEditDatapackRequest.mockResolvedValueOnce(operationResult);
-    rm.mockRejectedValueOnce(new Error("Error"));
-    const response = await app.inject({
-      method: "PATCH",
-      url: `/user/datapack/${id}`,
-      headers: formHeaders,
-      payload: formData.body
-    });
-    expect(response.json()).toEqual({ message: `Successfully updated ${id}` });
-    expect(editDatapack).toHaveBeenCalledOnce();
-    expect(processEditDatapackRequest).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledWith("test.jpg", { force: true });
-    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ message: "Success" });
   });
 });
 
@@ -999,5 +922,117 @@ describe("uploadDatapack tests", () => {
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
     expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+});
+
+describe("fetchWorkshopDatapack tests", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 when the user is not logged in", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers: { "mock-uuid": "" }
+    });
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 401 if user is not found in database", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 400 if workshopUUID is invalid", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Invalid workshop UUID" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 403 if workshop is not active", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "User does not have access to this workshop" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should reply 404 if the datapack is not found", async () => {
+    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    findUser.mockResolvedValueOnce([testUser as User]);
+    fetchUserDatapack.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Datapack not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should reply 200 when the datapack is successfully fetched", async () => {
+    const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+    findUser.mockResolvedValueOnce([testUser as User]);
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ title: "test" });
+  });
+});
+
+describe("fetchPublicUserDatapack tests", () => {
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 404 if the datapack is not found", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(await response.json()).toEqual({ error: "Datapack or user does not exist or cannot be found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should reply 401 if datapack is private", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(await response.json()).toEqual({ error: "Datapack is not public" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 200 when the datapack is successfully fetched", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test", isPublic: true } as shared.Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ title: "test", isPublic: true });
   });
 });

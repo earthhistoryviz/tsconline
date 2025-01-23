@@ -1,9 +1,8 @@
 import { observer } from "mobx-react-lite";
 import { useLocation, useNavigate, useParams, useBlocker } from "react-router";
 import styles from "./DatapackProfile.module.css";
-import React, { ChangeEvent, useContext, useEffect, useRef, useState } from "react";
+import React, { ChangeEvent, useContext, useEffect, useRef, useState, createContext } from "react";
 import { context } from "./state";
-import { loadRecaptcha } from "./util";
 import {
   Autocomplete,
   Avatar,
@@ -24,7 +23,6 @@ import CampaignIcon from "@mui/icons-material/Campaign";
 import { PageNotFound } from "./PageNotFound";
 import {
   Datapack,
-  DatapackConfigForChartRequest,
   DatapackWarning,
   MAX_AUTHORED_BY_LENGTH,
   MAX_DATAPACK_DESC_LENGTH,
@@ -33,52 +31,110 @@ import {
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH,
-  isUserDatapack
+  isWorkshopDatapack,
+  DatapackUniqueIdentifier,
+  isDatapackTypeString,
+  isUserDatapack,
+  isOfficialDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import { ErrorCodes } from "./util/error-codes";
+import { ErrorCodes, ErrorMessages } from "./util/error-codes";
 import {
-  doesDatapackAlreadyExist,
+  canEditDatapack,
+  doesMetadataAlreadyExist,
+  getDatapackFromArray,
   getDatapackProfileImageUrl,
+  getDatapackUUID,
+  getMetadataFromArray,
   getNavigationRouteForDatapackProfile,
-  hasLeadingTrailingWhiteSpace
+  hasLeadingTrailingWhiteSpace,
+  isOwnedByUser
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
-import { checkDatapackValidity } from "./state/actions/util-actions";
+import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
+import { loadRecaptcha, removeRecaptcha } from "./util";
+
+const SetDatapackContext = createContext<(datapack: Datapack) => void>(() => {});
 
 export const DatapackProfile = observer(() => {
   const { state, actions } = useContext(context);
   const { id } = useParams();
+  const query = new URLSearchParams(useLocation().search);
+  const queryType = query.get("type");
+  const uuid = query.get("uuid");
   const navigate = useNavigate();
   const [tabIndex, setTabIndex] = useState(0);
+  const areParamsValid = !!id && isDatapackTypeString(queryType) && !!uuid;
+  const [datapack, setDatapack] = useState<Datapack | null>(
+    areParamsValid ? getDatapackFromArray({ title: id, type: queryType, uuid }, state.datapacks) : null
+  );
+  const metadata = areParamsValid
+    ? getMetadataFromArray({ title: id, type: queryType, uuid }, state.datapackMetadata)
+    : null;
+  const [loading, setLoading] = useState(metadata && !datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
-  const query = new URLSearchParams(useLocation().search);
-  const fetchDatapack = () => {
-    if (!id) return;
-    const datapack = state.datapacks.find((d) => d.title === id && d.type === query.get("type"));
-    return datapack;
-  };
-  const datapack = fetchDatapack();
-  useEffect(() => {
-    if (datapack && !isMetadataInitialized) {
+  const shouldLoadRecaptcha =
+    !!metadata &&
+    ((isUserDatapack(metadata) && state.user.uuid && isOwnedByUser(metadata, state.user.uuid)) ||
+      isWorkshopDatapack(metadata) ||
+      (state.user.isAdmin && isOfficialDatapack(metadata)));
+  const initializeDatapack = async (controller: AbortController) => {
+    if (!areParamsValid || !metadata) return;
+    if (!datapack) {
+      const fetchedDatapack = await actions.fetchDatapack(metadata, { signal: controller.signal });
+      if (fetchedDatapack) {
+        actions.resetEditableDatapackMetadata(fetchedDatapack);
+        actions.addDatapack(fetchedDatapack);
+        setIsMetadataInitialized(true);
+        setDatapack(fetchedDatapack);
+      }
+    } else if (!isMetadataInitialized) {
       actions.resetEditableDatapackMetadata(datapack);
       setIsMetadataInitialized(true);
     }
-  }, [query.get("type"), id, isMetadataInitialized, datapack]);
+    setLoading(false);
+  };
+  const initializePage = async (controller: AbortController) => {
+    if (shouldLoadRecaptcha) {
+      await loadRecaptcha();
+    }
+    await initializeDatapack(controller);
+  };
+  useEffect(() => {
+    const controller = new AbortController();
+    initializePage(controller).catch((e) => {
+      console.error("Error fetching datapack", e);
+      displayServerError(e, ErrorCodes.UNABLE_TO_FETCH_DATAPACKS, ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_DATAPACKS]);
+    });
+    return () => {
+      if (shouldLoadRecaptcha) {
+        removeRecaptcha();
+      }
+      // if the user navigates away from the page quickly, the recaptcha script will be removed but the fetch will still be in progress causing an error as well as a zombie fetch request so we need to abort the fetch request
+      // a second issue is that due to strict mode the initial fetch will be aborted because React will call the cleanup before fetching is done causing the page to flicker to the 404 page for a split second
+      // the second fetch in the second useEffect will be successful and the page will render correctly
+      // this is not an issue in prod since strict mode is disabled
+      if (import.meta.env.MODE !== "development") {
+        // if we're in prod, we do want to abort to prevent errors and zombie fetch requests
+        // but if we're in dev, skip aborting so we don’t see that flicker, will see occasional recaptcha errors
+        controller.abort();
+      }
+    };
+  }, [queryType, id, isMetadataInitialized]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
   }, []);
-  if (!datapack || !id) return <PageNotFound />;
-  if (state.datapackProfilePage.editMode) loadRecaptcha();
+  if (loading) return <TSCDialogLoader open={true} transparentBackground />;
+  if (!metadata || !datapack || !areParamsValid) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {
@@ -99,10 +155,10 @@ export const DatapackProfile = observer(() => {
     }
   ];
   const Content: React.FC = observer(() => (
-    <>
+    <SetDatapackContext.Provider value={setDatapack}>
       <TSCDialogLoader open={state.datapackProfilePage.editRequestInProgress} transparentBackground />
       <div className={styles.header}>
-        <IconButton className={styles.back} onClick={() => navigate("/settings")}>
+        <IconButton className={styles.back} onClick={() => navigate(-1)}>
           <ArrowBackIcon className={styles.icon} />
         </IconButton>
         {state.datapackProfilePage.editMode ? (
@@ -125,12 +181,12 @@ export const DatapackProfile = observer(() => {
         ) : (
           <Typography className={styles.ht}>{datapack.title}</Typography>
         )}
-        <DatapackImage id={datapack.title} image={image} />
+        <DatapackImage datapack={datapack} image={image} />
       </div>
       <CustomTabs className={styles.tabs} centered value={tabIndex} onChange={(val) => setTabIndex(val)} tabs={tabs} />
       <CustomDivider className={styles.divider} />
       <DatapackProfileContent index={tabIndex} datapack={datapack} />
-    </>
+    </SetDatapackContext.Provider>
   ));
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -148,23 +204,32 @@ export const DatapackProfile = observer(() => {
       // types are really odd so I have decided to cast here, any other opinions are welcome
       const tempDatapackConfig = {
         ...state.datapackProfilePage.editableDatapackMetadata,
-        storedFileName: ""
-      } as DatapackConfigForChartRequest;
+        ...(isUserDatapack(metadata) || isWorkshopDatapack(metadata) ? { uuid: metadata.uuid } : {})
+      } as DatapackUniqueIdentifier;
       if (
         state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title &&
-        doesDatapackAlreadyExist(tempDatapackConfig, state.datapacks)
+        doesMetadataAlreadyExist(tempDatapackConfig, state.datapackMetadata)
       ) {
         actions.pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
         return;
       }
-      const result = await actions.handleDatapackEdit(datapack, state.datapackProfilePage.editableDatapackMetadata);
+      const editedDatapack = await actions.handleDatapackEdit(
+        datapack,
+        state.datapackProfilePage.editableDatapackMetadata
+      );
+      if (editedDatapack) {
+        setDatapack(editedDatapack);
+        actions.setDatapackProfilePageEditMode(false);
+      }
       // if the title has changed, navigate to the new title
-      if (result && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && query.get("type")) {
+      if (editedDatapack && state.datapackProfilePage.editableDatapackMetadata.title !== datapack.title && queryType) {
         navigate(
           getNavigationRouteForDatapackProfile(
+            getDatapackUUID(datapack),
             state.datapackProfilePage.editableDatapackMetadata.title,
-            query.get("type")!
-          )
+            queryType!
+          ),
+          { replace: true }
         );
       }
     }
@@ -187,15 +252,15 @@ export const DatapackProfile = observer(() => {
 
 type DatapackImageProps = {
   image: string;
-  id: string;
+  datapack: DatapackUniqueIdentifier;
 };
-const DatapackImage: React.FC<DatapackImageProps> = observer(({ id, image }) => {
+const DatapackImage: React.FC<DatapackImageProps> = observer(({ datapack, image }) => {
   const { state, actions } = useContext(context);
   const profileImageRef = useRef<HTMLInputElement>(null);
   const handleDatapackImageChange = async () => {
     if (profileImageRef.current && profileImageRef.current.files && profileImageRef.current.files[0]) {
       const file = profileImageRef.current.files[0];
-      await actions.replaceUserProfileImageFile(id, file);
+      await actions.replaceProfileImageFile(datapack, file);
     }
   };
   // add a query parameter to the image to force a refresh when the image is updated (@PAOLO IF ANY OTHER WAY TO DO THIS IS KNOWN PLEASE LET ME KNOW)
@@ -311,7 +376,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
-        {isUserDatapack(datapack) && datapack.uuid === state.user.uuid && (
+        {canEditDatapack(datapack, state.user) && (
           <EditButtons
             unsavedChanges={state.datapackProfilePage.unsavedChanges}
             resetForm={() => actions.resetEditableDatapackMetadata(datapack)}
@@ -325,7 +390,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <DateField datapackDate={datapack.date} />
         </div>
         <div className={styles.ai}>
-          <PublicField isPublic={datapack.isPublic} />
+          <PublicField isPublic={datapack.isPublic} disabled={isWorkshopDatapack(datapack)} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>Total Columns</Typography>
@@ -333,7 +398,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Name</Typography>
-          <DatapackFile id={datapack.title} fileName={datapack.originalFileName} />
+          <DatapackFile datapack={datapack} fileName={datapack.originalFileName} />
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
@@ -354,8 +419,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
 });
 type PublicFieldProps = {
   isPublic: boolean;
+  disabled: boolean;
 };
-const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
+const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic, disabled }) => {
   const { state, actions } = useContext(context);
   const PrivateComp = () => (
     <>
@@ -373,9 +439,14 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
     <>
       <Typography className={styles.aih}>Privacy</Typography>
       {state.datapackProfilePage.editMode ? (
-        <Box className={styles.privacyContainer}>
+        <Box
+          className={styles.privacyContainer}
+          sx={{
+            opacity: disabled ? 0.5 : 1
+          }}>
           <PrivateComp />
           <TSCSwitch
+            disabled={disabled}
             checked={state.datapackProfilePage.editableDatapackMetadata?.isPublic}
             onChange={(e) => {
               actions.updateEditableDatapackMetadata({ isPublic: e.target.checked });
@@ -389,17 +460,19 @@ const PublicField: React.FC<PublicFieldProps> = observer(({ isPublic }) => {
     </>
   );
 });
+
 type DatapackFileProps = {
   fileName: string;
-  id: string;
+  datapack: DatapackUniqueIdentifier;
 };
-
-const DatapackFile: React.FC<DatapackFileProps> = observer(({ id, fileName }) => {
+const DatapackFile: React.FC<DatapackFileProps> = observer(({ datapack, fileName }) => {
   const { state, actions } = useContext(context);
+  const setDatapack = useContext(SetDatapackContext);
   const handleFileUpload = async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file || !checkDatapackValidity(file)) return;
-    await actions.replaceUserDatapackFile(id, file);
+    const newDatapack = await actions.replaceDatapackFile(datapack, file);
+    if (newDatapack) setDatapack(newDatapack);
   };
   return (
     <>

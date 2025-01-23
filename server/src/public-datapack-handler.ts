@@ -16,11 +16,11 @@ import { isUUIDFolderAWorkshopFolder } from "./workshop/workshop-util.js";
 
 const mutex = new Mutex();
 
-export async function loadPublicUserDatapacks(uuidChunk?: string[]) {
+export async function loadPublicUserDatapacks() {
   const release = await mutex.acquire();
   try {
     const datapacks: Datapack[] = [];
-    const uuids = uuidChunk ? uuidChunk : await getDirectories(assetconfigs.publicDatapacksDirectory);
+    const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
       if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {
@@ -47,7 +47,8 @@ export async function switchPrivacySettingsOfDatapack(
   uuid: string,
   datapack: string,
   formerIsPublic: boolean,
-  newIsPublic: boolean
+  newIsPublic: boolean,
+  isTemporaryFile?: boolean
 ) {
   if (formerIsPublic === newIsPublic) {
     return;
@@ -63,10 +64,12 @@ export async function switchPrivacySettingsOfDatapack(
       throw new Error("Invalid datapack path");
     }
     await rename(oldDatapackPath, newDatapackPath);
-    await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
-      await rename(newDatapackPath, oldDatapackPath);
-      throw e;
-    });
+    if (isTemporaryFile) {
+      await changeFileMetadataKey(assetconfigs.fileMetadata, oldDatapackPath, newDatapackPath).catch(async (e) => {
+        await rename(newDatapackPath, oldDatapackPath);
+        throw e;
+      });
+    }
   } finally {
     release();
   }

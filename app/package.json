@@ -35,6 +35,7 @@
     "mobx-react-lite": "^3.4.0",
     "node-fetch": "^3.3.0",
     "react": "^18.2.0",
+    "react-big-calendar": "^1.17.1",
     "react-bootstrap": "^2.7.4",
     "react-card-flip": "^1.2.2",
     "react-dom": "^18.2.0",
@@ -58,10 +59,12 @@
     "@types/i18next": "^13.0.0",
     "@types/lodash": "^4.17.4",
     "@types/react": "^18.0.27",
+    "@types/react-big-calendar": "^1",
     "@types/react-dom": "^18.0.10",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "5.2.2",
-    "vite": "^5.4.11",
+    "vite": "^5.4.12",
+    "vite-plugin-checker": "^0.8.0",
     "vitest": "^1.6.0"
   },
   "private": true,
@@ -70,7 +73,7 @@
     "build-watch": "vite build --watch",
     "dev": "vite",
     "preview": "vite preview",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist .tsbuildinfo"
   },
   "type": "module"
 }

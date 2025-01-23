@@ -36,10 +36,6 @@ export type SuccessfulServerResponse = {
   message: string;
 };
 
-export type DatapackInfoChunk = {
-  datapacks: Datapack[];
-  totalChunks: number;
-};
 export type MapPackInfoChunk = {
   mapPackIndex: MapPackIndex;
   totalChunks: number;
@@ -47,14 +43,14 @@ export type MapPackInfoChunk = {
 
 export type ServerResponse = SuccessfulServerResponse | ServerResponseError;
 
-type OfficialDatapack = {
+export type OfficialDatapack = {
   type: "official";
 };
-type WorkshopDatapack = {
+export type WorkshopDatapack = {
   type: "workshop";
   uuid: string;
 };
-type UserDatapack = {
+export type UserDatapack = {
   type: "user";
   uuid: string;
 };
@@ -611,6 +607,16 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function isOfficialUUID(uuid: string): boolean {
+  return uuid === "official";
+}
+export function isWorkshopUUID(uuid: string): boolean {
+  const workshopPrefix = "workshop-";
+  if (uuid === workshopPrefix) return false;
+  const workshopId = Number(uuid.slice(workshopPrefix.length));
+  return uuid.startsWith(workshopPrefix) && !isNaN(workshopId) && Number.isInteger(workshopId) && workshopId > 0;
+}
+
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");
   if (typeof o.message !== "string") throwError("DatapackPriorityUpdateSuccess", "message", "string", o.message);
@@ -635,6 +641,12 @@ export function assertDatapackPriorityChangeRequest(o: any): asserts o is Datapa
   assertDatapackTypeString(o.uuid);
   if (typeof o.id !== "string") throwError("DatapackPriorityChangeRequest", "id", "string", o.id);
   if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
+}
+
+export function extractDatapackType(o: DatapackType): DatapackType {
+  const datapackType = { type: o.type, ...(isWorkshopDatapack(o) || isUserDatapack(o) ? { uuid: o.uuid } : {}) };
+  assertDatapackType(datapackType);
+  return datapackType;
 }
 
 export type BatchUpdateServerPartialError = {
@@ -875,11 +887,6 @@ export function assertMapPackInfoChunk(o: any): asserts o is MapPackInfoChunk {
   assertMapPackIndex(o.mapPackIndex);
 }
 
-export function assertDatapackInfoChunk(o: any): asserts o is DatapackInfoChunk {
-  if (!o || typeof o !== "object") throw new Error("DatapackInfoChunk must be a non-null object");
-  if (typeof o.totalChunks !== "number") throwError("DatapackInfoChunk", "totalChunks", "number", o.totalChunks);
-  assertDatapackArray(o.datapacks);
-}
 export function assertDatapackArray(o: any): asserts o is Datapack[] {
   if (!Array.isArray(o)) throw new Error("Datapack must be an array");
   for (const datapack of o) {
@@ -1799,5 +1806,23 @@ export function assertTimescale(val: any): asserts val is TimescaleItem {
   }
   if (typeof val.key !== "string" || typeof val.value !== "number") {
     throwError("Timescale", "'key' of type string and 'value' of type number", "", val);
+  }
+}
+
+export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUniqueIdentifier {
+  if (!o || typeof o !== "object") throw new Error("DatapackUniqueIdentifier must be a non-null object");
+  if (typeof o.title !== "string") throwError("DatapackUniqueIdentifier", "title", "string", o.title);
+  switch (o.type) {
+    case "official":
+      assertOfficialDatapack(o);
+      break;
+    case "workshop":
+      assertWorkshopDatapack(o);
+      break;
+    case "user":
+      assertUserDatapack(o);
+      break;
+    default:
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }

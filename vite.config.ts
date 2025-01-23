@@ -28,13 +28,18 @@ export default defineConfig({
         "shared/src/util.ts": thresholdConfig,
         "server/src/upload-handlers.ts": thresholdConfig,
         "server/src/upload-datapack.ts": thresholdConfig,
-        "server/src/user-auth.ts": thresholdConfig
+        "server/src/user-auth.ts": thresholdConfig,
+        "server/src/cloud/general-cloud-requests.ts": thresholdConfig,
+        "server/src/cloud/edit-handler.ts": thresholdConfig,
+        "server/src/workshop/workshop-auth.ts": thresholdConfig,
+        "server/src/workshop/workshop-routes.ts": thresholdConfig,
+        "server/src/constants.ts": thresholdConfig,
+        "server/src/error-logger.ts": thresholdConfig
         // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig
       },
       ignoreEmptyLines: true
-    },
-    outputFile: "coverage/sonar-report.xml"
+    }
   },
   resolve: {
     alias: [{ find: "@/", replacement: fileURLToPath(new URL("./", import.meta.url)) }]

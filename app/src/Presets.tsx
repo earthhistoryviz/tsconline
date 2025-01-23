@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig, DatapackConfigForChartRequest, assertDatapackConfigForChartRequest } from "@tsconline/shared";
+import { ChartConfig, DatapackConfigForChartRequest, extractDatapackType } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box } from "@mui/material";
@@ -10,7 +10,6 @@ import { useTheme } from "@mui/material/styles";
 import { TSCCard, StyledScrollbar } from "./components";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
-import _ from "lodash";
 import { useTranslation } from "react-i18next";
 
 export const Presets = () => {
@@ -69,18 +68,39 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                   <TSCCard
                     preset={preset}
                     generateChart={async () => {
-                      let datapacks: DatapackConfigForChartRequest[] = [];
+                      const datapacks: DatapackConfigForChartRequest[] = [];
                       try {
-                        datapacks = preset.datapacks.map((dp) => {
-                          const datapack = _.cloneDeep(
-                            state.datapacks.find((d) => d.title === dp.name && d.type == "official")
+                        for (const dp of preset.datapacks) {
+                          const stateDatapack = state.datapacks.find(
+                            (d) => d.title === dp.name && d.type === "official"
                           );
-                          assertDatapackConfigForChartRequest(datapack);
-                          return datapack;
-                        });
+                          if (stateDatapack) {
+                            datapacks.push({
+                              title: stateDatapack.title,
+                              isPublic: stateDatapack.isPublic,
+                              storedFileName: stateDatapack.storedFileName,
+                              ...extractDatapackType(stateDatapack)
+                            });
+                            continue;
+                          }
+                          actions.setLoadingDatapacks(true);
+                          const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
+                          if (!fetchedDatapack) {
+                            return;
+                          }
+                          actions.addDatapack(fetchedDatapack);
+                          datapacks.push({
+                            title: fetchedDatapack.title,
+                            isPublic: fetchedDatapack.isPublic,
+                            storedFileName: fetchedDatapack.storedFileName,
+                            ...extractDatapackType(fetchedDatapack)
+                          });
+                        }
                       } catch (e) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
                         return;
+                      } finally {
+                        actions.setLoadingDatapacks(false);
                       }
                       const success = await actions.processDatapackConfig(datapacks, preset.settings);
                       if (!success) return;

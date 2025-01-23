@@ -25,7 +25,8 @@ import type {
   DatapackConfigForChartRequest,
   SharedWorkshop,
   Datapack,
-  DatapackPriorityChangeRequest
+  DatapackPriorityChangeRequest,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -81,7 +82,7 @@ export type State = {
     workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
-      tempRowData: Datapack[] | null;
+      tempRowData: DatapackMetadata[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
     };
   };
@@ -109,10 +110,13 @@ export type State = {
   config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
-  datapacks: Datapack[]; // all datapacks on the server
+  loadingDatapacks: boolean;
+  datapackMetadata: DatapackMetadata[]; // all datapacks on the server, loaded on page load
+  datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
   skeletonStates: {
     presetsLoading: boolean;
-    officialDatapacksLoading: boolean;
+    publicOfficialDatapacksLoading: boolean;
+    privateOfficialDatapacksLoading: boolean;
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
@@ -244,10 +248,13 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  loadingDatapacks: false,
+  datapackMetadata: [],
   datapacks: [],
   skeletonStates: {
     presetsLoading: true,
-    officialDatapacksLoading: true,
+    publicOfficialDatapacksLoading: true,
+    privateOfficialDatapacksLoading: true,
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },

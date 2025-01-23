@@ -26,10 +26,11 @@ import {
   pushError,
   pushSnackbar,
   removeAllErrors,
-  removeDatapack
+  removeDatapack,
+  setPrivateOfficialDatapacksLoading
 } from "./general-actions";
 import { State } from "../state";
-import { getDatapackFromArray } from "../non-action-util";
+import { getMetadataFromArray } from "../non-action-util";
 import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
 
 export const adminFetchUsers = action(async () => {
@@ -292,7 +293,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
     const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
     if (!recaptchaToken) return;
-    if (getDatapackFromArray(metadata, state.datapacks)) {
+    if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -339,7 +340,8 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   }
 );
 
-export const adminFetchPrivateOfficialDatapacks = action(async () => {
+export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
+  setPrivateOfficialDatapacksLoading(true);
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
@@ -348,7 +350,8 @@ export const adminFetchPrivateOfficialDatapacks = action(async () => {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      }
+      },
+      ...options
     });
     if (response.ok) {
       const array = await response.json();
@@ -368,9 +371,12 @@ export const adminFetchPrivateOfficialDatapacks = action(async () => {
       );
     }
   } catch (error) {
+    if ((error as Error).name === "AbortError") return;
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
+  } finally {
+    setPrivateOfficialDatapacksLoading(false);
   }
 });
 
@@ -734,10 +740,10 @@ export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriority
       if (response.ok) {
         assertDatapackPriorityUpdateSuccess(json);
         json.completedRequests.forEach((datapack) => {
-          const index = state.datapacks.findIndex((d) => d.title === datapack.id);
+          const index = state.datapackMetadata.findIndex((d) => d.title === datapack.id);
           if (index !== -1) {
             runInAction(() => {
-              state.datapacks[index].priority = datapack.priority;
+              state.datapackMetadata[index].priority = datapack.priority;
             });
           }
         });

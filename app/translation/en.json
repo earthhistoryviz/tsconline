@@ -160,6 +160,7 @@
             "header": "Your Registered Workshops",
             "description-header": "Click a workshop to see more information!",
             "titles": {
+                "all": "All Workshops",
                 "upcoming": "Upcoming Workshops",
                 "active": "Active Workshops",
                 "past": "Past Workshops"
@@ -182,12 +183,42 @@
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available"
                 }
+            },
+            "calendar": {
+                "switchLabel": "Toggle calendar",
+                "month": "Month",
+                "week": "Week",
+                "days": {
+                    "sunday": "Sun",
+                    "monday": "Mon",
+                    "tuesday": "Tue",
+                    "wednesday": "Wed",
+                    "thursday": "Thu",
+                    "friday": "Fri",
+                    "saturday": "Sat"
+                },
+                "months": 
+                {
+                    "1": "January",
+                    "2": "February",
+                    "3": "March",
+                    "4": "April",
+                    "5": "May",
+                    "6": "June",
+                    "7": "July",
+                    "8": "August",
+                    "9": "September",
+                    "10": "October",
+                    "11": "November",
+                    "12": "December"
+                }
             }
         },
         "loading": {
             "loading-chart": "Loading Chart...",
             "loading-datapacks": "Loading Datapacks",
-            "time": "this could take more than a minute"
+            "time": "this could take more than a minute",
+            "fetching-datapacks": "Fetching Datapacks"
         },
         "settingsTabs": {
             "Time": "Time",
@@ -491,6 +522,7 @@
             "SERVER_TIMEOUT": "Server timed out. Please try again later.",
             "SERVER_BUSY": "Server is too busy. Please try again later.",
             "ADMIN_DELETE_USER_FAILED": "Unable to delete user. Please try again later.",
+            "UNABLE_TO_FETCH_DATAPACKS": "Unable to fetch datapacks. Please try again later.",
             "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
             "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
             "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
@@ -523,7 +555,9 @@
             "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance.",
             "ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add official datapack to workshop. Please try again later.",
             "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
-            "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it."
+            "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
+            "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
+            "METADATA_NOT_FOUND": "Metadata not found. Please try again later."
         },
         "button": {
             "generate": "Generate",
