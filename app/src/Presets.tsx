@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useContext } from "react";
 import { observer } from "mobx-react-lite";
 import { NavigateFunction, useNavigate } from "react-router-dom";
-import { ChartConfig, DatapackConfigForChartRequest } from "@tsconline/shared";
+import { ChartConfig, DatapackConfigForChartRequest, extractDatapackType } from "@tsconline/shared";
 import { context } from "./state";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { Accordion, AccordionSummary, AccordionDetails, Grid, Typography, Box } from "@mui/material";
@@ -75,7 +75,12 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             (d) => d.title === dp.name && d.type === "official"
                           );
                           if (stateDatapack) {
-                            datapacks.push(stateDatapack);
+                            datapacks.push({
+                              title: stateDatapack.title,
+                              isPublic: stateDatapack.isPublic,
+                              storedFileName: stateDatapack.storedFileName,
+                              ...extractDatapackType(stateDatapack)
+                            });
                             continue;
                           }
                           actions.setLoadingDatapacks(true);
@@ -84,7 +89,12 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             return;
                           }
                           actions.addDatapack(fetchedDatapack);
-                          datapacks.push(fetchedDatapack);
+                          datapacks.push({
+                            title: fetchedDatapack.title,
+                            isPublic: fetchedDatapack.isPublic,
+                            storedFileName: fetchedDatapack.storedFileName,
+                            ...extractDatapackType(fetchedDatapack)
+                          });
                         }
                       } catch (e) {
                         actions.pushError(ErrorCodes.NO_DATAPACK_FILE_FOUND);
