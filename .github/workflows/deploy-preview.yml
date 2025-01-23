@@ -63,10 +63,7 @@ jobs:
               docker stop $RUNNING_CONTAINER
               docker rm $RUNNING_CONTAINER
             fi 
-            BUILD_CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-build)
-            if [ -n "$BUILD_CONTAINER_ID" ]; then
-              docker wait $BUILD_CONTAINER_ID
-            fi
+
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
             if [ -z "$CONTAINER_ID" ]; then
