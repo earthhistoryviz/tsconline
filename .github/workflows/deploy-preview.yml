@@ -62,8 +62,7 @@ jobs:
               echo "Stopping and removing container $RUNNING_CONTAINER"
               docker stop $RUNNING_CONTAINER
               docker rm $RUNNING_CONTAINER
-            fi 
-
+            fi
             docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
             CONTAINER_ID=$(docker-compose -f docker-compose-preview.yml ps -q pr-preview-run)
             if [ -z "$CONTAINER_ID" ]; then
