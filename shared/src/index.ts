@@ -643,6 +643,12 @@ export function assertDatapackPriorityChangeRequest(o: any): asserts o is Datapa
   if (typeof o.priority !== "number") throwError("DatapackPriorityChangeRequest", "priority", "number", o.priority);
 }
 
+export function extractDatapackType(o: DatapackType): DatapackType {
+  const datapackType = { type: o.type, ...(isWorkshopDatapack(o) || isUserDatapack(o) ? { uuid: o.uuid } : {}) };
+  assertDatapackType(datapackType);
+  return datapackType;
+}
+
 export type BatchUpdateServerPartialError = {
   message: string;
   errors: string[];
