@@ -418,10 +418,6 @@ jobs:
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts.zip
 
-      - name: Verify artifact contents
-        run: |
-          ls -R /home/runner/work/tsconline/tsconline
-
       - name: Send build artifacts to server
         uses: appleboy/scp-action@v0.1.7
         with:
@@ -476,6 +472,11 @@ jobs:
               echo "Succesfully built"
             else
               echo "Setting up files for PR #${PR_NUMBER}"
+              unzip build-artifacts.zip
+              mv app/dist app
+              mv shared/dist shared
+              mv server/dist server
+              rm build-artifacts.zip
               cp ../server/assets/jars/* ./server/assets/jars/
               mkdir -p ./server/assets/datapacks
               cp ../server/assets/datapacks/* ./server/assets/datapacks/
