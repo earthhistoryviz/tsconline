@@ -1355,10 +1355,3 @@ export const setCrossPlotLockX = action((lockX: boolean) => {
 export const setCrossPlotLockY = action((lockY: boolean) => {
   state.chartTab.crossplot.lockY = lockY;
 });
-
-export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartX = chart;
-});
-export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartY = chart;
-});
