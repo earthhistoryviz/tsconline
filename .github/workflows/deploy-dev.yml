@@ -14,9 +14,10 @@ jobs:
       name: development
       url: ${{ vars.WEBSITE_URL }}
     steps:
-      - name: Get commit message
+      - name: Extract PR number
         id: commit_message
-        run: echo "commit_message=$(git log --format=%B -n 1 ${{ github.sha }})" >> $GITHUB_OUTPUT
+        run: |
+          commit_message=$(git log --format=%B -n 1 ${{ github.sha }})
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
