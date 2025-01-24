@@ -413,8 +413,6 @@ jobs:
 
       - name: Download build artifacts
         if: github.event.pull_request.merged == false
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts-${{ github.event.number }}.zip
 
@@ -440,6 +438,7 @@ jobs:
             TSCONLINE_DIR="/home/aaron/tsconline"
             PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
             BRANCH="${{ github.event.pull_request.head.ref }}"
+            cd "$TSCONLINE_DIR"
             
             if [ ! -d "$PR_PREVIEW_DIR" ]; then
               echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
