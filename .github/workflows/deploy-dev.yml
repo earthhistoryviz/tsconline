@@ -41,6 +41,58 @@ jobs:
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" -o build-artifacts.zip
 
+      - name: Verify build artifacts
+        id: verify_build_artifacts
+        run: |
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            echo "download_status=failed" >> $GITHUB_OUTPUT
+          else
+            echo "Downloaded build artifacts successfully"
+            echo "download_status=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if JAR artifact exists
+        if: steps.extract_pr.outputs.pr_number != ''
+        id: check_jar_artifact
+        run: |
+          if [ -f "build-artifacts.zip" ]; then
+            unzip -l build-artifacts.zip | grep -q "server/dist/tsconline.jar"
+            if [ $? -eq 0 ]; then
+              echo "JAR artifact found"
+              echo "jar_artifact=true" >> $GITHUB_OUTPUT
+            else
+              echo "JAR artifact not found"
+              echo "jar_artifact=false" >> $GITHUB_OUTPUT
+            fi
+          else
+            echo "Error: build-artifacts.zip not found"
+            echo "jar_artifact=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Checkout code
+        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+
+      - name: Install and build project
+        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        run: |
+          yarn
+          yarn build
+
+      - name: Zip build artifacts
+        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        run: |
+          zip -r build-artifacts.zip app/dist shared/dist server/dist
+
+      
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
