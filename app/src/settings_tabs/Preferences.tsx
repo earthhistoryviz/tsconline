@@ -106,8 +106,8 @@ export const Preferences = observer(function Preferences() {
               name="crossplot-checkbox"
               control={
                 <TSCCheckbox
-                  checked={state.chartTab.crossplot.isCrossPlot}
-                  onChange={() => actions.setIsCrossPlot(!state.chartTab.crossplot.isCrossPlot)}
+                  checked={state.chartTab.crossPlot.isCrossPlot}
+                  onChange={() => actions.setIsCrossPlot(!state.chartTab.crossPlot.isCrossPlot)}
                 />
               }
               label="Is Cross Plot"

@@ -131,7 +131,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       settings: xmlSettings,
       datapacks: state.config.datapacks,
       useCache: state.useCache,
-      isCrossPlot: state.chartTab.crossplot.isCrossPlot
+      isCrossPlot: state.chartTab.crossPlot.isCrossPlot
     };
     body = JSON.stringify(chartRequest);
   } catch (e) {
