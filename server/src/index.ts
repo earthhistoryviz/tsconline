@@ -21,7 +21,7 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
+import { fetchPublicUserDatapack, fetchUserDatapacksMetadata, uploadTreatiseDatapack, fetchTreatiseDatapack } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 
@@ -233,6 +233,7 @@ server.register(userRoutes, { prefix: "/user" });
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 
+server.get("/treatise/datapacks/:datapack", moderateRateLimit, fetchTreatiseDatapack);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
@@ -248,6 +249,7 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
+server.post("/externalChart", moderateRateLimit, uploadTreatiseDatapack);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
