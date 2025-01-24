@@ -4,17 +4,18 @@ import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**
- * get the private and public user datapack directories
+ * get the private user datapack directories
  * @param uuid
  * @returns
  */
 export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.privateDatapacksDirectory, uuid);
-  if (!(await verifyNonExistentFilepath(userDirectory))) {
-    await mkdir(userDirectory, { recursive: true });
-  }
   if (!(await verifyFilepath(userDirectory))) {
-    throw new Error("Invalid filepath");
+    if (await verifyNonExistentFilepath(userDirectory)) {
+      await mkdir(userDirectory, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
   }
   return userDirectory;
 }
@@ -25,11 +26,12 @@ export async function getPrivateUserUUIDDirectory(uuid: string): Promise<string>
  */
 export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> {
   const userDirectory = path.join(assetconfigs.publicDatapacksDirectory, uuid);
-  if (!(await verifyNonExistentFilepath(userDirectory))) {
-    await mkdir(userDirectory, { recursive: true });
-  }
   if (!(await verifyFilepath(userDirectory))) {
-    throw new Error("Invalid filepath");
+    if (await verifyNonExistentFilepath(userDirectory)) {
+      await mkdir(userDirectory, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
   }
   return userDirectory;
 }

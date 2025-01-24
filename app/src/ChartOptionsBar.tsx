@@ -271,6 +271,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
           actions.setChartTabIsSavingChart(false);
           a.remove();
         }
+        return () => {
+          DOMURL.revokeObjectURL(url);
+        };
       }
     }
     return (

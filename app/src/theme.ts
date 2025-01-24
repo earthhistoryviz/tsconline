@@ -24,6 +24,7 @@ declare module "@mui/material/styles" {
     iconContrastBackground: Palette["primary"];
     accordionLine: Palette["primary"];
     cardBackground: Palette["primary"];
+    calendarCurrentDay: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -48,6 +49,9 @@ declare module "@mui/material/styles" {
     iconContrastBackground?: PaletteOptions["primary"];
     accordionLine?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
+  }
+  interface PaletteColor {
+    divider?: string;
   }
 }
 declare module "@mui/material/Button" {
@@ -179,6 +183,11 @@ function createThemeOverrides(theme: Theme, primary: string) {
           }
         }
       },
+      MuiButtonBase: {
+        defaultProps: {
+          disableRipple: true
+        }
+      },
       MuiButton: {
         variants: [
           {
@@ -298,12 +307,15 @@ baseTheme = createTheme(baseTheme, {
       },
       name: "error"
     }),
-    dark: baseTheme.palette.augmentColor({
-      color: {
-        main: "#0e1217"
-      },
-      name: "dark"
-    })
+    dark: {
+      ...baseTheme.palette.augmentColor({
+        color: {
+          main: "#0e1217"
+        },
+        name: "dark"
+      }),
+      divider: "#505c71"
+    }
   }
 });
 
@@ -531,6 +543,9 @@ export let originalLightTheme = createTheme(baseTheme, {
     }),
     tableContainer: {
       main: "#FFFFFFB3"
+    },
+    calendarCurrentDay: {
+      main: "#bedefa"
     }
   }
 });
@@ -593,7 +608,7 @@ export let originalDarkTheme = createTheme(baseTheme, {
     }),
     action: {
       disabled,
-      disabledBackground: disabled,
+      disabledBackground: "#858585",
       hover: "#ababab1a"
     },
     outline: {
@@ -608,6 +623,9 @@ export let originalDarkTheme = createTheme(baseTheme, {
     },
     tableContainer: {
       main: "#1A222DB3"
+    },
+    calendarCurrentDay: {
+      main: "#313a42"
     }
   }
 });

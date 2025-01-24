@@ -31,6 +31,11 @@ export interface VerificationTable {
   reason: "password" | "invalidate" | "verify";
 }
 
+export type OperationResult = {
+  code: number;
+  message: string;
+};
+
 export interface IpTable {
   id: Generated<number>;
   ip: string;
@@ -168,4 +173,13 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
 
 export function isAccountType(o: any): o is AccountType {
   return o === "pro" || o === "default";
+}
+
+export function isOperationResult(o: any): o is OperationResult {
+  return typeof o.code === "number" && typeof o.message === "string";
+}
+export function assertOperationResult(o: any): asserts o is OperationResult {
+  if (typeof o !== "object" || !o) throw "OperationResult must be an object";
+  if (typeof o.code !== "number") throwError("OperationResult", "code", "number", o.code);
+  if (typeof o.message !== "string") throwError("OperationResult", "message", "string", o.message);
 }

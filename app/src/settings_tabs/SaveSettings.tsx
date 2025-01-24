@@ -1,5 +1,4 @@
 import * as React from "react";
-import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
@@ -11,16 +10,17 @@ import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { ChartSettings } from "../types";
-import { jsonToXml } from "../state/parse-settings";
-import { IconButton } from "@mui/material";
-import DownloadIcon from "@mui/icons-material/Download";
 import isValidFilename from "valid-filename";
-import "./SaveSettings.css";
+import { jsonToXml } from "../state/parse-settings";
 import { observer } from "mobx-react-lite";
-import { CustomTooltip, TSCButton } from "../components";
+import { TSCButton } from "../components";
 import { useTranslation } from "react-i18next";
+import { Button } from "@mui/material";
+
 const SaveSettings = observer(() => {
   const { state, actions } = React.useContext(context);
+  const { t } = useTranslation();
+
   function saveSettings(filename: string) {
     if (!state.settingsTabs.columns) {
       actions.pushSnackbar("Column Root is not set, try again after selecting a datapack", "info");
@@ -37,6 +37,7 @@ const SaveSettings = observer(() => {
     FileSaver.saveAs(blob, filename + ".tsc");
     actions.pushSnackbar("Successfully saved settings!", "success");
   }
+
   const [open, setOpen] = React.useState(false);
   const handleClickOpen = () => {
     setOpen(true);
@@ -47,21 +48,19 @@ const SaveSettings = observer(() => {
   const handleClose = () => {
     setOpen(false);
   };
-  const { t } = useTranslation();
+
   return (
     <React.Fragment>
-      <CustomTooltip title={t("settings.settings-file.save")}>
-        <IconButton className="icon-save-settings-button" onClick={handleClickOpen}>
-          <DownloadIcon className="save-settings-button" />
-        </IconButton>
-      </CustomTooltip>
+      <TSCButton onClick={handleClickOpen} className="save-settings-button">
+        {t("settings.preferences.settings-file.save")}
+      </TSCButton>
       <Dialog
         open={open}
         onClose={handleClose}
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
-            e.preventDefault(); // to stop website from reloading
+            e.preventDefault();
             if (!isValidFilename(state.loadSaveFilename)) {
               actions.pushSnackbar("Filename is not valid", "warning");
               return;
@@ -70,9 +69,9 @@ const SaveSettings = observer(() => {
             handleClose();
           }
         }}>
-        <DialogTitle>{t("settings.settings-file.save")}</DialogTitle>
+        <DialogTitle>{t("settings.preferences.settings-file.save")}</DialogTitle>
         <DialogContent>
-          <DialogContentText>{t("settings.settings-file.save-dialog.message")}</DialogContentText>
+          <DialogContentText>{t("settings.preferences.settings-file.save-dialog.message")}</DialogContentText>
           <TextField
             value={state.loadSaveFilename}
             autoFocus
@@ -87,10 +86,10 @@ const SaveSettings = observer(() => {
         </DialogContent>
         <DialogActions>
           <Button variant="outlined" onClick={handleClose}>
-            {t("settings.settings-file.save-dialog.cancel")}
+            {t("settings.preferences.settings-file.save-dialog.cancel")}
           </Button>
-          <TSCButton variant="text" type="submit">
-            {t("settings.settings-file.save-dialog.save")}
+          <TSCButton variant="contained" type="submit" color="primary" className="save-settings-button">
+            {t("settings.preferences.settings-file.save-dialog.save")}
           </TSCButton>
         </DialogActions>
       </Dialog>

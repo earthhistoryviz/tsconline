@@ -11,7 +11,8 @@
         "tags": [],
         "notes": "This is the internal datapack for TimeScale Creator 2020",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Human Evolution",
@@ -27,7 +28,8 @@
         ],
         "notes": "Suggest beginning with 0.05 to 2 Ma with vertical scale of 8",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Australia",
@@ -44,7 +46,8 @@
         ],
         "notes": "Contact Andrew Kelman for a special Public 'GA-TS_Creator' JAVA version (ca. 25 Mb) that has this Australian dataset and their extensive reconstruction images pre-installed with the full global suite.",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Belgium",
@@ -60,7 +63,8 @@
             "Dejonghe, L. (editor), 2006. Currentstatus of Chronostatigraphic Units Named from Belgium and Adjacent Areas. Geologica Belgica, volume 9."
         ],
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "South American Basins",
@@ -104,7 +108,8 @@
             "Galeazzi, J. S., 1998. Structural and Stratigraphic Evolution of the Western Malvinas Basin, Argentina. AAPG Bulletin, v. 82, n. 4, p. 596-636"
         ],
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Africa Bight",
@@ -116,7 +121,8 @@
         "tags": [],
         "references": [],
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "British Isles",
@@ -133,7 +139,8 @@
         ],
         "notes": "Each set of columns is separated by a strip \"color of time\" of the international-stage divisions to clarify the temporal correlations",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Evolution of Modern Life",
@@ -150,7 +157,8 @@
         "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less.",
         "contact": "James Ogg: jogg@purdue.edu",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Vertebrate Evolution",
@@ -166,7 +174,8 @@
         ],
         "notes": "Evolution branching is best visualized using intervals greater than 60 myr and with a vertical scale of 0.5 or less. Ranges of different selected fossil vertebrates are defaulted OFF (turn on from within each directory). ",
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     },
     {
         "title": "Human Culture",
@@ -180,6 +189,7 @@
         "references": [],
         "tags": [],
         "type": "official",
-        "isPublic": true
+        "isPublic": true,
+        "priority": 1
     }
 ]

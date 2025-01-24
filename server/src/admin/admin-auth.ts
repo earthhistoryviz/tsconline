@@ -5,7 +5,6 @@ import {
   adminDeleteUserDatapack,
   adminDeleteUser,
   getUsers,
-  adminUploadOfficialDatapack,
   adminDeleteOfficialDatapack,
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
@@ -13,7 +12,11 @@ import {
   adminGetWorkshops,
   adminEditWorkshop,
   adminDeleteWorkshop,
-  adminModifyUser
+  adminModifyUser,
+  adminEditDatapackPriorities,
+  adminAddOfficialDatapackToWorkshop,
+  adminEditDatapackMetadata,
+  adminUploadDatapack
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -129,7 +132,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["workshopId"]
   };
-
   const adminModifyUserBody = {
     type: "object",
     properties: {
@@ -141,10 +143,29 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     required: ["username", "email"],
     anyOf: [{ required: ["accountType"] }, { required: ["isAdmin"] }]
   };
+  const adminAddOfficialDatapackToWorkshopBody = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+      datapackTitle: { type: "string" }
+    },
+    required: ["workshopId", "datapackTitle"]
+  };
+  const adminEditDatapackMetadataBody = {
+    type: "object",
+    properties: {
+      datapack: { type: "string" }
+    },
+    required: ["datapack"]
+  };
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
-  fastify.get("/server/datapacks/private", { config: { rateLimit: looseRateLimit } }, fetchAllPrivateOfficialDatapacks);
+  fastify.get(
+    "/official/datapacks/private",
+    { config: { rateLimit: looseRateLimit } },
+    fetchAllPrivateOfficialDatapacks
+  );
   fastify.post(
     "/user",
     {
@@ -181,9 +202,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     adminDeleteUserDatapack
   );
-  fastify.post("/server/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadOfficialDatapack);
+  fastify.post("/official/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapack);
   fastify.delete(
-    "/server/datapack",
+    "/official/datapack",
     {
       schema: {
         body: adminDeleteOfficialDatapackBody
@@ -220,5 +241,21 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/user",
     { schema: { body: adminModifyUserBody }, config: { rateLimit: moderateRateLimit } },
     adminModifyUser
+  );
+  fastify.patch(
+    "/official/datapack/priority",
+    { config: { rateLimit: moderateRateLimit } },
+    adminEditDatapackPriorities
+  );
+  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } }, adminUploadDatapack);
+  fastify.post(
+    "/workshop/official/datapack",
+    { schema: { body: adminAddOfficialDatapackToWorkshopBody }, config: { rateLimit: moderateRateLimit } },
+    adminAddOfficialDatapackToWorkshop
+  );
+  fastify.patch(
+    "/official/datapack/:datapack",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: adminEditDatapackMetadataBody } },
+    adminEditDatapackMetadata
   );
 };

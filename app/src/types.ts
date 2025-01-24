@@ -3,18 +3,27 @@ import {
   DataMiningPointDataType,
   DatapackConfigForChartRequest,
   DatapackMetadata,
+  DatapackUniqueIdentifier,
   MapHierarchy,
   MapInfo,
   SharedUser,
   assertColumnInfo,
   assertDatapackConfigForChartRequest,
+  assertDatapackUniqueIdentifier,
   assertMapHierarchy,
   assertMapInfo,
   throwError
 } from "@tsconline/shared";
 import { State } from "./state";
 
-export type EditableDatapackMetadata = Omit<DatapackMetadata, "originalFileName" | "storedFileName" | "size">;
+export type DatapackFetchParams = {
+  isPublic: boolean;
+} & DatapackUniqueIdentifier;
+
+export type EditableDatapackMetadata = Omit<
+  DatapackMetadata,
+  "originalFileName" | "storedFileName" | "size" | "datapackImage"
+>;
 
 export type UploadDatapackMethodType = (
   file: File,
@@ -127,11 +136,13 @@ export type Config = {
 
 export const SettingsMenuOptionLabels = {
   time: "Time",
+  preferences: "Preferences",
   column: "Column",
   search: "Search",
   font: "Font",
   mappoints: "Map Points",
-  datapacks: "Datapacks"
+  datapacks: "Datapacks",
+  loadsave: "Load/Save"
 };
 
 export type SettingsTabs = keyof typeof SettingsMenuOptionLabels;
@@ -170,6 +181,12 @@ export type EditableUserProperties = {
   isAdmin: boolean;
   pictureUrl: string | undefined;
 };
+
+export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
+  if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");
+  if (typeof o.isPublic !== "boolean") throwError("DatapackFetchParams", "isPublic", "boolean", o.isPublic);
+  assertDatapackUniqueIdentifier(o);
+}
 
 export function assertSetDatapackConfigReturnValue(o: any): asserts o is SetDatapackConfigReturnValue {
   if (!o || typeof o !== "object") throw new Error("SetDatapackConfigReturnValue must be a non-null object");

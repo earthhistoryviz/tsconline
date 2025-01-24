@@ -33,6 +33,7 @@ export async function loadRecaptcha() {
   return new Promise<void>((resolve, reject) => {
     const script = document.createElement("script");
     script.src = "https://www.google.com/recaptcha/api.js?render=6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2";
+    script.id = "recaptcha-script";
     script.async = true;
     script.onload = () => {
       window.grecaptcha.ready(() => resolve());
@@ -43,14 +44,20 @@ export async function loadRecaptcha() {
 }
 
 export function removeRecaptcha() {
-  const nodeBadge = document.querySelector(".grecaptcha-badge");
-  if (nodeBadge && nodeBadge.parentNode) {
-    document.body.removeChild(nodeBadge.parentNode);
-  }
-  const script = document.querySelector('script[src^="https://www.gstatic.com/recaptcha/releases"]');
+  const badges = document.querySelectorAll(".grecaptcha-badge");
+  badges.forEach((badge) => {
+    if (badge.parentNode) {
+      document.body.removeChild(badge.parentNode);
+    }
+  });
+  const script = document.getElementById("recaptcha-script");
   if (script) {
     script.remove();
   }
+  const gstaticScripts = document.querySelectorAll('script[src^="https://www.gstatic.com/recaptcha/releases"]');
+  gstaticScripts.forEach((script) => {
+    script.remove();
+  });
 }
 
 declare global {

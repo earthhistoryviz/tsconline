@@ -89,6 +89,7 @@
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  overflow-x: hidden;
 }
 .container.buttonContainer {
   flex-direction: row;
@@ -97,11 +98,20 @@
   display: flex;
   flex-wrap: wrap;
   width: 100%;
-  overflow-x: hidden;
+}
+.official > .item {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(6, 1fr);
 }
 .wrapItem > *,
 .datapackDisplayContainer > .container:not(.official, .cards) {
   flex: 1 1 50%;
+}
+
+.datapackDisplayContainer > .container {
+  overflow-x: hidden;
 }
 .datapackDisplayContainer {
   display: flex;
@@ -120,6 +130,7 @@
 .container.cards,
 .container.cards > .item {
   gap: 10px;
+  display: flex;
 }
 .container.cards {
   margin: 0px 20px 20px;
@@ -133,9 +144,6 @@
   margin: 5px 0;
 }
 
-.loader {
-  margin-left: 30px;
-}
 .header {
   display: flex;
   flex-direction: row;

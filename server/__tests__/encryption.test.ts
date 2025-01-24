@@ -1,18 +1,29 @@
 import { vi, beforeAll, afterAll, describe, it, expect } from "vitest";
-import { runJavaEncrypt } from "../src/encryption";
+import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../src/encryption";
 import { access, readFile, rm } from "fs/promises";
 import { assertAssetConfig } from "../src/types";
 import path from "path";
+import * as userHandler from "../src/user/user-handler";
+vi.mock("../src/user/user-handler", async () => {
+  return {
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue("test/filepath"),
+    getEncryptedDatapackDirectory: vi
+      .fn()
+      .mockResolvedValue({ encryptedDir: "test/encryptedDir", encryptedFilepath: "test/encryptedFilepath" })
+  };
+});
+vi.mock("path", async (importOriginal) => {
+  const actual = await importOriginal<typeof path>();
+  return {
+    default: {
+      ...actual,
+      parse: vi.fn().mockReturnValue({ base: "test/filename" })
+    }
+  };
+});
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
-});
-afterAll(async () => {
-  const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
-  await rm(generatedFilePath, { recursive: true, force: true });
-  if (await checkFileExists(generatedFilePath)) {
-    throw new Error("test generated file directory shouldn't exist");
-  }
 });
 
 async function checkFileExists(filePath: string): Promise<boolean> {
@@ -24,23 +35,29 @@ async function checkFileExists(filePath: string): Promise<boolean> {
   }
 }
 
-let jarFilePath = "";
-let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
-if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
-  jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
-  resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
-} else {
-  try {
-    const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
-    assertAssetConfig(contents);
-    jarFilePath = "server/" + contents.activeJar;
-  } catch (e) {
-    throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
-  }
-}
-if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
-
 describe("runJavaEncrypt", async () => {
+  afterAll(async () => {
+    const generatedFilePath = path.resolve("server/__tests__/__data__/encryption-test-generated-file/");
+    await rm(generatedFilePath, { recursive: true, force: true });
+    if (await checkFileExists(generatedFilePath)) {
+      throw new Error("test generated file directory shouldn't exist");
+    }
+  });
+  let jarFilePath = "";
+  let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
+  if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
+    jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
+    resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
+  } else {
+    try {
+      const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
+      assertAssetConfig(contents);
+      jarFilePath = "server/" + contents.activeJar;
+    } catch (e) {
+      throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
+    }
+  }
+  if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
   it("should correctly encrypt an unencrypted TSCreator txt file", { timeout: 20000 }, async () => {
     if (!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-1.txt"))) {
       await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-1.txt", resultPath);
@@ -107,5 +124,21 @@ describe("runJavaEncrypt", async () => {
   it("should not encrypt an encrypted TSCreator txt file with the TSCreator Encrypted Datafile title", async () => {
     await runJavaEncrypt(jarFilePath, "server/__tests__/__data__/encryption-test-4.txt", resultPath);
     expect(!(await checkFileExists("server/__tests__/__data__/encryption-test-generated-file/encryption-test-4.txt")));
+  });
+});
+
+describe("getEncryptionDatapackFileSystemDetails", async () => {
+  const getUploadedDatapackFilepath = vi.spyOn(userHandler, "getUploadedDatapackFilepath");
+  const getEncryptedDatapackDirectory = vi.spyOn(userHandler, "getEncryptedDatapackDirectory");
+  it("should return the correct file system details for a given datapack", async () => {
+    const result = await getEncryptionDatapackFileSystemDetails("test-uuid", "test-datapack");
+    expect(result).toEqual({
+      filepath: "test/filepath",
+      filename: "test/filename",
+      encryptedDir: "test/encryptedDir",
+      encryptedFilepath: "test/encryptedFilepath"
+    });
+    expect(getUploadedDatapackFilepath).toHaveBeenCalledWith("test-uuid", "test-datapack");
+    expect(getEncryptedDatapackDirectory).toHaveBeenCalledWith("test-uuid", "test-datapack");
   });
 });

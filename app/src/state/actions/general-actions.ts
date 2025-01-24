@@ -6,17 +6,18 @@ import {
   TimescaleItem,
   assertSharedUser,
   assertChartInfoTSC,
-  assertDatapackInfoChunk,
   DatapackMetadata,
   defaultColumnRoot,
   FontsInfo,
-  Datapack,
   DatapackConfigForChartRequest,
   isUserDatapack,
   isOfficialDatapack,
   assertOfficialDatapack,
   assertDatapack,
-  assertDatapackArray
+  DatapackUniqueIdentifier,
+  isWorkshopDatapack,
+  Datapack,
+  assertDatapackMetadataArray
 } from "@tsconline/shared";
 
 import {
@@ -35,6 +36,7 @@ import {
   applyChartColumnSettings,
   applyRowOrder,
   handleDataMiningColumns,
+  handleDualColCompColumns,
   initializeColumnHashMap,
   searchColumns,
   searchEvents
@@ -44,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
@@ -54,34 +57,70 @@ import {
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
-import { doesDatapackAlreadyExist, getDatapackFromArray, isOwnedByUser } from "../non-action-util";
+import {
+  compareExistingDatapacks,
+  doesDatapackAlreadyExist,
+  doesMetadataAlreadyExist,
+  getMetadataFromArray,
+  isOwnedByUser
+} from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
+import { Workshop } from "../../Workshops";
 
-const increment = 1;
-
-export const fetchOfficialDatapack = action("fetchOfficialDatapack", async (datapack: string) => {
-  try {
-    const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, {
-      method: "GET"
-    });
-    const data = await response.json();
-    if (response.ok) {
-      assertOfficialDatapack(data);
-      assertDatapack(data);
-      return data;
-    } else {
-      displayServerError(
-        data,
-        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
-        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
-      );
+/**
+ * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * @param metadata
+ * @param options - Optional signal for aborting the fetch request
+ */
+export const fetchDatapack = action(
+  "fetchDatapack",
+  async (metadata: DatapackFetchParams, options?: { signal?: AbortSignal }) => {
+    let datapack: Datapack | undefined;
+    switch (metadata.type) {
+      case "user": {
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicUserDatapack(metadata.title, metadata.uuid, options);
+        } else {
+          datapack = await actions.fetchUserDatapack(metadata.title, options);
+        }
+        break;
+      }
+      case "official":
+        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
+        break;
+      case "workshop": {
+        datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
+        break;
+      }
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
+    return datapack;
   }
-  return null;
-});
+);
+
+export const fetchOfficialDatapack = action(
+  "fetchOfficialDatapack",
+  async (datapack: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const data = await response.json();
+      if (response.ok) {
+        assertOfficialDatapack(data);
+        assertDatapack(data);
+        return data;
+      } else {
+        displayServerError(
+          data,
+          ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+          ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+        );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -103,17 +142,27 @@ export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
     console.error(e);
   }
 });
-export const removeDatapack = action("removeDatapack", async (datapack: { title: string; type: string }) => {
-  state.datapacks = observable(state.datapacks.filter((d) => d.title !== datapack.title || d.type !== datapack.type));
+export const removeDatapack = action("removeDatapack", (datapack: DatapackUniqueIdentifier) => {
+  const datapackIndex = state.datapacks.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (datapackIndex > -1) {
+    state.datapacks.splice(datapackIndex, 1); // Remove the matching datapack in place
+  }
+  const metadataIndex = state.datapackMetadata.findIndex((d) => compareExistingDatapacks(d, datapack));
+  if (metadataIndex > -1) {
+    state.datapackMetadata.splice(metadataIndex, 1); // Remove the matching metadata in place
+  }
 });
 export const refreshPublicDatapacks = action("refreshPublicDatapacks", async () => {
+  state.datapackMetadata = observable(state.datapackMetadata.filter((d) => !d.isPublic));
   state.datapacks = observable(state.datapacks.filter((d) => !d.isPublic));
-  fetchAllPublicDatapacks();
+  fetchAllPublicDatapacksMetadata();
 });
-export const addDatapack = action("addDatapack", (datapack: Datapack) => {
-  // we don't log since fetching datapacks could produce duplicates
-  if (!doesDatapackAlreadyExist(datapack, state.datapacks)) {
+export const addDatapack = action("addDatapack", (datapack: DatapackMetadata | Datapack) => {
+  if ("columnInfo" in datapack && !doesDatapackAlreadyExist(datapack, state.datapacks)) {
     state.datapacks.push(observable(datapack));
+  }
+  if (!doesMetadataAlreadyExist(datapack, state.datapackMetadata)) {
+    state.datapackMetadata.push(observable(datapack));
   }
 });
 /**
@@ -123,34 +172,33 @@ export const resetSettings = action("resetSettings", () => {
   state.settings = JSON.parse(JSON.stringify(settings));
 });
 
-export const fetchAllPublicDatapacks = action("fetchAllPublicDatapacks", async () => {
-  let start = 0;
-  let total = -1;
+export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMetadata", async () => {
   try {
-    while (total == -1 || start < total) {
-      const response = await fetcher(`/public/datapacks?start=${start}&increment=${increment}`, {
-        method: "GET"
-      });
-      const index = await response.json();
-      try {
-        assertDatapackInfoChunk(index);
-        for (const dp of index.datapacks) {
-          addDatapack(dp);
-        }
-        if (total == -1) total = index.totalChunks;
-        start += increment;
-      } catch (e) {
-        displayServerError(index, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
-        return;
+    const response = await fetcher("/public/metadata", {
+      method: "GET"
+    });
+    const datapacks = await response.json();
+    try {
+      assertDatapackMetadataArray(datapacks);
+      for (const dp of datapacks) {
+        addDatapack(dp);
       }
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      setPublicOfficialDatapacksLoading(false);
+    } catch (e) {
+      console.error(e);
+      displayServerError(datapacks, ErrorCodes.INVALID_DATAPACK_INFO, ErrorMessages[ErrorCodes.INVALID_DATAPACK_INFO]);
+      return;
     }
     console.log("Datapacks loaded");
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPublicOfficialDatapacksLoading(false);
+    setPublicDatapacksLoading(false);
   }
 });
+
 export const fetchPresets = action("fetchPresets", async () => {
   try {
     const response = await fetcher("/presets");
@@ -165,44 +213,20 @@ export const fetchPresets = action("fetchPresets", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPresetsLoading(false);
   }
 });
 
-export const fetchPublicDatapacks = action("fetchPublicDatapacks", async () => {
+export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", async () => {
   try {
-    const response = await fetcher("/public/datapacks", {
-      method: "GET"
-    });
-    const data = await response.json();
-    try {
-      assertDatapackArray(data);
-      for (const dp of data) {
-        addDatapack(dp);
-      }
-      console.log("Public Datapacks loaded");
-    } catch (e) {
-      console.error(e);
-      displayServerError(data, ErrorCodes.INVALID_PUBLIC_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_PUBLIC_DATAPACKS]);
-    }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
-  }
-});
-
-/**
- * This will grab the user datapacks AND the server datapacks from the server
- */
-export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
-  try {
-    const response = await fetcher(`/user/datapacks`, {
+    const response = await fetcher(`/user/metadata`, {
       method: "GET",
       credentials: "include"
     });
     const data = await response.json();
     try {
-      assertDatapackArray(data);
-      // this does not check for duplicate keys
+      assertDatapackMetadataArray(data);
       for (const dp in data) {
         addDatapack(data[dp]);
       }
@@ -214,6 +238,8 @@ export const fetchUserDatapacks = action("fetchUserDatapacks", async () => {
   } catch (e) {
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
     console.error(e);
+  } finally {
+    setPrivateUserDatapacksLoading(false);
   }
 });
 
@@ -239,7 +265,7 @@ export const fetchTreatiseDatapacks = action("fetchTreatiseDatapacks", async (da
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
-    if (getDatapackFromArray(metadata, state.datapacks)) {
+    if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -261,6 +287,7 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",
@@ -284,7 +311,15 @@ export const uploadUserDatapack = action(
         }
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
-        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+        if (response.status === 403) {
+          pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+        } else {
+          displayServerError(
+            data,
+            ErrorCodes.INVALID_DATAPACK_UPLOAD,
+            ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]
+          );
+        }
       }
     } catch (e) {
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -338,6 +373,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartSettings(settings.settings);
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
+  handleDualColCompColumns();
   await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
@@ -449,12 +485,13 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string) => {
+  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
-      return;
+      return true;
     }
-    if (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)) return;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
+      return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
@@ -679,19 +716,25 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
       state.settingsTabs.selected = "time";
       break;
     case 1:
-      state.settingsTabs.selected = "column";
+      state.settingsTabs.selected = "preferences";
       break;
     case 2:
-      state.settingsTabs.selected = "search";
+      state.settingsTabs.selected = "column";
       break;
     case 3:
-      state.settingsTabs.selected = "font";
+      state.settingsTabs.selected = "search";
       break;
     case 4:
-      state.settingsTabs.selected = "mappoints";
+      state.settingsTabs.selected = "font";
       break;
     case 5:
+      state.settingsTabs.selected = "mappoints";
+      break;
+    case 6:
       state.settingsTabs.selected = "datapacks";
+      break;
+    case 7:
+      state.settingsTabs.selected = "loadsave";
       break;
     default:
       console.log("WARNING: setSettingTabsSelected: received index number that is unknown: ", newtab);
@@ -708,14 +751,23 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
   switch (tab) {
     case "time":
       return 0;
-    case "column":
+    case "preferences":
       return 1;
-    case "font":
+    case "column":
       return 2;
-    case "mappoints":
+    case "search":
       return 3;
-    case "datapacks":
+    case "font":
       return 4;
+    case "mappoints":
+      return 5;
+    case "datapacks":
+      return 6;
+    case "loadsave":
+      return 7;
+    default:
+      console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
+      return 0;
   }
 }
 
@@ -844,7 +896,7 @@ export async function getRecaptchaToken(token: string) {
   }
 }
 
-export const requestDownload = action(async (datapack: Datapack, needEncryption: boolean) => {
+export const requestDownload = action(async (datapack: DatapackMetadata, needEncryption: boolean) => {
   let route;
   if (!needEncryption) {
     route = `/user/datapack/download/${datapack.title}`;
@@ -943,7 +995,7 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
-      fetchUserDatapacks();
+      fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
     }
@@ -968,7 +1020,12 @@ export const setDefaultUserState = action(() => {
   removeUnauthorizedDatapacks();
 });
 export const removeUnauthorizedDatapacks = action(() => {
-  state.datapacks = state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || d.isPublic);
+  state.datapacks = observable(
+    state.datapacks.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
+  );
+  state.datapackMetadata = observable(
+    state.datapackMetadata.filter((d) => isOwnedByUser(d, state.user.uuid) || (d.isPublic && !isWorkshopDatapack(d)))
+  );
 });
 
 // This is a helper function to get the initial dark mode setting (checks for user preference and stored preference)
@@ -1005,7 +1062,9 @@ export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enable
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
 });
-
+export const setLoadingDatapacks = action("setLoadingDatapacks", (loading: boolean) => {
+  state.loadingDatapacks = loading;
+});
 export const setUser = action("setUser", (user: SharedUser) => {
   assertSharedUser(user);
   state.user = { ...state.user, ...user };
@@ -1030,7 +1089,7 @@ export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
 });
 export const setTab = action("setTab", (newval: number) => {
   if (
-    newval == 1 &&
+    newval == 2 &&
     state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
@@ -1216,9 +1275,23 @@ export const setChartTabIsSavingChart = action((term: boolean) => {
 export const setUnsafeChartContent = action((content: string) => {
   state.chartTab.unsafeChartContent = content;
 });
-export const setEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
+export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
-  state.datapackProfilePage.editableDatapackMetadata = metadata;
+  if (!metadata) {
+    state.datapackProfilePage.editableDatapackMetadata = null;
+    return;
+  }
+  // so we don't include any extra fields (since destructuring includes all fields)
+  state.datapackProfilePage.editableDatapackMetadata = {
+    description: metadata.description,
+    title: metadata.title,
+    isPublic: metadata.isPublic,
+    tags: metadata.tags,
+    type: metadata.type,
+    authoredBy: metadata.authoredBy,
+    priority: metadata.priority,
+    references: metadata.references
+  };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
   state.datapackProfilePage.unsavedChanges = unsavedChanges;
@@ -1233,4 +1306,64 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
+});
+
+// TODO: Change this when the actual backend for rendering all workshops is implemented.
+// Maybe similar to how we handled datapacks.
+// For now, this just loads the selected dummy workshop into the state.
+export const setWorkshopsArray = action((workshop: Workshop[]) => {
+  state.workshops = workshop;
+});
+
+export const setPresetsLoading = action((loading: boolean) => {
+  state.skeletonStates.presetsLoading = loading;
+});
+
+export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicOfficialDatapacksLoading = fetching;
+});
+export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateOfficialDatapacksLoading = fetching;
+});
+export const setPublicDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.publicUserDatapacksLoading = fetching;
+});
+export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
+  state.skeletonStates.privateUserDatapacksLoading = fetching;
+});
+
+export const setTourOpen = action((openTour: boolean, tourName: string) => {
+  switch (tourName) {
+    case "qsg":
+      state.guides.isQSGOpen = openTour;
+      state.guides.isDatapacksTourOpen = false; // Close any other tours that might still be open to prevent multiple tours from running simultaneously.
+      state.guides.isSettingsTourOpen = false; //  ensures that starting a new tour will not lead to overlapping tours,
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "datapacks":
+      state.guides.isDatapacksTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+      break;
+    case "settings":
+      state.guides.isSettingsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+
+      break;
+    case "workshops":
+      state.guides.isWorkshopsTourOpen = openTour;
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      break;
+    default:
+      console.error("No such tour");
+      state.guides.isQSGOpen = false;
+      state.guides.isDatapacksTourOpen = false;
+      state.guides.isSettingsTourOpen = false;
+      state.guides.isWorkshopsTourOpen = false;
+  }
 });

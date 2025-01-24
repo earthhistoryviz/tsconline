@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { styled } from "@mui/material/styles";
-import { Grid, Box, Avatar, CardMedia, IconButton, Typography, List, ListItem, ListItemText } from "@mui/material";
+import {
+  Grid,
+  Box,
+  Avatar,
+  CardMedia,
+  IconButton,
+  Typography,
+  List,
+  ListItem,
+  ListItemText,
+  Skeleton
+} from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import { TSCButton } from "./TSCButton";
 import ReactCardFlip from "react-card-flip";
@@ -27,30 +38,48 @@ const ContrastTypography = styled(Typography)(({ theme }) => ({
   color: theme.palette.cardBackground ? "#FFF" : theme.palette.text.primary
 }));
 
-export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; generateChart?: () => void }) => {
+// not providing preset will render a skeleton card
+export const TSCCard = ({ preset, generateChart }: { preset?: ChartConfig; generateChart?: () => void }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [added, setAdded] = useState(false);
   const { t } = useTranslation();
+
   function handleFlip() {
-    setIsFlipped(!isFlipped);
+    if (preset) {
+      setIsFlipped(!isFlipped);
+    }
   }
+
   function add() {
     setAdded(!added);
   }
+
   return (
     <ReactCardFlip isFlipped={isFlipped} flipDirection="horizontal">
       {/* This is the front card */}
       <Box className="front-card">
-        <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
+        {preset ? (
+          <CardMedia className="card-media-cover" image={devSafeUrl(preset.background)} onClick={handleFlip} />
+        ) : (
+          <Skeleton className="card-media-cover" variant="rectangular" />
+        )}
         <div className="card-content front-card-content">
           <CardBackground className="card-background clip-path" />
           <Box position="relative" zIndex={1}>
             <Grid container alignItems="center" spacing={2} onClick={handleFlip}>
               <Grid item>
-                <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
+                {!preset ? (
+                  <Skeleton variant="rounded" width={100} height={100} />
+                ) : (
+                  <Avatar className="avatar-logo avatar-box-shadow" src={devSafeUrl(preset.icon)} />
+                )}
               </Grid>
               <Grid item xs>
-                <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
+                {!preset ? (
+                  <Skeleton width="60%" />
+                ) : (
+                  <ContrastTypography className="card-title">{preset.title}</ContrastTypography>
+                )}
               </Grid>
             </Grid>
             <Grid container mt={2} alignItems="center" justifyContent="center" spacing={2} wrap="nowrap">
@@ -60,28 +89,33 @@ export const TSCCard = ({ preset, generateChart }: { preset: ChartConfig; genera
                 </IconButton>
               </Grid>
               <Grid item>
-                <TSCButton
-                  buttonType="gradient"
-                  style={{
-                    width: "auto",
-                    height: "auto",
-                    fontSize: "0.85rem"
-                  }}
-                  onClick={generateChart}>
-                  {t("button.generate")}
-                </TSCButton>
+                {!preset ? (
+                  <Skeleton width={80} height={35} />
+                ) : (
+                  <TSCButton
+                    buttonType="gradient"
+                    style={{
+                      width: "auto",
+                      height: "auto",
+                      fontSize: "0.85rem"
+                    }}
+                    onClick={generateChart}>
+                    {t("button.generate")}
+                  </TSCButton>
+                )}
               </Grid>
               <Grid item xs onClick={handleFlip}>
                 <Box display="flex" justifyContent="flex-end">
-                  <Date className="date">{preset.date}</Date>
+                  {!preset ? <Skeleton width={50} /> : <Date className="date">{preset.date}</Date>}
                 </Box>
               </Grid>
             </Grid>
           </Box>
         </div>
       </Box>
+
       {/* This is the back card */}
-      <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />
+      {preset && <BackCard handleFlip={handleFlip} add={add} added={added} preset={preset} />}
     </ReactCardFlip>
   );
 };

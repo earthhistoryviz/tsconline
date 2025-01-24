@@ -6,12 +6,16 @@ import {
   AdminSharedUser,
   Datapack,
   DatapackMetadata,
+  DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUserArray,
   assertDatapackArray,
   assertDatapackIndex,
+  assertDatapackPriorityPartialUpdateSuccess,
+  assertDatapackPriorityUpdateSuccess,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
+  assertWorkshopDatapack,
   isServerResponseError
 } from "@tsconline/shared";
 import { displayServerError } from "./util-actions";
@@ -22,10 +26,11 @@ import {
   pushError,
   pushSnackbar,
   removeAllErrors,
-  removeDatapack
+  removeDatapack,
+  setPrivateOfficialDatapacksLoading
 } from "./general-actions";
 import { State } from "../state";
-import { getDatapackFromArray } from "../non-action-util";
+import { getMetadataFromArray } from "../non-action-util";
 import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
 
 export const adminFetchUsers = action(async () => {
@@ -232,13 +237,13 @@ export const adminDeleteOfficialDatapacks = action(
     let deletedNoDatapacks = true;
     for (const datapack of datapacks) {
       try {
-        const response = await fetcher("/admin/server/datapack", {
+        const response = await fetcher("/admin/official/datapack", {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             "recaptcha-token": recaptchaToken
           },
-          body: JSON.stringify({ datapack }),
+          body: JSON.stringify({ datapack: datapack.title }),
           credentials: "include"
         });
         if (!response.ok) {
@@ -264,7 +269,7 @@ export const adminDeleteOfficialDatapacks = action(
         } else {
           deletedNoDatapacks = false;
           runInAction(() => {
-            removeDatapack(datapack);
+            removeDatapack({ title: datapack.title, type: "official" });
           });
         }
       } catch (error) {
@@ -288,7 +293,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
     const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
     if (!recaptchaToken) return;
-    if (getDatapackFromArray(metadata, state.datapacks)) {
+    if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
@@ -302,12 +307,13 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     formData.append("authoredBy", authoredBy);
     formData.append("isPublic", String(isPublic));
     formData.append("type", metadata.type);
+    formData.append("priority", String(metadata.priority));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
     try {
-      const response = await fetcher(`/admin/server/datapack`, {
+      const response = await fetcher(`/admin/official/datapack`, {
         method: "POST",
         body: formData,
         credentials: "include",
@@ -334,16 +340,18 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   }
 );
 
-export const adminFetchPrivateOfficialDatapacks = action(async () => {
+export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
+  setPrivateOfficialDatapacksLoading(true);
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
-    const response = await fetcher("/admin/server/datapacks/private", {
+    const response = await fetcher("/admin/official/datapacks/private", {
       method: "GET",
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      }
+      },
+      ...options
     });
     if (response.ok) {
       const array = await response.json();
@@ -363,9 +371,12 @@ export const adminFetchPrivateOfficialDatapacks = action(async () => {
       );
     }
   } catch (error) {
+    if ((error as Error).name === "AbortError") return;
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
+  } finally {
+    setPrivateOfficialDatapacksLoading(false);
   }
 });
 
@@ -588,6 +599,93 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
   return;
 });
 
+/**
+ * Uploads a datapack to a workshop
+ * @param file The file to upload
+ * @param metadata The metadata for the datapack
+ * @param workshopId The ID of the workshop to upload to (required)
+ */
+export const adminUploadDatapackToWorkshop = action(
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+    assertWorkshopDatapack(metadata);
+    const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const formData = new FormData();
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid } = metadata;
+    formData.append("datapack", file);
+    formData.append("title", title);
+    formData.append("description", description);
+    formData.append("references", JSON.stringify(references));
+    formData.append("tags", JSON.stringify(tags));
+    formData.append("authoredBy", authoredBy);
+    formData.append("isPublic", String(isPublic));
+    formData.append("type", type);
+    formData.append("uuid", uuid);
+    if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
+    if (notes) formData.append("notes", notes);
+    if (date) formData.append("date", date);
+    if (contact) formData.append("contact", contact);
+    try {
+      const response = await fetcher(`/admin/workshop/datapack`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+      } else {
+        displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
+      }
+    } catch (e) {
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
+
+/**
+ * Adds server datapacks to the workshop
+ * @param workshopId The ID of the workshop to add to
+ * @param titles The title of the datapack to add
+ */
+export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminAddOfficialDatapackToWorkshop");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/workshop/official/datapack`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ workshopId, datapackTitle }),
+      credentials: "include"
+    });
+    if (response.ok) {
+      pushSnackbar("Datapacks added to workshop successfully", "success");
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 409:
+          errorCode = ErrorCodes.ADMIN_SERVER_DATAPACK_ALREADY_EXISTS;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
   state.admin.workshops = workshop;
 });
@@ -613,4 +711,72 @@ export const updateAdminUserDatapacks = action(async (uuid: string[]) => {
 
 export const adminSetDisplayedUserDatapacks = action((datapacks: State["admin"]["displayedUserDatapacks"]) => {
   state.admin.displayedUserDatapacks = datapacks;
+});
+
+export const handleDatapackPriorityChange = action((data: Datapack, newPriority: number) => {
+  data.priority = newPriority;
+});
+
+export const setLoadingDatapackPriority = action((loading: boolean) => {
+  state.admin.datapackPriorityLoading = loading;
+});
+
+export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
+  try {
+    setLoadingDatapackPriority(true);
+    const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
+    if (!recaptchaToken) return;
+    const response = await fetcher("/admin/official/datapack/priority", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        "recaptcha-token": recaptchaToken
+      },
+      body: JSON.stringify({ tasks }),
+      credentials: "include"
+    });
+    const json = await response.json();
+    try {
+      if (response.ok) {
+        assertDatapackPriorityUpdateSuccess(json);
+        json.completedRequests.forEach((datapack) => {
+          const index = state.datapackMetadata.findIndex((d) => d.title === datapack.id);
+          if (index !== -1) {
+            runInAction(() => {
+              state.datapackMetadata[index].priority = datapack.priority;
+            });
+          }
+        });
+        pushSnackbar("Datapack priorities updated successfully", "success");
+      } else {
+        assertDatapackPriorityPartialUpdateSuccess(json);
+        pushSnackbar("Some datapack priorities were not updated", "warning");
+      }
+    } catch (e) {
+      console.error(e);
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_PRIORITY_BATCH_UPDATE_FAILED]
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+  } finally {
+    setLoadingDatapackPriority(false);
+  }
+});
+
+export const setAdminDatapackConfigTempRowData = action(
+  (tempRowData: State["admin"]["datapackConfig"]["tempRowData"]) => {
+    state.admin.datapackConfig.tempRowData = tempRowData;
+  }
+);
+export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChangeRequest[]) => {
+  state.admin.datapackConfig.rowPriorityUpdates = newVal;
+});
+export const resetAdminConfigTempState = action(() => {
+  state.admin.datapackConfig.rowPriorityUpdates = [];
+  state.admin.datapackConfig.tempRowData = null;
 });

@@ -4,7 +4,8 @@ import {
   fetchSingleUserDatapack,
   requestDownload,
   uploadDatapack,
-  userDeleteDatapack
+  userDeleteDatapack,
+  fetchWorkshopDatapack
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -62,6 +63,14 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["datapack"]
   };
+  const fetchWorkshopDatapackParams = {
+    type: "object",
+    properties: {
+      workshopUUID: { type: "string" },
+      datapackTitle: { type: "string" }
+    },
+    required: ["workshopUUID", "datapackTitle"]
+  };
   const requestDownloadQuery = {
     type: "object",
     properties: {
@@ -99,5 +108,13 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/:datapack",
     { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
     editDatapackMetadata
+  );
+  fastify.get(
+    "/workshop/:workshopUUID/datapack/:datapackTitle",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: fetchWorkshopDatapackParams }
+    },
+    fetchWorkshopDatapack
   );
 };

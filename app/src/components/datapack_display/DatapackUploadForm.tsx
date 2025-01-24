@@ -21,6 +21,11 @@ import { CustomDivider, StyledScrollbar } from "../TSCComponents";
 import {
   DatapackMetadata,
   DatapackType,
+  MAX_AUTHORED_BY_LENGTH,
+  MAX_DATAPACK_CONTACT_LENGTH,
+  MAX_DATAPACK_DESC_LENGTH,
+  MAX_DATAPACK_NOTES_LENGTH,
+  MAX_DATAPACK_REFERENCE_LENGTH,
   MAX_DATAPACK_TAGS_ALLOWED,
   MAX_DATAPACK_TAG_LENGTH,
   MAX_DATAPACK_TITLE_LENGTH
@@ -36,9 +41,10 @@ type DatapackUploadFormProps = {
   close: () => void;
   upload: (file: File, metadata: DatapackMetadata) => Promise<void>;
   type: DatapackType;
+  forcePublic?: boolean;
 };
-export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type }) => {
-  const { state, setters, handlers } = useDatapackUploadForm({ upload, type });
+export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, upload, type, forcePublic = false }) => {
+  const { state, setters, handlers } = useDatapackUploadForm({ upload, type, forcePublic });
   const { t } = useTranslation();
   return (
     <Box margin="20px" justifyContent="center" textAlign="center" maxWidth="70vw">
@@ -65,6 +71,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                 text={t("settings.datapacks.upload")}
                 variant="contained"
                 onChange={handlers.handleFileUpload}
+                accept=".dpk, .mdpk, .zip, .txt"
               />
               <Typography className="file-upload-text" variant="body2">
                 {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
@@ -96,7 +103,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               required
               InputLabelProps={{ shrink: true }}
               inputProps={{
-                maxLength: MAX_DATAPACK_TITLE_LENGTH
+                maxLength: MAX_AUTHORED_BY_LENGTH
               }}
               value={state.authoredBy}
               onChange={(event) => setters.setAuthoredBy(event.target.value)}
@@ -108,7 +115,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
             rows={5}
             label={t("settings.datapacks.upload-form.description")}
             placeholder={t("settings.datapacks.upload-form.description-placeholder")}
-            inputProps={{ className: "datapack-description-input-text" }}
+            inputProps={{ className: "datapack-description-input-text", maxLength: MAX_DATAPACK_DESC_LENGTH }}
             InputLabelProps={{ shrink: true }}
             value={state.description}
             onChange={(event) => setters.setDescription(event.target.value)}
@@ -151,7 +158,11 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
           <FormControlLabel
             name="public-datapack"
             control={
-              <TSCCheckbox checked={state.isPublic} onChange={(event) => setters.setIsPublic(event.target.checked)} />
+              <TSCCheckbox
+                disabled={forcePublic}
+                checked={state.isPublic}
+                onChange={(event) => setters.setIsPublic(event.target.checked)}
+              />
             }
             label={t("settings.datapacks.upload-form.make-public")}
           />
@@ -163,6 +174,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   variant="outlined"
                   value={reference.reference}
                   onChange={(event) => handlers.changeReference(index, event)}
+                  inputProps={{ maxLength: MAX_DATAPACK_REFERENCE_LENGTH }}
                   fullWidth
                 />
                 <IconButton
@@ -194,6 +206,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   sx={{ flexGrow: 0.5 }}
                   helperText={t("settings.datapacks.upload-form.contact-helper-text")}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ maxLength: MAX_DATAPACK_CONTACT_LENGTH }}
                   value={state.contact}
                   onChange={(event) => setters.setContact(event.target.value)}
                 />
@@ -203,6 +216,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   helperText={t("settings.datapacks.upload-form.notes-helper-text")}
                   sx={{ flexGrow: 1 }}
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ maxLength: MAX_DATAPACK_NOTES_LENGTH }}
                   value={state.notes}
                   onChange={(event) => setters.setNotes(event.target.value)}
                 />

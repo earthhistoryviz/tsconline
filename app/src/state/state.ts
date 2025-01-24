@@ -24,12 +24,15 @@ import type {
   AdminSharedUser,
   DatapackConfigForChartRequest,
   SharedWorkshop,
-  Datapack
+  Datapack,
+  DatapackPriorityChangeRequest,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
+import { Workshop } from "../Workshops";
 configure({ enforceActions: "observed" });
 
 export type State = {
@@ -77,11 +80,18 @@ export type State = {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
     workshops: SharedWorkshop[];
+    datapackPriorityLoading: boolean;
+    datapackConfig: {
+      tempRowData: DatapackMetadata[] | null;
+      rowPriorityUpdates: DatapackPriorityChangeRequest[];
+    };
   };
   datapackProfilePage: {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
     unsavedChanges: boolean;
+    editRequestInProgress: boolean;
+    datapackImageVersion: number;
   };
   mapState: {
     mapInfo: MapInfo;
@@ -97,10 +107,20 @@ export type State = {
     };
     mapHistory: MapHistory;
   };
-  config: Config;
+  config: Config; // the active datapacks
   prevConfig: Config;
   presets: Presets;
-  datapacks: Datapack[];
+  loadingDatapacks: boolean;
+  datapackMetadata: DatapackMetadata[]; // all datapacks on the server, loaded on page load
+  datapacks: Datapack[]; // all datapacks on the server, not loaded on page load
+  skeletonStates: {
+    presetsLoading: boolean;
+    publicOfficialDatapacksLoading: boolean;
+    privateOfficialDatapacksLoading: boolean;
+    publicUserDatapacksLoading: boolean;
+    privateUserDatapacksLoading: boolean;
+  };
+  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -120,6 +140,12 @@ export type State = {
   presetColors: string[];
   isProcessingDatapacks: boolean;
   unsavedDatapackConfig: DatapackConfigForChartRequest[];
+  guides: {
+    isQSGOpen: boolean;
+    isDatapacksTourOpen: boolean;
+    isSettingsTourOpen: boolean;
+    isWorkshopsTourOpen: boolean;
+  };
 };
 
 export const state = observable<State>({
@@ -147,6 +173,7 @@ export const state = observable<State>({
     isGoogleUser: false,
     isAdmin: false,
     uuid: "",
+    workshopIds: [],
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"
@@ -155,12 +182,19 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: []
+    workshops: [],
+    datapackPriorityLoading: false,
+    datapackConfig: {
+      tempRowData: null,
+      rowPriorityUpdates: []
+    }
   },
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,
-    unsavedChanges: false
+    unsavedChanges: false,
+    editRequestInProgress: false,
+    datapackImageVersion: 0
   },
   chartLoading: false,
   madeChart: false,
@@ -214,7 +248,17 @@ export const state = observable<State>({
     settingsPath: ""
   },
   presets: {},
+  loadingDatapacks: false,
+  datapackMetadata: [],
   datapacks: [],
+  skeletonStates: {
+    presetsLoading: true,
+    publicOfficialDatapacksLoading: true,
+    privateOfficialDatapacksLoading: true,
+    publicUserDatapacksLoading: true,
+    privateUserDatapacksLoading: true
+  },
+  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
@@ -233,5 +277,11 @@ export const state = observable<State>({
   presetColors: JSON.parse(localStorage.getItem("savedColors") || JSON.stringify(defaultColors)),
   snackbars: [],
   isProcessingDatapacks: false,
-  unsavedDatapackConfig: []
+  unsavedDatapackConfig: [],
+  guides: {
+    isQSGOpen: false,
+    isDatapacksTourOpen: false,
+    isSettingsTourOpen: false,
+    isWorkshopsTourOpen: false
+  }
 });

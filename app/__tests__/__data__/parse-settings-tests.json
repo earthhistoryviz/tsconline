@@ -104,7 +104,9 @@
             "frequency": null,
             "stepSize": 1,
             "windowSize": 2,
-            "isDataMiningColumn": false
+            "isDataMiningColumn": false,
+            "dualColCompColumnRef": null,
+            "drawDualColCompColumn": null
         },
         "show": true,
         "expanded": true
@@ -177,7 +179,9 @@
             "windowSize": 2,
             "stepSize": 1,
             "dataMiningPointDataType": null,
-            "isDataMiningColumn": false
+            "isDataMiningColumn": false,
+            "dualColCompColumnRef": null,
+            "drawDualColCompColumn": null
           },
         "show": true,
         "expanded": true
@@ -274,7 +278,9 @@
         "drawExtraColumn": null,
         "windowSize": 2,
         "stepSize": 1,
-        "isDataMiningColumn": false
+        "isDataMiningColumn": false,
+        "isDualColCompColumn": false,
+        "drawDualColCompColumn": null
       },
       "generate-point-column-xml-test": {
         "_id": "class datastore.PointColumn:Long-Term Phanerozoic",
@@ -351,7 +357,9 @@
         "pointType": "rect",
         "drawExtraColumn": null,
         "windowSize": 2,
-        "stepSize": 1
+        "stepSize": 1,
+        "isDualColCompColumn": false,
+        "drawDualColCompColumn": null
       },
       "generate-basic-column-with-point-child-xml-test": {
         "_id": "class datastore.RootColumn:Chart Root",
@@ -454,7 +462,9 @@
             "pointType": "rect",
             "drawExtraColumn": null,
             "windowSize": 2,
-            "stepSize": 1
+            "stepSize": 1,
+            "isDualColCompColumn": false,
+            "drawDualColCompColumn": null
           }
         ],
         "width": 100
