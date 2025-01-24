@@ -103,6 +103,7 @@ export async function initializeDatabase() {
       if (error) {
         console.error(`exec error: ${error}`);
         reject(error);
+        // comment
         throw new Error(`Migration failed: ${error}`);
       }
       if (stdout) console.log(stdout);
