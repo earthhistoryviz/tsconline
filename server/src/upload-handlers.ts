@@ -486,26 +486,21 @@ export async function processMultipartPartsForDatapackUpload(
   };
 }
 
-export async function uploadFilesToWorkshop(workshopId: number, files: MultipartFile[]) {
+export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.join(directory, "files");
   await mkdir(filesFolder, { recursive: true });
-  const errorList = [];
-  for (const file of files) {
-    const filename = file.filename;
-    const filePath = join(filesFolder, filename);
-    const { code, message } = await uploadFileToFileSystem(file, filePath);
-    if (code !== 200) {
-      console.error(message);
-      errorList.push(`Failed to upload file ${file.filename}, because ${message}`);
-      await rm(filePath, { force: true }).catch((e) => {
-        console.error(e)
-      });
-    }
 
+  const filename = file.filename;
+  const filePath = join(filesFolder, filename);
+  const { code, message } = await uploadFileToFileSystem(file, filePath);
+  if (code !== 200) {
+    await rm(filePath, { force: true }).catch((e) => {
+      console.error(e)
+    });
   }
-  return errorList;
+  return { code, message };
 }
 
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
@@ -515,10 +510,8 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
   await mkdir(filesFolder, { recursive: true });
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);
-  console.error(fileExtension);
   const filePath = join(filesFolder, `coverPicture${fileExtension}`);
   const { code, message } = await uploadFileToFileSystem(coverPicture, filePath);
-  console.error(message);
   if (code != 200) {
     await rm(filePath, { force: true }).catch((e) => {
       console.error(e);

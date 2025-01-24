@@ -170,7 +170,21 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       datapack: { type: "string" }
     },
     required: ["datapack"]
-  };
+  }; const addWorkshopCoverParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+    },
+    required: ["workshopId"]
+  }
+  const addWorkshopFileParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+    },
+    required: ["workshopId"]
+  }
+
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
@@ -276,6 +290,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     { config: { rateLimit: moderateRateLimit }, schema: { params: adminEditDatapackMetadataBody } },
     adminEditDatapackMetadata
   );
-  fastify.post("/workshop/files", { config: { rateLimit: moderateRateLimit } }, adminUploadFilesToWorkshop);
-  fastify.post("/workshop/cover", { config: { rateLimit: moderateRateLimit } }, adminUploadCoverPictureToWorkshop);
+  fastify.post("/workshop/files/:workshopId", { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopFileParams } }, adminUploadFilesToWorkshop);
+  fastify.post("/workshop/cover/:workshopId", { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopCoverParams } }, adminUploadCoverPictureToWorkshop);
 };
