@@ -274,7 +274,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       timeLineY: svg.getElementById("timelineY"),
       timeLabelX: svg.getElementById("TimeLineLabelX"),
       timeLabelY: svg.getElementById("TimeLineLabelY"),
-      limitingBox: svg.getElementById("CrossPlotLimitingBox"),
+      limitingBox: svg.getElementById("CrossplotLimitingBox"),
       timeLinesGroup: svg.getElementById("CrossPlotTimeLines"),
       timeLabelsGroup: svg.getElementById("CrossPlotTimeLabels")
     });

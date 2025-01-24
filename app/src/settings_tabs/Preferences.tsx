@@ -5,7 +5,6 @@ import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
 import { TSCCheckbox } from "../components";
 import "./Preferences.css";
-import { useNavigate } from "react-router";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
@@ -102,19 +101,19 @@ export const Preferences = observer(function Preferences() {
             }
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
+          {import.meta.env.DEV && (
+            <FormControlLabel
+              name="crossplot-checkbox"
+              control={
+                <TSCCheckbox
+                  checked={state.chartTab.crossplot.isCrossPlot}
+                  onChange={() => actions.setIsCrossPlot(!state.chartTab.crossplot.isCrossPlot)}
+                />
+              }
+              label="Is Cross Plot"
+            />
+          )}
         </FormGroup>
-        {import.meta.env.DEV && (
-          <FormControlLabel
-            name="crossplot-checkbox"
-            control={
-              <TSCCheckbox
-                checked={state.chartTab.crossplot.isCrossPlot}
-                onChange={() => actions.setIsCrossPlot(!state.chartTab.crossplot.isCrossPlot)}
-              />
-            }
-            label="Is Cross Plot"
-          />
-        )}
       </Box>
     </div>
   );
