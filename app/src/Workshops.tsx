@@ -24,11 +24,12 @@ import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
 import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
-import { context } from "./state";
+import { actions, context } from "./state";
 import { StyledScrollbar } from "./components";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
 import {
+  formatDate,
   getActiveWorkshops,
   getNavigationRouteForWorkshopDetails,
   getPastWorkshops,
@@ -48,103 +49,105 @@ import {
 import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import { SharedWorkshop } from "@tsconline/shared";
+import { devSafeUrl } from "./util";
 
 // TODO: change this when implement the backend
 
-export type Workshop = {
-  title: string;
-  start: string;
-  end: string;
-  workshopId: number;
-  active: boolean;
-  datapacks: string[];
-  description: string;
-  files: string[];
-  imageLink: string;
-};
+// export type Workshop = {
+//   title: string;
+//   start: string;
+//   end: string;
+//   workshopId: number;
+//   active: boolean;
+//   datapacks: string[];
+//   description: string;
+//   files: string[];
+//   imageLink: string;
+// };
 
-// TODO: change this when implement the backend
+// // TODO: change this when implement the backend
 
-const dummyWorkshops: Workshop[] = [
-  // Active Workshops
-  {
-    title: "React Basics",
-    start: "2025-01-29T09:00:00",
-    end: "2025-01-30T18:00:00",
-    workshopId: 1,
-    active: false,
-    datapacks: ["React Overview", "JSX Basics"],
-    description:
-      "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
-    files: ["ReactBasics.pdf", "example_code.mdpk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Advanced TypeScript",
-    start: "2025-01-07T09:00:00",
-    end: "2025-01-07T16:00:00",
-    workshopId: 2,
-    active: true,
-    datapacks: ["Generics", "Decorators", "Type Inference"],
-    description:
-      "Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.",
-    files: ["AdvancedTypeScriptGuide.pdf", "examples.txt"],
-    imageLink: TSCreatorLogo
-  },
-  // Upcoming Workshops
-  {
-    title: "Node.js for Beginners",
-    start: "2025-01-28T10:00:00",
-    end: "2025-01-29T15:00:00",
-    workshopId: 3,
-    active: true,
-    datapacks: ["Node Basics", "Express.js Overview"],
-    description:
-      "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
-    files: ["NodeIntro.pdf", "starter_code.mdpk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Fullstack Development",
-    start: "2025-01-07T13:00:00",
-    end: "2025-01-08T16:00:00",
-    workshopId: 4,
-    active: false,
-    datapacks: ["Frontend-Backend Integration", "API Design"],
-    description:
-      "A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.",
-    files: ["FullstackDevelopment.pdf", "sample_project.txt"],
-    imageLink: TSCreatorLogo
-  },
-  // Expired Workshops
-  {
-    title: "CSS in Depth",
-    start: "2024-12-03T09:00:00",
-    end: "2024-12-03T18:00:00",
-    workshopId: 5,
-    active: false,
-    datapacks: ["Flexbox", "Grid Layout", "Animations"],
-    description:
-      "Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.",
-    files: ["CSSInDepth.pdf", "examples.mpdk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Python for Data Science",
-    start: "2025-01-12T10:00:00",
-    end: "2025-01-13T13:00:00",
-    workshopId: 6,
-    active: false,
-    datapacks: ["Pandas", "NumPy", "Matplotlib"],
-    description:
-      "An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.",
-    files: ["PythonDataScience.pdf", "datasets.txt"],
-    imageLink: TSCreatorLogo
-  }
-];
+// const dummyWorkshops: Workshop[] = [
+//   // Active Workshops
+//   {
+//     title: "React Basics",
+//     start: "2024-11-20",
+//     end: "2024-12-25",
+//     workshopId: 1,
+//     active: true,
+//     datapacks: ["React Overview", "JSX Basics"],
+//     description:
+//       "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
+//     files: ["ReactBasics.pdf", "example_code.mdpk"],
+//     imageLink: TSCreatorLogo
+//   },
+//   {
+//     title: "Advanced TypeScript",
+//     start: "2024-11-18",
+//     end: "2024-11-24",
+//     workshopId: 2,
+//     active: true,
+//     datapacks: ["Generics", "Decorators", "Type Inference"],
+//     description:
+//       "Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.",
+//     files: ["AdvancedTypeScriptGuide.pdf", "examples.txt"],
+//     imageLink: TSCreatorLogo
+//   },
+//   // Upcoming Workshops
+//   {
+//     title: "Node.js for Beginners",
+//     start: "2024-12-01",
+//     end: "2024-12-10",
+//     workshopId: 3,
+//     active: false,
+//     datapacks: ["Node Basics", "Express.js Overview"],
+//     description:
+//       "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
+//     files: ["NodeIntro.pdf", "starter_code.mdpk"],
+//     imageLink: TSCreatorLogo
+//   },
+//   {
+//     title: "Fullstack Development",
+//     start: "2024-12-05",
+//     end: "2024-12-15",
+//     workshopId: 4,
+//     active: false,
+//     datapacks: ["Frontend-Backend Integration", "API Design"],
+//     description:
+//       "A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.",
+//     files: ["FullstackDevelopment.pdf", "sample_project.txt"],
+//     imageLink: TSCreatorLogo
+//   },
+//   // Expired Workshops
+//   {
+//     title: "CSS in Depth",
+//     start: "2024-11-01",
+//     end: "2024-11-10",
+//     workshopId: 5,
+//     active: false,
+//     datapacks: ["Flexbox", "Grid Layout", "Animations"],
+//     description:
+//       "Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.",
+//     files: ["CSSInDepth.pdf", "examples.mpdk"],
+//     imageLink: TSCreatorLogo
+//   },
+//   {
+//     title: "Python for Data Science",
+//     start: "2024-10-15",
+//     end: "2024-10-25",
+//     workshopId: 6,
+//     active: false,
+//     datapacks: ["Pandas", "NumPy", "Matplotlib"],
+//     description:
+//       "An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.",
+//     files: ["PythonDataScience.pdf", "datasets.txt"],
+//     imageLink: TSCreatorLogo
+//   }
+// ];
 
 type WorkshopsCategoryProps = {
-  workshops: Workshop[];
+  workshops: SharedWorkshop[];
   noDataMessage: string;
   imageSize: number;
   includeTime: boolean;
@@ -166,6 +169,14 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
   onClickHandler
 }) => {
   const { t } = useTranslation();
+  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
+    const coverImageUrl = workshop.coverPictureUrl;
+    const serverURL = (coverImageUrl && coverImageUrl?.length > 0) ? devSafeUrl(coverImageUrl) : TSCreatorLogo;
+    return serverURL;
+  }
+  useEffect(() => {
+    actions.adminFetchWorkshops();
+  }, []);
   return (
     <StyledScrollbar>
       <Box sx={{ display: "flex", padding: "5px 5px" }}>
@@ -220,9 +231,9 @@ export const Workshops: React.FC = observer(() => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const activeWorkshops = getActiveWorkshops(dummyWorkshops);
-  const upcomingWorkshops = getUpcomingWorkshops(dummyWorkshops);
-  const pastWorkshops = getPastWorkshops(dummyWorkshops);
+  const activeWorkshops = getActiveWorkshops(state.admin.workshops);
+  const upcomingWorkshops = getUpcomingWorkshops(state.admin.workshops);
+  const pastWorkshops = getPastWorkshops(state.admin.workshops);
 
   const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
   const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 500 ? "day" : "month"));
@@ -230,7 +241,7 @@ export const Workshops: React.FC = observer(() => {
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
     const now = dayjs();
-    return dummyWorkshops.some((workshop) => {
+    return state.admin.workshops.some((workshop) => {
       const startDate = dayjs(workshop.start);
       const endDate = dayjs(workshop.end);
       return (
@@ -250,12 +261,9 @@ export const Workshops: React.FC = observer(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const setWorkshopAndNavigate = (event: { workshopId: number }) => {
-    const workshop = dummyWorkshops.find((w) => w.workshopId === event.workshopId);
-    if (workshop) {
-      navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
-    }
-  };
+  function setWorkshopAndNavigate(workshop: SharedWorkshop) {
+    navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+  }
 
   const localizer = dayjsLocalizer(dayjs);
 
@@ -359,9 +367,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-            })
+            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+          })
         }}
         onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}>
         {/* timing details on card */}
@@ -442,9 +450,9 @@ export const Workshops: React.FC = observer(() => {
     workshopId: workshop.workshopId
   }));
 
-  useEffect(() => {
-    actions.setWorkshopsArray(dummyWorkshops);
-  }, []);
+  // useEffect(() => {
+  //   actions.setWorkshopsArray(dummyWorkshops);
+  // }, []);
   return (
     <>
       {state.isLoggedIn ? (
