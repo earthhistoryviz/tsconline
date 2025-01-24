@@ -113,7 +113,8 @@ export function processLine(
         );
       }
       map.name = formatColumnName(String(info[1]));
-      const trimmedPath = path.dirname(path.dirname(map_info));
+      // const trimmedPath = path.dirname(path.dirname(map_info));
+      const trimmedPath = map_info.replace(/\/map-packs\/.*$/, "");
       map.img = `/${trimmedPath}/MapImages/${String(info[2])}`;
       map.note = String(info[3]);
       break;
