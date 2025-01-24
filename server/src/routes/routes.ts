@@ -193,7 +193,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(settingsXml + chartrequest.datapacks.join(","));
+  const hash = md5(isCrossPlot + settingsXml + chartrequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
