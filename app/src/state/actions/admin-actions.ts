@@ -539,7 +539,6 @@ export const adminCreateWorkshop = action(
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      console.error(regRestrict);
       const body: Record<string, string | number | undefined> = { title, start, end, regRestrict, creatorUUID, regLink };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
@@ -859,9 +858,8 @@ export const adminAddFilesToWorkshop = action(async (workshopId: number, files: 
   files.forEach((file) => {
     formData.append(`file`, file);
   });
-  formData.append("workshopId", workshopId.toString());
   try {
-    const response = await fetcher(`/admin/workshop/files`, {
+    const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
       method: "POST",
       body: formData,
       credentials: "include",
@@ -900,11 +898,10 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
   const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
   if (!recaptchaToken) return;
   const formData = new FormData();
-
+  console.log("here")
   formData.append("file", coverPicture);
-  formData.append("workshopId", workshopId.toString());
   try {
-    const response = await fetcher(`/admin/workshop/cover`, {
+    const response = await fetcher(`/admin/workshop/cover/${workshopId}`, {
       method: "POST",
       body: formData,
       credentials: "include",
@@ -915,6 +912,7 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
 
 
     if (response.ok) {
+      console.log("here2");
       return true;
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED;

@@ -170,8 +170,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
 }) => {
   const { t } = useTranslation();
   const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
-    const coverImageUrl = workshop.coverPictureUrl;
-    const serverURL = (coverImageUrl && coverImageUrl?.length > 0) ? devSafeUrl(coverImageUrl) : TSCreatorLogo;
+    const serverURL = (workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0) ? devSafeUrl(workshop.coverPictureUrl) : TSCreatorLogo;
     return serverURL;
   }
   useEffect(() => {
