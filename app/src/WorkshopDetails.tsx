@@ -11,6 +11,8 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
 import { formatDate } from "./state/non-action-util";
+import { SharedWorkshop } from "@tsconline/shared";
+import { devSafeUrl } from "./util";
 
 // TODO: change this when backend is finished
 
@@ -32,6 +34,10 @@ export const WorkshopDetails = observer(() => {
       actions.fetchWorkshopFilesForDownload(workshop);
     }
   };
+  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
+    const serverURL = (workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0) ? devSafeUrl(workshop.coverPictureUrl) : TSCreatorLogo;
+    return serverURL;
+  }
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -42,7 +48,7 @@ export const WorkshopDetails = observer(() => {
 
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
-          <img className={styles.di} src={TSCreatorLogo} />
+          <img className={styles.di} src={getWorkshopCoverImage(workshop)} />
         </div>
         <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">
