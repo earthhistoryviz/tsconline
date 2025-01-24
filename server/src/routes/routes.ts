@@ -187,7 +187,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { useCache } = chartrequest;
+  const { useCache, isCrossPlot } = chartrequest;
   const uuid = request.session.get("uuid");
   const userId = (await findUser({ uuid }))[0]?.userId;
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
@@ -294,7 +294,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "-o",
       chartFilePath,
       // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-      "-a"
+      "-a",
+      ...(isCrossPlot ? ["-cross"] : [])
     ];
     return new Promise<void>((resolve, reject) => {
       const cmd = "java";

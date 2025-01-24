@@ -160,7 +160,7 @@ export const state = observable<State>({
     crossplot: {
       lockX: false,
       lockY: false,
-      isCrossPlot: true
+      isCrossPlot: false
     },
     scale: 1,
     zoomFitScale: 1,
