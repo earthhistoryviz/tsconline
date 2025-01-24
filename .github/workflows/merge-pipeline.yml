@@ -416,7 +416,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts.zip
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts-${{ github.event.number }}.zip
 
       - name: Send build artifacts to server
         uses: appleboy/scp-action@v0.1.7
@@ -424,8 +424,8 @@ jobs:
           host: dev.geolex.org
           username: deployuser
           key: ${{ secrets.SSH_KEY }}
-          source: build-artifacts.zip
-          target: /home/aaron/tsconline/pr-preview-${{ github.event.number }}
+          source: build-artifacts-${{ github.event.number }}.zip
+          target: /home/aaron/tsconline
 
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
@@ -441,9 +441,8 @@ jobs:
             PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
             BRANCH="${{ github.event.pull_request.head.ref }}"
             
-            if [ ! -d "$PR_PREVIEW_DIR/app" ]; then
+            if [ ! -d "$PR_PREVIEW_DIR" ]; then
               echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
-              mkdir -p "$PR_PREVIEW_DIR"
               git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
             else
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
@@ -451,8 +450,8 @@ jobs:
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
 
-            unzip -o "$PR_PREVIEW_DIR/build-artifacts.zip" -d "$PR_PREVIEW_DIR"
-            rm "$PR_PREVIEW_DIR/build-artifacts.zip"
+            unzip -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
+            rm "build-artifacts-${{ github.event.number }}"
             
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
