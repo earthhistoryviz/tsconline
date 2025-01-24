@@ -437,7 +437,8 @@ jobs:
           script: |
             PR_NUMBER=${{ github.event.number }}
             CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-            PR_PREVIEW_DIR="/home/aaron/tsconline/pr-preview-${PR_NUMBER}"
+            TSCONLINE_DIR="/home/aaron/tsconline"
+            PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
             BRANCH="${{ github.event.pull_request.head.ref }}"
             
             if [ ! -d "$PR_PREVIEW_DIR" ]; then
@@ -446,12 +447,10 @@ jobs:
               git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
             else
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
-              cd "$PR_PREVIEW_DIR"
-              git fetch origin "$BRANCH"
-              git reset --hard "origin/$BRANCH"
+              git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
+              git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
             
-            cd "$PR_PREVIEW_DIR"
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
               docker-compose -f docker-compose-preview.yml restart pr-preview-run
@@ -469,18 +468,22 @@ jobs:
                 sleep $INTERVAL
                 ELAPSED=$((ELAPSED + INTERVAL))
               done
-              echo "Succesfully built"
+              echo "Succesfully restarted container for PR #${PR_NUMBER}"
             else
               echo "Setting up files for PR #${PR_NUMBER}"
+              mkdir -p "$PR_PREVIEW_DIR/server/assets/jars"
+              cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
+              mkdir -p "$PR_PREVIEW_DIR/server/assets/datapacks"
+              cp "$TSCONLINE_DIR/server/assets/datapacks/"* "$PR_PREVIEW_DIR/server/assets/datapacks/"
+              cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
+              cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
+              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
+
+              cd "$PR_PREVIEW_DIR"
               unzip build-artifacts.zip
+              rm -rf app/dist shared/dist server/dist
               mv app/dist app
               mv shared/dist shared
               mv server/dist server
               rm build-artifacts.zip
-              cp ../server/assets/jars/* ./server/assets/jars/
-              mkdir -p ./server/assets/datapacks
-              cp ../server/assets/datapacks/* ./server/assets/datapacks/
-              cp ../server/.env ./server
-              cp ../app/.env ./app
-              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' ./server/.env
             fi
