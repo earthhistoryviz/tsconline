@@ -46,7 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
-  CrossplotSettingsTabs,
+  CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -685,7 +685,7 @@ export const settingOptions = [
   }
 ];
 
-export const setCrossplotSettingsTabsSelected = action((newtab: number | CrossplotSettingsTabs) => {
+export const setCrossPlotSettingsTabsSelected = action((newtab: number | CrossPlotSettingsTabs) => {
   if (typeof newtab === "string") {
     state.crossplotSettingsTabs.selected = newtab;
     return;
@@ -701,7 +701,7 @@ export const setCrossplotSettingsTabsSelected = action((newtab: number | Crosspl
       state.crossplotSettingsTabs.selected = "column";
       break;
     default:
-      console.log("WARNING: setCrossplotSettingsTabsSelected: received index number that is unknown: ", newtab);
+      console.log("WARNING: setCrossPlotSettingsTabsSelected: received index number that is unknown: ", newtab);
       state.crossplotSettingsTabs.selected = "xAxis";
   }
 });
@@ -1368,7 +1368,7 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
 });
 
 export const setIsCrossPlot = action((isCrossPlot: boolean) => {
-  state.chartTab.crossplot.isCrossplot = isCrossPlot;
+  state.chartTab.crossplot.isCrossPlot = isCrossPlot;
 });
 export const setCrossPlotLockX = action((lockX: boolean) => {
   state.chartTab.crossplot.lockX = lockX;
@@ -1377,9 +1377,9 @@ export const setCrossPlotLockY = action((lockY: boolean) => {
   state.chartTab.crossplot.lockY = lockY;
 });
 
-export const setCrossplotChartX = action((chart?: ColumnInfo) => {
+export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
   state.crossplotSettingsTabs.chartX = chart;
 });
-export const setCrossplotChartY = action((chart?: ColumnInfo) => {
+export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
   state.crossplotSettingsTabs.chartY = chart;
 });

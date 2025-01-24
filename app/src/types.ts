@@ -134,13 +134,13 @@ export type Config = {
   settingsPath: string;
 };
 
-export const CrossplotSettingsTabs = {
+export const CrossPlotSettingsTabs = {
   xAxis: "xAxis",
   yAxis: "yAxis",
   column: "Column"
 };
 
-export type CrossplotSettingsTabs = keyof typeof CrossplotSettingsTabs;
+export type CrossPlotSettingsTabs = keyof typeof CrossPlotSettingsTabs;
 
 export const SettingsMenuOptionLabels = {
   time: "Time",
@@ -171,7 +171,7 @@ export type TimeSettings = {
     skipEmptyColumns: boolean;
   };
 };
-export type CrossplotTimeSettings = {
+export type CrossPlotTimeSettings = {
   topStageAge: number;
   baseStageAge: number;
   unitsPerMY: number;

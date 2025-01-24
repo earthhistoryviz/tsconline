@@ -116,7 +116,7 @@ export const Preferences = observer(function Preferences() {
             />
           )}
         </FormGroup>
-        <TSCButton onClick={() => navigate("/crossplot")}>Crossplot</TSCButton>
+        <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>
       </Box>
     </div>
   );

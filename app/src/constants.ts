@@ -1,4 +1,4 @@
-import { ChartSettings, CrossplotTimeSettings } from "./types";
+import { ChartSettings, CrossPlotTimeSettings } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {
@@ -30,7 +30,7 @@ export const defaultTimeSettings = {
   skipEmptyColumns: true
 };
 
-export const defaultCrossplotSettings: CrossplotTimeSettings = {
+export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   topStageAge: 0,
   baseStageAge: 10,
   unitsPerMY: 2

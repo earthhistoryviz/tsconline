@@ -11,8 +11,8 @@ import {
   User,
   GroupedEventSearchInfo,
   EditableDatapackMetadata,
-  CrossplotSettingsTabs,
-  CrossplotTimeSettings
+  CrossPlotSettingsTabs,
+  CrossPlotTimeSettings
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -32,7 +32,7 @@ import type {
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
-import { defaultCrossplotSettings, settings } from "../constants";
+import { defaultCrossPlotSettings, settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
@@ -45,7 +45,7 @@ export type State = {
     crossplot: {
       lockX: boolean;
       lockY: boolean;
-      isCrossplot: boolean;
+      isCrossPlot: boolean;
     };
     scale: number;
     zoomFitScale: number;
@@ -76,9 +76,9 @@ export type State = {
     tabValue: number;
   };
   crossplotSettingsTabs: {
-    selected: CrossplotSettingsTabs;
-    chartXTimeSettings: CrossplotTimeSettings;
-    chartYTimeSettings: CrossplotTimeSettings;
+    selected: CrossPlotSettingsTabs;
+    chartXTimeSettings: CrossPlotTimeSettings;
+    chartYTimeSettings: CrossPlotTimeSettings;
     chartX: ColumnInfo | undefined;
     chartY: ColumnInfo | undefined;
   };
@@ -231,8 +231,8 @@ export const state = observable<State>({
   },
   crossplotSettingsTabs: {
     selected: "xAxis",
-    chartXTimeSettings: cloneDeep(defaultCrossplotSettings),
-    chartYTimeSettings: cloneDeep(defaultCrossplotSettings),
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartX: undefined,
     chartY: undefined
   },
