@@ -172,7 +172,6 @@ export type ChartSettings = {
   enableHideBlockLabel: boolean;
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
-  useDatapackSuggestedAge: boolean;
 };
 
 export type EditableUserProperties = {
@@ -254,8 +253,7 @@ export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean 
     a.enablePriority === b.enablePriority &&
     a.enableHideBlockLabel === b.enableHideBlockLabel &&
     a.mouseOverPopupsEnabled === b.mouseOverPopupsEnabled &&
-    a.datapackContainsSuggAge === b.datapackContainsSuggAge &&
-    a.useDatapackSuggestedAge === b.useDatapackSuggestedAge
+    a.datapackContainsSuggAge === b.datapackContainsSuggAge
   );
 }
 export function equalConfig(a: Config, b: Config): boolean {
