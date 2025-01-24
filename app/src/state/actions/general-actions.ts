@@ -1065,9 +1065,6 @@ export const setLanguage = action("setLanguage", (newval: string) => {
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
-export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.useDatapackSuggestedAge = isChecked;
-});
 export const setTab = action("setTab", (newval: number) => {
   if (
     newval == 2 &&
@@ -1347,4 +1344,21 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
+});
+
+export const setIsCrossPlot = action((isCrossPlot: boolean) => {
+  state.chartTab.crossplot.isCrossPlot = isCrossPlot;
+});
+export const setCrossPlotLockX = action((lockX: boolean) => {
+  state.chartTab.crossplot.lockX = lockX;
+});
+export const setCrossPlotLockY = action((lockY: boolean) => {
+  state.chartTab.crossplot.lockY = lockY;
+});
+
+export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartX = chart;
+});
+export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartY = chart;
 });

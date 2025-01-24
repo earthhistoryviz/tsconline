@@ -3,13 +3,15 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
-import { TSCCheckbox } from "../components";
+import { TSCButton, TSCCheckbox } from "../components";
 import "./Preferences.css";
+import { useNavigate } from "react-router";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
   const units = Object.keys(state.settings.timeSettings)[0];
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   if (!units || !state.settings.timeSettings[units]) {
     throw new Error("Invalid unit provided or unit not found in timeSettings");
@@ -101,18 +103,8 @@ export const Preferences = observer(function Preferences() {
             }
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
-          <FormControlLabel
-            name="use-suggested-age-spans"
-            control={
-              <TSCCheckbox
-                className="preferences-checkbox"
-                onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
-                checked={!state.settings.useDatapackSuggestedAge}
-              />
-            }
-            label={t("settings.preferences.checkboxs.use-suggested-age-spans")}
-          />
         </FormGroup>
+        <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>
       </Box>
     </div>
   );
