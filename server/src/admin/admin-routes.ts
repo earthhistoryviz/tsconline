@@ -37,6 +37,9 @@ import {
   assertSharedWorkshopArray
 } from "@tsconline/shared";
 import {
+  fetchWorkshopCoverPictureFilepath,
+  getWorkshopDatapacksNames,
+  getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
   uploadFileToFileSystem,
@@ -511,28 +514,68 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  * @returns
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
+  // try {
+  //   const workshops: SharedWorkshop[] = (await findWorkshop({})).map(async (workshop) => {
+  //     const now = new Date();
+  //     const start = new Date(workshop.start);
+  //     const end = new Date(workshop.end);
+  //     const imageLink = await fetchWorkshopCoverPictureFilepath(workshop.workshopId) ? fetchWorkshopCoverPictureFilepath(workshop.workshopId) : "";
+  //     return {
+  //       title: workshop.title,
+  //       start: start.toISOString(),
+  //       end: end.toISOString(),
+  //       workshopId: workshop.workshopId,
+  //       active: start <= now && now <= end,
+  //       regRestrict: workshop.regRestrict,
+  //       creatorUUID: workshop.creatorUUID,
+  //       regLink: workshop.regLink,
+  //       coverPictureUrl: imageLink
+  //     };
+  //   });
+  //   assertSharedWorkshopArray(workshops);
+  //   reply.send({ workshops });
+  // } catch (error) {
+  //   console.error(error);
+  //   reply.status(500).send({ error: "Unknown error" });
+  // }
   try {
-    const workshops: SharedWorkshop[] = (await findWorkshop({})).map((workshop) => {
-      const now = new Date();
-      const start = new Date(workshop.start);
-      const end = new Date(workshop.end);
-      return {
-        title: workshop.title,
-        start: start.toISOString(),
-        end: end.toISOString(),
-        workshopId: workshop.workshopId,
-        active: start <= now && now <= end,
-        regRestrict: workshop.regRestrict,
-        creatorUUID: workshop.creatorUUID,
-        regLink: workshop.regLink
-      };
-    });
+    const workshops: SharedWorkshop[] = await Promise.all(
+      (await findWorkshop({})).map(async (workshop) => {
+        const now = new Date();
+        const start = new Date(workshop.start);
+        const end = new Date(workshop.end);
+
+
+        const imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || "";
+        const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
+        const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
+
+        return {
+          title: workshop.title,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          workshopId: workshop.workshopId,
+          active: start <= now && now <= end,
+          regRestrict: workshop.regRestrict,
+          creatorUUID: workshop.creatorUUID,
+          regLink: workshop.regLink,
+          coverPictureUrl: imageLink,
+          datapacks: datapacks,
+          files: files
+        };
+      })
+    );
+
+    // 验证返回的数据
     assertSharedWorkshopArray(workshops);
+
+    // 发送成功的响应
     reply.send({ workshops });
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
+
 };
 
 /**

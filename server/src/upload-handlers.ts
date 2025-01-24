@@ -16,7 +16,7 @@ import {
   isDateValid,
   isUserDatapack
 } from "@tsconline/shared";
-import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
+import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
@@ -525,4 +525,60 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
     });
   }
   return { code, message };
+}
+
+export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
+  const filesFolder = path.join(directory, "cover");
+  const possibleExtensions = [".png", ".jpeg", ".jpg"];
+
+  // Loop through possible extensions and check if the file exists
+  for (const ext of possibleExtensions) {
+    const coverPicturePath = path.join(filesFolder, "coverPicture" + ext);
+    if (await checkFileExists(coverPicturePath)) {
+      return coverPicturePath;
+    }
+  }
+  return null;
+}
+
+/**
+ * get the name of all datapacks of a workshop. Since they will be stored in the form of directories, this function retrieves the name of each subdir under a workshop dir.
+ * @param workshopId workshop id
+ * @returns the name of all datapacks of a workshop
+ */
+export async function getWorkshopDatapacksNames(workshopId: number): Promise<string[]> {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
+  try {
+    const entries = readdir(directory, { withFileTypes: true });
+    const folders = (await entries)
+      .filter((entry) => (entry.isDirectory() && entry.name != "files" && entry.name != "cover"))
+      .map((entry) => entry.name);
+    return folders;
+  } catch (error) {
+    console.error(`Error reading directory ${directory}:`, error);
+    return [];
+  }
+}
+
+/**
+ * get the name of all files of a workshop. 
+ * @param workshopId workshop id
+ * @returns the name of all files of a workshop
+ */
+export async function getWorkshopFilesNames(workshopId: number): Promise<string[]> {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
+  const filesFolder = path.join(directory, "files");
+  try {
+    const entries = readdir(filesFolder, { withFileTypes: true });
+    const files = (await entries)
+      .map((entry) => entry.name);
+    return files;
+  } catch (error) {
+    console.error(`Error reading directory ${filesFolder}:`, error);
+    return [];
+  }
 }
