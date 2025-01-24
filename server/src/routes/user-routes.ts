@@ -4,10 +4,12 @@ import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encry
 import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity, getUserUUIDDirectory } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
+import archiver from "archiver";
+import { createWriteStream } from "fs";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -335,4 +337,68 @@ export const userDeleteDatapack = async function userDeleteDatapack(
     return;
   }
   reply.status(200).send({ message: "Datapack deleted" });
+};
+
+export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
+  request: FastifyRequest<{ Params: { workshopId: number }; }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  // for test usage: const uuid = "username";
+  const { workshopId } = request.params;
+  if (!workshopId) {
+    reply.status(400).send({ error: "Missing workshopId" });
+    return;
+  }
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
+  const filesFolder = path.join(directory, "files");
+  const zipfile = path.join(directory, `filesFor${workshopUUID}.zip`);
+
+  // check if the zip file already exists
+  try {
+    const file = await readFile(zipfile);
+    reply.send(file);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code !== "ENOENT") {
+      reply.status(500).send({ error: "An error occurred: " + e });
+      return;
+    }
+  }
+  // zip file not exists, create one
+  try {
+    const output = createWriteStream(path.join(directory, `filesFor${workshopUUID}.zip`));
+    const archive = archiver("zip", {
+      zlib: { level: 9 }, // Sets the compression level.
+    });
+    output.on("close", () => {
+      console.log(`ZIP file created: ${archive.pointer()} total bytes`);
+    });
+    output.on("error", (err) => {
+      console.error("Error writing ZIP file:", err);
+      throw err;
+    });
+    archive.pipe(output);
+    archive.directory(filesFolder, false);
+    await archive.finalize();
+    const file = await readFile(zipfile);
+    reply.send(file);
+
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      const errormsg = "Failed to process the file";
+      reply.status(404).send({ error: errormsg });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
+    return;
+  }
+
+
 };

@@ -18,6 +18,8 @@ export type SharedWorkshop = {
   regLink?: string | null;
   coverPictureUrl?: string;
   description?: string;
+  files?: string[];
+  datapacks?: string[];
 };
 
 export type ConvertCrossPlotRequest = {
