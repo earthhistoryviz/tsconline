@@ -348,57 +348,61 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  // for test usage: const uuid = "username";
   const { workshopId } = request.params;
   if (!workshopId) {
     reply.status(400).send({ error: "Missing workshopId" });
     return;
   }
+
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.join(directory, "files");
   const zipfile = path.join(directory, `filesFor${workshopUUID}.zip`);
-
-  // check if the zip file already exists
+  console.error("hello" + zipfile)
+  console.error("hi" + filesFolder)
   try {
-    const file = await readFile(zipfile);
-    reply.send(file);
-  } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code !== "ENOENT") {
-      reply.status(500).send({ error: "An error occurred: " + e });
-      return;
+    let file;
+
+    // Check if ZIP file already exists
+    try {
+      file = await readFile(zipfile);
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
     }
-  }
-  // zip file not exists, create one
-  try {
-    const output = createWriteStream(path.join(directory, `filesFor${workshopUUID}.zip`));
-    const archive = archiver("zip", {
-      zlib: { level: 9 }, // Sets the compression level.
-    });
-    output.on("close", () => {
-      console.log(`ZIP file created: ${archive.pointer()} total bytes`);
-    });
-    output.on("error", (err) => {
-      console.error("Error writing ZIP file:", err);
-      throw err;
-    });
-    archive.pipe(output);
-    archive.directory(filesFolder, false);
-    await archive.finalize();
-    const file = await readFile(zipfile);
-    reply.send(file);
 
+    // If ZIP file doesn't exist, create one
+    if (!file) {
+
+      const output = createWriteStream(zipfile);
+      output.on("close", () => {
+        console.log(`ZIP file created successfully: ${archive.pointer()} total bytes`);
+      });
+
+      output.on("error", (err) => {
+        console.error("Error writing ZIP file:", err);
+        throw err;
+      });
+      const archive = archiver("zip", {
+        zlib: { level: 9 }, // Compression level
+      });
+      archive.pipe(output);
+      archive.directory(filesFolder + path.sep, false);
+      await archive.finalize();
+      file = await readFile(zipfile);
+
+    }
+
+    reply.send(file);
   } catch (e) {
     const error = e as NodeJS.ErrnoException;
     if (error.code === "ENOENT") {
-      const errormsg = "Failed to process the file";
-      reply.status(404).send({ error: errormsg });
+      reply.status(404).send({ error: "Failed to process the file" });
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
     }
-    return;
   }
-
-
 };

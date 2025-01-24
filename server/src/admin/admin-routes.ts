@@ -589,7 +589,12 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
   reply: FastifyReply
 ) {
   const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
-  if (!title || !start || !end || !regRestrict || !creatorUUID) {
+  if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
+    console.error(!title)
+    console.error(!start)
+    console.error(!end)
+    console.error(!regRestrict)
+    console.error(!creatorUUID)
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
