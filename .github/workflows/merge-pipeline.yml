@@ -268,87 +268,63 @@ jobs:
       #   if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
       #   run: exit 1
 
-      # - name: Parse JAR Names
-      #   id: parse_jar_names
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-      #     main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
-      #     main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
-
-      #     if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
-      #       echo "Error: pr_jar or main_jar is empty. Check config.json format."
-      #       exit 1
-      #     fi
-
-      #     echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
-      #     echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
-      #     echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
-  
-      # - name: Check Artifact Existence
-      #   id: check_artifacts
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.pr_jar_name }}\") | .id" | head -n 1)
-      #     main_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.main_jar_name }}\") | .id" | head -n 1)
-
-      #     if [[ -z "$pr_exists" && -z "$main_exists" ]]; then
-      #       echo "Error: No artifacts found for either PR or main branch."
-      #       exit 1
-      #     fi
-  
-      #     echo "Found artifacts: PR: $pr_exists, Main: $main_exists"
-      #     echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
-      #     echo "main_jar_exists=$([ -n "$main_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
-      #     echo "pr_jar_id=$pr_exists" >> $GITHUB_OUTPUT
-      #     echo "main_jar_id=$main_exists" >> $GITHUB_OUTPUT
-
-      # - name: Determine if Upload is Necessary
-      #   id: upload_artifacts
-      #   run: |
-      #     upload_needed=false
-      #     jar_name=""
-      #     jar_id=""
-      
-      #     main_jar_exists="${{ steps.check_artifacts.outputs.main_jar_exists }}"
-      #     pr_jar_exists="${{ steps.check_artifacts.outputs.pr_jar_exists }}"
-      #     main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
-      #     pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
-      #     pr_jar_id="${{ steps.check_artifacts.outputs.pr_jar_id }}"
-      #     main_jar_id="${{ steps.check_artifacts.outputs.main_jar_id }}"
-      
-      #     if [[ "$main_jar_exists" != "true" ]]; then
-      #       upload_needed=true
-      #       if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
-      #         jar_name="$pr_jar_name"
-      #         jar_id="$pr_jar_id"
-      #       else
-      #         jar_name="$main_jar_name"
-      #         jar_id="$main_jar_id"
-      #       fi
-      #     fi
-      
-      #     echo "Upload needed: $upload_needed"
-      #     echo "Jar name: $jar_name"
-      #     echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
-      #     echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
-      #     echo "jar_id=$jar_id" >> $GITHUB_OUTPUT
-
-      # - name: Upload Artifacts if needed
-      #   if: steps.upload_artifacts.outputs.upload_needed == 'true'
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: ${{ steps.upload_artifacts.outputs.jar_name }}
-      #     path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
-
-      - name: Delete old artifacts with the same name
+      - name: Parse JAR Names
+        id: parse_jar_names
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-309") | .id')
-          for ID in $ARTIFACTS; do
+          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
+          main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
+
+          if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
+            echo "Error: pr_jar or main_jar is empty. Check config.json format."
+            exit 1
+          fi
+
+          echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
+          echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
+          echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
+  
+      - name: Check Artifact Existence
+        id: check_artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.pr_jar_name }}\") | .id" | head -n 1)
+          echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
+
+      - name: Determine if Upload is Necessary
+        id: upload_artifacts
+        run: |
+          upload_needed=false
+      
+          main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
+          pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
+          pr_jar_exists="${{ steps.check_artifacts.outputs.pr_jar_exists }}"
+      
+          if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
+            upload_needed=true
+          fi
+      
+          echo "Upload needed: $upload_needed"
+          echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
+
+      - name: Upload JAR Artifact if needed
+        if: steps.upload_artifacts.outputs.upload_needed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.parse_jar_names.outputs.pr_jar_name }}
+          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+          overwrite: true
+          retention-days: 90
+
+      - name: Delete old build artifacts with same name
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
             echo "Deleting artifact with ID: $ID"
             gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
           done
@@ -401,7 +377,7 @@ jobs:
             exit 1
           fi
 
-      - name: Determine Download URL
+      - name: Determine Download URL for build artifacts
         if: github.event.pull_request.merged == false
         id: determine_download_url
         env:
@@ -450,7 +426,7 @@ jobs:
             fi
 
             unzip -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
-            rm "build-artifacts-${{ github.event.number }}"
+            rm "build-artifacts-${{ github.event.number }}.zip"
             
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
