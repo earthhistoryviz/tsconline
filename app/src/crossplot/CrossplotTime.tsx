@@ -1,23 +1,23 @@
 import { observer } from "mobx-react-lite";
-import { CrossplotTimeSettings } from "../types";
+import { CrossPlotTimeSettings } from "../types";
 import { Box, Button, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
-import styles from "./CrossplotTime.module.css";
+import styles from "./CrossPlotTime.module.css";
 import { CustomDivider } from "../components";
 import { ColumnInfo } from "@tsconline/shared";
 
-type CrossplotTimeSelectorProps = {
+type CrossPlotTimeSelectorProps = {
   unit: string | undefined;
-  settings: CrossplotTimeSettings;
-  setTimeSettings: (crossPlotSettings: Partial<CrossplotTimeSettings>) => void;
+  settings: CrossPlotTimeSettings;
+  setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
 };
-export const CrossplotTimeSelector = observer(function CrossplotTime({
+export const CrossPlotTimeSelector = observer(function CrossPlotTime({
   unit,
   settings,
   setTimeSettings
-}: CrossplotTimeSelectorProps) {
+}: CrossPlotTimeSelectorProps) {
   const { t } = useTranslation();
   const checkAgeRange = () => settings && settings.topStageAge > settings.baseStageAge;
   const pleaseSelectAUnit = "Please select a unit";
@@ -81,19 +81,19 @@ export const CrossplotTimeSelector = observer(function CrossplotTime({
   );
 });
 
-type CrossplotTimeProps = {
-  settings: CrossplotTimeSettings;
+type CrossPlotTimeProps = {
+  settings: CrossPlotTimeSettings;
   column: ColumnInfo | undefined;
-  setTimeSettings: (crossPlotSettings: Partial<CrossplotTimeSettings>) => void;
-  setCrossplotChart: (crossPlotSettings: ColumnInfo | undefined) => void;
+  setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
+  setCrossPlotChart: (crossPlotSettings: ColumnInfo | undefined) => void;
 };
 
-export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function CrossplotTime({
+export const CrossPlotTime: React.FC<CrossPlotTimeProps> = observer(function CrossPlotTime({
   settings,
   setTimeSettings,
-  setCrossplotChart,
+  setCrossPlotChart,
   column
-}: CrossplotTimeProps) {
+}: CrossPlotTimeProps) {
   const { state } = useContext(context);
   return (
     <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
@@ -102,7 +102,7 @@ export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function Cro
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
           if (!col) return;
-          setCrossplotChart(col);
+          setCrossPlotChart(col);
         }}>
         {state.settingsTabs.columns &&
           Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
@@ -114,10 +114,10 @@ export const CrossplotTime: React.FC<CrossplotTimeProps> = observer(function Cro
           <em>None</em>
         </MenuItem>
       </Select>
-      <CrossplotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
+      <CrossPlotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
       <Button
         onClick={() => {
-          setCrossplotChart(undefined);
+          setCrossPlotChart(undefined);
         }}>
         Clear
       </Button>

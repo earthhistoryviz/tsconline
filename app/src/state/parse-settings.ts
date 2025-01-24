@@ -36,7 +36,7 @@ import {
   defaultZoneColumnInfoTSC,
   isRGB
 } from "@tsconline/shared";
-import { ChartSettings } from "../types";
+import { ChartSettings, CrossPlotTimeSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
 //for testing purposes
@@ -402,6 +402,31 @@ export function generateSettingsXml(stateSettings: ChartSettings, indent: string
   return xml;
 }
 
+export function generateCrossPlotSettingsXml(
+  unit: string,
+  stateSettings: CrossPlotTimeSettings,
+  indent: string
+): string {
+  let xml = "";
+  xml += `${indent}<setting name="topAge" source="text" unit="${stateSettings}">\n`;
+  xml += `${indent}    <setting name="text">${stateSettings.topStageAge}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="baseAge" source="text" unit="${unit}">\n`;
+  xml += `${indent}    <setting name="text">${stateSettings.baseStageAge}</setting>\n`;
+  xml += `${indent}</setting>\n`;
+  xml += `${indent}<setting name="unitsPerMY" unit="${unit}">${stateSettings.unitsPerMY * 30}</setting>\n`;
+  xml += `${indent}<setting name="skipEmptyColumns" unit="${unit}">true</setting>\n`;
+  // xml += `${indent}<setting name="variableColors">UNESCO</setting>\n`;
+  // xml += `${indent}<setting name="noIndentPattern">${stateSettings.noIndentPattern}</setting>\n`;
+  // xml += `${indent}<setting name="negativeChk">false</setting>\n`;
+  // xml += `${indent}<setting name="doPopups">${stateSettings.mouseOverPopupsEnabled}</setting>\n`;
+  // xml += `${indent}<setting name="enEventColBG">${stateSettings.enableColumnBackground}</setting>\n`;
+  // xml += `${indent}<setting name="enChartLegend">${stateSettings.enableChartLegend}</setting>\n`;
+  // xml += `${indent}<setting name="enPriority">${stateSettings.enablePriority}</setting>\n`;
+  // xml += `${indent}<setting name="enHideBlockLable">${stateSettings.enableHideBlockLabel}</setting>\n`;
+  return xml;
+}
+
 export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInfoTSC {
   let column: ColumnInfoTSC = cloneDeep(defaultColumnBasicInfoTSC);
   switch (state.columnDisplayType) {
@@ -528,7 +553,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   return column;
 }
 
-export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
+export function columnInfoToSettingsTSC(state: ColumnInfo): ChartInfoTSC {
   const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
   settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumnInfoToColumnInfoTSC(state);
   settingsTSC.settings = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
@@ -702,12 +727,35 @@ export function jsonToXml(
 ): string {
   normalizeColumnProperties(state);
   changeManuallyAddedColumns(state, hash);
-  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
+  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
   //parseSettings. needed for mocking in tests
   xml += parseSettings.generateSettingsXml(settings, "        ");
+  xml += "    </settings>\n";
+  xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.columnInfoTSCToXml(settingsTSC["class datastore.RootColumn:Chart Root"], "        ");
+  xml += "    </column>\n";
+  xml += "</TSCreator>";
+  return xml;
+}
+
+export function crossPlotJsonToXml(
+  state: ColumnInfo,
+  hash: Map<string, ColumnInfo>,
+  settings: CrossPlotTimeSettings,
+  version: string = "PRO8.1"
+) {
+  normalizeColumnProperties(state);
+  changeManuallyAddedColumns(state, hash);
+  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state)));
+  let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
+  xml += `<TSCreator version="${version}">\n`;
+  xml += '    <settings version="1.0">\n';
+  //parseSettings. needed for mocking in tests
+  xml += parseSettings.generateCrossPlotSettingsXml(state.units, settings, "        ");
   xml += "    </settings>\n";
   xml += '    <column id="class datastore.RootColumn:Chart Root">\n';
   //parseSettings. needed for mocking in tests
