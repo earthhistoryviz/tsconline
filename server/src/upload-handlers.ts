@@ -577,7 +577,11 @@ export async function getWorkshopFilesNames(workshopId: number): Promise<string[
     const files = (await entries)
       .map((entry) => entry.name);
     return files;
-  } catch (error) {
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      return [];
+    }
     console.error(`Error reading directory ${filesFolder}:`, error);
     return [];
   }

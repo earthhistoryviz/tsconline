@@ -1248,39 +1248,34 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-// TODO: Change this when the actual backend for rendering all workshops is implemented.
-// Maybe similar to how we handled datapacks.
-// For now, this just loads the selected dummy workshop into the state.
-// export const setWorkshopsArray = action((workshop: SharedWorkshop[]) => {
-//   state.selectedWorkshops = workshop;
-// });
+
 export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
-  const route = `user/workshop/download/${workshop.workshopId}`;
+  const route = `/user/workshop/download/${workshop.workshopId}`;
   const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
   if (!recaptchaToken) return null;
+
   const response = await fetcher(route, {
     method: "GET",
     credentials: "include",
     headers: {
-      "recaptcha-token": recaptchaToken
-    }
+      "recaptcha-token": recaptchaToken,
+    },
   });
+
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
     switch (response.status) {
-      case 404: {
-        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD; //change this
+      case 404:
+        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
         break;
-      }
-
-      case 401: {
+      case 401:
         errorCode = ErrorCodes.NOT_LOGGED_IN;
         break;
-      }
     }
     displayServerError(response, errorCode, ErrorMessages[errorCode]);
     return;
   }
+
   const file = await response.blob();
   let fileURL = "";
   if (file) {
@@ -1299,7 +1294,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
         const aTag = document.createElement("a");
         aTag.href = fileURL;
 
-        aTag.setAttribute("download", `FilesFor${workshop.title}`);
+        aTag.setAttribute("download", `FilesFor${workshop.title}.zip`);
 
         document.body.appendChild(aTag);
         aTag.click();
@@ -1312,6 +1307,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     }
   }
 });
+
 
 
 export const setPresetsLoading = action((loading: boolean) => {

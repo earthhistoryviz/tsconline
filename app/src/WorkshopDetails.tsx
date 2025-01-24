@@ -27,8 +27,10 @@ export const WorkshopDetails = observer(() => {
   const workshop = fetchWorkshop();
   if (!state.isLoggedIn) return <NotLoggedIn />;
   if (!workshop || !id) return <PageNotFound />;
-  const downloadWorkshopFiles = () => {
-    actions.fetchWorkshopFilesForDownload(workshop);
+  function downloadWorkshopFiles() {
+    if (workshop) {
+      actions.fetchWorkshopFilesForDownload(workshop);
+    }
   };
   return (
     <div className={styles.adjcontainer}>
@@ -85,7 +87,7 @@ export const WorkshopDetails = observer(() => {
                         variant="contained"
                         color="primary"
                         sx={{ marginTop: 2 }}
-                        onClick={downloadWorkshopFiles}
+                        onClick={() => downloadWorkshopFiles()}
                       >
                         {t("workshops.details-page.download-button")}
                       </TSCButton>
