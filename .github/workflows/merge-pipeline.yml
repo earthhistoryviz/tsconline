@@ -450,6 +450,9 @@ jobs:
               git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
+
+            unzip -o "$PR_PREVIEW_DIR/build-artifacts.zip" -d "$PR_PREVIEW_DIR"
+            rm "$PR_PREVIEW_DIR/build-artifacts.zip"
             
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
@@ -478,12 +481,4 @@ jobs:
               cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
               cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
               sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
-
-              cd "$PR_PREVIEW_DIR"
-              unzip build-artifacts.zip
-              rm -rf app/dist shared/dist server/dist
-              mv app/dist app
-              mv shared/dist shared
-              mv server/dist server
-              rm build-artifacts.zip
             fi
