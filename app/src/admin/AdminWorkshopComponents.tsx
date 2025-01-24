@@ -178,7 +178,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       let created = false;
 
       if (!editMode) {
-        console.error(regRestrict);
         const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end, regRestrict, state.user.uuid, regLink);
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
@@ -186,6 +185,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
         workshopId = createdWorkshopId;
         created = true;
+        console.log("188");
       } else {
         if (!workshop) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
@@ -297,6 +297,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
       handleDialogClose();
+      console.log("1882");
     } catch (error) {
       displayServerError(
         error,
@@ -340,6 +341,11 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const handleCoverPictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedCoverPicture = event.target.files![0];
     if (!uploadedCoverPicture) {
+      return;
+    }
+    const ext = uploadedCoverPicture.name.split(".").pop();
+    if (!uploadedCoverPicture.type.startsWith("image/") || !ext || !/^(jpg|jpeg|png)$/.test(ext)) {
+      actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE);
       return;
     }
     setCoverPicture(uploadedCoverPicture);
