@@ -35,7 +35,6 @@ import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
 import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
-import { CrossPlotSettings } from "./crossplot/CrossPlotSettings";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
