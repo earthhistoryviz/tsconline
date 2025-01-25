@@ -33,7 +33,7 @@ function getMajorVersion(migrationName: string | null): number {
   if (!migrationName) {
     return 0;
   }
-  const match = migrationName.match(/^v?(\d+)\.\d+\.\d+-/); // Account for 'v' prefix
+  const match = migrationName.match(/^v?(\d+)\.\d+\.\d+$/); // Account for 'v' prefix
   return match && match[1] ? parseInt(match[1], 10) : 0;
 }
 
