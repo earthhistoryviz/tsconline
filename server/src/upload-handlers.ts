@@ -46,7 +46,7 @@ import { pipeline } from "stream/promises";
 import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
-import { getWorkshopUUIDFromWorkshopId } from "./workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId } from "./workshop/workshop-util.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));

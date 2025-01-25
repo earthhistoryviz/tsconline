@@ -29,7 +29,6 @@ import { StyledScrollbar } from "./components";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
 import {
-  formatDate,
   getActiveWorkshops,
   getNavigationRouteForWorkshopDetails,
   getPastWorkshops,
@@ -57,7 +56,7 @@ type WorkshopsCategoryProps = {
   noDataMessage: string;
   imageSize: number;
   includeTime: boolean;
-  onClickHandler: (workshop: Workshop) => void;
+  onClickHandler: (workshop: SharedWorkshop) => void;
 };
 
 type Event = {
@@ -104,7 +103,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={workshop.imageLink}
+                    image={getWorkshopCoverImage(workshop)}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
                   />
@@ -168,6 +167,10 @@ export const Workshops: React.FC = observer(() => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  function setWorkshopAndNavigateForCalender(event: { workshopId: number }) {
+    navigate(getNavigationRouteForWorkshopDetails(event.workshopId));
+  }
 
   function setWorkshopAndNavigate(workshop: SharedWorkshop) {
     navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
@@ -245,10 +248,9 @@ export const Workshops: React.FC = observer(() => {
   const EventWrapper: React.FC<EventWrapperProps> = ({ event }) => {
     const overlappingEvent = !events.every(
       (e) =>
-        e === event ||
         !(
-          e.start &&
-          e.end &&
+          dayjs(e.start).toDate() &&
+          dayjs(e.end).toDate() &&
           event.start &&
           event.end &&
           new Date(e.start) <= new Date(event.end) &&
@@ -275,11 +277,11 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-          })
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+            })
         }}
-        onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}>
+        onClick={() => setWorkshopAndNavigateForCalender(event as { workshopId: number })}>
         {/* timing details on card */}
         <Typography className="custom-event-label">{event.title}</Typography>
         {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
@@ -316,7 +318,7 @@ export const Workshops: React.FC = observer(() => {
           (new Date(event.start) < date && new Date(event.end) >= date)
       )
     ) {
-      newStyle.backgroundImage = `url(${dummyWorkshops.find((workshop) => new Date(workshop.start).toDateString() === date.toDateString() || (new Date(workshop.start) < date && new Date(workshop.end) >= date))?.imageLink})`;
+      newStyle.backgroundImage = TSCreatorLogo; // This need to be fix later so leave it as TSCreatorLogo for now.
       newStyle.backgroundSize = "cover";
       newStyle.backgroundPosition = "center";
       newStyle.opacity = 0.3;
@@ -338,14 +340,14 @@ export const Workshops: React.FC = observer(() => {
       onView={(view) => setCalendarView(view)}
       view={calendarView as (typeof Views)[keyof typeof Views]}
       components={{ toolbar: CustomToolbar, eventWrapper: EventWrapper }}
-      onSelectEvent={(event) => setWorkshopAndNavigate(event as { workshopId: number })}
+      onSelectEvent={(event) => setWorkshopAndNavigateForCalender(event as { workshopId: number })}
       dayPropGetter={(date) => dayPropGetter(date, events)}
     />
   );
 
-  const events = [
+  const events: Event[] = [
     ...(calendarWorkshopFilter === "All"
-      ? dummyWorkshops
+      ? state.admin.workshops
       : calendarWorkshopFilter === "Active"
         ? activeWorkshops
         : calendarWorkshopFilter === "Upcoming"
