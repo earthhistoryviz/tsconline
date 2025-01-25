@@ -1266,7 +1266,6 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-
 export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
   const route = `/user/workshop/download/${workshop.workshopId}`;
   const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
@@ -1276,8 +1275,8 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     method: "GET",
     credentials: "include",
     headers: {
-      "recaptcha-token": recaptchaToken,
-    },
+      "recaptcha-token": recaptchaToken
+    }
   });
 
   if (!response.ok) {
@@ -1325,8 +1324,6 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     }
   }
 });
-
-
 
 export const setPresetsLoading = action((loading: boolean) => {
   state.skeletonStates.presetsLoading = loading;
