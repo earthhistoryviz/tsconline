@@ -52,22 +52,51 @@ jobs:
             echo "download_status=success" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check if JAR artifact exists
-        if: steps.extract_pr.outputs.pr_number != ''
-        id: check_jar_artifact
+      - name: Get all commits in the push
+        id: get_commits
         run: |
-          if [ -f "build-artifacts.zip" ]; then
-            unzip -l build-artifacts.zip | grep -q "server/dist/tsconline.jar"
-            if [ $? -eq 0 ]; then
-              echo "JAR artifact found"
-              echo "jar_artifact=true" >> $GITHUB_OUTPUT
+          # Get all commits included in the push
+          COMMITS=$(git rev-list ${{ github.event.before }}..${{ github.event.after }})
+          echo "Commits included in the push: $COMMITS"
+          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
+
+      - name: Check if `activeJar` in `server/assets/config.json` was modified
+        id: check_active_jar
+        run: |
+          MODIFIED=false
+          ACTIVE_JAR_CHANGED=false
+          NEW_ACTIVE_JAR=""
+          PREVIOUS_ACTIVE_JAR=""
+
+          for COMMIT in ${{ steps.get_commits.outputs.commits }}; do
+            # Check if the file was modified in this commit
+            if git diff-tree --no-commit-id --name-only -r $COMMIT | grep -q "server/assets/config.json"; then
+              MODIFIED=true
+
+              # Extract the current value of `activeJar` from the file in this commit
+              NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' || echo "null")
+
+              # Compare with the previous value to detect changes
+              if [ "$NEW_JAR" != "null" ] && [ "$NEW_JAR" != "$PREVIOUS_ACTIVE_JAR" ]; then
+                ACTIVE_JAR_CHANGED=true
+                NEW_ACTIVE_JAR=$NEW_JAR
+              fi
+              PREVIOUS_ACTIVE_JAR=$NEW_JAR
+            fi
+          done
+
+          if [ "$MODIFIED" == "true" ]; then
+            if [ "$ACTIVE_JAR_CHANGED" == "true" ]; then
+              echo "The 'activeJar' field was changed. New value: $NEW_ACTIVE_JAR"
+              echo "active_jar_changed=true" >> $GITHUB_OUTPUT
+              echo "new_active_jar=$NEW_ACTIVE_JAR" >> $GITHUB_OUTPUT
             else
-              echo "JAR artifact not found"
-              echo "jar_artifact=false" >> $GITHUB_OUTPUT
+              echo "'server/assets/config.json' was modified, but 'activeJar' was not changed."
+              echo "active_jar_changed=false" >> $GITHUB_OUTPUT
             fi
           else
-            echo "Error: build-artifacts.zip not found"
-            echo "jar_artifact=false" >> $GITHUB_OUTPUT
+            echo "'server/assets/config.json' was not modified in the commits."
+            echo "active_jar_changed=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Checkout code
