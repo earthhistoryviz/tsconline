@@ -11,13 +11,12 @@ import {
   SelectChangeEvent,
   FormControl,
   Divider,
-  IconButton,
   Avatar
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader, CustomDivider, CustomTooltip } from "../components";
+import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader } from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -25,7 +24,6 @@ import { SharedWorkshop, isOfficialDatapack } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
-import { FileUpload } from "@mui/icons-material";
 
 type AddDatapacksToWorkshopFormProps = {
   currentWorkshop: SharedWorkshop;
@@ -178,7 +176,14 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       let created = false;
 
       if (!editMode) {
-        const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end, regRestrict, state.user.uuid, regLink);
+        const createdWorkshopId = await actions.adminCreateWorkshop(
+          workshopTitle,
+          start,
+          end,
+          regRestrict,
+          state.user.uuid,
+          regLink
+        );
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
           return;
@@ -264,7 +269,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           }
           actions.pushSnackbar(message, "success");
         }
-
       } else {
         actions.removeAllErrors();
         actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
@@ -291,7 +295,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           }
           actions.pushSnackbar(message, "success");
         }
-
       } else {
         actions.removeAllErrors();
         actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
@@ -349,7 +352,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       return;
     }
     setCoverPicture(uploadedCoverPicture);
-  }
+  };
   return (
     <>
       <TSCPopup
@@ -446,9 +449,18 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             />
             <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
               <Typography>Open for public registration?</Typography>
-              <Select value={regRestrict == 1 ? "Yes" : "No"} sx={{ height: '30px' }} onChange={() => { setRegRestrict(regRestrict === 0 ? 1 : 0) }}>
-                <MenuItem sx={{ height: '30px' }} value="Yes">Yes</MenuItem>
-                <MenuItem sx={{ height: '30px' }} value="No">No</MenuItem>
+              <Select
+                value={regRestrict == 1 ? "Yes" : "No"}
+                sx={{ height: "30px" }}
+                onChange={() => {
+                  setRegRestrict(regRestrict === 0 ? 1 : 0);
+                }}>
+                <MenuItem sx={{ height: "30px" }} value="Yes">
+                  Yes
+                </MenuItem>
+                <MenuItem sx={{ height: "30px" }} value="No">
+                  No
+                </MenuItem>
               </Select>
             </Box>
             <Box textAlign="center" width="100%">
@@ -476,25 +488,30 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   />
                   <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
                 </Box>
-                <Divider style={{
-                  height: "0.05px",
-                  width: "100%",
-                  backgroundColor: theme.palette.outline.main
-                }} />
+                <Divider
+                  style={{
+                    height: "0.05px",
+                    width: "100%",
+                    backgroundColor: theme.palette.outline.main
+                  }}
+                />
                 <Box textAlign="center" width="100%">
                   <Typography variant="h5" mb="5px">
                     Add Files
                   </Typography>
                   <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
-                    <Typography ml="10px"> {files && files.length > 0 ? (
-                      <ul>
-                        {files.map((file, index) => (
-                          <li key={index}>{file.name}</li>
-                        ))}
-                      </ul>
-                    ) : (
-                      "No file selected"
-                    )}</Typography>
+                    <Typography ml="10px">
+                      {" "}
+                      {files && files.length > 0 ? (
+                        <ul>
+                          {files.map((file, index) => (
+                            <li key={index}>{file.name}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "No file selected"
+                      )}
+                    </Typography>
                     <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
                       <InputFileUpload
                         text="Upload Files for the workshop"
@@ -502,7 +519,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         startIcon={<CloudUploadIcon />}
                         multiple
                       />
-
                     </Box>
                   </Box>
 
@@ -511,7 +527,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   </Typography>
                   <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
                     {coverPicture ? (
-
                       <Avatar
                         variant="square"
                         src={URL.createObjectURL(coverPicture)}
@@ -536,16 +551,16 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         startIcon={<CloudUploadIcon />}
                         multiple
                       />
-
                     </Box>
-
                   </Box>
                 </Box>
-                <Divider style={{
-                  height: "0.05px",
-                  width: "100%",
-                  backgroundColor: theme.palette.outline.main
-                }} />
+                <Divider
+                  style={{
+                    height: "0.05px",
+                    width: "100%",
+                    backgroundColor: theme.palette.outline.main
+                  }}
+                />
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
                   {editMode && (
                     <>
@@ -568,7 +583,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             </Box>
           </Box>
         </Box>
-      </Dialog >
+      </Dialog>
     </>
   );
 });
