@@ -170,7 +170,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       datapack: { type: "string" }
     },
     required: ["datapack"]
-  }; const addWorkshopCoverParams = {
+  };
+  const addWorkshopCoverParams = {
     type: "object",
     properties: {
       workshopId: { type: "number" }
