@@ -383,7 +383,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DOWNLOAD_URL=$(gh api repos/earthhistoryviz/tsconline/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
           echo "Download URL: $DOWNLOAD_URL"
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
 
