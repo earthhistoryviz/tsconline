@@ -377,7 +377,7 @@ jobs:
             exit 1
           fi
 
-      - name: Determine Download URL
+      - name: Determine Download URL for build artifacts
         if: github.event.pull_request.merged == false
         id: determine_download_url
         env:
