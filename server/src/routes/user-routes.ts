@@ -340,7 +340,7 @@ export const userDeleteDatapack = async function userDeleteDatapack(
 };
 
 export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
-  request: FastifyRequest<{ Params: { workshopId: number }; }>,
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -358,8 +358,8 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.join(directory, "files");
   const zipfile = path.join(directory, `filesFor${workshopUUID}.zip`);
-  console.error("hello" + zipfile)
-  console.error("hi" + filesFolder)
+  console.error("hello" + zipfile);
+  console.error("hi" + filesFolder);
   try {
     let file;
 
@@ -376,7 +376,6 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 
     // If ZIP file doesn't exist, create one
     if (!file) {
-
       const output = createWriteStream(zipfile);
       output.on("close", () => {
         console.log(`ZIP file created successfully: ${archive.pointer()} total bytes`);
@@ -387,13 +386,12 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
         throw err;
       });
       const archive = archiver("zip", {
-        zlib: { level: 9 }, // Compression level
+        zlib: { level: 9 } // Compression level
       });
       archive.pipe(output);
       archive.directory(filesFolder + path.sep, false);
       await archive.finalize();
       file = await readFile(zipfile);
-
     }
 
     reply.send(file);

@@ -58,5 +58,3 @@ export async function verifyWorkshopValidity(workshopUUID: string, userId: numbe
   }
   return { code: 200, message: "Success" };
 }
-
-
