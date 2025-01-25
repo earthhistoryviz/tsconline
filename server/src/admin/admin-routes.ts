@@ -42,15 +42,14 @@ import {
   getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
-  uploadFileToFileSystem,
-  uploadFilesToWorkshop,
-  uploadUserDatapackHandler
+  uploadFilesToWorkshop
 } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
 import {
+  checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,
   deleteOfficialDatapack,
   deleteUserDatapack,
@@ -59,7 +58,7 @@ import {
   fetchAllUsersDatapacks,
   fetchUserDatapack
 } from "../user/user-handler.js";
-import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
@@ -251,7 +250,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => { });
+    await deleteAllUserDatapacks(uuid).catch(() => {});
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });

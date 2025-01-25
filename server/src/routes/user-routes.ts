@@ -4,12 +4,14 @@ import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encry
 import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity, getUserUUIDDirectory } from "../workshop/workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
+import path from "path";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
