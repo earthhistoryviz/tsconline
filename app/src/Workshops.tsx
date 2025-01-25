@@ -52,100 +52,6 @@ import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
 import { devSafeUrl } from "./util";
 
-// TODO: change this when implement the backend
-
-// export type Workshop = {
-//   title: string;
-//   start: string;
-//   end: string;
-//   workshopId: number;
-//   active: boolean;
-//   datapacks: string[];
-//   description: string;
-//   files: string[];
-//   imageLink: string;
-// };
-
-// // TODO: change this when implement the backend
-
-// const dummyWorkshops: Workshop[] = [
-//   // Active Workshops
-//   {
-//     title: "React Basics",
-//     start: "2024-11-20",
-//     end: "2024-12-25",
-//     workshopId: 1,
-//     active: true,
-//     datapacks: ["React Overview", "JSX Basics"],
-//     description:
-//       "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
-//     files: ["ReactBasics.pdf", "example_code.mdpk"],
-//     imageLink: TSCreatorLogo
-//   },
-//   {
-//     title: "Advanced TypeScript",
-//     start: "2024-11-18",
-//     end: "2024-11-24",
-//     workshopId: 2,
-//     active: true,
-//     datapacks: ["Generics", "Decorators", "Type Inference"],
-//     description:
-//       "Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.",
-//     files: ["AdvancedTypeScriptGuide.pdf", "examples.txt"],
-//     imageLink: TSCreatorLogo
-//   },
-//   // Upcoming Workshops
-//   {
-//     title: "Node.js for Beginners",
-//     start: "2024-12-01",
-//     end: "2024-12-10",
-//     workshopId: 3,
-//     active: false,
-//     datapacks: ["Node Basics", "Express.js Overview"],
-//     description:
-//       "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
-//     files: ["NodeIntro.pdf", "starter_code.mdpk"],
-//     imageLink: TSCreatorLogo
-//   },
-//   {
-//     title: "Fullstack Development",
-//     start: "2024-12-05",
-//     end: "2024-12-15",
-//     workshopId: 4,
-//     active: false,
-//     datapacks: ["Frontend-Backend Integration", "API Design"],
-//     description:
-//       "A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.",
-//     files: ["FullstackDevelopment.pdf", "sample_project.txt"],
-//     imageLink: TSCreatorLogo
-//   },
-//   // Expired Workshops
-//   {
-//     title: "CSS in Depth",
-//     start: "2024-11-01",
-//     end: "2024-11-10",
-//     workshopId: 5,
-//     active: false,
-//     datapacks: ["Flexbox", "Grid Layout", "Animations"],
-//     description:
-//       "Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.",
-//     files: ["CSSInDepth.pdf", "examples.mpdk"],
-//     imageLink: TSCreatorLogo
-//   },
-//   {
-//     title: "Python for Data Science",
-//     start: "2024-10-15",
-//     end: "2024-10-25",
-//     workshopId: 6,
-//     active: false,
-//     datapacks: ["Pandas", "NumPy", "Matplotlib"],
-//     description:
-//       "An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.",
-//     files: ["PythonDataScience.pdf", "datasets.txt"],
-//     imageLink: TSCreatorLogo
-//   }
-// ];
-
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
   noDataMessage: string;
@@ -170,9 +76,12 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
 }) => {
   const { t } = useTranslation();
   const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
-    const serverURL = (workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0) ? devSafeUrl(workshop.coverPictureUrl) : TSCreatorLogo;
+    const serverURL =
+      workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0
+        ? devSafeUrl("/" + workshop.coverPictureUrl)
+        : TSCreatorLogo;
     return serverURL;
-  }
+  };
   useEffect(() => {
     actions.adminFetchWorkshops();
   }, []);
@@ -449,9 +358,9 @@ export const Workshops: React.FC = observer(() => {
     workshopId: workshop.workshopId
   }));
 
-  // useEffect(() => {
-  //   actions.setWorkshopsArray(dummyWorkshops);
-  // }, []);
+  useEffect(() => {
+    actions.adminFetchWorkshops();
+  }, []);
   return (
     <>
       {state.isLoggedIn ? (
