@@ -540,11 +540,25 @@ export const adminFetchWorkshops = action(async () => {
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
-  async (title: string, start: string, end: string, regRestrict: number, creatorUUID: string, regLink?: string): Promise<number | undefined> => {
+  async (
+    title: string,
+    start: string,
+    end: string,
+    regRestrict: number,
+    creatorUUID: string,
+    regLink?: string
+  ): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      const body: Record<string, string | number | undefined> = { title, start, end, regRestrict, creatorUUID, regLink };
+      const body: Record<string, string | number | undefined> = {
+        title,
+        start,
+        end,
+        regRestrict,
+        creatorUUID,
+        regLink
+      };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
         headers: {
@@ -884,6 +898,10 @@ export const adminAddFilesToWorkshop = action(async (workshopId: number, files: 
         case 422:
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
           break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          adminFetchWorkshops();
+          break;
       }
       displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
     }
@@ -903,7 +921,6 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
   const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
   if (!recaptchaToken) return;
   const formData = new FormData();
-  console.log("here")
   formData.append("file", coverPicture);
   try {
     const response = await fetcher(`/admin/workshop/cover/${workshopId}`, {
@@ -915,9 +932,7 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
       }
     });
 
-
     if (response.ok) {
-      console.log("here2");
       return true;
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED;
@@ -927,6 +942,13 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
           break;
         case 422:
           errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          adminFetchWorkshops();
+          break;
+        case 415:
+          errorCode = ErrorCodes.INVALID_FILE_FORMAT;
           break;
       }
       displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
