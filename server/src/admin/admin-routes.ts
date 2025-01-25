@@ -16,7 +16,7 @@ import {
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
-import path, { resolve, extname, relative, join } from "path";
+import { resolve, extname, relative, join } from "path";
 import { assetconfigs } from "../util.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
@@ -473,19 +473,10 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         const start = new Date(workshop.start);
         const end = new Date(workshop.end);
 
-
-        let imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || "";
+        const imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || "";
         const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
         const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
-        if (imageLink && imageLink?.length > 0) {
-          const index = imageLink.indexOf("/public");
-          if (index !== -1) {
-            imageLink = imageLink.slice(index);
-          }
-          else {
-            imageLink = "";
-          }
-        }
+
         return {
           title: workshop.title,
           start: start.toISOString(),
@@ -508,7 +499,6 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
-
 };
 
 /**
@@ -518,7 +508,9 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string, regRestrict: number, creatorUUID: string, regLink?: string } }>,
+  request: FastifyRequest<{
+    Body: { title: string; start: string; end: string; regRestrict: number; creatorUUID: string; regLink?: string };
+  }>,
   reply: FastifyReply
 ) {
   const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
@@ -807,7 +799,7 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
 };
 
 export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: number }; }>,
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) {
   const parts = request.parts();
@@ -837,13 +829,12 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
     return;
   } catch (error) {
     console.error(error);
-    reply.status(500).send({ error: "Error uploading files to workshop" })
+    reply.status(500).send({ error: "Error uploading files to workshop" });
   }
-
 };
 
 export const adminUploadCoverPictureToWorkshop = async function adminUploadCoverPictureToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: number }; }>,
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) {
   const parts = request.parts();
@@ -857,7 +848,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
   }
   try {
     for await (const part of parts) {
-      console.error("loop here");
       if (part.type === "file" && part.fieldname === "file") {
         coverPicture = part;
         if (!checkFileTypeIsDatapackImage(coverPicture)) {
@@ -877,7 +867,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
         }
         reply.send({ message: "Cover picture added to workshop" });
         return;
-
       }
     }
     if (!coverPicture) {
@@ -885,9 +874,8 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
       reply.status(400).send({ error: "Missing cover picture" });
       return;
     }
-
   } catch (error) {
     console.error(error);
-    reply.status(500).send({ error: "Error uploading cover picture to workshop" })
+    reply.status(500).send({ error: "Error uploading cover picture to workshop" });
   }
 };

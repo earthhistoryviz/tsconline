@@ -14,8 +14,6 @@ import { formatDate } from "./state/non-action-util";
 import { SharedWorkshop } from "@tsconline/shared";
 import { devSafeUrl } from "./util";
 
-// TODO: change this when backend is finished
-
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
@@ -33,11 +31,16 @@ export const WorkshopDetails = observer(() => {
     if (workshop) {
       actions.fetchWorkshopFilesForDownload(workshop);
     }
-  };
-  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
-    const serverURL = (workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0) ? devSafeUrl(workshop.coverPictureUrl) : TSCreatorLogo;
-    return serverURL;
   }
+  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
+    const coverPictureUrl = "/" + workshop.coverPictureUrl;
+    console.error(coverPictureUrl);
+    const serverURL =
+      workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0
+        ? devSafeUrl("/" + workshop.coverPictureUrl)
+        : TSCreatorLogo;
+    return serverURL;
+  };
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -93,18 +96,13 @@ export const WorkshopDetails = observer(() => {
                         variant="contained"
                         color="primary"
                         sx={{ marginTop: 2 }}
-                        onClick={() => downloadWorkshopFiles()}
-                      >
+                        onClick={() => downloadWorkshopFiles()}>
                         {t("workshops.details-page.download-button")}
                       </TSCButton>
                     </>
                   ) : (
-                    <Typography className={styles.fileName}>
-                      {t("workshops.details-page.messages.no-files")}
-                    </Typography>
+                    <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
-
-
                 </>
               </Box>
             </div>

@@ -437,7 +437,7 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
   const { code, message } = await uploadFileToFileSystem(file, filePath);
   if (code !== 200) {
     await rm(filePath, { force: true }).catch((e) => {
-      console.error(e)
+      console.error(e);
     });
   }
   return { code, message };
@@ -487,7 +487,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
   try {
     const entries = readdir(directory, { withFileTypes: true });
     const folders = (await entries)
-      .filter((entry) => (entry.isDirectory() && entry.name != "files" && entry.name != "cover"))
+      .filter((entry) => entry.isDirectory() && entry.name != "files" && entry.name != "cover")
       .map((entry) => entry.name);
     return folders;
   } catch (error) {
@@ -497,7 +497,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
 }
 
 /**
- * get the name of all files of a workshop. 
+ * get the name of all files of a workshop.
  * @param workshopId workshop id
  * @returns the name of all files of a workshop
  */
@@ -507,8 +507,7 @@ export async function getWorkshopFilesNames(workshopId: number): Promise<string[
   const filesFolder = path.join(directory, "files");
   try {
     const entries = readdir(filesFolder, { withFileTypes: true });
-    const files = (await entries)
-      .map((entry) => entry.name);
+    const files = (await entries).map((entry) => entry.name);
     return files;
   } catch (e) {
     const error = e as NodeJS.ErrnoException;

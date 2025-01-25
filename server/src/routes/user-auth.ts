@@ -125,5 +125,9 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     fetchWorkshopDatapack
   );
-  fastify.get("/workshop/download/:workshopId", { config: { rateLimit: moderateRateLimit }, schema: { params: workshopTitleParams } }, downloadWorkshopFilesZip)
+  fastify.get(
+    "/workshop/download/:workshopId",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopTitleParams } },
+    downloadWorkshopFilesZip
+  );
 };
