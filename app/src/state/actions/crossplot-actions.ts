@@ -17,7 +17,6 @@ import {
 import { NavigateFunction } from "react-router";
 import {
   ColumnInfo,
-  CrossPlotChartRequest,
   FontsInfo,
   assertChartErrorResponse,
   assertChartInfo,
@@ -97,13 +96,13 @@ export const fetchCrossPlotChart = action(async (navigate: NavigateFunction) => 
     const columnCopy = cloneDeep(state.settingsTabs.columns!);
     const aggSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, cloneDeep(state.settings));
 
-    const crossPlotChartRequest: CrossPlotChartRequest = {
-      chartXSettings: settingsX,
-      chartYSettings: settingsY,
-      crossPlotSettings: aggSettings,
-      datapacks: state.config.datapacks
+    const crossPlotChartRequest = {
+      settingsX,
+      settingsY,
+      aggSettings
     };
-    const response = await fetcher(`/crossplot`, {
+
+    const response = await fetcher(`/chart`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -169,7 +168,7 @@ export const fetchCrossPlotChart = action(async (navigate: NavigateFunction) => 
       setUnsafeChartContent(content);
       // the display version
       setChartContent(sanitizedSVG);
-      setChartTimelineEnabled(state.chartTab.crossplot.isCrossPlot);
+      setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
       setChartTimelineLocked(false);
       pushSnackbar("Successfully generated chart", "success");
     } catch (e) {
