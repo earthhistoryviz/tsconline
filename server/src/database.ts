@@ -73,7 +73,7 @@ let db: Kysely<Database>;
 export async function initializeDatabase() {
   db = new Kysely<Database>({
     dialect: new SqliteDialect({
-      database: new BetterSqlite3(path.join("db", "TSC.db"))
+      database: new BetterSqlite3(path.join("src", "db", "TSC.db"))
     })
   });
 
@@ -99,7 +99,7 @@ export async function initializeDatabase() {
     .execute();
 
   await new Promise<void>((resolve, reject) => {
-    exec("node dist/database.js up", (error, stdout, stderr) => {
+    exec("node dist/db/migrate.js up", (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
         reject(error);

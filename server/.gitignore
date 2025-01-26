@@ -1,5 +1,5 @@
 node_modules
 dist
 .env
-db/TSC.db
+src/db/TSC.db
 *.log
