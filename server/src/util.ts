@@ -8,6 +8,7 @@ import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
 import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+import { FastifyRequest } from "fastify";
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
@@ -92,6 +93,24 @@ export async function grabFilepaths(files: string[], topDirectory: string, botDi
   paths = paths.filter((path) => pattern.test(path));
   return paths;
 }
+
+/* Utility to validate the path of mappoint images for public and private
+ * Path must have 'MapImages' as second to last string in path and end with an image extension */
+export const isValidMapImagePath = (pathName: string): boolean => {
+  const pathSegments = pathName.split("/");
+  const isImage = /\.(png|jpg|jpeg|gif|webp)$/i.test(pathName);
+  const isSecondToLastSegment = pathSegments[pathSegments.length - 2] === "MapImages";
+  return isSecondToLastSegment && isImage;
+};
+
+// Utility to validate private access based on UUID
+export const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req: FastifyRequest }): boolean => {
+  const uuid = req.session.get("uuid");
+  if (!uuid) return false;
+  const pathSegments = pathName.split("/");
+  const [uuidFolder] = pathSegments.slice(4);
+  return uuidFolder === uuid && isValidMapImagePath(pathName);
+};
 
 /**
  * trim the first and last character (most likely quotes) (will not check if it is though)
