@@ -2,8 +2,8 @@ import * as path from "path";
 import BetterSqlite3 from "better-sqlite3";
 import { promises as fs } from "fs";
 import { Kysely, Migrator, SqliteDialect, FileMigrationProvider } from "kysely";
-import { Database } from "../dist/types.js";
-import logger from "../dist/error-logger.js";
+import { Database } from "../types.js";
+import logger from "../error-logger.js";
 
 /*
 IMPORTANT: Exercise extreme caution when performing migrations that delete data. Always ensure a backup of the database exists before running such migrations, as the data deletion is irreversible. 
@@ -40,14 +40,14 @@ function getMajorVersion(migrationName: string | null): number {
 async function migrateToLatest(force: boolean = false) {
   const db = new Kysely<Database>({
     dialect: new SqliteDialect({
-      database: new BetterSqlite3("TSC.db")
+      database: new BetterSqlite3(path.join("src", "db", "TSC.db"))
     })
   });
 
   try {
     const migrationFolder = new URL("migrations", import.meta.url).pathname;
 
-    const migrations = (await fs.readdir(migrationFolder)).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
+    const migrations = (await fs.readdir(migrationFolder)).filter((file) => file.endsWith(".js")).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
 
     const migrator = new Migrator({
       db,
@@ -70,7 +70,7 @@ async function migrateToLatest(force: boolean = false) {
 
     // Find unapplied migrations grouped by major version
     const unappliedMigrations = migrations
-      .map((migration) => migration.replace(/\.ts$/, "")) // Remove .ts extension
+      .map((migration) => migration.replace(/\.js$/, "")) // Remove .js extension
       .filter((migration) => !appliedMigrations.includes(migration));
 
     const migrationsToApply: string[] = [];
