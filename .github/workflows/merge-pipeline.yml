@@ -319,6 +319,9 @@ jobs:
           overwrite: true
           retention-days: 90
 
+      - name: Install Production Dependencies
+        run: yarn workspaces focus -A --production --frozen-lockfile
+
       - name: Delete old build artifacts with same name
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -337,6 +340,7 @@ jobs:
             app/dist
             shared/dist
             server/dist
+            .yarn/cache
           overwrite: true
           retention-days: 90
 
