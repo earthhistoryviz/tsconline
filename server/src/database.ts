@@ -99,7 +99,7 @@ export async function initializeDatabase() {
     .execute();
 
   await new Promise<void>((resolve, reject) => {
-    exec("cd db && yarn tsx migrate.ts up", (error, stdout, stderr) => {
+    exec("node dist/database.js up", (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
         reject(error);
