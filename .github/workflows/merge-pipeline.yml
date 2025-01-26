@@ -320,7 +320,7 @@ jobs:
           retention-days: 90
 
       - name: Install Production Dependencies
-        run: yarn workspaces focus -A --production --immutable
+        run: yarn workspaces focus -A --production
 
       - name: Delete old build artifacts with same name
         env:
