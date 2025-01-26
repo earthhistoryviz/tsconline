@@ -218,13 +218,7 @@ export type ChartRequest = {
   settings: string; // JSON string representing the settings file you want to use to make a chart
   datapacks: DatapackConfigForChartRequest[]; // array of datapacks you want to use to make a chart
   useCache: boolean; // whether to use the cache or not
-};
-
-export type CrossPlotChartRequest = {
-  chartXSettings: string;
-  chartYSettings: string;
-  crossPlotSettings: string;
-  datapacks: DatapackConfigForChartRequest[];
+  isCrossPlot: boolean;
 };
 
 export type ServerResponseError = {
@@ -613,17 +607,6 @@ export type DatapackPriorityUpdateSuccess = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
-
-export function assertCrossPlotChartRequest(o: any): asserts o is CrossPlotChartRequest {
-  if (!o || typeof o !== "object") throw new Error("CrossPlotChartRequest must be a non-null object");
-  if (!Array.isArray(o.datapacks)) throwError("ChartRequest", "datapacks", "array", o.datapacks);
-  if (typeof o.crossPlotSettings !== "string")
-    throwError("CrossPlotChartRequest", "crossPlotSettings", "string", o.crossPlotSettings);
-  if (typeof o.chartXSettings !== "string")
-    throwError("CrossPlotChartRequest", "chartXSettings", "string", o.chartXSettings);
-  if (typeof o.chartYSettings !== "string")
-    throwError("CrossPlotChartRequest", "chartYSettings", "string", o.chartYSettings);
-}
 
 export function isOfficialUUID(uuid: string): boolean {
   return uuid === "official";
@@ -1354,6 +1337,7 @@ export function assertChartRequest(o: any): asserts o is ChartRequest {
   if (typeof o !== "object") throw new Error("ChartRequest must be an object");
   if (typeof o.settings !== "string") throwError("ChartRequest", "settings", "string", o.settings);
   if (!Array.isArray(o.datapacks)) throwError("ChartRequest", "datapacks", "array", o.datapacks);
+  if (typeof o.isCrossPlot !== "boolean") throwError("ChartRequest", "isCrossPlot", "boolean", o.isCrossPlot);
 }
 
 export function isServerResponseError(o: any): o is ServerResponseError {

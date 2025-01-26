@@ -130,7 +130,8 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     const chartRequest: ChartRequest = {
       settings: xmlSettings,
       datapacks: state.config.datapacks,
-      useCache: state.useCache
+      useCache: state.useCache,
+      isCrossPlot: state.chartTab.crossPlot.isCrossPlot,
     };
     body = JSON.stringify(chartRequest);
   } catch (e) {
@@ -203,7 +204,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       generalActions.setUnsafeChartContent(content);
       // the display version
       generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(state.chartTab.crossplot.isCrossPlot);
+      generalActions.setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
       generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
     } catch (e) {

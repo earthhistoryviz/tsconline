@@ -1368,13 +1368,13 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
 });
 
 export const setIsCrossPlot = action((isCrossPlot: boolean) => {
-  state.chartTab.crossplot.isCrossPlot = isCrossPlot;
+  state.chartTab.crossPlot.isCrossPlot = isCrossPlot;
 });
 export const setCrossPlotLockX = action((lockX: boolean) => {
-  state.chartTab.crossplot.lockX = lockX;
+  state.chartTab.crossPlot.lockX = lockX;
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
-  state.chartTab.crossplot.lockY = lockY;
+  state.chartTab.crossPlot.lockY = lockY;
 });
 
 export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
