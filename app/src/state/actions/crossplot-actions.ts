@@ -32,6 +32,7 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
 });
 
 function areSettingsValidForGeneration() {
+  // check if columns EXIST
   if (!state.crossplotSettingsTabs.chartX || !state.settingsTabs.columns) {
     pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
@@ -39,6 +40,7 @@ function areSettingsValidForGeneration() {
   const xSettings = state.crossplotSettingsTabs.chartXTimeSettings;
   const ySettings = state.crossplotSettingsTabs.chartYTimeSettings;
   if (!xSettings || !ySettings) return false;
+  // verify validity of time settings being within logical range
   const xValid =
     xSettings.baseStageAge > xSettings.topStageAge || !isNaN(xSettings.topStageAge) || !isNaN(xSettings.baseStageAge);
   const yValid =
@@ -48,6 +50,7 @@ function areSettingsValidForGeneration() {
     return false;
   }
   removeError(ErrorCodes.IS_BAD_RANGE);
+  // check if columns are selected
   if (
     !state.crossplotSettingsTabs.chartX?.children.some((child) => child.on) ||
     !state.crossplotSettingsTabs.chartY?.children.some((child) => child.on)
@@ -70,7 +73,7 @@ const createColumnHashMap = (column: ColumnInfo, hash: Map<string, ColumnInfo>) 
 /**
  * Fetch the crossplot chart from the server
  */
-export const fetchCrossPlotChart = action(async (navigate: NavigateFunction) => {
+export const compileCrossPlotChartRequest = action("compileCrossPlotChartRequest", async (navigate: NavigateFunction) => {
   if (!areSettingsValidForGeneration()) {
     return false;
   }

@@ -14,3 +14,10 @@
   flex-direction: column;
   word-spacing: 1;
 }
+.crossPlotGenerateButton {
+  width: fit-content;
+  height: auto;
+  margin: 5px;
+  font-size: 0.85rem;
+  align-self: center;
+}
