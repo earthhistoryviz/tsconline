@@ -179,7 +179,7 @@ export default observer(function App() {
             title={t("dialogs.default-age.title")}
             onYes={() => actions.handlePopupResponse(true, navigate)}
             onNo={() => actions.handlePopupResponse(false, navigate)}
-            onClose={() => actions.fetchChartFromServer(navigate)}
+            onClose={() => actions.compileChartRequest(navigate)}
           />
           <TSCDialogLoader
             open={state.isProcessingDatapacks}
