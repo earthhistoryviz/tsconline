@@ -1,32 +1,22 @@
 import { action } from "mobx";
-import { CrossPlotTimeSettings } from "../../types";
+import { ChartSettings, CrossPlotTimeSettings } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
-  checkSVGStatus,
   pushError,
-  pushSnackbar,
-  removeError,
-  setChartContent,
-  setChartHash,
-  setChartLoading,
-  setChartTimelineEnabled,
-  setChartTimelineLocked,
-  setUnsafeChartContent
+  removeError
 } from "./general-actions";
 import { NavigateFunction } from "react-router";
 import {
   ColumnInfo,
   FontsInfo,
-  assertChartErrorResponse,
-  assertChartInfo,
-  defaultColumnRoot
+  defaultColumnRoot,
+  ChartRequest
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
-import { crossPlotJsonToXml, jsonToXml } from "../parse-settings";
-import { fetcher } from "../../util";
+import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import DOMPurify from "dompurify";
+import { sendChartRequestToServer } from "./generate-chart-actions";
 
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
   state.crossplotSettingsTabs.chartXTimeSettings = {
@@ -77,124 +67,114 @@ const createColumnHashMap = (column: ColumnInfo, hash: Map<string, ColumnInfo>) 
   return hash;
 };
 
+/**
+ * Fetch the crossplot chart from the server
+ */
 export const fetchCrossPlotChart = action(async (navigate: NavigateFunction) => {
   if (!areSettingsValidForGeneration()) {
     return false;
   }
   navigate("/chart");
   try {
-    const chartX = setCrossPlotChart(cloneDeep(state.crossplotSettingsTabs.chartX!));
-    const chartXHash = createColumnHashMap(chartX, new Map<string, ColumnInfo>());
-    const chartY = setCrossPlotChart(
-      cloneDeep(state.crossplotSettingsTabs.chartY || state.crossplotSettingsTabs.chartX!)
+    const columnCopy = cloneDeep(
+      combineCrossPlotColumns(state.crossplotSettingsTabs.chartX!, state.crossplotSettingsTabs.chartY!)
     );
-    const chartYHash = createColumnHashMap(chartY, new Map<string, ColumnInfo>());
-    const settingsX = crossPlotJsonToXml(chartX, chartXHash, state.crossplotSettingsTabs.chartXTimeSettings);
-    const settingsY = crossPlotJsonToXml(chartY, chartYHash, state.crossplotSettingsTabs.chartYTimeSettings);
+    const columnHashMap = createColumnHashMap(columnCopy, new Map());
+    const crossPlotChartSettings = cloneDeep(
+      createCrossPlotChartSettings(
+        state.crossplotSettingsTabs.chartXTimeSettings,
+        state.crossplotSettingsTabs.chartYTimeSettings
+      )
+    );
+    const json = jsonToXml(columnCopy, columnHashMap, crossPlotChartSettings);
 
-    // this is to
-    const columnCopy = cloneDeep(state.settingsTabs.columns!);
-    const aggSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, cloneDeep(state.settings));
-
-    const crossPlotChartRequest = {
-      settingsX,
-      settingsY,
-      aggSettings
+    const crossPlotChartRequest: ChartRequest = {
+      isCrossPlot: true,
+      settings: json,
+      datapacks: state.config.datapacks,
+      useCache: state.useCache
     };
 
-    const response = await fetcher(`/chart`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(crossPlotChartRequest),
-      credentials: "include"
-    });
-    const answer = await response.json();
-    if (response.status === 500) {
-      assertChartErrorResponse(answer);
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (answer.errorCode) {
-        case 100:
-          errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
-          break;
-        case 1000:
-          errorCode = ErrorCodes.INVALID_SETTINGS;
-          break;
-        case 1001:
-          errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
-          break;
-        case 400:
-        case 1002:
-        case 1003:
-        case 1004:
-        case 1005:
-        case 2000:
-        case 2001:
-        case 2002:
-        case 2003:
-          errorCode = ErrorCodes.INTERNAL_ERROR;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      setChartLoading(false);
-      return;
-    }
-    try {
-      assertChartInfo(answer);
-      setChartHash(answer.hash);
-      await checkSVGStatus();
-      const content = await (await fetcher(answer.chartpath)).text();
-      const domPurifyConfig = {
-        ADD_ATTR: [
-          "docbase",
-          "popuptext",
-          "minY",
-          "maxY",
-          "vertScale",
-          "topAge",
-          "baseAge",
-          "minX",
-          "maxX",
-          "baseLimit",
-          "topLimit",
-          "x1",
-          "y1"
-        ],
-        ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
-      };
-      const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
-      // for download ONLY
-      setUnsafeChartContent(content);
-      // the display version
-      setChartContent(sanitizedSVG);
-      setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
-      setChartTimelineLocked(false);
-      pushSnackbar("Successfully generated chart", "success");
-    } catch (e) {
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (response.status) {
-        case 408:
-          errorCode = ErrorCodes.SERVER_TIMEOUT;
-          break;
-        case 503:
-          errorCode = ErrorCodes.SERVER_BUSY;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      return;
-    }
+    await sendChartRequestToServer(crossPlotChartRequest);
   } catch (e) {
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
-const setCrossPlotChart = action((column: ColumnInfo) => {
+/**
+ * when both crossplot columns have the same unit, prepend this string to the unit
+ * @param unit
+ * @returns
+ */
+const prependCrossPlotUnitPrefixOnDupe = (unit: string) => {
+  return "custom-cross-plot-unit: " + unit;
+};
+
+/**
+ * Take the only two units (or one) and create a chart settings object
+ * @param xSettings
+ * @param ySettings
+ * @returns
+ */
+const createCrossPlotChartSettings = (
+  xSettings: CrossPlotTimeSettings,
+  ySettings: CrossPlotTimeSettings
+): ChartSettings => {
+  if (!state.crossplotSettingsTabs.chartX || !state.crossplotSettingsTabs.chartY) {
+    throw new Error("No columns selected for crossplot");
+  }
+  const xUnit = state.crossplotSettingsTabs.chartX.units;
+  const yUnit =
+    state.crossplotSettingsTabs.chartY.units === xUnit
+      ? prependCrossPlotUnitPrefixOnDupe(xUnit)
+      : state.crossplotSettingsTabs.chartY.units;
+  return {
+    timeSettings: {
+      [xUnit]: {
+        selectedStage: "",
+        topStageAge: xSettings.topStageAge,
+        topStageKey: "",
+        baseStageAge: xSettings.baseStageAge,
+        baseStageKey: "",
+        unitsPerMY: xSettings.unitsPerMY,
+        skipEmptyColumns: true
+      },
+      [yUnit]: {
+        selectedStage: "",
+        topStageAge: ySettings.topStageAge,
+        topStageKey: "",
+        baseStageAge: ySettings.baseStageAge,
+        baseStageKey: "",
+        unitsPerMY: ySettings.unitsPerMY,
+        skipEmptyColumns: true
+      }
+    },
+    noIndentPattern: false,
+    enableColumnBackground: false,
+    enableChartLegend: false,
+    enablePriority: false,
+    enableHideBlockLabel: false,
+    mouseOverPopupsEnabled: false,
+    datapackContainsSuggAge: false
+  };
+};
+
+/**
+ * Create a master columninfo with both columns
+ */
+const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: ColumnInfo) => {
   const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
-  column.parent = columnRoot.name;
-  columnRoot.children = [column];
+  columnOne.parent = columnRoot.name;
+  columnRoot.children = [columnOne];
+  columnRoot.fontOptions = columnOne.fontOptions;
   for (const opt in columnRoot.fontsInfo) {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
+  if (columnOne.units === columnTwo.units) {
+    return columnRoot;
+  }
+  columnTwo.parent = columnRoot.name;
+  columnRoot.children.push(columnTwo);
+  columnRoot.fontOptions = Array.from(new Set([...columnOne.fontOptions, ...columnTwo.fontOptions]));
   return columnRoot;
 });
