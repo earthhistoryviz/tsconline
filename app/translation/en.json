@@ -197,8 +197,7 @@
                     "friday": "Fri",
                     "saturday": "Sat"
                 },
-                "months": 
-                {
+                "months": {
                     "1": "January",
                     "2": "February",
                     "3": "March",
@@ -565,7 +564,8 @@
             "generate": "Generate",
             "generate-chart": "Generate Chart",
             "remove-cache": "Remove Cache",
-            "confirm-selection": "Confirm Selection"
+            "confirm-selection": "Confirm Selection",
+            "generate-cross-plot": "Generate Cross Plot"
         },
         "yes": "Yes",
         "no": "No",

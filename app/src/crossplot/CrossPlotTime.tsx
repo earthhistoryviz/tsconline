@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { CrossPlotTimeSettings } from "../types";
-import { Box, Button, MenuItem, Select, TextField, Typography } from "@mui/material";
+import { Box, MenuItem, Select, TextField, Typography } from "@mui/material";
 import { context } from "../state";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
@@ -25,7 +25,7 @@ export const CrossPlotTimeSelector = observer(function CrossPlotTime({
     <Box display="flex" gap="30px" flexDirection="column" width="100%" textAlign="center">
       <Box>
         <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
-        <CustomDivider className="time-form-divider" />
+        <CustomDivider className={styles.divider} />
         <TextField
           size="small"
           className="UnitTextField"
@@ -44,7 +44,7 @@ export const CrossPlotTimeSelector = observer(function CrossPlotTime({
       </Box>
       <Box>
         <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
-        <CustomDivider className="time-form-divider" />
+        <CustomDivider className={styles.divider} />
         <TextField
           size="small"
           className="UnitTextField"
@@ -63,7 +63,7 @@ export const CrossPlotTimeSelector = observer(function CrossPlotTime({
       </Box>
       <Box>
         <Typography className="IntervalLabel">{t("settings.time.interval.vertical-scale-header")}</Typography>
-        <CustomDivider className="time-form-divider" />
+        <CustomDivider className={styles.divider} />
         <TextField
           className="VerticalScale"
           label={`${unit ? t("settings.time.interval.vertical-scale") + unit + "):" : pleaseSelectAUnit}`}
@@ -96,31 +96,29 @@ export const CrossPlotTime: React.FC<CrossPlotTimeProps> = observer(function Cro
 }: CrossPlotTimeProps) {
   const { state } = useContext(context);
   return (
-    <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
+    <>
       <Select
         value={column?.units || 0}
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
           if (!col) return;
           setCrossPlotChart(col);
-        }}>
+        }}
+        className={styles.unitSelect}
+        >
         {state.settingsTabs.columns &&
           Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
             <MenuItem key={index} value={column.units}>
               {`${column.name} (${column.units})`}
             </MenuItem>
           ))}
-        <MenuItem value={0}>
+        {!column && <MenuItem value={0}>
           <em>None</em>
-        </MenuItem>
+        </MenuItem>}
       </Select>
+    <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
       <CrossPlotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
-      <Button
-        onClick={() => {
-          setCrossPlotChart(undefined);
-        }}>
-        Clear
-      </Button>
     </Box>
+    </>
   );
 });

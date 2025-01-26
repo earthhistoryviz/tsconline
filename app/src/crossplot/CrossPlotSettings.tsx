@@ -7,9 +7,14 @@ import { useContext } from "react";
 import { CustomTabs } from "../components/TSCCustomTabs";
 import { Column } from "../settings_tabs/Column";
 import { CrossPlotTime } from "./CrossPlotTime";
+import { TSCButton } from "../components";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export const CrossPlotSettings = observer(() => {
   const { state, actions } = useContext(context);
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const tabs = Object.values(CrossPlotSettingsTabs).map((val) => ({ id: val, tab: val }));
   const tabKeys = Object.keys(CrossPlotSettingsTabs);
   const tabIndex = tabKeys.indexOf(state.crossplotSettingsTabs.selected);
@@ -29,6 +34,9 @@ export const CrossPlotSettings = observer(() => {
         className="main-settings-tabs"
       />
       <SettingsTab tab={state.crossplotSettingsTabs.selected} />
+      <TSCButton onClick={() => actions.compileCrossPlotChartRequest(navigate)} buttonType="gradient" className={styles.crossPlotGenerateButton}>
+        {t("button.generate-cross-plot")}
+        </TSCButton>
     </Box>
   );
 });
