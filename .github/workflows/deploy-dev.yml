@@ -38,8 +38,12 @@ jobs:
 
       - name: Download Build Artifacts if PR number is present
         id: download_build_artifacts
-        if: steps.extract_info.outputs.pr_number != ''
         run: |
+          if [ -z "${{ steps.extract_info.outputs.pr_number }}" ]; then
+            echo "No PR number detected. Skipping download."
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_info.outputs.pr_number }}") | .archive_download_url' | head -n 1)
           echo "Download URL: $DOWNLOAD_URL"
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
@@ -65,32 +69,33 @@ jobs:
       - name: Check if activeJar was modified and downlaod
         id: check_active_jar
         run: |
-          ACTIVE_JAR_CHANGED=false
           NEW_ACTIVE_JAR=""
+          JAR_DOWNLOAD_STATUS="failed"
 
           for COMMIT in ${{ steps.extract_info.outputs.commits }}; do
             if git diff-tree --no-commit-id --name-only -r $COMMIT | grep -q "server/assets/config.json"; then
               NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
               if [ "$NEW_JAR" != "null" ]; then
-                echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
-                echo "active_jar_changed=true" >> $GITHUB_OUTPUT
+                echo "New active jar: $NEW_JAR"
                 DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "${NEW_JAR}") | .archive_download_url' | head -n 1)
                 curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o "jar.zip"
                 if [ -f "jar.zip" ]; then
-                  echo "jar_download_status=success" >> $GITHUB_OUTPUT
+                  echo "Jar download successful."
+                  JAR_DOWNLOAD_STATUS="success"
                   unzip -q jar.zip -o $NEW_JAR
-                else
-                  echo "jar_download_status=failed" >> $GITHUB_OUTPUT
                 fi
                 break
               fi
             fi
           done
 
+          echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+          echo "jar_download_status=$JAR_DOWNLOAD_STATUS" >> $GITHUB_OUTPUT
+
       - name: Determine if build is necessary
         id: build_necessary
         run: |
-          if [ "${{ steps.check_active_jar.outputs.active_jar_changed }}" == "false" ]; then
+          if [ "${{ steps.check_active_jar.outputs.new_active_jar }}" == "" ]; then
             echo "Build is not necessary."
             echo "build_necessary=false" >> $GITHUB_OUTPUT
           elif [ "${{ steps.check_active_jar.outputs.jar_download_status }}" == "failed" ]; then
