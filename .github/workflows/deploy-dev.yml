@@ -34,7 +34,7 @@ jobs:
           fi
 
       - name: Determine Download URL if PR number is present
-        id: determine_download_url
+        id: determine_build_download_url
         if: steps.extract_pr.outputs.pr_number != ''
         run: |
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr.outputs.pr_number }}") | .archive_download_url' | head -n 1)
@@ -42,9 +42,9 @@ jobs:
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
 
       - name: Download build artifacts
-        if: steps.determine_download_url.outputs.download_url != ''
+        if: steps.determine_build_download_url.outputs.download_url != ''
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" -o build-artifacts.zip
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_build_download_url.outputs.download_url }}" -o build-artifacts.zip
 
       - name: Get all commits in the push
         id: get_commits
@@ -68,7 +68,7 @@ jobs:
               MODIFIED=true
 
               # Extract the current value of `activeJar` from the file in this commit
-              NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' || echo "null")
+              NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
 
               # Compare with the previous value to detect changes
               if [ "$NEW_JAR" != "null" ] && [ "$NEW_JAR" != "$PREVIOUS_ACTIVE_JAR" ]; then
@@ -93,14 +93,20 @@ jobs:
             echo "active_jar_changed=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Attempt to download build artifacts if `activeJar` was changed
+      - name: Get Download URL for new activeJar
+        id: determine_jar_download_url
         if: steps.check_active_jar.outputs.active_jar_changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "${{ steps.check_active_jar.outputs.new_active_jar }}") | .archive_download_url' | head -n 1)
           echo "Download URL: $DOWNLOAD_URL"
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
-
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
+      
+      - name: Download new activeJar 
+        if: steps.determine_jar_download_url.outputs.download_url != ''
+        run: |
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_jar_download_url.outputs.download_url }}" -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
 
       - name: Verify build and Jar artifacts
         id: verify_artifacts
