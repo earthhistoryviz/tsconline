@@ -14,6 +14,9 @@ jobs:
       name: development
       url: ${{ vars.WEBSITE_URL }}
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Extract PR number from commit message
         id: extract_pr
         run: |
@@ -98,10 +101,6 @@ jobs:
             echo "'server/assets/config.json' was not modified in the commits."
             echo "active_jar_changed=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Checkout code
-        if: steps.verify_build_artifacts.outputs.download_status == 'false'
-        uses: actions/checkout@v4
 
       - name: Setup Node.js
         if: steps.verify_build_artifacts.outputs.download_status == 'false'
