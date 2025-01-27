@@ -19,8 +19,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract PR number from commit message
-        id: extract_pr
+      - name: Extract PR number and commits
+        id: extract_info
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
@@ -32,108 +32,74 @@ jobs:
             echo "Detected PR number: $PR_NUMBER"
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           fi
-
-      - name: Determine Download URL if PR number is present
-        id: determine_build_download_url
-        if: steps.extract_pr.outputs.pr_number != ''
-        run: |
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr.outputs.pr_number }}") | .archive_download_url' | head -n 1)
-          echo "Download URL: $DOWNLOAD_URL"
-          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
-
-      - name: Download build artifacts
-        if: steps.determine_build_download_url.outputs.download_url != ''
-        run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_build_download_url.outputs.download_url }}" -o build-artifacts.zip
-
-      - name: Get all commits in the push
-        id: get_commits
-        run: |
-          # Get all commits included in the push
           COMMITS=$(git rev-list ${{ github.event.before }}..${{ github.event.after }})
           echo "Commits included in the push: $COMMITS"
           echo "commits=$COMMITS" >> $GITHUB_OUTPUT
 
-      - name: Check if `activeJar` in `server/assets/config.json` was modified
+      - name: Download Build Artifacts if PR number is present
+        id: download_build_artifacts
+        if: steps.extract_info.outputs.pr_number != ''
+        run: |
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_info.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          echo "Download URL: $DOWNLOAD_URL"
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
+          if [ -f "build-artifacts.zip" ]; then
+            echo "build_download_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.download_build_artifacts.outputs.build_download_status == 'failed'
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+
+      - name: Install and build project
+        if: steps.download_build_artifacts.outputs.build_download_status == 'failed'
+        run: |
+          yarn
+          yarn build
+          zip -q -r build-artifacts.zip app/dist shared/dist server/dist  
+
+      - name: Check if activeJar was modified and downlaod
         id: check_active_jar
         run: |
-          MODIFIED=false
           ACTIVE_JAR_CHANGED=false
           NEW_ACTIVE_JAR=""
-          PREVIOUS_ACTIVE_JAR=""
 
-          for COMMIT in ${{ steps.get_commits.outputs.commits }}; do
-            # Check if the file was modified in this commit
+          for COMMIT in ${{ steps.extract_info.outputs.commits }}; do
             if git diff-tree --no-commit-id --name-only -r $COMMIT | grep -q "server/assets/config.json"; then
-              MODIFIED=true
-
-              # Extract the current value of `activeJar` from the file in this commit
               NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
-
-              # Compare with the previous value to detect changes
-              if [ "$NEW_JAR" != "null" ] && [ "$NEW_JAR" != "$PREVIOUS_ACTIVE_JAR" ]; then
-                ACTIVE_JAR_CHANGED=true
-                NEW_ACTIVE_JAR=$NEW_JAR
+              if [ "$NEW_JAR" != "null" ]; then
+                echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+                echo "active_jar_changed=true" >> $GITHUB_OUTPUT
+                DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "${NEW_JAR}") | .archive_download_url' | head -n 1)
+                curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o "jar.zip"
+                if [ -f "jar.zip" ]; then
+                  echo "jar_download_status=success" >> $GITHUB_OUTPUT
+                  unzip -q jar.zip -o $NEW_JAR
+                else
+                  echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+                fi
+                break
               fi
-              PREVIOUS_ACTIVE_JAR=$NEW_JAR
             fi
           done
 
-          if [ "$MODIFIED" == "true" ]; then
-            if [ "$ACTIVE_JAR_CHANGED" == "true" ]; then
-              echo "The 'activeJar' field was changed. New value: $NEW_ACTIVE_JAR"
-              echo "active_jar_changed=true" >> $GITHUB_OUTPUT
-              echo "new_active_jar=$NEW_ACTIVE_JAR" >> $GITHUB_OUTPUT
-            else
-              echo "'server/assets/config.json' was modified, but 'activeJar' was not changed."
-              echo "active_jar_changed=false" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "'server/assets/config.json' was not modified in the commits."
-            echo "active_jar_changed=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Get Download URL for new activeJar
-        id: determine_jar_download_url
-        if: steps.check_active_jar.outputs.active_jar_changed == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Determine if build is necessary
+        id: build_necessary
         run: |
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "${{ steps.check_active_jar.outputs.new_active_jar }}") | .archive_download_url' | head -n 1)
-          echo "Download URL: $DOWNLOAD_URL"
-          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
-      
-      - name: Download new activeJar 
-        if: steps.determine_jar_download_url.outputs.download_url != ''
-        run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_jar_download_url.outputs.download_url }}" -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
-          mv ${{ steps.check_active_jar.outputs.new_active_jar }}.zip ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.zip
-
-      - name: Verify build and Jar artifacts
-        id: verify_artifacts
-        run: |
-          if [ ! -f "build-artifacts.zip" ]; then
-            echo "Error: build-artifacts.zip not found"
-            echo "build_download_status=failed" >> $GITHUB_OUTPUT
-          else
-            echo "Downloaded build artifacts successfully"
-            echo "build_download_status=success" >> $GITHUB_OUTPUT
-          fi
-          if [ "${{ steps.check_active_jar.outputs.active_jar_changed }}" == "true" ]; then
-            if [ ! -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" ]; then
-              echo "Error: ${{ steps.check_active_jar.outputs.new_active_jar }}.zip not found"
-              echo "jar_download_status=failed" >> $GITHUB_OUTPUT
-            else
-              echo "Downloaded ${{ steps.check_active_jar.outputs.new_active_jar }}.zip successfully"
-              echo "jar_download_status=success" >> $GITHUB_OUTPUT
-            fi
-          else
-            echo "Jar artifact verification not required"
-            echo "jar_download_status=not_required" >> $GITHUB_OUTPUT
+          if [ "${{ steps.check_active_jar.outputs.active_jar_changed }}" == "false" ]; then
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.check_active_jar.outputs.jar_download_status }}" == "failed" ]; then
+            echo "Build is necessary."
+            echo "build_necessary=true" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up SSH key
-        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        if: steps.build_necessary.outputs.build_necessary == 'true'
         run: |
           eval $(ssh-agent)
           mkdir -p ~/.ssh
@@ -144,12 +110,12 @@ jobs:
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
       - name: Checkout code from Bitbucket
-        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        if: steps.build_necessary.outputs.build_necessary == 'true'
         run: |
           git clone git@bitbucket.org:strat/tscreator.git
 
       - name: Set up jdk
-        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        if: steps.build_necessary.outputs.build_necessary == 'true'
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
@@ -157,54 +123,30 @@ jobs:
           java-package: "jdk"
 
       - name: Build and compile TSCreator Jar
-        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        if: steps.build_necessary.outputs.build_necessary == 'true'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }} \;
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} \;
           if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
             exit 1
           fi
+
+      - name: Send Artifacts to Server
+        run: |
+          FILES_TO_SEND="build-artifacts.zip"
+          if [ "${{ steps.check_active_jar.outputs.jar_download_status }}" == "success" ]; then
+            FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
+          fi
       
-      - name: Send Jar to server
-        if: steps.check_active_jar.outputs.active_jar_changed == 'true'
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          source: ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}
-          target: ${{ secrets.DEV_PATH }}
-
-      - name: Setup Node.js
-        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
-        uses: actions/setup-node@v3
-        with:
-          node-version: '21'
-
-      - name: Install and build project
-        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
-        run: |
-          yarn
-          yarn build
-
-      - name: Zip build artifacts
-        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
-        run: |
-          zip -r build-artifacts.zip app/dist shared/dist server/dist
-
-      - name: Send build artifacts to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_KEY }}
-          source: build-artifacts.zip
-          target: ${{ secrets.DEV_PATH }}/build-artifacts.zip
+          echo "Sending files: $FILES_TO_SEND"
+          echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
 
       # - name: Deploy to server
       #   uses: appleboy/ssh-action@v1.0.3
