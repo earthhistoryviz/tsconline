@@ -42,20 +42,9 @@ jobs:
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
 
       - name: Download build artifacts
-        if: steps.extract_pr.outputs.pr_number != ''
+        if: steps.determine_download_url.outputs.download_url != ''
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" -o build-artifacts.zip
-
-      - name: Verify build artifacts
-        id: verify_build_artifacts
-        run: |
-          if [ ! -f "build-artifacts.zip" ]; then
-            echo "Error: build-artifacts.zip not found"
-            echo "download_status=failed" >> $GITHUB_OUTPUT
-          else
-            echo "Downloaded build artifacts successfully"
-            echo "download_status=success" >> $GITHUB_OUTPUT
-          fi
 
       - name: Get all commits in the push
         id: get_commits
@@ -104,98 +93,189 @@ jobs:
             echo "active_jar_changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Attempt to download build artifacts if `activeJar` was changed
+        if: steps.check_active_jar.outputs.active_jar_changed == 'true'
+        run: |
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "${{ steps.check_active_jar.outputs.new_active_jar }}") | .archive_download_url' | head -n 1)
+          echo "Download URL: $DOWNLOAD_URL"
+          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+
+          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
+
+      - name: Verify build and Jar artifacts
+        id: verify_artifacts
+        run: |
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          else
+            echo "Downloaded build artifacts successfully"
+            echo "build_download_status=success" >> $GITHUB_OUTPUT
+          fi
+          if [ ! -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" && ${{ steps.check_active_jar.outputs.active_jar_changed }} == 'true' ]; then
+            echo "Error: ${{ steps.check_active_jar.outputs.new_active_jar }}.zip not found"
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+          else
+            echo "Downloaded ${{ steps.check_active_jar.outputs.new_active_jar }}.zip successfully or not required"
+            echo "jar_download_status=success" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up SSH key
+        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Checkout code from Bitbucket
+        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+
+      - name: Set up jdk
+        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+
+      - name: Build and compile TSCreator Jar
+        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        run: |
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar" ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+      
+      - name: Send Jar to server
+        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_KEY }}
+          source: ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar
+          target: ${{ secrets.DEV_PATH }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar
+
       - name: Setup Node.js
-        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
         uses: actions/setup-node@v3
         with:
           node-version: '21'
 
       - name: Install and build project
-        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
         run: |
           yarn
           yarn build
 
       - name: Zip build artifacts
-        if: steps.verify_build_artifacts.outputs.download_status == 'false'
+        if: steps.verify_artifacts.outputs.build_download_status == 'failed'
         run: |
           zip -r build-artifacts.zip app/dist shared/dist server/dist
 
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
+      - name: Send build artifacts to server
+        uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            cd ${{ secrets.DEV_PATH }}
+          key: ${{ secrets.SSH_KEY }}
+          source: build-artifacts.zip
+          target: ${{ secrets.DEV_PATH }}/build-artifacts.zip
 
-            git pull --no-edit
+      # - name: Deploy to server
+      #   uses: appleboy/ssh-action@v1.0.3
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USERNAME }}
+      #     key: ${{ secrets.SSH_PRIVATE_KEY }}
+      #     script: |
+      #       cd ${{ secrets.DEV_PATH }}
 
-            PULL_STATUS=$?
+      #       git pull --no-edit
 
-            if [ $PULL_STATUS -eq 0 ]; then
-              echo "git pull succeeded"
-            else
-              echo "git pull failed with exit status $PULL_STATUS"
-              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
-              exit 1
-            fi
+      #       PULL_STATUS=$?
 
-            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
-            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
-            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
-            echo 'NODE_ENV="production"' >> ./server/.env
-            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
-            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
-            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
-            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
-            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
-            echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
+      #       if [ $PULL_STATUS -eq 0 ]; then
+      #         echo "git pull succeeded"
+      #       else
+      #         echo "git pull failed with exit status $PULL_STATUS"
+      #         echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
+      #         exit 1
+      #       fi
 
-            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
-            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+      #       unzip -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
+      #       rm build-artifacts.zip
+      #       if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" ]; then
+      #         unzip -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip -d ${{ secrets.DEV_PATH }}/server/assets/jars
+      #         rm ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
+      #       fi
 
-            if [ ! -f "docker-compose-server.yml" ]; then
-              echo "Error: docker-compose-server.yml not found"
-              exit 1
-            fi
+      #       echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+      #       echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+      #       echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+      #       echo 'NODE_ENV="production"' >> ./server/.env
+      #       echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+      #       echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+      #       echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+      #       echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+      #       echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+      #       echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Container is not running. Bringing up the container..."
-              docker-compose -f docker-compose-server.yml up -d
-              if [ $? -ne 0 ]; then
-                echo "Error: Failed to bring up the container."
-                exit 1
-              fi
-            else
-              echo "Container is already running. Restarting..."
-              docker-compose -f docker-compose-server.yml restart
-            fi
+      #       echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+      #       echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
-            sleep 5
+      #       if [ ! -f "docker-compose-server.yml" ]; then
+      #         echo "Error: docker-compose-server.yml not found"
+      #         exit 1
+      #       fi
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for tsconline."
-              exit 1
-            fi
+      #       CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+      #       if [ -z "$CONTAINER_ID" ]; then
+      #         echo "Container is not running. Bringing up the container..."
+      #         docker-compose -f docker-compose-server.yml up -d
+      #         if [ $? -ne 0 ]; then
+      #           echo "Error: Failed to bring up the container."
+      #           exit 1
+      #         fi
+      #       else
+      #         echo "Container is already running. Restarting..."
+      #         docker-compose -f docker-compose-server.yml restart
+      #       fi
 
-            MAX_WAIT=480
-            INTERVAL=5
-            ELAPSED=0
+      #       START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+      #       sleep 5
 
-            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-              if [ $ELAPSED -ge $MAX_WAIT ]; then
-                echo "Max wait time exceeded. Exiting..."
-                echo "Last 200 lines in container:"
-                docker-compose -f docker-compose-server.yml logs --tail=200
-                docker-compose -f docker-compose-server.yml stop
-                exit 1
-              fi
-              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-              sleep $INTERVAL
-              ELAPSED=$((ELAPSED + INTERVAL))
-            done
+      #       CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+      #       if [ -z "$CONTAINER_ID" ]; then
+      #         echo "Error: Failed to get container ID for tsconline."
+      #         exit 1
+      #       fi
+
+      #       MAX_WAIT=480
+      #       INTERVAL=5
+      #       ELAPSED=0
+
+      #       while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+      #         if [ $ELAPSED -ge $MAX_WAIT ]; then
+      #           echo "Max wait time exceeded. Exiting..."
+      #           echo "Last 200 lines in container:"
+      #           docker-compose -f docker-compose-server.yml logs --tail=200
+      #           docker-compose -f docker-compose-server.yml stop
+      #           exit 1
+      #         fi
+      #         echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+      #         sleep $INTERVAL
+      #         ELAPSED=$((ELAPSED + INTERVAL))
+      #       done
