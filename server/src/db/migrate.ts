@@ -47,7 +47,9 @@ async function migrateToLatest(force: boolean = false) {
   try {
     const migrationFolder = new URL("migrations", import.meta.url).pathname;
 
-    const migrations = (await fs.readdir(migrationFolder)).filter((file) => file.endsWith(".js")).sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
+    const migrations = (await fs.readdir(migrationFolder))
+      .filter((file) => file.endsWith(".js"))
+      .sort((a, b) => a.localeCompare(b)); // Sort by filename alphabetically
 
     const migrator = new Migrator({
       db,

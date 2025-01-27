@@ -5,7 +5,7 @@ concurrency:
 on:
   push:
     branches:
-      - main
+      - TSC-577-send-artifacts-to-the-server-instead-of-deployments
 
 jobs:
   deploy:
@@ -119,8 +119,6 @@ jobs:
         if: steps.verify_build_artifacts.outputs.download_status == 'false'
         run: |
           zip -r build-artifacts.zip app/dist shared/dist server/dist
-
-      
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
