@@ -99,7 +99,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "${{ steps.check_active_jar.outputs.new_active_jar }}") | .archive_download_url' | head -n 1)
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "${{ steps.check_active_jar.outputs.new_active_jar }}") | .archive_download_url' | head -n 1)
           echo "Download URL: $DOWNLOAD_URL"
           echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
       
