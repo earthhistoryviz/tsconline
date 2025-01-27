@@ -59,6 +59,7 @@ export const Home = observer(function Home() {
             className="sub-header-section-landing-page-image"
             src={devSafeUrl("/public/website-images/landing-page.png")}
           />
+          <UpcomingWorkshops />
         </Box>
         <Box className="get-started-landing-page">
           <Box
@@ -550,6 +551,148 @@ const ChartCreationSteps = observer(
             ))}
           </Box>
         )}
+      </Box>
+    );
+  })
+);
+
+
+const UpcomingWorkshops = observer(
+  forwardRef<HTMLDivElement>(function UpcomingWorkshops(props, ref) {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const { t } = useTranslation();
+    const workshops = [
+      {
+        title: t("landing-page.upcoming-workshop.workshop1.title"),
+        date: t("landing-page.upcoming-workshop.workshop1.time"),
+        description: t("landing-page.upcoming-workshop.workshop1.description"),
+        participants:  t("landing-page.upcoming-workshop.workshop1.participants"),
+        dataPacks: t("landing-page.upcoming-workshop.workshop1.datapacks"),
+        image: "https://via.placeholder.com/150" 
+      },
+      {
+        title: t("landing-page.upcoming-workshop.workshop2.title"),
+        date: t("landing-page.upcoming-workshop.workshop2.time"),
+        description: t("landing-page.upcoming-workshop.workshop2.description"),
+        participants:  t("landing-page.upcoming-workshop.workshop2.participants"),
+        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
+        image: "https://via.placeholder.com/150"
+      },
+      {
+        title: t("landing-page.upcoming-workshop.workshop3.title"),
+        date: t("landing-page.upcoming-workshop.workshop3.time"),
+        description: t("landing-page.upcoming-workshop.workshop3.description"),
+        participants:  t("landing-page.upcoming-workshop.workshop3.participants"),
+        dataPacks: t("landing-page.upcoming-workshop.workshop3.datapacks"),
+        image: "https://via.placeholder.com/150"
+      }
+    ];
+
+    const gradient = createGradient(
+      theme.palette.mainGradientLeft.main,
+      theme.palette.mainGradientRight.main
+    );
+
+    return (
+      <Box
+        display="flex"
+        height = "930px"
+        width = "306px"
+        top="20px"
+        position="relative"
+        borderRadius = "60px"
+        flexDirection="row"
+        ref={ref}
+        border="2px solid black"
+        sx={{
+          backgroundColor: "rgba(195, 219, 246, 0.49)",
+          padding: "20px",
+          align: "center",
+          display: "flex" ,
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+        >
+        <Typography className="upcoming-workshop-title1" variant="h3">
+          {t("landing-page.upcoming-workshop.title")}
+        </Typography>
+        {!isMobile && (
+          <Box>              
+            {workshops.map((step, index) => (
+              <>
+                <img 
+                  loading="lazy"
+                  rel="preload"
+                  className="upcoming-workshop-image"
+                  // src={devSafeUrl("/public/website-images/interactive-map-points-feature.png")}
+                  />
+                <Box key={index}
+                  sx={{
+                      display: "flex",
+                      flexDirection: "column"
+                    }}
+                >
+                  <Typography className="upcoming-workshop-title2">
+                    {step.title}
+                  </Typography>
+                  <Typography className="upcoming-workshop-date">
+                    {step.date}
+                  </Typography>
+                  <Typography className="upcoming-workshop-description">
+                    {step.description}
+                  </Typography>
+                  <Typography className="upcoming-workshop-pd">
+                    Participants:{step.participants} Datapacks:{step.dataPacks}
+                  </Typography>
+                  <CustomDivider />
+                </Box>
+              </>
+            ))}
+          </Box>
+        )}
+
+        
+        
+        {/* {isMobile && (
+          <Box className="mobile-upcoming-workshops-list" sx={{ width: "90%", marginTop: "16px" }}>
+            {workshops.map((workshop, index) => (
+              <Box
+                key={index}
+                className="mobile-workshop-item"
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  marginBottom: "16px",
+                  padding: "16px",
+                  borderRadius: "12px",
+                  background: gradient.dark,
+                  color: "white"
+                }}
+              >
+                <Box
+                  component="img"
+                  src={workshop.image}
+                  alt={workshop.title}
+                  sx={{ width: "100%", height: "auto", borderRadius: "8px", marginBottom: "8px" }}
+                />
+                <Typography variant="h6" sx={{ fontWeight: "bold", textAlign: "center" }}>
+                  {workshop.title}
+                </Typography>
+                <Typography variant="caption" sx={{ textAlign: "center" }}>
+                  {workshop.date}
+                </Typography>
+                <Typography variant="body2" sx={{ marginTop: "4px", textAlign: "center" }}>
+                  {workshop.description}
+                </Typography>
+                <Typography variant="caption" sx={{ marginTop: "4px", textAlign: "center" }}>
+                  {workshop.participants} participants • {workshop.dataPacks} datapacks
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        )} */}
       </Box>
     );
   })

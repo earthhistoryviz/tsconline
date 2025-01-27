@@ -143,13 +143,13 @@
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 0.8fr 1.2fr 0.7fr;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
   padding-left: 5vw;
-  padding: 8%;
+  /* padding: 8%; */
   padding-bottom: 0;
   position: relative;
 }
@@ -835,3 +835,56 @@
 }
 
 /* end of carousel css */
+
+/* upcoming workshop */
+.upcoming-workshop-image {
+  margin-top: 15px;
+  align-items: center;
+  grid-area: "img";
+  border-radius: 30px;
+  width: 260px;
+  height: 120px;
+  display: flex;
+  overflow: hidden;
+}
+
+.upcoming-workshop-title1 { 
+  font-family: 'Arial', sans-serif; 
+  margin-top: 5px;
+  font-size: 1.4em;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(12, 1, 1, 0.974);
+}
+
+.upcoming-workshop-title2 { 
+  font-family: 'Arial', sans-serif; 
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.upcoming-workshop-date {
+  font-family: 'Arial', sans-serif; 
+  font-size: 0.8em;
+  text-align: left;
+}
+
+.upcoming-workshop-description {
+  font-family: 'Arial', sans-serif; 
+  font-size: 0.9em;
+  line-height: 1.2;
+  display: -webkit-box;
+  line-clamp:3;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-workshop-pd {
+  margin-top: 10px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+  font-size: 0.8em;
+  text-align: right;
+}
+/* end of upcoming workshop */
