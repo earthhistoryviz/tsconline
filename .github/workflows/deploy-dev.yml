@@ -107,6 +107,7 @@ jobs:
         if: steps.determine_jar_download_url.outputs.download_url != ''
         run: |
           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_jar_download_url.outputs.download_url }}" -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
+          mv ${{ steps.check_active_jar.outputs.new_active_jar }}.zip ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.zip
 
       - name: Verify build and Jar artifacts
         id: verify_artifacts
@@ -170,7 +171,7 @@ jobs:
           fi
       
       - name: Send Jar to server
-        if: steps.verify_artifacts.outputs.jar_download_status == 'failed'
+        if: steps.check_active_jar.outputs.active_jar_changed == 'true'
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.SSH_HOST }}
