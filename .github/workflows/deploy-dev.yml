@@ -161,8 +161,8 @@ jobs:
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar \;
-          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }} \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
@@ -176,8 +176,8 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_KEY }}
-          source: ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar
-          target: ${{ secrets.DEV_PATH }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}.jar
+          source: ${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}
+          target: ${{ secrets.DEV_PATH }}
 
       - name: Setup Node.js
         if: steps.verify_artifacts.outputs.build_download_status == 'failed'
