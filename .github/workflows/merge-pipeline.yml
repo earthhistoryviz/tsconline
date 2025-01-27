@@ -422,7 +422,7 @@ jobs:
             
             if [ ! -d "$PR_PREVIEW_DIR" ]; then
               echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
-              git clone --branch "$BRANCH" --depth 1 https://github.com/earthhistoryviz/tsconline.git "$PR_PREVIEW_DIR"
+              git clone --branch "$BRANCH" --depth 1 https://github.com/${{ github.repository }}.git "$PR_PREVIEW_DIR"
             else
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
               git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
