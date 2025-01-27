@@ -38,6 +38,8 @@ jobs:
 
       - name: Download Build Artifacts if PR number is present
         id: download_build_artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -z "${{ steps.extract_info.outputs.pr_number }}" ]; then
             echo "No PR number detected. Skipping download."
@@ -68,6 +70,8 @@ jobs:
 
       - name: Check if activeJar was modified and downlaod
         id: check_active_jar
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           NEW_ACTIVE_JAR=""
           JAR_DOWNLOAD_STATUS="failed"
@@ -77,12 +81,17 @@ jobs:
               NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
               if [ "$NEW_JAR" != "null" ]; then
                 echo "New active jar: $NEW_JAR"
-                DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "${NEW_JAR}") | .archive_download_url' | head -n 1)
+                DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"$NEW_JAR\") | .archive_download_url" | head -n 1)
+                if [ -z "$DOWNLOAD_URL" ]; then
+                  echo "Error: Download URL not found for $NEW_JAR"
+                  break
+                fi
                 curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o "jar.zip"
                 if [ -f "jar.zip" ]; then
                   echo "Jar download successful."
                   JAR_DOWNLOAD_STATUS="success"
-                  unzip -q jar.zip -o $NEW_JAR
+                  unzip -q jar.zip
+                  mv *.jar $NEW_JAR
                 fi
                 break
               fi
@@ -92,7 +101,7 @@ jobs:
           echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
           echo "jar_download_status=$JAR_DOWNLOAD_STATUS" >> $GITHUB_OUTPUT
 
-      - name: Determine if build is necessary
+      - name: Determine if building Jar is necessary
         id: build_necessary
         run: |
           if [ "${{ steps.check_active_jar.outputs.new_active_jar }}" == "" ]; then
@@ -114,11 +123,6 @@ jobs:
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
-      - name: Checkout code from Bitbucket
-        if: steps.build_necessary.outputs.build_necessary == 'true'
-        run: |
-          git clone git@bitbucket.org:strat/tscreator.git
-
       - name: Set up jdk
         if: steps.build_necessary.outputs.build_necessary == 'true'
         uses: actions/setup-java@v4
@@ -127,14 +131,15 @@ jobs:
           java-version: "8"
           java-package: "jdk"
 
-      - name: Build and compile TSCreator Jar
+      - name: Checkout code and build jar
         if: steps.build_necessary.outputs.build_necessary == 'true'
         run: |
+          git clone git@bitbucket.org:strat/tscreator.git
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
           find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} \;
-          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+          if [ -f  ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
@@ -143,13 +148,17 @@ jobs:
 
       - name: Send Artifacts to Server
         run: |
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            exit 1
+          fi
           FILES_TO_SEND="build-artifacts.zip"
-          if [ "${{ steps.check_active_jar.outputs.jar_download_status }}" == "success" ]; then
+          if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
           fi
       
           echo "Sending files: $FILES_TO_SEND"
-          echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
           scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
 
@@ -176,9 +185,8 @@ jobs:
 
       #       unzip -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
       #       rm build-artifacts.zip
-      #       if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" ]; then
-      #         unzip -o ${{ steps.check_active_jar.outputs.new_active_jar }}.zip -d ${{ secrets.DEV_PATH }}/server/assets/jars
-      #         rm ${{ steps.check_active_jar.outputs.new_active_jar }}.zip
+      #       if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+      #         mv ${{ steps.check_active_jar.outputs.new_active_jar }} ${{ secrets.DEV_PATH }}/server/assets/jars
       #       fi
 
       #       echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
