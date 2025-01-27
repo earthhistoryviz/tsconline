@@ -112,12 +112,17 @@ jobs:
             echo "Downloaded build artifacts successfully"
             echo "build_download_status=success" >> $GITHUB_OUTPUT
           fi
-          if [ ! -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" && ${{ steps.check_active_jar.outputs.active_jar_changed }} == 'true' ]; then
-            echo "Error: ${{ steps.check_active_jar.outputs.new_active_jar }}.zip not found"
-            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+          if [ "${{ steps.check_active_jar.outputs.active_jar_changed }}" == "true" ]; then
+            if [ ! -f "${{ steps.check_active_jar.outputs.new_active_jar }}.zip" ]; then
+              echo "Error: ${{ steps.check_active_jar.outputs.new_active_jar }}.zip not found"
+              echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+            else
+              echo "Downloaded ${{ steps.check_active_jar.outputs.new_active_jar }}.zip successfully"
+              echo "jar_download_status=success" >> $GITHUB_OUTPUT
+            fi
           else
-            echo "Downloaded ${{ steps.check_active_jar.outputs.new_active_jar }}.zip successfully or not required"
-            echo "jar_download_status=success" >> $GITHUB_OUTPUT
+            echo "Jar artifact verification not required"
+            echo "jar_download_status=not_required" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up SSH key
