@@ -849,21 +849,21 @@
 }
 
 .upcoming-workshop-title1 { 
-  font-family: 'Arial', sans-serif; 
-  margin-top: 5px;
+  font-family: "Gill Sans"; 
+  margin-top: 10px;
   font-size: 1.4em;
   white-space: nowrap;
   border-bottom: 1px solid rgba(12, 1, 1, 0.974);
 }
 
 .upcoming-workshop-title2 { 
-  font-family: 'Arial', sans-serif; 
+  font-family: "Gill Sans"; 
   font-size: 1.2em;
-  font-weight: bold;
+  font-weight: 600;
 }
 
 .upcoming-workshop-date {
-  font-family: 'Arial', sans-serif; 
+  font-family:  "Gill Sans"; 
   font-size: 0.8em;
   text-align: left;
 }
@@ -881,8 +881,8 @@
 }
 
 .upcoming-workshop-pd {
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin-top: 8px;
+  margin-bottom: 16px;
   line-height: 1.5;
   font-size: 0.8em;
   text-align: right;

@@ -579,14 +579,6 @@ const UpcomingWorkshops = observer(
         dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
         image: "https://via.placeholder.com/150"
       },
-      {
-        title: t("landing-page.upcoming-workshop.workshop3.title"),
-        date: t("landing-page.upcoming-workshop.workshop3.time"),
-        description: t("landing-page.upcoming-workshop.workshop3.description"),
-        participants:  t("landing-page.upcoming-workshop.workshop3.participants"),
-        dataPacks: t("landing-page.upcoming-workshop.workshop3.datapacks"),
-        image: "https://via.placeholder.com/150"
-      }
     ];
 
     const gradient = createGradient(
@@ -596,24 +588,21 @@ const UpcomingWorkshops = observer(
 
     return (
       <Box
-        display="flex"
-        height = "930px"
-        width = "306px"
-        top="20px"
-        position="relative"
-        borderRadius = "60px"
-        flexDirection="row"
         ref={ref}
-        border="2px solid black"
         sx={{
+          display: "flex",
+          height: "80vh",
+          width: "306px",
+          position: "relative",
+          top: "40px",
+          borderRadius: "60px",
+          flexDirection: "column",
+          border: "2px solid black",
           backgroundColor: "rgba(195, 219, 246, 0.49)",
           padding: "20px",
-          align: "center",
-          display: "flex" ,
-          flexDirection: "column",
           alignItems: "center",
         }}
-        >
+      >
         <Typography className="upcoming-workshop-title1" variant="h3">
           {t("landing-page.upcoming-workshop.title")}
         </Typography>
@@ -625,7 +614,7 @@ const UpcomingWorkshops = observer(
                   loading="lazy"
                   rel="preload"
                   className="upcoming-workshop-image"
-                  // src={devSafeUrl("/public/website-images/interactive-map-points-feature.png")}
+                  src={devSafeUrl("/public/website-images/interactive-map-points-feature.png")}
                   />
                 <Box key={index}
                   sx={{
@@ -651,9 +640,6 @@ const UpcomingWorkshops = observer(
             ))}
           </Box>
         )}
-
-        
-        
         {/* {isMobile && (
           <Box className="mobile-upcoming-workshops-list" sx={{ width: "90%", marginTop: "16px" }}>
             {workshops.map((workshop, index) => (
