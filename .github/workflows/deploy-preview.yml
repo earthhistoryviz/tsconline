@@ -98,7 +98,9 @@ jobs:
       - name: Fetch previous PR number
         id: fetch_previous_pr
         run: |
-          scp deployuser@dev.geolex.org:/tmp/running_pr.txt ./running_pr.txt
+          echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem deployuser@dev.geolex.org:/tmp/running_pr.txt ./running_pr.txt
           PR_NUMBER=$(cat ./running_pr.txt)
           echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
