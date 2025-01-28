@@ -339,14 +339,15 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ github.event.number }}
+          overwrite: true
+          retention-days: 90
+          include-hidden-files: true
           path: |
             app/dist
             shared/dist
             server/dist
-            **/.yarn/cache/**
-            **/.pnp.*
-          overwrite: true
-          retention-days: 90
+            .yarn/cache/**
+            .pnp.*
 
   wait-for-checks:
     runs-on: ubuntu-latest
