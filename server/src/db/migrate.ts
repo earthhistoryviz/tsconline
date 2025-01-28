@@ -40,7 +40,7 @@ function getMajorVersion(migrationName: string | null): number {
 async function migrateToLatest(force: boolean = false) {
   const db = new Kysely<Database>({
     dialect: new SqliteDialect({
-      database: new BetterSqlite3(path.join("src", "db", "TSC.db"))
+      database: new BetterSqlite3(path.join("db", "TSC.db"))
     })
   });
 
