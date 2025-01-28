@@ -332,6 +332,9 @@ jobs:
       - name: Install Production Dependencies
         run: yarn workspaces focus -A --production
 
+      - name: List files for debugging
+        run: find . -type f | sort
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
