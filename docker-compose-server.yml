@@ -12,7 +12,7 @@ services:
       - NODE_ENV=production
     networks:
       - shared_network
-    command: [ "/code/entrypoint-no-build.sh" ]
+    command: [ "yarn workspaces focus -A --production && /code/entrypoint-no-build.sh" ]
 
 networks:
   shared_network:

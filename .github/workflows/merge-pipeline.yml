@@ -319,9 +319,6 @@ jobs:
           overwrite: true
           retention-days: 90
 
-      - name: Install Production Dependencies
-        run: yarn workspaces focus -A --production
-
       - name: Delete old build artifacts with same name
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -331,6 +328,9 @@ jobs:
             echo "Deleting artifact with ID: $ID"
             gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
           done
+
+      - name: Install Production Dependencies
+        run: yarn workspaces focus -A --production
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -429,7 +429,7 @@ jobs:
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
 
-            unzip -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
+            unzip -q -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
             rm "build-artifacts-${{ github.event.number }}.zip"
             
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
