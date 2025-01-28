@@ -17,15 +17,63 @@ jobs:
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.5.3
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Add known hosts
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '21'
+
+      - name: Install and build project
         run: |
+          yarn
+          yarn build
+          zip -q -r build-artifacts.zip app/dist shared/dist server/dist
+
+      - name: Parse Jar Name
+        id: parse_jar_name
+        run: |
+          jar_name=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
           mkdir -p ~/.ssh
-          ssh-keyscan -H $SSH_HOST >> ~/.ssh/known_hosts
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+  
+      - name: Set up jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+
+      - name: Checkout code and build jar
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }};
+          if [ -f  ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+
+      - name: Send Artifacts to Server
+        run: |
+          FILES_TO_SEND="build-artifacts.zip ${{ steps.parse_jar_name.outputs.jar_name }}"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -48,6 +96,10 @@ jobs:
               exit 1
             fi
 
+            unzip -q -o build-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
+            rm build-artifacts.zip
+            mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
+
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
             echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
@@ -62,10 +114,6 @@ jobs:
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            if [ ! -f "docker-compose.yml" ]; then
-              echo "Error: docker-compose.yml not found"
-              exit 1
-            fi
             if [ ! -f "docker-compose-server.yml" ]; then
               echo "Error: docker-compose-server.yml not found"
               exit 1
