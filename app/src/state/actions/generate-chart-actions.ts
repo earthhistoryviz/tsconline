@@ -119,6 +119,7 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
+  generalActions.setIsCrossPlot(false);
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
   resetChartTab();

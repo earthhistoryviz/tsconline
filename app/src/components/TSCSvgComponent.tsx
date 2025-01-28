@@ -543,6 +543,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       };
     }
   }, [
+    svgContainerRef.current,
     chartContent,
     state.chartTab.chartTimelineEnabled,
     state.chartTab.chartTimelineLocked,
