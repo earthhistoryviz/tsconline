@@ -341,6 +341,7 @@ jobs:
             shared/dist
             server/dist
             .yarn/cache
+            .pnp.*
           overwrite: true
           retention-days: 90
 

@@ -17,6 +17,7 @@ import { exec } from "child_process";
 import path from "path";
 import { randomUUID } from "crypto";
 import { hash } from "bcrypt-ts";
+import { access, mkdir } from "fs/promises";
 
 /*
 If updating the database schema please update the schema details below.
@@ -71,9 +72,17 @@ Another point is that altering these schema commands could break the migration s
 let db: Kysely<Database>;
 
 export async function initializeDatabase() {
+  const dbFolder = "db";
+  const dbPath = path.join(dbFolder, "TSC.db");
+  try {
+    await access(dbFolder);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    await mkdir(dbFolder);
+  }
   db = new Kysely<Database>({
     dialect: new SqliteDialect({
-      database: new BetterSqlite3(path.join("db", "TSC.db"))
+      database: new BetterSqlite3(dbPath)
     })
   });
 
