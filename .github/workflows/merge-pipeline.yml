@@ -332,21 +332,17 @@ jobs:
       - name: Install Production Dependencies
         run: yarn workspaces focus -A --production
 
-      - name: List files for debugging
-        run: find . -type f | sort
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ github.event.number }}
+          overwrite: true
+          retention-days: 90
+          include-hidden-files: true
           path: |
             app/dist
             shared/dist
             server/dist
-            .yarn/cache
-            .pnp.*
-          overwrite: true
-          retention-days: 90
 
   wait-for-checks:
     runs-on: ubuntu-latest
@@ -435,6 +431,8 @@ jobs:
 
             unzip -q -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
             rm "build-artifacts-${{ github.event.number }}.zip"
+
+            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-install
             
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
