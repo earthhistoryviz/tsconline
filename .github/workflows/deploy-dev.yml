@@ -55,6 +55,17 @@ jobs:
             echo "build_download_status=failed" >> $GITHUB_OUTPUT
           fi
 
+      - name: Delete build artifacts
+        if: steps.download_build_artifacts.outputs.build_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_info.outputs.pr_number }}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
+
       - name: Setup Node.js
         if: steps.download_build_artifacts.outputs.build_download_status == 'failed'
         uses: actions/setup-node@v3
@@ -100,6 +111,17 @@ jobs:
 
           echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
           echo "jar_download_status=$JAR_DOWNLOAD_STATUS" >> $GITHUB_OUTPUT
+
+      - name: Delete Jar artifacts
+        if: steps.check_active_jar.outputs.jar_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == ${{ steps.check_active_jar.outputs.new_active_jar }}) | .id')
+          for ID in $JAR_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
 
       - name: Determine if building Jar is necessary
         id: build_necessary
