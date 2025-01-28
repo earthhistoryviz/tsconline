@@ -103,20 +103,8 @@ export const Preferences = observer(function Preferences() {
             }
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
-          {import.meta.env.DEV && (
-            <FormControlLabel
-              name="crossplot-checkbox"
-              control={
-                <TSCCheckbox
-                  checked={state.chartTab.crossPlot.isCrossPlot}
-                  onChange={() => actions.setIsCrossPlot(!state.chartTab.crossPlot.isCrossPlot)}
-                />
-              }
-              label="Is Cross Plot"
-            />
-          )}
         </FormGroup>
-        <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>
+        {import.meta.env.DEV && <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>}
       </Box>
     </div>
   );

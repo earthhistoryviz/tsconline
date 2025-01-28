@@ -104,21 +104,22 @@ export const CrossPlotTime: React.FC<CrossPlotTimeProps> = observer(function Cro
           if (!col) return;
           setCrossPlotChart(col);
         }}
-        className={styles.unitSelect}
-        >
+        className={styles.unitSelect}>
         {state.settingsTabs.columns &&
           Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
             <MenuItem key={index} value={column.units}>
               {`${column.name} (${column.units})`}
             </MenuItem>
           ))}
-        {!column && <MenuItem value={0}>
-          <em>None</em>
-        </MenuItem>}
+        {!column && (
+          <MenuItem value={0}>
+            <em>None</em>
+          </MenuItem>
+        )}
       </Select>
-    <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
-      <CrossPlotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
-    </Box>
+      <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
+        <CrossPlotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
+      </Box>
     </>
   );
 });

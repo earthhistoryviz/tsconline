@@ -34,9 +34,12 @@ export const CrossPlotSettings = observer(() => {
         className="main-settings-tabs"
       />
       <SettingsTab tab={state.crossplotSettingsTabs.selected} />
-      <TSCButton onClick={() => actions.compileCrossPlotChartRequest(navigate)} buttonType="gradient" className={styles.crossPlotGenerateButton}>
+      <TSCButton
+        onClick={() => actions.compileCrossPlotChartRequest(navigate)}
+        buttonType="gradient"
+        className={styles.crossPlotGenerateButton}>
         {t("button.generate-cross-plot")}
-        </TSCButton>
+      </TSCButton>
     </Box>
   );
 });

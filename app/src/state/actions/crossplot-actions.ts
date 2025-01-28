@@ -2,21 +2,13 @@ import { action } from "mobx";
 import { ChartSettings, CrossPlotTimeSettings } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import {
-  pushError,
-  removeError
-} from "./general-actions";
+import { pushError, removeError, setIsCrossPlot } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import {
-  ColumnInfo,
-  FontsInfo,
-  defaultColumnRoot,
-  ChartRequest
-} from "@tsconline/shared";
+import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { sendChartRequestToServer } from "./generate-chart-actions";
+import { resetChartTab, sendChartRequestToServer } from "./generate-chart-actions";
 
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
   state.crossplotSettingsTabs.chartXTimeSettings = {
@@ -73,37 +65,43 @@ const createColumnHashMap = (column: ColumnInfo, hash: Map<string, ColumnInfo>) 
 /**
  * Fetch the crossplot chart from the server
  */
-export const compileCrossPlotChartRequest = action("compileCrossPlotChartRequest", async (navigate: NavigateFunction) => {
-  if (!areSettingsValidForGeneration()) {
-    return false;
-  }
-  navigate("/chart");
-  try {
-    const columnCopy = cloneDeep(
-      combineCrossPlotColumns(state.crossplotSettingsTabs.chartX!, state.crossplotSettingsTabs.chartY!)
-    );
-    const columnHashMap = createColumnHashMap(columnCopy, new Map());
-    const crossPlotChartSettings = cloneDeep(
-      createCrossPlotChartSettings(
-        state.crossplotSettingsTabs.chartXTimeSettings,
-        state.crossplotSettingsTabs.chartYTimeSettings
-      )
-    );
-    const json = jsonToXml(columnCopy, columnHashMap, crossPlotChartSettings);
+export const compileCrossPlotChartRequest = action(
+  "compileCrossPlotChartRequest",
+  async (navigate: NavigateFunction) => {
+    if (!areSettingsValidForGeneration()) {
+      return false;
+    }
+    resetChartTab();
+    setIsCrossPlot(true);
+    navigate("/chart");
+    try {
+      const columnCopy = combineCrossPlotColumns(
+        cloneDeep(state.crossplotSettingsTabs.chartX!),
+        cloneDeep(state.crossplotSettingsTabs.chartY!)
+      );
+      const columnHashMap = createColumnHashMap(columnCopy, new Map());
+      const crossPlotChartSettings = cloneDeep(
+        createCrossPlotChartSettings(
+          state.crossplotSettingsTabs.chartXTimeSettings,
+          state.crossplotSettingsTabs.chartYTimeSettings
+        )
+      );
+      const json = jsonToXml(columnCopy, columnHashMap, crossPlotChartSettings);
 
-    const crossPlotChartRequest: ChartRequest = {
-      isCrossPlot: true,
-      settings: json,
-      datapacks: state.config.datapacks,
-      useCache: state.useCache
-    };
+      const crossPlotChartRequest: ChartRequest = {
+        isCrossPlot: true,
+        settings: json,
+        datapacks: state.config.datapacks,
+        useCache: state.useCache
+      };
 
-    await sendChartRequestToServer(crossPlotChartRequest);
-  } catch (e) {
-    console.error(e);
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      await sendChartRequestToServer(crossPlotChartRequest);
+    } catch (e) {
+      console.error(e);
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    }
   }
-});
+);
 /**
  * when both crossplot columns have the same unit, prepend this string to the unit
  * @param unit
