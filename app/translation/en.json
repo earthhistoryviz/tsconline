@@ -219,6 +219,11 @@
             "time": "this could take more than a minute",
             "fetching-datapacks": "Fetching Datapacks"
         },
+        "crossPlot": {
+            "time": {
+                "select-unit": "Please select a unit."
+            }
+        },
         "settingsTabs": {
             "Time": "Time",
             "Preferences": "Preferences",
