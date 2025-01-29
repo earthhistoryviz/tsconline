@@ -286,14 +286,6 @@ jobs:
           echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
           echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
           echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
-  
-      - name: Check Artifact Existence
-        id: check_artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.jar_artifact_name }}\") | .id" | head -n 1)
-          echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
       - name: Determine if Upload is Necessary
         id: upload_artifacts
@@ -302,9 +294,8 @@ jobs:
       
           main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
           pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
-          pr_jar_exists="${{ steps.check_artifacts.outputs.pr_jar_exists }}"
       
-          if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
+          if [[ "$main_jar_name" != "$pr_jar_name" ]]; then
             upload_needed=true
             mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
@@ -320,19 +311,6 @@ jobs:
           path: ${{ steps.parse_jar_names.outputs.pr_jar_name }}
           overwrite: true
           retention-days: 90
-
-      - name: Delete old build artifacts with same name
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .id')
-          for ID in $BUILD_ARTIFACTS; do
-            echo "Deleting artifact with ID: $ID"
-            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
-          done
-
-      - name: Install Production Dependencies
-        run: yarn workspaces focus -A --production
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
@@ -383,29 +361,53 @@ jobs:
             exit 1
           fi
 
-      - name: Determine Download URL for build artifacts
-        if: github.event.pull_request.merged == false
-        id: determine_download_url
+      - name: Download PR Artifacts if PR number is present
+        id: download_pr_artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
-          echo "Download URL: $DOWNLOAD_URL"
-          echo "download_url=$DOWNLOAD_URL" >> $GITHUB_OUTPUT
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No build artifact found."
+          else
+            echo "Build download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
+          fi
+          if [ -f "build-artifacts.zip" ]; then
+            echo "build_download_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          fi
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ github.event.number }}") | .archive_download_url' | head -n 1)
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No jar artifact found."
+          else
+            echo "Jar download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
+            unzip -q jar.zip
+          fi
+          if [ -f "jar.zip" ]; then
+            echo "jar_download_status=success" >> $GITHUB_OUTPUT
+            echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
+          else
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Download build artifacts
-        if: github.event.pull_request.merged == false
+      - name: Send Artifacts to Server
         run: |
-          curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "${{ steps.determine_download_url.outputs.download_url }}" --output build-artifacts-${{ github.event.number }}.zip
-
-      - name: Send build artifacts to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: dev.geolex.org
-          username: deployuser
-          key: ${{ secrets.SSH_KEY }}
-          source: build-artifacts-${{ github.event.number }}.zip
-          target: /home/aaron/tsconline
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            exit 1
+          fi
+          FILES_TO_SEND="build-artifacts.zip"
+          if [ ${{ steps.download_pr_artifacts.outputs.jar_download_status }} == "success" ]; then
+            FILES_TO_SEND="$FILES_TO_SEND ${{ steps.download_pr_artifacts.outputs.jar_file }}"
+          fi
+      
+          echo "Sending files: $FILES_TO_SEND"
+          echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND deployuser@dev.geolex.org:/home/aaron/tsconline
 
       - name: Setup files for deployment preview
         if: github.event.pull_request.merged == false
@@ -439,8 +441,11 @@ jobs:
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
 
-            unzip -q -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
-            rm "build-artifacts-${{ github.event.number }}.zip"
+            unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"
+            rm "build-artifacts.zip"
+            if [ -f "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
+              mv "${{ steps.download_pr_artifacts.outputs.jar_file }}" "$PR_PREVIEW_DIR/server/assets/jars"
+            fi
 
             cd "$PR_PREVIEW_DIR"
             docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
@@ -455,6 +460,7 @@ jobs:
               while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
+                  docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
                   docker-compose -f docker-compose-preview.yml down
                   exit 1
                 fi

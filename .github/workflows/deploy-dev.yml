@@ -5,7 +5,7 @@ concurrency:
 on:
   push:
     branches:
-      - main
+      - TSC-577-send-artifacts-to-the-server-instead-of-deployments
 
 jobs:
   deploy:
@@ -19,8 +19,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Extract PR number and commits
-        id: extract_info
+      - name: Extract PR number
+        id: extract_pr_number
         run: |
           COMMIT_MESSAGE=$(git log -1 --pretty=%B)
           echo "Commit message: $COMMIT_MESSAGE"
@@ -32,21 +32,19 @@ jobs:
             echo "Detected PR number: $PR_NUMBER"
             echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
           fi
-          COMMITS=$(git rev-list ${{ github.event.before }}..${{ github.event.after }})
-          echo "Commits included in the push: $COMMITS"
-          echo "commits=$COMMITS" >> $GITHUB_OUTPUT
 
-      - name: Download Build Artifacts and JAR if PR number is present
+      - name: Download PR Artifacts if PR number is present
         id: download_pr_artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ -z "${{ steps.extract_info.outputs.pr_number }}" ]; then
+          if [ -z "${{ steps.extract_pr_number.outputs.pr_number }}" ]; then
             echo "No PR number detected. Skipping download."
             echo "build_download_status=failed" >> $GITHUB_OUTPUT
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
             exit 0
           fi
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_info.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "No build artifact found."
           else
@@ -58,7 +56,7 @@ jobs:
           else
             echo "build_download_status=failed" >> $GITHUB_OUTPUT
           fi
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_info.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "No jar artifact found."
           else
@@ -73,28 +71,6 @@ jobs:
             echo "jar_download_status=failed" >> $GITHUB_OUTPUT
           fi
 
-      - name: Delete build artifacts
-        if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_info.outputs.pr_number }}") | .id')
-          for ID in $BUILD_ARTIFACTS; do
-            echo "Deleting artifact with ID: $ID"
-            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
-          done
-
-      - name: Delete jar artifact
-        if: steps.download_pr_artifacts.outputs.jar_download_status == 'success'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_info.outputs.pr_number }}") | .id')
-          for ID in $JAR_ARTIFACTS; do
-            echo "Deleting artifact with ID: $ID"
-            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
-          done
-
       - name: Setup Node.js
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
         uses: actions/setup-node@v3
@@ -108,36 +84,44 @@ jobs:
           yarn build
           zip -q -r build-artifacts.zip app/dist shared/dist server/dist  
 
-      - name: Check if activeJar was modified and download if necessary
-        if: steps.download_pr_artifacts.outputs.jar_download_status == 'failed'
+      - name: Compare old vs. new activeJar
         id: check_active_jar
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NEW_ACTIVE_JAR=""
-          JAR_DOWNLOAD_STATUS="failed"
-
-          for COMMIT in ${{ steps.extract_info.outputs.commits }}; do
-            if git diff-tree --no-commit-id --name-only -r $COMMIT | grep -q "server/assets/config.json"; then
-              NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
-              if [ "$NEW_JAR" != "null" ]; then
-                echo "New active jar: $NEW_JAR"
-                break
-              fi
-            fi
-          done
-
-          echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+          OLD_COMMIT="${{ github.event.before }}"
+          NEW_COMMIT="${{ github.event.after }}"
+      
+          echo "Old commit SHA: $OLD_COMMIT"
+          echo "New commit SHA: $NEW_COMMIT"
+      
+          OLD_JAR=$(git show "$OLD_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
+      
+          NEW_JAR=$(git show "$NEW_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
+      
+          echo "Old activeJar: $OLD_JAR"
+          echo "New activeJar: $NEW_JAR"
+      
+          if [ "$OLD_JAR" != "$NEW_JAR" ]; then
+            echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+          fi
 
       - name: Determine if building Jar is necessary
         id: build_necessary
         run: |
-          if [ "${{ steps.check_active_jar.outputs.new_active_jar }}" == ""]; then
+          if [ -z "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             echo "Build is not necessary."
             echo "build_necessary=false" >> $GITHUB_OUTPUT
-          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" || ${{ steps.check_active_jar.outputs.new_active_jar }} != ${{ steps.download_pr_artifacts.outputs.jar_file }} ]; then
+          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" ] || [ "${{ steps.check_active_jar.outputs.new_active_jar }}" != "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
             echo "Build is necessary."
             echo "build_necessary=true" >> $GITHUB_OUTPUT
+          else
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Set up SSH key
@@ -199,7 +183,10 @@ jobs:
           script: |
             cd ${{ secrets.DEV_PATH }}
 
-            git pull --no-edit
+            git fetch origin TSC-577-send-artifacts-to-the-server-instead-of-deployments
+            git checkout TSC-577-send-artifacts-to-the-server-instead-of-deployments
+            git pull origin TSC-577-send-artifacts-to-the-server-instead-of-deployments
+            # git pull --no-edit
 
             PULL_STATUS=$?
 
@@ -274,3 +261,25 @@ jobs:
               sleep $INTERVAL
               ELAPSED=$((ELAPSED + INTERVAL))
             done
+
+      - name: Delete build artifacts
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
+
+      - name: Delete jar artifact
+        if: steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $JAR_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
