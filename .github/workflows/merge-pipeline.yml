@@ -321,9 +321,6 @@ jobs:
           overwrite: true
           retention-days: 90
 
-      - name: Install Production Dependencies
-        run: yarn workspaces focus -A --production
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -453,8 +450,8 @@ jobs:
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
             fi
 
-            unzip -q -o "build-artifacts-${{ github.event.number }}" -d "$PR_PREVIEW_DIR"
-            rm "build-artifacts-${{ github.event.number }}.zip"
+            unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"
+            rm "build-artifacts.zip"
             if [ -f "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
               mv "${{ steps.download_pr_artifacts.outputs.jar_file }}" "$PR_PREVIEW_DIR/server/assets/jars"
             fi
