@@ -41,6 +41,7 @@ jobs:
           if [ -z "${{ steps.extract_pr_number.outputs.pr_number }}" ]; then
             echo "No PR number detected. Skipping download."
             echo "build_download_status=failed" >> $GITHUB_OUTPUT
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
             exit 0
           fi
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
