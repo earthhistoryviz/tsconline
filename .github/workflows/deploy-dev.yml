@@ -115,7 +115,7 @@ jobs:
           if [ -z "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             echo "Build is not necessary."
             echo "build_necessary=false" >> $GITHUB_OUTPUT
-          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" || ${{ steps.check_active_jar.outputs.new_active_jar }} != ${{ steps.download_pr_artifacts.outputs.jar_file }} ]; then
+          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" ] || [ "${{ steps.check_active_jar.outputs.new_active_jar }}" != "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
             echo "Build is necessary."
             echo "build_necessary=true" >> $GITHUB_OUTPUT
           else
