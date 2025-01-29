@@ -378,7 +378,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts--paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "No build artifact found."
           else
