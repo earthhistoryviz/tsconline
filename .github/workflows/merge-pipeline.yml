@@ -423,6 +423,14 @@ jobs:
             if [ ! -d "$PR_PREVIEW_DIR" ]; then
               echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
               git clone --branch "$BRANCH" --depth 1 https://github.com/${{ github.repository }}.git "$PR_PREVIEW_DIR"
+              echo "Setting up files for PR #${PR_NUMBER}"
+              mkdir -p "$PR_PREVIEW_DIR/server/assets/jars"
+              cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
+              mkdir -p "$PR_PREVIEW_DIR/server/assets/datapacks"
+              cp "$TSCONLINE_DIR/server/assets/datapacks/"* "$PR_PREVIEW_DIR/server/assets/datapacks/"
+              cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
+              cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
+              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
             else
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
               git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
@@ -453,13 +461,4 @@ jobs:
                 ELAPSED=$((ELAPSED + INTERVAL))
               done
               echo "Succesfully restarted container for PR #${PR_NUMBER}"
-            else
-              echo "Setting up files for PR #${PR_NUMBER}"
-              mkdir -p "$PR_PREVIEW_DIR/server/assets/jars"
-              cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
-              mkdir -p "$PR_PREVIEW_DIR/server/assets/datapacks"
-              cp "$TSCONLINE_DIR/server/assets/datapacks/"* "$PR_PREVIEW_DIR/server/assets/datapacks/"
-              cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
-              cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
-              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
             fi
