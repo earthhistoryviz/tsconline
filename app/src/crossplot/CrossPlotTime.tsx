@@ -20,7 +20,7 @@ export const CrossPlotTimeSelector = observer(function CrossPlotTime({
 }: CrossPlotTimeSelectorProps) {
   const { t } = useTranslation();
   const checkAgeRange = () => settings && settings.topStageAge > settings.baseStageAge;
-  const pleaseSelectAUnit = "Please select a unit";
+  const pleaseSelectAUnit = t("crossPlot.time.select-unit");
   return (
     <Box display="flex" gap="30px" flexDirection="column" width="100%" textAlign="center">
       <Box>
