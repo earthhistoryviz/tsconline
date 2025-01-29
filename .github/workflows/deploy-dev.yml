@@ -106,9 +106,7 @@ jobs:
           echo "New activeJar: $NEW_JAR"
       
           if [ "$OLD_JAR" != "$NEW_JAR" ]; then
-            echo "active_jar_changed=true" >> $GITHUB_OUTPUT
-          else
-            echo "active_jar_changed=false" >> $GITHUB_OUTPUT
+            echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
           fi
 
       - name: Determine if building Jar is necessary
