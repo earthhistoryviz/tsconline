@@ -285,13 +285,14 @@ jobs:
           echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
           echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
           echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
+          echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
   
       - name: Check Artifact Existence
         id: check_artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.pr_jar_name }}\") | .id" | head -n 1)
+          pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.jar_artifact_name }}\") | .id" | head -n 1)
           echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
       - name: Determine if Upload is Necessary
@@ -305,6 +306,7 @@ jobs:
       
           if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
             upload_needed=true
+            mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
       
           echo "Upload needed: $upload_needed"
@@ -314,8 +316,8 @@ jobs:
         if: steps.upload_artifacts.outputs.upload_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.parse_jar_names.outputs.pr_jar_name }}
-          path: ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+          name: ${{ steps.parse_jar_names.outputs.jar_artifact_name }}
+          path: ${{ steps.parse_jar_names.outputs.pr_jar_name }}
           overwrite: true
           retention-days: 90
 
