@@ -36,7 +36,7 @@ jobs:
           echo "Commits included in the push: $COMMITS"
           echo "commits=$COMMITS" >> $GITHUB_OUTPUT
 
-      - name: Download Build Artifacts and JAR if PR number is present
+      - name: Download PR Artifacts if PR number is present
         id: download_pr_artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -108,15 +108,12 @@ jobs:
           yarn build
           zip -q -r build-artifacts.zip app/dist shared/dist server/dist  
 
-      - name: Check if activeJar was modified and download if necessary
+      - name: Check if activeJar was modified
         if: steps.download_pr_artifacts.outputs.jar_download_status == 'failed'
         id: check_active_jar
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          NEW_ACTIVE_JAR=""
-          JAR_DOWNLOAD_STATUS="failed"
-
           for COMMIT in ${{ steps.extract_info.outputs.commits }}; do
             if git diff-tree --no-commit-id --name-only -r $COMMIT | grep -q "server/assets/config.json"; then
               NEW_JAR=$(git show $COMMIT:server/assets/config.json | jq -r '.activeJar' | xargs basename || echo "null")
