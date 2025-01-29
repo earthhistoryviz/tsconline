@@ -5,7 +5,6 @@ networks:
 services:
   pr-preview-install:
     build: .
-    restart: unless-stopped
     volumes:
       - .:/code
     networks:
@@ -13,6 +12,7 @@ services:
     environment:
       NODE_ENV: production
     command: bash -c "source /root/.nvm/nvm.sh && nvm use node && yarn workspaces focus -A --production && yarn dev:config"
+  
   pr-preview-run:
     build: .
     restart: unless-stopped
@@ -25,4 +25,4 @@ services:
     environment:
       DISPLAY: ":99"
       NODE_ENV: production
-    command: /code/entrypoint-no-build.sh
+    command: [ "/code/entrypoint-no-build.sh" ]
