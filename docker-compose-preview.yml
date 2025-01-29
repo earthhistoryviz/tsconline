@@ -5,7 +5,6 @@ networks:
 services:
   pr-preview-install:
     build: .
-    restart: unless-stopped
     volumes:
       - .:/code
     networks:
