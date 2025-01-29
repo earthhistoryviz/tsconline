@@ -105,7 +105,7 @@ jobs:
           echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
 
       - name: Comment on previous PR
-        if: ${{ steps.fetch_previous_pr.outputs.previous_pr_number != '' }}
+        if: steps.fetch_previous_pr.outputs.previous_pr_number != '' && steps.fetch_previous_pr.outputs.previous_pr_number != '${{ github.event.issue.number }}'
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -117,3 +117,4 @@ jobs:
               issue_number: previousPRNumber,
               body: comment
             });
+        continue-on-error: true
