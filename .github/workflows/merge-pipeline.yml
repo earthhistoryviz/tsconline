@@ -286,14 +286,6 @@ jobs:
           echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
           echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
           echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
-  
-      - name: Check Artifact Existence
-        id: check_artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pr_exists=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q ".artifacts[] | select(.name == \"${{ steps.parse_jar_names.outputs.jar_artifact_name }}\") | .id" | head -n 1)
-          echo "pr_jar_exists=$([ -n "$pr_exists" ] && echo true || echo false)" >> $GITHUB_OUTPUT
 
       - name: Determine if Upload is Necessary
         id: upload_artifacts
@@ -302,9 +294,8 @@ jobs:
       
           main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
           pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
-          pr_jar_exists="${{ steps.check_artifacts.outputs.pr_jar_exists }}"
       
-          if [[ "$main_jar_name" != "$pr_jar_name" && "$pr_jar_exists" != "true" ]]; then
+          if [[ "$main_jar_name" != "$pr_jar_name" ]]; then
             upload_needed=true
             mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
@@ -469,6 +460,7 @@ jobs:
               while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
                 if [ $ELAPSED -ge $MAX_WAIT ]; then
                   echo "Max wait time exceeded. Exiting..."
+                  docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
                   docker-compose -f docker-compose-preview.yml down
                   exit 1
                 fi
