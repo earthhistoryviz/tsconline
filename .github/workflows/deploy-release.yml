@@ -60,7 +60,7 @@ jobs:
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }};
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} \;
           if [ -f  ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} ]; then
             echo "Successfully made jar."
           else
