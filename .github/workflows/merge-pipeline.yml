@@ -287,7 +287,7 @@ jobs:
           echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
           echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
 
-      - name: Determine if Upload is Necessary
+      - name: Determine if Jar Upload is Necessary
         id: upload_artifacts
         run: |
           upload_needed=false
@@ -303,7 +303,17 @@ jobs:
           echo "Upload needed: $upload_needed"
           echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
 
-      - name: Upload JAR Artifact if needed
+      - name: Delete old jar artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ github.event.number }}") | .id')
+          for ID in $JAR_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
+
+      - name: Upload Jar Artifact if needed
         if: steps.upload_artifacts.outputs.upload_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
@@ -311,6 +321,16 @@ jobs:
           path: ${{ steps.parse_jar_names.outputs.pr_jar_name }}
           overwrite: true
           retention-days: 90
+
+      - name: Delete old build artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number}}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
