@@ -75,7 +75,7 @@ jobs:
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
         uses: actions/setup-node@v3
         with:
-          node-version: "21"
+          node-version: "20"
 
       - name: Install and build project
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
@@ -106,6 +106,10 @@ jobs:
           echo "Old activeJar: $OLD_JAR"
           echo "New activeJar: $NEW_JAR"
 
+          if [ "$OLD_JAR" == "null" ] || [ "$NEW_JAR" == "null" ]; then
+            echo "Error: Failed to get activeJar from config.json"
+            exit 1
+          fi
           if [ "$OLD_JAR" != "$NEW_JAR" ]; then
             echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
           fi
