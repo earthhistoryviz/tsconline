@@ -198,7 +198,7 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
-        
+
       - name: Run Tests
         id: run_tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -211,7 +211,7 @@ jobs:
       - name: Run Tests and Coverage (Exclude Encryption)
         id: run_tests_exclude_encryption
         if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: | 
+        run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
@@ -226,19 +226,19 @@ jobs:
             const fs = require('fs');
             const log = fs.readFileSync('test_output.log', 'utf8');
             const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
-  
+
             const commentBody = `
             ## :x: Coverage Thresholds Not Met
-  
+
             The following coverage thresholds were not met:
-            
+
             \`\`\`
             ${coverageErrors.join('\n')}
             \`\`\`
-  
+
             Please review the coverage report and improve the tests to meet the thresholds.
             `;
-  
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -291,15 +291,15 @@ jobs:
         id: upload_artifacts
         run: |
           upload_needed=false
-      
+
           main_jar_name="${{ steps.parse_jar_names.outputs.main_jar_name }}"
           pr_jar_name="${{ steps.parse_jar_names.outputs.pr_jar_name }}"
-      
+
           if [[ "$main_jar_name" != "$pr_jar_name" ]]; then
             upload_needed=true
             mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
-      
+
           echo "Upload needed: $upload_needed"
           echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
 
@@ -381,7 +381,7 @@ jobs:
             exit 1
           fi
 
-      - name: Download PR Artifacts if PR number is present
+      - name: Download PR Artifacts
         id: download_pr_artifacts
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -389,14 +389,14 @@ jobs:
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "No build artifact found."
+            exit 1
           else
             echo "Build download URL: $DOWNLOAD_URL"
             curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
           fi
-          if [ -f "build-artifacts.zip" ]; then
-            echo "build_download_status=success" >> $GITHUB_OUTPUT
-          else
-            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            exit 1
           fi
           DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ github.event.number }}") | .archive_download_url' | head -n 1)
           if [ -z "$DOWNLOAD_URL" ]; then
@@ -423,7 +423,7 @@ jobs:
           if [ ${{ steps.download_pr_artifacts.outputs.jar_download_status }} == "success" ]; then
             FILES_TO_SEND="$FILES_TO_SEND ${{ steps.download_pr_artifacts.outputs.jar_file }}"
           fi
-      
+
           echo "Sending files: $FILES_TO_SEND"
           echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
@@ -443,7 +443,7 @@ jobs:
             PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
             BRANCH="${{ github.event.pull_request.head.ref }}"
             cd "$TSCONLINE_DIR"
-            
+
             if [ ! -d "$PR_PREVIEW_DIR" ]; then
               echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
               git clone --branch "$BRANCH" --depth 1 https://github.com/${{ github.repository }}.git "$PR_PREVIEW_DIR"
@@ -469,7 +469,7 @@ jobs:
 
             cd "$PR_PREVIEW_DIR"
             docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
-            
+
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
               docker-compose -f docker-compose-preview.yml restart pr-preview-run

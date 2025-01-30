@@ -37,7 +37,7 @@ jobs:
             echo "Commenter is not a code owner"
             exit 1
           fi
-        
+
       - name: React to comment
         uses: dkershner6/reaction-action@v2
         with:
@@ -118,4 +118,3 @@ jobs:
               issue_number: previousPRNumber,
               body: comment
             });
-        continue-on-error: true
