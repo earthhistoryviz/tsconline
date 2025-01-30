@@ -6,12 +6,12 @@ concurrency:
 on:
   push:
     branches:
-      - 'release-*'
+      - "release-*"
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: production
       url: ${{ vars.WEBSITE_URL }}
     env:
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '21'
+          node-version: "21"
 
       - name: Install and build project
         run: |
@@ -46,7 +46,7 @@ jobs:
           echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
           ssh-add ~/.ssh/id_rsa
           ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
-  
+
       - name: Set up jdk
         uses: actions/setup-java@v4
         with:
@@ -118,7 +118,7 @@ jobs:
               echo "Error: docker-compose-server.yml not found"
               exit 1
             fi
-            
+
             docker compose -f docker-compose-server.yml restart
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
@@ -147,4 +147,3 @@ jobs:
               sleep $INTERVAL
               ELAPSED=$((ELAPSED + INTERVAL))
             done
-            

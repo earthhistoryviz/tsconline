@@ -10,7 +10,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: development
       url: ${{ vars.WEBSITE_URL }}
     steps:
@@ -75,37 +75,37 @@ jobs:
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
         uses: actions/setup-node@v3
         with:
-          node-version: '21'
+          node-version: "21"
 
       - name: Install and build project
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
         run: |
           yarn
           yarn build
-          zip -q -r build-artifacts.zip app/dist shared/dist server/dist  
+          zip -q -r build-artifacts.zip app/dist shared/dist server/dist
 
       - name: Compare old vs. new activeJar
         id: check_active_jar
         run: |
           OLD_COMMIT="${{ github.event.before }}"
           NEW_COMMIT="${{ github.event.after }}"
-      
+
           echo "Old commit SHA: $OLD_COMMIT"
           echo "New commit SHA: $NEW_COMMIT"
-      
+
           OLD_JAR=$(git show "$OLD_COMMIT:server/assets/config.json" \
             | jq -r '.activeJar' \
             | xargs basename \
             || echo "null")
-      
+
           NEW_JAR=$(git show "$NEW_COMMIT:server/assets/config.json" \
             | jq -r '.activeJar' \
             | xargs basename \
             || echo "null")
-      
+
           echo "Old activeJar: $OLD_JAR"
           echo "New activeJar: $NEW_JAR"
-      
+
           if [ "$OLD_JAR" != "$NEW_JAR" ]; then
             echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
           fi
@@ -168,7 +168,7 @@ jobs:
           if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
             FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
           fi
-      
+
           echo "Sending files: $FILES_TO_SEND"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem

@@ -22,12 +22,12 @@ jobs:
 
       - name: TruffleHog Secret Detection
         id: trufflehog
-        continue-on-error: true 
+        continue-on-error: true
         run: |
           trufflehog git file://$(pwd) --only-verified --fail --github-actions > trufflehog-reults.json 2>&1;
 
-      - name: Scan Results Status 
-        if: steps.trufflehog.outcome == 'failure' 
+      - name: Scan Results Status
+        if: steps.trufflehog.outcome == 'failure'
         run: |
-            cat trufflehog-reults.json;
-            exit 1;
+          cat trufflehog-reults.json;
+          exit 1;
