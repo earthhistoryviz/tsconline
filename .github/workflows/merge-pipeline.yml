@@ -4,7 +4,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened] # Runs on opening a pr, pushing to a pr, and reopening a pr
     branches:
-      - main
+      - TSC-577-send-artifacts-to-the-server-instead-of-deployments
 
 jobs:
   check-files:
