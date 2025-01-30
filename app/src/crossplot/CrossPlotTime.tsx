@@ -5,7 +5,7 @@ import { context } from "../state";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import styles from "./CrossPlotTime.module.css";
-import { CustomDivider } from "../components";
+import { CustomDivider, CustomTooltip } from "../components";
 import { ColumnInfo } from "@tsconline/shared";
 
 type CrossPlotTimeSelectorProps = {
@@ -96,30 +96,36 @@ export const CrossPlotTime: React.FC<CrossPlotTimeProps> = observer(function Cro
   column,
   disabled
 }: CrossPlotTimeProps) {
+  const { t } = useTranslation();
   const { state } = useContext(context);
   return (
     <>
-      <Select
-        disabled={disabled}
-        value={column?.units || 0}
-        onChange={(evt) => {
-          const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
-          if (!col) return;
-          setCrossPlotChart(col);
-        }}
-        className={styles.unitSelect}>
-        {state.settingsTabs.columns &&
-          Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
-            <MenuItem key={index} value={column.units}>
-              {`${column.name} (${column.units})`}
+      <CustomTooltip
+        title={
+          !column ? t("crossPlot.time.select-datapack") : disabled ? t("crossPlot.time.disabled-unit-reason") : ""
+        }>
+        <Select
+          disabled={disabled || !column}
+          value={column?.units || 0}
+          onChange={(evt) => {
+            const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
+            if (!col) return;
+            setCrossPlotChart(col);
+          }}
+          className={styles.unitSelect}>
+          {state.settingsTabs.columns &&
+            Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
+              <MenuItem key={index} value={column.units}>
+                {`${column.name} (${column.units})`}
+              </MenuItem>
+            ))}
+          {!column && (
+            <MenuItem value={0}>
+              <em>{t("crossPlot.time.no-chart-units-available")}</em>
             </MenuItem>
-          ))}
-        {!column && (
-          <MenuItem value={0}>
-            <em>None</em>
-          </MenuItem>
-        )}
-      </Select>
+          )}
+        </Select>
+      </CustomTooltip>
       <Box className={styles.timeSettingsContainer} sx={{ backgroundColor: "secondaryBackground.main" }}>
         <CrossPlotTimeSelector unit={column?.units} settings={settings} setTimeSettings={setTimeSettings} />
       </Box>
