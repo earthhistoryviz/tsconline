@@ -6,6 +6,7 @@ import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
+import fastifyMetrics from "fastify-metrics";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
@@ -40,6 +41,12 @@ const server = fastify({
       },
     }
   }*/
+});
+
+server.register(fastifyMetrics, {
+  endpoint: "/metrics",
+  defaultMetrics: { enabled: true },
+  routeMetrics: { enabled: true }
 });
 
 // Load up all the chart configs found in presets:
