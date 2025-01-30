@@ -29,7 +29,8 @@ export const CrossPlotSettings = observer(() => {
         tabs={tabs}
         value={tabIndex}
         onChange={actions.setCrossPlotSettingsTabsSelected}
-        tabIndicatorLength={70}
+        tabIndicatorLength={100}
+        width={130}
         centered
         className="main-settings-tabs"
       />
@@ -50,6 +51,7 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: CrossPlotSetti
     case "xAxis":
       return (
         <CrossPlotTime
+          disabled
           settings={state.crossplotSettingsTabs.chartXTimeSettings}
           column={state.crossplotSettingsTabs.chartX}
           setTimeSettings={actions.setCrossPlotChartXTimeSettings}
