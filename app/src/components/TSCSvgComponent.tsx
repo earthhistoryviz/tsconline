@@ -506,7 +506,12 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       setupTimelineAndLabelNonCrossPlot(svg);
       hideOrShowTimelineNonCrossPlot(state.chartTab.chartTimelineEnabled);
     }
-  }, [state.chartTab.crossPlot.isCrossPlot, svgContainerRef.current, chartContent]);
+  }, [
+    state.chartTab.crossPlot.isCrossPlot,
+    svgContainerRef.current,
+    chartContent,
+    state.chartTab.chartTimelineEnabled
+  ]);
 
   useEffect(() => {
     const container = svgContainerRef.current;
