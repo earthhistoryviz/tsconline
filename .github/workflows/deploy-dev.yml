@@ -5,7 +5,7 @@ concurrency:
 on:
   push:
     branches:
-      - TSC-577-send-artifacts-to-the-server-instead-of-deployments
+      - main
 
 jobs:
   deploy:
@@ -183,10 +183,7 @@ jobs:
           script: |
             cd ${{ secrets.DEV_PATH }}
 
-            git fetch origin TSC-577-send-artifacts-to-the-server-instead-of-deployments
-            git checkout TSC-577-send-artifacts-to-the-server-instead-of-deployments
-            git pull origin TSC-577-send-artifacts-to-the-server-instead-of-deployments
-            # git pull --no-edit
+            git pull --no-edit
 
             PULL_STATUS=$?
 
