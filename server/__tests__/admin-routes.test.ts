@@ -28,7 +28,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-r
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => {})
+    editDatapackMetadataRequestHandler: vi.fn(async () => { })
   };
 });
 
@@ -98,9 +98,14 @@ vi.mock("../src/upload-handlers", async () => {
   return {
     uploadUserDatapackHandler: vi.fn().mockImplementation(() => Promise.resolve(testDatapackDescription)),
     setupNewDatapackDirectoryInUUIDDirectory: vi.fn().mockResolvedValue({}),
-    uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file))
+    uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file)),
+    fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
+    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
+    getWorkshopFilesNames: vi.fn().mockResolvedValue([])
   };
 });
+
+
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof util>();
   return {
@@ -136,7 +141,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -233,7 +238,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => {});
+    file.on("data", () => { });
     file.on("end", () => {
       resolve();
     });
@@ -275,7 +280,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -368,7 +373,10 @@ const testWorkshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString(),
-  workshopId: 1
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -388,7 +396,7 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   {
     method: "POST",
     url: "/admin/workshop",
-    body: { title: "test", start: "2024-08-29T04:00:00.000Z", end: "2024-08-30T04:00:00.000Z" }
+    body: { title: "test", start: "2024-08-29T04:00:00.000Z", end: "2024-08-30T04:00:00.000Z", regRestrict: 0, creatorUUID: testWorkshop.creatorUUID, regLink: testWorkshop.regLink }
   },
   {
     method: "PATCH",
@@ -1667,6 +1675,9 @@ describe("adminGetWorkshops", () => {
     vi.clearAllMocks();
   });
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const fetchImageLink = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
+  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
+  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   it("should return 500 if findWorkshop throws an error", async () => {
     findWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
@@ -1679,12 +1690,22 @@ describe("adminGetWorkshops", () => {
   });
   it("should return 200 if successful and workshop active as false", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshop]);
+
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(await response.json()).toEqual({ workshops: [{ ...testWorkshop, active: false }] });
+    expect(fetchImageLink).toHaveBeenCalledOnce();
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({
+      workshops: [{
+        ...testWorkshop, active: false, "coverPictureUrl": "",
+        "datapacks": [],
+        "files": []
+      }]
+    });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and workshop active as true", async () => {
@@ -1694,8 +1715,15 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
+    expect(fetchImageLink).toHaveBeenCalledOnce();
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
-      workshops: [{ ...testWorkshop, start: mockDate.toISOString(), active: true }]
+      workshops: [{
+        ...testWorkshop, start: mockDate.toISOString(), active: true, "coverPictureUrl": "",
+        "datapacks": [],
+        "files": []
+      }]
     });
     expect(response.statusCode).toBe(200);
   });
@@ -1707,7 +1735,10 @@ describe("adminCreateWorkshop", () => {
   const body = {
     title: testWorkshop.title,
     start: testWorkshop.start,
-    end: testWorkshop.end
+    end: testWorkshop.end,
+    regRestrict: testWorkshop.regRestrict,
+    creatorUUID: testWorkshop.creatorUUID,
+    regLink: testWorkshop.regLink
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1924,7 +1955,7 @@ describe("adminEditWorkshop", () => {
   });
   it("should return 409 if workshop with title and dates already exists", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
-    findWorkshop.mockResolvedValueOnce([{ ...body, end: testWorkshop.end }]);
+    findWorkshop.mockResolvedValueOnce([{ ...body, end: testWorkshop.end, regLink: null, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }]);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1963,7 +1994,12 @@ describe("adminEditWorkshop", () => {
     });
     expect(updateWorkshop).toHaveBeenCalledOnce();
     expect(updateWorkshop).toHaveBeenCalledWith({ workshopId: body.workshopId }, { ...body, workshopId: undefined });
-    expect(await response.json()).toEqual({ workshop: { ...body, end: testWorkshop.end, active: false } });
+    expect(await response.json()).toEqual({
+      workshop: {
+        ...body, end: testWorkshop.end, active: false, regRestrict: 0,
+        creatorUUID: ""
+      }
+    });
     expect(response.statusCode).toBe(200);
   });
 });

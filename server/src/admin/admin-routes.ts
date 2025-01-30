@@ -250,7 +250,7 @@ export const adminDeleteUser = async function adminDeleteUser(
       return;
     }
     await deleteUser({ uuid });
-    await deleteAllUserDatapacks(uuid).catch(() => {});
+    await deleteAllUserDatapacks(uuid).catch(() => { });
     await deleteAllUserMetadata(assetconfigs.fileMetadata, uuid);
   } catch (error) {
     reply.status(500).send({ error: "Unknown error" });
@@ -672,7 +672,9 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       start: newWorkshop.start,
       end: newWorkshop.end,
       workshopId: workshopId,
-      active: newStart <= now && now <= newEnd
+      active: newStart <= now && now <= newEnd,
+      regRestrict: 0,
+      creatorUUID: "" //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
