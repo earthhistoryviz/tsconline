@@ -240,8 +240,8 @@
             "Discussion": "Discussion",
             "Warnings": "Warnings",
             "Load/Save": "Load/Save",
-            "xAxis": "X Axis",
-            "yAxis": "Y Axis"
+            "xAxis": "X Axis (Age-only)",
+            "yAxis": "Y Axis (Age/Depth)"
         },
         "settings": {
             "time": {

@@ -86,18 +86,21 @@ type CrossPlotTimeProps = {
   column: ColumnInfo | undefined;
   setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
   setCrossPlotChart: (crossPlotSettings: ColumnInfo | undefined) => void;
+  disabled?: boolean;
 };
 
 export const CrossPlotTime: React.FC<CrossPlotTimeProps> = observer(function CrossPlotTime({
   settings,
   setTimeSettings,
   setCrossPlotChart,
-  column
+  column,
+  disabled
 }: CrossPlotTimeProps) {
   const { state } = useContext(context);
   return (
     <>
       <Select
+        disabled={disabled}
         value={column?.units || 0}
         onChange={(evt) => {
           const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
