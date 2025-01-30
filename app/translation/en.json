@@ -221,7 +221,10 @@
         },
         "crossPlot": {
             "time": {
-                "select-unit": "Please select a unit."
+                "select-unit": "Please select a unit.",
+                "no-chart-units-available": "No datapacks selected",
+                "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
+                "select-datapack": "Please select a datapack."
             }
         },
         "settingsTabs": {
