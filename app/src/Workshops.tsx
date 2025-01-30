@@ -49,7 +49,9 @@ import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
-import { devSafeUrl } from "./util";
+import { devSafeUrl, loadRecaptcha, removeRecaptcha } from "./util";
+import { useLocation } from "react-router-dom";
+
 
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
@@ -74,6 +76,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
   onClickHandler
 }) => {
   const { t } = useTranslation();
+  const { state } = useContext(context);
   const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
     const serverURL =
       workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0
@@ -82,8 +85,11 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
     return serverURL;
   };
   useEffect(() => {
-    actions.adminFetchWorkshops();
-  }, []);
+    const fetchData = async () => {
+      await actions.adminFetchWorkshops();
+    };
+    fetchData();
+  }, [state.user.isAdmin]); // should change to check if the user if logged in, and only show those are open for public registration. But leave it as it is for now.
   return (
     <StyledScrollbar>
       <Box sx={{ display: "flex", padding: "5px 5px" }}>
@@ -277,9 +283,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-            })
+            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+          })
         }}
         onClick={() => setWorkshopAndNavigateForCalender(event as { workshopId: number })}>
         {/* timing details on card */}
