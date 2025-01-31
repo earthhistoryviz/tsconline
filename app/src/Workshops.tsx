@@ -49,9 +49,7 @@ import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
-import { devSafeUrl, loadRecaptcha, removeRecaptcha } from "./util";
-import { useLocation } from "react-router-dom";
-
+import { devSafeUrl } from "./util";
 
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
@@ -283,9 +281,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-          })
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+            })
         }}
         onClick={() => setWorkshopAndNavigateForCalender(event as { workshopId: number })}>
         {/* timing details on card */}
