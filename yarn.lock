@@ -2134,13 +2134,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@opentelemetry/api@npm:^1.4.0":
-  version: 1.9.0
-  resolution: "@opentelemetry/api@npm:1.9.0"
-  checksum: a607f0eef971893c4f2ee2a4c2069aade6ec3e84e2a1f5c2aac19f65c5d9eeea41aa72db917c1029faafdd71789a1a040bdc18f40d63690e22ccae5d7070f194
-  languageName: node
-  linkType: hard
-
 "@pkgjs/parseargs@npm:^0.11.0":
   version: 0.11.0
   resolution: "@pkgjs/parseargs@npm:0.11.0"
@@ -2630,8 +2623,8 @@ __metadata:
     cors: "npm:^2.8.5"
     dompurify: "npm:^3.2.4"
     dotenv: "npm:^16.4.5"
-    fastify: "npm:^4.27.0"
-    fastify-metrics: "npm:^12.1.0"
+    fastify: "npm:^4.17.0"
+    fastify-metrics: "npm:^9.0.0"
     form-auto-content: "npm:^3.2.1"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
@@ -6431,29 +6424,22 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify-metrics@npm:^12.1.0":
-  version: 12.1.0
-  resolution: "fastify-metrics@npm:12.1.0"
+"fastify-metrics@npm:^9.0.0":
+  version: 9.2.4
+  resolution: "fastify-metrics@npm:9.2.4"
   dependencies:
-    fastify-plugin: "npm:^5.0.0"
-    prom-client: "npm:^15.1.3"
+    fastify-plugin: "npm:^4.2.0"
+    prom-client: "npm:^14.0.1"
   peerDependencies:
-    fastify: ">=5"
-  checksum: 14936c2eb8578929f99b6112e6cc117b1e7816d7aeba468fe380ccb3ae989103334885265cc0ecffe4a080bff75f5baec94976e08268ebbe1359f8b88baebbb0
+    fastify: ^4.0.0
+  checksum: fb85ae23d16bee37a50c001a56afd1742c7129632f7de218f4a43ea49de07a5cb2fc7b466c6f2bee88253406db914f094fe8be254285a67d9da05ec96425ef8b
   languageName: node
   linkType: hard
 
-"fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.5.0":
+"fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.2.0, fastify-plugin@npm:^4.5.0":
   version: 4.5.1
   resolution: "fastify-plugin@npm:4.5.1"
   checksum: 7c6d777ada0f01c8a1166a2a669cccfd6074c7764121f07cce997745f198227a271c7a317aaf0da273b329f24307f0eba3f093d872d29b839b33deb525bbafe2
-  languageName: node
-  linkType: hard
-
-"fastify-plugin@npm:^5.0.0":
-  version: 5.0.1
-  resolution: "fastify-plugin@npm:5.0.1"
-  checksum: 76f6960558239d1ead520ecfb9dbb9b0435a63376d9d48bed0861609a909bf1958cb097745bb1a5485592f2c6d1438941e7481203c86b0e74d2bc34f09e8ed3e
   languageName: node
   linkType: hard
 
@@ -9833,13 +9819,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prom-client@npm:^15.1.3":
-  version: 15.1.3
-  resolution: "prom-client@npm:15.1.3"
+"prom-client@npm:^14.0.1":
+  version: 14.2.0
+  resolution: "prom-client@npm:14.2.0"
   dependencies:
-    "@opentelemetry/api": "npm:^1.4.0"
     tdigest: "npm:^0.1.1"
-  checksum: eba75e15ab896845d39359e3a4d6f7913ea05339b3122d8dde8c8c374669ad1a1d1ab2694ab2101c420bd98086a564e4f2a18aa29018fc14a4732e57c1c19aec
+  checksum: 892eb83eb860945f3ee55bc19bb73e4a64cb63d95e28336141f49fb90a05354765b4ac4a8ba046fd895690f0bf231de1289caf180647cefdfd0d767f34725d97
   languageName: node
   linkType: hard
 

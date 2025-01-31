@@ -50,6 +50,14 @@ server.register(fastifyMetrics, {
   routeMetrics: { enabled: true }
 });
 
+server.addHook("preHandler", (request, reply, done) => {
+  if (request.raw.url === "/metrics" && request.ip !== "127.0.0.1" && request.ip !== "::1") {
+    reply.code(403).send({ error: "Forbidden" });
+  } else {
+    done();
+  }
+});
+
 // Load up all the chart configs found in presets:
 const presets = await loadPresets();
 try {
