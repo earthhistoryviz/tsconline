@@ -1,12 +1,13 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "src",
+    "rootDir": "/workspaces/tsconline",
     "outDir": "dist",
     "allowJs": true
   },
   "exclude": ["assets/uploads"],
   "include": [ 
     "src",
+    "app/src/util"
   ]
 }
