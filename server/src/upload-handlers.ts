@@ -370,6 +370,7 @@ export async function processMultipartPartsForDatapackUpload(
   }
   const isProOrAdmin = user[0].isAdmin || user[0].accountType === "pro";
   for await (const part of parts) {
+      console.log("test", part.fieldname)
     if (part.type === "file") {
       if (part.fieldname === "datapack") {
         // DOWNLOAD FILE HERE AND SAVE TO FILE
@@ -405,9 +406,13 @@ export async function processMultipartPartsForDatapackUpload(
           return { code, message };
         }
       }
+      // else if(part.fieldname == "pdfFiles[]") {
+      //
+      // }
     } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
       fields[part.fieldname] = part.value;
     }
+
   }
   if (!file || !filepath || !originalFileName || !storedFileName) {
     await cleanupTempFiles();
