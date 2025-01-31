@@ -18,7 +18,7 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
@@ -429,7 +429,12 @@ export async function processMultipartPartsForDatapackUpload(
 export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.join(directory, "files");
+  const filesFolder = path.resolve(directory, "files");
+
+  verifyNonExistentFilepath(filesFolder);
+  if (!verifyNonExistentFilepath(filesFolder)) {
+    throw new Error("Invalid directory path.");
+  }
   await mkdir(filesFolder, { recursive: true });
 
   const filename = file.filename;
@@ -446,7 +451,12 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.join(directory, "cover");
+  const filesFolder = path.resolve(directory, "cover");
+
+  verifyNonExistentFilepath(filesFolder);
+  if (!verifyNonExistentFilepath(filesFolder)) {
+    throw new Error("Invalid directory path.");
+  }
   await mkdir(filesFolder, { recursive: true });
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);
