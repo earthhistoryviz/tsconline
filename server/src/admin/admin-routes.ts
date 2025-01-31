@@ -853,15 +853,6 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
 ) {
   const parts = request.parts();
   const { workshopId } = request.params;
-  if (!workshopId) {
-    reply.status(400).send({ error: "Missing workshopId or files" });
-    return;
-  }
-  const workshop = await getWorkshopIfNotEnded(workshopId);
-  if (!workshop) {
-    reply.status(404).send({ error: "Workshop not found or has ended" });
-    return;
-  }
 
   try {
     for await (const part of parts) {
@@ -873,7 +864,11 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
         }
       }
     }
-
+    const workshop = await getWorkshopIfNotEnded(workshopId);
+    if (!workshop) {
+      reply.status(404).send({ error: "Workshop not found or has ended" });
+      return;
+    }
     reply.send({ message: "Files added to workshop" });
     return;
   } catch (error) {
@@ -890,11 +885,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
   const { workshopId } = request.params;
   let coverPicture: MultipartFile | undefined;
 
-  if (!workshopId) {
-    console.error("Missing workshopId ");
-    reply.status(400).send({ error: "Missing workshopId" });
-    return;
-  }
   try {
     for await (const part of parts) {
       if (part.type === "file" && part.fieldname === "file") {
@@ -917,6 +907,11 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
         reply.send({ message: "Cover picture added to workshop" });
         return;
       }
+    }
+    if (!workshopId) {
+      console.error("Missing workshopId ");
+      reply.status(400).send({ error: "Missing workshopId" });
+      return;
     }
     if (!coverPicture) {
       console.error("Missing cover picture");

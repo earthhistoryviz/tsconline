@@ -365,14 +365,14 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.resolve(directory, "files");
-  verifyFilepath(filesFolder);
-  if (!verifyFilepath(filesFolder)) {
-    throw new Error("Invalid directory path.");
+  if (!(await verifyFilepath(filesFolder))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
   }
   const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
-  verifyNonExistentFilepath(zipfile);
-  if (!verifyNonExistentFilepath(zipfile)) {
-    throw new Error("Invalid directory path.");
+  if (!(await verifyNonExistentFilepath(zipfile))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
   }
   try {
     let file;
