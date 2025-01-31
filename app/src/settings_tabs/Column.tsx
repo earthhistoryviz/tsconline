@@ -184,8 +184,8 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const dataInrange = checkIfDataIsInRange(
     column.minAge,
     column.maxAge,
-    state.settings.timeSettings[column.units].topStageAge,
-    state.settings.timeSettings[column.units].baseStageAge
+    state.settings.timeSettings[column.units]?.topStageAge || 0,
+    state.settings.timeSettings[column.units]?.baseStageAge || 0
   );
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (

@@ -46,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -568,6 +569,8 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
+      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
@@ -684,6 +687,26 @@ export const settingOptions = [
   }
 ];
 
+export const setCrossPlotSettingsTabsSelected = action((newtab: number | CrossPlotSettingsTabs) => {
+  if (typeof newtab === "string") {
+    state.crossplotSettingsTabs.selected = newtab;
+    return;
+  }
+  switch (newtab) {
+    case 0:
+      state.crossplotSettingsTabs.selected = "xAxis";
+      break;
+    case 1:
+      state.crossplotSettingsTabs.selected = "yAxis";
+      break;
+    case 2:
+      state.crossplotSettingsTabs.selected = "column";
+      break;
+    default:
+      console.log("WARNING: setCrossPlotSettingsTabsSelected: received index number that is unknown: ", newtab);
+      state.crossplotSettingsTabs.selected = "xAxis";
+  }
+});
 /**
  * set the settings tab based on a string or number
  */
@@ -1354,4 +1377,11 @@ export const setCrossPlotLockX = action((lockX: boolean) => {
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
   state.chartTab.crossPlot.lockY = lockY;
+});
+
+export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartX = chart;
+});
+export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartY = chart;
 });
