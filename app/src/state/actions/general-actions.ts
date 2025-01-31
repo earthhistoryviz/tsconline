@@ -43,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError } from "./util-actions";
+import { displayServerError, downloadFile } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -1290,18 +1290,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
         throw new Error("Invalid file");
       }
       fileURL = reader.result;
-      if (fileURL) {
-        const aTag = document.createElement("a");
-        aTag.href = fileURL;
-
-        aTag.setAttribute("download", `FilesFor${workshop.title}.zip`);
-
-        document.body.appendChild(aTag);
-        aTag.click();
-        aTag.remove();
-      } else {
-        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      }
+      downloadFile(fileURL, `FilesFor${workshop.title}.zip`);
     } catch (error) {
       pushError(ErrorCodes.INVALID_PATH);
     }

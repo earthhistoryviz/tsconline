@@ -11,6 +11,7 @@ import {
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
@@ -167,4 +168,8 @@ export async function downloadFile(blob: Blob, filename: string) {
   document.body.appendChild(aTag);
   aTag.click();
   aTag.remove();
+}
+export function getWorkshopCoverImage(coverPictureUrl?: string) {
+  const serverURL = coverPictureUrl && coverPictureUrl?.length > 0 ? devSafeUrl("/" + coverPictureUrl) : TSCreatorLogo;
+  return serverURL;
 }

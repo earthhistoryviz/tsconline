@@ -17,7 +17,6 @@ import {
   FormControlLabel,
   Switch
 } from "@mui/material";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
@@ -32,7 +31,8 @@ import {
   getActiveWorkshops,
   getNavigationRouteForWorkshopDetails,
   getPastWorkshops,
-  getUpcomingWorkshops
+  getUpcomingWorkshops,
+  getWorkshopCoverImage
 } from "./state/non-action-util";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
@@ -49,7 +49,8 @@ import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
-import { devSafeUrl } from "./util";
+import { ErrorCodes } from "./util/error-codes";
+import { loadRecaptcha, removeRecaptcha } from "./util";
 
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
@@ -64,6 +65,7 @@ type Event = {
   start: Date;
   end: Date;
   workshopId: number;
+  coverPictureUrl?: string;
 };
 
 const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
@@ -74,20 +76,6 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
   onClickHandler
 }) => {
   const { t } = useTranslation();
-  const { state } = useContext(context);
-  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
-    const serverURL =
-      workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0
-        ? devSafeUrl("/" + workshop.coverPictureUrl)
-        : TSCreatorLogo;
-    return serverURL;
-  };
-  useEffect(() => {
-    const fetchData = async () => {
-      await actions.adminFetchWorkshops();
-    };
-    fetchData();
-  }, [state.user.isAdmin]); // should change to check if the user if logged in, and only show those are open for public registration. But leave it as it is for now.
   return (
     <StyledScrollbar>
       <Box sx={{ display: "flex", padding: "5px 5px" }}>
@@ -107,9 +95,10 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={getWorkshopCoverImage(workshop)}
+                    image={getWorkshopCoverImage(workshop.coverPictureUrl)}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
+                    onError={() => actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE)}
                   />
                   <Typography variant="h5" component="div" gutterBottom>
                     {workshop.title}
@@ -172,7 +161,7 @@ export const Workshops: React.FC = observer(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  function setWorkshopAndNavigateForCalender(event: { workshopId: number }) {
+  function setWorkshopAndNavigateForCalendar(event: { workshopId: number }) {
     navigate(getNavigationRouteForWorkshopDetails(event.workshopId));
   }
 
@@ -285,7 +274,7 @@ export const Workshops: React.FC = observer(() => {
               height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
             })
         }}
-        onClick={() => setWorkshopAndNavigateForCalender(event as { workshopId: number })}>
+        onClick={() => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}>
         {/* timing details on card */}
         <Typography className="custom-event-label">{event.title}</Typography>
         {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
@@ -322,7 +311,12 @@ export const Workshops: React.FC = observer(() => {
           (new Date(event.start) < date && new Date(event.end) >= date)
       )
     ) {
-      newStyle.backgroundImage = TSCreatorLogo; // This need to be fix later so leave it as TSCreatorLogo for now.
+      const theEvent = events.find(
+        (event) =>
+          new Date(event.start).toDateString() === date.toDateString() ||
+          (new Date(event.start) < date && new Date(event.end) >= date)
+      );
+      newStyle.backgroundImage = getWorkshopCoverImage(theEvent!.coverPictureUrl); // This need to be fix later so leave it as TSCreatorLogo for now.
       newStyle.backgroundSize = "cover";
       newStyle.backgroundPosition = "center";
       newStyle.opacity = 0.3;
@@ -344,7 +338,7 @@ export const Workshops: React.FC = observer(() => {
       onView={(view) => setCalendarView(view)}
       view={calendarView as (typeof Views)[keyof typeof Views]}
       components={{ toolbar: CustomToolbar, eventWrapper: EventWrapper }}
-      onSelectEvent={(event) => setWorkshopAndNavigateForCalender(event as { workshopId: number })}
+      onSelectEvent={(event) => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}
       dayPropGetter={(date) => dayPropGetter(date, events)}
     />
   );
@@ -361,12 +355,32 @@ export const Workshops: React.FC = observer(() => {
     title: workshop.title,
     start: dayjs(workshop.start).toDate(),
     end: dayjs(workshop.end).toDate(),
-    workshopId: workshop.workshopId
+    workshopId: workshop.workshopId,
+    coverPictureUrl: workshop.coverPictureUrl
   }));
 
   useEffect(() => {
-    actions.adminFetchWorkshops();
-  }, []);
+    const controller = new AbortController();
+    const shouldLoadRecaptcha = state.isLoggedIn && state.user.isAdmin;
+
+    if (shouldLoadRecaptcha) {
+      loadRecaptcha().then(async () => {
+        if (state.user.isAdmin) {
+          await actions.adminFetchWorkshops();
+        }
+      });
+    } else {
+      actions.adminFetchWorkshops();
+    }
+
+    return () => {
+      if (shouldLoadRecaptcha) {
+        removeRecaptcha();
+      }
+      controller.abort();
+    };
+  }, [state.isLoggedIn, state.user?.isAdmin]);
+
   return (
     <>
       {state.isLoggedIn ? (

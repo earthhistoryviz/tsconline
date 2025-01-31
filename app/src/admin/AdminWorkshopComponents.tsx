@@ -9,14 +9,20 @@ import {
   InputLabel,
   ListItemText,
   SelectChangeEvent,
-  FormControl,
-  Divider,
-  Avatar
+  Avatar,
+  FormControl
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader } from "../components";
+import {
+  TSCButton,
+  InputFileUpload,
+  TSCPopup,
+  DatapackUploadForm,
+  TSCDialogLoader,
+  CustomDivider
+} from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -151,23 +157,27 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     setWorkshop(null);
     onClose();
   };
-
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       setLoading(true);
       event.preventDefault();
+      const errorMessages: string[] = [];
+
       if (!workshopTitle) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
+        errorMessages.push("Invalid form: Workshop title is required.");
       }
       if (!startDate || !endDate) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
+        errorMessages.push("Invalid form: Start and end dates are required.");
       }
       const start = dayjs(startDate).toISOString();
       const end = dayjs(endDate).toISOString();
       if (dayjs(start).isAfter(dayjs(end)) || dayjs(start).isSame(dayjs(end))) {
         actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
+        return;
+      }
+
+      if (errorMessages.length > 0) {
+        actions.pushSnackbar(errorMessages.join(" "), "warning");
         return;
       }
 
@@ -190,7 +200,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
         workshopId = createdWorkshopId;
         created = true;
-        console.log("188");
       } else {
         if (!workshop) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
@@ -211,13 +220,15 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         if (!isWorkshopUnchanged) {
           const newWorkshop = await actions.adminEditWorkshop(updatedFields);
           if (!newWorkshop) {
+            actions.pushError(ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED);
             return;
           }
           edited = true;
           setWorkshop(newWorkshop);
         }
-        if (isWorkshopUnchanged && !emailFile && !emails) {
-          actions.pushSnackbar("No changes made", "info");
+
+        if (isWorkshopUnchanged && !emailFile && !emails && !regLink && !files && !coverPicture && !regRestrict) {
+          actions.pushSnackbar("No changes made.", "info");
           return;
         }
       }
@@ -229,78 +240,35 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         form.append("workshopId", workshopId.toString());
         const response = await actions.adminAddUsersToWorkshop(form);
         if (!response.success) {
-          if (created || edited)
-            actions.pushSnackbar(
-              `Workshop ${created ? "created" : "edited"} successfully but users could not be added`,
-              "warning"
-            );
+          errorMessages.push("Users could not be added.");
           setInvalidEmails(response.invalidEmails);
-          if (created) handleDialogClose();
-          return;
-        } else {
-          actions.removeAllErrors();
-          let message = "";
-          if (created || edited) {
-            message = `Workshop ${created ? "created" : "edited"} successfully and users added`;
-          } else {
-            message = "Users added successfully";
-          }
-          actions.pushSnackbar(message, "success");
         }
       }
 
       if (coverPicture) {
         const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
         if (!response) {
-          if (created || edited)
-            actions.pushSnackbar(
-              `Workshop ${created ? "created" : "edited"} successfully but cover picture could not be uploaded`,
-              "warning"
-            );
-          if (created) handleDialogClose();
-          return;
-        } else {
-          actions.removeAllErrors();
-          let message = "";
-          if (created || edited) {
-            message = `Workshop ${created ? "created" : "edited"} successfully and cover picture uploaded`;
-          } else {
-            message = "Cover picture uploaded successfully";
-          }
-          actions.pushSnackbar(message, "success");
+          errorMessages.push("Cover picture could not be uploaded.");
         }
-      } else {
-        actions.removeAllErrors();
-        actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
 
-      // handling files
-      if (files && files.length != 0) {
+      if (files && files.length !== 0) {
         const response = await actions.adminAddFilesToWorkshop(workshopId, files);
         if (!response) {
-          if (created || edited)
-            actions.pushSnackbar(
-              `Workshop ${created ? "created" : "edited"} successfully but files could not be uploaded`,
-              "warning"
-            );
-          if (created) handleDialogClose();
-          return;
-        } else {
-          actions.removeAllErrors();
-          let message = "";
-          if (created || edited) {
-            message = `Workshop ${created ? "created" : "edited"} successfully and files uploaded`;
-          } else {
-            message = "Files uploaded successfully";
-          }
-          actions.pushSnackbar(message, "success");
+          errorMessages.push("Files could not be uploaded.");
         }
-      } else {
-        actions.removeAllErrors();
-        actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
+
+      if (errorMessages.length > 0) {
+        actions.pushSnackbar(errorMessages.join(" "), "warning");
+      }
+      const successMessage = created ? "Workshop created successfully." : edited ? "Workshop edited successfully." : "";
+
+      if (successMessage.length > 0 && errorMessages.length == 0) {
+        actions.pushSnackbar(successMessage, "success");
+      }
+
       handleDialogClose();
-      console.log("1882");
     } catch (error) {
       displayServerError(
         error,
@@ -488,7 +456,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   />
                   <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
                 </Box>
-                <Divider
+                <CustomDivider
                   style={{
                     height: "0.05px",
                     width: "100%",
@@ -533,7 +501,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         alt="Cover Picture"
                         sx={{ width: 100, height: 100 }}
                       />
-                    ) : editMode && currentWorkshop?.coverPictureUrl ? (
+                    ) : currentWorkshop?.coverPictureUrl ? (
                       // workshop has a old cover picture
                       <Avatar
                         variant="square"
@@ -554,7 +522,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                     </Box>
                   </Box>
                 </Box>
-                <Divider
+                <CustomDivider
                   style={{
                     height: "0.05px",
                     width: "100%",
@@ -572,6 +540,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setEmails("");
                           setEmailFile(null);
                           setFiles(null);
+                          setCoverPicture(null);
+                          setRegLink(undefined);
+                          setRegRestrict(0);
                         }}>
                         Reset Form
                       </TSCButton>
