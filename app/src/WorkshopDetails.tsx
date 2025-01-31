@@ -1,6 +1,5 @@
 import { useContext } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
 import { CustomDivider, TSCButton } from "./components";
@@ -10,9 +9,7 @@ import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
-import { formatDate } from "./state/non-action-util";
-import { SharedWorkshop } from "@tsconline/shared";
-import { devSafeUrl } from "./util";
+import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -32,15 +29,7 @@ export const WorkshopDetails = observer(() => {
       actions.fetchWorkshopFilesForDownload(workshop);
     }
   }
-  const getWorkshopCoverImage = (workshop: SharedWorkshop) => {
-    const coverPictureUrl = "/" + workshop.coverPictureUrl;
-    console.error(coverPictureUrl);
-    const serverURL =
-      workshop.coverPictureUrl && workshop.coverPictureUrl?.length > 0
-        ? devSafeUrl("/" + workshop.coverPictureUrl)
-        : TSCreatorLogo;
-    return serverURL;
-  };
+
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -51,7 +40,7 @@ export const WorkshopDetails = observer(() => {
 
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
-          <img className={styles.di} src={getWorkshopCoverImage(workshop)} />
+          <img className={styles.di} src={getWorkshopCoverImage(workshop.coverPictureUrl)} />
         </div>
         <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">
@@ -92,6 +81,7 @@ export const WorkshopDetails = observer(() => {
                           • {file}
                         </Typography>
                       ))}
+                      {/* TODO: change this to only be allowed if user is registered to the workshop. Probably need a route for checking this */}
                       <TSCButton
                         variant="contained"
                         color="primary"
