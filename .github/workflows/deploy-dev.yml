@@ -275,6 +275,29 @@ jobs:
               ELAPSED=$((ELAPSED + INTERVAL))
             done
 
+            MONITORING_CHANGED=$(git diff --name-only HEAD^ | grep '^monitoring/' || echo "")
+
+            if [ -n "$MONITORING_CHANGED" ]; then
+              echo "Detected changes in monitoring/ directory. Updating monitoring services..."
+
+              MONITORING_DIR="secrets.MONITORING_DIR"
+
+              mkdir -p $MONITORING_DIR
+
+              rsync -avz --delete monitoring/ $MONITORING_DIR/
+
+              if [ ! -f "$MONITORING_DIR/docker-compose-prometheus.yml" ]; then
+                echo "Error: docker-compose-prometheus.yml not found in $MONITORING_DIR"
+                exit 1
+              fi
+
+              docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml up -d
+
+              echo "Monitoring services updated and restarted successfully."
+            else
+              echo "No monitoring/ changes detected. Skipping monitoring update."
+            fi
+
       - name: Send Jar Artifact to Dropbox
         if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
         run: |
@@ -317,6 +340,51 @@ jobs:
               --header "Content-Type: application/json" \
               --data "$DELETE_PAYLOAD"
           done
+
+      - name: Send Jar Artifact to Dropbox
+        if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        run: |
+          # --- Get the access token ---
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+
+          # --- Upload the new JAR artifact ---
+          DROPBOX_FILE_PATH="${{ secrets.DROPBOX_PATH }}/${{ steps.check_active_jar.outputs.new_active_jar }}"
+          DROPBOX_API_ARG=$(printf '{"path": "%s", "mode": "overwrite", "autorename": false, "mute": true}' "$DROPBOX_FILE_PATH")
+          curl -s -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --header "Dropbox-API-Arg: $DROPBOX_API_ARG" \
+            --data-binary @"${{ steps.check_active_jar.outputs.new_active_jar }}"
+          echo -e "\nUploaded ${{ steps.check_active_jar.outputs.new_active_jar }} to Dropbox"
+
+          # --- List all JAR files in the base Dropbox folder excluding the new active JAR, old active JAR, and decryption JAR ---
+          echo "Listing JAR files in Dropbox..."
+          LIST_PAYLOAD=$(printf '{"path": "%s", "recursive": false}' "${{ secrets.DROPBOX_PATH }}")
+          LIST_RESPONSE=$(curl -s -X POST https://api.dropboxapi.com/2/files/list_folder \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$LIST_PAYLOAD")
+          echo "List Folder Response: $LIST_RESPONSE"
+          FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
+            | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
+            
+          if [[ -z "$FILES_TO_DELETE" ]]; then
+            echo "No files to delete. Exiting."
+            exit 0
+          fi
+          echo "Files to delete: $FILES_TO_DELETE"
+
+          # --- Delete the filtered files ---
+          for FILE in $FILES_TO_DELETE; do
+            echo "Deleting $FILE"
+            DELETE_PAYLOAD=$(printf '{"path": "%s/%s"}' "${{ secrets.DROPBOX_PATH }}" "$FILE")
+            curl -s -X POST https://api.dropboxapi.com/2/files/delete_v2 \
+              --header "Authorization: Bearer $ACCESS_TOKEN" \
+              --header "Content-Type: application/json" \
+              --data "$DELETE_PAYLOAD"
+          done
+
+            
 
       - name: Delete build artifacts
         if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
