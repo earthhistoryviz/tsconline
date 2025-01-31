@@ -6,7 +6,7 @@
     "allowJs": true,
   },
   "include": [
-    "src"
+    "src",
   ]
 }
    

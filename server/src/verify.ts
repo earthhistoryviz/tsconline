@@ -1,5 +1,7 @@
+import {fetcher} from '/workspaces/tsconline/app/src/util';
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+
 
 /**
  * Verifies the given Recaptcha token. The token is sent to Google's Recaptcha API for verification.
@@ -8,21 +10,33 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
  */
 export async function checkRecaptchaToken(token: string): Promise<number> {
   try {
-    if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
-    const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
-      { method: "POST" }
-    );
-    const data = await response.json();
-    if (!data.success) {
-      console.error("Recaptcha failed:", data);
+    if (process.env.NODE_ENV !== "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
+
+    const response = await verify(token);
+
+    if (!response.success) {
+      console.error("Recaptcha failed:", response);
       throw new Error("Recaptcha failed");
     }
-    return data.score;
+
+    return response.score;
   } catch (error) {
     console.error("Recaptcha error:", error);
     throw new Error("Recaptcha failed");
   }
+}
+
+async function verify(token: string) {
+  const secret = process.env.RECAPTCHA_SECRET_KEY; // Ensure the secret key is taken from the environment variable
+  const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
+  const httpResponse = await fetcher(url, { method: "POST" });
+
+  if (httpResponse.ok) {
+    const data = await httpResponse.json();
+    return data;
+  }
+
+  throw new Error("Network response was not ok");
 }
 
 /**
@@ -33,6 +47,9 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
 export function generateToken(uuid: string): string {
   return randomBytes(16).toString("hex") + encrypt(uuid);
 }
+
+
+
 
 /**
  * Encrypts the data using AES-256-CBC. The key and IV are read from the environment variables AES_SECRET_KEY and AES_IV. If these are not set, random keys are generated.
