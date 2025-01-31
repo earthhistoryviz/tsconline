@@ -39,6 +39,11 @@ export type State = {
   chartTab: {
     chartTimelineEnabled: boolean;
     chartTimelineLocked: boolean;
+    crossPlot: {
+      lockX: boolean;
+      lockY: boolean;
+      isCrossPlot: boolean;
+    };
     scale: number;
     zoomFitScale: number;
     resetMidX: number;
@@ -152,6 +157,11 @@ export const state = observable<State>({
   chartTab: {
     chartTimelineEnabled: false,
     chartTimelineLocked: false,
+    crossPlot: {
+      lockX: false,
+      lockY: false,
+      isCrossPlot: false
+    },
     scale: 1,
     zoomFitScale: 1,
     resetMidX: 0,
