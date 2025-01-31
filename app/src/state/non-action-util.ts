@@ -3,13 +3,13 @@ import {
   DatapackMetadata,
   DatapackUniqueIdentifier,
   SharedUser,
+  SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
-import { Workshop } from "../Workshops";
 
 export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {
   return (
@@ -108,19 +108,19 @@ export function hasLeadingTrailingWhiteSpace(input: string) {
   return input.trim() !== input;
 }
 
-export function getActiveWorkshops(workshops: Workshop[]) {
+export function getActiveWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const activeWorkshops = workshops.filter(
     (workshop) => workshop.active && new Date(workshop.start) <= now && new Date(workshop.end) >= now
   );
   return activeWorkshops;
 }
-export function getUpcomingWorkshops(workshops: Workshop[]) {
+export function getUpcomingWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const upcomingWorkshops = workshops.filter((workshop) => !workshop.active && new Date(workshop.start) > now);
   return upcomingWorkshops;
 }
-export function getPastWorkshops(workshops: Workshop[]) {
+export function getPastWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
