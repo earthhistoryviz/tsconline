@@ -18,7 +18,14 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
+import {
+  assetconfigs,
+  checkFileExists,
+  getBytes,
+  makeTempFilename,
+  verifyFilepath,
+  verifyNonExistentFilepath
+} from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
@@ -433,9 +440,8 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.resolve(directory, "files");
 
-  verifyNonExistentFilepath(filesFolder);
-  if (!verifyNonExistentFilepath(filesFolder)) {
-    throw new Error("Invalid directory path.");
+  if (!(await verifyNonExistentFilepath(filesFolder))) {
+    return { code: 500, message: "Invalid directory path." };
   }
   await mkdir(filesFolder, { recursive: true });
 
@@ -455,9 +461,8 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesFolder = path.resolve(directory, "cover");
 
-  verifyNonExistentFilepath(filesFolder);
-  if (!verifyNonExistentFilepath(filesFolder)) {
-    throw new Error("Invalid directory path.");
+  if (!(await verifyNonExistentFilepath(filesFolder))) {
+    return { code: 500, message: "Invalid directory path." };
   }
   await mkdir(filesFolder, { recursive: true });
   const filename = coverPicture.filename;
@@ -475,9 +480,12 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.join(directory, "cover");
+  const filesFolder = path.resolve(directory, "cover");
   const possibleExtensions = [".png", ".jpeg", ".jpg"];
-
+  if (!(await verifyFilepath(filesFolder))) {
+    console.error("Invalid directory path.");
+    return null;
+  }
   // Loop through possible extensions and check if the file exists
   for (const ext of possibleExtensions) {
     const coverPicturePath = path.join(filesFolder, "coverPicture" + ext);
@@ -496,6 +504,10 @@ export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
 export async function getWorkshopDatapacksNames(workshopId: number): Promise<string[]> {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
+  if (!(await verifyFilepath(directory))) {
+    console.error("Invalid directory path");
+    return [];
+  }
   try {
     const entries = readdir(directory, { withFileTypes: true });
     const folders = (await entries)
@@ -516,7 +528,11 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
 export async function getWorkshopFilesNames(workshopId: number): Promise<string[]> {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.join(directory, "files");
+  const filesFolder = path.resolve(directory, "files");
+  if (!(await verifyFilepath(filesFolder))) {
+    console.error("Invalid directory path");
+    return [];
+  }
   try {
     const entries = readdir(filesFolder, { withFileTypes: true });
     const files = (await entries).map((entry) => entry.name);

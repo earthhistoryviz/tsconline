@@ -28,7 +28,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-r
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => {})
+    editDatapackMetadataRequestHandler: vi.fn(async () => { })
   };
 });
 
@@ -101,7 +101,9 @@ vi.mock("../src/upload-handlers", async () => {
     uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file)),
     fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
     getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
-    getWorkshopFilesNames: vi.fn().mockResolvedValue([])
+    getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
+    uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file))
   };
 });
 
@@ -140,7 +142,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -237,7 +239,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => {});
+    file.on("data", () => { });
     file.on("end", () => {
       resolve();
     });
@@ -279,7 +281,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -2616,6 +2618,134 @@ describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
     });
     expect(await response.json()).toEqual([{ title: "test" }]);
     expect(fetchAllPrivateOfficialDatapacks).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminUploadFilesToWorkshop", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
+      json.file = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should return 404 if workshop ended", async () => {
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should return error code if failed to upload file", async () => {
+    vi.mocked(uploadHandlers.uploadFilesToWorkshop).mockImplementationOnce(async (id, file) => {
+      await consumeStream(file);
+      return { code: 500, message: "Failed to save file" };
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 200 if successfully uploaded file", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Files added to workshop" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminUploadCoverPicToWorkshop", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
+      json.file = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "coverpic.png",
+          contentType: "image/png"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should return 404 if workshop ended", async () => {
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should return error code if failed to upload cover picture", async () => {
+    vi.mocked(uploadHandlers.uploadCoverPicToWorkshop).mockImplementationOnce(async (id, file) => {
+      await consumeStream(file);
+      return { code: 500, message: "Failed to save file" };
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return error code 415 if the cover picture is in wrong type", async () => {
+    vi.mocked(userHandlers.checkFileTypeIsDatapackImage).mockReturnValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type" });
+    expect(response.statusCode).toBe(415);
+  });
+
+  it("should return 200 if successfully uploaded cover picture", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Cover picture added to workshop" });
     expect(response.statusCode).toBe(200);
   });
 });
