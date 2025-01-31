@@ -1,7 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
+import {
+  assetconfigs,
+  checkHeader,
+  extractMetadataFromDatapack,
+  verifyFilepath,
+  verifyNonExistentFilepath
+} from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
@@ -358,10 +364,16 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.join(directory, "files");
-  const zipfile = path.join(directory, `filesFor${workshopUUID}.zip`);
-  console.error("hello" + zipfile);
-  console.error("hi" + filesFolder);
+  const filesFolder = path.resolve(directory, "files");
+  verifyFilepath(filesFolder);
+  if (!verifyFilepath(filesFolder)) {
+    throw new Error("Invalid directory path.");
+  }
+  const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
+  verifyNonExistentFilepath(zipfile);
+  if (!verifyNonExistentFilepath(zipfile)) {
+    throw new Error("Invalid directory path.");
+  }
   try {
     let file;
 
