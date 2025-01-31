@@ -139,8 +139,7 @@
                     "enable-legend": "启用添加图例",
                     "lithology-auto-indent": "禁用自动缩进岩性图案",
                     "conserve-chart": "使用家谱绘图时节省图表空间（暂无该功能）",
-                    "hide-block-labels": "根据优先级隐藏组标签",
-                    "use-suggested-age-spans": "禁用数据包建议的时间区间"
+                    "hide-block-labels": "根据优先级隐藏组标签"
                 },
                 "settings-file": {
                     "load": "上传设置",
