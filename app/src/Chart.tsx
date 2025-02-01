@@ -1,6 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useEffect, useRef } from "react";
-import { context } from "./state";
+import React, { useEffect, useRef } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -136,6 +135,8 @@ export const Chart: React.FC<ChartProps> = observer(
                 step={step}
                 minScale={minScale}
                 maxScale={maxScale}
+                zoomSettings={zoomSettings}
+                setZoomSettings={setZoomSettings}
               />
             )}
             <div id="chart-transform-wrapper">
