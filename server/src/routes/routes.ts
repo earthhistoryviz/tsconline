@@ -187,13 +187,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { useCache } = chartrequest;
+  const { useCache, isCrossPlot } = chartrequest;
   const uuid = request.session.get("uuid");
   const userId = (await findUser({ uuid }))[0]?.userId;
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(settingsXml + chartrequest.datapacks.join(","));
+  const hash = md5(isCrossPlot + settingsXml + chartrequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
@@ -294,7 +294,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "-o",
       chartFilePath,
       // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-      "-a"
+      "-a",
+      ...(isCrossPlot ? ["-cross"] : [])
     ];
     return new Promise<void>((resolve, reject) => {
       const cmd = "java";
