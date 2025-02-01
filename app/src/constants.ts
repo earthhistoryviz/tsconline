@@ -1,4 +1,4 @@
-import { ChartSettings, CrossPlotTimeSettings } from "./types";
+import { ChartSettings, ChartZoomSettings, CrossPlotTimeSettings } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {
@@ -34,4 +34,13 @@ export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   topStageAge: 0,
   baseStageAge: 10,
   unitsPerMY: 2
+};
+
+export const defaultChartZoomSettings: ChartZoomSettings = {
+  zoomFitScale: 1,
+  zoomFitMidCoord: 0,
+  zoomFitMidCoordIsX: true,
+  resetMidX: 0,
+  scale: 1,
+  enableScrollZoom: false
 };

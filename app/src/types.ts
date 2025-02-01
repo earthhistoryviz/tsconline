@@ -140,6 +140,15 @@ export const CrossPlotSettingsTabs = {
   column: "Column"
 };
 
+export type ChartZoomSettings = {
+  scale: number;
+  zoomFitScale: number;
+  zoomFitMidCoord: number;
+  zoomFitMidCoordIsX: boolean;
+  resetMidX: number;
+  enableScrollZoom: boolean;
+};
+
 export type CrossPlotSettingsTabs = keyof typeof CrossPlotSettingsTabs;
 
 export const SettingsMenuOptionLabels = {
