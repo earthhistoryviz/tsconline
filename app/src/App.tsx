@@ -145,7 +145,18 @@ export default observer(function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/chart" element={<Chart />} />
+            <Route
+              path="/chart"
+              element={
+                <Chart
+                  chartContent={state.chartContent}
+                  zoomSettings={state.chartTab.chartZoomSettings}
+                  setZoomSettings={actions.setChartTabZoomSettings}
+                  madeChart={state.madeChart}
+                  chartLoading={state.chartLoading}
+                />
+              }
+            />
             <Route path="/help" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
