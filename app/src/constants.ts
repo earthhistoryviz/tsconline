@@ -18,8 +18,7 @@ export const settings: ChartSettings = {
   enablePriority: false,
   enableHideBlockLabel: false,
   mouseOverPopupsEnabled: false,
-  datapackContainsSuggAge: false,
-  useDatapackSuggestedAge: true
+  datapackContainsSuggAge: false
 };
 export const defaultTimeSettings = {
   selectedStage: "",

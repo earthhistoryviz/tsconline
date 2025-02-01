@@ -258,8 +258,7 @@
                     "enable-legend": "Enable legend for the chart",
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
-                    "hide-block-labels": "Hide block labels based on priority",
-                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
+                    "hide-block-labels": "Hide block labels based on priority"
                 },
                 "settings-file": {
                     "load": "Load Settings",
