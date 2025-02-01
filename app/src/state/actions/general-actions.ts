@@ -1248,6 +1248,10 @@ export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype",
   state.chartTab.downloadFiletype = newval;
 });
 
+export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
+  state.chartTab.downloadFilename = newval;
+});
+
 export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
   state.chartTab.chartZoomSettings = { ...state.chartTab.chartZoomSettings, ...newval };
 });
