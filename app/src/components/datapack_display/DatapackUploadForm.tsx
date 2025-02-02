@@ -59,7 +59,12 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
       <CustomDivider />
       <form onSubmit={handlers.handleSubmit}>
         <StyledScrollbar className="datapack-upload-form-container">
-          <Box display="flex" flexDirection="row" justifyContent="flex-start" gap="100px" margin="10px">
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="flex-start"
+            gap={{ xs: "15px", sm: "100px" }}
+            margin="10px">
             <UploadProfilePicture
               profileImageRef={state.profileImageRef}
               profileImage={state.profileImage}
