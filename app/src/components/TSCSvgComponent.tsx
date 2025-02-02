@@ -12,7 +12,7 @@ type TSCSvgComponentProps = {
   svgContainerRef: React.RefObject<HTMLDivElement>;
 };
 
-type NonCrossPlotTimeLineElements = {
+type TimeLineElements = {
   timeline: Element;
   timelineUp: Element;
   timelineDown: Element;
@@ -23,7 +23,7 @@ type NonCrossPlotTimeLineElements = {
 
 export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef, chartContent }) => {
   const { state, actions } = useContext(context);
-  const [timeLineElements, setNonCrossPlotTimeLineElements] = React.useState<NonCrossPlotTimeLineElements | null>(null);
+  const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
 
   /**
    *  handle the mouse events on the svg elements for popups
@@ -81,7 +81,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
    * @returns
    */
   const setupTimelineAndLabelNonCrossPlot = (svg: SVGSVGElement) => {
-    setNonCrossPlotTimeLineElements({
+    setTimeLineElements({
       timeline: svg.getElementById("timeline"),
       timelineUp: svg.getElementById("timeline_up"),
       timelineDown: svg.getElementById("timeline_down"),
@@ -101,7 +101,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       timeline.setAttribute(attr.name, attr.value);
     }
     svg.appendChild(timeline);
-    setNonCrossPlotTimeLineElements({
+    setTimeLineElements({
       timeline,
       timelineUp,
       timelineDown: svg.getElementById("timeline_down"),
