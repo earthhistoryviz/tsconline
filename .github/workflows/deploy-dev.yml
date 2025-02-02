@@ -268,3 +268,26 @@ jobs:
               sleep $INTERVAL
               ELAPSED=$((ELAPSED + INTERVAL))
             done
+
+            MONITORING_CHANGED=$(git diff --name-only HEAD^ | grep '^monitoring/' || echo "")
+
+            if [ -n "$MONITORING_CHANGED" ]; then
+              echo "Detected changes in monitoring/ directory. Updating monitoring services..."
+
+              MONITORING_DIR="secrets.MONITORING_DIR"
+
+              mkdir -p $MONITORING_DIR
+
+              rsync -avz --delete monitoring/ $MONITORING_DIR/
+
+              if [ ! -f "$MONITORING_DIR/docker-compose-prometheus.yml" ]; then
+                echo "Error: docker-compose-prometheus.yml not found in $MONITORING_DIR"
+                exit 1
+              fi
+
+              docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml up -d
+
+              echo "Monitoring services updated and restarted successfully."
+            else
+              echo "No monitoring/ changes detected. Skipping monitoring update."
+            fi
