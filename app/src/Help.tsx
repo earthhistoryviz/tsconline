@@ -1,4 +1,4 @@
-import { AccordionSummary, Typography, AccordionDetails, Divider } from "@mui/material";
+import { AccordionSummary, Typography, AccordionDetails, Divider, Toolbar, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Collapse, Box } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -7,12 +7,85 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import { Breadcrumbs } from "@mui/joy";
+import { useState } from "react";
+import React from "react";
+import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import HelpMenuItems from "./components/HelpMenuItems";
+import Grid from '@mui/material/Grid';
+
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const background = { bgcolor: "secondaryBackground.main" };
+
+
+  const [content, setContent] = useState('This is preloaded content');
+  const [open, setOpen] = useState<{ [key: string]: boolean }>({});
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
+
+  const menuItems = HelpMenuItems;
+
+  const RecursiveMenu = ({ items, open, handleItemClick, setContent, depth = 0 }) => {
+    return (
+      <List component="div" disablePadding>
+        {items.map((item) => (
+          <React.Fragment key={item.id}>
+
+            <ListItem disablePadding>
+
+              <ListItemButton
+                // This flips the accordion icon to the left
+                sx={{ pl: depth * 2, display: "flex", flexDirection: "row-reverse" }}
+                onClick={() => handleItemClick(item)}
+              >
+
+                <ListItemText primary={item.label} />
+                {item.subItems && (
+                  open[item.id] ? <ExpandLess /> : <ExpandMore />
+                )}
+
+              </ListItemButton>
+
+            </ListItem>
+
+            {item.subItems && (
+              <Collapse in={open[item.id]} timeout="auto" unmountOnExit>
+                <RecursiveMenu
+                  items={item.subItems}
+                  open={open}
+                  handleItemClick={handleItemClick}
+                  setContent={setContent}
+                  depth={depth + 1}
+                />
+              </Collapse>
+            )}
+          </React.Fragment>
+        ))}
+      </List>
+    );
+  };
+
+  const handleItemClick = (item: any) => {
+    if (item.subItems) {
+      setOpen(prev => {
+        // Copy all existing values
+        const newState = { ...prev };
+        // Toggle the value for this item
+        newState[item.id] = !prev[item.id];
+        return newState;
+
+        //For the breadcrumbs
+
+      });
+    } else {
+      setContent(item.content);
+    }
+  }
+
   function runTour(tourName: string) {
     actions.setTourOpen(true, tourName);
     switch (tourName) {
@@ -148,6 +221,38 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
+      {/* Where I put the crumble accordion */}
+      {/* Breadcrumbs */}
+      {/* This is for the side bar on the left */}
+      {/* https://mui.com/material-ui/react-drawer/?srsltid=AfmBOoqGlnJDIBPocYybp4rzXtiSxuZPwDXHheAiyQPQ95nJZNhNpzUV */}
+
+      {/* Box For the menu and the content it displays */}
+      <Box sx={{ flexGrow: 1 }}>
+        <Grid container spacing={2}>
+          <Grid item xs={4}>
+            <Toolbar>
+              <RecursiveMenu
+                items={HelpMenuItems}
+                open={open}
+                handleItemClick={handleItemClick}
+                setContent={setContent}
+              />
+            </Toolbar>
+          </Grid>
+          <Grid item xs={8}>
+            {/* Display selected content */}
+            {content && (
+              <Typography sx={{ float: "" }}>
+                {content}
+              </Typography>
+            )}
+          </Grid>
+        </Grid>
+      </Box>
+
+
+
+
     </div>
   );
 });
