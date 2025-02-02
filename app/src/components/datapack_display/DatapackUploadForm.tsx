@@ -91,19 +91,20 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                 accept=".pdf"
                 multiple={true}
               />
-                <div className="datapack-pdf-file-div">
-              {state.pdfFiles.length !== 0 ?
-                Array.from(state.pdfFiles).map((file) => (
-                    <div className="datapack-pdf-file-container" key={file.name}>
-                        <Typography className="file-upload-text" variant="body2" >
-                            {file ? file.name : t("settings.datapacks.upload-form.no-file")}
+              <div className="datapack-pdf-file-div">
+                {state.pdfFiles.length !== 0
+                  ? Array.from(state.pdfFiles).map((file) => (
+                      <div className="datapack-pdf-file-container" key={file.name}>
+                        <Typography className="file-upload-text" variant="body2">
+                          {file ? file.name : t("settings.datapacks.upload-form.no-file")}
                         </Typography>
                         <IconButton className="icon" onClick={() => handlers.handlePDFFileDelete(file.name)}>
-                            <DeleteOutline className="close-icon"/>
+                          <DeleteOutline className="close-icon" />
                         </IconButton>
-                    </div>
-                )) : t("settings.datapacks.upload-form.no-file")}
-                </div>
+                      </div>
+                    ))
+                  : t("settings.datapacks.upload-form.no-file")}
+              </div>
             </Box>
           </Box>
           <Box gap="10px" display="flex">

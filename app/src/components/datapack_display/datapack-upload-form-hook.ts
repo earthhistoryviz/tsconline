@@ -114,25 +114,25 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     actions.removeAllErrors();
     setProfileImage(file);
   };
-    const handlePDFFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const files = event.target.files!;
-        if (!files) {
-            return;
-        }
-        actions.removeAllErrors();
-        setPDFFiles(files);
-    };
-    const handlePDFFileDelete = (fileName: string) => {
-        if (!pdfFiles) {
-            return;
-        }
-        const filesArray = Array.from(pdfFiles);
-        const updatedFiles = filesArray.filter((file) => file.name !== fileName);
-        const updatedFileList = new DataTransfer();
-        updatedFiles.forEach((file) => updatedFileList.items.add(file));
-        actions.removeAllErrors();
-        setPDFFiles(updatedFileList.files);
-    };
+  const handlePDFFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files!;
+    if (!files) {
+      return;
+    }
+    actions.removeAllErrors();
+    setPDFFiles(files);
+  };
+  const handlePDFFileDelete = (fileName: string) => {
+    if (!pdfFiles) {
+      return;
+    }
+    const filesArray = Array.from(pdfFiles);
+    const updatedFiles = filesArray.filter((file) => file.name !== fileName);
+    const updatedFileList = new DataTransfer();
+    updatedFiles.forEach((file) => updatedFileList.items.add(file));
+    actions.removeAllErrors();
+    setPDFFiles(updatedFileList.files);
+  };
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -159,7 +159,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
-        pdfFiles,
+      pdfFiles,
       profileImageRef,
       priority
     },
@@ -184,8 +184,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       changeReference,
       handleDateChange,
       handleProfileImageChange,
-        handlePDFFileUpload,
-        handlePDFFileDelete
+      handlePDFFileUpload,
+      handlePDFFileDelete
     }
   };
 };
