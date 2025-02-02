@@ -35,3 +35,4 @@ export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   baseStageAge: 10,
   unitsPerMY: 2
 };
+export const isDevServer = window.location.hostname === "www.dev.timescalecreator.org" || "www.pr-preview.geolex.org";
