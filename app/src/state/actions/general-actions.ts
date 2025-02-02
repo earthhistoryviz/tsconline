@@ -279,13 +279,13 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
-      if (pdfFiles) {
-          Array.from(pdfFiles).forEach((file, i) => {
-              formData.append(`pdfFiles${i}`, file);
-          });
-      }
-      formData.append("priority", String(metadata.priority));
-      console.log(formData)
+    if (pdfFiles) {
+      Array.from(pdfFiles).forEach((file) => {
+        formData.append("pdfFiles[]", file);
+      });
+    }
+    formData.append("priority", String(metadata.priority));
+    console.log(formData);
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",
