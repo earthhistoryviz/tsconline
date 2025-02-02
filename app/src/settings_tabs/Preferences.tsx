@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { TSCButton, TSCCheckbox } from "../components";
 import "./Preferences.css";
 import { useNavigate } from "react-router";
+import { isDevServer } from "../constants";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
@@ -104,7 +105,7 @@ export const Preferences = observer(function Preferences() {
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
         </FormGroup>
-        {import.meta.env.DEV && <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>}
+        {isDevServer && <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>}
       </Box>
     </div>
   );
