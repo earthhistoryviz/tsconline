@@ -321,6 +321,10 @@ export function checkFileTypeIsDatapackImage(file: MultipartFile): boolean {
   );
 }
 
+export function checkFileTypeIsPDF(file: MultipartFile): boolean {
+  return file.mimetype === "application/pdf" && /\.pdf$/i.test(path.extname(file.filename));
+}
+
 export async function processEditDatapackRequest(
   formData: AsyncIterableIterator<Multipart>,
   uuid: string
