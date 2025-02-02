@@ -25,7 +25,7 @@ export const Chart: React.FC<ChartProps> = observer(
     const step = 0.1;
     const minScale = 0.1;
     const maxScale = 8;
-    const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, resetMidX, enableScrollZoom } = zoomSettings;
+    const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = zoomSettings;
 
     const setChartAlignmentValues = () => {
       const container = transformContainerRef.current;
