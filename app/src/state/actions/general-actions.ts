@@ -1253,7 +1253,12 @@ export const setChartTabDownloadFilename = action("setChartTabDownloadFilename",
 });
 
 export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
-  state.chartTab.chartZoomSettings = { ...state.chartTab.chartZoomSettings, ...newval };
+  if (newval.enableScrollZoom) state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+  if (newval.resetMidX) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
+  if (newval.scale) state.chartTab.chartZoomSettings.scale = newval.scale;
+  if (newval.zoomFitMidCoord) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+  if (newval.zoomFitScale) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+  if (newval.zoomFitMidCoordIsX) state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
 });
 
 export const setChartTabIsSavingChart = action((term: boolean) => {
