@@ -20,6 +20,7 @@ import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
+
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
 }));
@@ -65,6 +66,7 @@ vi.mock("../src/load-packs", () => ({
 }));
 vi.mock("../src/user/user-handler", () => ({
   checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
+  checkFileTypeIsPDF: vi.fn().mockReturnValue(true),
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
   deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
   doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
@@ -616,6 +618,7 @@ it("should return the directory and filename", async () => {
 describe("processMultipartPartsForDatapackUpload tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const checkFileTypeIsPDF = vi.spyOn(userHandlers, "checkFileTypeIsPDF");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const rm = vi.spyOn(fsPromises, "rm");
   let formData: AsyncIterableIterator<Multipart>;
@@ -740,5 +743,45 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     expect(rm).toHaveBeenCalledOnce();
     expect(data.code).toBe(500);
     expect(data.message).toBe("Failed to save file");
+  });
+  it("should return a 415 error if invalid file type for datapack pdf file", async () => {
+    checkFileTypeIsPDF.mockReturnValueOnce(false);
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "text/plain",
+        filename: "file1.txt",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack pdf file");
+  });
+  it("should return pdfFields with correct file paths and names", async () => {
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    pipeline.mockResolvedValueOnce(undefined);
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    if ("pdfFields" in data) {
+      expect(data.pdfFields).toEqual({
+        tempPDFFilePaths: expect.arrayContaining([expect.any(String)]),
+        pdfFileNames: ["file1.pdf"]
+      });
+    }
   });
 });
