@@ -280,16 +280,23 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       await rm(datapackImageFilepath, { force: true });
     }
   }
-  if (pdfFields && pdfFields.tempPDFFilePaths) {
-    for (const pdfFilePath in pdfFields.tempPDFFilePaths) {
-      const datapackPDFFilepathDest = path.join(datapackFolder, pdfFilePath);
+  if (pdfFields && pdfFields.tempPDFFilePaths && pdfFields.pdfFileNames) {
+    for (let i = 0; i < pdfFields.tempPDFFilePaths.length; i++) {
+      const pdfFilePath = pdfFields.tempPDFFilePaths[i];
+      const pdfFileName = pdfFields.pdfFileNames[i];
+
+      if (!pdfFilePath || !pdfFileName) continue;
+
+      const datapackPDFFilepathDest = path.join(datapackFolder, pdfFileName);
       await copyFile(pdfFilePath, datapackPDFFilepathDest);
-      // remove the original file if it was copied from a temp file
+
+      // Remove the original file if it was copied from a temp file
       if (!manual && pdfFilePath !== datapackPDFFilepathDest) {
         await rm(pdfFilePath, { force: true });
       }
     }
   }
+
   await writeFile(
     getUnsafeCachedDatapackFilePath(datapackFolder),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
