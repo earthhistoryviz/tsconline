@@ -5,3 +5,4 @@ export * from "./column-actions";
 export * from "./admin-actions";
 export * from "./user-actions";
 export * from "./shared-admin-user-actions";
+export * from "./crossplot-actions";
