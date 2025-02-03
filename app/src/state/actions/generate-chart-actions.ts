@@ -14,7 +14,7 @@ import { getDatapackFromArray } from "../non-action-util";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (response) setDatapackTimeDefaults();
-  fetchChartFromServer(navigate);
+  compileChartRequest(navigate);
 });
 
 type UnitValues = {
@@ -70,7 +70,7 @@ export const initiateChartGeneration = action(
     ) {
       state.showSuggestedAgePopup = true;
     } else {
-      fetchChartFromServer(navigate);
+      compileChartRequest(navigate);
     }
   }
 );
@@ -114,36 +114,48 @@ export const resetChartTab = action("resetChartTab", () => {
   generalActions.setChartTabZoomFitMidCoordIsX(true);
 });
 
-export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
   // asserts column is not null
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
+  generalActions.setIsCrossPlot(false);
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
   resetChartTab();
-  let body;
+  let chartRequest: ChartRequest | null = null;
   try {
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
     const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    const chartRequest: ChartRequest = {
+    chartRequest = {
       settings: xmlSettings,
       datapacks: state.config.datapacks,
       useCache: state.useCache,
-      isCrossPlot: state.chartTab.crossPlot.isCrossPlot
+      isCrossPlot: false
     };
-    body = JSON.stringify(chartRequest);
   } catch (e) {
     console.error(e);
     generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
     return;
   }
-  console.log("Sending settings to server...");
+  if (!chartRequest) {
+    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+    return;
+  }
+  await sendChartRequestToServer(chartRequest);
+});
+
+const savePreviousSettings = action("savePreviousSettings", () => {
+  state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+  state.prevConfig = JSON.parse(JSON.stringify(state.config));
+});
+
+export const sendChartRequestToServer = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
   try {
     const response = await fetcher(`/chart`, {
       method: "POST",
-      body,
+      body: JSON.stringify(chartRequest),
       credentials: "include"
     });
     const answer = await response.json();
@@ -204,7 +216,7 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
       generalActions.setUnsafeChartContent(content);
       // the display version
       generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(false);
+      generalActions.setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
       generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
     } catch (e) {
@@ -224,9 +236,4 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
-});
-
-const savePreviousSettings = action("savePreviousSettings", () => {
-  state.prevSettings = JSON.parse(JSON.stringify(state.settings));
-  state.prevConfig = JSON.parse(JSON.stringify(state.config));
 });
