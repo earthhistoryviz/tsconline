@@ -285,7 +285,6 @@ export const uploadUserDatapack = action(
       });
     }
     formData.append("priority", String(metadata.priority));
-    console.log(formData);
     try {
       const response = await fetcher(`/user/datapack`, {
         method: "POST",
