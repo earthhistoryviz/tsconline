@@ -388,6 +388,9 @@ export async function processMultipartPartsForDatapackUpload(
     if (filepath) {
       await rm(filepath, { force: true });
     }
+    for (const pdfPath of tempPDFFilePaths) {
+      await rm(pdfPath, { force: true });
+    }
   }
   const user = await findUser({ uuid }).catch(() => []);
   if (!uuid || !user || !user[0]) {
