@@ -7,84 +7,38 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { Breadcrumbs } from "@mui/joy";
+import Breadcrumbs from '@mui/material/Breadcrumbs';
 import { useState } from "react";
 import React from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import HelpMenuItems from "./components/HelpMenuItems";
 import Grid from '@mui/material/Grid';
 
+import HelpDrawer from "./HelpDrawer";
+import { Routes, Route } from "react-router-dom";
+import HelpPresets from "./HelpMenuPages/HelpPresets";
+import HelpDatapacks from "./HelpMenuPages/HelpDatapacks";
+import HelpChart from "./HelpMenuPages/HelpChart";
+import HelpColumnVariants from "./HelpMenuPages/HelpColumnVariants";
+import HelpBreadcrumbs from "./HelpBreadcrumbs";
+import HelpSettings from "./HelpMenuPages/HelpSettings";
+import HelpHelp from "./HelpMenuPages/HelpHelp";
+import HelpWorkshops from "./HelpMenuPages/HelpWorkshops";
+import HelpOptions from "./HelpMenuPages/HelpOptions";
+import HelpWhatIsAChart from "./HelpMenuPages/HelpWhatIsAChart";
+import HelpSavingAChart from "./HelpMenuPages/HelpSavingAChart";
+import HelpBlockColumn from "./HelpMenuPages/HelpBlockColumns";
+import HelpPointColumns from "./HelpMenuPages/HelpPointColumns";
+import HelpEventColumns from "./HelpMenuPages/HelpEventColumns";
+import HelpDualColumnComparison from "./HelpMenuPages/HelpDualColumnComparison";
+import HelpDataMining from "./HelpMenuPages/HelpDataMining";
+import HelpFreehandColumns from "./HelpMenuPages/HelpFreehandColumns";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const background = { bgcolor: "secondaryBackground.main" };
-
-
-  const [content, setContent] = useState('This is preloaded content');
-  const [open, setOpen] = useState<{ [key: string]: boolean }>({});
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null);
-
-  const menuItems = HelpMenuItems;
-
-  const RecursiveMenu = ({ items, open, handleItemClick, setContent, depth = 0 }) => {
-    return (
-      <List component="div" disablePadding>
-        {items.map((item) => (
-          <React.Fragment key={item.id}>
-
-            <ListItem disablePadding>
-
-              <ListItemButton
-                // This flips the accordion icon to the left
-                sx={{ pl: depth * 2, display: "flex", flexDirection: "row-reverse" }}
-                onClick={() => handleItemClick(item)}
-              >
-
-                <ListItemText primary={item.label} />
-                {item.subItems && (
-                  open[item.id] ? <ExpandLess /> : <ExpandMore />
-                )}
-
-              </ListItemButton>
-
-            </ListItem>
-
-            {item.subItems && (
-              <Collapse in={open[item.id]} timeout="auto" unmountOnExit>
-                <RecursiveMenu
-                  items={item.subItems}
-                  open={open}
-                  handleItemClick={handleItemClick}
-                  setContent={setContent}
-                  depth={depth + 1}
-                />
-              </Collapse>
-            )}
-          </React.Fragment>
-        ))}
-      </List>
-    );
-  };
-
-  const handleItemClick = (item: any) => {
-    if (item.subItems) {
-      setOpen(prev => {
-        // Copy all existing values
-        const newState = { ...prev };
-        // Toggle the value for this item
-        newState[item.id] = !prev[item.id];
-        return newState;
-
-        //For the breadcrumbs
-
-      });
-    } else {
-      setContent(item.content);
-    }
-  }
 
   function runTour(tourName: string) {
     actions.setTourOpen(true, tourName);
@@ -221,38 +175,44 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
-      {/* Where I put the crumble accordion */}
-      {/* Breadcrumbs */}
-      {/* This is for the side bar on the left */}
-      {/* https://mui.com/material-ui/react-drawer/?srsltid=AfmBOoqGlnJDIBPocYybp4rzXtiSxuZPwDXHheAiyQPQ95nJZNhNpzUV */}
-
       {/* Box For the menu and the content it displays */}
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
           <Grid item xs={4}>
             <Toolbar>
-              <RecursiveMenu
-                items={HelpMenuItems}
-                open={open}
-                handleItemClick={handleItemClick}
-                setContent={setContent}
-              />
+              <HelpDrawer />
             </Toolbar>
           </Grid>
+
+          {/* The main content */}
           <Grid item xs={8}>
-            {/* Display selected content */}
-            {content && (
-              <Typography sx={{ float: "" }}>
-                {content}
-              </Typography>
-            )}
+            {/* This is where the Breadcrumb is */}
+            <HelpBreadcrumbs />
+
+            <Routes>
+              <Route path="presets" element={<HelpPresets />} />
+              <Route path="datapacks" element={<HelpDatapacks />} />
+              <Route path="chart/*" element={<HelpChart />} />
+                <Route path="chart/what_is_a_chart" element={<HelpWhatIsAChart />} />
+                <Route path="chart/column_variants/*" element={<HelpColumnVariants />} />
+                  <Route path="chart/column_variants/block_columns" element={<HelpBlockColumn />} />
+                  <Route path="chart/column_variants/point_columns" element={<HelpPointColumns />} />
+                  <Route path="chart/column_variants/event_columns" element={<HelpEventColumns />} />
+                    <Route path="chart/column_variants/event_columns/dual_column_comparison" element={<HelpDualColumnComparison />} />
+                    <Route path="chart/column_variants/event_columns/data_mining" element={<HelpDataMining />} />
+                    <Route path="chart/column_variants/freehand_columns" element={<HelpFreehandColumns />} />
+                <Route path="chart/saving_a_chart" element={<HelpSavingAChart />} />
+              <Route path="settings" element={<HelpSettings />} />
+              <Route path="help" element={<HelpHelp />} />
+              <Route path="workshops" element={<HelpWorkshops />} />
+              <Route path="options" element={<HelpOptions />} />
+            </Routes>
+
           </Grid>
         </Grid>
       </Box>
-
-
-
-
     </div>
   );
 });
+
+export default Help;
