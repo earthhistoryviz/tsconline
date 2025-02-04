@@ -295,7 +295,8 @@ describe("writeUserDatapack test", () => {
   it("should write the datapack", async () => {
     await writeUserDatapack("test", datapack);
     expect(writeFile).toHaveBeenCalledOnce();
-    expect(writeFile).toHaveBeenCalledWith("test/test/test-cached-filename", JSON.stringify(datapack, null, 2));
+    const expectedPath = path.join("test", "test", "test-cached-filename");
+    expect(writeFile).toHaveBeenCalledWith(expectedPath, JSON.stringify(datapack, null, 2));
   });
 });
 
@@ -412,7 +413,8 @@ describe("getUploadedDatapackFilepath test", () => {
   });
   it("should return the filepath", async () => {
     readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
-    expect(await getUploadedDatapackFilepath("test", "test")).toBe("test/test/test");
+    const result = await getUploadedDatapackFilepath("test", "test");
+    expect(path.normalize(result)).toBe(path.normalize("test/test/test"));
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
   });
 });
