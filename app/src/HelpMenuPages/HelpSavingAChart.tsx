@@ -3,8 +3,11 @@ import React from "react";
 
 const HelpSavingAChart = () => {
   return (
-    
-    <h1> Saving a Chart </h1>
+    <div>
+       <h1> Saving a Chart </h1>
+       <p> Insert md file here </p>
+    </div>
+   
   );
 };
 

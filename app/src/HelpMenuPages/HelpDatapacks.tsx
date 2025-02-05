@@ -3,7 +3,10 @@ import React from "react";
 
 const HelpDatapacks = () => {
   return (
-      <h1> Data Packs </h1>
+    <div>
+       <h1> Data Packs </h1>
+       <p> Insert md file here </p>
+    </div>
   );
 };
 

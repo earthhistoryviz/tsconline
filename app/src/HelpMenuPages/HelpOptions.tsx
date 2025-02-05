@@ -3,10 +3,10 @@ import React from "react";
 
 const HelpOptions = () => {
   return (
-      <div>
-        <h1> Options </h1>
-      </div>
-      
+    <div>
+      <h1> Options </h1>
+      <p> Insert md file here </p>
+    </div>
   );
 };
 

@@ -3,7 +3,7 @@ import { links } from "./HelpMenuLinks";
 
 
 export default function HelpBreadcrumbs() {
-
+  //const location = useLocation();
   const findBreadcrumbs = (links, path) => {
     for (let link of links) {
       if (path.startsWith(link.to)) {

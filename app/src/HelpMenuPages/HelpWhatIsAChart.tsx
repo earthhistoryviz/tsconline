@@ -3,8 +3,11 @@ import React from "react";
 
 const HelpWhatIsAChart = () => {
   return (
-    
-    <h1> What is a chart? </h1>
+    <div>
+      <h1> What is a chart? </h1>
+      <p> Insert a md file here </p>
+    </div>
+
   );
 };
 

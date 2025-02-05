@@ -5,9 +5,8 @@ import { Outlet } from "react-router-dom";
 const HelpSettings = () => {
   return (
     <div>
-        
-        <h1> Settings </h1>
-        <p> What is a Chart? </p>
+      <h1> Settings </h1>
+      <p> Insert md file here </p>
     </div>
   );
 };

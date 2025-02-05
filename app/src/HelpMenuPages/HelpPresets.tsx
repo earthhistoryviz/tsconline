@@ -3,11 +3,10 @@ import React from "react";
 
 const HelpPresets = () => {
   return (
-      <div>
-        <h1> Presets </h1>
-        <p> This is the presets </p>
-      </div>
-      
+    <div>
+      <h1> Presets </h1>
+      <p> Insert md file here </p>
+    </div>
   );
 };
 

@@ -3,8 +3,10 @@ import React from "react";
 
 const HelpDualColumnComparison = () => {
   return (
-    
-    <h1> Dual Column Comparison </h1>
+    <div>
+      <h1> Dual Column Comparison </h1>
+      <div> Insert md file here </div>
+    </div>
   );
 };
 
