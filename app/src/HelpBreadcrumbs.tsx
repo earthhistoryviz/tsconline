@@ -1,10 +1,9 @@
-import { Breadcrumbs, Link, Stack } from '@mui/material'; // Assuming you are using Material-UI
+import { Breadcrumbs, Link, Stack } from '@mui/material';
 import { links } from "./HelpMenuLinks";
 
-
 export default function HelpBreadcrumbs() {
-  //const location = useLocation();
-  const findBreadcrumbs = (links, path) => {
+  // letting links and path be any type for now, but could be changed in the future
+  const findBreadcrumbs = (links : any, path : any) => {
     for (let link of links) {
       if (path.startsWith(link.to)) {
         if (link.to === path) {
@@ -27,7 +26,8 @@ export default function HelpBreadcrumbs() {
   return (
     <Stack spacing={2}>
       <Breadcrumbs separator=">">
-        {breadcrumbs.map((breadcrumb, index) => (
+        {/* Setting breadcrumb and index as any type for now */}
+        {breadcrumbs.map((breadcrumb : any , index : any) => (
           <Link key={index} href={breadcrumb.to}>
             {breadcrumb.label}
           </Link>
