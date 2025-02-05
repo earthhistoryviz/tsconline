@@ -60,10 +60,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
     //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
     //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
     //soft requirement for this workaround: animation time for reset or fit = 0
-    const smallUpdate = () => {
-      setZoomSettings({ enableScrollZoom: !enableScrollZoom });
-      setZoomSettings({ enableScrollZoom: !enableScrollZoom });
-    };
     const OptionsButton = () => {
       const [open, setOpen] = React.useState<boolean>(false);
       const handleClick = () => {
@@ -91,7 +87,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
               <div style={{ margin: "auto" }}>
                 <Switch
                   inputProps={{ "aria-label": "controlled" }}
-                  defaultChecked={enableScrollZoom}
+                  checked={enableScrollZoom}
                   onChange={handleSwitch}
                   color="info"
                 />
@@ -138,7 +134,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
             onClick={() => {
               container.setTransform(resetMidX, 0, 1, 0);
               setZoomSettings({ scale: 1 });
-              smallUpdate();
             }}>
             <RestartAltIcon />
           </IconButton>
@@ -156,7 +151,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
                 container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
               }
               setZoomSettings({ scale: zoomFitScale });
-              smallUpdate();
             }}>
             <ZoomOutMapIcon />
           </IconButton>

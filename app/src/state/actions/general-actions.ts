@@ -1253,12 +1253,12 @@ export const setChartTabDownloadFilename = action("setChartTabDownloadFilename",
 });
 
 export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
-  if (newval.enableScrollZoom) state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
-  if (newval.resetMidX) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
-  if (newval.scale) state.chartTab.chartZoomSettings.scale = newval.scale;
-  if (newval.zoomFitMidCoord) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
-  if (newval.zoomFitScale) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
-  if (newval.zoomFitMidCoordIsX) state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+  if (newval.enableScrollZoom !== undefined) state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+  if (newval.resetMidX !== undefined) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
+  if (newval.scale !== undefined) state.chartTab.chartZoomSettings.scale = newval.scale;
+  if (newval.zoomFitMidCoord !== undefined) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+  if (newval.zoomFitScale !== undefined) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+  if (newval.zoomFitMidCoordIsX !== undefined) state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
 });
 
 export const setChartTabIsSavingChart = action((term: boolean) => {
