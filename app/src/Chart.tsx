@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -9,6 +9,8 @@ import { Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartZoomSettings } from "./types";
+import { context } from "./state";
+import { TSCCrossPlotSVGComponent } from "./components/TSCCrossPlotSVGComponent";
 
 type ChartProps = {
   chartContent: string;
@@ -20,6 +22,7 @@ type ChartProps = {
 export const Chart: React.FC<ChartProps> = observer(
   ({ zoomSettings, setZoomSettings, chartContent, madeChart, chartLoading }) => {
     const theme = useTheme();
+    const { state } = useContext(context);
     const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
     const svgContainerRef = useRef<HTMLDivElement>(null);
     const [setup, setSetup] = useState(false); // used to setup the chart alignment values
@@ -161,7 +164,11 @@ export const Chart: React.FC<ChartProps> = observer(
                     borderColor: theme.palette.divider,
                     visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
                   }}>
-                  <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={chartContent} />
+                  {state.chartTab.crossPlot.isCrossPlot ? (
+                    <TSCCrossPlotSVGComponent svgContainerRef={svgContainerRef} chartContent={chartContent} />
+                  ) : (
+                    <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={chartContent} />
+                  )}
                 </TransformComponent>
               </TransformWrapper>
             </div>
