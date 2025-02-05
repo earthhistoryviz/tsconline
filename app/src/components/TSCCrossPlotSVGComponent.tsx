@@ -176,7 +176,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
           window.removeEventListener("keydown", keydownListener);
         };
       }
-    }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
+    }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled, timeLineElements]);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
