@@ -67,7 +67,6 @@ export const Chart: React.FC<ChartProps> = observer(
       const container = transformContainerRef.current;
       if (!container) return;
 
-
       if (zoomFitMidCoordIsX) {
         container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
       } else {

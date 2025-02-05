@@ -147,8 +147,8 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       if (!container) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
-      setupTimelineAndLabelCrossPlot(svg);
-      hideOrShowTimelineCrossPlot(state.chartTab.chartTimelineEnabled);
+      setupTimelineAndLabel(svg);
+      hideOrShowTimeline(state.chartTab.chartTimelineEnabled);
     }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
     useEffect(() => {
       const container = svgContainerRef.current;
@@ -158,7 +158,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       // either timeline or popups
       if (state.chartTab.chartTimelineEnabled) {
         // crossplot or non crossplot
-        const eventListenerWrapper = (evt: MouseEvent) => handleTimeLineCrossPlot(evt, svg);
+        const eventListenerWrapper = (evt: MouseEvent) => handleTimeLine(evt, svg);
         const lockX = () => actions.setCrossPlotLockX(!state.chartTab.crossPlot.lockX);
         const lockY = () => actions.setCrossPlotLockY(!state.chartTab.crossPlot.lockY);
         const keydownListener = (evt: KeyboardEvent) => {
@@ -193,7 +193,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       const { timeLabelY } = timeLineElements;
       return timeLabelY.getBoundingClientRect().width;
     };
-    const hideOrShowTimelineCrossPlot = (show: boolean) => {
+    const hideOrShowTimeline = (show: boolean) => {
       if (!timeLineElements) {
         return;
       }
@@ -202,7 +202,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       timeLabelsGroup.setAttributeNS(null, "style", show ? "fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
       limitingBox.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 1;" : "stroke-opacity: 0;");
     };
-    const setupTimelineAndLabelCrossPlot = (svg: SVGSVGElement) => {
+    const setupTimelineAndLabel = (svg: SVGSVGElement) => {
       setTimeLineElements({
         timeLineX: svg.getElementById("timelineX"),
         timeLineY: svg.getElementById("timelineY"),
@@ -269,7 +269,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
      * @param svg
      * @returns
      */
-    const handleTimeLineCrossPlot = (evt: MouseEvent, svg: SVGSVGElement) => {
+    const handleTimeLine = (evt: MouseEvent, svg: SVGSVGElement) => {
       if (!timeLineElements) {
         return;
       }
