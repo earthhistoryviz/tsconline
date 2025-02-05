@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -22,6 +22,7 @@ export const Chart: React.FC<ChartProps> = observer(
     const theme = useTheme();
     const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
     const svgContainerRef = useRef<HTMLDivElement>(null);
+    const [setup, setSetup] = useState(false); // used to setup the chart alignment values
     const step = 0.1;
     const minScale = 0.1;
     const maxScale = 8;
@@ -52,11 +53,20 @@ export const Chart: React.FC<ChartProps> = observer(
       setZoomSettings({ resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2 });
     };
 
+    // we need to setup the chart alignment values when the chart content changes
+    // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
+    useEffect(() => {
+      setSetup(false);
+      const container = transformContainerRef.current;
+      if (!container) return;
+      setChartAlignmentValues();
+      setSetup(true);
+    }, [chartContent, transformContainerRef.current]);
+
     useEffect(() => {
       const container = transformContainerRef.current;
       if (!container) return;
 
-      setChartAlignmentValues();
 
       if (zoomFitMidCoordIsX) {
         container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
@@ -64,10 +74,6 @@ export const Chart: React.FC<ChartProps> = observer(
         container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
       }
       setZoomSettings({ scale: zoomFitScale });
-
-      //small update
-      setZoomSettings({ enableScrollZoom: !enableScrollZoom });
-      setZoomSettings({ enableScrollZoom: !enableScrollZoom });
 
       const windowResizeListenerWrapper = () => {
         setChartAlignmentValues();
@@ -112,7 +118,7 @@ export const Chart: React.FC<ChartProps> = observer(
         if (container.instance.wrapperComponent)
           container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
       };
-    }, [chartContent]);
+    }, [setup, chartContent, transformContainerRef.current]);
     const { t } = useTranslation();
 
     return (
@@ -153,7 +159,8 @@ export const Chart: React.FC<ChartProps> = observer(
                     height: "84vh",
                     width: "80vw",
                     border: "2px solid",
-                    borderColor: theme.palette.divider
+                    borderColor: theme.palette.divider,
+                    visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
                   }}>
                   <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={chartContent} />
                 </TransformComponent>
