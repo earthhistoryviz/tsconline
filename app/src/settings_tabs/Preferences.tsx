@@ -3,16 +3,14 @@ import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
-import { TSCButton, TSCCheckbox } from "../components";
+import { TSCCheckbox } from "../components";
 import "./Preferences.css";
 import { useNavigate } from "react-router";
-import { isDevServer } from "../constants";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);
   const units = Object.keys(state.settings.timeSettings)[0];
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   if (!units || !state.settings.timeSettings[units]) {
     throw new Error("Invalid unit provided or unit not found in timeSettings");
@@ -105,7 +103,6 @@ export const Preferences = observer(function Preferences() {
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
         </FormGroup>
-        {isDevServer && <TSCButton onClick={() => navigate("/crossplot")}>CrossPlot</TSCButton>}
       </Box>
     </div>
   );

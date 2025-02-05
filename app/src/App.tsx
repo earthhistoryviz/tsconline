@@ -4,7 +4,7 @@ import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
-import { Chart } from "./Chart";
+import { Chart, ChartContext } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
@@ -148,13 +148,16 @@ export default observer(function App() {
             <Route
               path="/chart"
               element={
-                <Chart
-                  chartContent={state.chartContent}
-                  zoomSettings={state.chartTab.chartZoomSettings}
-                  setZoomSettings={actions.setChartTabZoomSettings}
-                  madeChart={state.madeChart}
-                  chartLoading={state.chartLoading}
-                />
+                <ChartContext.Provider
+                  value={{
+                    chartContent: state.chartContent,
+                    zoomSettings: state.chartTab.chartZoomSettings,
+                    setZoomSettings: actions.setChartTabZoomSettings,
+                    madeChart: state.madeChart,
+                    chartLoading: state.chartLoading
+                  }}>
+                  <Chart />
+                </ChartContext.Provider>
               }
             />
             <Route path="/help" element={<Help />} />

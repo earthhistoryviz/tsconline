@@ -1,6 +1,7 @@
 import React, { useEffect, useContext } from "react";
 import { context } from "../state/index";
 import { observer } from "mobx-react-lite";
+import { ChartContext } from "../Chart";
 
 interface SVGWindow extends Window {
   curHoverElemID?: string;
@@ -8,7 +9,6 @@ interface SVGWindow extends Window {
 }
 
 type TSCSvgComponentProps = {
-  chartContent: string;
   svgContainerRef: React.RefObject<HTMLDivElement>;
 };
 
@@ -21,8 +21,10 @@ type TimeLineElements = {
   timeLabelDown: Element;
 };
 
-export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef, chartContent }) => {
+export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef }) => {
   const { state, actions } = useContext(context);
+  const { chartTabState } = useContext(ChartContext);
+  const { chartTimelineEnabled } = chartTabState;
   const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
 
   /**
@@ -204,8 +206,8 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     const svg = container.querySelector("svg");
     if (!svg) return;
     setupTimelineAndLabel(svg);
-    hideOrShowTimeline(state.chartTab.chartTimelineEnabled);
-  }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
+    hideOrShowTimeline(chartTimelineEnabled);
+  }, [svgContainerRef.current, chartContent, chartTimelineEnabled]);
 
   useEffect(() => {
     const container = svgContainerRef.current;
@@ -213,7 +215,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     const svg = container.querySelector("svg");
     if (!svg) return;
     // either timeline or popups
-    if (state.chartTab.chartTimelineEnabled) {
+    if (chartTimelineEnabled) {
       // crossplot or non crossplot
       const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
       const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTab.chartTimelineLocked);
@@ -237,7 +239,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
   }, [
     svgContainerRef.current,
     chartContent,
-    state.chartTab.chartTimelineEnabled,
+    chartTimelineEnabled,
     state.chartTab.chartTimelineLocked,
     state.prevSettings.mouseOverPopupsEnabled,
     timeLineElements
