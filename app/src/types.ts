@@ -60,6 +60,22 @@ export type DownloadPdfCompleteMessage = {
   value: Blob | undefined;
 };
 
+export type ChartTabState = {
+  chartTimelineEnabled: boolean;
+  downloadFilename: string;
+  downloadFiletype: "svg" | "pdf" | "png";
+  isSavingChart: boolean;
+  unsafeChartContent: string;
+  madeChart: boolean;
+  chartLoading: boolean;
+  chartContent: string;
+  chartZoomSettings: ChartZoomSettings;
+  chartHash: string;
+};
+export type ChartContextType = {
+  chartTabState: ChartTabState;
+};
+
 export type SetDatapackConfigMessage = {
   datapacks: DatapackConfigForChartRequest[];
   stateCopy: State;
