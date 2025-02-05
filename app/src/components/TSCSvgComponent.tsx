@@ -80,7 +80,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
    * @param svg
    * @returns
    */
-  const setupTimelineAndLabelNonCrossPlot = (svg: SVGSVGElement) => {
+  const setupTimelineAndLabel = (svg: SVGSVGElement) => {
     setTimeLineElements({
       timeline: svg.getElementById("timeline"),
       timelineUp: svg.getElementById("timeline_up"),
@@ -122,7 +122,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
    * @param svg
    * @returns
    */
-  const handleTimelineNonCrossPlot = (evt: MouseEvent, svg: SVGSVGElement) => {
+  const handleTimeline = (evt: MouseEvent, svg: SVGSVGElement) => {
     if (!timeLineElements) {
       return;
     }
@@ -178,7 +178,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
   /**
    * hide or show the timeline on the non crossplot svg
    */
-  const hideOrShowTimelineNonCrossPlot = (show: boolean) => {
+  const hideOrShowTimeline = (show: boolean) => {
     if (!timeLineElements) {
       return;
     }
@@ -203,8 +203,8 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     if (!container) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
-    setupTimelineAndLabelNonCrossPlot(svg);
-    hideOrShowTimelineNonCrossPlot(state.chartTab.chartTimelineEnabled);
+    setupTimelineAndLabel(svg);
+    hideOrShowTimeline(state.chartTab.chartTimelineEnabled);
   }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
 
   useEffect(() => {
@@ -215,7 +215,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     // either timeline or popups
     if (state.chartTab.chartTimelineEnabled) {
       // crossplot or non crossplot
-      const eventListenerWrapper = (evt: MouseEvent) => handleTimelineNonCrossPlot(evt, svg);
+      const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
       const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTab.chartTimelineLocked);
       container.addEventListener("mousemove", eventListenerWrapper);
       container.addEventListener("click", lockTimeline);
