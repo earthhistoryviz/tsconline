@@ -31,249 +31,256 @@ import {
 } from "@mui/material";
 import React from "react";
 import isValidFilename from "valid-filename";
-import { ChartZoomSettings, DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
+import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { t } from "i18next";
+import { ChartContext } from "./Chart";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
   step: number;
   minScale: number;
   maxScale: number;
-  setZoomSettings: (zoomSettings: Partial<ChartZoomSettings>) => void;
-  zoomSettings: ChartZoomSettings;
 }
 
-export const OptionsBar: React.FC<OptionsBarProps> = observer(
-  ({ transformRef, svgRef, step, minScale, maxScale, setZoomSettings, zoomSettings }) => {
-    const { state, actions } = useContext(context);
-    const theme = useTheme();
-    const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = zoomSettings;
+export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
+  const { actions } = useContext(context);
+  const { chartTabState } = useContext(ChartContext);
+  const {
+    isSavingChart,
+    unsafeChartContent,
+    chartZoomSettings,
+    chartTimelineEnabled,
+    downloadFilename,
+    downloadFiletype
+  } = chartTabState;
+  const theme = useTheme();
+  const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
-    const container = transformRef.current;
-    const content = svgRef.current;
-    if (!container || !content) {
-      return;
-    }
-    //workaround for unexpected behavior
-    //conditions for behavior: limitToBounds = true, zoomToScroll = false
-    //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
-    //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
-    //soft requirement for this workaround: animation time for reset or fit = 0
-    const OptionsButton = () => {
-      const [open, setOpen] = React.useState<boolean>(false);
-      const handleClick = () => {
-        setOpen(!open);
-      };
-      const handleSwitch = () => {
-        setZoomSettings({ enableScrollZoom: !enableScrollZoom });
-      };
-      return (
-        <div>
-          <CustomTooltip title="Options">
-            <IconButton id="option-button" onClick={handleClick}>
-              <SettingsIcon />
-            </IconButton>
-          </CustomTooltip>
-          <Box
-            sx={{
-              border: "2px solid",
-              borderColor: theme.palette.divider,
-              bgcolor: theme.palette.backgroundColor.main
-            }}
-            style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
-            <div className="flex-row">
-              <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
-              <div style={{ margin: "auto" }}>
-                <Switch
-                  inputProps={{ "aria-label": "controlled" }}
-                  checked={enableScrollZoom}
-                  onChange={handleSwitch}
-                  color="info"
-                />
-              </div>
+  const container = transformRef.current;
+  const content = svgRef.current;
+  if (!container || !content) {
+    return;
+  }
+  //workaround for unexpected behavior
+  //conditions for behavior: limitToBounds = true, zoomToScroll = false
+  //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
+  //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
+  //soft requirement for this workaround: animation time for reset or fit = 0
+  const OptionsButton = () => {
+    const [open, setOpen] = React.useState<boolean>(false);
+    const handleClick = () => {
+      setOpen(!open);
+    };
+    const handleSwitch = () => {
+      actions.setChartTabZoomSettings(chartZoomSettings, { enableScrollZoom: !enableScrollZoom });
+    };
+    return (
+      <div>
+        <CustomTooltip title="Options">
+          <IconButton id="option-button" onClick={handleClick}>
+            <SettingsIcon />
+          </IconButton>
+        </CustomTooltip>
+        <Box
+          sx={{
+            border: "2px solid",
+            borderColor: theme.palette.divider,
+            bgcolor: theme.palette.backgroundColor.main
+          }}
+          style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
+          <div className="flex-row">
+            <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
+            <div style={{ margin: "auto" }}>
+              <Switch
+                inputProps={{ "aria-label": "controlled" }}
+                checked={enableScrollZoom}
+                onChange={handleSwitch}
+                color="info"
+              />
             </div>
-          </Box>
-        </div>
-      );
-    };
-    const ZoomInButton = () => {
-      return (
-        <CustomTooltip title="Zoom In">
-          <IconButton
-            onClick={() => {
-              if (scale < maxScale) {
-                container.zoomIn(step, 0);
-                setZoomSettings({ scale: scale + step });
-              }
-            }}>
-            <ZoomInIcon />
-          </IconButton>
-        </CustomTooltip>
-      );
-    };
-    const ZoomOutButton = () => {
-      return (
-        <CustomTooltip title="Zoom Out">
-          <IconButton
-            onClick={() => {
-              if (scale > minScale) {
-                container.zoomOut(step, 0);
-                setZoomSettings({ scale: scale - step });
-              }
-            }}>
-            <ZoomOutIcon />
-          </IconButton>
-        </CustomTooltip>
-      );
-    };
-    const ResetButton = () => {
-      return (
-        <CustomTooltip title="Reset Transformation">
-          <IconButton
-            onClick={() => {
-              container.setTransform(resetMidX, 0, 1, 0);
-              setZoomSettings({ scale: 1 });
-            }}>
-            <RestartAltIcon />
-          </IconButton>
-        </CustomTooltip>
-      );
-    };
-    const ZoomFitButton = () => {
-      return (
-        <CustomTooltip title="Zoom Fit">
-          <IconButton
-            onClick={() => {
-              if (zoomFitMidCoordIsX) {
-                container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
-              } else {
-                container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
-              }
-              setZoomSettings({ scale: zoomFitScale });
-            }}>
-            <ZoomOutMapIcon />
-          </IconButton>
-        </CustomTooltip>
-      );
-    };
-
-    const TimelineButton = () => {
-      return (
-        <CustomTooltip title="Timeline On/Off">
-          <IconButton onClick={() => actions.setChartTimelineEnabled(!state.chartTab.chartTimelineEnabled)}>
-            <HorizontalRuleIcon className="timeline-button" />
-          </IconButton>
-        </CustomTooltip>
-      );
-    };
-    const DownloadButton = observer(() => {
-      const [downloadOpen, setDownloadOpen] = React.useState(false);
-      const handleDownloadOpen = () => {
-        setDownloadOpen(true);
-      };
-
-      const handleDownloadClose = () => {
-        setDownloadOpen(false);
-      };
-      const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        actions.setChartTabDownloadFilename(e.target.value);
-      };
-
-      const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
-        return new Promise((resolve, reject) => {
-          const image = new Image();
-
-          image.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-              reject("Canvas context not found");
-              return;
+          </div>
+        </Box>
+      </div>
+    );
+  };
+  const ZoomInButton = () => {
+    return (
+      <CustomTooltip title="Zoom In">
+        <IconButton
+          onClick={() => {
+            if (scale < maxScale) {
+              container.zoomIn(step, 0);
+              actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale + step });
             }
-            const pixelRatio = 3;
-            canvas.width = width * pixelRatio;
-            canvas.height = height * pixelRatio;
-            ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-            ctx.drawImage(image, 0, 0);
-
-            URL.revokeObjectURL(url);
-            const imgURI = canvas.toDataURL();
-            canvas.remove();
-            resolve(imgURI);
-          };
-          image.onerror = () => {
-            reject("Failed to load svg onto image");
-          };
-          image.width = width;
-          image.height = height;
-          image.src = url;
-        });
-      };
-
-      async function downloadChart() {
-        actions.setChartTabIsSavingChart(true);
-        try {
-          if (state.chartTab.downloadFiletype === "svg") {
-            const blob = new Blob([state.chartTab.unsafeChartContent]);
-            FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
-            actions.pushSnackbar("Saved Chart as SVG!", "success");
-          } else {
-            const svgNode = svgRef.current?.children[0];
-            if (!svgNode) return;
-            if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
-            //height and width in cm, so convert to pixels
-            const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
-            const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
-            const svgString = state.chartContent;
-            const svgBlob = new Blob([svgString], {
-              type: "image/svg+xml;charset=utf-8"
-            });
-
-            const DOMURL = window.URL || window.webkitURL || window;
-            const url = DOMURL.createObjectURL(svgBlob);
-
-            let imgURI = "";
-            try {
-              imgURI = await svgToImageURI(url, svgWidth, svgHeight);
-            } catch (e) {
-              console.error(e);
-              actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+          }}>
+          <ZoomInIcon />
+        </IconButton>
+      </CustomTooltip>
+    );
+  };
+  const ZoomOutButton = () => {
+    return (
+      <CustomTooltip title="Zoom Out">
+        <IconButton
+          onClick={() => {
+            if (scale > minScale) {
+              container.zoomOut(step, 0);
+              actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale - step });
             }
-            if (state.chartTab.downloadFiletype === "pdf") {
-              actions.pushSnackbar(
-                "Generating a pdf will take a few seconds, feel free to close out of the popup",
-                "info"
-              );
-              const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
-                type: "module"
-              });
-              const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
-              downloadWorker.postMessage(message);
-              downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
-                const { status, value } = e.data;
-                if (status === "success" && value) {
-                  FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
-                  actions.pushSnackbar("Saved Chart as PDF!", "success");
-                } else {
-                  actions.pushSnackbar("Saving Chart Timed Out", "info");
-                }
-                downloadWorker.terminate();
-              };
-            } else if (state.chartTab.downloadFiletype === "png") {
-              const a = document.createElement("a");
-              a.download = state.chartTab.downloadFilename + ".png"; // filename
-              a.target = "_blank";
-              a.href = imgURI;
-              a.click();
-              actions.pushSnackbar("Saved Chart as PNG!", "success");
-              a.remove();
+          }}>
+          <ZoomOutIcon />
+        </IconButton>
+      </CustomTooltip>
+    );
+  };
+  const ResetButton = () => {
+    return (
+      <CustomTooltip title="Reset Transformation">
+        <IconButton
+          onClick={() => {
+            container.setTransform(resetMidX, 0, 1, 0);
+            actions.setChartTabZoomSettings(chartZoomSettings, { scale: 1 });
+          }}>
+          <RestartAltIcon />
+        </IconButton>
+      </CustomTooltip>
+    );
+  };
+  const ZoomFitButton = () => {
+    return (
+      <CustomTooltip title="Zoom Fit">
+        <IconButton
+          onClick={() => {
+            if (zoomFitMidCoordIsX) {
+              container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
+            } else {
+              container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
             }
-            DOMURL.revokeObjectURL(url);
+            actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
+          }}>
+          <ZoomOutMapIcon />
+        </IconButton>
+      </CustomTooltip>
+    );
+  };
+
+  const TimelineButton = () => {
+    return (
+      <CustomTooltip title="Timeline On/Off">
+        <IconButton onClick={() => actions.setChartTimelineEnabled(!chartTimelineEnabled)}>
+          <HorizontalRuleIcon className="timeline-button" />
+        </IconButton>
+      </CustomTooltip>
+    );
+  };
+  const DownloadButton = observer(() => {
+    const [downloadOpen, setDownloadOpen] = React.useState(false);
+    const handleDownloadOpen = () => {
+      setDownloadOpen(true);
+    };
+
+    const handleDownloadClose = () => {
+      setDownloadOpen(false);
+    };
+    const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      actions.setChartTabState(chartTabState, { downloadFilename: e.target.value });
+    };
+
+    const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject("Canvas context not found");
+            return;
           }
-        } finally {
-          actions.setChartTabIsSavingChart(false);
+          const pixelRatio = 3;
+          canvas.width = width * pixelRatio;
+          canvas.height = height * pixelRatio;
+          ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+          ctx.drawImage(image, 0, 0);
+
+          URL.revokeObjectURL(url);
+          const imgURI = canvas.toDataURL();
+          canvas.remove();
+          resolve(imgURI);
+        };
+        image.onerror = () => {
+          reject("Failed to load svg onto image");
+        };
+        image.width = width;
+        image.height = height;
+        image.src = url;
+      });
+    };
+
+    async function downloadChart() {
+      actions.setChartTabState(chartTabState, { isSavingChart: true });
+      try {
+      if (downloadFiletype === "svg") {
+        const blob = new Blob([unsafeChartContent]);
+        FileSaver.saveAs(blob, downloadFilename + ".svg");
+        actions.pushSnackbar("Saved Chart as SVG!", "success");
+      } else {
+        const svgNode = svgRef.current?.children[0];
+        if (!svgNode) return;
+        if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+        //height and width in cm, so convert to pixels
+        const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+        const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+        const svgString = chartTabState.chartContent;
+        const svgBlob = new Blob([svgString], {
+          type: "image/svg+xml;charset=utf-8"
+        });
+
+        const DOMURL = window.URL || window.webkitURL || window;
+        const url = DOMURL.createObjectURL(svgBlob);
+
+          let imgURI = "";
+          try {
+            imgURI = await svgToImageURI(url, svgWidth, svgHeight);
+          } catch (e) {
+            console.error(e);
+            actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+          }
+          if (state.chartTab.downloadFiletype === "pdf") {
+            actions.pushSnackbar(
+              "Generating a pdf will take a few seconds, feel free to close out of the popup",
+              "info"
+            );
+            const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+              type: "module"
+            });
+            const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+            downloadWorker.postMessage(message);
+            downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+              const { status, value } = e.data;
+              if (status === "success" && value) {
+                FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+                actions.pushSnackbar("Saved Chart as PDF!", "success");
+              } else {
+                actions.pushSnackbar("Saving Chart Timed Out", "info");
+              }
+              downloadWorker.terminate();
+            };
+          } else if (state.chartTab.downloadFiletype === "png") {
+            const a = document.createElement("a");
+            a.download = state.chartTab.downloadFilename + ".png"; // filename
+            a.target = "_blank";
+            a.href = imgURI;
+            a.click();
+            actions.pushSnackbar("Saved Chart as PNG!", "success");
+            a.remove();
+          }
+          DOMURL.revokeObjectURL(url);
         }
+      } finally {
+        actions.setChartTabState(chartTabState, { isSavingChart: false });
+      }
       }
       return (
         <div>
@@ -342,41 +349,40 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
       );
     });
 
-    const HelpButton = () => {
-      return (
-        <div>
-          <CustomTooltip
-            title={
-              <>
-                ctrl/⊞/⌘ + Minus (-) - Zoom out
-                <br />
-                ctrl/⊞/⌘ + Plus (+) - Zoom in
-                <br />
-                Shift + Scroll - Horizontal Scroll
-              </>
-            }>
-            <IconButton>
-              <HelpOutlineIcon />
-            </IconButton>
-          </CustomTooltip>
-        </div>
-      );
-    };
+  const HelpButton = () => {
     return (
-      <div className="options-bar">
-        <div className="flex-row">
-          <OptionsButton />
-          <ZoomInButton />
-          <ZoomOutButton />
-          <ResetButton />
-          <ZoomFitButton />
-          <TimelineButton />
-          <DownloadButton />
-        </div>
-        <div className="flex-row">
-          <HelpButton />
-        </div>
+      <div>
+        <CustomTooltip
+          title={
+            <>
+              ctrl/⊞/⌘ + Minus (-) - Zoom out
+              <br />
+              ctrl/⊞/⌘ + Plus (+) - Zoom in
+              <br />
+              Shift + Scroll - Horizontal Scroll
+            </>
+          }>
+          <IconButton>
+            <HelpOutlineIcon />
+          </IconButton>
+        </CustomTooltip>
       </div>
     );
-  }
-);
+  };
+  return (
+    <div className="options-bar">
+      <div className="flex-row">
+        <OptionsButton />
+        <ZoomInButton />
+        <ZoomOutButton />
+        <ResetButton />
+        <ZoomFitButton />
+        <TimelineButton />
+        <DownloadButton />
+      </div>
+      <div className="flex-row">
+        <HelpButton />
+      </div>
+    </div>
+  );
+});
