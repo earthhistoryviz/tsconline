@@ -213,68 +213,66 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(
 
       async function downloadChart() {
         actions.setChartTabIsSavingChart(true);
-        if (state.chartTab.downloadFiletype === "svg") {
-          const blob = new Blob([state.chartTab.unsafeChartContent]);
-          FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
-          actions.pushSnackbar("Saved Chart as SVG!", "success");
-          actions.setChartTabIsSavingChart(false);
-        } else {
-          const svgNode = svgRef.current?.children[0];
-          if (!svgNode) return;
-          if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
-          //height and width in cm, so convert to pixels
-          const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
-          const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
-          const svgString = state.chartContent;
-          const svgBlob = new Blob([svgString], {
-            type: "image/svg+xml;charset=utf-8"
-          });
-
-          const DOMURL = window.URL || window.webkitURL || window;
-          const url = DOMURL.createObjectURL(svgBlob);
-
-          let imgURI = "";
-          try {
-            imgURI = await svgToImageURI(url, svgWidth, svgHeight);
-          } catch (e) {
-            console.error(e);
-            actions.pushSnackbar("Failed to download chart, please try again.", "warning");
-            actions.setChartTabIsSavingChart(false);
-          }
-          if (state.chartTab.downloadFiletype === "pdf") {
-            actions.pushSnackbar(
-              "Generating a pdf will take a few seconds, feel free to close out of the popup",
-              "info"
-            );
-            const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
-              type: "module"
+        try {
+          if (state.chartTab.downloadFiletype === "svg") {
+            const blob = new Blob([state.chartTab.unsafeChartContent]);
+            FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
+            actions.pushSnackbar("Saved Chart as SVG!", "success");
+          } else {
+            const svgNode = svgRef.current?.children[0];
+            if (!svgNode) return;
+            if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+            //height and width in cm, so convert to pixels
+            const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+            const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+            const svgString = state.chartContent;
+            const svgBlob = new Blob([svgString], {
+              type: "image/svg+xml;charset=utf-8"
             });
-            const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
-            downloadWorker.postMessage(message);
-            downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
-              const { status, value } = e.data;
-              if (status === "success" && value) {
-                FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
-                actions.pushSnackbar("Saved Chart as PDF!", "success");
-              } else {
-                actions.pushSnackbar("Saving Chart Timed Out", "info");
-              }
-              actions.setChartTabIsSavingChart(false);
-              downloadWorker.terminate();
-            };
-          } else if (state.chartTab.downloadFiletype === "png") {
-            const a = document.createElement("a");
-            a.download = state.chartTab.downloadFilename + ".png"; // filename
-            a.target = "_blank";
-            a.href = imgURI;
-            a.click();
-            actions.pushSnackbar("Saved Chart as PNG!", "success");
-            actions.setChartTabIsSavingChart(false);
-            a.remove();
-          }
-          return () => {
+
+            const DOMURL = window.URL || window.webkitURL || window;
+            const url = DOMURL.createObjectURL(svgBlob);
+
+            let imgURI = "";
+            try {
+              imgURI = await svgToImageURI(url, svgWidth, svgHeight);
+            } catch (e) {
+              console.error(e);
+              actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+            }
+            if (state.chartTab.downloadFiletype === "pdf") {
+              actions.pushSnackbar(
+                "Generating a pdf will take a few seconds, feel free to close out of the popup",
+                "info"
+              );
+              const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+                type: "module"
+              });
+              const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+              downloadWorker.postMessage(message);
+              downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+                const { status, value } = e.data;
+                if (status === "success" && value) {
+                  FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+                  actions.pushSnackbar("Saved Chart as PDF!", "success");
+                } else {
+                  actions.pushSnackbar("Saving Chart Timed Out", "info");
+                }
+                downloadWorker.terminate();
+              };
+            } else if (state.chartTab.downloadFiletype === "png") {
+              const a = document.createElement("a");
+              a.download = state.chartTab.downloadFilename + ".png"; // filename
+              a.target = "_blank";
+              a.href = imgURI;
+              a.click();
+              actions.pushSnackbar("Saved Chart as PNG!", "success");
+              a.remove();
+            }
             DOMURL.revokeObjectURL(url);
-          };
+          }
+        } finally {
+          actions.setChartTabIsSavingChart(false);
         }
       }
       return (
