@@ -374,8 +374,7 @@
                     "current-overlay": "Current Overlay",
                     "choose-column-empty": "Choose Column >>>",
                     "display-overlay": "Display Overlay",
-                    "choose-second-column": "Choose Second Column",
-                    "search-bar": "Search"
+                    "choose-second-column": "Choose Second Column"
                 }
             },
             "search": {
