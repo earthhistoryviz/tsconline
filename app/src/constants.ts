@@ -49,7 +49,7 @@ export const defaultChartZoomSettings: ChartZoomSettings = {
 export const defaultChartTabState: ChartTabState = {
   chartHash: "",
   chartContent: "",
-  chartTimelineEnabled: true,
+  chartTimelineEnabled: false,
   chartZoomSettings: defaultChartZoomSettings,
   downloadFilename: "chart",
   downloadFiletype: "svg",
