@@ -17,7 +17,7 @@ import { attachTscPrefixToName } from "../src/state/actions/util-actions";
 vi.mock("../src/state/actions/util-actions", () => ({
   changeManuallyAddedColumns: vi.fn(),
   normalizeColumnProperties: vi.fn(),
-  attachTscPrefixToName: vi.fn(attachTscPrefixToName),
+  attachTscPrefixToName: vi.fn(attachTscPrefixToName)
 }));
 const tests = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-tests.json").toString());
 const keys = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-keys.json").toString());
