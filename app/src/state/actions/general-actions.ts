@@ -637,29 +637,6 @@ export const removeCache = action("removeCache", async () => {
   }
 });
 
-/**
- * Resets state
- * Only implementation is used when we remove cache
- * If error from server, this is really bad. Will loop forever
- */
-export const resetState = action("resetState", () => {
-  setChartMade(true);
-  setChartLoading(true);
-  processDatapackConfig([]);
-  setChartHash("");
-  setChartContent("");
-  setUseCache(true);
-  setUsePreset(true);
-  setTab(0);
-  setSettingsTabsSelected("time");
-  setSettingsColumns(undefined);
-  setMapInfo({});
-  state.columnMenu.columnSelected = null;
-  state.columnMenu.tabValue = 0;
-  state.columnMenu.tabs = ["General", "Font"];
-  state.settingsXML = "";
-});
-
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
 });
@@ -781,11 +758,11 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * Constantly ping the server for the pdf status
  * TODO DEPRECATE FOR SVGS
  */
-export const checkSVGStatus = action(async () => {
+export const checkSVGStatus = action(async (hash: string) => {
   let SVGReady = false;
   try {
     while (!SVGReady) {
-      SVGReady = await fetchSVGStatus();
+      SVGReady = await fetchSVGStatus(hash);
       if (!SVGReady) {
         // Wait for some time before checking again
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -795,18 +772,17 @@ export const checkSVGStatus = action(async () => {
     console.log(`Error fetching svg status: ${e}`);
     return;
   }
-  setChartLoading(false);
 });
 
 /**
  * The request for pdf status
  * @returns
  */
-async function fetchSVGStatus(): Promise<boolean> {
-  if (state.chartHash === "") {
+async function fetchSVGStatus(hash: string): Promise<boolean> {
+  if (hash === "") {
     return false;
   }
-  const response = await fetcher(`/svgstatus/${state.chartHash}`, {
+  const response = await fetcher(`/svgstatus/${hash}`, {
     method: "GET"
   });
   const data = await response.json();
@@ -1093,7 +1069,7 @@ export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
 export const setTab = action("setTab", (newval: number) => {
   if (
     newval == 2 &&
-    state.chartContent &&
+    state.chartTab.state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
     pushSnackbar("Chart settings are different from the displayed chart.", "warning");
@@ -1108,9 +1084,6 @@ export const setUseCache = action((temp: boolean) => {
 });
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
-});
-export const setChartContent = action("setChartContent", (chartContent: string) => {
-  state.chartContent = chartContent;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;
@@ -1150,19 +1123,8 @@ export const setMouseOverPopupsEnabled = action((checked: boolean) => {
   state.settings.mouseOverPopupsEnabled = checked;
 });
 
-export const setChartLoading = action((value: boolean) => {
-  state.chartTab.state.chartLoading = value;
-});
-
-export const setChartMade = action((value: boolean) => {
-  state.chartTab.state.chartLoading = value;
-});
-
 export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
   state.mapState.mapHierarchy = mapHierarchy;
-});
-export const setChartHash = action("setChartHash", (charthash: string) => {
-  state.chartHash = charthash;
 });
 export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
   state.datapackProfilePage.editMode = editMode;
@@ -1245,20 +1207,11 @@ export const setCookies = action("setCookies", (newval: boolean) => {
   localStorage.setItem("cookieConsent", newval.toString());
 });
 
-export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
-  state.chartTab.state.downloadFiletype = newval;
-});
-
-export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
-  state.chartTab.state.downloadFilename = newval;
-});
-
 export const setChartTabState = action("setChartTabState", (oldval: ChartTabState, newval: Partial<ChartTabState>) => {
   if (!isObservable(oldval)) {
     throw new Error("oldval is not observable");
   }
-  if (newval.chartZoomSettings !== undefined)
-    setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
+  if (newval.chartZoomSettings !== undefined) setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
   if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
   if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
   if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
@@ -1269,30 +1222,20 @@ export const setChartTabState = action("setChartTabState", (oldval: ChartTabStat
   if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });
 
-export const setChartTabZoomSettings = action(
-  "setChartTabZoomSettings",
-  (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
-    if (!isObservable(oldval)) {
-      throw new Error("oldval is not observable");
-    }
-    if (newval.enableScrollZoom !== undefined)
-      state.chartTab.state.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
-    if (newval.resetMidX !== undefined) state.chartTab.state.chartZoomSettings.resetMidX = newval.resetMidX;
-    if (newval.scale !== undefined) state.chartTab.state.chartZoomSettings.scale = newval.scale;
-    if (newval.zoomFitMidCoord !== undefined)
-      state.chartTab.state.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
-    if (newval.zoomFitScale !== undefined) state.chartTab.state.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
-    if (newval.zoomFitMidCoordIsX !== undefined)
-      state.chartTab.state.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+export const setChartTabZoomSettings = action("setChartTabZoomSettings", (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
+  if (!isObservable(oldval)) {
+    throw new Error("oldval is not observable");
   }
-);
+  if (newval.enableScrollZoom !== undefined)
+    state.chartTab.state.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+  if (newval.resetMidX !== undefined) state.chartTab.state.chartZoomSettings.resetMidX = newval.resetMidX;
+  if (newval.scale !== undefined) state.chartTab.state.chartZoomSettings.scale = newval.scale;
+  if (newval.zoomFitMidCoord !== undefined) state.chartTab.state.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+  if (newval.zoomFitScale !== undefined) state.chartTab.state.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+  if (newval.zoomFitMidCoordIsX !== undefined)
+    state.chartTab.state.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+});
 
-export const setChartTabIsSavingChart = action((term: boolean) => {
-  state.chartTab.state.isSavingChart = term;
-});
-export const setUnsafeChartContent = action((content: string) => {
-  state.chartTab.state.unsafeChartContent = content;
-});
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   if (!metadata) {

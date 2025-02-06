@@ -24,7 +24,7 @@ type TimeLineElements = {
 export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef }) => {
   const { state, actions } = useContext(context);
   const { chartTabState } = useContext(ChartContext);
-  const { chartTimelineEnabled } = chartTabState;
+  const { chartTimelineEnabled, chartContent } = chartTabState;
   const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
 
   /**

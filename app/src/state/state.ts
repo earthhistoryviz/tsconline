@@ -13,8 +13,7 @@ import {
   EditableDatapackMetadata,
   CrossPlotSettingsTabs,
   CrossPlotTimeSettings,
-  ChartZoomSettings,
-  ChartTabState
+  ChartTabState,
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -34,7 +33,7 @@ import type {
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
-import { defaultChartTabState, defaultChartZoomSettings, defaultCrossPlotSettings, settings } from "../constants";
+import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
@@ -49,7 +48,7 @@ export type State = {
     lockX: boolean;
     lockY: boolean;
     state: ChartTabState;
-  };
+  },
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
@@ -131,8 +130,6 @@ export type State = {
     sortedPatterns: Patterns[string][];
   };
   selectedPreset: ChartConfig | null;
-  chartContent: string;
-  chartHash: string;
   settingsXML: string;
   settings: ChartSettings;
   prevSettings: ChartSettings;
@@ -156,12 +153,12 @@ export type State = {
 export const state = observable<State>({
   chartTab: {
     chartTimelineLocked: false,
-    state: cloneDeep(defaultChartTabState)
+    state: cloneDeep(defaultChartTabState),
   },
   crossPlot: {
     lockX: false,
     lockY: false,
-    state: cloneDeep(defaultChartTabState)
+    state: cloneDeep(defaultChartTabState),
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -269,8 +266,6 @@ export const state = observable<State>({
     sortedPatterns: []
   },
   selectedPreset: null,
-  chartContent: "",
-  chartHash: "",
   settingsXML: "",
   settings: JSON.parse(JSON.stringify(settings)),
   prevSettings: JSON.parse(JSON.stringify(settings)),

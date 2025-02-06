@@ -149,13 +149,7 @@ export default observer(function App() {
               path="/chart"
               element={
                 <ChartContext.Provider
-                  value={{
-                    chartContent: state.chartContent,
-                    zoomSettings: state.chartTab.chartZoomSettings,
-                    setZoomSettings: actions.setChartTabZoomSettings,
-                    madeChart: state.madeChart,
-                    chartLoading: state.chartLoading
-                  }}>
+                  value={{chartTabState: state.chartTab.state}}>
                   <Chart />
                 </ChartContext.Provider>
               }

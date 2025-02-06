@@ -98,7 +98,6 @@ export const Home = observer(function Home() {
             }}
             onClick={async () => {
               actions.removeCache();
-              actions.resetState();
             }}>
             {t("button.remove-cache")}
           </TSCButton>
