@@ -1,7 +1,13 @@
 import { action } from "mobx";
 import { ErrorCodes } from "../../util/error-codes";
 import { pushError, pushSnackbar } from "./general-actions";
-import { ColumnInfo, DisplayedColumnTypes, assertEventSettings, assertPointSettings, isServerResponseError } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  DisplayedColumnTypes,
+  assertEventSettings,
+  assertPointSettings,
+  isServerResponseError
+} from "@tsconline/shared";
 import { state } from "../state";
 /**
  * Since we hash by name only to allow consistency between facies maps and
