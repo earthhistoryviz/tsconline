@@ -11,14 +11,13 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
 import { useState } from "react";
-import Loader from '@emotion/react';
-const { t, i18n } = useTranslation();
+import LoadingButton from '@mui/lab/LoadingButton'
+
+
 
 // TODO: change this when backend is finished
 
-//for testing
-console.log("Loaded translations:", i18n.getResourceBundle(i18n.language, "translation"));
-console.log("Register button text:", t("workshops.details-page.register-button"));
+
 
 export const WorkshopDetails = observer(() => {
   const { state } = useContext(context);
@@ -26,10 +25,10 @@ export const WorkshopDetails = observer(() => {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const [isRegistered] = useState(true);
+  const [isRegistered] = useState(false);
   const [buttonSwitchNotReg, setButtonBool] = useState(false);
   const [switchColorsBool, setColorBool] = useState(false);
-  const [loading, setLoading] = useState(false);  
+  const [loading, setLoading] = useState(false);
 
   const handleRegisterClick = () => {
     setColorBool(true)
@@ -46,7 +45,6 @@ export const WorkshopDetails = observer(() => {
         setLoading(false)
       }
     }, 2000);
-
   };
 
 
@@ -118,17 +116,17 @@ export const WorkshopDetails = observer(() => {
                   )}
                   <Box sx={{ display: 'flex', marginTop: 2}}>
 
-                  <TSCButton
-                       href={fetchWorkshopFiles()}
-                       variant="contained"
-                      sx={{
-                        marginRight: 2, backgroundColor: switchColorsBool ? 'grey' : 'secondary'
-                      }}
-                      onClick={handleRegisterClick}
-                    >
-                      {buttonSwitchNotReg ? t("workshops.details-page.registered-button"):  t("workshops.details-page.register-button")}
-                    </TSCButton>
-
+                    <LoadingButton
+                        
+                        variant="contained"
+                        sx={{
+                          marginRight: 2, backgroundColor: switchColorsBool ? 'grey' : 'tan'
+                        }}
+                        onClick={handleRegisterClick}
+                        loading={loading}
+                      >
+                        {buttonSwitchNotReg ? t("workshops.details-page.registered-button"):  t("workshops.details-page.register-button")}
+                    </LoadingButton>
 
                     <TSCButton variant="contained" color="primary"  href={fetchWorkshopFiles()}>
                       {t("workshops.details-page.download-button")}
