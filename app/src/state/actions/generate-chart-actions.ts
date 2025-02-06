@@ -7,8 +7,8 @@ import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo } f
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import DOMPurify from "dompurify";
-import { ChartSettings } from "../../types";
+import DOMPurify, { sanitize } from "dompurify";
+import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
@@ -102,13 +102,16 @@ function areSettingsValidForGeneration() {
   return true;
 }
 
-export const resetChartTab = action("resetChartTab", () => {
+export const resetChartTabState = action("resetChartTabState", (oldval: ChartTabState) => {
+  generalActions.setChartTabState(oldval, {
+    madeChart: false,
+    chartLoading: false,
+    chartContent: "",
+    unsafeChartContent: "",
+    chartZoomSettings: cloneDeep(defaultChartZoomSettings),
+    chartTimelineEnabled: false
+  });
   generalActions.setTab(3);
-  generalActions.setChartMade(true);
-  generalActions.setChartLoading(true);
-  generalActions.setChartHash("");
-  generalActions.setChartContent("");
-  generalActions.setChartTabZoomSettings(cloneDeep(defaultChartZoomSettings));
 });
 
 export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
@@ -116,10 +119,9 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
-  generalActions.setIsCrossPlot(false);
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
-  resetChartTab();
+  resetChartTabState(state.chartTab.state);
   let chartRequest: ChartRequest | null = null;
   try {
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
@@ -182,13 +184,11 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
           break;
       }
       displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      generalActions.setChartLoading(false);
       return;
     }
     try {
       assertChartInfo(answer);
-      generalActions.setChartHash(answer.hash);
-      await generalActions.checkSVGStatus();
+      await generalActions.checkSVGStatus(answer.hash);
       const content = await (await fetcher(answer.chartpath)).text();
       const domPurifyConfig = {
         ADD_ATTR: [
@@ -209,13 +209,12 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
-      // for download ONLY
-      generalActions.setUnsafeChartContent(content);
-      // the display version
-      generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
-      generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
+      return {
+        chartContent: sanitizedSVG,
+        unsafeChartContent: content,
+        hash: answer.hash
+      };
     } catch (e) {
       let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
       switch (response.status) {

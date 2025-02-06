@@ -2,13 +2,13 @@ import { action } from "mobx";
 import { ChartSettings, CrossPlotTimeSettings } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { pushError, removeError, setIsCrossPlot } from "./general-actions";
+import { pushError, removeError, setChartTabState } from "./general-actions";
 import { NavigateFunction } from "react-router";
 import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { resetChartTab, sendChartRequestToServer } from "./generate-chart-actions";
+import { resetChartTabState, sendChartRequestToServer } from "./generate-chart-actions";
 
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
   state.crossplotSettingsTabs.chartXTimeSettings = {
@@ -71,8 +71,7 @@ export const compileCrossPlotChartRequest = action(
     if (!areSettingsValidForGeneration()) {
       return false;
     }
-    resetChartTab();
-    setIsCrossPlot(true);
+    resetChartTabState(state.crossPlot.state);
     navigate("/chart");
     try {
       const columnCopy = combineCrossPlotColumns(
@@ -95,10 +94,15 @@ export const compileCrossPlotChartRequest = action(
         useCache: state.useCache
       };
 
-      await sendChartRequestToServer(crossPlotChartRequest);
+      const response = await sendChartRequestToServer(crossPlotChartRequest);
+      if (!response) {
+        throw new Error("Could not receive response");
+      }
     } catch (e) {
       console.error(e);
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    } finally {
+      setChartTabState(state.crossPlot.state, { chartLoading: false });
     }
   }
 );
