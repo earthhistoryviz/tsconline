@@ -1,7 +1,7 @@
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import { ColumnContainer, TSCCheckbox, Lottie, StyledScrollbar, CustomDivider, Accordion } from "../../components";
-import { Box, Tooltip, Typography, useTheme, IconButton, TextField } from "@mui/material";
+import { Box, Tooltip, Typography, useTheme, IconButton } from "@mui/material";
 import { useContext, useEffect, useRef, useState } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
@@ -101,7 +101,6 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
               </Box>
             </Box>
             <Box>
-      
               <Box
                 id="DccColumnAccordionWrapper"
                 ref={scrollRef}
@@ -112,7 +111,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 position="relative">
                 {state.settingsTabs.columns &&
                   Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
-                    <ColumnAccordion key={childName} column={childColumn}/>
+                    <ColumnAccordion key={childName} column={childColumn} />
                   ))}
                 {/* Button to take users to top of column menu when scrolling */}
 
@@ -215,7 +214,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         state.settings.timeSettings[column.units].baseStageAge
       );
 
-      // if there are no children, don't make an accordion
+  // if there are no children, don't make an accordion
   if (column.children.length == 0) {
     return (
       <div
@@ -328,5 +327,5 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         </MuiAccordionDetails>
       </Accordion>
     </div>
-  )
+  );
 });
