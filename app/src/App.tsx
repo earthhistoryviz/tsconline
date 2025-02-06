@@ -17,7 +17,7 @@ import { Datapacks } from "./settings_tabs/Datapack";
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
-import { TSCYesNoPopup, TSCError, TSCSnackbar } from "./components";
+import { TSCYesNoPopup, TSCError, TSCSnackbar, TSCSvgComponent } from "./components";
 import { CssBaseline } from "@mui/material";
 import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
@@ -150,7 +150,7 @@ export default observer(function App() {
               path="/chart"
               element={
                 <ChartContext.Provider value={{ chartTabState: state.chartTab.state }}>
-                  <Chart />
+                  <Chart Component={TSCSvgComponent} />
                 </ChartContext.Provider>
               }
             />

@@ -1037,10 +1037,6 @@ export const listenForSystemDarkMode = () => {
   };
 };
 
-export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
-  state.chartTab.state.chartTimelineEnabled = enabled;
-});
-
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
 });

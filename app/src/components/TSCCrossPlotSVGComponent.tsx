@@ -1,5 +1,5 @@
 import { roundToDecimalPlace } from "@tsconline/shared";
-import React, { useContext, useEffect } from "react";
+import React, { forwardRef, useContext, useEffect, useRef } from "react";
 import { RefObject } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
@@ -14,9 +14,6 @@ type TimeLineElements = {
   timeLabelsGroup: Element;
 };
 
-type TSCCrossPlotSVGComponentProps = {
-  ref: RefObject<HTMLDivElement>;
-};
 const lineStroke = "2";
 // just a helper function to convert pixels to svg coordinates in case anyone needs
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -138,197 +135,202 @@ const showCurrAgeY = (
   return currAgeY;
 };
 
-export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> = observer(({ ref }) => {
-  const { state, actions } = useContext(context);
-  const { chartTabState } = useContext(ChartContext);
-  const { chartTimelineEnabled, chartContent } = chartTabState;
-  const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
-  useEffect(() => {
-    const container = ref.current;
-    if (!container || !chartContent) return;
-    const svg = container.querySelector("svg");
-    if (!svg) return;
-    setupTimelineAndLabel(svg);
-    hideOrShowTimeline(chartTimelineEnabled);
-  }, [ref.current, chartContent, chartTimelineEnabled]);
-  useEffect(() => {
-    const container = ref.current;
-    if (!container || !chartContent) return;
-    const svg = container.querySelector("svg");
-    if (!svg) return;
-    // either timeline or popups
-    if (chartTimelineEnabled) {
-      // crossplot or non crossplot
-      const eventListenerWrapper = (evt: MouseEvent) => handleTimeLine(evt, svg);
-      const lockX = () => actions.setCrossPlotLockX(!state.crossPlot.lockX);
-      const lockY = () => actions.setCrossPlotLockY(!state.crossPlot.lockY);
-      const keydownListener = (evt: KeyboardEvent) => {
-        if (!chartTimelineEnabled) return;
-        if (evt.key === "x") {
-          lockX();
-        } else if (evt.key === "y") {
-          lockY();
-        }
-      };
-      container.addEventListener("mousemove", eventListenerWrapper);
-      window.addEventListener("keydown", keydownListener);
-      return () => {
-        container.removeEventListener("mousemove", eventListenerWrapper);
-        window.removeEventListener("keydown", keydownListener);
-      };
-    }
-  }, [ref.current, chartContent, chartTimelineEnabled, timeLineElements]);
+export const TSCCrossPlotSVGComponent: React.FC = observer(
+  forwardRef<HTMLDivElement>((_, ref) => {
+    const { state, actions } = useContext(context);
+    const { chartTabState } = useContext(ChartContext);
+    const { chartTimelineEnabled, chartContent } = chartTabState;
+    console.log("chartTimelineEnabled", chartTimelineEnabled);
+    const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      setupTimelineAndLabel(svg);
+      hideOrShowTimeline(chartTimelineEnabled);
+    }, [ref, chartContent, chartTimelineEnabled]);
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      // either timeline or popups
+      if (chartTimelineEnabled) {
+        // crossplot or non crossplot
+        const eventListenerWrapper = (evt: MouseEvent) => handleTimeLine(evt, svg);
+        const lockX = () => actions.setCrossPlotLockX(!state.crossPlot.lockX);
+        const lockY = () => actions.setCrossPlotLockY(!state.crossPlot.lockY);
+        const keydownListener = (evt: KeyboardEvent) => {
+          if (!chartTimelineEnabled) return;
+          if (evt.key === "x") {
+            lockX();
+          } else if (evt.key === "y") {
+            lockY();
+          }
+        };
+        container.addEventListener("mousemove", eventListenerWrapper);
+        window.addEventListener("keydown", keydownListener);
+        return () => {
+          container.removeEventListener("mousemove", eventListenerWrapper);
+          window.removeEventListener("keydown", keydownListener);
+        };
+      }
+    }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
 
-  const getLabelWidthX = () => {
-    if (!timeLineElements) return 0;
-    const { timeLabelX } = timeLineElements;
-    return timeLabelX.getBoundingClientRect().width;
-  };
-  const getLabelHeightX = () => {
-    if (!timeLineElements) return 0;
-    const { timeLabelX } = timeLineElements;
-    return timeLabelX.getBoundingClientRect().height;
-  };
-  const getLabelWidthY = () => {
-    if (!timeLineElements) return 0;
-    const { timeLabelY } = timeLineElements;
-    return timeLabelY.getBoundingClientRect().width;
-  };
-  const hideOrShowTimeline = (show: boolean) => {
-    if (!timeLineElements) {
-      return;
-    }
-    const { timeLinesGroup, timeLabelsGroup, limitingBox } = timeLineElements!;
-    timeLinesGroup.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 0.5;" : "stroke-opacity: 0;");
-    timeLabelsGroup.setAttributeNS(null, "style", show ? "fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
-    limitingBox.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 1;" : "stroke-opacity: 0;");
-  };
-  const setupTimelineAndLabel = (svg: SVGSVGElement) => {
-    setTimeLineElements({
-      timeLineX: svg.getElementById("timelineX"),
-      timeLineY: svg.getElementById("timelineY"),
-      timeLabelX: svg.getElementById("TimeLineLabelX"),
-      timeLabelY: svg.getElementById("TimeLineLabelY"),
-      limitingBox: svg.getElementById("CrossplotLimitingBox"),
-      timeLinesGroup: svg.getElementById("CrossPlotTimeLines"),
-      timeLabelsGroup: svg.getElementById("CrossPlotTimeLabels")
-    });
-    if (!timeLineElements) {
-      return;
-    }
-    const { timeLineX, timeLineY, timeLabelX, timeLabelY, limitingBox } = timeLineElements;
-    const minX = getMinX(timeLineX);
-    const maxX = getMaxX(timeLineX);
-    const topLimitX = getTopLimit(timeLineX);
-    const baseLimitX = getBaseLimit(timeLineX);
-    const scaleX = getScale(timeLineX);
-    const topAgeX = getTopAge(timeLineX);
-
-    const maxY = getMaxY(timeLineY);
-    const minY = getMinY(timeLineY);
-    const topLimitY = getTopLimit(timeLineY);
-    const baseLimitY = getBaseLimit(timeLineY);
-    const scaleY = getScale(timeLineY);
-    const topAgeY = getTopAge(timeLineY);
-
-    const svgScale = getSvgScale(svg);
-
-    const ageToX = (age: number) => {
-      return Math.min(minX + (age > topAgeX ? Math.round((age - topAgeX) * scaleX) : 0), maxX);
+    const getLabelWidthX = () => {
+      if (!timeLineElements) return 0;
+      const { timeLabelX } = timeLineElements;
+      return timeLabelX.getBoundingClientRect().width;
     };
-    const depthToY = (depth: number) => {
-      return Math.min(minY + (depth > topAgeY ? Math.round((depth - topAgeY) * scaleY) : 0), maxY);
+    const getLabelHeightX = () => {
+      if (!timeLineElements) return 0;
+      const { timeLabelX } = timeLineElements;
+      return timeLabelX.getBoundingClientRect().height;
     };
-    const limitWidth = ageToX(baseLimitX) - ageToX(topLimitX);
-    const limitHeight = depthToY(baseLimitY) - depthToY(topLimitY);
-    const textsize = getTextSize(svg);
+    const getLabelWidthY = () => {
+      if (!timeLineElements) return 0;
+      const { timeLabelY } = timeLineElements;
+      return timeLabelY.getBoundingClientRect().width;
+    };
+    const hideOrShowTimeline = (show: boolean) => {
+      if (!timeLineElements) {
+        return;
+      }
+      const { timeLinesGroup, timeLabelsGroup, limitingBox } = timeLineElements!;
+      timeLinesGroup.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 0.5;" : "stroke-opacity: 0;");
+      timeLabelsGroup.setAttributeNS(null, "style", show ? "fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
+      limitingBox.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 1;" : "stroke-opacity: 0;");
+    };
+    const setupTimelineAndLabel = (svg: SVGSVGElement) => {
+      setTimeLineElements({
+        timeLineX: svg.getElementById("timelineX"),
+        timeLineY: svg.getElementById("timelineY"),
+        timeLabelX: svg.getElementById("TimeLineLabelX"),
+        timeLabelY: svg.getElementById("TimeLineLabelY"),
+        limitingBox: svg.getElementById("CrossplotLimitingBox"),
+        timeLinesGroup: svg.getElementById("CrossPlotTimeLines"),
+        timeLabelsGroup: svg.getElementById("CrossPlotTimeLabels")
+      });
+      if (!timeLineElements) {
+        return;
+      }
+      const { timeLineX, timeLineY, timeLabelX, timeLabelY, limitingBox } = timeLineElements;
+      const minX = getMinX(timeLineX);
+      const maxX = getMaxX(timeLineX);
+      const topLimitX = getTopLimit(timeLineX);
+      const baseLimitX = getBaseLimit(timeLineX);
+      const scaleX = getScale(timeLineX);
+      const topAgeX = getTopAge(timeLineX);
 
-    limitingBox.setAttributeNS(null, "x", String(ageToX(topLimitX)));
-    limitingBox.setAttributeNS(null, "y", String(depthToY(topLimitY)));
-    limitingBox.setAttributeNS(null, "width", String(limitWidth));
-    limitingBox.setAttributeNS(null, "height", String(limitHeight));
-    limitingBox.setAttributeNS(null, "stroke-width", lineStroke);
+      const maxY = getMaxY(timeLineY);
+      const minY = getMinY(timeLineY);
+      const topLimitY = getTopLimit(timeLineY);
+      const baseLimitY = getBaseLimit(timeLineY);
+      const scaleY = getScale(timeLineY);
+      const topAgeY = getTopAge(timeLineY);
 
-    timeLineX.setAttributeNS(null, "stroke-width", lineStroke);
-    timeLineY.setAttributeNS(null, "stroke-width", lineStroke);
+      const svgScale = getSvgScale(svg);
 
-    timeLabelX.setAttributeNS(
-      null,
-      "font-size",
-      String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
-    );
-    timeLabelX.setAttributeNS(null, "dominant-baseline", "text-after-edge");
-    timeLabelY.setAttributeNS(
-      null,
-      "font-size",
-      String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
-    );
-  };
-  /**
-   * handle the timeline movement with the cursor on the crossplot svg
-   * @param evt
-   * @param svg
-   * @returns
-   */
-  const handleTimeLine = (evt: MouseEvent, svg: SVGSVGElement) => {
-    if (!timeLineElements) {
-      return;
-    }
-    const { timeLineX, timeLineY, timeLabelX, timeLabelY } = timeLineElements;
-    const maxX = getMaxX(timeLineX);
-    const minX = getMinX(timeLineX);
-    const topAgeX = getTopAge(timeLineX);
-    const scaleX = getScale(timeLineX);
+      const ageToX = (age: number) => {
+        return Math.min(minX + (age > topAgeX ? Math.round((age - topAgeX) * scaleX) : 0), maxX);
+      };
+      const depthToY = (depth: number) => {
+        return Math.min(minY + (depth > topAgeY ? Math.round((depth - topAgeY) * scaleY) : 0), maxY);
+      };
+      const limitWidth = ageToX(baseLimitX) - ageToX(topLimitX);
+      const limitHeight = depthToY(baseLimitY) - depthToY(topLimitY);
+      const textsize = getTextSize(svg);
 
-    const maxY = getMaxY(timeLineY);
-    const minY = getMinY(timeLineY);
-    const topAgeY = getTopAge(timeLineY);
-    const scaleY = getScale(timeLineY);
+      limitingBox.setAttributeNS(null, "x", String(ageToX(topLimitX)));
+      limitingBox.setAttributeNS(null, "y", String(depthToY(topLimitY)));
+      limitingBox.setAttributeNS(null, "width", String(limitWidth));
+      limitingBox.setAttributeNS(null, "height", String(limitHeight));
+      limitingBox.setAttributeNS(null, "stroke-width", lineStroke);
 
-    const textsize = getTextSize(svg);
-    //cursor location
-    let point = new DOMPoint();
-    point.x = evt.clientX;
-    point.y = evt.clientY;
-    if (svg.getScreenCTM()) {
-      //converts coordinates
-      point = point.matrixTransform(svg.getScreenCTM()!.inverse());
-    }
-    const currX = keepInBounds(point.x, minX, maxX);
-    const currY = keepInBounds(point.y, minY, maxY);
-    //move timeline vertically if not locked
-    if (!state.crossPlot.lockY) {
-      timeLineY.setAttribute("y1", String(currY));
-      timeLineY.setAttribute("y2", String(currY));
-    }
-    if (!state.crossPlot.lockX) {
-      timeLineX.setAttribute("x1", String(currX));
-      timeLineX.setAttribute("x2", String(currX));
-    }
-    showCurrAgeX(
-      timeLabelX,
-      getX1(timeLineX),
-      point.y,
-      textsize,
-      scaleX,
-      topAgeX,
-      minX,
-      maxX,
-      convertPixelWidthToSvgLength(svg, getLabelWidthX()),
-      convertPixelHeightToSvgLength(svg, getLabelHeightX())
-    );
-    showCurrAgeY(
-      timeLabelY,
-      point.x,
-      getY1(timeLineY),
-      textsize,
-      scaleY,
-      topAgeY,
-      minY,
-      maxY,
-      maxX,
-      convertPixelWidthToSvgLength(svg, getLabelWidthY())
-    );
-  };
-  return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
-});
+      timeLineX.setAttributeNS(null, "stroke-width", lineStroke);
+      timeLineY.setAttributeNS(null, "stroke-width", lineStroke);
+
+      timeLabelX.setAttributeNS(
+        null,
+        "font-size",
+        String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
+      );
+      timeLabelX.setAttributeNS(null, "dominant-baseline", "text-after-edge");
+      timeLabelY.setAttributeNS(
+        null,
+        "font-size",
+        String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
+      );
+    };
+    /**
+     * handle the timeline movement with the cursor on the crossplot svg
+     * @param evt
+     * @param svg
+     * @returns
+     */
+    const handleTimeLine = (evt: MouseEvent, svg: SVGSVGElement) => {
+      if (!timeLineElements) {
+        return;
+      }
+      const { timeLineX, timeLineY, timeLabelX, timeLabelY } = timeLineElements;
+      const maxX = getMaxX(timeLineX);
+      const minX = getMinX(timeLineX);
+      const topAgeX = getTopAge(timeLineX);
+      const scaleX = getScale(timeLineX);
+
+      const maxY = getMaxY(timeLineY);
+      const minY = getMinY(timeLineY);
+      const topAgeY = getTopAge(timeLineY);
+      const scaleY = getScale(timeLineY);
+
+      const textsize = getTextSize(svg);
+      //cursor location
+      let point = new DOMPoint();
+      point.x = evt.clientX;
+      point.y = evt.clientY;
+      if (svg.getScreenCTM()) {
+        //converts coordinates
+        point = point.matrixTransform(svg.getScreenCTM()!.inverse());
+      }
+      const currX = keepInBounds(point.x, minX, maxX);
+      const currY = keepInBounds(point.y, minY, maxY);
+      //move timeline vertically if not locked
+      if (!state.crossPlot.lockY) {
+        timeLineY.setAttribute("y1", String(currY));
+        timeLineY.setAttribute("y2", String(currY));
+      }
+      if (!state.crossPlot.lockX) {
+        timeLineX.setAttribute("x1", String(currX));
+        timeLineX.setAttribute("x2", String(currX));
+      }
+      showCurrAgeX(
+        timeLabelX,
+        getX1(timeLineX),
+        point.y,
+        textsize,
+        scaleX,
+        topAgeX,
+        minX,
+        maxX,
+        convertPixelWidthToSvgLength(svg, getLabelWidthX()),
+        convertPixelHeightToSvgLength(svg, getLabelHeightX())
+      );
+      showCurrAgeY(
+        timeLabelY,
+        point.x,
+        getY1(timeLineY),
+        textsize,
+        scaleY,
+        topAgeY,
+        minY,
+        maxY,
+        maxX,
+        convertPixelWidthToSvgLength(svg, getLabelWidthY())
+      );
+    };
+    return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
+  })
+);
