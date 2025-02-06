@@ -2,7 +2,7 @@ import { action } from "mobx";
 import { ChartSettings, CrossPlotTimeSettings } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { pushError, removeError, setChartTabState } from "./general-actions";
+import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
 import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
@@ -72,7 +72,8 @@ export const compileCrossPlotChartRequest = action(
       return false;
     }
     resetChartTabStateForGeneration(state.crossPlot.state);
-    navigate("/chart");
+    setTab(0);
+    navigate("/crossplot");
     try {
       const columnCopy = combineCrossPlotColumns(
         cloneDeep(state.crossplotSettingsTabs.chartX!),

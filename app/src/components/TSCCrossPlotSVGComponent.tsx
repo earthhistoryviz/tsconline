@@ -15,7 +15,7 @@ type TimeLineElements = {
 };
 
 type TSCCrossPlotSVGComponentProps = {
-  svgContainerRef: RefObject<HTMLDivElement>;
+  ref: RefObject<HTMLDivElement>;
 };
 const lineStroke = "2";
 // just a helper function to convert pixels to svg coordinates in case anyone needs
@@ -138,22 +138,22 @@ const showCurrAgeY = (
   return currAgeY;
 };
 
-export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> = observer(({ svgContainerRef }) => {
+export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> = observer(({ ref }) => {
   const { state, actions } = useContext(context);
   const { chartTabState } = useContext(ChartContext);
   const { chartTimelineEnabled, chartContent } = chartTabState;
   const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
   useEffect(() => {
-    const container = svgContainerRef.current;
-    if (!container) return;
+    const container = ref.current;
+    if (!container || !chartContent) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
     setupTimelineAndLabel(svg);
     hideOrShowTimeline(chartTimelineEnabled);
-  }, [svgContainerRef.current, chartContent, chartTimelineEnabled]);
+  }, [ref.current, chartContent, chartTimelineEnabled]);
   useEffect(() => {
-    const container = svgContainerRef.current;
-    if (!container) return;
+    const container = ref.current;
+    if (!container || !chartContent) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
     // either timeline or popups
@@ -177,7 +177,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
         window.removeEventListener("keydown", keydownListener);
       };
     }
-  }, [svgContainerRef.current, chartContent, chartTimelineEnabled, timeLineElements]);
+  }, [ref.current, chartContent, chartTimelineEnabled, timeLineElements]);
 
   const getLabelWidthX = () => {
     if (!timeLineElements) return 0;
@@ -330,5 +330,5 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       convertPixelWidthToSvgLength(svg, getLabelWidthY())
     );
   };
-  return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
+  return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
 });
