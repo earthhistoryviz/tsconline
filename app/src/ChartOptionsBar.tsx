@@ -58,7 +58,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
   const container = transformRef.current;
-  const content = svgRef.current;
+  const content = svgRef?.current;
   if (!container || !content) {
     return;
   }
@@ -168,7 +168,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const TimelineButton = () => {
     return (
       <CustomTooltip title="Timeline On/Off">
-        <IconButton onClick={() => actions.setChartTimelineEnabled(!chartTimelineEnabled)}>
+        <IconButton
+          onClick={() => actions.setChartTabState(chartTabState, { chartTimelineEnabled: !chartTimelineEnabled })}>
           <HorizontalRuleIcon className="timeline-button" />
         </IconButton>
       </CustomTooltip>
@@ -226,7 +227,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         FileSaver.saveAs(blob, downloadFilename + ".svg");
         actions.pushSnackbar("Saved Chart as SVG!", "success");
       } else {
-        const svgNode = svgRef.current?.children[0];
+        const svgNode = svgRef?.current?.children[0];
         if (!svgNode) return;
         if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
         //height and width in cm, so convert to pixels
