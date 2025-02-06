@@ -46,6 +46,7 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  ChartZoomSettings,
   CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
@@ -1243,31 +1244,23 @@ export const setCookies = action("setCookies", (newval: boolean) => {
   localStorage.setItem("cookieConsent", newval.toString());
 });
 
-export const setChartTabScale = action("setChartTabScale", (newval: number) => {
-  state.chartTab.scale = newval;
+export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
+  state.chartTab.downloadFiletype = newval;
 });
 
-export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval: number) => {
-  state.chartTab.zoomFitScale = newval;
-});
-export const setChartTabResetMidX = action("setChartTabResetMidX", (newval: number) => {
-  state.chartTab.resetMidX = newval;
-});
-export const setChartTabZoomFitMidCoord = action("setChartTabZoomFitMidCoord", (newval: number) => {
-  state.chartTab.zoomFitMidCoord = newval;
-});
-export const setChartTabZoomFitMidCoordIsX = action("setChartTabZoomFitMidCoordIsX", (newval: boolean) => {
-  state.chartTab.zoomFitMidCoordIsX = newval;
-});
 export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
   state.chartTab.downloadFilename = newval;
 });
 
-export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
-  state.chartTab.downloadFiletype = newval;
-});
-export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
-  state.chartTab.enableScrollZoom = newval;
+export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
+  if (newval.enableScrollZoom !== undefined)
+    state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+  if (newval.resetMidX !== undefined) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
+  if (newval.scale !== undefined) state.chartTab.chartZoomSettings.scale = newval.scale;
+  if (newval.zoomFitMidCoord !== undefined) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+  if (newval.zoomFitScale !== undefined) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+  if (newval.zoomFitMidCoordIsX !== undefined)
+    state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
 });
 
 export const setChartTabIsSavingChart = action((term: boolean) => {

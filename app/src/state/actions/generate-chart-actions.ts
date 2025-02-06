@@ -11,6 +11,7 @@ import DOMPurify from "dompurify";
 import { ChartSettings } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
+import { defaultChartZoomSettings } from "../../constants";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (response) setDatapackTimeDefaults();
@@ -107,11 +108,7 @@ export const resetChartTab = action("resetChartTab", () => {
   generalActions.setChartLoading(true);
   generalActions.setChartHash("");
   generalActions.setChartContent("");
-  generalActions.setChartTabScale(1);
-  generalActions.setChartTabZoomFitScale(1);
-  generalActions.setChartTabResetMidX(0);
-  generalActions.setChartTabZoomFitMidCoord(0);
-  generalActions.setChartTabZoomFitMidCoordIsX(true);
+  generalActions.setChartTabZoomSettings(cloneDeep(defaultChartZoomSettings));
 });
 
 export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
