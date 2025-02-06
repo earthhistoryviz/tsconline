@@ -36,6 +36,7 @@ import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours"
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
 import { CrossPlotSettings } from "./crossplot/CrossPlotSettings";
+import { CrossPlotChart } from "./CrossPlotChart";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -168,7 +169,8 @@ export default observer(function App() {
             <Route path="/workshops" element={<Workshops />} />
             <Route path="/file-format-info" element={<FileFormatInfo />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
-            <Route path="/crossplot" element={<CrossPlotSettings />} />
+            <Route path="/crossplot-settings" element={<CrossPlotSettings />} />
+            <Route path="/crossplot" element={<CrossPlotChart />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
             .reverse()

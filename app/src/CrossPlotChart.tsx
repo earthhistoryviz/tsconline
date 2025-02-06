@@ -4,14 +4,7 @@ import { Chart, ChartContext } from "./Chart";
 import { useContext } from "react";
 import { context } from "./state";
 
-type ChartProps = {
-  chartContent: string;
-  zoomSettings: ChartZoomSettings;
-  setZoomSettings: (zoomSettings: Partial<ChartZoomSettings>) => void;
-  madeChart: boolean;
-  chartLoading: boolean;
-};
-export const CrossPlotChart: React.FC<ChartProps> = observer(() => {
+export const CrossPlotChart: React.FC = observer(() => {
   const { state } = useContext(context);
   return (
     <ChartContext.Provider value={{ chartTabState: state.crossPlot.state }}>

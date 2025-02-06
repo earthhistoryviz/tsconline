@@ -172,11 +172,7 @@ export const Chart: React.FC = observer(() => {
                   borderColor: theme.palette.divider,
                   visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
                 }}>
-                {false ? (
-                  <TSCCrossPlotSVGComponent svgContainerRef={svgContainerRef} />
-                ) : (
-                  <TSCSvgComponent svgContainerRef={svgContainerRef} />
-                )}
+                {false ? <TSCCrossPlotSVGComponent ref={svgContainerRef} /> : <TSCSvgComponent ref={svgContainerRef} />}
               </TransformComponent>
             </TransformWrapper>
           </div>

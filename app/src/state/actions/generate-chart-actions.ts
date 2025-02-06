@@ -111,7 +111,6 @@ export const resetChartTabStateForGeneration = action("resetChartTabStateForGene
     chartZoomSettings: cloneDeep(defaultChartZoomSettings),
     chartTimelineEnabled: false
   });
-  generalActions.setTab(3);
 });
 
 export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
@@ -122,6 +121,7 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
   resetChartTabStateForGeneration(state.chartTab.state);
+  generalActions.setTab(3);
   let chartRequest: ChartRequest | null = null;
   try {
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);

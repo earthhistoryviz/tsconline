@@ -9,7 +9,7 @@ interface SVGWindow extends Window {
 }
 
 type TSCSvgComponentProps = {
-  svgContainerRef: React.RefObject<HTMLDivElement>;
+  ref: React.RefObject<HTMLDivElement>;
 };
 
 type TimeLineElements = {
@@ -21,7 +21,7 @@ type TimeLineElements = {
   timeLabelDown: Element;
 };
 
-export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef }) => {
+export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ ref }) => {
   const { state, actions } = useContext(context);
   const { chartTabState } = useContext(ChartContext);
   const { chartTimelineEnabled, chartContent } = chartTabState;
@@ -201,16 +201,16 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
 
   // setup the timeline and label on the svg
   useEffect(() => {
-    const container = svgContainerRef.current;
+    const container = ref.current;
     if (!container) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
     setupTimelineAndLabel(svg);
     hideOrShowTimeline(chartTimelineEnabled);
-  }, [svgContainerRef.current, chartContent, chartTimelineEnabled]);
+  }, [ref.current, chartContent, chartTimelineEnabled]);
 
   useEffect(() => {
-    const container = svgContainerRef.current;
+    const container = ref.current;
     if (!container) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
@@ -237,7 +237,7 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       };
     }
   }, [
-    svgContainerRef.current,
+    ref.current,
     chartContent,
     chartTimelineEnabled,
     state.chartTab.chartTimelineLocked,
@@ -245,5 +245,5 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     timeLineElements
   ]);
 
-  return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
+  return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
 });
