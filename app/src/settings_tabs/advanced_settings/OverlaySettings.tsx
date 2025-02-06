@@ -19,8 +19,6 @@ import {
 } from "../../util/util";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import "./OverlaySettings.css";
-import { getRegex } from "../../util";
-import { attachTscPrefixToName } from "../../state/actions/util-actions";
 type OverlaySettingsProps = {
   column: ColumnInfo;
 };
@@ -35,7 +33,6 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const [showScroll, setShowScroll] = useState(false);
-  const [overlaySearchTerm, setOverlaySearchTerm] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
 
@@ -104,15 +101,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
               </Box>
             </Box>
             <Box>
-              <Typography>{t("settings.column.overlay-menu.choose-second-column")}</Typography>
-              <TextField
-                className="overlay-search-bar"
-                variant="outlined"
-                size="small"
-                label={t("settings.column.overlay-menu.search-bar")}
-                onChange={(e) => setOverlaySearchTerm(e.target.value)}
-                value={overlaySearchTerm}
-              />
+      
               <Box
                 id="DccColumnAccordionWrapper"
                 ref={scrollRef}
@@ -123,7 +112,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 position="relative">
                 {state.settingsTabs.columns &&
                   Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
-                    <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
+                    <ColumnAccordion key={childName} column={childColumn}/>
                   ))}
                 {/* Button to take users to top of column menu when scrolling */}
 
@@ -146,7 +135,6 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
 
 type ColumnAccordionProps = {
   column: ColumnInfo;
-  overlaySearchTerm: string;
 };
 
 function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, userBaseAge: number) {
@@ -188,17 +176,11 @@ function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, user
   return true;
 }
 
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, overlaySearchTerm }) => {
+const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
-
-  //for search
-  const regExp = getRegex(overlaySearchTerm);
-  if (!regExp.test(column.name) || !regExp.test(column.editName)) {
-    return;
-  }
 
   function getSelectedOverlayColumn(): string | null {
     if (!state.columnMenu.columnSelected) {
@@ -341,70 +323,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column, over
         <MuiAccordionDetails className="column-accordion-details">
           {column.children &&
             Object.entries(column.children).map(([childName, childColumn]) => (
-              <ColumnAccordion key={childName} column={childColumn} overlaySearchTerm={overlaySearchTerm} />
+              <ColumnAccordion key={childName} column={childColumn} />
             ))}
         </MuiAccordionDetails>
       </Accordion>
     </div>
   )
-
-  return (
-    <div
-      className={`column-leaf-row-container ${selectedClass}`}
-      onClick={() => {
-        if (!state.columnMenu.columnSelected) {
-          return;
-        }
-        const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-        if (!refColumn) {
-          return;
-        }
-        if (refColumn.columnDisplayType === "Point") {
-          assertPointSettings(refColumn.columnSpecificSettings);
-        } else if (refColumn.columnDisplayType === "Event") {
-          assertEventSettings(refColumn.columnSpecificSettings);
-        } else {
-          return;
-        }
-        refColumn.columnSpecificSettings.drawDualColCompColumn = attachTscPrefixToName(column.name, column.columnDisplayType);
-      }}
-      tabIndex={0}>
-      <ColumnContainer className="dcc-column-leaf">
-        {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
-          <Tooltip
-            title={t("settings.column.tooltip.not-in-range")}
-            placement="top"
-            arrow
-            slotProps={{
-              popper: {
-                modifiers: [
-                  {
-                    name: "offset",
-                    options: {
-                      offset: [0, -10]
-                    }
-                  }
-                ]
-              }
-            }}>
-            <ErrorOutlineIcon
-              className="column-error-icon"
-              style={{
-                color: theme.palette.error.main
-              }}
-            />
-          </Tooltip>
-        )}
-        <Typography
-          className={
-            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-            column.name === state.columnMenu.columnSelected
-              ? "dcc-not-allowed"
-              : "column-display-name"
-          }>
-          {column.editName}
-        </Typography>
-      </ColumnContainer>
-    </div>
-  );
 });
