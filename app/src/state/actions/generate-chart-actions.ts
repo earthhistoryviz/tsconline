@@ -102,10 +102,10 @@ function areSettingsValidForGeneration() {
   return true;
 }
 
-export const resetChartTabState = action("resetChartTabState", (oldval: ChartTabState) => {
+export const resetChartTabStateForGeneration = action("resetChartTabStateForGeneration", (oldval: ChartTabState) => {
   generalActions.setChartTabState(oldval, {
     madeChart: false,
-    chartLoading: false,
+    chartLoading: true,
     chartContent: "",
     unsafeChartContent: "",
     chartZoomSettings: cloneDeep(defaultChartZoomSettings),
@@ -121,7 +121,7 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
-  resetChartTabState(state.chartTab.state);
+  resetChartTabStateForGeneration(state.chartTab.state);
   let chartRequest: ChartRequest | null = null;
   try {
     const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
