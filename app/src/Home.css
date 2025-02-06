@@ -127,7 +127,8 @@
 }
 
 .landing-page-title {
-  font-size: 3.75rem;
+  line-height: 1.5em;
+  font-size: 2.75rem;
 }
 
 .get-started-button-landing-page {
@@ -143,7 +144,7 @@
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr 0.7fr;
+  grid-template-columns: 0.8fr 1.2fr 0.6fr;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -199,13 +200,20 @@
   transition: box-shadow 0.3s ease;
 }
 
-.sub-header-section-landing-page-text,
 .home-landing-page-carousel-text {
   backdrop-filter: blur(5px);
   display: flex;
   flex-direction: column;
   align-self: flex-start;
   padding-top: 50px;
+  gap: 5px;
+}
+
+.sub-header-section-landing-page-text {
+  display: flex;
+  flex-direction: column;
+  align-self: flex-start;
+  padding-top: 20vh;
   gap: 5px;
 }
 
@@ -272,6 +280,7 @@
 }
 
 .sub-header-section-landing-page-description {
+  margin-top: 20px;
   font-size: 1.5rem;
 }
 
@@ -287,7 +296,11 @@
 }
 
 .get-started-button-container {
-  margin: 2%;
+  position: absolute;
+  left: 50%;
+  padding: 2%;
+  margin-bottom: 10%;
+  transform: translateX(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -703,10 +716,32 @@
     margin-top: 0px;
   }
 }
+/* end of cards css */
 
-@media screen and (max-width: 1300px) {
+/* sub-section-landing-page CSS */
+@media screen and (max-width: 1950px) {
   .landing-page-title {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
+  }
+
+  .sub-header-section-landing-page-description {
+    font-size: 1.75rem;
+  }
+}
+
+@media screen and (max-width: 1500px) {
+  .landing-page-title {
+    font-size: 3rem;
+  }
+
+  .sub-header-section-landing-page-description {
+    font-size: 1.5rem;
+  }
+}
+
+@media screen and (max-width: 1350px) {
+  .landing-page-title {
+    font-size: 1.75rem;
   }
 
   .sub-header-section-landing-page-description {
@@ -727,7 +762,7 @@
   }
 
   .landing-page-title {
-    font-size: 2.25rem;
+    font-size: 1.75rem;
     text-align: center;
   }
 
@@ -749,8 +784,8 @@
     gap: 10px;
   }
 }
+/* end sub-section-landing-page CSS */
 
-/* end of cards css */
 /* carousel css */
 @media screen and (max-width: 1550px) {
   .home-landing-page-carousel-title {
@@ -838,53 +873,58 @@
 
 /* upcoming workshop */
 .upcoming-workshop-image {
-  margin-top: 15px;
-  align-items: center;
+  margin-top: 5px;
+  position: center;
   grid-area: "img";
-  border-radius: 30px;
-  width: 260px;
-  height: 120px;
+  border-radius: 20px;
+  width: 25vh;
+  height: 12vh;
   display: flex;
   overflow: hidden;
 }
 
-.upcoming-workshop-title1 { 
-  font-family: "Gill Sans"; 
-  margin-top: 10px;
-  font-size: 1.4em;
+.upcoming-workshop-title1 {
+  position: sticky;
+  font-family: "Typography";
+  margin-top: 5px;
+  font-size: 1.3em;
   white-space: nowrap;
-  border-bottom: 1px solid rgba(12, 1, 1, 0.974);
+  margin-bottom: 10px;
 }
 
-.upcoming-workshop-title2 { 
-  font-family: "Gill Sans"; 
-  font-size: 1.2em;
+.upcoming-workshop-title2 {
+  font-family: "Typography";
+  font-size: 1em;
+  line-height: 1;
   font-weight: 600;
 }
 
 .upcoming-workshop-date {
-  font-family:  "Gill Sans"; 
-  font-size: 0.8em;
+  font-family: "Typography";
+  font-size: 0.7em;
+  line-height: 1;
   text-align: left;
 }
 
 .upcoming-workshop-description {
-  font-family: 'Arial', sans-serif; 
-  font-size: 0.9em;
-  line-height: 1.2;
+  font-family: "Typography";
+  font-size: 0.8em;
+  line-height: 1;
   display: -webkit-box;
-  line-clamp:3;
-  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  line-clamp: 3;
+  -webkit-line-clamp: 3; /*Limit to 3 lines */
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .upcoming-workshop-pd {
-  margin-top: 8px;
-  margin-bottom: 16px;
-  line-height: 1.5;
+  font-family: "Typography";
+  margin-top: 5px;
+  margin-bottom: 5px;
+  line-height: 1;
   font-size: 0.8em;
   text-align: right;
+  padding-top: 2px;
 }
 /* end of upcoming workshop */

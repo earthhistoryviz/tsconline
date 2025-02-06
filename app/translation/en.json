@@ -3,7 +3,7 @@
         "landing-page": {
             "get-started": "Get Started",
             "welcome": "Welcome to TimeScale Creator!",
-            "welcome-desc": "TimeScale Creator is an advanced online cloud service designed to help you explore and visualize the geologic time scale with ease. With access to a vast internal database of over 20,000 global and regional events—including biologic, geomagnetic, sea-level, and stable isotope data—TimeScale Creator is the ultimate tool for researchers, educators, and enthusiasts of Earth history.",
+            "welcome-desc": "TimeScale Creator is an online tool for exploring the geologist time scale, with access to over 20,000 global events, ideal for researchers and Earth history enthusiasts.",
             "carousel": {
                 "customize-chart": {
                     "title": "Customize Your Chart",
@@ -292,7 +292,8 @@
                     "enable-legend": "Enable legend for the chart",
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
-                    "hide-block-labels": "Hide block labels based on priority"
+                    "hide-block-labels": "Hide block labels based on priority",
+                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
                 },
                 "settings-file": {
                     "load": "Load Settings",

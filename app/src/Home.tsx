@@ -43,10 +43,10 @@ export const Home = observer(function Home() {
   };
   return (
     <div className="whole_page">
-      <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
+      <Box sx={{ backgroundColor: "baseTheme.palette.augmentColor.color.main" }}>
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
-            <Typography className="landing-page-title" variant="h2" fontWeight="700">
+            <Typography className="landing-page-title" fontWeight="600">
               {t("landing-page.welcome")}
             </Typography>
             <Typography className="sub-header-section-landing-page-description">
@@ -57,32 +57,32 @@ export const Home = observer(function Home() {
             loading="lazy"
             rel="preload"
             className="sub-header-section-landing-page-image"
-            src={devSafeUrl("/public/website-images/landing-page.png")}
+            src={devSafeUrl("/public/website-images/landing-page2.png")}
           />
           <UpcomingWorkshops />
-        </Box>
-        <Box className="get-started-landing-page">
-          <Box
-            className="get-started-button-container"
-            onClick={handleScrollToPreset}
-            onMouseEnter={() => setHoveringGetStarted(true)}
-            onMouseLeave={() => setHoveringGetStarted(false)}>
-            <motion.div
-              animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 11 }}
-              style={{ display: "inline-block" }}>
-              <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
-                {t("landing-page.get-started")}
-              </Typography>
-            </motion.div>
-            <motion.div
-              initial={{ y: 0 }}
-              whileHover={{ y: 10 }}
-              animate={{ y: hoveringGetStarted ? 10 : 0 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              style={{ display: "inline-block" }}>
-              <ChevronRight className="get-started-button-landing-page" />
-            </motion.div>
+          <Box className="get-started-landing-page">
+            <Box
+              className="get-started-button-container"
+              onClick={handleScrollToPreset}
+              onMouseEnter={() => setHoveringGetStarted(true)}
+              onMouseLeave={() => setHoveringGetStarted(false)}>
+              <motion.div
+                animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 11 }}
+                style={{ display: "inline-block" }}>
+                <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
+                  {t("landing-page.get-started")}
+                </Typography>
+              </motion.div>
+              <motion.div
+                initial={{ y: 0 }}
+                whileHover={{ y: 10 }}
+                animate={{ y: hoveringGetStarted ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                style={{ display: "inline-block" }}>
+                <ChevronRight className="get-started-button-landing-page" />
+              </motion.div>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -556,7 +556,6 @@ const ChartCreationSteps = observer(
   })
 );
 
-
 const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops(props, ref) {
     const theme = useTheme();
@@ -567,118 +566,102 @@ const UpcomingWorkshops = observer(
         title: t("landing-page.upcoming-workshop.workshop1.title"),
         date: t("landing-page.upcoming-workshop.workshop1.time"),
         description: t("landing-page.upcoming-workshop.workshop1.description"),
-        participants:  t("landing-page.upcoming-workshop.workshop1.participants"),
+        participants: t("landing-page.upcoming-workshop.workshop1.participants"),
         dataPacks: t("landing-page.upcoming-workshop.workshop1.datapacks"),
-        image: "https://via.placeholder.com/150" 
+        image: devSafeUrl("/public/website-images/workshop1.png")
       },
       {
         title: t("landing-page.upcoming-workshop.workshop2.title"),
         date: t("landing-page.upcoming-workshop.workshop2.time"),
         description: t("landing-page.upcoming-workshop.workshop2.description"),
-        participants:  t("landing-page.upcoming-workshop.workshop2.participants"),
+        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
         dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
-        image: "https://via.placeholder.com/150"
+        image: devSafeUrl("/public/website-images/workshop2.png")
       },
+      {
+        title: t("landing-page.upcoming-workshop.workshop2.title"),
+        date: t("landing-page.upcoming-workshop.workshop2.time"),
+        description: t("landing-page.upcoming-workshop.workshop2.description"),
+        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
+        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
+        image: devSafeUrl("/public/website-images/workshop3.png")
+      },
+      {
+        title: t("landing-page.upcoming-workshop.workshop2.title"),
+        date: t("landing-page.upcoming-workshop.workshop2.time"),
+        description: t("landing-page.upcoming-workshop.workshop2.description"),
+        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
+        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
+        image: devSafeUrl("/public/website-images/workshop3.png")
+      }
     ];
-
-    const gradient = createGradient(
-      theme.palette.mainGradientLeft.main,
-      theme.palette.mainGradientRight.main
-    );
-
     return (
       <Box
         ref={ref}
         sx={{
           display: "flex",
-          height: "80vh",
-          width: "306px",
-          position: "relative",
-          top: "40px",
-          borderRadius: "60px",
+          width: "300px",
+          marginLeft: "40px",
+          marginBottom: "80px",
           flexDirection: "column",
-          border: "2px solid black",
-          backgroundColor: "rgba(195, 219, 246, 0.49)",
+          backgroundColor: "secondaryBackground.main",
           padding: "20px",
-          alignItems: "center",
-        }}
-      >
-        <Typography className="upcoming-workshop-title1" variant="h3">
-          {t("landing-page.upcoming-workshop.title")}
-        </Typography>
-        {!isMobile && (
-          <Box>              
-            {workshops.map((step, index) => (
-              <>
-                <img 
-                  loading="lazy"
-                  rel="preload"
-                  className="upcoming-workshop-image"
-                  src={devSafeUrl("/public/website-images/interactive-map-points-feature.png")}
-                  />
-                <Box key={index}
+          marginRight: "20px",
+          minHeight: "50vh",
+          maxHeight: "80vh",
+          marginTop: "40px"
+        }}>
+        <Box
+          sx={{
+            position: "sticky",
+            zIndex: 10,
+            backgroundColor: "secondaryBackground: baseTheme.palette.augmentColor.color.main"
+          }}>
+          <Typography className="upcoming-workshop-title1" variant="h3">
+            {t("landing-page.upcoming-workshop.title")}
+          </Typography>
+          <CustomDivider />
+        </Box>
+        <Box
+          sx={{
+            overflowY: "auto",
+            paddingRight: "10px",
+            maxHeight: "85vh",
+            "&::-webkit-scrollbar": {
+              width: "8px"
+            },
+            "&::-webkit-scrollbar-track": {
+              background: "white"
+            },
+            "&::-webkit-scrollbar-thumb": {
+              background: "lightgray",
+              borderRadius: "4px"
+            },
+            "&::-webkit-scrollbar-thumb:hover": {
+              background: "gray"
+            }
+          }}>
+          {!isMobile &&
+            workshops.map((step, index) => (
+              <Box key={index}>
+                <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
+                <Box
+                  key={index}
                   sx={{
-                      display: "flex",
-                      flexDirection: "column"
-                    }}
-                >
-                  <Typography className="upcoming-workshop-title2">
-                    {step.title}
-                  </Typography>
-                  <Typography className="upcoming-workshop-date">
-                    {step.date}
-                  </Typography>
-                  <Typography className="upcoming-workshop-description">
-                    {step.description}
-                  </Typography>
+                    display: "flex",
+                    flexDirection: "column"
+                  }}>
+                  <Typography className="upcoming-workshop-title2">{step.title}</Typography>
+                  <Typography className="upcoming-workshop-date">{step.date}</Typography>
+                  <Typography className="upcoming-workshop-description">{step.description}</Typography>
                   <Typography className="upcoming-workshop-pd">
                     Participants:{step.participants} Datapacks:{step.dataPacks}
                   </Typography>
                   <CustomDivider />
                 </Box>
-              </>
-            ))}
-          </Box>
-        )}
-        {/* {isMobile && (
-          <Box className="mobile-upcoming-workshops-list" sx={{ width: "90%", marginTop: "16px" }}>
-            {workshops.map((workshop, index) => (
-              <Box
-                key={index}
-                className="mobile-workshop-item"
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  marginBottom: "16px",
-                  padding: "16px",
-                  borderRadius: "12px",
-                  background: gradient.dark,
-                  color: "white"
-                }}
-              >
-                <Box
-                  component="img"
-                  src={workshop.image}
-                  alt={workshop.title}
-                  sx={{ width: "100%", height: "auto", borderRadius: "8px", marginBottom: "8px" }}
-                />
-                <Typography variant="h6" sx={{ fontWeight: "bold", textAlign: "center" }}>
-                  {workshop.title}
-                </Typography>
-                <Typography variant="caption" sx={{ textAlign: "center" }}>
-                  {workshop.date}
-                </Typography>
-                <Typography variant="body2" sx={{ marginTop: "4px", textAlign: "center" }}>
-                  {workshop.description}
-                </Typography>
-                <Typography variant="caption" sx={{ marginTop: "4px", textAlign: "center" }}>
-                  {workshop.participants} participants • {workshop.dataPacks} datapacks
-                </Typography>
               </Box>
             ))}
-          </Box>
-        )} */}
+        </Box>
       </Box>
     );
   })
