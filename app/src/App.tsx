@@ -148,8 +148,7 @@ export default observer(function App() {
             <Route
               path="/chart"
               element={
-                <ChartContext.Provider
-                  value={{chartTabState: state.chartTab.state}}>
+                <ChartContext.Provider value={{ chartTabState: state.chartTab.state }}>
                   <Chart />
                 </ChartContext.Provider>
               }

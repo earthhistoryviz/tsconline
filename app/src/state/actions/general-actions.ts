@@ -1211,7 +1211,8 @@ export const setChartTabState = action("setChartTabState", (oldval: ChartTabStat
   if (!isObservable(oldval)) {
     throw new Error("oldval is not observable");
   }
-  if (newval.chartZoomSettings !== undefined) setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
+  if (newval.chartZoomSettings !== undefined)
+    setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
   if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
   if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
   if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
@@ -1222,19 +1223,23 @@ export const setChartTabState = action("setChartTabState", (oldval: ChartTabStat
   if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });
 
-export const setChartTabZoomSettings = action("setChartTabZoomSettings", (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
-  if (!isObservable(oldval)) {
-    throw new Error("oldval is not observable");
+export const setChartTabZoomSettings = action(
+  "setChartTabZoomSettings",
+  (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
+    if (!isObservable(oldval)) {
+      throw new Error("oldval is not observable");
+    }
+    if (newval.enableScrollZoom !== undefined)
+      state.chartTab.state.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+    if (newval.resetMidX !== undefined) state.chartTab.state.chartZoomSettings.resetMidX = newval.resetMidX;
+    if (newval.scale !== undefined) state.chartTab.state.chartZoomSettings.scale = newval.scale;
+    if (newval.zoomFitMidCoord !== undefined)
+      state.chartTab.state.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+    if (newval.zoomFitScale !== undefined) state.chartTab.state.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+    if (newval.zoomFitMidCoordIsX !== undefined)
+      state.chartTab.state.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
   }
-  if (newval.enableScrollZoom !== undefined)
-    state.chartTab.state.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
-  if (newval.resetMidX !== undefined) state.chartTab.state.chartZoomSettings.resetMidX = newval.resetMidX;
-  if (newval.scale !== undefined) state.chartTab.state.chartZoomSettings.scale = newval.scale;
-  if (newval.zoomFitMidCoord !== undefined) state.chartTab.state.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
-  if (newval.zoomFitScale !== undefined) state.chartTab.state.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
-  if (newval.zoomFitMidCoordIsX !== undefined)
-    state.chartTab.state.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
-});
+);
 
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
