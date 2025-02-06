@@ -179,9 +179,13 @@
                 "files": "Files",
                 "download-button": "Download Files",
                 "description": "Description",
+                "register-button": "Register",
+                "registered-button": "Already Registered",
                 "messages": {
                     "no-datapacks": "No datapacks available",
-                    "no-files": "No files available"
+                    "no-files": "No files available",
+                    "not-registered": "Contact jogg@purdue.edu to register!"
+
                 }
             },
             "calendar": {
