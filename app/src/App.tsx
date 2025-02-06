@@ -35,6 +35,7 @@ import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
 import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
+import { CrossPlotSettings } from "./crossplot/CrossPlotSettings";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -144,7 +145,18 @@ export default observer(function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/chart" element={<Chart />} />
+            <Route
+              path="/chart"
+              element={
+                <Chart
+                  chartContent={state.chartContent}
+                  zoomSettings={state.chartTab.chartZoomSettings}
+                  setZoomSettings={actions.setChartTabZoomSettings}
+                  madeChart={state.madeChart}
+                  chartLoading={state.chartLoading}
+                />
+              }
+            />
             <Route path="/help" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
@@ -160,6 +172,7 @@ export default observer(function App() {
             <Route path="/workshops" element={<Workshops />} />
             <Route path="/file-format-info" element={<FileFormatInfo />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
+            <Route path="/crossplot" element={<CrossPlotSettings />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
             .reverse()
@@ -177,7 +190,7 @@ export default observer(function App() {
             title={t("dialogs.default-age.title")}
             onYes={() => actions.handlePopupResponse(true, navigate)}
             onNo={() => actions.handlePopupResponse(false, navigate)}
-            onClose={() => actions.fetchChartFromServer(navigate)}
+            onClose={() => actions.compileChartRequest(navigate)}
           />
           <TSCDialogLoader
             open={state.isProcessingDatapacks}

@@ -10,7 +10,10 @@ import {
   SettingsTabs,
   User,
   GroupedEventSearchInfo,
-  EditableDatapackMetadata
+  EditableDatapackMetadata,
+  CrossPlotSettingsTabs,
+  CrossPlotTimeSettings,
+  ChartZoomSettings
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -30,24 +33,25 @@ import type {
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
-import { settings } from "../constants";
+import { defaultChartZoomSettings, defaultCrossPlotSettings, settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
+import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
 export type State = {
   chartTab: {
     chartTimelineEnabled: boolean;
     chartTimelineLocked: boolean;
-    scale: number;
-    zoomFitScale: number;
-    resetMidX: number;
-    zoomFitMidCoord: number;
-    zoomFitMidCoordIsX: boolean;
+    crossPlot: {
+      lockX: boolean;
+      lockY: boolean;
+      isCrossPlot: boolean;
+    };
+    chartZoomSettings: ChartZoomSettings;
     downloadFilename: string;
     downloadFiletype: "svg" | "pdf" | "png";
     isSavingChart: boolean;
-    enableScrollZoom: boolean;
     unsafeChartContent: string;
   };
   loadSaveFilename: string;
@@ -66,6 +70,13 @@ export type State = {
     columnSelected: string | null;
     tabs: string[];
     tabValue: number;
+  };
+  crossplotSettingsTabs: {
+    selected: CrossPlotSettingsTabs;
+    chartXTimeSettings: CrossPlotTimeSettings;
+    chartYTimeSettings: CrossPlotTimeSettings;
+    chartX: ColumnInfo | undefined;
+    chartY: ColumnInfo | undefined;
   };
   settingsTabs: {
     selected: SettingsTabs;
@@ -152,15 +163,15 @@ export const state = observable<State>({
   chartTab: {
     chartTimelineEnabled: false,
     chartTimelineLocked: false,
-    scale: 1,
-    zoomFitScale: 1,
-    resetMidX: 0,
-    zoomFitMidCoord: 0,
-    zoomFitMidCoordIsX: true,
+    crossPlot: {
+      lockX: false,
+      lockY: false,
+      isCrossPlot: false
+    },
+    chartZoomSettings: cloneDeep(defaultChartZoomSettings),
     downloadFilename: "chart",
     downloadFiletype: "svg",
     isSavingChart: false,
-    enableScrollZoom: false,
     unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
@@ -208,6 +219,13 @@ export const state = observable<State>({
     columnSelected: null,
     tabs: ["General", "Font"],
     tabValue: 0
+  },
+  crossplotSettingsTabs: {
+    selected: "xAxis",
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartX: undefined,
+    chartY: undefined
   },
   settingsTabs: {
     selected: "time",

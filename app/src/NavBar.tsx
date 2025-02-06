@@ -99,7 +99,7 @@ export const NavBar = observer(function Navbar() {
             <Tabs
               value={state.tab || false}
               onChange={(_e, value) => {
-                if (value === 3) settingsMenuToggle(false);
+                if (value === 4) settingsMenuToggle(false);
                 actions.setTab(value);
               }}
               //override the TSCTabs since it has the dark navbar

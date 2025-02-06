@@ -134,6 +134,23 @@ export type Config = {
   settingsPath: string;
 };
 
+export const CrossPlotSettingsTabs = {
+  xAxis: "xAxis",
+  yAxis: "yAxis",
+  column: "Column"
+};
+
+export type ChartZoomSettings = {
+  scale: number;
+  zoomFitScale: number;
+  zoomFitMidCoord: number;
+  zoomFitMidCoordIsX: boolean;
+  resetMidX: number;
+  enableScrollZoom: boolean;
+};
+
+export type CrossPlotSettingsTabs = keyof typeof CrossPlotSettingsTabs;
+
 export const SettingsMenuOptionLabels = {
   time: "Time",
   preferences: "Preferences",
@@ -163,6 +180,11 @@ export type TimeSettings = {
     skipEmptyColumns: boolean;
   };
 };
+export type CrossPlotTimeSettings = {
+  topStageAge: number;
+  baseStageAge: number;
+  unitsPerMY: number;
+};
 export type ChartSettings = {
   timeSettings: TimeSettings;
   noIndentPattern: boolean;
@@ -172,7 +194,6 @@ export type ChartSettings = {
   enableHideBlockLabel: boolean;
   mouseOverPopupsEnabled: boolean;
   datapackContainsSuggAge: boolean;
-  useDatapackSuggestedAge: boolean;
 };
 
 export type EditableUserProperties = {
@@ -254,8 +275,7 @@ export function equalChartSettings(a: ChartSettings, b: ChartSettings): boolean 
     a.enablePriority === b.enablePriority &&
     a.enableHideBlockLabel === b.enableHideBlockLabel &&
     a.mouseOverPopupsEnabled === b.mouseOverPopupsEnabled &&
-    a.datapackContainsSuggAge === b.datapackContainsSuggAge &&
-    a.useDatapackSuggestedAge === b.useDatapackSuggestedAge
+    a.datapackContainsSuggAge === b.datapackContainsSuggAge
   );
 }
 export function equalConfig(a: Config, b: Config): boolean {

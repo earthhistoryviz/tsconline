@@ -10,19 +10,174 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: 
+    environment:
       name: development
       url: ${{ vars.WEBSITE_URL }}
     steps:
-      - name: Set up SSH key
-        uses: webfactory/ssh-agent@v0.5.3
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          fetch-depth: 0
 
-      - name: Add known hosts
+      - name: Extract PR number
+        id: extract_pr_number
         run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+          PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number detected in the commit message."
+            echo "pr_number=" >> $GITHUB_OUTPUT
+          else
+            echo "Detected PR number: $PR_NUMBER"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Download PR Artifacts if PR number is present
+        id: download_pr_artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "${{ steps.extract_pr_number.outputs.pr_number }}" ]; then
+            echo "No PR number detected. Skipping download."
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No build artifact found."
+          else
+            echo "Build download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
+          fi
+          if [ -f "build-artifacts.zip" ]; then
+            echo "build_download_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          fi
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No jar artifact found."
+          else
+            echo "Jar download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
+            unzip -q jar.zip
+          fi
+          if [ -f "jar.zip" ]; then
+            echo "jar_download_status=success" >> $GITHUB_OUTPUT
+            echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
+          else
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
+
+      - name: Install and build project
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
+        run: |
+          yarn
+          yarn build
+          zip -q -r build-artifacts.zip app/dist shared/dist server/dist
+
+      - name: Compare old vs. new activeJar
+        id: check_active_jar
+        run: |
+          OLD_COMMIT="${{ github.event.before }}"
+          NEW_COMMIT="${{ github.event.after }}"
+
+          echo "Old commit SHA: $OLD_COMMIT"
+          echo "New commit SHA: $NEW_COMMIT"
+
+          OLD_JAR=$(git show "$OLD_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
+
+          NEW_JAR=$(git show "$NEW_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
+
+          echo "Old activeJar: $OLD_JAR"
+          echo "New activeJar: $NEW_JAR"
+
+          if [ "$OLD_JAR" == "null" ] || [ "$NEW_JAR" == "null" ]; then
+            echo "Error: Failed to get activeJar from config.json"
+            exit 1
+          fi
+          if [ "$OLD_JAR" != "$NEW_JAR" ]; then
+            echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Determine if building Jar is necessary
+        id: build_necessary
+        run: |
+          if [ -z "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" ] || [ "${{ steps.check_active_jar.outputs.new_active_jar }}" != "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
+            echo "Build is necessary."
+            echo "build_necessary=true" >> $GITHUB_OUTPUT
+          else
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up SSH key
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        run: |
+          eval $(ssh-agent)
           mkdir -p ~/.ssh
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Set up jdk
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+
+      - name: Checkout code and build jar
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} \;
+          if [ -f  ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+
+      - name: Send Artifacts to Server
+        run: |
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            exit 1
+          fi
+          FILES_TO_SEND="build-artifacts.zip"
+          if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+            FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
+          fi
+
+          echo "Sending files: $FILES_TO_SEND"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -42,6 +197,12 @@ jobs:
               echo "git pull failed with exit status $PULL_STATUS"
               echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
               exit 1
+            fi
+
+            unzip -q -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
+            rm build-artifacts.zip
+            if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+              mv ${{ steps.check_active_jar.outputs.new_active_jar }} ${{ secrets.DEV_PATH }}/server/assets/jars
             fi
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
@@ -101,3 +262,25 @@ jobs:
               sleep $INTERVAL
               ELAPSED=$((ELAPSED + INTERVAL))
             done
+
+      - name: Delete build artifacts
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
+
+      - name: Delete jar artifact
+        if: steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $JAR_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done

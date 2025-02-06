@@ -12,9 +12,25 @@ type TSCSvgComponentProps = {
   svgContainerRef: React.RefObject<HTMLDivElement>;
 };
 
+type TimeLineElements = {
+  timeline: Element;
+  timelineUp: Element;
+  timelineDown: Element;
+  timeLabel: Element;
+  timeLabelUp: Element;
+  timeLabelDown: Element;
+};
+
 export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgContainerRef, chartContent }) => {
   const { state, actions } = useContext(context);
+  const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
 
+  /**
+   *  handle the mouse events on the svg elements for popups
+   * @param evt
+   * @param container
+   * @returns
+   */
   const handleSvgEvent = (evt: MouseEvent, container: HTMLElement) => {
     const target = evt.target as HTMLElement;
     const svgEventWindow = window as SVGWindow;
@@ -59,18 +75,40 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     }
   };
 
+  /**
+   * setup the non crossPlot elements and positioning of the timeline and label on the non crossplot svg
+   * @param svg
+   * @returns
+   */
   const setupTimelineAndLabel = (svg: SVGSVGElement) => {
+    setTimeLineElements({
+      timeline: svg.getElementById("timeline"),
+      timelineUp: svg.getElementById("timeline_up"),
+      timelineDown: svg.getElementById("timeline_down"),
+      timeLabel: svg.getElementById("TimeLineLabel"),
+      timeLabelUp: svg.getElementById("TimeLineLabelUp"),
+      timeLabelDown: svg.getElementById("TimeLineLabelDown")
+    });
     if (svg.getElementById("timeline")) return;
     //sanitizing the svg removes timeline id, so add it back
     const timeline = document.createElementNS("http://www.w3.org/2000/svg", "line");
     timeline.setAttribute("id", "timeline");
     //timeline_up and timeline_down are still in the svg after sanitization
     const timelineUp = svg.getElementById("timeline_up");
+    if (!timelineUp) return;
     for (const attr of timelineUp.attributes) {
       if (attr.name === "id") continue;
       timeline.setAttribute(attr.name, attr.value);
     }
     svg.appendChild(timeline);
+    setTimeLineElements({
+      timeline,
+      timelineUp,
+      timelineDown: svg.getElementById("timeline_down"),
+      timeLabel: svg.getElementById("TimeLineLabel"),
+      timeLabelUp: svg.getElementById("TimeLineLabelUp"),
+      timeLabelDown: svg.getElementById("TimeLineLabelDown")
+    });
     const timeLabelUp = svg.getElementById("TimeLineLabelUp");
     const timeLabelDown = svg.getElementById("TimeLineLabelDown");
     if (!timeLabelUp.firstChild || !timeLabelDown.firstChild) return;
@@ -78,14 +116,17 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     timeLabelDown.firstChild.nodeValue = "+1";
   };
 
+  /**
+   * handle the cursor and timeline movement on the non crossplot svg
+   * @param evt
+   * @param svg
+   * @returns
+   */
   const handleTimeline = (evt: MouseEvent, svg: SVGSVGElement) => {
-    if (!state.chartTab.chartTimelineEnabled) return;
-    const timeline = svg.getElementById("timeline");
-    const timelineUp = svg.getElementById("timeline_up");
-    const timelineDown = svg.getElementById("timeline_down");
-    const timeLabel = svg.getElementById("TimeLineLabel");
-    const timeLabelUp = svg.getElementById("TimeLineLabelUp");
-    const timeLabelDown = svg.getElementById("TimeLineLabelDown");
+    if (!timeLineElements) {
+      return;
+    }
+    const { timeline, timelineUp, timelineDown, timeLabel, timeLabelUp, timeLabelDown } = timeLineElements;
     //cursor location
     let point = new DOMPoint();
     point.x = evt.clientX;
@@ -134,13 +175,14 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     }
   };
 
-  const hideOrShowTimeline = (svg: SVGSVGElement, show: boolean) => {
-    const timeline = svg.getElementById("timeline");
-    const timelineUp = svg.getElementById("timeline_up");
-    const timelineDown = svg.getElementById("timeline_down");
-    const timeLabel = svg.getElementById("TimeLineLabel");
-    const timeLabelUp = svg.getElementById("TimeLineLabelUp");
-    const timeLabelDown = svg.getElementById("TimeLineLabelDown");
+  /**
+   * hide or show the timeline on the non crossplot svg
+   */
+  const hideOrShowTimeline = (show: boolean) => {
+    if (!timeLineElements) {
+      return;
+    }
+    const { timeline, timelineUp, timelineDown, timeLabel, timeLabelUp, timeLabelDown } = timeLineElements;
     timeline.setAttribute("style", show ? "stroke: red; stroke-width: 0.5; stroke-opacity: 1;" : "stroke-opacity: 0;");
     timelineUp.setAttribute(
       "style",
@@ -155,14 +197,24 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
     timeLabelDown.setAttribute("style", show ? "font-size: 10; fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
   };
 
+  // setup the timeline and label on the svg
   useEffect(() => {
     const container = svgContainerRef.current;
     if (!container) return;
     const svg = container.querySelector("svg");
     if (!svg) return;
     setupTimelineAndLabel(svg);
-    hideOrShowTimeline(svg, state.chartTab.chartTimelineEnabled);
+    hideOrShowTimeline(state.chartTab.chartTimelineEnabled);
+  }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
+
+  useEffect(() => {
+    const container = svgContainerRef.current;
+    if (!container) return;
+    const svg = container.querySelector("svg");
+    if (!svg) return;
+    // either timeline or popups
     if (state.chartTab.chartTimelineEnabled) {
+      // crossplot or non crossplot
       const eventListenerWrapper = (evt: MouseEvent) => handleTimeline(evt, svg);
       const lockTimeline = () => actions.setChartTimelineLocked(!state.chartTab.chartTimelineLocked);
       container.addEventListener("mousemove", eventListenerWrapper);
@@ -183,10 +235,12 @@ export const TSCSvgComponent: React.FC<TSCSvgComponentProps> = observer(({ svgCo
       };
     }
   }, [
+    svgContainerRef.current,
     chartContent,
     state.chartTab.chartTimelineEnabled,
     state.chartTab.chartTimelineLocked,
-    state.prevSettings.mouseOverPopupsEnabled
+    state.prevSettings.mouseOverPopupsEnabled,
+    timeLineElements
   ]);
 
   return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
