@@ -10,14 +10,47 @@ import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
+import { useState } from "react";
+import Loader from '@emotion/react';
+const { t, i18n } = useTranslation();
 
 // TODO: change this when backend is finished
+
+//for testing
+console.log("Loaded translations:", i18n.getResourceBundle(i18n.language, "translation"));
+console.log("Register button text:", t("workshops.details-page.register-button"));
 
 export const WorkshopDetails = observer(() => {
   const { state } = useContext(context);
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
+
+  const [isRegistered] = useState(true);
+  const [buttonSwitchNotReg, setButtonBool] = useState(false);
+  const [switchColorsBool, setColorBool] = useState(false);
+  const [loading, setLoading] = useState(false);  
+
+  const handleRegisterClick = () => {
+    setColorBool(true)
+    setLoading(true)
+    setTimeout(() => {
+      if (isRegistered) 
+      {
+        setButtonBool(true)
+        setLoading(false)
+      } 
+      else 
+      {
+        alert(t("workshops.details-page.messages.not-registered")); 
+        setLoading(false)
+      }
+    }, 2000);
+
+  };
+
+
+  
   const fetchWorkshop = () => {
     if (!id) return;
     const workshop = state.workshops.find((d) => d.workshopId === Number(id));
@@ -83,9 +116,24 @@ export const WorkshopDetails = observer(() => {
                   ) : (
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
-                  <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} href={fetchWorkshopFiles()}>
-                    {t("workshops.details-page.download-button")}
-                  </TSCButton>
+                  <Box sx={{ display: 'flex', marginTop: 2}}>
+
+                  <TSCButton
+                       href={fetchWorkshopFiles()}
+                       variant="contained"
+                      sx={{
+                        marginRight: 2, backgroundColor: switchColorsBool ? 'grey' : 'secondary'
+                      }}
+                      onClick={handleRegisterClick}
+                    >
+                      {buttonSwitchNotReg ? t("workshops.details-page.registered-button"):  t("workshops.details-page.register-button")}
+                    </TSCButton>
+
+
+                    <TSCButton variant="contained" color="primary"  href={fetchWorkshopFiles()}>
+                      {t("workshops.details-page.download-button")}
+                    </TSCButton>
+                  </Box>
                 </>
               </Box>
             </div>
