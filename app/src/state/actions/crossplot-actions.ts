@@ -104,7 +104,8 @@ export const compileCrossPlotChartRequest = action(
         chartContent: response.chartContent,
         chartHash: response.hash,
         madeChart: true,
-        unsafeChartContent: response.unsafeChartContent
+        unsafeChartContent: response.unsafeChartContent,
+        chartTimelineEnabled: true
       });
     } catch (e) {
       console.error(e);

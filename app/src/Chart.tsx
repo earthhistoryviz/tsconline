@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { Children, createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -18,7 +18,11 @@ export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
 });
 
-export const Chart: React.FC = observer(() => {
+type ChartProps = {
+  Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
+};
+
+export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
@@ -172,7 +176,7 @@ export const Chart: React.FC = observer(() => {
                   borderColor: theme.palette.divider,
                   visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
                 }}>
-                {false ? <TSCCrossPlotSVGComponent ref={svgContainerRef} /> : <TSCSvgComponent ref={svgContainerRef} />}
+                {<Component ref={svgContainerRef} />}
               </TransformComponent>
             </TransformWrapper>
           </div>
