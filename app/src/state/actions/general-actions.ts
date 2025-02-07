@@ -1225,15 +1225,12 @@ export const setChartTabZoomSettings = action(
     if (!isObservable(oldval)) {
       throw new Error("oldval is not observable");
     }
-    if (newval.enableScrollZoom !== undefined)
-      state.chartTab.state.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
-    if (newval.resetMidX !== undefined) state.chartTab.state.chartZoomSettings.resetMidX = newval.resetMidX;
-    if (newval.scale !== undefined) state.chartTab.state.chartZoomSettings.scale = newval.scale;
-    if (newval.zoomFitMidCoord !== undefined)
-      state.chartTab.state.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
-    if (newval.zoomFitScale !== undefined) state.chartTab.state.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
-    if (newval.zoomFitMidCoordIsX !== undefined)
-      state.chartTab.state.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+    if (newval.enableScrollZoom !== undefined) oldval.enableScrollZoom = newval.enableScrollZoom;
+    if (newval.resetMidX !== undefined) oldval.resetMidX = newval.resetMidX;
+    if (newval.zoomFitMidCoord !== undefined) oldval.zoomFitMidCoord = newval.zoomFitMidCoord;
+    if (newval.zoomFitMidCoordIsX !== undefined) oldval.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+    if (newval.zoomFitScale !== undefined) oldval.zoomFitScale = newval.zoomFitScale;
+    if (newval.scale !== undefined) oldval.scale = newval.scale;
   }
 );
 
