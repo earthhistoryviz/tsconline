@@ -197,8 +197,7 @@
                     "friday": "Fri",
                     "saturday": "Sat"
                 },
-                "months": 
-                {
+                "months": {
                     "1": "January",
                     "2": "February",
                     "3": "March",
@@ -220,6 +219,14 @@
             "time": "this could take more than a minute",
             "fetching-datapacks": "Fetching Datapacks"
         },
+        "crossPlot": {
+            "time": {
+                "select-unit": "Please select a unit.",
+                "no-chart-units-available": "No datapacks selected",
+                "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
+                "select-datapack": "Please select a datapack."
+            }
+        },
         "settingsTabs": {
             "Time": "Time",
             "Preferences": "Preferences",
@@ -235,7 +242,9 @@
             "View Data": "View Data",
             "Discussion": "Discussion",
             "Warnings": "Warnings",
-            "Load/Save": "Load/Save"
+            "Load/Save": "Load/Save",
+            "xAxis": "X Axis (Age-only)",
+            "yAxis": "Y Axis (Age/Depth)"
         },
         "settings": {
             "time": {
@@ -246,7 +255,8 @@
                     "base-name": "Base Age/Stage Name",
                     "not-avaliable": "Not Available for this Unit",
                     "vertical-scale": "Vertical Scale (cm per 1 ",
-                    "helper-text": "Base age should be older than top age"
+                    "helper-text": "Base age should be older than top age",
+                    "vertical-scale-header": "Vertical Scale"
                 }
             },
             "preferences": {
@@ -562,7 +572,8 @@
             "generate": "Generate",
             "generate-chart": "Generate Chart",
             "remove-cache": "Remove Cache",
-            "confirm-selection": "Confirm Selection"
+            "confirm-selection": "Confirm Selection",
+            "generate-cross-plot": "Generate Cross Plot"
         },
         "yes": "Yes",
         "no": "No",

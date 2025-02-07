@@ -46,6 +46,8 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  ChartZoomSettings,
+  CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -568,6 +570,8 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
+      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
@@ -684,6 +688,26 @@ export const settingOptions = [
   }
 ];
 
+export const setCrossPlotSettingsTabsSelected = action((newtab: number | CrossPlotSettingsTabs) => {
+  if (typeof newtab === "string") {
+    state.crossplotSettingsTabs.selected = newtab;
+    return;
+  }
+  switch (newtab) {
+    case 0:
+      state.crossplotSettingsTabs.selected = "xAxis";
+      break;
+    case 1:
+      state.crossplotSettingsTabs.selected = "yAxis";
+      break;
+    case 2:
+      state.crossplotSettingsTabs.selected = "column";
+      break;
+    default:
+      console.log("WARNING: setCrossPlotSettingsTabsSelected: received index number that is unknown: ", newtab);
+      state.crossplotSettingsTabs.selected = "xAxis";
+  }
+});
 /**
  * set the settings tab based on a string or number
  */
@@ -1220,31 +1244,23 @@ export const setCookies = action("setCookies", (newval: boolean) => {
   localStorage.setItem("cookieConsent", newval.toString());
 });
 
-export const setChartTabScale = action("setChartTabScale", (newval: number) => {
-  state.chartTab.scale = newval;
+export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
+  state.chartTab.downloadFiletype = newval;
 });
 
-export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval: number) => {
-  state.chartTab.zoomFitScale = newval;
-});
-export const setChartTabResetMidX = action("setChartTabResetMidX", (newval: number) => {
-  state.chartTab.resetMidX = newval;
-});
-export const setChartTabZoomFitMidCoord = action("setChartTabZoomFitMidCoord", (newval: number) => {
-  state.chartTab.zoomFitMidCoord = newval;
-});
-export const setChartTabZoomFitMidCoordIsX = action("setChartTabZoomFitMidCoordIsX", (newval: boolean) => {
-  state.chartTab.zoomFitMidCoordIsX = newval;
-});
 export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
   state.chartTab.downloadFilename = newval;
 });
 
-export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
-  state.chartTab.downloadFiletype = newval;
-});
-export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
-  state.chartTab.enableScrollZoom = newval;
+export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
+  if (newval.enableScrollZoom !== undefined)
+    state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
+  if (newval.resetMidX !== undefined) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
+  if (newval.scale !== undefined) state.chartTab.chartZoomSettings.scale = newval.scale;
+  if (newval.zoomFitMidCoord !== undefined) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
+  if (newval.zoomFitScale !== undefined) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
+  if (newval.zoomFitMidCoordIsX !== undefined)
+    state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
 });
 
 export const setChartTabIsSavingChart = action((term: boolean) => {
@@ -1354,4 +1370,11 @@ export const setCrossPlotLockX = action((lockX: boolean) => {
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
   state.chartTab.crossPlot.lockY = lockY;
+});
+
+export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartX = chart;
+});
+export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+  state.crossplotSettingsTabs.chartY = chart;
 });

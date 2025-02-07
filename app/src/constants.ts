@@ -1,4 +1,4 @@
-import { ChartSettings } from "./types";
+import { ChartSettings, ChartZoomSettings, CrossPlotTimeSettings } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {
@@ -28,4 +28,20 @@ export const defaultTimeSettings = {
   baseStageKey: "",
   unitsPerMY: 2,
   skipEmptyColumns: true
+};
+
+export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
+  topStageAge: 0,
+  baseStageAge: 10,
+  unitsPerMY: 2
+};
+export const isDevServer = window.location.hostname === "www.dev.timescalecreator.org" || "www.pr-preview.geolex.org";
+
+export const defaultChartZoomSettings: ChartZoomSettings = {
+  zoomFitScale: 1,
+  zoomFitMidCoord: 0,
+  zoomFitMidCoordIsX: true,
+  resetMidX: 0,
+  scale: 1,
+  enableScrollZoom: false
 };
