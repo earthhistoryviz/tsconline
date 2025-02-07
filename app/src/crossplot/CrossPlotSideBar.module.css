@@ -1,6 +1,10 @@
 .crossPlotSideBar {
   display: grid;
-  background-color: #f5f5f5;
-  border-right: 1px solid #e0e0e0;
   overflow-y: auto;
+}
+
+.leftTabs {
+  display: grid;
+  grid-template-columns: 1fr;
+  width: var(--side-bar-width);
 }

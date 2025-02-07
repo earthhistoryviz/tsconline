@@ -13,7 +13,14 @@ export const CrossPlotChart: React.FC = observer(() => {
     <ChartContext.Provider value={{ chartTabState: state.crossPlot.state }}>
       <Box className={styles.container} gridTemplateColumns="26.5vw 73.5vw">
         <CrossPlotSideBar />
-        <Chart Component={TSCCrossPlotSVGComponent} width="73.5vw" />
+        <Chart
+          Component={TSCCrossPlotSVGComponent}
+          style={{
+            border: "none",
+            borderTop: "2px solid",
+            width: "73.5vw"
+          }}
+        />
       </Box>
     </ChartContext.Provider>
   );

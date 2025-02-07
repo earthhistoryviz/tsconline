@@ -156,6 +156,13 @@ export const CrossPlotSettingsTabs = {
   column: "Column"
 };
 
+export const CrossPlotTabs = {
+  time: "Time",
+  column: "Column",
+  markers: "Markers"
+};
+export type CrossPlotTab = keyof typeof CrossPlotTabs;
+
 export type ChartZoomSettings = {
   scale: number;
   zoomFitScale: number;
