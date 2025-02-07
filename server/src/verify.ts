@@ -25,12 +25,13 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
 }
 
 async function verify(token: string) {
-  const secret = process.env.RECAPTCHA_SECRET_KEY; // Ensure the secret key is taken from the environment variable
+  const secret = process.env.RECAPTCHA_SECRET_KEY; 
   const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
   const httpResponse = await fetch(url, { method: "POST" });
 
   if (httpResponse.ok) {
     const data = await httpResponse.json();
+    console.log(data)
     return data;
   }
 
