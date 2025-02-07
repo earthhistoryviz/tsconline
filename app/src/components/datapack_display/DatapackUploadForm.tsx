@@ -59,7 +59,12 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
       <CustomDivider />
       <form onSubmit={handlers.handleSubmit}>
         <StyledScrollbar className="datapack-upload-form-container">
-          <Box display="flex" flexDirection="row" justifyContent="flex-start" gap="100px" margin="10px">
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", sm: "row" }}
+            justifyContent="flex-start"
+            gap={{ xs: "15px", sm: "100px" }}
+            margin="10px">
             <UploadProfilePicture
               profileImageRef={state.profileImageRef}
               profileImage={state.profileImage}
@@ -81,6 +86,30 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
                   <DeleteOutline className="close-icon" />
                 </IconButton>
               )}
+            </Box>
+            <Box className="file-upload">
+              <InputFileUpload
+                startIcon={<CloudUploadIcon />}
+                text={"PDF Upload"}
+                variant="contained"
+                onChange={handlers.handlePDFFileUpload}
+                accept=".pdf"
+                multiple={true}
+              />
+              <div className="datapack-pdf-file-div">
+                {state.pdfFiles.length !== 0
+                  ? Array.from(state.pdfFiles).map((file) => (
+                      <div className="datapack-pdf-file-container" key={file.name}>
+                        <Typography className="file-upload-text" variant="body2">
+                          {file ? file.name : t("settings.datapacks.upload-form.no-file")}
+                        </Typography>
+                        <IconButton className="icon" onClick={() => handlers.handlePDFFileDelete(file.name)}>
+                          <DeleteOutline className="close-icon" />
+                        </IconButton>
+                      </div>
+                    ))
+                  : t("settings.datapacks.upload-form.no-file")}
+              </div>
             </Box>
           </Box>
           <Box gap="10px" display="flex">
