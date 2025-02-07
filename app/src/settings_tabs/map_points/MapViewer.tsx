@@ -79,7 +79,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapStyle = {
     height: mapHeight
   };
-
   return (
     <div ref={mapViewerRef}>
       <HeaderBar isFacies={isFacies} name={name} />
