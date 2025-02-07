@@ -140,7 +140,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { state, actions } = useContext(context);
     const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;
-    console.log("chartTimelineEnabled", chartTimelineEnabled);
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;

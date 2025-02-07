@@ -64,7 +64,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
         zoomFitMidCoordIsX: true
       });
     }
-
     actions.setChartTabZoomSettings(chartZoomSettings, {
       resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
     });
@@ -75,10 +74,11 @@ export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
   useEffect(() => {
     setSetup(false);
     const container = transformContainerRef.current;
-    if (!container) return;
+    const content = svgContainerRef.current;
+    if (!container || !content) return;
     setChartAlignmentValues();
     setSetup(true);
-  }, [chartContent, transformContainerRef.current]);
+  }, [chartContent, transformContainerRef.current, svgContainerRef.current, svgContainerRef, transformContainerRef]);
 
   useEffect(() => {
     const container = transformContainerRef.current;
