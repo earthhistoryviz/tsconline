@@ -13,7 +13,8 @@ import {
   EditableDatapackMetadata,
   CrossPlotSettingsTabs,
   CrossPlotTimeSettings,
-  ChartTabState
+  ChartTabState,
+  CrossPlotTab
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -45,6 +46,7 @@ export type State = {
     state: ChartTabState;
   };
   crossPlot: {
+    tab: CrossPlotTab;
     lockX: boolean;
     lockY: boolean;
     state: ChartTabState;
@@ -156,6 +158,7 @@ export const state = observable<State>({
     state: cloneDeep(defaultChartTabState)
   },
   crossPlot: {
+    tab: "time",
     lockX: false,
     lockY: false,
     state: cloneDeep(defaultChartTabState)
