@@ -5,12 +5,11 @@ import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
 import { context } from "./state";
-import { TSCCrossPlotSVGComponent } from "./components/TSCCrossPlotSVGComponent";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 
@@ -20,9 +19,11 @@ export const ChartContext = createContext<ChartContextType>({
 
 type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
+  width?: string;
+  height?: string;
 };
 
-export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
+export const Chart: React.FC<ChartProps> = observer(({ Component, height, width }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
@@ -138,14 +139,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
   const { t } = useTranslation();
 
   return (
-    <div
-      style={{
-        height: "94vh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignContent: "center"
-      }}>
+    <Box className="chart-container">
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
@@ -170,8 +164,8 @@ export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
               disablePadding={true}>
               <TransformComponent
                 wrapperStyle={{
-                  height: "84vh",
-                  width: "80vw",
+                  height: height ?? "84vh",
+                  width: width ?? "80vw",
                   border: "2px solid",
                   borderColor: theme.palette.divider,
                   visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
@@ -187,6 +181,17 @@ export const Chart: React.FC<ChartProps> = observer(({ Component }) => {
         </div>
       )}
       <TSCPopupManager />
-    </div>
+    </Box>
+  );
+});
+
+export const ChartTab: React.FC = observer(() => {
+  const { state } = useContext(context);
+  return (
+    <ChartContext.Provider value={{ chartTabState: state.chartTab.state }}>
+      <Box className="chart-tab">
+        <Chart Component={TSCSvgComponent} />
+      </Box>
+    </ChartContext.Provider>
   );
 });
