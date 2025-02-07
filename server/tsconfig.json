@@ -1,7 +1,7 @@
 {
   "extends": "../tsconfig.json",
   "compilerOptions": {
-    "rootDir": "/workspaces/tsconline",
+    "rootDir": "src",
     "outDir": "dist",
     "allowJs": true,
     "declaration": false
