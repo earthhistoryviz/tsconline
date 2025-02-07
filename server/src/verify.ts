@@ -1,7 +1,6 @@
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
-
 /**
  * Verifies the given Recaptcha token. The token is sent to Google's Recaptcha API for verification.
  * @param token The token to verify
@@ -46,9 +45,6 @@ async function verify(token: string) {
 export function generateToken(uuid: string): string {
   return randomBytes(16).toString("hex") + encrypt(uuid);
 }
-
-
-
 
 /**
  * Encrypts the data using AES-256-CBC. The key and IV are read from the environment variables AES_SECRET_KEY and AES_IV. If these are not set, random keys are generated.
