@@ -122,27 +122,42 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   savePreviousSettings();
   resetChartTabStateForGeneration(state.chartTab.state);
   generalActions.setTab(3);
-  let chartRequest: ChartRequest | null = null;
   try {
-    const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    chartRequest = {
-      settings: xmlSettings,
-      datapacks: state.config.datapacks,
-      useCache: state.useCache,
-      isCrossPlot: false
-    };
-  } catch (e) {
-    console.error(e);
-    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-    return;
+    let chartRequest: ChartRequest | null = null;
+    try {
+      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+      chartRequest = {
+        settings: xmlSettings,
+        datapacks: state.config.datapacks,
+        useCache: state.useCache,
+        isCrossPlot: false
+      };
+    } catch (e) {
+      console.error(e);
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    if (!chartRequest) {
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    const response = await sendChartRequestToServer(chartRequest);
+    if (!response) {
+      // error SHOULD already displayed
+      return;
+    }
+    generalActions.setChartTabState(state.chartTab.state, {
+      chartContent: response.chartContent,
+      chartHash: response.hash,
+      madeChart: true,
+      unsafeChartContent: response.unsafeChartContent,
+      chartTimelineEnabled: false
+    });
+  } finally {
+    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
-  if (!chartRequest) {
-    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-    return;
-  }
-  await sendChartRequestToServer(chartRequest);
 });
 
 const savePreviousSettings = action("savePreviousSettings", () => {
