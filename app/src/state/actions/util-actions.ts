@@ -1,8 +1,14 @@
 import { action } from "mobx";
 import { ErrorCodes } from "../../util/error-codes";
 import { pushError, pushSnackbar } from "./general-actions";
-import { ColumnInfo, isServerResponseError } from "@tsconline/shared";
-
+import {
+  ColumnInfo,
+  DisplayedColumnTypes,
+  assertEventSettings,
+  assertPointSettings,
+  isServerResponseError
+} from "@tsconline/shared";
+import { state } from "../state";
 /**
  * Since we hash by name only to allow consistency between facies maps and
  * the column page, a generic like Facies Label will cause errors.
@@ -83,4 +89,47 @@ export function checkDatapackValidity(file: File) {
     return false;
   }
   return true;
+}
+
+export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, userBaseAge: number) {
+  if (userBaseAge <= userTopAge) {
+    return false;
+  }
+  let reachedFirstRef = false;
+  while (!reachedFirstRef) {
+    if (dccColumn.maxAge < userTopAge || dccColumn.minAge > userBaseAge) {
+      return false;
+    }
+    if (dccColumn.columnDisplayType === "Event") {
+      assertEventSettings(dccColumn.columnSpecificSettings);
+    } else if (dccColumn.columnDisplayType === "Point") {
+      assertPointSettings(dccColumn.columnSpecificSettings);
+    } else {
+      console.warn("WARNING: dccColumn is not a valid column type");
+      return false;
+    }
+    //reached end of ref list
+    if (!dccColumn.columnSpecificSettings.dualColCompColumnRef) {
+      reachedFirstRef = true;
+      break;
+    }
+    const refCol = state.settingsTabs.columnHashMap.get(dccColumn.columnSpecificSettings.dualColCompColumnRef);
+    if (!refCol) {
+      console.log("WARNING: tried to get reference while checking dcc column, but is undefined");
+      return false;
+    }
+    dccColumn = refCol;
+  }
+  return true;
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }
