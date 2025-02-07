@@ -4,7 +4,7 @@ import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
-import { Chart, ChartContext } from "./Chart";
+import { ChartTab } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
@@ -17,7 +17,7 @@ import { Datapacks } from "./settings_tabs/Datapack";
 import { ForgotPassword } from "./ForgotPassword";
 import { AccountVerify } from "./AccountVerify";
 import { AccountRecovery } from "./AccountRecovery";
-import { TSCYesNoPopup, TSCError, TSCSnackbar, TSCSvgComponent } from "./components";
+import { TSCYesNoPopup, TSCError, TSCSnackbar } from "./components";
 import { CssBaseline } from "@mui/material";
 import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
@@ -36,7 +36,7 @@ import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours"
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
 import { CrossPlotSettings } from "./crossplot/CrossPlotSettings";
-import { CrossPlotChart } from "./CrossPlotChart";
+import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -146,14 +146,7 @@ export default observer(function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
-            <Route
-              path="/chart"
-              element={
-                <ChartContext.Provider value={{ chartTabState: state.chartTab.state }}>
-                  <Chart Component={TSCSvgComponent} />
-                </ChartContext.Provider>
-              }
-            />
+            <Route path="/chart" element={<ChartTab />} />
             <Route path="/help" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
