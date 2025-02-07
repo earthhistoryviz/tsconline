@@ -19,11 +19,10 @@ export const ChartContext = createContext<ChartContextType>({
 
 type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
-  width?: string;
-  height?: string;
+  style?: React.CSSProperties;
 };
 
-export const Chart: React.FC<ChartProps> = observer(({ Component, height, width }) => {
+export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
@@ -164,11 +163,12 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, height, width 
               disablePadding={true}>
               <TransformComponent
                 wrapperStyle={{
-                  height: height ?? "84vh",
-                  width: width ?? "80vw",
+                  height: "84vh",
+                  width: "80vw",
                   border: "2px solid",
                   borderColor: theme.palette.divider,
-                  visibility: !setup ? "hidden" : "visible" // prevent flashing of chart when generating
+                  visibility: !setup ? "hidden" : "visible", // prevent flashing of chart when generating
+                  ...style
                 }}>
                 {<Component ref={svgContainerRef} />}
               </TransformComponent>
