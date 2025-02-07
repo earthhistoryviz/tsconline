@@ -1,4 +1,3 @@
-import {fetcher} from '/workspaces/tsconline/app/src/util';
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
 
@@ -29,7 +28,7 @@ export async function checkRecaptchaToken(token: string): Promise<number> {
 async function verify(token: string) {
   const secret = process.env.RECAPTCHA_SECRET_KEY; // Ensure the secret key is taken from the environment variable
   const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
-  const httpResponse = await fetcher(url, { method: "POST" });
+  const httpResponse = await fetch(url, { method: "POST" });
 
   if (httpResponse.ok) {
     const data = await httpResponse.json();
