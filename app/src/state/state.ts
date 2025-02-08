@@ -46,7 +46,6 @@ export type State = {
     state: ChartTabState;
   };
   crossPlot: {
-    tab: CrossPlotTab;
     lockX: boolean;
     lockY: boolean;
     state: ChartTabState;
@@ -158,7 +157,6 @@ export const state = observable<State>({
     state: cloneDeep(defaultChartTabState)
   },
   crossPlot: {
-    tab: "time",
     lockX: false,
     lockY: false,
     state: cloneDeep(defaultChartTabState)

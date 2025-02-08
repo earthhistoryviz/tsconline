@@ -10,10 +10,6 @@ import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
 
-export const setCrossPlotTabs = action((tab: CrossPlotTab) => {
-  state.crossPlot.tab = tab;
-});
-
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
   state.crossplotSettingsTabs.chartXTimeSettings = {
     ...state.crossplotSettingsTabs.chartXTimeSettings,

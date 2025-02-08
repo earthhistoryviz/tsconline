@@ -1,10 +1,29 @@
 .crossPlotSideBar {
   display: grid;
+  grid-template-columns: var(--side-bar-width) 1fr;
+  grid-template-rows: 1fr;
   overflow-y: auto;
+  border-right: 2px solid;
+  box-shadow: 5px 0px 10px -5px rgba(0, 0, 0, 0.5);
 }
 
-.leftTabs {
-  display: grid;
-  grid-template-columns: 1fr;
-  width: var(--side-bar-width);
+.tabs {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 40px;
+  padding-top: 25px;
+}
+
+.tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: fit-content;
+  gap: 7px;
+  cursor: pointer;
+}
+.tabText {
+  font-size: 0.8rem;
 }
