@@ -75,8 +75,9 @@ export const NavBar = observer(function Navbar() {
     navigate(path);
     setMenuDrawerOpen(false);
   };
+  const Offset = styled("div")(({ theme }) => theme.mixins.toolbar);
   return (
-    <StyledAppBar position="fixed" className="nav-bar">
+    <StyledAppBar position="sticky" className="nav-bar">
       <Toolbar>
         {!isMobile && (
           <>

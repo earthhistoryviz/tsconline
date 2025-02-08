@@ -142,7 +142,6 @@ export default observer(function App() {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           {location.pathname != "/verify" && <NavBar />}
-          <Toolbar />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
