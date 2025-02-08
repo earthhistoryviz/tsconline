@@ -1,5 +1,4 @@
 // This is for the nest menu and also for the breadcrumbs
-
 const HelpMenuItems = [
   {
     id: 1,
@@ -45,7 +44,7 @@ const HelpMenuItems = [
       {
         id: "2-1",
         label: "What is a Chart?",
-        content: "Stuff",
+        content: "Stuff"
       },
       {
         id: "2-2",
@@ -83,14 +82,14 @@ const HelpMenuItems = [
             id: "2-2-4",
             label: "Freehand Columns",
             content: "This is freehand columns"
-          },
+          }
         ]
       },
       {
         id: "2-3",
         label: "Saving a Chart",
         content: "Saving a Chart"
-      },
+      }
     ]
   },
   {
@@ -143,4 +142,4 @@ const HelpMenuItems = [
   }
 ];
 
-export default HelpMenuItems
+export default HelpMenuItems;
