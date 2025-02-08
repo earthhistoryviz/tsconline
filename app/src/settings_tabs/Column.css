@@ -52,6 +52,7 @@
   z-index: 0;
   padding-left: 10px;
   resize: horizontal;
+  position: relative;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
@@ -118,9 +119,10 @@
 }
 
 .column-filter-buttons {
-  display: flex;
-  flex-direction: row;
-  justify-content: flex-end;
+  position: sticky;
+  top: 0px;
+  left: 100%;
+  width: max-content;
 }
 
 .column-accordion {
