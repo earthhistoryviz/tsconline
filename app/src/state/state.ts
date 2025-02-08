@@ -13,8 +13,7 @@ import {
   EditableDatapackMetadata,
   CrossPlotSettingsTabs,
   CrossPlotTimeSettings,
-  ChartTabState,
-  CrossPlotTab
+  ChartTabState
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {

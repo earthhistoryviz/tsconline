@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartSettings, CrossPlotTab, CrossPlotTimeSettings } from "../../types";
+import { ChartSettings, CrossPlotTimeSettings } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, removeError, setChartTabState, setTab } from "./general-actions";

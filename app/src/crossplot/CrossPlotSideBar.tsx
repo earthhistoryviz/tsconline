@@ -6,6 +6,7 @@ import { Box, Button, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { Column, ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
+import { StyledScrollbar } from "../components";
 
 export const CrossPlotSideBar: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -49,7 +50,9 @@ export const CrossPlotSideBar: React.FC = observer(() => {
           );
         })}
       </Box>
-      {tabs[tabIndex].component}
+        <Box overflow="auto">
+        {tabs[tabIndex].component}
+        </Box>
     </Box>
   );
 });
