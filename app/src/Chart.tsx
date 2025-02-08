@@ -134,7 +134,15 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
       if (container.instance.wrapperComponent)
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
-  }, [setup, chartContent, transformContainerRef.current]);
+  }, [
+    setup,
+    chartContent,
+    transformContainerRef.current,
+    transformContainerRef,
+    zoomFitMidCoord,
+    zoomFitMidCoordIsX,
+    zoomFitScale
+  ]);
   const { t } = useTranslation();
 
   return (
