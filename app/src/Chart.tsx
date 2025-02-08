@@ -142,7 +142,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
-        <div id="wrapper" className="chart-and-options-bar">
+        <div className="chart-and-options-bar">
           {transformContainerRef?.current && svgContainerRef?.current && (
             <OptionsBar
               transformRef={transformContainerRef}
@@ -163,8 +163,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
               disablePadding={true}>
               <TransformComponent
                 wrapperStyle={{
-                  height: "84vh",
-                  width: "80vw",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  overflow: "hidden",
                   border: "2px solid",
                   borderColor: theme.palette.divider,
                   visibility: !setup ? "hidden" : "visible", // prevent flashing of chart when generating
