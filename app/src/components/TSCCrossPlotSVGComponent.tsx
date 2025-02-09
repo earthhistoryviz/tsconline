@@ -149,7 +149,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!svg) return;
       setupTimelineAndLabel(svg);
       hideOrShowTimeline(chartTimelineEnabled);
-    }, [ref, chartContent, chartTimelineEnabled]);
+    }, [ref, chartContent, chartTimelineEnabled, typeof ref !== "function" && ref ? ref.current : null]);
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
