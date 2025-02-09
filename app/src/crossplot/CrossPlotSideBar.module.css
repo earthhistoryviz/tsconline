@@ -7,7 +7,7 @@
   overflow-x: hidden;
   resize: horizontal;
   max-width: 70vw;
-  min-width: 40vw;
+  min-width: max(350px, 20vw);
 }
 
 .tabs {
@@ -41,4 +41,23 @@
   width: 100%;
   height: 100%;
   background-color: transparent;
+}
+
+.timeLabel,
+.unitLabel {
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 140px;
+}
+
+.timeIntervalForm {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.timeIntervalLabel {
+  font-size: 0.9rem;
 }
