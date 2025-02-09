@@ -223,24 +223,24 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     async function downloadChart() {
       actions.setChartTabState(chartTabState, { isSavingChart: true });
       try {
-      if (downloadFiletype === "svg") {
-        const blob = new Blob([unsafeChartContent]);
-        FileSaver.saveAs(blob, downloadFilename + ".svg");
-        actions.pushSnackbar("Saved Chart as SVG!", "success");
-      } else {
-        const svgNode = svgRef?.current?.children[0];
-        if (!svgNode) return;
-        if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
-        //height and width in cm, so convert to pixels
-        const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
-        const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
-        const svgString = chartTabState.chartContent;
-        const svgBlob = new Blob([svgString], {
-          type: "image/svg+xml;charset=utf-8"
-        });
+        if (downloadFiletype === "svg") {
+          const blob = new Blob([unsafeChartContent]);
+          FileSaver.saveAs(blob, downloadFilename + ".svg");
+          actions.pushSnackbar("Saved Chart as SVG!", "success");
+        } else {
+          const svgNode = svgRef?.current?.children[0];
+          if (!svgNode) return;
+          if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+          //height and width in cm, so convert to pixels
+          const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+          const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+          const svgString = chartTabState.chartContent;
+          const svgBlob = new Blob([svgString], {
+            type: "image/svg+xml;charset=utf-8"
+          });
 
-        const DOMURL = window.URL || window.webkitURL || window;
-        const url = DOMURL.createObjectURL(svgBlob);
+          const DOMURL = window.URL || window.webkitURL || window;
+          const url = DOMURL.createObjectURL(svgBlob);
 
           let imgURI = "";
           try {
@@ -249,7 +249,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             console.error(e);
             actions.pushSnackbar("Failed to download chart, please try again.", "warning");
           }
-          if (state.chartTab.downloadFiletype === "pdf") {
+          if (downloadFiletype === "pdf") {
             actions.pushSnackbar(
               "Generating a pdf will take a few seconds, feel free to close out of the popup",
               "info"
@@ -262,16 +262,16 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
               const { status, value } = e.data;
               if (status === "success" && value) {
-                FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
+                FileSaver.saveAs(value, downloadFilename + ".pdf");
                 actions.pushSnackbar("Saved Chart as PDF!", "success");
               } else {
                 actions.pushSnackbar("Saving Chart Timed Out", "info");
               }
               downloadWorker.terminate();
             };
-          } else if (state.chartTab.downloadFiletype === "png") {
+          } else if (downloadFiletype === "png") {
             const a = document.createElement("a");
-            a.download = state.chartTab.downloadFilename + ".png"; // filename
+            a.download = downloadFilename + ".png"; // filename
             a.target = "_blank";
             a.href = imgURI;
             a.click();
