@@ -5,7 +5,6 @@ import { context } from "../state/index";
 import { useTranslation } from "react-i18next";
 import { TSCCheckbox } from "../components";
 import "./Preferences.css";
-import { useNavigate } from "react-router";
 
 export const Preferences = observer(function Preferences() {
   const { state, actions } = useContext(context);

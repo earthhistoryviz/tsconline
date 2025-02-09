@@ -11,7 +11,6 @@ import {
   User,
   GroupedEventSearchInfo,
   EditableDatapackMetadata,
-  CrossPlotSettingsTabs,
   CrossPlotTimeSettings,
   ChartTabState
 } from "../types";

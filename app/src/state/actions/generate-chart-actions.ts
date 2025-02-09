@@ -7,7 +7,7 @@ import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo } f
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import DOMPurify, { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
