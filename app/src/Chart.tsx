@@ -92,6 +92,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
     actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
 
     const windowResizeListenerWrapper = () => {
+      console.log("resize");
       setChartAlignmentValues();
     };
 
