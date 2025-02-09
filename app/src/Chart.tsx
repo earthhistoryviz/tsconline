@@ -19,10 +19,11 @@ export const ChartContext = createContext<ChartContextType>({
 
 type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
+  refList?: React.RefObject<HTMLDivElement>[];
   style?: React.CSSProperties;
 };
 
-export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
+export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
@@ -92,7 +93,6 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
     actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
 
     const windowResizeListenerWrapper = () => {
-      console.log("resize");
       setChartAlignmentValues();
     };
 
@@ -144,6 +144,23 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style }) => {
     zoomFitMidCoordIsX,
     zoomFitScale
   ]);
+  useEffect(() => {
+    if (!refList || refList.length == 0) return;
+    const observers: ResizeObserver[] = [];
+    for (const ref of refList) {
+      if (!ref.current) continue;
+      const resizeObserver = new ResizeObserver((entries) => {
+        setChartAlignmentValues();
+      });
+      resizeObserver.observe(ref.current);
+      observers.push(resizeObserver);
+    }
+    return () => {
+      for (const observer of observers) {
+        observer.disconnect();
+      }
+    };
+  }, [refList]);
   const { t } = useTranslation();
 
   return (

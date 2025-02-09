@@ -1,5 +1,5 @@
 .container {
   display: grid;
-  grid-template-columns: 26.5vw minmax(0, 1fr);
+  grid-template-columns: auto minmax(20vw, 1fr);
   grid-template-rows: calc(100vh - var(--nav-bar-height));
 }
