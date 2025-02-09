@@ -143,10 +143,15 @@ export const TagButton: React.FC<ButtonProps> = ({ ...props }) => {
   return <Button {...props} className={styles.tagbutton} sx={{ color: "backgroundColor.contrastText" }} />;
 };
 
-export const NotImplemented: React.FC = () => {
+type NotImplementedProps = {
+  size?: "small" | "medium" | "large";
+};
+export const NotImplemented: React.FC<NotImplementedProps> = ({ size = "large" }) => {
+  const width = size === "small" ? 200 : size === "medium" ? 300 : 500;
+  const height = size === "small" ? 200 : size === "medium" ? 300 : 500;
   return (
     <div className={styles.notimplemented}>
-      <Lottie animationData={SecurityResearch} width={500} height={500} autoplay loop />
+      <Lottie animationData={SecurityResearch} width={width} height={height} autoplay loop />
       <Typography variant="h5">Not Yet Implemented</Typography>
       <Typography>Stay tuned for updates!</Typography>
       <Attribution>
