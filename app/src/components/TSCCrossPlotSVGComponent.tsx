@@ -1,6 +1,5 @@
 import { roundToDecimalPlace } from "@tsconline/shared";
-import React, { forwardRef, useContext, useEffect, useRef } from "react";
-import { RefObject } from "react";
+import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
@@ -136,7 +135,7 @@ const showCurrAgeY = (
 };
 
 export const TSCCrossPlotSVGComponent: React.FC = observer(
-  forwardRef<HTMLDivElement>((_, ref) => {
+  forwardRef<HTMLDivElement>(function TSCCrossPlotSVGComponent(_, ref) {
     const { state, actions } = useContext(context);
     const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;

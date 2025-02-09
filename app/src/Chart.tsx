@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { Children, createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -149,7 +149,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
     const observers: ResizeObserver[] = [];
     for (const ref of refList) {
       if (!ref.current) continue;
-      const resizeObserver = new ResizeObserver((entries) => {
+      const resizeObserver = new ResizeObserver(() => {
         setChartAlignmentValues();
       });
       resizeObserver.observe(ref.current);

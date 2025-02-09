@@ -1,6 +1,5 @@
 import { observer } from "mobx-react-lite";
 import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
-import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";

@@ -18,7 +18,7 @@ type TimeLineElements = {
 };
 
 export const TSCSvgComponent: React.FC = observer(
-  forwardRef<HTMLDivElement>((props, ref) => {
+  forwardRef<HTMLDivElement>(function TSCSvgComponent(_, ref) {
     const { state, actions } = useContext(context);
     const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;

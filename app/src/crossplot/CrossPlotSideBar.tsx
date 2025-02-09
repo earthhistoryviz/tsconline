@@ -1,8 +1,8 @@
 import { observer } from "mobx-react-lite";
-import { forwardRef, useContext, useEffect, useRef, useState } from "react";
+import { forwardRef, useContext, useEffect, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, FormControl, FormControlLabel, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
@@ -14,7 +14,7 @@ import { CustomDivider, NotImplemented, TSCButton } from "../components";
 import { useNavigate } from "react-router";
 
 export const CrossPlotSideBar = observer(
-  forwardRef<HTMLDivElement, {}>((_, ref) => {
+  forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
     const [sidebarWidth, setSidebarWidth] = useState("300px"); // this is so the sidebar retains the width when resized
     const { actions } = useContext(context);

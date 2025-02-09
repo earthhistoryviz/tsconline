@@ -48,7 +48,6 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
   ChartZoomSettings,
-  CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
