@@ -91,16 +91,16 @@ const Time: React.FC = () => {
       <CrossPlotTimeSettingsForm
         formLabel={t("crossPlot.time.xAxis")}
         disabled
-        settings={state.crossplotSettingsTabs.chartXTimeSettings}
-        column={state.crossplotSettingsTabs.chartX}
+        settings={state.crossPlot.chartXTimeSettings}
+        column={state.crossPlot.chartX}
         setTimeSettings={actions.setCrossPlotChartXTimeSettings}
         setCrossPlotChart={actions.setCrossPlotChartX}
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
         formLabel={t("crossPlot.time.yAxis")}
-        settings={state.crossplotSettingsTabs.chartYTimeSettings}
-        column={state.crossplotSettingsTabs.chartY}
+        settings={state.crossPlot.chartYTimeSettings}
+        column={state.crossPlot.chartY}
         setTimeSettings={actions.setCrossPlotChartYTimeSettings}
         setCrossPlotChart={actions.setCrossPlotChartY}
       />

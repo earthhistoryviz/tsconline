@@ -69,6 +69,7 @@ import {
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
+import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 
 /**
  * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
@@ -666,26 +667,6 @@ export const settingOptions = [
   }
 ];
 
-export const setCrossPlotSettingsTabsSelected = action((newtab: number | CrossPlotSettingsTabs) => {
-  if (typeof newtab === "string") {
-    state.crossplotSettingsTabs.selected = newtab;
-    return;
-  }
-  switch (newtab) {
-    case 0:
-      state.crossplotSettingsTabs.selected = "xAxis";
-      break;
-    case 1:
-      state.crossplotSettingsTabs.selected = "yAxis";
-      break;
-    case 2:
-      state.crossplotSettingsTabs.selected = "column";
-      break;
-    default:
-      console.log("WARNING: setCrossPlotSettingsTabsSelected: received index number that is unknown: ", newtab);
-      state.crossplotSettingsTabs.selected = "xAxis";
-  }
-});
 /**
  * set the settings tab based on a string or number
  */
@@ -1325,18 +1306,4 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
-});
-
-export const setCrossPlotLockX = action((lockX: boolean) => {
-  state.crossPlot.lockX = lockX;
-});
-export const setCrossPlotLockY = action((lockY: boolean) => {
-  state.crossPlot.lockY = lockY;
-});
-
-export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartX = chart;
-});
-export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartY = chart;
 });

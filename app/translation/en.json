@@ -220,6 +220,7 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
+            "create-datapack": "Create Datapack",
             "time": {
                 "no-unit-selected": "No unit selected",
                 "select-unit": "Please select a unit.",
