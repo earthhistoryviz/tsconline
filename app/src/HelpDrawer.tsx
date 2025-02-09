@@ -4,8 +4,14 @@ import { useState } from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { links } from "./help-menu-links";
 
+interface MenuLink {
+  to: string;
+  label: string;
+  children?: MenuLink[];
+}
+
 // Setting link as any type for now
-function NavItem({ link }: { link: any }) {
+function NavItem({ link }: { link: MenuLink }) {
   const [open, setOpen] = useState(false);
 
   // If the item has children, handle expand/collapse
@@ -38,8 +44,7 @@ function NavItem({ link }: { link: any }) {
       {link.children && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List component="div" disablePadding sx={{ pl: 1, borderLeft: "1px solid lightgray", marginLeft: "27.5px" }}>
-            {/* Setting child and index as any type for now */}
-            {link.children.map((child: any, index: any) => (
+            {link.children.map((child: MenuLink, index: number) => (
               <NavItem key={index} link={child} />
             ))}
           </List>
