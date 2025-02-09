@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import { forwardRef, useContext, useState } from "react";
+import { forwardRef, useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, FormControlLabel, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
@@ -15,7 +15,20 @@ import { CustomDivider, NotImplemented } from "../components";
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement, {}>((_, ref) => {
     const [tabIndex, setTabIndex] = useState(0);
+    const [sidebarWidth, setSidebarWidth] = useState("300px"); // this is so the sidebar retains the width when resized
     const theme = useTheme();
+    useEffect(() => {
+      if (typeof ref === "function") return;
+      const sidebar = ref?.current;
+      if (!sidebar) return;
+
+      const observer = new ResizeObserver(() => {
+        setSidebarWidth(`${sidebar.offsetWidth}px`); // Save width when resized
+      });
+
+      observer.observe(sidebar);
+      return () => observer.disconnect();
+    }, [ref]);
     const tabs = [
       { tabName: "Time", Icon: AccessTimeRounded, component: <Time /> },
       {
@@ -28,6 +41,7 @@ export const CrossPlotSideBar = observer(
     return (
       <Box
         className={styles.crossPlotSideBar}
+        sx={{ width: sidebarWidth }}
         ref={ref}
         bgcolor="backgroundColor.main"
         borderRight="1px solid"
