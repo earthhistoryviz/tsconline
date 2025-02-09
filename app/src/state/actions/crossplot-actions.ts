@@ -47,9 +47,9 @@ function areSettingsValidForGeneration() {
   if (!xSettings || !ySettings) return false;
   // verify validity of time settings being within logical range
   const xValid =
-    xSettings.baseStageAge > xSettings.topStageAge || !isNaN(xSettings.topStageAge) || !isNaN(xSettings.baseStageAge);
+    xSettings.baseStageAge > xSettings.topStageAge && !isNaN(xSettings.topStageAge) && !isNaN(xSettings.baseStageAge);
   const yValid =
-    ySettings.baseStageAge > ySettings.topStageAge || !isNaN(ySettings.topStageAge) || !isNaN(ySettings.baseStageAge);
+    ySettings.baseStageAge > ySettings.topStageAge && !isNaN(ySettings.topStageAge) && !isNaN(ySettings.baseStageAge);
   if (!xValid || !yValid) {
     pushError(ErrorCodes.IS_BAD_RANGE);
     return false;
@@ -78,7 +78,7 @@ const createColumnHashMap = (column: ColumnInfo, hash: Map<string, ColumnInfo>) 
 /**
  * Fetch the crossplot chart from the server
  */
-export const compileCrossPlotChartRequest = action(
+export const compileAndSendCrossPlotChartRequest = action(
   "compileCrossPlotChartRequest",
   async (navigate: NavigateFunction) => {
     if (!areSettingsValidForGeneration()) {
