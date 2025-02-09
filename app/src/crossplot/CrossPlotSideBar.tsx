@@ -17,12 +17,16 @@ export const CrossPlotSideBar: React.FC = observer(() => {
     {
       tabName: "Columns",
       Icon: TableChartRounded,
-      component: <ColumnDisplay/>
+      component: <ColumnDisplay />
     },
     { tabName: "Markers", Icon: BookmarkRounded, component: <div>Markers</div> }
   ];
   return (
-    <Box className={styles.crossPlotSideBar} bgcolor="backgroundColor.main" borderColor="divider">
+    <Box
+      className={styles.crossPlotSideBar}
+      bgcolor="backgroundColor.main"
+      borderRight="1px solid"
+      borderColor="divider">
       <Box className={styles.tabs} bgcolor={Color(theme.palette.dark.main).alpha(0.9).toString()}>
         {tabs.map((tab, index) => {
           const sx = {
@@ -33,8 +37,12 @@ export const CrossPlotSideBar: React.FC = observer(() => {
               className={styles.tab}
               key={index}
               sx={{
-                "&:hover > *": {
-                  color: theme.palette.button.main
+                "&:hover": {
+                  // make the background color of the tab lighter when hovered
+                  backgroundColor:
+                    index === tabIndex
+                      ? Color(theme.palette.button.main).alpha(0.1).toString()
+                      : Color("gray").alpha(0.1).toString()
                 }
               }}
               onClick={() => setTabIndex(index)}>
@@ -50,9 +58,7 @@ export const CrossPlotSideBar: React.FC = observer(() => {
           );
         })}
       </Box>
-        <Box overflow="auto">
-        {tabs[tabIndex].component}
-        </Box>
+      <Box className={styles.tabContent}>{tabs[tabIndex].component}</Box>
     </Box>
   );
 });
