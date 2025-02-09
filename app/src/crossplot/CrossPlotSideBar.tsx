@@ -10,7 +10,7 @@ import { CrossPlotTimeSettings } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider } from "../components";
+import { CustomDivider, NotImplemented } from "../components";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement, {}>((_, ref) => {
@@ -23,7 +23,7 @@ export const CrossPlotSideBar = observer(
         Icon: TableChartRounded,
         component: <ColumnDisplay />
       },
-      { tabName: "Markers", Icon: BookmarkRounded, component: <div>Markers</div> }
+      { tabName: "Markers", Icon: BookmarkRounded, component: <NotImplemented size="medium" /> }
     ];
     return (
       <Box
