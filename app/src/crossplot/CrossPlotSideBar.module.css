@@ -71,6 +71,6 @@
 .generate {
   position: fixed;
   bottom: 10px;
-  left: 10%;
+  left: 5%;
   z-index: 10;
 }

@@ -85,8 +85,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         </CustomTooltip>
         <Box
           sx={{
-            border: "2px solid",
-            borderColor: theme.palette.divider,
             bgcolor: theme.palette.backgroundColor.main
           }}
           style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
