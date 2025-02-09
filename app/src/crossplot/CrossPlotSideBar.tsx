@@ -1,15 +1,13 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useState } from "react";
+import { forwardRef, useContext, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, Button, Typography, useTheme } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import Color from "color";
-import { Column, ColumnDisplay } from "../settings_tabs/Column";
+import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { StyledScrollbar } from "../components";
 
-export const CrossPlotSideBar: React.FC = observer(() => {
-  const { state } = useContext(context);
+export const CrossPlotSideBar = observer(forwardRef<HTMLDivElement, {}>((_, ref) => {
   const [tabIndex, setTabIndex] = useState(0);
   const theme = useTheme();
   const tabs = [
@@ -24,6 +22,7 @@ export const CrossPlotSideBar: React.FC = observer(() => {
   return (
     <Box
       className={styles.crossPlotSideBar}
+      ref={ref}
       bgcolor="backgroundColor.main"
       borderRight="1px solid"
       borderColor="divider">
@@ -61,4 +60,4 @@ export const CrossPlotSideBar: React.FC = observer(() => {
       <Box className={styles.tabContent}>{tabs[tabIndex].component}</Box>
     </Box>
   );
-});
+}));
