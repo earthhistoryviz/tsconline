@@ -10,27 +10,40 @@ import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
 
+export const setCrossPlotLockX = action((lockX: boolean) => {
+  state.crossPlot.lockX = lockX;
+});
+export const setCrossPlotLockY = action((lockY: boolean) => {
+  state.crossPlot.lockY = lockY;
+});
+
+export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+  state.crossPlot.chartX = chart;
+});
+export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+  state.crossPlot.chartY = chart;
+});
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
-  state.crossplotSettingsTabs.chartXTimeSettings = {
-    ...state.crossplotSettingsTabs.chartXTimeSettings,
+  state.crossPlot.chartXTimeSettings = {
+    ...state.crossPlot.chartXTimeSettings,
     ...timeSettings
   };
 });
 export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
-  state.crossplotSettingsTabs.chartYTimeSettings = {
-    ...state.crossplotSettingsTabs.chartYTimeSettings,
+  state.crossPlot.chartYTimeSettings = {
+    ...state.crossPlot.chartYTimeSettings,
     ...timeSettings
   };
 });
 
 function areSettingsValidForGeneration() {
   // check if columns EXIST
-  if (!state.crossplotSettingsTabs.chartX || !state.settingsTabs.columns) {
+  if (!state.crossPlot.chartX || !state.settingsTabs.columns) {
     pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
   }
-  const xSettings = state.crossplotSettingsTabs.chartXTimeSettings;
-  const ySettings = state.crossplotSettingsTabs.chartYTimeSettings;
+  const xSettings = state.crossPlot.chartXTimeSettings;
+  const ySettings = state.crossPlot.chartYTimeSettings;
   if (!xSettings || !ySettings) return false;
   // verify validity of time settings being within logical range
   const xValid =
@@ -44,8 +57,8 @@ function areSettingsValidForGeneration() {
   removeError(ErrorCodes.IS_BAD_RANGE);
   // check if columns are selected
   if (
-    !state.crossplotSettingsTabs.chartX?.children.some((child) => child.on) ||
-    !state.crossplotSettingsTabs.chartY?.children.some((child) => child.on)
+    !state.crossPlot.chartX?.children.some((child) => child.on) ||
+    !state.crossPlot.chartY?.children.some((child) => child.on)
   ) {
     pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
@@ -76,15 +89,12 @@ export const compileCrossPlotChartRequest = action(
     navigate("/crossplot");
     try {
       const columnCopy = combineCrossPlotColumns(
-        cloneDeep(state.crossplotSettingsTabs.chartX!),
-        cloneDeep(state.crossplotSettingsTabs.chartY!)
+        cloneDeep(state.crossPlot.chartX!),
+        cloneDeep(state.crossPlot.chartY!)
       );
       const columnHashMap = createColumnHashMap(columnCopy, new Map());
       const crossPlotChartSettings = cloneDeep(
-        createCrossPlotChartSettings(
-          state.crossplotSettingsTabs.chartXTimeSettings,
-          state.crossplotSettingsTabs.chartYTimeSettings
-        )
+        createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
       );
       const json = jsonToXml(columnCopy, columnHashMap, crossPlotChartSettings);
 
@@ -134,14 +144,12 @@ const createCrossPlotChartSettings = (
   xSettings: CrossPlotTimeSettings,
   ySettings: CrossPlotTimeSettings
 ): ChartSettings => {
-  if (!state.crossplotSettingsTabs.chartX || !state.crossplotSettingsTabs.chartY) {
+  if (!state.crossPlot.chartX || !state.crossPlot.chartY) {
     throw new Error("No columns selected for crossplot");
   }
-  const xUnit = state.crossplotSettingsTabs.chartX.units;
+  const xUnit = state.crossPlot.chartX.units;
   const yUnit =
-    state.crossplotSettingsTabs.chartY.units === xUnit
-      ? prependCrossPlotUnitPrefixOnDupe(xUnit)
-      : state.crossplotSettingsTabs.chartY.units;
+    state.crossPlot.chartY.units === xUnit ? prependCrossPlotUnitPrefixOnDupe(xUnit) : state.crossPlot.chartY.units;
   return {
     timeSettings: {
       [xUnit]: {

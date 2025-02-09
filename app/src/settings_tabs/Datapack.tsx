@@ -162,10 +162,10 @@ export const Datapacks = observer(function Datapacks() {
       {isDevServer && (
         <TSCButton
           onClick={() => {
-            navigate("/crossplot-settings");
+            navigate("/crossplot");
             actions.setTab(0);
           }}>
-          Create Datapack
+          {t("crossPlot.create-datapack")}
         </TSCButton>
       )}
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>

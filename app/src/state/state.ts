@@ -47,6 +47,10 @@ export type State = {
   crossPlot: {
     lockX: boolean;
     lockY: boolean;
+    chartXTimeSettings: CrossPlotTimeSettings;
+    chartYTimeSettings: CrossPlotTimeSettings;
+    chartX: ColumnInfo | undefined;
+    chartY: ColumnInfo | undefined;
     state: ChartTabState;
   };
   loadSaveFilename: string;
@@ -63,13 +67,6 @@ export type State = {
     columnSelected: string | null;
     tabs: string[];
     tabValue: number;
-  };
-  crossplotSettingsTabs: {
-    selected: CrossPlotSettingsTabs;
-    chartXTimeSettings: CrossPlotTimeSettings;
-    chartYTimeSettings: CrossPlotTimeSettings;
-    chartX: ColumnInfo | undefined;
-    chartY: ColumnInfo | undefined;
   };
   settingsTabs: {
     selected: SettingsTabs;
@@ -158,6 +155,10 @@ export const state = observable<State>({
   crossPlot: {
     lockX: false,
     lockY: false,
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartX: undefined,
+    chartY: undefined,
     state: cloneDeep(defaultChartTabState)
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
@@ -203,13 +204,6 @@ export const state = observable<State>({
     columnSelected: null,
     tabs: ["General", "Font"],
     tabValue: 0
-  },
-  crossplotSettingsTabs: {
-    selected: "xAxis",
-    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartX: undefined,
-    chartY: undefined
   },
   settingsTabs: {
     selected: "time",
