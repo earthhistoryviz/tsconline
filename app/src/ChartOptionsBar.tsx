@@ -35,6 +35,7 @@ import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { t } from "i18next";
 import { ChartContext } from "./Chart";
+import styles from "./ChartOptionsBar.module.css";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -282,73 +283,75 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       } finally {
         actions.setChartTabState(chartTabState, { isSavingChart: false });
       }
-      }
-      return (
-        <div>
-          <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
-            {t("chart.save")}
-          </TSCButton>
-          <Dialog
-            disableRestoreFocus
-            open={downloadOpen}
-            onClose={handleDownloadClose}
-            PaperProps={{
-              component: "form",
-              onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
-                e.preventDefault(); // to stop website from reloading
-                if (!isValidFilename(state.chartTab.downloadFilename)) {
-                  actions.pushSnackbar("Filename is not valid", "warning");
-                  return;
-                }
-                downloadChart();
+    }
+    return (
+      <div>
+        <TSCButton className={styles.saveButton} buttonType="gradient" onClick={() => handleDownloadOpen()}>
+          {t("chart.save")}
+        </TSCButton>
+        <Dialog
+          disableRestoreFocus
+          open={downloadOpen}
+          onClose={handleDownloadClose}
+          PaperProps={{
+            component: "form",
+            onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+              e.preventDefault(); // to stop website from reloading
+              if (!isValidFilename(downloadFilename)) {
+                actions.pushSnackbar("Filename is not valid", "warning");
+                return;
               }
-            }}>
-            <DialogTitle>Save Chart</DialogTitle>
-            <DialogContent>
-              <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
-              <div className="flex-row chart-download-button">
-                <TextField
-                  defaultValue={state.chartTab.downloadFilename}
-                  autoFocus
-                  required
-                  margin="normal"
-                  type="text"
-                  size="small"
-                  fullWidth
-                  label="filename"
-                  variant="standard"
-                  onChange={handleFilenameChange}
-                />
-                <Box sx={{ minWidth: 120 }}>
-                  <FormControl fullWidth margin="normal">
-                    <Select
-                      variant="standard"
-                      size="small"
-                      value={state.chartTab.downloadFiletype}
-                      label="Age"
-                      onChange={(e) => {
-                        actions.setChartTabDownloadFiletype(e.target.value as "svg" | "png" | "pdf");
-                      }}>
-                      <MenuItem value={"svg"}>.svg</MenuItem>
-                      <MenuItem value={"pdf"}>.pdf</MenuItem>
-                      <MenuItem value={"png"}>.png</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Box>
-              </div>
-            </DialogContent>
-            <DialogActions>
-              <Button variant="outlined" onClick={handleDownloadClose}>
-                Exit
-              </Button>
-              <TSCLoadingButton loading={state.chartTab.isSavingChart} type="submit">
-                Save
-              </TSCLoadingButton>
-            </DialogActions>
-          </Dialog>
-        </div>
-      );
-    });
+              downloadChart();
+            }
+          }}>
+          <DialogTitle>Save Chart</DialogTitle>
+          <DialogContent>
+            <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
+            <div className="flex-row chart-download-button">
+              <TextField
+                defaultValue={downloadFilename}
+                autoFocus
+                required
+                margin="normal"
+                type="text"
+                size="small"
+                fullWidth
+                label="filename"
+                variant="standard"
+                onChange={handleFilenameChange}
+              />
+              <Box sx={{ minWidth: 120 }}>
+                <FormControl fullWidth margin="normal">
+                  <Select
+                    variant="standard"
+                    size="small"
+                    value={downloadFiletype}
+                    label="Age"
+                    onChange={(e) => {
+                      actions.setChartTabState(chartTabState, {
+                        downloadFiletype: e.target.value as "svg" | "png" | "pdf"
+                      });
+                    }}>
+                    <MenuItem value={"svg"}>.svg</MenuItem>
+                    <MenuItem value={"pdf"}>.pdf</MenuItem>
+                    <MenuItem value={"png"}>.png</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </div>
+          </DialogContent>
+          <DialogActions>
+            <Button variant="outlined" onClick={handleDownloadClose}>
+              Exit
+            </Button>
+            <TSCLoadingButton loading={isSavingChart} type="submit">
+              Save
+            </TSCLoadingButton>
+          </DialogActions>
+        </Dialog>
+      </div>
+    );
+  });
 
   const HelpButton = () => {
     return (

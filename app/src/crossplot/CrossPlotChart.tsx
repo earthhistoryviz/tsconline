@@ -13,7 +13,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   return (
     <ChartContext.Provider value={{ chartTabState: state.crossPlot.state }}>
       <Box className={styles.container}>
-        <CrossPlotSideBar ref={ref}/>
+        <CrossPlotSideBar ref={ref} />
         <Chart
           Component={TSCCrossPlotSVGComponent}
           refList={[ref]}
