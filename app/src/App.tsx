@@ -157,7 +157,7 @@ export default observer(function App() {
                 />
               }
             />
-            <Route path="/help" element={<Help />} />
+            <Route path="/help/*" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
