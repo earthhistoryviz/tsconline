@@ -8,6 +8,7 @@ const DUMP_FILE = join("db", "london", "london.sql");
 const OUTPUT_DIR = join("db", "london", "output_csvs");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
+const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES/i;
 
 if (!existsSync(OUTPUT_DIR)) {
   mkdirSync(OUTPUT_DIR);
@@ -16,7 +17,7 @@ if (!existsSync(OUTPUT_DIR)) {
 // Function to clean up MySQL values (handles quotes, NULLs, etc.)
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
-  return value.trim().replace(/^'|'$/g, "").replace(/\\'/g, "'");
+  return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
 };
 
 async function convertSQLDumpToCSV(dumpFile: string) {
@@ -26,7 +27,6 @@ async function convertSQLDumpToCSV(dumpFile: string) {
   const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
   const schemas: string[] = [];
   let currentLine = "";
-  let tableName = "";
   let columns: string[] = [];
 
   try {
@@ -45,23 +45,9 @@ async function convertSQLDumpToCSV(dumpFile: string) {
         if (schema) schemas.push(schema);
         continue;
       }
-      const insertMatch = currentLine.match(/^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES/i);
-      if (insertMatch && insertMatch[1] && insertMatch[2]) {
-        tableName = insertMatch[1];
-        columns = insertMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
-
-        if (!tables[tableName]) {
-          tables[tableName] = { columns, rows: [] };
-        }
-
-        let valuesPart = currentLine.split("VALUES")[1];
-        if (valuesPart) {
-          let valueGroups = valuesPart
-            .split(/\),\s?\(/)
-            .map((row) => row.trim().replace(/^\(/, "").replace(/\);?$/, "").split(",").map(cleanValue));
-          tables[tableName]!.rows.push(...valueGroups);
-        }
-
+      const insertMatch = currentLine.match(insertRegex);
+      if (insertMatch) {
+        processInsert(tables, insertMatch, currentLine);
         currentLine = "";
       }
     }
@@ -104,6 +90,28 @@ async function convertSQLDumpToCSV(dumpFile: string) {
   writeFileSync(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
 
   console.log(chalk.green("✅ All tables exported successfully!"));
+}
+
+function processInsert(
+  tables: Record<string, { columns: string[]; rows: (string | null)[][] }>,
+  insertMatch: RegExpMatchArray,
+  currentLine: string
+) {
+  if (!insertMatch[1] || !insertMatch[2]) return;
+  const tableName = insertMatch[1];
+  const columns = insertMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
+
+  if (!tables[tableName]) {
+    tables[tableName] = { columns, rows: [] };
+  }
+
+  let valuesPart = currentLine.split("VALUES")[1];
+  if (valuesPart) {
+    let valueGroups = valuesPart
+      .split(/\),\s?\(/)
+      .map((row) => row.trim().replace(/^\(/, "").replace(/\);?$/, "").split(",").map(cleanValue));
+    tables[tableName]!.rows.push(...valueGroups);
+  }
 }
 
 // Define type mapping from MySQL to TypeScript
