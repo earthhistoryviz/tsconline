@@ -4,6 +4,7 @@ import { londonDb, outputCSVDir } from "./london-database.js";
 import { readdir } from "fs/promises";
 import { join } from "path";
 import { toCamelCase, assertLondonDatabaseKey, isLondonDatabaseType, LondonDatabaseKey } from "../types.js";
+import chalk from "chalk";
 
 const BATCH_SIZE = 1;
 
@@ -47,7 +48,7 @@ async function insertLargeCSVData(tableName: string, filePath: string) {
             return;
           }
         }
-        console.log(`Imported ${filePath} into ${tableName}`);
+        console.log(chalk.cyan(`Imported ${filePath} into ${tableName}`));
         resolve();
       })
       .on("error", reject);

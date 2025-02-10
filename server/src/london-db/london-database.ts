@@ -169,7 +169,7 @@ export async function initializeLondonDatabase() {
   await convertSQLDumpToCSV(sqlDump);
   console.log(chalk.green("London database CSVs exported successfully!"));
   await importAllTables();
-  console.log(chalk.green("London database imported successfully!"));
+  console.log(chalk.green("✅London database imported successfully!"));
 }
 
 await rm(londonDBFilePath).catch(() => {});
