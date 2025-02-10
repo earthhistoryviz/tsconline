@@ -73,7 +73,7 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
       );
 
       await csvWriter.writeRecords(records);
-      console.log(`Exported: ` + chalk.green(`${table}.csv`));
+      console.log(chalk.cyan(`Exported: ${table}.csv to ${outputCSVDir}`));
     } catch (e) {
       console.error(e);
       console.log(chalk.yellow(`Error exporting ${table} to CSV`));
@@ -83,13 +83,13 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
   try {
     // write the schemas
     await writeFile(join(outputCSVDir, "kysely-schema.ts"), schemas.join("\n\n"));
-    console.log(`Exported: ` + chalk.green(`kysely_schema.ts`));
+    console.log(chalk.cyan("Exported schemas to kysely_schema.ts"));
   } catch (e) {
     console.error(e);
     console.log(chalk.yellow(`Error exporting schemas to kysely_schema.ts`));
   }
 
-  console.log(chalk.green("✅ All tables exported successfully!"));
+  console.log(chalk.green("All tables exported successfully to csv!"));
 }
 
 function processInsert(
