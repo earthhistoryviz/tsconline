@@ -1,5 +1,6 @@
 import { throwError } from "@tsconline/shared";
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
+import { CPdinos, CPdinos_icons, CPdinos_images, CPdinos_reflinks, CPdinos_refs } from "./london-db/types";
 
 export interface Database {
   users: UserTable;
@@ -115,6 +116,33 @@ export type FileMetadata = {
   lastUpdated: string;
   uuid: string;
 };
+
+export interface LondonDatabase {
+  cpdinos: CPdinos;
+  cpdinosIcons: CPdinos_icons;
+  cpdinosImages: CPdinos_images;
+  cpdinosReflinks: CPdinos_reflinks;
+  cpdinosRefs: CPdinos_refs;
+}
+
+export function isLondonDatabaseType(key: string): boolean {
+  return ["CPdinos", "CPdinos_icons", "CPdinos_images", "CPdinos_reflinks", "CPdinos_refs"].includes(key);
+}
+export function isLondonDatabaseKey(key: string): key is LondonDatabaseKey {
+  return ["cpdinos", "cpdinosIcons", "cpdinosImages", "cpdinosReflinks", "cpdinosRefs"].includes(key);
+}
+export function assertLondonDatabaseKey(key: string): asserts key is LondonDatabaseKey {
+  if (!isLondonDatabaseKey(key)) {
+    throw new Error(`Invalid London database key: ${key}`);
+  }
+}
+export function toCamelCase(str: string): string {
+  return str
+    .toLowerCase() // Convert everything to lowercase
+    .replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase()); // Remove non-alphanumeric & capitalize next letter
+}
+// get the table names
+export type LondonDatabaseKey = keyof LondonDatabase;
 
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";

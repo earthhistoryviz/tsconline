@@ -3,7 +3,7 @@ import { createObjectCsvWriter } from "csv-writer";
 import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
-import { access, mkdir, writeFile } from "fs/promises";
+import { writeFile } from "fs/promises";
 import { outputCSVDir } from "./london-database.js";
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
@@ -22,7 +22,6 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
   const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
   const schemas: string[] = [];
   let currentLine = "";
-  let columns: string[] = [];
 
   try {
     for await (const line of rl) {
@@ -83,7 +82,7 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
 
   try {
     // write the schemas
-    await writeFile(join(outputCSVDir, "kysely_schema.ts"), schemas.join("\n\n"));
+    await writeFile(join(outputCSVDir, "kysely-schema.ts"), schemas.join("\n\n"));
     console.log(`Exported: ` + chalk.green(`kysely_schema.ts`));
   } catch (e) {
     console.error(e);
@@ -110,7 +109,7 @@ function processInsert(
   if (valuesPart) {
     valuesPart = valuesPart.replace(new RegExp(`^${breakWord}\\(`), "");
     const regex = new RegExp("\\)," + breakWord + "\\(");
-    let valueGroups = valuesPart
+    const valueGroups = valuesPart
       .split(regex)
       .map((row) => row.trim().replace(/^\(/, "").replace(/\);?$/, "").split(",").map(cleanValue));
     tables[tableName]!.rows.push(...valueGroups);
@@ -148,11 +147,11 @@ function processSchema(statement: string) {
   let columnMatch;
   while ((columnMatch = columnRegex.exec(cleanLine)) !== null) {
     if (columnMatch) {
-      let [, columnName, type, size, unsigned, notNull, , defaultValue] = columnMatch;
+      const [, columnName, type, size, unsigned, notNull, , defaultValue] = columnMatch;
       if (columnName && type) {
         const tsColumnName = /^\d|\w+-\w+/.test(columnName) ? `"${columnName}"` : columnName;
         let tsType = "string";
-        let mappedType = typeMapping[type.toLowerCase()];
+        const mappedType = typeMapping[type.toLowerCase()];
         if (mappedType) {
           tsType = mappedType;
         }

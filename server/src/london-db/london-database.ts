@@ -1,38 +1,11 @@
 import { access, mkdir, rm } from "fs/promises";
 import { Kysely, SqliteDialect } from "kysely";
-import { CPdinos, CPdinos_icons, CPdinos_images, CPdinos_reflinks, CPdinos_refs } from "./types";
 import BetterSqlite3 from "better-sqlite3";
 import { join } from "path";
 import chalk from "chalk";
 import { convertSQLDumpToCSV } from "./dump-to-csv.js";
 import { importAllTables } from "./csv-to-sqlite.js";
-
-export interface LondonDatabase {
-  cpdinos: CPdinos;
-  cpdinosIcons: CPdinos_icons;
-  cpdinosImages: CPdinos_images;
-  cpdinosReflinks: CPdinos_reflinks;
-  cpdinosRefs: CPdinos_refs;
-}
-
-export function isLondonDatabaseType(key: string): boolean {
-  return ["CPdinos", "CPdinos_icons", "CPdinos_images", "CPdinos_reflinks", "CPdinos_refs"].includes(key);
-}
-export function isLondonDatabaseKey(key: string): key is LondonDatabaseKey {
-  return ["cpdinos", "cpdinosIcons", "cpdinosImages", "cpdinosReflinks", "cpdinosRefs"].includes(key);
-}
-export function assertLondonDatabaseKey(key: string): asserts key is LondonDatabaseKey {
-  if (!isLondonDatabaseKey(key)) {
-    throw new Error(`Invalid London database key: ${key}`);
-  }
-}
-export function toCamelCase(str: string): string {
-  return str
-    .toLowerCase() // Convert everything to lowercase
-    .replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase()); // Remove non-alphanumeric & capitalize next letter
-}
-// get the table names
-export type LondonDatabaseKey = keyof LondonDatabase;
+import { LondonDatabase } from "../types";
 
 const londonDBFilePath = join("db", "london", "london.db");
 const londonDBDir = join("db", "london");
@@ -45,7 +18,7 @@ export async function initializeLondonDatabase() {
   try {
     await access(outputCSVDir);
   } catch (e) {
-    if ((e as any).code === "ENOENT") {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") {
       mkdir(outputCSVDir, { recursive: true });
     } else {
       throw e;
@@ -54,7 +27,7 @@ export async function initializeLondonDatabase() {
   try {
     await access(londonDBDir);
   } catch (e) {
-    if ((e as any).code === "ENOENT") {
+    if ((e as NodeJS.ErrnoException).code === "ENOENT") {
       console.log("London database directory does not exist. Creating it now...");
       await mkdir(londonDBDir, { recursive: true });
     }
