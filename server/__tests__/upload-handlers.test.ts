@@ -587,10 +587,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     expect(writeFileMetadata).not.toHaveBeenCalled();
   });
   it("should handle pdfFields and remove original PDF files when not manual", async () => {
-    const pdfFields = {
-      tempPDFFilePaths: ["tempPath1", "tempPath2"],
-      pdfFileNames: ["file1.pdf", "file2.pdf"]
-    };
+    const pdfFields = { "file1.pdf": "tempPath1", "file2.pdf": "tempPath2" };
 
     loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
       index[metadata.title] = metadata as shared.Datapack;
@@ -600,7 +597,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     const datapackFolder = "uuid-directory/title";
 
     const normalizedDatapackFolder = path.join(datapackFolder); // Ensure path is normalized to the platform
-    const pathResolveSpy = vi.spyOn(path, "resolve").mockImplementation((...args) => args.join(path.sep));
+    const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
 
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, undefined, pdfFields);
 
@@ -608,11 +605,11 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
     expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
 
-    expect(pathResolveSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file1.pdf");
-    expect(pathResolveSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file2.pdf");
+    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file1.pdf");
+    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file2.pdf");
 
     // Restore the spy
-    pathResolveSpy.mockRestore();
+    pathJoinSpy.mockRestore();
   });
 });
 

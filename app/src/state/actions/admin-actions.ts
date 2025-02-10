@@ -292,7 +292,7 @@ export const adminDeleteOfficialDatapacks = action(
 );
 
 export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: FileList) => {
     const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
     if (!recaptchaToken) return;
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
@@ -314,6 +314,11 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    if (pdfFiles) {
+      Array.from(pdfFiles).forEach((file) => {
+        formData.append("pdfFiles[]", file);
+      });
+    }
     try {
       const response = await fetcher(`/admin/official/datapack`, {
         method: "POST",
