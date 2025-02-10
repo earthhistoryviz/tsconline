@@ -115,12 +115,15 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setProfileImage(file);
   };
   const handlePDFFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files!;
-    if (!files) {
+    const newFiles = event.target.files;
+    if (!newFiles) {
       return;
     }
     actions.removeAllErrors();
-    setPDFFiles(files);
+    const dataTransfer = new DataTransfer();
+    Array.from(pdfFiles).forEach((file) => dataTransfer.items.add(file));
+    Array.from(newFiles).forEach((file) => dataTransfer.items.add(file));
+    setPDFFiles(dataTransfer.files);
   };
   const handlePDFFileDelete = (fileName: string) => {
     if (!pdfFiles) {
