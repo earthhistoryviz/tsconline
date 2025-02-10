@@ -1,18 +1,16 @@
 import * as readline from "readline";
 import { createObjectCsvWriter } from "csv-writer";
-import { createReadStream, existsSync, mkdirSync, writeFileSync } from "fs";
+import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
+import { access, mkdir, writeFile } from "fs/promises";
 
 const DUMP_FILE = join("db", "london", "london.sql");
-const OUTPUT_DIR = join("db", "london", "output_csvs");
+export const OUTPUT_DIR = join("db", "london", "output_csvs");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES/i;
 
-if (!existsSync(OUTPUT_DIR)) {
-  mkdirSync(OUTPUT_DIR);
-}
 
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
@@ -87,7 +85,7 @@ async function convertSQLDumpToCSV(dumpFile: string) {
 
   try {
     // write the schemas
-    writeFileSync(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
+    await writeFile(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
     console.log(`Exported: ` + chalk.green(`kysely_schema.ts`));
   } catch (e) {
     console.error(e);
@@ -194,5 +192,19 @@ function processSchema(statement: string) {
   return "";
 }
 
-processSchema(DUMP_FILE);
-convertSQLDumpToCSV(DUMP_FILE);
+try {
+    await access(OUTPUT_DIR)
+} catch (e) { 
+    if ((e as any).code === "ENOENT") {
+        mkdir(OUTPUT_DIR);
+    } else {
+        throw e;
+    }
+}
+try {
+    await access(DUMP_FILE);
+} catch (e) {
+    console.log(chalk.red("SQL dump file not found"));
+    process.exit(1);
+}
+await convertSQLDumpToCSV(DUMP_FILE);
