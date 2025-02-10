@@ -28,7 +28,7 @@ export interface CPdinos {
   refs_linked: string | null; // mediumtext
   Parent: string | null; // varchar(255) DEFAULT NULL
   detached_from: string | null; // varchar(255) DEFAULT NULL
-  detached_from_id: number | null; // int DEFAULT NULL
+  detached_from_id: string | null; // varchar(255) DEFAULT NULL
   table_header: string | null; // varchar(255) DEFAULT NULL
   table_caption: string | null; // varchar(255) DEFAULT NULL
   path: string | null; // varchar(255) DEFAULT NULL
