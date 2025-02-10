@@ -144,13 +144,13 @@ function processSchema(statement: string) {
   } else {
     return;
   }
-  const columnRegex = /`(\w+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
+  const columnRegex = /`([\w-]+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
   let columnMatch;
   while ((columnMatch = columnRegex.exec(cleanLine)) !== null) {
     if (columnMatch) {
       let [, columnName, type, size, unsigned, notNull, , defaultValue] = columnMatch;
       if (columnName && type) {
-        const tsColumnName = /^\d/.test(columnName) ? `"${columnName}"` : columnName;
+        const tsColumnName = /^\d|\w+-\w+/.test(columnName) ? `"${columnName}"` : columnName;
         let tsType = "string";
         let mappedType = typeMapping[type.toLowerCase()];
         if (mappedType) {

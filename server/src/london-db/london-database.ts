@@ -18,6 +18,19 @@ export interface LondonDatabase {
 export function isLondonDatabaseType(key: string): boolean {
   return ["CPdinos", "CPdinos_icons", "CPdinos_images", "CPdinos_reflinks", "CPdinos_refs"].includes(key);
 }
+export function isLondonDatabaseKey(key: string): key is LondonDatabaseKey {
+  return ["cpdinos", "cpdinosIcons", "cpdinosImages", "cpdinosReflinks", "cpdinosRefs"].includes(key);
+}
+export function assertLondonDatabaseKey(key: string): asserts key is LondonDatabaseKey {
+  if (!isLondonDatabaseKey(key)) {
+    throw new Error(`Invalid London database key: ${key}`);
+  }
+}
+export function toCamelCase(str: string): string {
+  return str
+    .toLowerCase() // Convert everything to lowercase
+    .replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase()); // Remove non-alphanumeric & capitalize next letter
+}
 // get the table names
 export type LondonDatabaseKey = keyof LondonDatabase;
 
@@ -115,10 +128,11 @@ export async function initializeLondonDatabase() {
     .addColumn("search_age", "text", (col) => col.defaultTo(null))
     .addColumn("rating", "real", (col) => col.defaultTo(null))
     .addColumn("source", "text", (col) => col.defaultTo(null))
+    .addColumn("source-old", "text", (col) => col.defaultTo(null))
     .addColumn("source_refno", "integer", (col) => col.defaultTo(null))
     .addColumn("notes", "text", (col) => col.defaultTo(null))
     .addColumn("lat_long", "text", (col) => col.defaultTo(null))
-    .addColumn("latitute", "real", (col) => col.defaultTo(null))
+    .addColumn("latitude", "real", (col) => col.defaultTo(null))
     .addColumn("longitude", "real", (col) => col.defaultTo(null))
     .addColumn("water_depth", "text", (col) => col.defaultTo(null))
     .addColumn("collection_details", "text", (col) => col.defaultTo(null))
