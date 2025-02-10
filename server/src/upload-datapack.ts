@@ -21,12 +21,12 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
       filepath: string;
       datapackMetadata: DatapackMetadata;
       tempProfilePictureFilepath?: string;
-      pdfFields: Record<string, string[]>;
+      pdfFields: { [fileName: string]: string };
     }
 > => {
   let fields: Record<string, string> = {};
   let file: MultipartFile | undefined;
-  let pdfFields: Record<string, string[]> = {};
+  let pdfFields: { [fileName: string]: string } = {};
   try {
     const result = await processMultipartPartsForDatapackUpload(uuid, parts);
     if (isOperationResult(result)) {
