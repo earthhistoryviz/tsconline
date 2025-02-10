@@ -85,8 +85,14 @@ async function convertSQLDumpToCSV(dumpFile: string) {
     }
   }
 
-  // write the schemas
-  writeFileSync(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
+  try {
+    // write the schemas
+    writeFileSync(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
+    console.log(`Exported: ` + chalk.green(`kysely_schema.ts`));
+  } catch (e) {
+    console.error(e);
+    console.log(chalk.yellow(`Error exporting schemas to kysely_schema.ts`));
+  }
 
   console.log(chalk.green("✅ All tables exported successfully!"));
 }
