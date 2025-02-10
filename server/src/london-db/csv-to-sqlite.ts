@@ -1,16 +1,9 @@
 import csv from "csv-parser";
 import { createReadStream } from "fs";
-import {
-  LondonDatabaseKey,
-  assertLondonDatabaseKey,
-  isLondonDatabaseType,
-  londonDb,
-  outputCSVDir,
-  toCamelCase
-} from "./london-database.js";
-import { readFile, readdir } from "fs/promises";
+import { londonDb, outputCSVDir } from "./london-database.js";
+import { readdir } from "fs/promises";
 import { join } from "path";
-import { createInterface } from "readline/promises";
+import { toCamelCase, assertLondonDatabaseKey, isLondonDatabaseType, LondonDatabaseKey } from "../types.js";
 
 const BATCH_SIZE = 1;
 
@@ -61,21 +54,6 @@ async function insertLargeCSVData(tableName: string, filePath: string) {
   });
 }
 
-async function insertLargeCSVDataReadFile(tableName: LondonDatabaseKey, filePath: string) {
-  const fileStream = createReadStream(filePath);
-  const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
-  const headers = readline.line.split(",");
-
-  let batch: (string | null)[][] = [];
-  for await (const line of readline) {
-    const row = line.split(",").map((value) => (value === "" ? null : value));
-    batch.push(row);
-    if (batch.length >= BATCH_SIZE) {
-      await londonDb.insertInto(tableName).values(batch).execute();
-      batch = [];
-    }
-  }
-}
 async function getCSVFiles(directory: string): Promise<string[]> {
   try {
     const files = await readdir(directory);
@@ -86,7 +64,6 @@ async function getCSVFiles(directory: string): Promise<string[]> {
   }
 }
 
-// Import all tables
 export async function importAllTables() {
   const files = await getCSVFiles(outputCSVDir);
   for (const csv of files) {
