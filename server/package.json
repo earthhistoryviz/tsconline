@@ -78,7 +78,8 @@
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
-    "london": "node dist/london-db/london-database.js"
+    "london": "node dist/london-db/london-database.js",
+    "sqlite": "node dist/sqlite-db/csv-to-sqlite.js"
   },
   "type": "module"
 }

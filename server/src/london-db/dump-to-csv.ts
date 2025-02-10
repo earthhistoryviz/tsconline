@@ -4,20 +4,17 @@ import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
 import { access, mkdir, writeFile } from "fs/promises";
-
-const DUMP_FILE = join("db", "london", "london.sql");
-export const OUTPUT_DIR = join("db", "london", "output_csvs");
+import { outputCSVDir } from "./london-database.js";
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES/i;
-
 
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
   return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
 };
 
-async function convertSQLDumpToCSV(dumpFile: string) {
+export async function convertSQLDumpToCSV(dumpFile: string) {
   const fileStream = createReadStream(dumpFile);
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
 
@@ -59,7 +56,7 @@ async function convertSQLDumpToCSV(dumpFile: string) {
   for (const [table, { columns, rows }] of Object.entries(tables)) {
     try {
       const csvWriter = createObjectCsvWriter({
-        path: join(OUTPUT_DIR, `${table}.csv`),
+        path: join(outputCSVDir, `${table}.csv`),
         header: columns.map((col) => ({ id: col, title: col }))
       });
 
@@ -85,7 +82,7 @@ async function convertSQLDumpToCSV(dumpFile: string) {
 
   try {
     // write the schemas
-    await writeFile(join(OUTPUT_DIR, "kysely_schema.ts"), schemas.join("\n\n"));
+    await writeFile(join(outputCSVDir, "kysely_schema.ts"), schemas.join("\n\n"));
     console.log(`Exported: ` + chalk.green(`kysely_schema.ts`));
   } catch (e) {
     console.error(e);
@@ -191,20 +188,3 @@ function processSchema(statement: string) {
   }
   return "";
 }
-
-try {
-    await access(OUTPUT_DIR)
-} catch (e) { 
-    if ((e as any).code === "ENOENT") {
-        mkdir(OUTPUT_DIR);
-    } else {
-        throw e;
-    }
-}
-try {
-    await access(DUMP_FILE);
-} catch (e) {
-    console.log(chalk.red("SQL dump file not found"));
-    process.exit(1);
-}
-await convertSQLDumpToCSV(DUMP_FILE);

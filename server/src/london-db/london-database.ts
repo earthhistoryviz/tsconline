@@ -1,44 +1,59 @@
-import { access, mkdir } from "fs/promises";
+import { access, mkdir, rm } from "fs/promises";
 import { Kysely, SqliteDialect } from "kysely";
 import { CPdinos, CPdinos_icons, CPdinos_images, CPdinos_reflinks, CPdinos_refs } from "./types";
 import BetterSqlite3 from "better-sqlite3";
 import { join } from "path";
-import { exec } from "child_process";
+import chalk from "chalk";
+import { convertSQLDumpToCSV } from "./dump-to-csv.js";
+import { importAllTables } from "./csv-to-sqlite.js";
 
 export interface LondonDatabase {
-    cpdinos: CPdinos;
-    cpdinosIcons: CPdinos_icons;
-    cpdinosImages: CPdinos_images;
-    cpdinosReflinks: CPdinos_reflinks;
-    cpdinosRefs: CPdinos_refs;
+  cpdinos: CPdinos;
+  cpdinosIcons: CPdinos_icons;
+  cpdinosImages: CPdinos_images;
+  cpdinosReflinks: CPdinos_reflinks;
+  cpdinosRefs: CPdinos_refs;
 }
 
 export function isLondonDatabaseType(key: string): boolean {
-    return ["CPdinos", "CPdinos_icons", "CPdinos_images", "CPdinos_reflinks", "CPdinos_refs"].includes(key);
+  return ["CPdinos", "CPdinos_icons", "CPdinos_images", "CPdinos_reflinks", "CPdinos_refs"].includes(key);
 }
 // get the table names
 export type LondonDatabaseKey = keyof LondonDatabase;
 
 const londonDBFilePath = join("db", "london", "london.db");
 const londonDBDir = join("db", "london");
+export const outputCSVDir = join("db", "london", "output_csvs");
+export const sqlDump = join("db", "london", "london.sql");
 
 export let londonDb: Kysely<LondonDatabase>;
 
 export async function initializeLondonDatabase() {
-    try {
-        await access(londonDBDir);
-    } catch (e) {
-        if ((e as any).code === "ENOENT") {
-            console.log("London database directory does not exist. Creating it now...");
-            await mkdir(londonDBDir, { recursive: true });
-        }
+  try {
+    await access(outputCSVDir);
+  } catch (e) {
+    if ((e as any).code === "ENOENT") {
+      mkdir(outputCSVDir, { recursive: true });
+    } else {
+      throw e;
     }
-    londonDb = new Kysely<LondonDatabase>({
-        dialect: new SqliteDialect({
-            database: new BetterSqlite3(londonDBFilePath),
-        })
-    });
-    await londonDb.schema.createTable("cpdinos").ifNotExists()
+  }
+  try {
+    await access(londonDBDir);
+  } catch (e) {
+    if ((e as any).code === "ENOENT") {
+      console.log("London database directory does not exist. Creating it now...");
+      await mkdir(londonDBDir, { recursive: true });
+    }
+  }
+  londonDb = new Kysely<LondonDatabase>({
+    dialect: new SqliteDialect({
+      database: new BetterSqlite3(londonDBFilePath)
+    })
+  });
+  await londonDb.schema
+    .createTable("cpdinos")
+    .ifNotExists()
     .addColumn("id", "integer", (col) => col.primaryKey().notNull())
     .addColumn("Taxon", "text", (col) => col.unique())
     .addColumn("citation", "text", (col) => col.defaultTo(null))
@@ -66,7 +81,7 @@ export async function initializeLondonDatabase() {
     .addColumn("refs_linked", "text", (col) => col.defaultTo(null))
     .addColumn("Parent", "text", (col) => col.defaultTo(null))
     .addColumn("detached_from", "text", (col) => col.defaultTo(null))
-    .addColumn("detached_from_id", "integer", (col) => col.defaultTo(null))
+    .addColumn("detached_from_id", "text", (col) => col.defaultTo(null))
     .addColumn("table_header", "text", (col) => col.defaultTo(null))
     .addColumn("table_caption", "text", (col) => col.defaultTo(null))
     .addColumn("path", "text", (col) => col.defaultTo(null))
@@ -74,8 +89,10 @@ export async function initializeLondonDatabase() {
     .addColumn("last_edit", "text", (col) => col.defaultTo(null))
     .execute();
 
-    await londonDb.schema.createTable("cpdinosIcons").ifNotExists()
-    .addColumn("file_name", "text", (col) => col.defaultTo('').notNull())
+  await londonDb.schema
+    .createTable("cpdinosIcons")
+    .ifNotExists()
+    .addColumn("file_name", "text", (col) => col.defaultTo("").notNull())
     .addColumn("file_module", "text", (col) => col.defaultTo(null))
     .addColumn("taxon", "text", (col) => col.defaultTo("").notNull())
     .addColumn("module", "text", (col) => col.defaultTo("").notNull())
@@ -83,8 +100,10 @@ export async function initializeLondonDatabase() {
     .addPrimaryKeyConstraint("cpdinosIconsPrimaryKey", ["file_name", "taxon", "module"])
     .execute();
 
-    await londonDb.schema.createTable("cpdinosImages").ifNotExists()
-    .addColumn("file_name", "text", (col) => col.defaultTo('').notNull().primaryKey())
+  await londonDb.schema
+    .createTable("cpdinosImages")
+    .ifNotExists()
+    .addColumn("file_name", "text", (col) => col.defaultTo("").notNull().primaryKey())
     .addColumn("image_type", "text", (col) => col.defaultTo(null))
     .addColumn("species_f", "text", (col) => col.defaultTo(null))
     .addColumn("taxon_id", "integer", (col) => col.defaultTo(null))
@@ -112,14 +131,18 @@ export async function initializeLondonDatabase() {
     .addColumn("uploaded", "text", (col) => col.defaultTo(null))
     .execute();
 
-    await londonDb.schema.createTable("cpdinosReflinks").ifNotExists()
+  await londonDb.schema
+    .createTable("cpdinosReflinks")
+    .ifNotExists()
     .addColumn("id", "integer", (col) => col.primaryKey().notNull())
     .addColumn("refno", "integer", (col) => col.defaultTo(null))
     .addColumn("taxon_id", "integer", (col) => col.defaultTo(null))
-    .addColumn("category", "text", (col) => col.defaultTo(''))
+    .addColumn("category", "text", (col) => col.defaultTo(""))
     .execute();
 
-    await londonDb.schema.createTable("cpdinosRefs").ifNotExists()
+  await londonDb.schema
+    .createTable("cpdinosRefs")
+    .ifNotExists()
     .addColumn("refno", "integer", (col) => col.primaryKey().notNull())
     .addColumn("abv_ref", "text", (col) => col.defaultTo(null))
     .addColumn("authors", "text", (col) => col.defaultTo(null))
@@ -133,7 +156,7 @@ export async function initializeLondonDatabase() {
     .addColumn("part", "text", (col) => col.defaultTo(null))
     .addColumn("firstP", "text", (col) => col.defaultTo(null))
     .addColumn("lastP", "text", (col) => col.defaultTo(null))
-    .addColumn("publisher", "text", (col) => col.defaultTo(''))
+    .addColumn("publisher", "text", (col) => col.defaultTo(""))
     .addColumn("notes", "text", (col) => col.defaultTo(null))
     .addColumn("language", "text", (col) => col.defaultTo(null))
     .addColumn("editors", "text", (col) => col.defaultTo(null))
@@ -149,24 +172,24 @@ export async function initializeLondonDatabase() {
     .addColumn("full_ref", "text", (col) => col.defaultTo(null))
     .execute();
 
-    await new Promise<void>((resolve, reject) => {
-        exec("node dist/london-db/dump-to-csv.js", (err, stdout, stderr) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        })
-    });
-    await new Promise<void>((resolve, reject) => {
-        exec("node dist/london-db/csv-to-sqlite.js", (err, stdout, stderr) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve();
-            }
-        })
-    });
+  console.log(chalk.cyan("London database initialized successfully!"));
+  try {
+    await access(sqlDump);
+  } catch (e) {
+    console.log(chalk.red("SQL dump file not found"));
+    process.exit(1);
+  }
+  await convertSQLDumpToCSV(sqlDump);
+  console.log(chalk.green("London database CSVs exported successfully!"));
+  await importAllTables();
+  console.log(chalk.green("London database imported successfully!"));
 }
 
-await initializeLondonDatabase();
+await rm(londonDBFilePath).catch(() => {});
+try {
+  await initializeLondonDatabase();
+} catch (e) {
+  console.error(e);
+  console.log(chalk.red("Error initializing London database"));
+  process.exit(1);
+}
