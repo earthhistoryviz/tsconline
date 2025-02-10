@@ -18,9 +18,9 @@ async function insertLargeCSVData(tableName: LondonDatabaseKey, filePath: string
           try {
             await londonDb.insertInto(tableName).values(batch).execute();
           } catch (error) {
-            console.log(row);
             reject(error);
           }
+          batch.pop();
           batch.length = 0;
         }
       })

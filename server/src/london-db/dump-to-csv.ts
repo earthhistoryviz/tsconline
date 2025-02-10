@@ -7,7 +7,8 @@ import { access, mkdir, writeFile } from "fs/promises";
 import { outputCSVDir } from "./london-database.js";
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
-const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\) VALUES/i;
+const breakWord = "break";
+const insertRegex = new RegExp(`^INSERT INTO \`?(\\w+)\`? \\(([^)]+)\\)${breakWord}VALUES`, "i");
 
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
@@ -30,7 +31,7 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
         currentLine = "";
         continue;
       }
-      currentLine += line.trim() + " ";
+      currentLine += line.trim() + breakWord;
       if (!line.trim().endsWith(";")) continue; // keep going until a statement is completed
 
       if (tableRegex.test(currentLine)) {
@@ -107,8 +108,10 @@ function processInsert(
 
   let valuesPart = currentLine.split("VALUES")[1];
   if (valuesPart) {
+    valuesPart = valuesPart.replace(new RegExp(`^${breakWord}\\(`), "");
+    const regex = new RegExp("\\)," + breakWord + "\\(");
     let valueGroups = valuesPart
-      .split(/\),\s?\(/)
+      .split(regex)
       .map((row) => row.trim().replace(/^\(/, "").replace(/\);?$/, "").split(",").map(cleanValue));
     tables[tableName]!.rows.push(...valueGroups);
   }
