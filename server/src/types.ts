@@ -136,12 +136,6 @@ export function assertLondonDatabaseKey(key: string): asserts key is LondonDatab
     throw new Error(`Invalid London database key: ${key}`);
   }
 }
-export function toCamelCase(str: string): string {
-  return str
-    .toLowerCase() // Convert everything to lowercase
-    .replace(/[^a-zA-Z0-9]+(.)/g, (match, char) => char.toUpperCase()); // Remove non-alphanumeric & capitalize next letter
-}
-// get the table names
 export type LondonDatabaseKey = keyof LondonDatabase;
 
 export function assertEmail(o: any): asserts o is Email {

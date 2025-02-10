@@ -3,8 +3,9 @@ import { createReadStream } from "fs";
 import { londonDb, outputCSVDir } from "./london-database.js";
 import { readdir } from "fs/promises";
 import { join } from "path";
-import { toCamelCase, assertLondonDatabaseKey, isLondonDatabaseType, LondonDatabaseKey } from "../types.js";
+import { assertLondonDatabaseKey, isLondonDatabaseType, LondonDatabaseKey } from "../types.js";
 import chalk from "chalk";
+import { toCamelCase } from "../util.js";
 
 const BATCH_SIZE = 1;
 
