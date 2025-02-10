@@ -14,7 +14,6 @@ if (!existsSync(OUTPUT_DIR)) {
   mkdirSync(OUTPUT_DIR);
 }
 
-// Function to clean up MySQL values (handles quotes, NULLs, etc.)
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
   return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
@@ -114,7 +113,6 @@ function processInsert(
   }
 }
 
-// Define type mapping from MySQL to TypeScript
 const typeMapping: Record<string, string> = {
   int: "number",
   "int unsigned": "number",
@@ -130,7 +128,6 @@ const typeMapping: Record<string, string> = {
   boolean: "boolean"
 };
 
-// Function to extract column definitions from CREATE TABLE
 function processSchema(statement: string) {
   const cleanLine = statement.trim();
   let tableName = "";
@@ -191,7 +188,5 @@ function processSchema(statement: string) {
   return "";
 }
 
-// Run the script
-processSchema(DUMP_FILE); // Replace with your actual SQL file
-
+processSchema(DUMP_FILE);
 convertSQLDumpToCSV(DUMP_FILE);
