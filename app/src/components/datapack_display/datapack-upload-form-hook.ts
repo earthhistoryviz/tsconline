@@ -144,6 +144,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setReferences([]);
     setDate(null);
     setFile(null);
+    setPDFFiles(new DataTransfer().files);
   };
   return {
     state: {

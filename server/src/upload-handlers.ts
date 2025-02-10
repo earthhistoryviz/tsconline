@@ -246,7 +246,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   metadata: DatapackMetadata,
   manual: boolean, // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
   datapackImageFilepath?: string,
-  pdfFields?: Record<string, string[]>
+  pdfFields?: { [fileName: string]: string }
 ) {
   if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
     throw new Error("Datapack already exists");
@@ -280,25 +280,19 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       await rm(datapackImageFilepath, { force: true });
     }
   }
-  if (pdfFields && pdfFields.tempPDFFilePaths && pdfFields.pdfFileNames) {
-    for (let i = 0; i < pdfFields.tempPDFFilePaths.length; i++) {
-      const pdfFilePath = pdfFields.tempPDFFilePaths[i];
-      const pdfFileName = pdfFields.pdfFileNames[i];
-
+  if (pdfFields && Object.keys(pdfFields).length > 0) {
+    for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
-
-      const datapackPDFFilepathDest = path.resolve(datapackFolder, pdfFileName);
+      const datapackPDFFilepathDest = path.join(datapackFolder, pdfFileName);
       if (!datapackPDFFilepathDest.startsWith(datapackFolder)) {
         throw new Error("Invalid datapack PDF filepath destination path");
       }
-
-      // Remove the original file if it was copied from a temp file
+      // remove the original file if it was copied from a temp file
       if (!manual && pdfFilePath !== datapackPDFFilepathDest) {
         await rm(pdfFilePath, { force: true });
       }
     }
   }
-
   await writeFile(
     getUnsafeCachedDatapackFilePath(datapackFolder),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
@@ -372,15 +366,15 @@ export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
   parts: AsyncIterableIterator<Multipart>
 ): Promise<
-  { fields: { [key: string]: string }; file: MultipartFile; pdfFields: { [key: string]: string[] } } | OperationResult
+  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields: { [fileName: string]: string } }
+  | OperationResult
 > {
   let file: MultipartFile | undefined;
   let filepath: string | undefined;
   let originalFileName: string | undefined;
   let storedFileName: string | undefined;
   let tempProfilePictureFilepath: string | undefined;
-  const tempPDFFilePaths: string[] = [];
-  const pdfFileNames: string[] = [];
+  const pdfFields: Record<string, string> = {};
   let datapackImage: string | undefined;
   const fields: { [key: string]: string } = {};
   async function cleanupTempFiles() {
@@ -390,7 +384,7 @@ export async function processMultipartPartsForDatapackUpload(
     if (filepath) {
       await rm(filepath, { force: true });
     }
-    for (const pdfPath of tempPDFFilePaths) {
+    for (const pdfPath of Object.values(pdfFields)) {
       await rm(pdfPath, { force: true });
     }
   }
@@ -439,9 +433,8 @@ export async function processMultipartPartsForDatapackUpload(
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack pdf file" };
         }
-        tempPDFFilePaths.push(join(tmpdir(), part.filename));
-        pdfFileNames.push(part.filename);
-        const filePath = tempPDFFilePaths[tempPDFFilePaths.length - 1] ?? "";
+        const filePath = join(tmpdir(), part.filename);
+        pdfFields[part.filename] = filePath;
         const { code, message } = await uploadFileToFileSystem(part, filePath);
         if (code !== 200) {
           await cleanupTempFiles();
@@ -467,9 +460,6 @@ export async function processMultipartPartsForDatapackUpload(
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     },
-    pdfFields: {
-      tempPDFFilePaths,
-      pdfFileNames
-    }
+    pdfFields
   };
 }
