@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as XLSX from "xlsx";
 import * as path from "path";
+
 // File paths
 const inputDir = "./translation";
 const outputExcelFile = "./translation/translation.xlsx";
