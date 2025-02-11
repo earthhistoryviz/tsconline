@@ -1,10 +1,9 @@
 import { observer } from "mobx-react-lite";
 import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
-import Toolbar from "@mui/material/Toolbar";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
-import { Chart } from "./Chart";
+import { ChartTab } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { originalDarkTheme, originalLightTheme } from "./theme";
@@ -35,7 +34,7 @@ import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
 import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
-import { CrossPlotSettings } from "./crossplot/CrossPlotSettings";
+import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -141,22 +140,10 @@ export default observer(function App() {
         <ThemeProvider theme={theme}>
           <CssBaseline />
           {location.pathname != "/verify" && <NavBar />}
-          <Toolbar />
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
-            <Route
-              path="/chart"
-              element={
-                <Chart
-                  chartContent={state.chartContent}
-                  zoomSettings={state.chartTab.chartZoomSettings}
-                  setZoomSettings={actions.setChartTabZoomSettings}
-                  madeChart={state.madeChart}
-                  chartLoading={state.chartLoading}
-                />
-              }
-            />
+            <Route path="/chart" element={<ChartTab />} />
             <Route path="/help" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
@@ -172,7 +159,7 @@ export default observer(function App() {
             <Route path="/workshops" element={<Workshops />} />
             <Route path="/file-format-info" element={<FileFormatInfo />} />
             <Route path="/workshops/:id" element={<WorkshopDetails />} />
-            <Route path="/crossplot" element={<CrossPlotSettings />} />
+            <Route path="/crossplot" element={<CrossPlotChart />} />
           </Routes>
           {Array.from(state.errors.errorAlerts.entries())
             .reverse()
