@@ -2623,7 +2623,7 @@ __metadata:
     cors: "npm:^2.8.5"
     dompurify: "npm:^3.2.4"
     dotenv: "npm:^16.4.5"
-    fastify: "npm:^4.17.0"
+    fastify: "npm:^4.27.0"
     fastify-metrics: "npm:^9.0.0"
     form-auto-content: "npm:^3.2.1"
     glob: "npm:^10.3.10"
