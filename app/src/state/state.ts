@@ -11,8 +11,8 @@ import {
   User,
   GroupedEventSearchInfo,
   EditableDatapackMetadata,
-  CrossPlotSettingsTabs,
-  CrossPlotTimeSettings
+  CrossPlotTimeSettings,
+  ChartTabState
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -32,7 +32,7 @@ import type {
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
-import { defaultCrossPlotSettings, settings } from "../constants";
+import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
@@ -40,31 +40,23 @@ configure({ enforceActions: "observed" });
 
 export type State = {
   chartTab: {
-    chartTimelineEnabled: boolean;
     chartTimelineLocked: boolean;
-    crossPlot: {
-      lockX: boolean;
-      lockY: boolean;
-      isCrossPlot: boolean;
-    };
-    scale: number;
-    zoomFitScale: number;
-    resetMidX: number;
-    zoomFitMidCoord: number;
-    zoomFitMidCoordIsX: boolean;
-    downloadFilename: string;
-    downloadFiletype: "svg" | "pdf" | "png";
-    isSavingChart: boolean;
-    enableScrollZoom: boolean;
-    unsafeChartContent: string;
+    state: ChartTabState;
+  };
+  crossPlot: {
+    lockX: boolean;
+    lockY: boolean;
+    chartXTimeSettings: CrossPlotTimeSettings;
+    chartYTimeSettings: CrossPlotTimeSettings;
+    chartX: ColumnInfo | undefined;
+    chartY: ColumnInfo | undefined;
+    state: ChartTabState;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
   user: User;
-  chartLoading: boolean;
   tab: number;
-  madeChart: boolean;
   showSuggestedAgePopup: boolean;
   isFullscreen: boolean;
   showPresetInfo: boolean;
@@ -74,13 +66,6 @@ export type State = {
     columnSelected: string | null;
     tabs: string[];
     tabValue: number;
-  };
-  crossplotSettingsTabs: {
-    selected: CrossPlotSettingsTabs;
-    chartXTimeSettings: CrossPlotTimeSettings;
-    chartYTimeSettings: CrossPlotTimeSettings;
-    chartX: ColumnInfo | undefined;
-    chartY: ColumnInfo | undefined;
   };
   settingsTabs: {
     selected: SettingsTabs;
@@ -141,8 +126,6 @@ export type State = {
     sortedPatterns: Patterns[string][];
   };
   selectedPreset: ChartConfig | null;
-  chartContent: string;
-  chartHash: string;
   settingsXML: string;
   settings: ChartSettings;
   prevSettings: ChartSettings;
@@ -165,23 +148,17 @@ export type State = {
 
 export const state = observable<State>({
   chartTab: {
-    chartTimelineEnabled: false,
     chartTimelineLocked: false,
-    crossPlot: {
-      lockX: false,
-      lockY: false,
-      isCrossPlot: false
-    },
-    scale: 1,
-    zoomFitScale: 1,
-    resetMidX: 0,
-    zoomFitMidCoord: 0,
-    zoomFitMidCoordIsX: true,
-    downloadFilename: "chart",
-    downloadFiletype: "svg",
-    isSavingChart: false,
-    enableScrollZoom: false,
-    unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
+    state: cloneDeep(defaultChartTabState)
+  },
+  crossPlot: {
+    lockX: false,
+    lockY: false,
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartX: undefined,
+    chartY: undefined,
+    state: cloneDeep(defaultChartTabState)
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -216,8 +193,6 @@ export const state = observable<State>({
     editRequestInProgress: false,
     datapackImageVersion: 0
   },
-  chartLoading: false,
-  madeChart: false,
   tab: 0,
   showSuggestedAgePopup: false,
   isFullscreen: false,
@@ -228,13 +203,6 @@ export const state = observable<State>({
     columnSelected: null,
     tabs: ["General", "Font"],
     tabValue: 0
-  },
-  crossplotSettingsTabs: {
-    selected: "xAxis",
-    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartX: undefined,
-    chartY: undefined
   },
   settingsTabs: {
     selected: "time",
@@ -291,8 +259,6 @@ export const state = observable<State>({
     sortedPatterns: []
   },
   selectedPreset: null,
-  chartContent: "",
-  chartHash: "",
   settingsXML: "",
   settings: JSON.parse(JSON.stringify(settings)),
   prevSettings: JSON.parse(JSON.stringify(settings)),

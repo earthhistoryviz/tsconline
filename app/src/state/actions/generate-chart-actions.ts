@@ -8,9 +8,10 @@ import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { ChartSettings } from "../../types";
+import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
+import { defaultChartZoomSettings } from "../../constants";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (response) setDatapackTimeDefaults();
@@ -101,17 +102,15 @@ function areSettingsValidForGeneration() {
   return true;
 }
 
-export const resetChartTab = action("resetChartTab", () => {
-  generalActions.setTab(3);
-  generalActions.setChartMade(true);
-  generalActions.setChartLoading(true);
-  generalActions.setChartHash("");
-  generalActions.setChartContent("");
-  generalActions.setChartTabScale(1);
-  generalActions.setChartTabZoomFitScale(1);
-  generalActions.setChartTabResetMidX(0);
-  generalActions.setChartTabZoomFitMidCoord(0);
-  generalActions.setChartTabZoomFitMidCoordIsX(true);
+export const resetChartTabStateForGeneration = action("resetChartTabStateForGeneration", (oldval: ChartTabState) => {
+  generalActions.setChartTabState(oldval, {
+    madeChart: false,
+    chartLoading: true,
+    chartContent: "",
+    unsafeChartContent: "",
+    chartZoomSettings: cloneDeep(defaultChartZoomSettings),
+    chartTimelineEnabled: false
+  });
 });
 
 export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
@@ -119,31 +118,46 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
-  generalActions.setIsCrossPlot(false);
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
-  resetChartTab();
-  let chartRequest: ChartRequest | null = null;
+  resetChartTabStateForGeneration(state.chartTab.state);
+  generalActions.setTab(3);
   try {
-    const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    chartRequest = {
-      settings: xmlSettings,
-      datapacks: state.config.datapacks,
-      useCache: state.useCache,
-      isCrossPlot: false
-    };
-  } catch (e) {
-    console.error(e);
-    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-    return;
+    let chartRequest: ChartRequest | null = null;
+    try {
+      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+      chartRequest = {
+        settings: xmlSettings,
+        datapacks: state.config.datapacks,
+        useCache: state.useCache,
+        isCrossPlot: false
+      };
+    } catch (e) {
+      console.error(e);
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    if (!chartRequest) {
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    const response = await sendChartRequestToServer(chartRequest);
+    if (!response) {
+      // error SHOULD already displayed
+      return;
+    }
+    generalActions.setChartTabState(state.chartTab.state, {
+      chartContent: response.chartContent,
+      chartHash: response.hash,
+      madeChart: true,
+      unsafeChartContent: response.unsafeChartContent,
+      chartTimelineEnabled: false
+    });
+  } finally {
+    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
-  if (!chartRequest) {
-    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-    return;
-  }
-  await sendChartRequestToServer(chartRequest);
 });
 
 const savePreviousSettings = action("savePreviousSettings", () => {
@@ -185,13 +199,11 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
           break;
       }
       displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      generalActions.setChartLoading(false);
       return;
     }
     try {
       assertChartInfo(answer);
-      generalActions.setChartHash(answer.hash);
-      await generalActions.checkSVGStatus();
+      await generalActions.checkSVGStatus(answer.hash);
       const content = await (await fetcher(answer.chartpath)).text();
       const domPurifyConfig = {
         ADD_ATTR: [
@@ -212,13 +224,12 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
-      // for download ONLY
-      generalActions.setUnsafeChartContent(content);
-      // the display version
-      generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(state.chartTab.crossPlot.isCrossPlot);
-      generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
+      return {
+        chartContent: sanitizedSVG,
+        unsafeChartContent: content,
+        hash: answer.hash
+      };
     } catch (e) {
       let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
       switch (response.status) {
