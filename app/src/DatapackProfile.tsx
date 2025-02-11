@@ -122,9 +122,6 @@ export const DatapackProfile = observer(() => {
       });
     }
     return () => {
-      if (state.user.isAdmin) {
-        removeRecaptcha();
-      }
       controller.abort();
     };
   }, [state.user.isAdmin]);
