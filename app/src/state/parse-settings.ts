@@ -42,8 +42,8 @@ import { cloneDeep, range } from "lodash";
 //for testing purposes
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
-import { attachTscPrefixToName, changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
-
+import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
+import { attachTscPrefixToName } from "./non-action-util";
 /**
  * casts a string to a specified type
  * @param value a string that we want to cast to a type

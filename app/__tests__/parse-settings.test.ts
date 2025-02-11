@@ -13,12 +13,21 @@ import {
 import * as parseSettings from "../src/state/parse-settings";
 import { ChartSettings } from "../src/types";
 import { readFileSync } from "fs";
-import { attachTscPrefixToName } from "../src/state/actions/util-actions";
-vi.mock("../src/state/actions/util-actions", () => ({
-  changeManuallyAddedColumns: vi.fn(),
-  normalizeColumnProperties: vi.fn(),
-  attachTscPrefixToName: vi.fn(attachTscPrefixToName)
-}));
+import * as util from "../src/state/non-action-util";
+
+vi.mock("../src/state/actions/util-actions", () => {
+  return {
+    changeManuallyAddedColumns: vi.fn(),
+    normalizeColumnProperties: vi.fn()
+  };
+});
+vi.mock("../src/state/non-action-util", async (importOriginal) => {
+  const actual = await importOriginal<typeof util>();
+  return {
+    ...actual,
+    attachTscPrefixToName: vi.fn(actual.attachTscPrefixToName)
+  };
+});
 const tests = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-tests.json").toString());
 const keys = JSON.parse(readFileSync("./app/__tests__/__data__/parse-settings-keys.json").toString());
 describe("escape html chars", () => {
