@@ -52,6 +52,7 @@ import {
   getMetadataFromArray,
   getNavigationRouteForDatapackProfile,
   hasLeadingTrailingWhiteSpace,
+  isMetadataLoading,
   isOwnedByUser
 } from "./state/non-action-util";
 import { Public, FileUpload, Lock } from "@mui/icons-material";
@@ -76,7 +77,7 @@ export const DatapackProfile = observer(() => {
   const metadata = areParamsValid
     ? getMetadataFromArray({ title: id, type: queryType, uuid }, state.datapackMetadata)
     : null;
-  const [loading, setLoading] = useState(metadata && !datapack);
+  const [loading, setLoading] = useState(!datapack);
   // we need this because if a user refreshes the page, the metadata will be reset and we also
   // don't want to reset the metadata every time the datapack changes (file uploads shouldn't reset the metadata)
   const [isMetadataInitialized, setIsMetadataInitialized] = useState(false);
@@ -99,14 +100,34 @@ export const DatapackProfile = observer(() => {
       actions.resetEditableDatapackMetadata(datapack);
       setIsMetadataInitialized(true);
     }
-    setLoading(false);
   };
   const initializePage = async (controller: AbortController) => {
+    if (!datapack && isMetadataLoading()) {
+      setLoading(true);
+      return;
+    }
     if (shouldLoadRecaptcha) {
       await loadRecaptcha();
     }
     await initializeDatapack(controller);
+    setLoading(false);
   };
+  useEffect(() => {
+    const controller = new AbortController();
+    if (state.user.isAdmin) {
+      loadRecaptcha().then(async () => {
+        if (state.user.isAdmin) {
+          await actions.adminFetchPrivateOfficialDatapacks({ signal: controller.signal });
+        }
+      });
+    }
+    return () => {
+      if (state.user.isAdmin) {
+        removeRecaptcha();
+      }
+      controller.abort();
+    };
+  }, [state.user.isAdmin]);
   useEffect(() => {
     const controller = new AbortController();
     initializePage(controller).catch((e) => {
@@ -127,14 +148,14 @@ export const DatapackProfile = observer(() => {
         controller.abort();
       }
     };
-  }, [queryType, id, isMetadataInitialized]);
+  }, [queryType, id, isMetadataInitialized, isMetadataLoading()]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
     };
   }, []);
   if (loading) return <TSCDialogLoader open={true} transparentBackground />;
-  if (!metadata || !datapack || !areParamsValid) return <PageNotFound />;
+  if (!datapack || !areParamsValid) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
   const tabs = [
     {

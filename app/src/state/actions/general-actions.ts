@@ -198,7 +198,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     console.error(e);
   } finally {
     setPublicOfficialDatapacksLoading(false);
-    setPublicDatapacksLoading(false);
+    setPublicUserDatapacksLoading(false);
   }
 });
 
@@ -957,9 +957,12 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
+      if (!data.user.isAdmin) setPrivateOfficialDatapacksLoading(false);
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
+      setPrivateOfficialDatapacksLoading(false);
+      setPrivateUserDatapacksLoading(false);
     }
   } catch (error) {
     console.error("Failed to check session:", error);
@@ -1264,7 +1267,7 @@ export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateOfficialDatapacksLoading = fetching;
 });
-export const setPublicDatapacksLoading = action((fetching: boolean) => {
+export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
