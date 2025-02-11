@@ -34,6 +34,8 @@ import isValidFilename from "valid-filename";
 import { DownloadPdfCompleteMessage, DownloadPdfMessage } from "./types";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { t } from "i18next";
+import { ChartContext } from "./Chart";
+import styles from "./ChartOptionsBar.module.css";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -43,11 +45,21 @@ interface OptionsBarProps {
 }
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
-  const { state, actions } = useContext(context);
+  const { actions } = useContext(context);
+  const { chartTabState } = useContext(ChartContext);
+  const {
+    isSavingChart,
+    unsafeChartContent,
+    chartZoomSettings,
+    chartTimelineEnabled,
+    downloadFilename,
+    downloadFiletype
+  } = chartTabState;
   const theme = useTheme();
+  const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
   const container = transformRef.current;
-  const content = svgRef.current;
+  const content = svgRef?.current;
   if (!container || !content) {
     return;
   }
@@ -56,17 +68,13 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   //after reset transformation or zoom fit, panning with touchpad jarringly misaligns chart from center
   //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
   //soft requirement for this workaround: animation time for reset or fit = 0
-  const smallUpdate = () => {
-    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
-    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
-  };
   const OptionsButton = () => {
     const [open, setOpen] = React.useState<boolean>(false);
     const handleClick = () => {
       setOpen(!open);
     };
     const handleSwitch = () => {
-      actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
+      actions.setChartTabZoomSettings(chartZoomSettings, { enableScrollZoom: !enableScrollZoom });
     };
     return (
       <div>
@@ -77,8 +85,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         </CustomTooltip>
         <Box
           sx={{
-            border: "2px solid",
-            borderColor: theme.palette.divider,
             bgcolor: theme.palette.backgroundColor.main
           }}
           style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
@@ -87,7 +93,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <div style={{ margin: "auto" }}>
               <Switch
                 inputProps={{ "aria-label": "controlled" }}
-                defaultChecked={state.chartTab.enableScrollZoom}
+                checked={enableScrollZoom}
                 onChange={handleSwitch}
                 color="info"
               />
@@ -102,9 +108,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Zoom In">
         <IconButton
           onClick={() => {
-            if (state.chartTab.scale < maxScale) {
+            if (scale < maxScale) {
               container.zoomIn(step, 0);
-              actions.setChartTabScale(state.chartTab.scale + step);
+              actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale + step });
             }
           }}>
           <ZoomInIcon />
@@ -117,9 +123,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Zoom Out">
         <IconButton
           onClick={() => {
-            if (state.chartTab.scale > minScale) {
+            if (scale > minScale) {
               container.zoomOut(step, 0);
-              actions.setChartTabScale(state.chartTab.scale - step);
+              actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale - step });
             }
           }}>
           <ZoomOutIcon />
@@ -132,9 +138,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Reset Transformation">
         <IconButton
           onClick={() => {
-            container.setTransform(state.chartTab.resetMidX, 0, 1, 0);
-            actions.setChartTabScale(1);
-            smallUpdate();
+            container.setTransform(resetMidX, 0, 1, 0);
+            actions.setChartTabZoomSettings(chartZoomSettings, { scale: 1 });
           }}>
           <RestartAltIcon />
         </IconButton>
@@ -146,13 +151,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       <CustomTooltip title="Zoom Fit">
         <IconButton
           onClick={() => {
-            if (state.chartTab.zoomFitMidCoordIsX) {
-              container.setTransform(state.chartTab.zoomFitMidCoord, 0, state.chartTab.zoomFitScale, 0);
+            if (zoomFitMidCoordIsX) {
+              container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
             } else {
-              container.setTransform(0, state.chartTab.zoomFitMidCoord, state.chartTab.zoomFitScale, 0);
+              container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
             }
-            actions.setChartTabScale(state.chartTab.zoomFitScale);
-            smallUpdate();
+            actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
           }}>
           <ZoomOutMapIcon />
         </IconButton>
@@ -163,7 +167,8 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const TimelineButton = () => {
     return (
       <CustomTooltip title="Timeline On/Off">
-        <IconButton onClick={() => actions.setChartTimelineEnabled(!state.chartTab.chartTimelineEnabled)}>
+        <IconButton
+          onClick={() => actions.setChartTabState(chartTabState, { chartTimelineEnabled: !chartTimelineEnabled })}>
           <HorizontalRuleIcon className="timeline-button" />
         </IconButton>
       </CustomTooltip>
@@ -179,7 +184,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
       setDownloadOpen(false);
     };
     const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      actions.setChartTabDownloadFilename(e.target.value);
+      actions.setChartTabState(chartTabState, { downloadFilename: e.target.value });
     };
 
     const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
@@ -214,71 +219,72 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     };
 
     async function downloadChart() {
-      actions.setChartTabIsSavingChart(true);
-      if (state.chartTab.downloadFiletype === "svg") {
-        const blob = new Blob([state.chartTab.unsafeChartContent]);
-        FileSaver.saveAs(blob, state.chartTab.downloadFilename + ".svg");
-        actions.pushSnackbar("Saved Chart as SVG!", "success");
-        actions.setChartTabIsSavingChart(false);
-      } else {
-        const svgNode = svgRef.current?.children[0];
-        if (!svgNode) return;
-        if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
-        //height and width in cm, so convert to pixels
-        const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
-        const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
-        const svgString = state.chartContent;
-        const svgBlob = new Blob([svgString], {
-          type: "image/svg+xml;charset=utf-8"
-        });
-
-        const DOMURL = window.URL || window.webkitURL || window;
-        const url = DOMURL.createObjectURL(svgBlob);
-
-        let imgURI = "";
-        try {
-          imgURI = await svgToImageURI(url, svgWidth, svgHeight);
-        } catch (e) {
-          console.error(e);
-          actions.pushSnackbar("Failed to download chart, please try again.", "warning");
-          actions.setChartTabIsSavingChart(false);
-        }
-        if (state.chartTab.downloadFiletype === "pdf") {
-          actions.pushSnackbar("Generating a pdf will take a few seconds, feel free to close out of the popup", "info");
-          const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
-            type: "module"
+      actions.setChartTabState(chartTabState, { isSavingChart: true });
+      try {
+        if (downloadFiletype === "svg") {
+          const blob = new Blob([unsafeChartContent]);
+          FileSaver.saveAs(blob, downloadFilename + ".svg");
+          actions.pushSnackbar("Saved Chart as SVG!", "success");
+        } else {
+          const svgNode = svgRef?.current?.children[0];
+          if (!svgNode) return;
+          if (!svgNode.getAttribute("height") || !svgNode.getAttribute("width")) return;
+          //height and width in cm, so convert to pixels
+          const svgHeight = Number(svgNode.getAttribute("height")!.slice(0, -2)) * 37.795;
+          const svgWidth = Number(svgNode.getAttribute("width")!.slice(0, -2)) * 37.795;
+          const svgString = chartTabState.chartContent;
+          const svgBlob = new Blob([svgString], {
+            type: "image/svg+xml;charset=utf-8"
           });
-          const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
-          downloadWorker.postMessage(message);
-          downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
-            const { status, value } = e.data;
-            if (status === "success" && value) {
-              FileSaver.saveAs(value, state.chartTab.downloadFilename + ".pdf");
-              actions.pushSnackbar("Saved Chart as PDF!", "success");
-            } else {
-              actions.pushSnackbar("Saving Chart Timed Out", "info");
-            }
-            actions.setChartTabIsSavingChart(false);
-            downloadWorker.terminate();
-          };
-        } else if (state.chartTab.downloadFiletype === "png") {
-          const a = document.createElement("a");
-          a.download = state.chartTab.downloadFilename + ".png"; // filename
-          a.target = "_blank";
-          a.href = imgURI;
-          a.click();
-          actions.pushSnackbar("Saved Chart as PNG!", "success");
-          actions.setChartTabIsSavingChart(false);
-          a.remove();
-        }
-        return () => {
+
+          const DOMURL = window.URL || window.webkitURL || window;
+          const url = DOMURL.createObjectURL(svgBlob);
+
+          let imgURI = "";
+          try {
+            imgURI = await svgToImageURI(url, svgWidth, svgHeight);
+          } catch (e) {
+            console.error(e);
+            actions.pushSnackbar("Failed to download chart, please try again.", "warning");
+          }
+          if (downloadFiletype === "pdf") {
+            actions.pushSnackbar(
+              "Generating a pdf will take a few seconds, feel free to close out of the popup",
+              "info"
+            );
+            const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
+              type: "module"
+            });
+            const message: DownloadPdfMessage = { imgURI: imgURI, height: svgHeight, width: svgWidth };
+            downloadWorker.postMessage(message);
+            downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
+              const { status, value } = e.data;
+              if (status === "success" && value) {
+                FileSaver.saveAs(value, downloadFilename + ".pdf");
+                actions.pushSnackbar("Saved Chart as PDF!", "success");
+              } else {
+                actions.pushSnackbar("Saving Chart Timed Out", "info");
+              }
+              downloadWorker.terminate();
+            };
+          } else if (downloadFiletype === "png") {
+            const a = document.createElement("a");
+            a.download = downloadFilename + ".png"; // filename
+            a.target = "_blank";
+            a.href = imgURI;
+            a.click();
+            actions.pushSnackbar("Saved Chart as PNG!", "success");
+            a.remove();
+          }
           DOMURL.revokeObjectURL(url);
-        };
+        }
+      } finally {
+        actions.setChartTabState(chartTabState, { isSavingChart: false });
       }
     }
     return (
       <div>
-        <TSCButton buttonType="gradient" onClick={() => handleDownloadOpen()}>
+        <TSCButton className={styles.saveButton} buttonType="gradient" onClick={() => handleDownloadOpen()}>
           {t("chart.save")}
         </TSCButton>
         <Dialog
@@ -289,7 +295,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             component: "form",
             onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
               e.preventDefault(); // to stop website from reloading
-              if (!isValidFilename(state.chartTab.downloadFilename)) {
+              if (!isValidFilename(downloadFilename)) {
                 actions.pushSnackbar("Filename is not valid", "warning");
                 return;
               }
@@ -301,7 +307,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
             <div className="flex-row chart-download-button">
               <TextField
-                defaultValue={state.chartTab.downloadFilename}
+                defaultValue={downloadFilename}
                 autoFocus
                 required
                 margin="normal"
@@ -317,10 +323,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
                   <Select
                     variant="standard"
                     size="small"
-                    value={state.chartTab.downloadFiletype}
+                    value={downloadFiletype}
                     label="Age"
                     onChange={(e) => {
-                      actions.setChartTabDownloadFiletype(e.target.value as "svg" | "png" | "pdf");
+                      actions.setChartTabState(chartTabState, {
+                        downloadFiletype: e.target.value as "svg" | "png" | "pdf"
+                      });
                     }}>
                     <MenuItem value={"svg"}>.svg</MenuItem>
                     <MenuItem value={"pdf"}>.pdf</MenuItem>
@@ -334,7 +342,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Button variant="outlined" onClick={handleDownloadClose}>
               Exit
             </Button>
-            <TSCLoadingButton loading={state.chartTab.isSavingChart} type="submit">
+            <TSCLoadingButton loading={isSavingChart} type="submit">
               Save
             </TSCLoadingButton>
           </DialogActions>
