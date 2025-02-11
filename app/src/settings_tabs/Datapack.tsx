@@ -41,7 +41,8 @@ export const Datapacks = observer(function Datapacks() {
   const navigate = useNavigate();
   const shouldLoadRecaptcha =
     state.isLoggedIn &&
-    (state.user.isAdmin ||
+    (formOpen ||
+      state.user.isAdmin ||
       state.datapackMetadata.some((dp) => isWorkshopDatapack(dp) || (isUserDatapack(dp) && !dp.isPublic)));
   useEffect(() => {
     const controller = new AbortController();
