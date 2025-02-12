@@ -294,7 +294,7 @@ jobs:
             if [ "${{ steps.monitoring_changed.outputs.monitoring_changed }}" == "true" ]; then
               echo "Detected changes in monitoring/ directory. Updating monitoring services..."
 
-              MONITORING_DIR={{ secrets.MONITORING_DIR }}
+              MONITORING_DIR="${{ secrets.MONITORING_DIR }}"
 
               mkdir -p $MONITORING_DIR
 
