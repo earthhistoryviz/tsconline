@@ -30,6 +30,12 @@ import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
 
+/**
+ * Fetches the official datapack with the given name if it is public
+ * @param request
+ * @param reply
+ * @returns
+ */
 export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
   reply: FastifyReply
@@ -42,6 +48,10 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   const officialDatapack = await fetchUserDatapack("official", name);
   if (!officialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  if (!officialDatapack.isPublic) {
+    reply.status(403).send({ error: "Datapack is not public" });
     return;
   }
   reply.send(officialDatapack);
