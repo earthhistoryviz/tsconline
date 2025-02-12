@@ -305,7 +305,7 @@ jobs:
 
               rm -rf $MONITORING_DIR/*
 
-              mv monitoring/* $MONITORING_DIR/
+              cp monitoring/* $MONITORING_DIR/
 
               if [ ! -f "$MONITORING_DIR/docker-compose-prometheus.yml" ]; then
                 echo "Error: docker-compose-prometheus.yml not found in $MONITORING_DIR"
