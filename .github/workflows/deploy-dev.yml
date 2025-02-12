@@ -187,6 +187,19 @@ jobs:
       #     chmod 600 /tmp/ssh_key.pem
       #     scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
 
+      - name: Check for monitoring changes
+        id: monitoring_changed
+        run: |
+          MONITORING_CHANGED=$(git diff --name-only "$OLD_COMMIT" "$NEW_COMMIT" | grep '^monitoring/' || echo "")
+
+          if [ -n "$MONITORING_CHANGED" ]; then
+            echo "Detected changes in monitoring/ directory. Updating monitoring services..."
+            echo "monitoring_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No monitoring/ changes detected. Skipping monitoring update."
+            echo "monitoring_changed=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -275,9 +288,7 @@ jobs:
             #   ELAPSED=$((ELAPSED + INTERVAL))
             # done
 
-            MONITORING_CHANGED=$(git diff --name-only HEAD^ | grep '^monitoring/' || echo "")
-
-            if [ -n "$MONITORING_CHANGED" ]; then
+            if [ "${{ steps.monitoring_changed.outputs.monitoring_changed }}" == "true" ]; then
               echo "Detected changes in monitoring/ directory. Updating monitoring services..."
 
               MONITORING_DIR= {{secrets.MONITORING_DIR}}
