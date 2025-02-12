@@ -5,7 +5,7 @@ concurrency:
 on:
   push:
     branches:
-      - TSC-498-monitoring-with-prometheus-grafana
+      - main
 
 jobs:
   deploy:
@@ -19,173 +19,173 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Extract PR number
-      #   id: extract_pr_number
-      #   run: |
-      #     COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-      #     echo "Commit message: $COMMIT_MESSAGE"
-      #     PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oE '#[0-9]+' | tr -d '#')
-      #     if [ -z "$PR_NUMBER" ]; then
-      #       echo "No PR number detected in the commit message."
-      #       echo "pr_number=" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "Detected PR number: $PR_NUMBER"
-      #       echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
-      #     fi
+      - name: Extract PR number
+        id: extract_pr_number
+        run: |
+          COMMIT_MESSAGE=$(git log -1 --pretty=%B)
+          echo "Commit message: $COMMIT_MESSAGE"
+          PR_NUMBER=$(echo "$COMMIT_MESSAGE" | grep -oE '#[0-9]+' | tr -d '#')
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR number detected in the commit message."
+            echo "pr_number=" >> $GITHUB_OUTPUT
+          else
+            echo "Detected PR number: $PR_NUMBER"
+            echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
 
-      # - name: Download PR Artifacts if PR number is present
-      #   id: download_pr_artifacts
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     if [ -z "${{ steps.extract_pr_number.outputs.pr_number }}" ]; then
-      #       echo "No PR number detected. Skipping download."
-      #       echo "build_download_status=failed" >> $GITHUB_OUTPUT
-      #       echo "jar_download_status=failed" >> $GITHUB_OUTPUT
-      #       exit 0
-      #     fi
-      #     DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
-      #     if [ -z "$DOWNLOAD_URL" ]; then
-      #       echo "No build artifact found."
-      #     else
-      #       echo "Build download URL: $DOWNLOAD_URL"
-      #       curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
-      #     fi
-      #     if [ -f "build-artifacts.zip" ]; then
-      #       echo "build_download_status=success" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "build_download_status=failed" >> $GITHUB_OUTPUT
-      #     fi
-      #     DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
-      #     if [ -z "$DOWNLOAD_URL" ]; then
-      #       echo "No jar artifact found."
-      #     else
-      #       echo "Jar download URL: $DOWNLOAD_URL"
-      #       curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
-      #       unzip -q jar.zip
-      #     fi
-      #     if [ -f "jar.zip" ]; then
-      #       echo "jar_download_status=success" >> $GITHUB_OUTPUT
-      #       echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "jar_download_status=failed" >> $GITHUB_OUTPUT
-      #     fi
+      - name: Download PR Artifacts if PR number is present
+        id: download_pr_artifacts
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -z "${{ steps.extract_pr_number.outputs.pr_number }}" ]; then
+            echo "No PR number detected. Skipping download."
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No build artifact found."
+          else
+            echo "Build download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
+          fi
+          if [ -f "build-artifacts.zip" ]; then
+            echo "build_download_status=success" >> $GITHUB_OUTPUT
+          else
+            echo "build_download_status=failed" >> $GITHUB_OUTPUT
+          fi
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .archive_download_url' | head -n 1)
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "No jar artifact found."
+          else
+            echo "Jar download URL: $DOWNLOAD_URL"
+            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
+            unzip -q jar.zip
+          fi
+          if [ -f "jar.zip" ]; then
+            echo "jar_download_status=success" >> $GITHUB_OUTPUT
+            echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
+          else
+            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+          fi
 
-      # - name: Setup Node.js
-      #   if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
-      #   uses: actions/setup-node@v3
-      #   with:
-      #     node-version: "20"
+      - name: Setup Node.js
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20"
 
-      # - name: Install and build project
-      #   if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
-      #   run: |
-      #     yarn
-      #     yarn build
-      #     zip -q -r build-artifacts.zip app/dist shared/dist server/dist
+      - name: Install and build project
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
+        run: |
+          yarn
+          yarn build
+          zip -q -r build-artifacts.zip app/dist shared/dist server/dist
 
-      # - name: Compare old vs. new activeJar
-      #   id: check_active_jar
-      #   run: |
-      #     OLD_COMMIT="${{ github.event.before }}"
-      #     NEW_COMMIT="${{ github.event.after }}"
+      - name: Compare old vs. new activeJar
+        id: check_active_jar
+        run: |
+          OLD_COMMIT="${{ github.event.before }}"
+          NEW_COMMIT="${{ github.event.after }}"
 
-      #     echo "Old commit SHA: $OLD_COMMIT"
-      #     echo "New commit SHA: $NEW_COMMIT"
+          echo "Old commit SHA: $OLD_COMMIT"
+          echo "New commit SHA: $NEW_COMMIT"
 
-      #     OLD_JAR=$(git show "$OLD_COMMIT:server/assets/config.json" \
-      #       | jq -r '.activeJar' \
-      #       | xargs basename \
-      #       || echo "null")
+          OLD_JAR=$(git show "$OLD_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
 
-      #     NEW_JAR=$(git show "$NEW_COMMIT:server/assets/config.json" \
-      #       | jq -r '.activeJar' \
-      #       | xargs basename \
-      #       || echo "null")
+          NEW_JAR=$(git show "$NEW_COMMIT:server/assets/config.json" \
+            | jq -r '.activeJar' \
+            | xargs basename \
+            || echo "null")
 
-      #     echo "Old activeJar: $OLD_JAR"
-      #     echo "New activeJar: $NEW_JAR"
+          echo "Old activeJar: $OLD_JAR"
+          echo "New activeJar: $NEW_JAR"
 
-      #     if [ "$OLD_JAR" == "null" ] || [ "$NEW_JAR" == "null" ]; then
-      #       echo "Error: Failed to get activeJar from config.json"
-      #       exit 1
-      #     fi
-      #     if [ "$OLD_JAR" != "$NEW_JAR" ]; then
-      #       echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
-      #       echo "old_active_jar=$OLD_JAR" >> $GITHUB_OUTPUT
-      #     fi
+          if [ "$OLD_JAR" == "null" ] || [ "$NEW_JAR" == "null" ]; then
+            echo "Error: Failed to get activeJar from config.json"
+            exit 1
+          fi
+          if [ "$OLD_JAR" != "$NEW_JAR" ]; then
+            echo "new_active_jar=$NEW_JAR" >> $GITHUB_OUTPUT
+            echo "old_active_jar=$OLD_JAR" >> $GITHUB_OUTPUT
+          fi
 
-      # - name: Determine if building Jar is necessary
-      #   id: build_necessary
-      #   run: |
-      #     if [ -z "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
-      #       echo "Build is not necessary."
-      #       echo "build_necessary=false" >> $GITHUB_OUTPUT
-      #     elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" ] || [ "${{ steps.check_active_jar.outputs.new_active_jar }}" != "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
-      #       echo "Build is necessary."
-      #       echo "build_necessary=true" >> $GITHUB_OUTPUT
-      #     else
-      #       echo "Build is not necessary."
-      #       echo "build_necessary=false" >> $GITHUB_OUTPUT
-      #     fi
+      - name: Determine if building Jar is necessary
+        id: build_necessary
+        run: |
+          if [ -z "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
+          elif [ "${{ steps.download_pr_artifacts.outputs.jar_download_status }}" == "failed" ] || [ "${{ steps.check_active_jar.outputs.new_active_jar }}" != "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
+            echo "Build is necessary."
+            echo "build_necessary=true" >> $GITHUB_OUTPUT
+          else
+            echo "Build is not necessary."
+            echo "build_necessary=false" >> $GITHUB_OUTPUT
+          fi
 
-      # - name: Set up SSH key
-      #   if: steps.build_necessary.outputs.build_necessary == 'true'
-      #   run: |
-      #     eval $(ssh-agent)
-      #     mkdir -p ~/.ssh
-      #     echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-      #     chmod 600 ~/.ssh/id_rsa
-      #     echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
-      #     ssh-add ~/.ssh/id_rsa
-      #     ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+      - name: Set up SSH key
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
 
-      # - name: Set up jdk
-      #   if: steps.build_necessary.outputs.build_necessary == 'true'
-      #   uses: actions/setup-java@v4
-      #   with:
-      #     distribution: "temurin"
-      #     java-version: "8"
-      #     java-package: "jdk"
+      - name: Set up jdk
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
 
-      # - name: Checkout code and build jar
-      #   if: steps.build_necessary.outputs.build_necessary == 'true'
-      #   run: |
-      #     git clone git@bitbucket.org:strat/tscreator.git
-      #     cd ${{ github.workspace }}/tscreator/devel
-      #     make
-      #     make jar
-      #     find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} \;
-      #     if [ -f  ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} ]; then
-      #       echo "Successfully made jar."
-      #     else
-      #       echo "Failed to make jar."
-      #       exit 1
-      #     fi
+      - name: Checkout code and build jar
+        if: steps.build_necessary.outputs.build_necessary == 'true'
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} \;
+          if [ -f  ${{ github.workspace }}/${{ steps.check_active_jar.outputs.new_active_jar }} ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
 
-      # - name: Parse DecryptionJar Name
-      #   if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
-      #   id: parse_decryption_jar
-      #   run: |
-      #     JAR_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
-      #     echo "name=$JAR_NAME" >> $GITHUB_OUTPUT
-      #     echo "Decryption Jar: $JAR_NAME"
+      - name: Parse DecryptionJar Name
+        if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        id: parse_decryption_jar
+        run: |
+          JAR_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          echo "name=$JAR_NAME" >> $GITHUB_OUTPUT
+          echo "Decryption Jar: $JAR_NAME"
 
-      # - name: Send Artifacts to Server
-      #   run: |
-      #     if [ ! -f "build-artifacts.zip" ]; then
-      #       echo "Error: build-artifacts.zip not found"
-      #       exit 1
-      #     fi
-      #     FILES_TO_SEND="build-artifacts.zip"
-      #     if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
-      #       FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
-      #     fi
+      - name: Send Artifacts to Server
+        run: |
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
+            exit 1
+          fi
+          FILES_TO_SEND="build-artifacts.zip"
+          if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+            FILES_TO_SEND="$FILES_TO_SEND ${{ steps.check_active_jar.outputs.new_active_jar }}"
+          fi
 
-      #     echo "Sending files: $FILES_TO_SEND"
-      #     echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
-      #     chmod 600 /tmp/ssh_key.pem
-      #     scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
+          echo "Sending files: $FILES_TO_SEND"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEV_PATH }}
 
       - name: Check for monitoring changes
         id: monitoring_changed
@@ -224,72 +224,72 @@ jobs:
               exit 1
             fi
 
-            # unzip -q -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
-            # rm build-artifacts.zip
-            # if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
-            #   mv ${{ steps.check_active_jar.outputs.new_active_jar }} ${{ secrets.DEV_PATH }}/server/assets/jars
-            #   find ${{ secrets.DEV_PATH }}/server/assets/jars -type f \
-            #     | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" \
-            #     | xargs rm -f
-            # fi
+            unzip -q -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
+            rm build-artifacts.zip
+            if [ -f "${{ steps.check_active_jar.outputs.new_active_jar }}" ]; then
+              mv ${{ steps.check_active_jar.outputs.new_active_jar }} ${{ secrets.DEV_PATH }}/server/assets/jars
+              find ${{ secrets.DEV_PATH }}/server/assets/jars -type f \
+                | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" \
+                | xargs rm -f
+            fi
 
-            # echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
-            # echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
-            # echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
-            # echo 'NODE_ENV="production"' >> ./server/.env
-            # echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
-            # echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
-            # echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
-            # echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
-            # echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
-            # echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
-            # echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
-            # echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            # if [ ! -f "docker-compose-server.yml" ]; then
-            #   echo "Error: docker-compose-server.yml not found"
-            #   exit 1
-            # fi
+            if [ ! -f "docker-compose-server.yml" ]; then
+              echo "Error: docker-compose-server.yml not found"
+              exit 1
+            fi
 
-            # CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            # if [ -z "$CONTAINER_ID" ]; then
-            #   echo "Container is not running. Bringing up the container..."
-            #   docker-compose -f docker-compose-server.yml up -d
-            #   if [ $? -ne 0 ]; then
-            #     echo "Error: Failed to bring up the container."
-            #     exit 1
-            #   fi
-            # else
-            #   echo "Container is already running. Restarting..."
-            #   docker-compose -f docker-compose-server.yml restart
-            # fi
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Container is not running. Bringing up the container..."
+              docker-compose -f docker-compose-server.yml up -d
+              if [ $? -ne 0 ]; then
+                echo "Error: Failed to bring up the container."
+                exit 1
+              fi
+            else
+              echo "Container is already running. Restarting..."
+              docker-compose -f docker-compose-server.yml restart
+            fi
 
-            # START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
-            # sleep 5
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+            sleep 5
 
-            # CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            # if [ -z "$CONTAINER_ID" ]; then
-            #   echo "Error: Failed to get container ID for tsconline."
-            #   exit 1
-            # fi
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for tsconline."
+              exit 1
+            fi
 
-            # MAX_WAIT=480
-            # INTERVAL=5
-            # ELAPSED=0
+            MAX_WAIT=480
+            INTERVAL=5
+            ELAPSED=0
 
-            # while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-            #   if [ $ELAPSED -ge $MAX_WAIT ]; then
-            #     echo "Max wait time exceeded. Exiting..."
-            #     echo "Last 200 lines in container:"
-            #     docker-compose -f docker-compose-server.yml logs --tail=200
-            #     docker-compose -f docker-compose-server.yml stop
-            #     exit 1
-            #   fi
-            #   echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-            #   sleep $INTERVAL
-            #   ELAPSED=$((ELAPSED + INTERVAL))
-            # done
+            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                echo "Last 200 lines in container:"
+                docker-compose -f docker-compose-server.yml logs --tail=200
+                docker-compose -f docker-compose-server.yml stop
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
 
             if [ "${{ steps.monitoring_changed.outputs.monitoring_changed }}" == "true" ]; then
               echo "Detected changes in monitoring/ directory. Updating monitoring services..."
@@ -332,110 +332,110 @@ jobs:
               echo "No monitoring/ changes detected. Skipping monitoring update."
             fi
 
-      # - name: Send Jar Artifact to Dropbox
-      #   if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
-      #   run: |
-      #     # --- Get the access token ---
-      #     ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+      - name: Send Jar Artifact to Dropbox
+        if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        run: |
+          # --- Get the access token ---
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
 
-      #     # --- Upload the new JAR artifact ---
-      #     DROPBOX_FILE_PATH="${{ secrets.DROPBOX_PATH }}/${{ steps.check_active_jar.outputs.new_active_jar }}"
-      #     DROPBOX_API_ARG=$(printf '{"path": "%s", "mode": "overwrite", "autorename": false, "mute": true}' "$DROPBOX_FILE_PATH")
-      #     curl -s -X POST "https://content.dropboxapi.com/2/files/upload" \
-      #       --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #       --header "Content-Type: application/octet-stream" \
-      #       --header "Dropbox-API-Arg: $DROPBOX_API_ARG" \
-      #       --data-binary @"${{ steps.check_active_jar.outputs.new_active_jar }}"
-      #     echo -e "\nUploaded ${{ steps.check_active_jar.outputs.new_active_jar }} to Dropbox"
+          # --- Upload the new JAR artifact ---
+          DROPBOX_FILE_PATH="${{ secrets.DROPBOX_PATH }}/${{ steps.check_active_jar.outputs.new_active_jar }}"
+          DROPBOX_API_ARG=$(printf '{"path": "%s", "mode": "overwrite", "autorename": false, "mute": true}' "$DROPBOX_FILE_PATH")
+          curl -s -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --header "Dropbox-API-Arg: $DROPBOX_API_ARG" \
+            --data-binary @"${{ steps.check_active_jar.outputs.new_active_jar }}"
+          echo -e "\nUploaded ${{ steps.check_active_jar.outputs.new_active_jar }} to Dropbox"
 
-      #     # --- List all JAR files in the base Dropbox folder excluding the new active JAR, old active JAR, and decryption JAR ---
-      #     echo "Listing JAR files in Dropbox..."
-      #     LIST_PAYLOAD=$(printf '{"path": "%s", "recursive": false}' "${{ secrets.DROPBOX_PATH }}")
-      #     LIST_RESPONSE=$(curl -s -X POST https://api.dropboxapi.com/2/files/list_folder \
-      #       --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #       --header "Content-Type: application/json" \
-      #       --data "$LIST_PAYLOAD")
-      #     echo "List Folder Response: $LIST_RESPONSE"
-      #     FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
-      #       | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
+          # --- List all JAR files in the base Dropbox folder excluding the new active JAR, old active JAR, and decryption JAR ---
+          echo "Listing JAR files in Dropbox..."
+          LIST_PAYLOAD=$(printf '{"path": "%s", "recursive": false}' "${{ secrets.DROPBOX_PATH }}")
+          LIST_RESPONSE=$(curl -s -X POST https://api.dropboxapi.com/2/files/list_folder \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$LIST_PAYLOAD")
+          echo "List Folder Response: $LIST_RESPONSE"
+          FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
+            | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
 
-      #     if [[ -z "$FILES_TO_DELETE" ]]; then
-      #       echo "No files to delete. Exiting."
-      #       exit 0
-      #     fi
-      #     echo "Files to delete: $FILES_TO_DELETE"
+          if [[ -z "$FILES_TO_DELETE" ]]; then
+            echo "No files to delete. Exiting."
+            exit 0
+          fi
+          echo "Files to delete: $FILES_TO_DELETE"
 
-      #     # --- Delete the filtered files ---
-      #     for FILE in $FILES_TO_DELETE; do
-      #       echo "Deleting $FILE"
-      #       DELETE_PAYLOAD=$(printf '{"path": "%s/%s"}' "${{ secrets.DROPBOX_PATH }}" "$FILE")
-      #       curl -s -X POST https://api.dropboxapi.com/2/files/delete_v2 \
-      #         --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #         --header "Content-Type: application/json" \
-      #         --data "$DELETE_PAYLOAD"
-      #     done
+          # --- Delete the filtered files ---
+          for FILE in $FILES_TO_DELETE; do
+            echo "Deleting $FILE"
+            DELETE_PAYLOAD=$(printf '{"path": "%s/%s"}' "${{ secrets.DROPBOX_PATH }}" "$FILE")
+            curl -s -X POST https://api.dropboxapi.com/2/files/delete_v2 \
+              --header "Authorization: Bearer $ACCESS_TOKEN" \
+              --header "Content-Type: application/json" \
+              --data "$DELETE_PAYLOAD"
+          done
 
-      # - name: Send Jar Artifact to Dropbox
-      #   if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
-      #   run: |
-      #     # --- Get the access token ---
-      #     ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+      - name: Send Jar Artifact to Dropbox
+        if: steps.build_necessary.outputs.build_necessary == 'true' || steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        run: |
+          # --- Get the access token ---
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
 
-      #     # --- Upload the new JAR artifact ---
-      #     DROPBOX_FILE_PATH="${{ secrets.DROPBOX_PATH }}/${{ steps.check_active_jar.outputs.new_active_jar }}"
-      #     DROPBOX_API_ARG=$(printf '{"path": "%s", "mode": "overwrite", "autorename": false, "mute": true}' "$DROPBOX_FILE_PATH")
-      #     curl -s -X POST "https://content.dropboxapi.com/2/files/upload" \
-      #       --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #       --header "Content-Type: application/octet-stream" \
-      #       --header "Dropbox-API-Arg: $DROPBOX_API_ARG" \
-      #       --data-binary @"${{ steps.check_active_jar.outputs.new_active_jar }}"
-      #     echo -e "\nUploaded ${{ steps.check_active_jar.outputs.new_active_jar }} to Dropbox"
+          # --- Upload the new JAR artifact ---
+          DROPBOX_FILE_PATH="${{ secrets.DROPBOX_PATH }}/${{ steps.check_active_jar.outputs.new_active_jar }}"
+          DROPBOX_API_ARG=$(printf '{"path": "%s", "mode": "overwrite", "autorename": false, "mute": true}' "$DROPBOX_FILE_PATH")
+          curl -s -X POST "https://content.dropboxapi.com/2/files/upload" \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/octet-stream" \
+            --header "Dropbox-API-Arg: $DROPBOX_API_ARG" \
+            --data-binary @"${{ steps.check_active_jar.outputs.new_active_jar }}"
+          echo -e "\nUploaded ${{ steps.check_active_jar.outputs.new_active_jar }} to Dropbox"
 
-      #     # --- List all JAR files in the base Dropbox folder excluding the new active JAR, old active JAR, and decryption JAR ---
-      #     echo "Listing JAR files in Dropbox..."
-      #     LIST_PAYLOAD=$(printf '{"path": "%s", "recursive": false}' "${{ secrets.DROPBOX_PATH }}")
-      #     LIST_RESPONSE=$(curl -s -X POST https://api.dropboxapi.com/2/files/list_folder \
-      #       --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #       --header "Content-Type: application/json" \
-      #       --data "$LIST_PAYLOAD")
-      #     echo "List Folder Response: $LIST_RESPONSE"
-      #     FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
-      #       | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
+          # --- List all JAR files in the base Dropbox folder excluding the new active JAR, old active JAR, and decryption JAR ---
+          echo "Listing JAR files in Dropbox..."
+          LIST_PAYLOAD=$(printf '{"path": "%s", "recursive": false}' "${{ secrets.DROPBOX_PATH }}")
+          LIST_RESPONSE=$(curl -s -X POST https://api.dropboxapi.com/2/files/list_folder \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Content-Type: application/json" \
+            --data "$LIST_PAYLOAD")
+          echo "List Folder Response: $LIST_RESPONSE"
+          FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
+            | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
 
-      #     if [[ -z "$FILES_TO_DELETE" ]]; then
-      #       echo "No files to delete. Exiting."
-      #       exit 0
-      #     fi
-      #     echo "Files to delete: $FILES_TO_DELETE"
+          if [[ -z "$FILES_TO_DELETE" ]]; then
+            echo "No files to delete. Exiting."
+            exit 0
+          fi
+          echo "Files to delete: $FILES_TO_DELETE"
 
-      #     # --- Delete the filtered files ---
-      #     for FILE in $FILES_TO_DELETE; do
-      #       echo "Deleting $FILE"
-      #       DELETE_PAYLOAD=$(printf '{"path": "%s/%s"}' "${{ secrets.DROPBOX_PATH }}" "$FILE")
-      #       curl -s -X POST https://api.dropboxapi.com/2/files/delete_v2 \
-      #         --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #         --header "Content-Type: application/json" \
-      #         --data "$DELETE_PAYLOAD"
-      #     done
+          # --- Delete the filtered files ---
+          for FILE in $FILES_TO_DELETE; do
+            echo "Deleting $FILE"
+            DELETE_PAYLOAD=$(printf '{"path": "%s/%s"}' "${{ secrets.DROPBOX_PATH }}" "$FILE")
+            curl -s -X POST https://api.dropboxapi.com/2/files/delete_v2 \
+              --header "Authorization: Bearer $ACCESS_TOKEN" \
+              --header "Content-Type: application/json" \
+              --data "$DELETE_PAYLOAD"
+          done
 
-      # - name: Delete build artifacts
-      #   if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
-      #     for ID in $BUILD_ARTIFACTS; do
-      #       echo "Deleting artifact with ID: $ID"
-      #       gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
-      #     done
+      - name: Delete build artifacts
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $BUILD_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
 
-      # - name: Delete jar artifact
-      #   if: steps.download_pr_artifacts.outputs.jar_download_status == 'success'
-      #   env:
-      #     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #   run: |
-      #     JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
-      #     for ID in $JAR_ARTIFACTS; do
-      #       echo "Deleting artifact with ID: $ID"
-      #       gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
-      #     done
+      - name: Delete jar artifact
+        if: steps.download_pr_artifacts.outputs.jar_download_status == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          JAR_ARTIFACTS=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ steps.extract_pr_number.outputs.pr_number }}") | .id')
+          for ID in $JAR_ARTIFACTS; do
+            echo "Deleting artifact with ID: $ID"
+            gh api --method DELETE repos/${{ github.repository }}/actions/artifacts/$ID
+          done
