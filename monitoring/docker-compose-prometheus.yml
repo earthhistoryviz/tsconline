@@ -7,18 +7,7 @@ networks:
 volumes:
   prometheus_data: {}
 
-# Prometheus, Alertmanager, and Node Exporter services
 services:
-  alertmanager:
-    image: prom/alertmanager:latest
-    container_name: alertmanager
-    restart: unless-stopped
-    volumes:
-      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
-    ports:
-      - "9093:9093"
-    networks:
-      - shared_network
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -56,3 +45,6 @@ services:
       - "9090:9090"
     networks:
       - shared_network
+    environment:
+      GRAFANA_USERID: ${GRAFANA_USERID}
+      GRAFANA_PSWD: ${GRAFANA_PSWD}
