@@ -316,13 +316,13 @@ jobs:
               GRAFANA_PSWD=$(grep 'GRAFANA_PSWD' $MONITORING_DIR/.env | cut -d '=' -f2)
 
               if [ -z "$GRAFANA_USERID" ] || [ -z "$GRAFANA_PSWD" ]; then
-                  echo "Error: Grafana credentials are missing in .env file."
-                  exit 1
+                echo "Error: Grafana credentials are missing in .env file."
+                exit 1
               fi
 
               echo "Updating prometheus.yml with Grafana credentials..."
-              sed -i "s/__GRAFANA_USERID__/$GRAFANA_USERID/g" $MONITORING_DIR/prometheus.yml
-              sed -i "s/__GRAFANA_PSWD__/$GRAFANA_PSWD/g" $MONITORING_DIR/prometheus.yml
+              sed -i s/__GRAFANA_USERID__/$GRAFANA_USERID/g $MONITORING_DIR/prometheus.yml
+              sed -i s/__GRAFANA_PSWD__/$GRAFANA_PSWD/g $MONITORING_DIR/prometheus.yml
 
               docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml down
               docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml up -d
