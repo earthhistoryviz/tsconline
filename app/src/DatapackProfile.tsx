@@ -114,19 +114,6 @@ export const DatapackProfile = observer(() => {
   };
   useEffect(() => {
     const controller = new AbortController();
-    if (state.user.isAdmin) {
-      loadRecaptcha().then(async () => {
-        if (state.user.isAdmin) {
-          await actions.adminFetchPrivateOfficialDatapacks({ signal: controller.signal });
-        }
-      });
-    }
-    return () => {
-      controller.abort();
-    };
-  }, [state.user.isAdmin]);
-  useEffect(() => {
-    const controller = new AbortController();
     initializePage(controller).catch((e) => {
       console.error("Error fetching datapack", e);
       displayServerError(e, ErrorCodes.UNABLE_TO_FETCH_DATAPACKS, ErrorMessages[ErrorCodes.UNABLE_TO_FETCH_DATAPACKS]);

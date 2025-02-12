@@ -69,9 +69,10 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
 import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
- * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * Fetches datapacks of any type from the server. If used to fetch private user/official datapacks or workshop datapacks, it requires recaptcha to be loaded.
  * @param metadata
  * @param options - Optional signal for aborting the fetch request
  */
@@ -89,7 +90,11 @@ export const fetchDatapack = action(
         break;
       }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicOfficialDatapack(metadata.title, options);
+        } else {
+          datapack = await actions.adminFetchOfficialDatapack(metadata.title, options);
+        }
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
@@ -100,7 +105,10 @@ export const fetchDatapack = action(
   }
 );
 
-export const fetchOfficialDatapack = action(
+/**
+ * Fetch a public official datapack (see adminFetchOfficialDatapack for private)
+ */
+export const fetchPublicOfficialDatapack = action(
   "fetchOfficialDatapack",
   async (datapack: string, options?: { signal?: AbortSignal }) => {
     try {
@@ -957,7 +965,11 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
-      if (!data.user.isAdmin) setPrivateOfficialDatapacksLoading(false);
+      if (data.user.isAdmin) {
+        adminFetchPrivateOfficialDatapacksMetadata();
+      } else {
+        setPrivateOfficialDatapacksLoading(false);
+      }
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);

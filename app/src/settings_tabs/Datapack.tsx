@@ -45,19 +45,9 @@ export const Datapacks = observer(function Datapacks() {
       state.user.isAdmin ||
       state.datapackMetadata.some((dp) => isWorkshopDatapack(dp) || (isUserDatapack(dp) && !dp.isPublic)));
   useEffect(() => {
-    const controller = new AbortController();
-    if (shouldLoadRecaptcha) {
-      loadRecaptcha().then(async () => {
-        if (state.user.isAdmin) {
-          await actions.adminFetchPrivateOfficialDatapacks({ signal: controller.signal });
-        }
-      });
-    }
+    if (shouldLoadRecaptcha) loadRecaptcha();
     return () => {
-      if (shouldLoadRecaptcha) {
-        removeRecaptcha();
-      }
-      controller.abort();
+      if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, [shouldLoadRecaptcha]);
 

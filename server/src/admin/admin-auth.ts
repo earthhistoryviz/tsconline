@@ -16,7 +16,8 @@ import {
   adminEditDatapackPriorities,
   adminAddOfficialDatapackToWorkshop,
   adminEditDatapackMetadata,
-  adminUploadDatapack
+  adminUploadDatapack,
+  adminFetchSingleOfficialDatapack
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -72,6 +73,13 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const moderateRateLimit = {
     max: 30,
     timeWindow: "1 minute"
+  };
+  const adminFetchSingleOfficialDatapackParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" }
+    },
+    required: ["datapackTitle"]
   };
   const adminCreateUserBody = {
     type: "object",
@@ -165,6 +173,11 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapacks/private",
     { config: { rateLimit: looseRateLimit } },
     fetchAllPrivateOfficialDatapacks
+  );
+  fastify.get(
+    "/official/datapack/:datapackTitle",
+    { schema: { params: adminFetchSingleOfficialDatapackParams }, config: { rateLimit: looseRateLimit } },
+    adminFetchSingleOfficialDatapack
   );
   fastify.post(
     "/user",

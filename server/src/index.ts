@@ -25,6 +25,7 @@ import { userRoutes } from "./routes/user-auth.js";
 import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -233,10 +234,13 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+// these are seperate from the admin routes because they don't require recaptcha
+server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
+
 server.register(workshopRoutes, { prefix: "/workshop" });
 
 server.register(userRoutes, { prefix: "/user" });
-// these are seperate from the user routes because they doesn't require recaptcha
+// these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 
