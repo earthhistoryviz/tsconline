@@ -324,7 +324,7 @@ jobs:
       #     echo "List Folder Response: $LIST_RESPONSE"
       #     FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
       #       | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
-            
+
       #     if [[ -z "$FILES_TO_DELETE" ]]; then
       #       echo "No files to delete. Exiting."
       #       exit 0
@@ -367,7 +367,7 @@ jobs:
       #     echo "List Folder Response: $LIST_RESPONSE"
       #     FILES_TO_DELETE=$(echo "$LIST_RESPONSE" | jq -r '.entries[] | select(.name | test("\\.jar$"; "i")) | .name' \
       #       | grep -v -e "${{ steps.parse_decryption_jar.outputs.name }}" -e "${{ steps.check_active_jar.outputs.new_active_jar }}" -e "${{ steps.check_active_jar.outputs.old_active_jar }}" || true)
-            
+
       #     if [[ -z "$FILES_TO_DELETE" ]]; then
       #       echo "No files to delete. Exiting."
       #       exit 0
@@ -383,8 +383,6 @@ jobs:
       #         --header "Content-Type: application/json" \
       #         --data "$DELETE_PAYLOAD"
       #     done
-
-            
 
       # - name: Delete build artifacts
       #   if: steps.download_pr_artifacts.outputs.build_download_status == 'success'
