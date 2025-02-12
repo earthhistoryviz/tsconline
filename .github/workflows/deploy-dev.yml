@@ -192,7 +192,7 @@ jobs:
         run: |
           OLD_COMMIT="${{ github.event.before }}"
           NEW_COMMIT="${{ github.event.after }}"
-          
+
           MONITORING_CHANGED=$(git diff --name-only "$OLD_COMMIT" "$NEW_COMMIT" | grep '^monitoring/' || echo "")
 
           if [ -n "$MONITORING_CHANGED" ]; then
@@ -294,7 +294,7 @@ jobs:
             if [ "${{ steps.monitoring_changed.outputs.monitoring_changed }}" == "true" ]; then
               echo "Detected changes in monitoring/ directory. Updating monitoring services..."
 
-              MONITORING_DIR= {{secrets.MONITORING_DIR}}
+              MONITORING_DIR={{ secrets.MONITORING_DIR }}
 
               mkdir -p $MONITORING_DIR
 
