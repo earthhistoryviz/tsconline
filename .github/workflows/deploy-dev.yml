@@ -298,7 +298,7 @@ jobs:
 
               mkdir -p $MONITORING_DIR
 
-              mv monitoring/ $MONITORING_DIR/
+              mv monitoring/* $MONITORING_DIR/
 
               if [ ! -f "$MONITORING_DIR/docker-compose-prometheus.yml" ]; then
                 echo "Error: docker-compose-prometheus.yml not found in $MONITORING_DIR"
