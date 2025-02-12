@@ -190,6 +190,9 @@ jobs:
       - name: Check for monitoring changes
         id: monitoring_changed
         run: |
+          OLD_COMMIT="${{ github.event.before }}"
+          NEW_COMMIT="${{ github.event.after }}"
+          
           MONITORING_CHANGED=$(git diff --name-only "$OLD_COMMIT" "$NEW_COMMIT" | grep '^monitoring/' || echo "")
 
           if [ -n "$MONITORING_CHANGED" ]; then
