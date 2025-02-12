@@ -45,6 +45,3 @@ services:
       - "9090:9090"
     networks:
       - shared_network
-    environment:
-      GRAFANA_USERID: ${GRAFANA_USERID}
-      GRAFANA_PSWD: ${GRAFANA_PSWD}
