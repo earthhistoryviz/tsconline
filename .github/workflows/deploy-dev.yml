@@ -14,10 +14,10 @@ jobs:
       name: development
       url: ${{ vars.WEBSITE_URL }}
     steps:
-      # - name: Checkout code
-      #   uses: actions/checkout@v4
-      #   with:
-      #     fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       # - name: Extract PR number
       #   id: extract_pr_number
