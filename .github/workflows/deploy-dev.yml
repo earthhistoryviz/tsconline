@@ -296,7 +296,14 @@ jobs:
 
               MONITORING_DIR="${{ secrets.MONITORING_DIR }}"
 
+              if [ -z "$MONITORING_DIR" ]; then
+                echo "Error: MONITORING_DIR not set in secrets."
+                exit 1
+              fi
+
               mkdir -p $MONITORING_DIR
+
+              rm -rf $MONITORING_DIR/*
 
               mv monitoring/* $MONITORING_DIR/
 
