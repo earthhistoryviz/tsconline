@@ -8,7 +8,6 @@ volumes:
   prometheus_data: {}
 
 services:
-
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
