@@ -311,7 +311,8 @@ jobs:
                 echo "Error: docker-compose-prometheus.yml not found in $MONITORING_DIR"
                 exit 1
               fi
-
+              
+              docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml down
               docker-compose -f $MONITORING_DIR/docker-compose-prometheus.yml up -d
 
               echo "Monitoring services updated and restarted successfully."
