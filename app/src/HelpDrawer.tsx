@@ -10,11 +10,10 @@ interface MenuLink {
   children?: MenuLink[];
 }
 
-// Setting link as any type for now
+
 function NavItem({ link }: { link: MenuLink }) {
   const [open, setOpen] = useState(false);
 
-  // If the item has children, handle expand/collapse
   const handleClick = () => {
     if (link.children) {
       setOpen(!open);

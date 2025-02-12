@@ -30,6 +30,8 @@ import HelpEventColumns from "./HelpMenuPages/Chart/Column Variants/Event Column
 import HelpDualColumnComparison from "./HelpMenuPages/Chart/Column Variants/Event Columns/HelpDualColumnComparison";
 import HelpDataMining from "./HelpMenuPages/Chart/Column Variants/Event Columns/HelpDataMining";
 import HelpFreehandColumns from "./HelpMenuPages/Chart/Column Variants/HelpFreehandColumns";
+import { PageNotFound } from "./PageNotFound";
+import NewBreadcrumbs from "./HelpBreadcrumbsUpdated";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
@@ -172,8 +174,8 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
-      <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto" }}>
-        <Grid item>
+      <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
+        <Grid item sx={background}>
           <Toolbar>
             {/* Does work, it just needs more pages so that the style scrollbar actually activates */}
             <StyledScrollbar>
@@ -181,7 +183,7 @@ export const Help = observer(function Help() {
             </StyledScrollbar>
           </Toolbar>
         </Grid>
-        <Grid item>
+        <Grid item sx={background}>
           {/* This is where the Breadcrumb is */}
           <HelpBreadcrumbs />
 
@@ -205,8 +207,13 @@ export const Help = observer(function Help() {
             <Route path="help" element={<HelpHelp />} />
             <Route path="workshops" element={<HelpWorkshops />} />
             <Route path="options" element={<HelpOptions />} />
+
+            <Route path="404" element={<PageNotFound />} />
           </Routes>
         </Grid>
+      </Grid>
+      <Grid>
+      <NewBreadcrumbs/>
       </Grid>
     </div>
   );

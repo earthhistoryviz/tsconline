@@ -13,10 +13,9 @@ interface Breadcrumb {
 }
 
 export default function HelpBreadcrumbs() {
-  // letting links and path be any type for now, but could be changed in the future
-  // need to fix the any path
-
   const findBreadcrumbs = (links: MenuLink[], path: string): Breadcrumb[] => {
+    {/* For the actually response */}
+    {/* For the demo */}
     for (const link of links) {
       if (path.startsWith(link.to)) {
         if (link.to === path) {
