@@ -10,7 +10,6 @@ alerting:
 rule_files:
   - "rules.yml"
 
-# test
 scrape_configs:
   - job_name: "prometheus"
     scrape_interval: 20s
