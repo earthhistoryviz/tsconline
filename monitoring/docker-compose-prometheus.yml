@@ -7,7 +7,6 @@ networks:
 volumes:
   prometheus_data: {}
 
-# test
 services:
   alertmanager:
     image: prom/alertmanager:latest
