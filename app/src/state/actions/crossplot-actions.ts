@@ -1,5 +1,5 @@
 import { action } from "mobx";
-import { ChartSettings, CrossPlotTimeSettings } from "../../types";
+import { ChartSettings, CrossPlotTimeSettings, Marker } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
@@ -15,6 +15,18 @@ export const setCrossPlotLockX = action((lockX: boolean) => {
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
   state.crossPlot.lockY = lockY;
+});
+
+export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
+  state.crossPlot.markerMode = markerMode;
+});
+
+export const addCrossPlotMarker = action((marker: Marker) => {
+  state.crossPlot.markers.push(marker);
+});
+
+export const removeCrossPlotMarker = action((marker: Marker) => {
+  state.crossPlot.markers = state.crossPlot.markers.filter((m) => m !== marker);
 });
 
 export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
