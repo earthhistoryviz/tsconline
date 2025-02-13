@@ -15,6 +15,7 @@ import {
   throwError
 } from "@tsconline/shared";
 import { State } from "./state";
+import React from "react";
 
 export type DatapackFetchParams = {
   isPublic: boolean;
@@ -74,6 +75,12 @@ export type ChartTabState = {
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;
+  otherChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onChange: (boolean: boolean) => void;
+    value: boolean;
+  }[];
 };
 
 export type SetDatapackConfigMessage = {
