@@ -36,7 +36,7 @@ import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
  * @param reply
  * @returns
  */
-export const fetchOfficialDatapack = async function fetchOfficialDatapack(
+export const fetchPublicOfficialDatapack = async function fetchPublicOfficialDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
   reply: FastifyReply
 ) {

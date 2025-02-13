@@ -10,17 +10,15 @@ import {
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
-import { state } from "./state";
+import { State } from "./state";
 
-export function isMetadataLoading() {
+export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
   const {
-    skeletonStates: {
-      publicOfficialDatapacksLoading,
-      privateOfficialDatapacksLoading,
-      publicUserDatapacksLoading,
-      privateUserDatapacksLoading
-    }
-  } = state;
+    publicOfficialDatapacksLoading,
+    privateOfficialDatapacksLoading,
+    publicUserDatapacksLoading,
+    privateUserDatapacksLoading
+  } = skeletonStates;
   return (
     publicOfficialDatapacksLoading ||
     privateOfficialDatapacksLoading ||

@@ -102,7 +102,7 @@ export const DatapackProfile = observer(() => {
     }
   };
   const initializePage = async (controller: AbortController) => {
-    if (!datapack && isMetadataLoading()) {
+    if (!datapack && isMetadataLoading(state.skeletonStates)) {
       setLoading(true);
       return;
     }
@@ -132,7 +132,7 @@ export const DatapackProfile = observer(() => {
         controller.abort();
       }
     };
-  }, [queryType, id, isMetadataInitialized, isMetadataLoading()]);
+  }, [queryType, id, isMetadataInitialized, isMetadataLoading(state.skeletonStates)]);
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
