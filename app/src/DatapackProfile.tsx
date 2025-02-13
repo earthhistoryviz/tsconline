@@ -107,11 +107,14 @@ export const DatapackProfile = observer(() => {
       setLoading(true);
       return;
     }
-    if (shouldLoadRecaptcha) {
-      await loadRecaptcha();
+    try {
+      if (shouldLoadRecaptcha) {
+        await loadRecaptcha();
+      }
+      await initializeDatapack(controller);
+    } finally {
+      setLoading(false);
     }
-    await initializeDatapack(controller);
-    setLoading(false);
   };
   useEffect(() => {
     const controller = new AbortController();

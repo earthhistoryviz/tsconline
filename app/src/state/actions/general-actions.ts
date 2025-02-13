@@ -112,7 +112,7 @@ export const fetchPublicOfficialDatapack = action(
   "fetchOfficialDatapack",
   async (datapack: string, options?: { signal?: AbortSignal }) => {
     try {
-      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const response = await fetcher(`/official/datapack/${encodeURIComponent(datapack)}`, options);
       const data = await response.json();
       if (response.ok) {
         assertOfficialDatapack(data);
@@ -955,6 +955,7 @@ export const logout = action("logout", async () => {
 export const sessionCheck = action("sessionCheck", async () => {
   const cookieConsentValue = localStorage.getItem("cookieConsent");
   state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
+  let fetchStarted = false;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -965,6 +966,7 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
+      fetchStarted = true;
       if (data.user.isAdmin) {
         adminFetchPrivateOfficialDatapacksMetadata();
       } else {
@@ -973,11 +975,14 @@ export const sessionCheck = action("sessionCheck", async () => {
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
-      setPrivateOfficialDatapacksLoading(false);
-      setPrivateUserDatapacksLoading(false);
     }
   } catch (error) {
     console.error("Failed to check session:", error);
+  } finally {
+    if (!fetchStarted) {
+      setPrivateOfficialDatapacksLoading(false);
+      setPrivateUserDatapacksLoading(false);
+    }
   }
 });
 
