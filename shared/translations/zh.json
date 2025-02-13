@@ -1,0 +1,464 @@
+{
+    "translation": {
+        "about": "通过 TimeScale Creator 在线版, 您可以从地球历史上大量的全球和地区事件中探索和创建地质时间尺度任意部分的图表。内部数据库套件包括 20,000 多个生物、地磁、海平面、稳定同位素和其他事件。",
+        "login": {
+            "signin": "登陆",
+            "forgot-password": "忘记密码?",
+            "signup": "还没有账户？注册账户",
+            "username": "用户名",
+            "password": "密码",
+            "tooltip": "账户设置",
+            "profile": "个人主页",
+            "add": "添加账户",
+            "logout": "退出登陆",
+            "admin": "管理员",
+            "profile-info": "个人信息",
+            "welcome": "欢迎",
+            "email": "邮箱",
+            "settings": "设置",
+            "dark-mode": "深色模式",
+            "delete": "删除账户",
+            "save": "保存更改",
+            "cancel": "取消更改",
+            "change": "更改",
+            "current-password": "当前密码",
+            "new-password": "新密码",
+            "new-email": "新邮箱",
+            "new-username": "新用户名",
+            "reset-password": "输入邮箱以接收密码重置链接",
+            "enter-new-password": "请输入新密码",
+            "recovery": "密码找回",
+            "send": "发送"
+        },
+        "signup": {
+            "title": "注册账户",
+            "email": "邮箱地址",
+            "username": "用户名",
+            "password": "密码",
+            "signin": "已有账户？登陆",
+            "email-sent": "已发送电子邮件。请检查您的电子邮件以验证您的账户"
+        },
+        "title": {
+            "about": "关于我们",
+            "main": "Time Scale Creator 在线版",
+            "settings": "设置"
+        },
+        "navBar": {
+            "chart": "图表",
+            "datapacks": "选择数据包",
+            "settings": "设置",
+            "help": "帮助",
+            "about": "关于",
+            "workshops": "工作坊"
+        },
+        "workshops": {
+            "login-first": "请登陆以查看您的工作坊",
+            "header": "您的工作坊",
+            "description-header": "点击工作坊以查看更多信息!",
+            "titles": {
+                "all": "所有工作坊",
+                "upcoming": "即将开始的工作坊",
+                "active": "正在进行的工作坊",
+                "past": "过去的工作坊"
+            },
+            "messages": {
+                "upcoming": "暂无即将开始的工作坊",
+                "active": "暂无正在进行的工作坊",
+                "past": "暂无过去的工作坊"
+            },
+            "dates": {
+                "start": "开始日期: ",
+                "end": "结束日期: "
+            },
+            "details-page": {
+                "datapacks": "数据包",
+                "files": "文件",
+                "download-button": "下载文件",
+                "description": "内容简介",
+                "messages": {
+                    "no-datapacks": "暂无数据包",
+                    "no-files": "暂无文件"
+                }
+            },
+            "calendar": {
+                "months": {
+                    "1": "一月",
+                    "2": "二月",
+                    "3": "三月",
+                    "4": "四月",
+                    "5": "五月",
+                    "6": "六月",
+                    "7": "七月",
+                    "8": "八月",
+                    "9": "九月",
+                    "10": "十月",
+                    "11": "十一月",
+                    "12": "十二月"
+                }
+            }
+        },
+        "loading": {
+            "loading-chart": "加载图表...",
+            "loading-datapacks": "加载数据包",
+            "time": "这可能需要超过一分钟"
+        },
+        "settingsTabs": {
+            "Time": "选择时间区间",
+            "Preferences": "選擇偏好",
+            "Column": "选择列",
+            "Search": "搜索",
+            "Font": "字体",
+            "Map Points": "地图",
+            "Datapacks": "选择数据包",
+            "General": "基础选项",
+            "Data Mining": "数据挖掘",
+            "Curve Drawing": "绘制曲线图",
+            "About": "关于",
+            "View Data": "查看数据",
+            "Discussion": "讨论",
+            "Warnings": "警告"
+        },
+        "settings": {
+            "time": {
+                "interval": {
+                    "top": "区间顶部",
+                    "base": "区间底部",
+                    "top-name": "年代/阶段 名称",
+                    "base-name": "年代/阶段 名称",
+                    "not-avaliable": "该时间单位无可选年代",
+                    "vertical-scale": "垂直比例（厘米 每 1",
+                    "helper-text": "区间底部年代应大于区间顶部年代"
+                }
+            },
+            "preferences": {
+                "checkboxs": {
+                    "skip-empty-columns": "在已选时间段内没有数据的列将不会被画出",
+                    "mouse-over-info": "鼠标移至目标上时显示详细信息",
+                    "global-priority": "启用优先级过滤",
+                    "stage-background": "启用事件列的背景",
+                    "enable-legend": "启用添加图例",
+                    "lithology-auto-indent": "禁用自动缩进岩性图案",
+                    "conserve-chart": "使用家谱绘图时节省图表空间（暂无该功能）",
+                    "hide-block-labels": "根据优先级隐藏组标签",
+                    "use-suggested-age-spans": "禁用数据包建议的时间区间"
+                },
+                "settings-file": {
+                    "load": "上传设置",
+                    "save": "保存设置",
+                    "load-dialog": {
+                        "message": "这将覆盖你所做的任何更改！",
+                        "cancel": "取消",
+                        "load": "上传"
+                    },
+                    "save-dialog": {
+                        "message": "请输入文件名",
+                        "cancel": "取消",
+                        "save": "保存"
+                    }
+                }
+            },
+            "column": {
+                "tooltip": {
+                    "auto-scale": "自动缩放",
+                    "flip": "翻转区间",
+                    "note-in-range": "数据不在所选时间区间内"
+                },
+                "titles": {
+                    "column-menu-title": "个性化设置列",
+                    "data-mining-title": "数据挖掘设置",
+                    "font-option-title": "设置\"{{name}}\"列的字体"
+                },
+                "menu": {
+                    "shift-row": "移动位置",
+                    "edit-name": "编辑标题",
+                    "background-color": "背景颜色",
+                    "enable-title": "显示标题",
+                    "show-age-label": "显示年代",
+                    "info-box": "信息与参考",
+                    "add-blank-column": "添加一个空白列",
+                    "add-age-column": "添加一个年代列",
+                    "width": "宽",
+                    "orientation": {
+                        "title": "图标排布",
+                        "horizontal": "横向",
+                        "vertical": "纵向"
+                    },
+                    "show-uncertainty": "显示不确定性",
+                    "events": "事件",
+                    "ranges": "范围",
+                    "first-occurrence": "首先发生的优先",
+                    "last-occurrence": "最后发生的优先",
+                    "alphabetical": "按字母顺序排列",
+                    "ruler": {
+                        "title": "调整年代刻度尺",
+                        "left": "左对齐",
+                        "right": "右对齐"
+                    }
+                },
+                "font-menu": {
+                    "change": "更改字体",
+                    "additional": "子列的更多字体选项"
+                },
+                "datamining-menu": {
+                    "title": "数据挖掘设置",
+                    "window-size": "窗口大小",
+                    "step-size": "步长",
+                    "options": {
+                        "frequency": "频率",
+                        "max-val": "最大值",
+                        "min-val": "最小值",
+                        "avg-val": "平均值",
+                        "roc": "变化率",
+                        "freq-of-LAD": "LAD 频率",
+                        "freq-of-FAD": "FAD 频率",
+                        "combined-events": "组合事件"
+                    },
+                    "options-title": {
+                        "event": "事件类型",
+                        "chron": "年代类型",
+                        "plot": "绘制数据类型"
+                    }
+                },
+                "curve-drawing-menu": {
+                    "title": "点设置",
+                    "rod": "数据范围",
+                    "lower-range": "下限",
+                    "upper-range": "上限",
+                    "scale-start": "刻度起点",
+                    "scale-step": "刻度步长",
+                    "show-scale": "显示刻度",
+                    "draw-points": "绘制点",
+                    "point-shape": "点形状",
+                    "line": "线条",
+                    "fill": "填充",
+                    "background-gradient": "背景渐变",
+                    "curve-gradient": "曲线渐变",
+                    "start": "起点",
+                    "end": "终点"
+                }
+            },
+            "search": {
+                "search-bar": "搜索",
+                "found-result": "找到 {{count}} 个结果",
+                "current-time-settings": "当前时间区间设置(顶部 / 底部)",
+                "header": {
+                    "status": "是否已选",
+                    "center": "居中",
+                    "extend": "延展",
+                    "column": "列名称",
+                    "age": "年代",
+                    "qualifier": "类别",
+                    "notes": "注释"
+                }
+            },
+            "font": {
+                "notes1": "这些是系统默认的全局字体",
+                "notes2": "在此处更改字体会影响整个图表",
+                "notes3": "注意：可以通过每列的“字体”按钮单独更改每列的字体"
+            },
+            "map-points": {
+                "not-avaliable": "该数据包暂无地图可用"
+            },
+            "datapacks": {
+                "see-info-guidance": "点击数据包以查看更多信息！",
+                "add-datapack-guidance": "点击加号添加数据包",
+                "title": {
+                    "workshop": "工作坊数据包",
+                    "your": "你的数据包"
+                },
+                "no": "暂无",
+                "avaliable": "可用",
+                "upload": "上传数据包",
+                "upload-form": {
+                    "title": "上传你的数据包",
+                    "no-file": "没有选择文件",
+                    "name": "数据包名称",
+                    "name-placeholder": "请为你的数据包输入名称",
+                    "author": "作者",
+                    "author-placeholder": "作者为...",
+                    "description": "数据包概述",
+                    "description-placeholder": "请为你的数据包添加概述",
+                    "tags": "标签",
+                    "make-public": "使数据包对公共可见",
+                    "button": {
+                        "add-ref": "添加引用",
+                        "more": "更多选项",
+                        "finish": "完成并上传",
+                        "startover": "重新开始"
+                    },
+                    "reference": "引用",
+                    "contact": "联系方式",
+                    "contact-placeholder": "输入你的联系方式",
+                    "contact-helper-text": "如果想要其他用户就此数据包问题联系你，请填写",
+                    "notes": "注释",
+                    "notes-placeholder": "为你的数据包添加注释",
+                    "notes-helper-text": "如果想要指导其他用户如何有效地使用此数据包，请填写"
+                }
+            }
+        },
+        "chart": {
+            "no-chart-yet": "您还未制作任何图表",
+            "save": "保存图表"
+        },
+        "dialogs": {
+            "confirm-datapack-change": {
+                "title": "确认更改数据包",
+                "message": "你有未保存的更改! 你想保存你的更改吗?",
+                "yes": "保存",
+                "no": "不保存"
+            },
+            "default-age": {
+                "title": "使用默认时间区间？"
+            }
+        },
+        "help": {
+            "qsg": {
+                "title": "快速指南",
+                "content": "欢迎使用Time Scale Creator在线版！在这个快速指南中，您将迅速了解导航栏上每个标签页的功能。点击“开始快速指南”按钮开始体验。",
+                "button": "开始快速指南"
+            },
+            "tour": {
+                "title": "导览",
+                "content": {
+                    "datapacks": "在数据包导览中，您将深入探索数据包页面。点击按钮开始您的导览！",
+                    "settings": "在设置导览中，您将深入探索设置页面。点击按钮开始您的导览！"
+                },
+                "button": {
+                    "datapacks": "开始数据包导览",
+                    "settings": "开始设置导览"
+                }
+            },
+            "license": "软件许可",
+            "file-format-info": {
+                "title": "文件格式信息",
+                "link": "查看文件格式信息"
+            }
+        },
+        "errors": {
+            "title": "错误",
+            "SERVER_RESPONSE_ERROR": "服务器错误。请稍后再试。",
+            "INVALID_DATAPACK_INFO": "从服务器接收到的数据包信息无效。请稍后再试。",
+            "INVALID_PRESET_INFO": "从服务器接收到的预置无效。请稍后再试。",
+            "INVALID_PATTERN_INFO": "从服务器接收到的模式信息无效。请稍后再试。",
+            "INVALID_TIME_SCALE": "从服务器收到的时间刻度无效。请稍后再试。",
+            "INVALID_DATAPACK_CONFIG": "数据包未正确设置。请稍后再试。",
+            "INVALID_SVG_READY_RESPONSE": "从服务器收到的SVG就绪响应无效。请稍后再试。",
+            "INVALID_SETTINGS_RESPONSE": "从服务器收到的设置响应无效。请稍后再试。",
+            "INVALID_CHART_RESPONSE": "从服务器收到的图表响应无效。请稍后再试。",
+            "INVALID_PATH": "请求的文件路径无效。请确保文件路径正确。",
+            "INVALID_DATAPACK_UPLOAD": "无效的数据包上传",
+            "INVALID_USER_DATAPACKS": "从服务器收到的用户数据包无效。请稍后再试。",
+            "INVALID_PUBLIC_DATAPACKS": "从服务器收到的公共数据包无效。请稍后再试。",
+            "NO_DATAPACK_FILE_FOUND": "暂无数据包。请先上传一个数据包。",
+            "DATAPACK_FILE_NAME_TOO_LONG": "数据包名称过长。请缩短名称。",
+            "UNRECOGNIZED_DATAPACK_EXTENSION": "无法识别数据包扩展名。文件必须是 .dpk, .mdpk, .map, .txt格式。请上传有效文件格式。",
+            "UNRECOGNIZED_DATAPACK_FILE": "无法识别数据包。请上传有效文件。",
+            "UNFINISHED_DATAPACK_UPLOAD_FORM": "请完成数据包上传表单后再尝试上传文件。",
+            "DATAPACK_ALREADY_EXISTS": "数据包已存在。请上传不重名的数据包。",
+            "NO_DATAPACKS_SELECTED": "未选择数据包。请至少选择一个数据包进行绘制。",
+            "NO_COLUMNS_SELECTED": "未选择列。请至少选择一个列进行绘制。",
+            "IS_BAD_RANGE": "区间底部年代应大于区间顶部年代。",
+            "INVALID_MAPPACK_INFO": "从服务器接收到无效的地图包信息。请稍后再试。",
+            "UNABLE_TO_LOGIN_SERVER": "由于服务器错误无法登陆。请稍后再试。",
+            "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL": "无法使用Google登陆。请稍后再试。",
+            "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD": "无效的用户名或密码。请稍后再试。",
+            "UNABLE_TO_LOGIN_EXISTING_USER": "已存在使用该电子邮件的用户。请登录或使用其他电子邮件注册。",
+            "UNABLE_TO_LOGOUT": "无法登出。请稍后再试。",
+            "UNABLE_TO_SIGNUP_SERVER": "由于服务器错误无法注册。请稍后再试。",
+            "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL": "电子邮件或用户名已存在。请使用不同的电子邮件或用户名重试。",
+            "INVALID_FORM": "表格无效。请确保所有栏目填写正确。",
+            "UNABLE_TO_VERIFY_ACCOUNT": "您的电子邮件未经验证。请先验证您的电子邮件。如果您没有收到电子邮件，请重新发送。",
+            "ALREADY_VERIFIED_ACCOUNT": "帐户已验证。请登录。",
+            "UNABLE_TO_VERIFY_ACCOUNT_SERVER": "由于服务器错误，无法验证帐户。请稍后再试。",
+            "TOKEN_EXPIRED_OR_INVALID": "您的令牌无效或已过期。请申请新的验证电子邮件。",
+            "UNABLE_TO_SEND_EMAIL": "无法发送邮件。请稍后再试。",
+            "UNABLE_TO_RESET_PASSWORD": "无法重置密码。请稍后再试。",
+            "UNABLE_TO_RESET_EMAIL": "无法重置邮箱。请稍后再试。",
+            "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "您的账户已被锁定。请查看您的电子邮件以获取更多信息或联系技术支持获得帮助。",
+            "UNABLE_TO_RECOVER_ACCOUNT": "无法恢复账户。请联系技术支持获取更多信息。",
+            "NOT_LOGGED_IN": "您尚未登录。请登录后访问此页面。",
+            "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "服务器上未找到所请求的数据包。请稍后再试，或联系我们的技术支持团队。",
+            "INCORRECT_ENCRYPTION_HEADER": "无法加密文件。请稍后再试。",
+            "TOO_MANY_REQUESTS": "请求过于频繁。请稍后再试。",
+            "RECAPTCHA_FAILED": "验证失败. 请稍后再试。",
+            "COOKIE_REJECTED": "您必须接受 Cookie 才能登录。",
+            "UNRECOGNIZED_IMAGE_FILE": "图像扩展名无法识别。请上传有效的图像文件。",
+            "UPLOAD_PROFILE_PICTURE_FAILED": "无法上传个人资料图片。请稍后再试。",
+            "UNABLE_TO_CHANGE_USERNAME": "无法更改用户名。请稍后再试。",
+            "UNABLE_TO_DELETE_PROFILE": "无法删除用户。请稍后再试。",
+            "INCORRECT_PASSWORD": "密码错误。请稍后再试。",
+            "USERNAME_TAKEN": "用户名已被使用。请使用一个新的用户名。",
+            "UNABLE_TO_READ_FILE_OR_EMPTY_FILE": "无法读取文件或文件为空。请稍后再试。",
+            "FETCH_USERS_FAILED": "无法获取用户信息供管理员查阅。请稍后再试。",
+            "ADMIN_ADD_USER_FAILED": "无法添加用户。请稍后再试。",
+            "SERVER_TIMEOUT": "服务器超时。请稍后再试。",
+            "SERVER_BUSY": "服务器忙。请稍后再试。",
+            "ADMIN_DELETE_USER_FAILED": "无法删除用户。请稍后再试。",
+            "UNABLE_TO_FETCH_USER_DATAPACKS": "无法获取用户数据包。请稍后再试。",
+            "CANNOT_DELETE_ROOT_USER": "不能删除根用户。",
+            "ADMIN_DELETE_USER_DATAPACK_FAILED": "无法删除用户数据包。请稍后再试。",
+            "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "无法删除服务器数据包。请稍后再试。",
+            "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "无法删除根数据包。请向服务器管理员寻求帮助。",
+            "INVALID_SERVER_DATAPACK_REQUEST": "无效的服务器数据包请求。请稍后再试。",
+            "SERVER_FILE_METADATA_ERROR": "服务器文件元数据错误。请稍后再试。",
+            "USER_DELETE_DATAPACK_FAILED": "无法删除用户数据包。请稍后再试。",
+            "UNABLE_TO_PROCESS_DATAPACK_CONFIG": "处理数据包配置失败。请稍后再试。",
+            "INVALID_SETTINGS": "无效的设置。请稍后再试。",
+            "INTERNAL_ERROR": "生成图表时出现内部错误。请稍后再试。",
+            "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "无法将用户添加到工作坊。请稍后再试。",
+            "ADMIN_EMAIL_INVALID": "电子邮件无效。请修复电子邮件并重试。",
+            "ADMIN_WORKSHOP_FIELDS_EMPTY": "您必须提供至少一个领域才能将用户添加到工作坊。",
+            "UNRECOGNIZED_EXCEL_FILE": "无法识别 Excel 文件。请上传有效的 Excel 文件。",
+            "SERVER_DATAPACK_ALREADY_EXISTS": "服务器数据包已存在。请上传一个独特的数据包（不同的文件名）。",
+            "ADMIN_WORKSHOP_START_AFTER_END": "开始日期必须早于结束日期",
+            "ADMIN_CREATE_WORKSHOP_FAILED": "无法创建工作坊。请稍后再试。",
+            "ADMIN_WORKSHOP_ALREADY_EXISTS": "该工作坊名称已存在。请另选名称。",
+            "ADMIN_FETCH_WORKSHOPS_FAILED": "无法抓取工作坊。请稍后再试。",
+            "ADMIN_WORKSHOP_NOT_FOUND": "服务器未找到工作坊。该工作坊可能已结束或被删除。"
+        },
+        "button": {
+            "generate": "绘制",
+            "generate-chart": "绘制图表",
+            "remove-cache": "清除缓存",
+            "confirm-selection": "确认选择"
+        },
+        "yes": "是",
+        "no": "否",
+        "tours": {
+            "quit": "退出导览",
+            "finish": "结束导览",
+            "next": "下一步",
+            "back": "上一步",
+            "qsg": {
+                "step1": "在预设页面中，我们提供了预设置，允许您快速生成特定类型的图表，无需从头开始配置所有选项。每个预设都配备了指定的数据包、视觉样式和设置，使您能够一键创建图表",
+                "step2": "在数据包页面，您可以选择生成图表所需的数据包。我们提供九个官方数据包，每个数据包都包含为特定主题探索量身定制的数据集合集。如需更详细的数据包指导，请参考“导览”部分下的数据包导览。",
+                "step3": "在图表页面，您可以查看已创建的图表并探索地质事件的详细可视化图。此外，您还可以下载并保存这些图表以供参考或进一步分析。",
+                "step4": "在设置页面，您可以自定义图表的所有方面。这包括调整比例和时间范围、选择显示哪些行、设置背景色和字体样式等。根据您的具体需求和偏好调整图表，以优化您的视觉分析。如需更详细的设置指导，请参考“导览”部分下的设置导览。",
+                "step5": "在帮助页面，您可以找到关于如何使用网站的详细帮助和信息。",
+                "step6": "在工作坊页面，您可以访问一系列提供深入指导的教育和实验教程。在这里，您可以探索已注册的研讨会，通过亲身实践的学习环境来提升您的技能。",
+                "step7": "关于页面提供了我们开发团队的信息。",
+                "step8": "点击此处登录并解锁前面提到的功能，例如访问工作坊界面。登陆后，您还将能够上传数据包并充分利用所有功能。"
+            },
+            "datapack": {
+                "step1": "在数据包显示类型之间切换：行视图、卡片视图或紧凑视图。",
+                "step2": "勾选添加您想要的数据包",
+                "step3": "点此取消选择所有数据包",
+                "step4": "记得确认您的选择"
+            },
+            "settings": {
+                "step1": "在时间设置中，您可以为您的数据设置“时间段顶部”和“时间段底部”。调整这两个值将改变图表的时间跨度，您可以通过输入值或使用下拉选择器进行调整。您还可以调整垂直比例，以改变图表中每百万年占据的垂直空间量。例如，将其设置得更高将使时间间隔进一步分开，使每个时期更易于仔细检查。",
+                "step2": "在偏好中，您可以自定义显示选项。例如，您可以选择在选定时间段内将无数据的列显示为灰色，添加工具提示以提供额外信息，或启用图表的筛选和图例选项。此外，您可以从文件加载您的设置或将当前设置保存到文件中。此功能使您可以备份设置、与他人分享或快速应用以前保存的设置到您的图表中。",
+                "step3": "在列设置中，您可以深度自定义图表的外观和组织。在“列自定义”区域，您可以调整标题和移动行位置，以简化图表上数据的显示方式。根据您的展示需求启用或禁用特定元素，如图表标题和百万年标记。在“字体选项”部分，通过选择不同的字体、大小和样式为标题和标签，细化您的图表外观，确保重要数据突出显示或符合格式要求。请注意，列高级设置可能根据您正在使用的数据包而有所不同，每个数据包都有最适合数据特性的列高级设置。",
+                "step4": "在搜索中，您可以通过输入关键词快速定位特定列，然后直接将其添加到您的图表中。只需输入一个与您正在寻找的设置相关的词语，系统便会显示所有相关结果。此功能可以帮助您管理众多数据点，或进行快速调整而无需浏览繁杂列表。请注意目前只支持英文搜索。",
+                "step5": "在字体设置中您可以自定义图表内的文本外观。您可以为各种元素如列标题、年龄标签等调整字体样式、大小和格式。每项设置都是可继承的，确保相关元素间的一致性，除非另行设置。在这里更改字体设置将系统范围内应用，但您可以使用每个列设置中的“更改字体”选项覆盖这些设置。尝试不同的字体和大小，以增强图表的可读性和视觉吸引力。",
+                "step6": "在地图点设置中，您可以访问和管理不同位置的地理数据点。此功能允许您直接在交互式地图上查看特定位置的详细信息。您可以切换不同的地图层，并用详细描述（如纬度、经度和附加说明）可视化数据点。请注意，并非所有数据包都包含地图点。",
+                "step7": "在数据包设置中，您可以选择您希望用于生成图表的数据包。我们提供九个官方数据包，每个数据包都包含为特定主题探索量身定制的数据集合。您也许已经注意到，此页面与\"数据包\"页面内容相同；您在两个地方都可以进行选择和设置。如需更详细的关于如何利用数据包的指导，请参阅帮助页面“导览”部分中的数据包导览。"
+            }
+        },
+        "language-names": {
+            "en-US": "English",
+            "en": "English",
+            "zh": "中文"
+        }
+    }
+}

@@ -30,9 +30,6 @@ function mergeData(excelFilePath: string, translationJsonDir: string): Record<st
     languageJsons[lang] = {};
   });
 
-  data.forEach((row) => {
-    const keyPath = row.Key.split(".");
-
     languages.forEach((lang) => {
       const jsonFilePath = path.join(translationJsonDir, `${lang}.json`);
       let existingJson: NestedTranslations = {};
@@ -43,10 +40,9 @@ function mergeData(excelFilePath: string, translationJsonDir: string): Record<st
 
       languageJsons[lang] = existingJson;
       data.forEach((row) => {
+        if (!row[lang]) return;
 
-        if (!row[lang]) return
-
-        const keyPath = ["translations", ...row.Key.split(".")];
+        const keyPath = row.Key.split(".");
         let current: NestedTranslations = languageJsons[lang]!;
 
         keyPath.forEach((key, index) => {
@@ -61,20 +57,11 @@ function mergeData(excelFilePath: string, translationJsonDir: string): Record<st
         });
       });
     });
-  });
-  return languageJsons
+  return languageJsons;
 }
 
-  // // Temporary, Save each language JSON to a file
-  // languages.forEach((lang) => {
-  //   if (!languageJsons[lang]) return
-  //   languageJsons[lang] = {"translation": languageJsons[lang]!}
-  //   const fileName = `${lang}.json`;
-  //   fs.writeFileSync("./src/translations/" + fileName, JSON.stringify(languageJsons[lang], null, 2));
-  // })
-
-function writeTranslationsToExcel(data: Record<string, NestedTranslations>, outputFilePath: string):void {
-  if (!data) return
+function writeTranslationsToExcel(data: Record<string, NestedTranslations>, outputFilePath: string): void {
+  if (!data) return;
   const flattenObject = (obj: NestedTranslations, prefix = ""): Record<string, string> => {
     const flattened: Record<string, string> = {};
     for (const key in obj) {
@@ -93,9 +80,9 @@ function writeTranslationsToExcel(data: Record<string, NestedTranslations>, outp
   };
   const translations: Record<string, Record<string, string>> = {};
   Object.keys(data).forEach((key) => {
-    if (!data[key]) return
-    translations[key] = flattenObject(data[key]!)
-  })
+    if (!data[key]) return;
+    translations[key] = flattenObject(data[key]!);
+  });
   const combined: Record<string, Record<string, string>> = {};
   Object.entries(translations).forEach(([lang, data]) => {
     Object.entries(data).forEach(([key, value]) => {
@@ -120,16 +107,13 @@ function writeTranslationsToExcel(data: Record<string, NestedTranslations>, outp
 }
 
 function writeTranslationsToJson(data: Record<string, NestedTranslations>, outputDir: string): void {
-    Object.keys(data).forEach((lang) => {
-      console.log(lang)
-    if (!data[lang]) return
+  Object.keys(data).forEach((lang) => {
+    if (!data[lang]) return;
     data[lang] = {"translation": data[lang]!}
     const fileName = `${lang}.json`;
-    fs.writeFileSync("./src/translations/" + fileName, JSON.stringify(data[lang], null, 2));
-  })
+    fs.writeFileSync(path.join(outputDir, fileName), JSON.stringify(data[lang], null, 4));
+  });
 }
-
-
 
 try {
   // Load the current asset config:
@@ -140,8 +124,8 @@ try {
 }
 
 const translationExcel = path.join(assetconfigs.translationFilepath);
-const translationJsonDir = path.join("./src/trans")
-const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir)
-writeTranslationsToExcel(mergedData, translationExcel)
-writeTranslationsToJson(mergedData, translationJsonDir)
+const translationJsonDir = path.join("../shared/translations");
+const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir);
 
+writeTranslationsToExcel(mergedData, translationExcel);
+writeTranslationsToJson(mergedData, translationJsonDir);
