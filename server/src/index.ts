@@ -178,7 +178,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
-server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
+server.get("/server/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
 
 server.get("/facies-patterns", (_request, reply) => {
