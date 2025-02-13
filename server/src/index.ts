@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -6,7 +6,7 @@ import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
-import fastifyMetrics from "fastify-metrics";
+import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
@@ -44,12 +44,57 @@ const server = fastify({
   }*/
 });
 
-server.register(fastifyMetrics, {
-  endpoint: "/metrics",
-  defaultMetrics: { enabled: true },
-  routeMetrics: { enabled: true }
+collectDefaultMetrics();
+const httpMetricsLabelNames = ["method", "path"];
+const totalHttpRequestCount = new Counter({
+  name: "nodejs_http_total_count",
+  help: "total request number",
+  labelNames: httpMetricsLabelNames
+});
+const totalHttpRequestDuration = new Gauge({
+  name: "nodejs_http_total_duration",
+  help: "the last duration or response time of last request",
+  labelNames: httpMetricsLabelNames
+});
+const activeUsers = new Gauge({
+  name: "nodejs_active_users",
+  help: "number of active users"
 });
 
+// Pathing count and call duration
+server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [number, number] }) => {
+  request.startTime = process.hrtime();
+});
+server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }) => {
+  const duration = process.hrtime(request.startTime);
+  const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
+  totalHttpRequestCount.labels(request.method, request.routerPath).inc();
+  totalHttpRequestDuration.labels(request.method, request.routerPath).set(durationInMs);
+});
+
+// Active user metric tracking
+server.addHook("onSend", async (request, reply) => {
+  if (reply.statusCode === 200) {
+    if (request.routerPath === "/auth/login" || request.routerPath === "/auth/signup") {
+      activeUsers.inc();
+    } else if (request.routerPath === "/auth/logout") {
+      activeUsers.dec();
+    }
+  }
+});
+
+// Expose the metrics endpoint
+server.get("/metrics", async (_request, reply) => {
+  try {
+    const metrics = await register.metrics();
+    reply.header("Content-Type", register.contentType).send(metrics);
+  } catch (e) {
+    console.error("Error loading configs: ", e);
+    reply.status(500).send(e);
+  }
+});
+
+// Restrict access to /metrics to localhost only
 server.addHook("preHandler", (request, reply, done) => {
   if (request.raw.url === "/metrics" && request.ip !== "127.0.0.1" && request.ip !== "::1") {
     reply.code(403).send({ error: "Forbidden" });

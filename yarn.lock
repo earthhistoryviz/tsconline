@@ -2631,7 +2631,6 @@ __metadata:
     dompurify: "npm:^3.2.4"
     dotenv: "npm:^16.4.5"
     fastify: "npm:^4.27.0"
-    fastify-metrics: "npm:^9.0.0"
     form-auto-content: "npm:^3.2.1"
     glob: "npm:^10.3.10"
     google-auth-library: "npm:^9.8.0"
@@ -6432,19 +6431,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"fastify-metrics@npm:^9.0.0":
-  version: 9.2.4
-  resolution: "fastify-metrics@npm:9.2.4"
-  dependencies:
-    fastify-plugin: "npm:^4.2.0"
-    prom-client: "npm:^14.0.1"
-  peerDependencies:
-    fastify: ^4.0.0
-  checksum: fb85ae23d16bee37a50c001a56afd1742c7129632f7de218f4a43ea49de07a5cb2fc7b466c6f2bee88253406db914f094fe8be254285a67d9da05ec96425ef8b
-  languageName: node
-  linkType: hard
-
-"fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.2.0, fastify-plugin@npm:^4.5.0":
+"fastify-plugin@npm:^4.0.0, fastify-plugin@npm:^4.5.0":
   version: 4.5.1
   resolution: "fastify-plugin@npm:4.5.1"
   checksum: 7c6d777ada0f01c8a1166a2a669cccfd6074c7764121f07cce997745f198227a271c7a317aaf0da273b329f24307f0eba3f093d872d29b839b33deb525bbafe2
@@ -9824,15 +9811,6 @@ __metadata:
   version: 0.11.10
   resolution: "process@npm:0.11.10"
   checksum: dbaa7e8d1d5cf375c36963ff43116772a989ef2bb47c9bdee20f38fd8fc061119cf38140631cf90c781aca4d3f0f0d2c834711952b728953f04fd7d238f59f5b
-  languageName: node
-  linkType: hard
-
-"prom-client@npm:^14.0.1":
-  version: 14.2.0
-  resolution: "prom-client@npm:14.2.0"
-  dependencies:
-    tdigest: "npm:^0.1.1"
-  checksum: 892eb83eb860945f3ee55bc19bb73e4a64cb63d95e28336141f49fb90a05354765b4ac4a8ba046fd895690f0bf231de1289caf180647cefdfd0d767f34725d97
   languageName: node
   linkType: hard
 
