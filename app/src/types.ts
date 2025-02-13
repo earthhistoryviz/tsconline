@@ -220,6 +220,13 @@ export type EditableUserProperties = {
   pictureUrl: string | undefined;
 };
 
+export type Marker = {
+  age: number;
+  depth: number;
+  color: string;
+  comment: string;
+};
+
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
   if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");
   if (typeof o.isPublic !== "boolean") throwError("DatapackFetchParams", "isPublic", "boolean", o.isPublic);
