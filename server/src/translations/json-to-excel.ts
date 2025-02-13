@@ -1,10 +1,20 @@
 import * as fs from "fs";
 import * as XLSX from "xlsx";
-import * as path from "path";
+import path from "path";
+import { assetconfigs, loadAssetConfigs } from "../util.js";
 
-// File paths
-const inputDir = "./translation";
-const outputExcelFile = "./translation/translation.xlsx";
+//location of translation jsons
+const inputDir = "./translations";
+
+try {
+  // Load the current asset config:
+  await loadAssetConfigs();
+} catch (e) {
+  console.error("Error loading configs: ", e);
+  process.exit(1);
+}
+
+const outputExcelFile = path.join(assetconfigs.translationFilepath);
 
 type NestedTranslations = {
   [key: string]: string | NestedTranslations;
@@ -16,10 +26,10 @@ const flattenObject = (obj: NestedTranslations, prefix = ""): Record<string, str
     const value = obj[key];
     const fullKey = prefix ? `${prefix}.${key}` : key;
 
-    if (typeof value === "object" && value !== null) {
+    if (typeof value === "object" && value !== undefined) {
       // Recursively flatten nested objects
       Object.assign(flattened, flattenObject(value as NestedTranslations, fullKey));
-    } else if (value !== null) {
+    } else if (value !== undefined) {
       // Add non-null values to the flattened object
       flattened[fullKey] = value.toString();
     }
@@ -42,10 +52,10 @@ jsonFiles.forEach((file) => {
 const combined: Record<string, Record<string, string>> = {};
 Object.entries(translations).forEach(([lang, data]) => {
   Object.entries(data).forEach(([key, value]) => {
-    if (!combined[key]) {
+    const obj = combined[key];
+    if (obj === undefined) {
       combined[key] = {};
-    }
-    combined[key][lang] = value;
+    } else if (obj !== undefined) obj[lang] = value;
   });
 });
 
@@ -60,5 +70,3 @@ const worksheet = XLSX.utils.json_to_sheet(rows);
 const workbook = XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(workbook, worksheet, "Translations");
 XLSX.writeFile(workbook, outputExcelFile);
-
-console.log(`Excel file generated at ${outputExcelFile}`);
