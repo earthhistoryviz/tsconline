@@ -69,9 +69,10 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
 import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
- * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * Fetches datapacks of any type from the server. If used to fetch private user/official datapacks or workshop datapacks, it requires recaptcha to be loaded.
  * @param metadata
  * @param options - Optional signal for aborting the fetch request
  */
@@ -89,7 +90,11 @@ export const fetchDatapack = action(
         break;
       }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicOfficialDatapack(metadata.title, options);
+        } else {
+          datapack = await actions.adminFetchOfficialDatapack(metadata.title, options);
+        }
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
@@ -100,11 +105,14 @@ export const fetchDatapack = action(
   }
 );
 
-export const fetchOfficialDatapack = action(
+/**
+ * Fetch a public official datapack (see adminFetchOfficialDatapack for private)
+ */
+export const fetchPublicOfficialDatapack = action(
   "fetchOfficialDatapack",
   async (datapack: string, options?: { signal?: AbortSignal }) => {
     try {
-      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const response = await fetcher(`/official/datapack/${encodeURIComponent(datapack)}`, options);
       const data = await response.json();
       if (response.ok) {
         assertOfficialDatapack(data);
@@ -198,7 +206,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     console.error(e);
   } finally {
     setPublicOfficialDatapacksLoading(false);
-    setPublicDatapacksLoading(false);
+    setPublicUserDatapacksLoading(false);
   }
 });
 
@@ -947,6 +955,7 @@ export const logout = action("logout", async () => {
 export const sessionCheck = action("sessionCheck", async () => {
   const cookieConsentValue = localStorage.getItem("cookieConsent");
   state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
+  let fetchStarted = false;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -957,12 +966,23 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
+      fetchStarted = true;
+      if (data.user.isAdmin) {
+        adminFetchPrivateOfficialDatapacksMetadata();
+      } else {
+        setPrivateOfficialDatapacksLoading(false);
+      }
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
     }
   } catch (error) {
     console.error("Failed to check session:", error);
+  } finally {
+    if (!fetchStarted) {
+      setPrivateOfficialDatapacksLoading(false);
+      setPrivateUserDatapacksLoading(false);
+    }
   }
 });
 
@@ -1264,7 +1284,7 @@ export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateOfficialDatapacksLoading = fetching;
 });
-export const setPublicDatapacksLoading = action((fetching: boolean) => {
+export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {

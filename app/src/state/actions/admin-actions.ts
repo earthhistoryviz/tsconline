@@ -9,10 +9,13 @@ import {
   DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUserArray,
+  assertDatapack,
   assertDatapackArray,
   assertDatapackIndex,
+  assertDatapackMetadataArray,
   assertDatapackPriorityPartialUpdateSuccess,
   assertDatapackPriorityUpdateSuccess,
+  assertOfficialDatapack,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   assertWorkshopDatapack,
@@ -21,7 +24,6 @@ import {
 import { displayServerError } from "./util-actions";
 import {
   addDatapack,
-  fetchOfficialDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -324,7 +326,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
       const data = await response.json();
 
       if (response.ok) {
-        const pack = await fetchOfficialDatapack(metadata.title);
+        const pack = await adminFetchOfficialDatapack(metadata.title);
         if (!pack) {
           return;
         }
@@ -340,8 +342,10 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   }
 );
 
+/**
+ * Fetches all private official datapacks, used only on Admin page
+ */
 export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
-  setPrivateOfficialDatapacksLoading(true);
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
@@ -375,8 +379,68 @@ export const adminFetchPrivateOfficialDatapacks = action(async (options?: { sign
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
+  }
+});
+
+export const adminFetchPrivateOfficialDatapacksMetadata = action(async () => {
+  try {
+    const response = await fetcher("/admin/official/private/metadata", {
+      method: "GET",
+      credentials: "include"
+    });
+    if (response.ok) {
+      const data = await response.json();
+      assertDatapackMetadataArray(data);
+      for (const dp in data) {
+        addDatapack(data[dp]);
+      }
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   } finally {
     setPrivateOfficialDatapacksLoading(false);
+  }
+});
+
+/**
+ * Fetch an official datapack, private or public
+ */
+export const adminFetchOfficialDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(datapack)}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      ...options
+    });
+    if (response.ok) {
+      const datapack = await response.json();
+      assertOfficialDatapack(datapack);
+      assertDatapack(datapack);
+      return datapack;
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+    }
+  } catch (error) {
+    if ((error as Error).name === "AbortError") return;
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
   }
 });
 

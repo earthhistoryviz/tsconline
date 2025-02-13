@@ -24,6 +24,7 @@ import * as logger from "../src/error-logger";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
@@ -64,9 +65,10 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     ...actual,
-    assertDatapackIndex: vi.fn().mockReturnValue(true),
-    assertDatapack: vi.fn().mockReturnValue(true),
-    assertDatapackPriorityChangeRequestArray: vi.fn().mockReturnValue(true)
+    assertDatapackIndex: vi.fn(),
+    assertDatapack: vi.fn(),
+    assertDatapackPriorityChangeRequestArray: vi.fn(),
+    assertDatapackMetadata: vi.fn()
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -271,6 +273,7 @@ beforeAll(async () => {
     };
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
+  app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
@@ -409,7 +412,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   },
   { method: "POST", url: "/admin/workshop/datapack" },
   { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
-  { method: "PATCH", url: "/admin/official/datapack/test" }
+  { method: "PATCH", url: "/admin/official/datapack/test" },
+  { method: "GET", url: "/admin/official/datapack/test" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -2464,6 +2468,98 @@ describe("adminEditDatapackMetadata", () => {
     });
     expect(await response.json()).toEqual({ message: "Success" });
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+  });
+});
+describe("adminFetchSingleOfficialDatapack", () => {
+  const fetchUserDatapack = vi.spyOn(userHandlers, "fetchUserDatapack");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 404 if an error occurred in fetchUserDatapack", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/test",
+      headers
+    });
+    expect(response.statusCode).toBe(404);
+    expect(await response.json().error).toBe("Datapack not found");
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+  });
+  it("should return datapack", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/datapack/test",
+      headers
+    });
+    expect(await response.json()).toEqual({ title: "test" });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+  });
+});
+describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  const fetchAllPrivateOfficialDatapacks = vi.spyOn(userHandlers, "fetchAllPrivateOfficialDatapacks");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 401 if not logged in", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/private/metadata",
+      headers: {}
+    });
+    expect(findUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 403 if no user is found", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/private/metadata",
+      headers
+    });
+    expect(findUser).toHaveBeenCalledTimes(1);
+    expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 403 if not admin", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/private/metadata",
+      headers
+    });
+    expect(findUser).toHaveBeenCalledTimes(1);
+    expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 500 if an error occurred in fetchAllPrivateOfficialDatapacks", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]);
+    fetchAllPrivateOfficialDatapacks.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/private/metadata",
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json().error).toBe("Unknown error fetching private official datapacks");
+    expect(fetchAllPrivateOfficialDatapacks).toHaveBeenCalledOnce();
+  });
+  it("should return metadatas", async () => {
+    findUser.mockResolvedValueOnce([testAdminUser]);
+    fetchAllPrivateOfficialDatapacks.mockResolvedValueOnce([
+      { title: "test", defaultChronostrat: "UNESCO" }
+    ] as shared.Datapack[]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/admin/official/private/metadata",
+      headers
+    });
+    expect(await response.json()).toEqual([{ title: "test" }]);
+    expect(fetchAllPrivateOfficialDatapacks).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
   });
 });

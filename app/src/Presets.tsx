@@ -84,7 +84,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             continue;
                           }
                           actions.setLoadingDatapacks(true);
-                          const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
+                          const fetchedDatapack = await actions.fetchPublicOfficialDatapack(dp.name);
                           if (!fetchedDatapack) {
                             return;
                           }

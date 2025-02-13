@@ -265,26 +265,26 @@ describe("get a single user datapack", () => {
     expect(fetchUserDatapack).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Database error" });
   });
-  it("should reply 500 if an error occurred in fetchUserDatapack", async () => {
+  it("should reply 404 if an error occurred in fetchUserDatapack", async () => {
     fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
       headers
     });
-    expect(response.statusCode).toBe(500);
+    expect(response.statusCode).toBe(404);
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
-  it("should reply 500 if no metadata is found", async () => {
+  it("should reply 404 if no metadata is found", async () => {
     fetchUserDatapack.mockResolvedValueOnce("" as unknown as shared.Datapack);
     const response = await app.inject({
       method: "GET",
       url: `/user/datapack/${filename}`,
       headers
     });
-    expect(response.statusCode).toBe(500);
+    expect(response.statusCode).toBe(404);
     expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
