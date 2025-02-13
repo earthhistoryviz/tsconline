@@ -30,33 +30,33 @@ function mergeData(excelFilePath: string, translationJsonDir: string): Record<st
     languageJsons[lang] = {};
   });
 
-    languages.forEach((lang) => {
-      const jsonFilePath = path.join(translationJsonDir, `${lang}.json`);
-      let existingJson: NestedTranslations = {};
+  languages.forEach((lang) => {
+    const jsonFilePath = path.join(translationJsonDir, `${lang}.json`);
+    let existingJson: NestedTranslations = {};
 
-      if (fs.existsSync(jsonFilePath)) {
-        existingJson = JSON.parse(fs.readFileSync(jsonFilePath, "utf-8"))["translation"] || {};
-      }
+    if (fs.existsSync(jsonFilePath)) {
+      existingJson = JSON.parse(fs.readFileSync(jsonFilePath, "utf-8"))["translation"] || {};
+    }
 
-      languageJsons[lang] = existingJson;
-      data.forEach((row) => {
-        if (!row[lang]) return;
+    languageJsons[lang] = existingJson;
+    data.forEach((row) => {
+      if (!row[lang]) return;
 
-        const keyPath = row.Key.split(".");
-        let current: NestedTranslations = languageJsons[lang]!;
+      const keyPath = row.Key.split(".");
+      let current: NestedTranslations = languageJsons[lang]!;
 
-        keyPath.forEach((key, index) => {
-          if (index === keyPath.length - 1) {
-            current[key] = row[lang]!;
-          } else {
-            if (!current[key] || typeof current[key] !== "object") {
-              current[key] = {} as NestedTranslations;
-            }
-            current = current[key] as NestedTranslations;
+      keyPath.forEach((key, index) => {
+        if (index === keyPath.length - 1) {
+          current[key] = row[lang]!;
+        } else {
+          if (!current[key] || typeof current[key] !== "object") {
+            current[key] = {} as NestedTranslations;
           }
-        });
+          current = current[key] as NestedTranslations;
+        }
       });
     });
+  });
   return languageJsons;
 }
 
@@ -109,7 +109,7 @@ function writeTranslationsToExcel(data: Record<string, NestedTranslations>, outp
 function writeTranslationsToJson(data: Record<string, NestedTranslations>, outputDir: string): void {
   Object.keys(data).forEach((lang) => {
     if (!data[lang]) return;
-    data[lang] = {"translation": data[lang]!}
+    data[lang] = { translation: data[lang]! };
     const fileName = `${lang}.json`;
     fs.writeFileSync(path.join(outputDir, fileName), JSON.stringify(data[lang], null, 4));
   });
