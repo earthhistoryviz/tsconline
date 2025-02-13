@@ -97,6 +97,7 @@ const Time: React.FC = observer(() => {
   return (
     <Box className={styles.timeComponent}>
       <CrossPlotTimeSettingsForm
+        possibleCharts={state.settingsTabs.columns?.children}
         formLabel={t("crossPlot.time.xAxis")}
         disabled
         settings={state.crossPlot.chartXTimeSettings}
@@ -106,6 +107,7 @@ const Time: React.FC = observer(() => {
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
+        possibleCharts={state.settingsTabs.columns?.children}
         formLabel={t("crossPlot.time.yAxis")}
         settings={state.crossPlot.chartYTimeSettings}
         column={state.crossPlot.chartY}
@@ -117,6 +119,7 @@ const Time: React.FC = observer(() => {
 });
 
 type CrossPlotTimeProps = {
+  possibleCharts: ColumnInfo[] | undefined;
   settings: CrossPlotTimeSettings;
   column: ColumnInfo | undefined;
   setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
@@ -125,9 +128,8 @@ type CrossPlotTimeProps = {
   disabled?: boolean;
 };
 const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
-  ({ column, settings, formLabel, setTimeSettings, setCrossPlotChart, disabled }) => {
+  ({ possibleCharts, column, settings, formLabel, setTimeSettings, setCrossPlotChart, disabled }) => {
     const { t } = useTranslation();
-    const { state } = useContext(context);
     const checkAgeRange = () => settings && settings.topStageAge > settings.baseStageAge;
     const pleaseSelectAUnit = t("crossPlot.time.select-unit");
     return (
@@ -144,13 +146,13 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
           disabled={disabled || !column}
           value={column?.units || 0}
           onChange={(evt) => {
-            const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
+            const col = possibleCharts?.find((col) => col.units === evt.target.value);
             if (!col) return;
             setCrossPlotChart(col);
           }}
           className={styles.unitSelect}>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
+          {possibleCharts &&
+            Object.entries(possibleCharts).map(([index, column]) => (
               <MenuItem key={index} value={column.units}>
                 {`${column.name} (${column.units})`}
               </MenuItem>
