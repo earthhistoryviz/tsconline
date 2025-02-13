@@ -3,8 +3,8 @@ import XLSX from "xlsx";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 
-type TranslationObject = {
-  [name: string]: string | TranslationObject;
+type NestedTranslations = {
+  [name: string]: string | NestedTranslations;
 };
 
 function excelToJson(filePath: string): void {
@@ -24,7 +24,7 @@ function excelToJson(filePath: string): void {
   const languages = columnsArray.filter((lang) => lang !== "Key");
 
   // Create an object to hold separate language JSON structures
-  const languageJsons: Record<string, TranslationObject> = {};
+  const languageJsons: Record<string, NestedTranslations> = {};
 
   languages.forEach((lang) => {
     languageJsons[lang] = {};
@@ -34,7 +34,7 @@ function excelToJson(filePath: string): void {
     const keyPath = row.Key.split(".");
 
     languages.forEach((lang) => {
-      let current: TranslationObject = languageJsons[lang] !== undefined ? languageJsons[lang]! : {};
+      let current: NestedTranslations = languageJsons[lang] !== undefined ? languageJsons[lang]! : {};
       //skip if no translation for this key language pair
       if (!row[lang]) {
         return;
@@ -49,7 +49,7 @@ function excelToJson(filePath: string): void {
           if (!current[key]) {
             current[key] = {};
           }
-          current = current[key] as TranslationObject;
+          current = current[key] as NestedTranslations;
         }
       });
     });
