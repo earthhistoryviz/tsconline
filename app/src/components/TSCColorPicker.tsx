@@ -5,15 +5,16 @@ import Button from "@mui/material/Button";
 import "./TSCColorPicker.css";
 import { context } from "../state";
 import { createPortal } from "react-dom";
+import { ButtonProps } from "@mui/material";
 
-interface TSCColorPickerProps {
+type TSCColorPickerProps = {
   color: string; // Current color
   onColorChange: (color: string) => void; // Callback function when color changes
   disabled?: boolean;
   portal?: boolean;
-}
+} & Omit<ButtonProps, "onChange" | "color">;
 const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(
-  ({ color, onColorChange, disabled = false, portal = false }) => {
+  ({ color, onColorChange, disabled = false, portal = false, ...props }) => {
     const [showPicker, setShowPicker] = useState<boolean>(false);
     const [selectedColor, setSelectedColor] = useState<string>(color);
     const { state, actions } = useContext(context);
@@ -91,6 +92,7 @@ const TSCColorPicker: React.FC<TSCColorPickerProps> = observer(
           disabled={disabled}
           className="cp-button"
           style={{ backgroundColor: selectedColor }}
+          {...props}
         />
         {showPicker && (portal && portalContainer ? createPortal(ColorPicker, portalContainer) : ColorPicker)}
       </>

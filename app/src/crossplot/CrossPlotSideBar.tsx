@@ -1,17 +1,18 @@
 import { observer } from "mobx-react-lite";
-import { forwardRef, useContext, useEffect, useState } from "react";
+import React, { forwardRef, useContext, useEffect, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings } from "../types";
+import { CrossPlotTimeSettings, Marker } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, NotImplemented, TSCButton } from "../components";
+import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
+import TSCColorPicker from "../components/TSCColorPicker";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -39,7 +40,28 @@ export const CrossPlotSideBar = observer(
         Icon: TableChartRounded,
         component: <ColumnDisplay />
       },
-      { tabName: "Markers", Icon: BookmarkRounded, component: <NotImplemented size="medium" /> }
+      {
+        tabName: "Markers",
+        Icon: BookmarkRounded,
+        component: (
+          <Markers
+            markers={[
+              {
+                age: 0,
+                depth: 0,
+                color: "#000000",
+                comment: ""
+              },
+              {
+                age: 0,
+                depth: 0,
+                color: "#000000",
+                comment: ""
+              }
+            ]}
+          />
+        )
+      }
     ];
     return (
       <Box
@@ -220,3 +242,40 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
     );
   }
 );
+
+type MarkersProps = {
+  markers: Marker[];
+};
+const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
+  return (
+    <Box className={styles.markersComponent}>
+      {markers.map((marker, index) => (
+        <Box key={index} display="flex" flexDirection="column" gap="10px" paddingBottom="10px">
+          <MarkerOptions marker={marker} />
+          {index !== markers.length - 1 && <CustomDivider />}
+        </Box>
+      ))}
+    </Box>
+  );
+});
+
+const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
+  return (
+    <Box className={styles.markerContainer}>
+      <Box className={styles.checkBoxContainer}>
+        <TSCCheckbox />
+      </Box>
+      <Box className={styles.markerOptions}>
+        <Box className={styles.topMarkerRow}>
+          <TSCColorPicker color="#00000" onColorChange={() => {}} className={styles.colorPicker} />
+          <TextField select size="small" className={styles.selectMarker} label="Type" value="">
+            <MenuItem value="a">A</MenuItem>
+          </TextField>
+          <TextField size="small" className={styles.ageMarker} label="Age" />
+          <TextField size="small" className={styles.depthMarker} label="Depth" />
+        </Box>
+        <TextField size="small" label="Comment" fullWidth />
+      </Box>
+    </Box>
+  );
+});
