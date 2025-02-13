@@ -2,6 +2,7 @@ import {
   Datapack,
   DatapackMetadata,
   DatapackUniqueIdentifier,
+  DisplayedColumnTypes,
   SharedUser,
   isOfficialDatapack,
   isUserDatapack,
@@ -124,4 +125,15 @@ export function getPastWorkshops(workshops: Workshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }
