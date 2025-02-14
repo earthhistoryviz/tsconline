@@ -3,6 +3,7 @@ import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
+import { useTheme } from "@mui/material";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -49,8 +50,12 @@ const convertPixelHeightToSvgLength = (svg: SVGSVGElement, length: number) => {
   return (length / height) * viewBoxHeight;
 };
 
-const ageToCoord = (age: number, min: number, max: number, topAge: number, scale: number) => {
+const ageToCoordWithinBounds = (age: number, min: number, max: number, topAge: number, scale: number) => {
   return Math.min(min + (age > topAge ? Math.round((age - topAge) * scale) : 0), max);
+};
+
+const ageToCoord = (age: number, scale: number, topAge: number) => {
+  return age > topAge ? Math.round((age - topAge) * scale) : 0;
 };
 
 const getX1 = (element: Element) => {
@@ -154,6 +159,7 @@ const showCurrAgeY = (
 export const TSCCrossPlotSVGComponent: React.FC = observer(
   forwardRef<HTMLDivElement>(function TSCCrossPlotSVGComponent(_, ref) {
     const { state, actions } = useContext(context);
+    const theme = useTheme();
     const { chartTabState, otherChartOptions } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
@@ -194,6 +200,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         };
       }
     }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
+    // add double click listener to add marker
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
@@ -215,6 +222,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           ) {
             return;
           }
+          const { timeLineX, timeLineY } = timeLineElements;
           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           circle.setAttribute("cx", point.x.toString());
           circle.setAttribute("cy", point.y.toString());
@@ -223,6 +231,12 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           circle.setAttribute("stroke", "black");
           circle.setAttribute("stroke-width", "1");
           svg.appendChild(circle);
+          actions.addCrossPlotMarker({
+            age: ageToCoord(getX1(timeLineX), getScale(timeLineX), getTopAge(timeLineX)),
+            depth: ageToCoord(getY1(timeLineY), getScale(timeLineY), getTopAge(timeLineY)),
+            color: theme.palette.button.main,
+            comment: ""
+          });
         };
         svg.addEventListener("dblclick", handleDoubleClick);
         return () => {
@@ -285,10 +299,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
 
       const svgScale = getSvgScale(svg);
 
-      const topX = ageToCoord(topLimitX, minX, maxX, topAgeX, scaleX);
-      const topY = ageToCoord(topLimitY, minY, maxY, topAgeY, scaleY);
-      const limitWidth = ageToCoord(baseLimitX, minX, maxX, topAgeX, scaleX) - topX;
-      const limitHeight = ageToCoord(baseLimitY, minY, maxY, topAgeY, scaleY) - topY;
+      const topX = ageToCoordWithinBounds(topLimitX, minX, maxX, topAgeX, scaleX);
+      const topY = ageToCoordWithinBounds(topLimitY, minY, maxY, topAgeY, scaleY);
+      const limitWidth = ageToCoordWithinBounds(baseLimitX, minX, maxX, topAgeX, scaleX) - topX;
+      const limitHeight = ageToCoordWithinBounds(baseLimitY, minY, maxY, topAgeY, scaleY) - topY;
       const textsize = getTextSize(svg);
 
       limitingBox.setAttributeNS(null, "x", String(topX));

@@ -18,7 +18,7 @@ export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
     const [sidebarWidth, setSidebarWidth] = useState("300px"); // this is so the sidebar retains the width when resized
-    const { actions } = useContext(context);
+    const { state, actions } = useContext(context);
     const navigate = useNavigate();
     const theme = useTheme();
     useEffect(() => {
@@ -43,24 +43,7 @@ export const CrossPlotSideBar = observer(
       {
         tabName: "Markers",
         Icon: BookmarkRounded,
-        component: (
-          <Markers
-            markers={[
-              {
-                age: 0,
-                depth: 0,
-                color: "#000000",
-                comment: ""
-              },
-              {
-                age: 0,
-                depth: 0,
-                color: "#000000",
-                comment: ""
-              }
-            ]}
-          />
-        )
+        component: <Markers markers={state.crossPlot.markers} />
       }
     ];
     return (
