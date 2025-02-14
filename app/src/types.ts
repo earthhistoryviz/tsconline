@@ -228,6 +228,7 @@ export type EditableUserProperties = {
 };
 
 export type Marker = {
+  id: number;
   age: number;
   depth: number;
   color: string;
