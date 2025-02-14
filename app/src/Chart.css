@@ -38,7 +38,6 @@
   justify-content: center;
   width: 100vw;
   height: calc(100vh - var(--nav-bar-height));
-  padding: 10px;
   overflow: hidden;
 }
 
@@ -60,6 +59,8 @@
   justify-content: space-between;
   height: 100%;
   width: 100%;
+  border: 2px solid gray;
+  border-bottom: 0px;
 }
 .flex-row {
   display: flex;
@@ -71,7 +72,6 @@
   align-items: flex-end;
 }
 .chart-container {
-  display: block;
   height: 100%;
   width: 100%;
 }

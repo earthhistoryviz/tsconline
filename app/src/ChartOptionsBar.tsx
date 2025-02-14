@@ -49,7 +49,10 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
   "&:hover": {
     backgroundColor: Color(theme.palette.icon.main).alpha(0.2).toString()
   },
-  borderRadius: 0
+  borderRadius: 0,
+  "&.active": {
+    backgroundColor: Color(theme.palette.button.main).alpha(0.3).toString()
+  }
 }));
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
@@ -176,6 +179,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     return (
       <CustomTooltip title="Timeline On/Off">
         <StyledIconButton
+          className={`${chartTimelineEnabled ? "active" : ""}`}
           onClick={() => actions.setChartTabState(chartTabState, { chartTimelineEnabled: !chartTimelineEnabled })}>
           <HorizontalRuleIcon className="timeline-button" />
         </StyledIconButton>
@@ -388,13 +392,15 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ResetButton />
         <ZoomFitButton />
         <TimelineButton />
-        {...otherChartOptions?.map(({ icon, label, onChange, value }) => (
+        {(otherChartOptions || []).map(({ icon, label, onChange, value }) => (
           <Box key={label}>
-            <CustomTooltip title={label}>
-              <StyledIconButton onClick={() => onChange(!value)}>{icon}</StyledIconButton>
+            <CustomTooltip title={label} key="label">
+              <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>
+                {icon}
+              </StyledIconButton>
             </CustomTooltip>
           </Box>
-        )) ?? []}
+        ))}
         <DownloadButton />
       </div>
       <div className="flex-row">

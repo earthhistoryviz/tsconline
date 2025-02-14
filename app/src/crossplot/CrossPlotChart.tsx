@@ -18,7 +18,7 @@ export const CrossPlotChart: React.FC = observer(() => {
         chartTabState: state.crossPlot.state,
         otherChartOptions: [
           {
-            label: "Show Markers",
+            label: "Markers",
             icon: <img src={MarkerIcon} width="24" height="24" />,
             onChange: actions.setCrossPlotMarkerMode,
             value: state.crossPlot.markerMode
