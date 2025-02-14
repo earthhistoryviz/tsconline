@@ -115,17 +115,20 @@ function writeTranslationsToJson(data: Record<string, NestedTranslations>, outpu
   });
 }
 
-try {
-  // Load the current asset config:
-  await loadAssetConfigs();
-} catch (e) {
-  console.error("Error loading configs: ", e);
-  process.exit(1);
+export async function syncTranslations() {
+  try {
+    // Load the current asset config:
+    await loadAssetConfigs();
+  } catch (e) {
+    console.error("Error loading configs: ", e);
+    process.exit(1);
+  }
+  
+  const translationExcel = path.join(assetconfigs.translationFilepath);
+  const translationJsonDir = path.join("../shared/translations");
+  const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir);
+  
+  writeTranslationsToExcel(mergedData, translationExcel);
+  writeTranslationsToJson(mergedData, translationJsonDir);
+  
 }
-
-const translationExcel = path.join(assetconfigs.translationFilepath);
-const translationJsonDir = path.join("../shared/translations");
-const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir);
-
-writeTranslationsToExcel(mergedData, translationExcel);
-writeTranslationsToJson(mergedData, translationJsonDir);
