@@ -25,6 +25,7 @@ import { userRoutes } from "./routes/user-auth.js";
 import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
+import { syncTranslations } from "./sync-translations.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -345,6 +346,11 @@ server.setNotFoundHandler((_request, reply) => {
 });
 
 export const queue = new PQueue({ concurrency: maxConcurrencySize });
+
+
+if (process.env.NODE_ENV !== "production") {
+  syncTranslations();
+}
 
 //Start the server...
 try {
