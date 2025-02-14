@@ -232,6 +232,8 @@ export type Marker = {
   element: SVGRectElement;
   age: number;
   depth: number;
+  x: number; // the actual pos with no rounding
+  y: number; // the actual pos with no rounding
   color: string;
   comment: string;
   type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
