@@ -1,6 +1,8 @@
-import { Breadcrumbs, Link, Stack } from "@mui/material";
 import { useState, useEffect } from 'react';
-import { links } from "./help-menu-json"
+import { Breadcrumbs, Link, Stack } from "@mui/material";
+import { links as defaultLinks } from "./help-menu-json";
+import { fetcher } from "./util";
+import { PageNotFound } from "./PageNotFound";
 
 interface LinkPath {
   Title: string;
@@ -14,62 +16,61 @@ interface Breadcrumb {
 }
 
 export default function NewBreadcrumbs() {
-  const [breadcrumbs, setBreadcrumbs] = useState<Breadcrumb[]>([
-    { to: "/help", label: "All Categories" }
-  ]);
+  // Use this for the 404 error page
+  const [notFound, setNotFound] = useState(false);
+  const [fetchedData, setFetchedData] = useState<LinkPath[]>(defaultLinks);
 
-  const titleToPath = (title: string): string => {
-    return title.replace(/\s+/g, '-');
+  // Fetching the data from the server (in reality it's just a json file)
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetcher('/help-menu-json');
+        const data = await response.json();
+        setFetchedData(data.links);
+      } 
+      catch (error) {
+        console.error("Error loading data:", error);
+        setFetchedData(defaultLinks);
+      }
+    };
+
+    loadData();
+  }, []);
+
+
+  const generatePath = (title: string): string => {
+    return `/help/${title.toLowerCase().replace(/\s+/g, '-')}`;
   };
 
-  const findBreadcrumbs = (
-    links: LinkPath[], 
-    currentPath: string, 
-    parentPath: string = "/help"
-  ): Breadcrumb[] => {
+  {/* Transforms the whole JSON structure from the useEffect into a queried */}
+  const findBreadcrumbs = (links: LinkPath[], currentPath: string): Breadcrumb[] => {
     for (const link of links) {
-      const linkPath = `${parentPath}/${titleToPath(link.Title)}`;
+      const linkPath = generatePath(link.Title);
       
       if (currentPath === linkPath) {
-        return [{
-          to: linkPath,
-          label: link.Title
-        }];
+        return [{ to: linkPath, label: link.Title }];
       }
 
-      if (link.Children && link.Children.length > 0) {
-        const childPath = findBreadcrumbs(link.Children, currentPath, linkPath);
-        
-        if (childPath.length > 0) {
-          return [{
-            to: linkPath,
-            label: link.Title
-          }, ...childPath];
+      if (currentPath.startsWith(linkPath) && link.Children && link.Children.length > 0) {
+        const childBreadcrumbs = findBreadcrumbs(link.Children, currentPath);
+        if (childBreadcrumbs.length > 0) {
+          return [{ to: linkPath, label: link.Title }, ...childBreadcrumbs];
         }
       }
     }
     return [];
   };
-
-  useEffect(() => {
-    const currentPath = window.location.pathname;
-    const pathBreadcrumbs = findBreadcrumbs(links, currentPath);
-    
-    setBreadcrumbs([
-      { to: "/help", label: "All Categories" },
-      ...pathBreadcrumbs
-    ]);
-  }, [window.location.pathname]);
+  
+  const breadcrumbs: Breadcrumb[] = [
+    { to: "/help", label: "All Categories" },
+    ...findBreadcrumbs(fetchedData, location.pathname)
+  ];
 
   return (
     <Stack spacing={2}>
       <Breadcrumbs separator=">">
         {breadcrumbs.map((breadcrumb: Breadcrumb, index: number) => (
-          <Link 
-            key={index} 
-            href={breadcrumb.to} 
-            sx={{ width: "47px" }}
-          >
+          <Link key={index} href={breadcrumb.to} sx={{ width: "47px" }}>
             {breadcrumb.label}
           </Link>
         ))}

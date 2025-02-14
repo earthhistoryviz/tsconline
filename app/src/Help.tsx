@@ -32,6 +32,7 @@ import HelpDataMining from "./HelpMenuPages/Chart/Column Variants/Event Columns/
 import HelpFreehandColumns from "./HelpMenuPages/Chart/Column Variants/HelpFreehandColumns";
 import { PageNotFound } from "./PageNotFound";
 import NewBreadcrumbs from "./HelpBreadcrumbsUpdated";
+import NewHelpDrawer from "./HelpDrawerUpdated";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
@@ -174,6 +175,7 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
+      {/* For the demo */}
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <Toolbar>
@@ -212,8 +214,16 @@ export const Help = observer(function Help() {
           </Routes>
         </Grid>
       </Grid>
-      <Grid>
-      <NewBreadcrumbs/>
+
+      {/* The Actual breadcrumb */}
+      <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
+        <Grid item sx={background}>
+          <NewHelpDrawer/>
+        </Grid>
+        <Grid item sx={background}>
+          <NewBreadcrumbs />
+        </Grid>
+
       </Grid>
     </div>
   );
