@@ -24,8 +24,15 @@ export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
   state.crossPlot.markerMode = markerMode;
 });
 
-export const addCrossPlotMarker = action((marker: Marker) => {
+export const addCrossPlotMarker = action((temp: Omit<Marker, "id">) => {
+  const marker = {
+    ...temp,
+    id: state.crossPlot.markers[state.crossPlot.markers.length - 1]?.id + 1 || 0
+  };
   state.crossPlot.markers.push(marker);
+});
+export const removeCrossPlotMarkers = action((id: number) => {
+  state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
 });
 
 export const removeCrossPlotMarker = action((marker: Marker) => {
