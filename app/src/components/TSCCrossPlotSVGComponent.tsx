@@ -54,7 +54,7 @@ const ageToCoordWithinBounds = (age: number, min: number, max: number, topAge: n
   return Math.min(min + (age > topAge ? Math.round((age - topAge) * scale) : 0), max);
 };
 
-const ageToCoord = (age: number, scale: number, topAge: number) => {
+export const ageToCoord = (age: number, scale: number, topAge: number) => {
   return age > topAge ? Math.round((age - topAge) * scale) : 0;
 };
 
@@ -112,6 +112,9 @@ const keepLabelInXBounds = (x: number, maxX: number, labelWidth: number, gap: nu
 const keepLabelInYBounds = (y: number, minY: number, labelHeight: number, gap: number = 0) => {
   return y - labelHeight - gap < minY ? Math.max(y + labelHeight + gap, minY + labelHeight + gap) : y - gap;
 };
+const coordToAge = (coord: number, scale: number, topAge: number, min: number) => {
+  return roundToDecimalPlace(topAge + (coord - min) / scale, 3);
+};
 const showCurrAgeX = (
   elem: Element,
   x: number,
@@ -125,7 +128,7 @@ const showCurrAgeX = (
   labelHeight: number
 ) => {
   const currX = keepInBounds(x, minX, maxX);
-  const currAgeX = roundToDecimalPlace(topAge + (currX - minX) / scale, 3).toFixed(3);
+  const currAgeX = coordToAge(currX, scale, topAge, minX);
   const xPos = keepLabelInXBounds(x, maxX, labelWidth, textsize * 0.1);
   const yPos = keepLabelInYBounds(y, 0, labelHeight, labelHeight);
   elem.setAttributeNS(null, "x", String(xPos));
@@ -147,7 +150,7 @@ const showCurrAgeY = (
   labelWidth: number
 ) => {
   const currY = keepInBounds(y, minY, maxY);
-  const currAgeY = roundToDecimalPlace(topAge + (currY - minY) / scale, 3).toFixed(3);
+  const currAgeY = coordToAge(currY, scale, topAge, minY);
   const xPos = keepLabelInXBounds(x, maxX, labelWidth, 0.5 * labelWidth);
   const yPos = currY - textsize * 0.1;
   elem.setAttributeNS(null, "x", String(xPos));
@@ -229,14 +232,15 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           circle.setAttribute("cx", point.x.toString());
           circle.setAttribute("cy", point.y.toString());
           circle.setAttribute("r", "5");
-          circle.setAttribute("fill", "red");
+          circle.setAttribute("fill", theme.palette.button.main);
           circle.setAttribute("stroke", "black");
           circle.setAttribute("stroke-width", "1");
           svg.appendChild(circle);
           actions.addCrossPlotMarker({
             id: markerId,
-            age: ageToCoord(getX1(timeLineX), getScale(timeLineX), getTopAge(timeLineX)),
-            depth: ageToCoord(getY1(timeLineY), getScale(timeLineY), getTopAge(timeLineY)),
+            element: circle,
+            age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
+            depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
             color: theme.palette.button.main,
             comment: ""
           });
@@ -299,6 +303,21 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       const baseLimitY = getBaseLimit(timeLineY);
       const scaleY = getScale(timeLineY);
       const topAgeY = getTopAge(timeLineY);
+
+      actions.setCrossPlotBounds({
+        minX,
+        minY,
+        maxX,
+        maxY,
+        topLimitX,
+        topLimitY,
+        baseLimitX,
+        baseLimitY,
+        scaleX,
+        scaleY,
+        topAgeX,
+        topAgeY
+      });
 
       const svgScale = getSvgScale(svg);
 
