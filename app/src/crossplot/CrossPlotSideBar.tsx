@@ -6,7 +6,7 @@ import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } f
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker } from "../types";
+import { CrossPlotTimeSettings, Marker, isMarkerType, markerTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
@@ -258,8 +258,21 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
             }}
             className={styles.colorPicker}
           />
-          <TextField select size="small" className={styles.selectMarker} label="Type" value="">
-            <MenuItem value="a">A</MenuItem>
+          <TextField
+            select
+            size="small"
+            className={styles.selectMarker}
+            label="Type"
+            value={marker.type}
+            onChange={(e) => {
+              if (!isMarkerType(e.target.value)) return;
+              actions.editCrossPlotMarker(marker, { type: e.target.value });
+            }}>
+            {markerTypes.map((markerType) => (
+              <MenuItem key={markerType} value={markerType}>
+                {markerType}
+              </MenuItem>
+            ))}
           </TextField>
           <TextField
             size="small"

@@ -228,12 +228,16 @@ export type EditableUserProperties = {
 
 export type Marker = {
   id: string;
-  element: SVGCircleElement;
+  element: SVGRectElement;
   age: number;
   depth: number;
   color: string;
   comment: string;
+  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
+  line: SVGLineElement;
 };
+
+export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 
 export type CrossPlotBounds = {
   minX: number;
@@ -249,6 +253,10 @@ export type CrossPlotBounds = {
   topAgeX: number;
   topAgeY: number;
 };
+
+export function isMarkerType(value: string): value is Marker["type"] {
+  return markerTypes.includes(value);
+}
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
   if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");
