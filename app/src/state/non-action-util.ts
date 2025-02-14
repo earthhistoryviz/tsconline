@@ -10,6 +10,7 @@ import {
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from "./state";
 
 export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
@@ -140,3 +141,11 @@ export function getPastWorkshops(workshops: SharedWorkshop[]) {
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
 }
+export function getWorkshopCoverImage(coverPictureUrl?: string) {
+  const serverURL =
+    coverPictureUrl && coverPictureUrl?.length > 0
+      ? devSafeUrl("/" + coverPictureUrl)
+      : TSCreatorLogo;
+  return serverURL;
+};
+

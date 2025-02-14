@@ -190,7 +190,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
         workshopId = createdWorkshopId;
         created = true;
-        console.log("188");
       } else {
         if (!workshop) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
@@ -216,7 +215,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           edited = true;
           setWorkshop(newWorkshop);
         }
-        if (isWorkshopUnchanged && !emailFile && !emails) {
+
+        // TODO: add regLink, regRestrict and other potential fields to adminEditWorkshop
+        if (isWorkshopUnchanged && !emailFile && !emails && !regLink && !files && !coverPicture && !regRestrict) {
           actions.pushSnackbar("No changes made", "info");
           return;
         }
@@ -300,7 +301,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
       handleDialogClose();
-      console.log("1882");
     } catch (error) {
       displayServerError(
         error,

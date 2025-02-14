@@ -508,6 +508,7 @@ export const adminFetchWorkshops = action(async () => {
       headers: {
         "recaptcha-token": recaptchaToken
       }
+
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
