@@ -347,7 +347,6 @@ server.setNotFoundHandler((_request, reply) => {
 
 export const queue = new PQueue({ concurrency: maxConcurrencySize });
 
-
 if (process.env.NODE_ENV !== "production") {
   syncTranslations();
 }
