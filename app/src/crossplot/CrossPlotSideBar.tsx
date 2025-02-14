@@ -261,8 +261,24 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           <TextField select size="small" className={styles.selectMarker} label="Type" value="">
             <MenuItem value="a">A</MenuItem>
           </TextField>
-          <TextField size="small" className={styles.ageMarker} label="Age" />
-          <TextField size="small" className={styles.depthMarker} label="Depth" />
+          <TextField
+            size="small"
+            className={styles.ageMarker}
+            label="Age"
+            value={marker.age}
+            onChange={(evt) => {
+              actions.editCrossPlotMarker(marker, { age: parseFloat(evt.target.value) });
+            }}
+          />
+          <TextField
+            size="small"
+            className={styles.depthMarker}
+            label="Depth"
+            value={marker.depth}
+            onChange={(evt) => {
+              actions.editCrossPlotMarker(marker, { depth: parseFloat(evt.target.value) });
+            }}
+          />
         </Box>
         <TextField size="small" label="Comment" fullWidth />
       </Box>
