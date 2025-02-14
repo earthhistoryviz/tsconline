@@ -163,7 +163,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
   forwardRef<HTMLDivElement>(function TSCCrossPlotSVGComponent(_, ref) {
     const { state, actions } = useContext(context);
     const theme = useTheme();
-    const { chartTabState, otherChartOptions } = useContext(ChartContext);
+    const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     useEffect(() => {
@@ -207,7 +207,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
-      if (!container || !chartContent) return;
+      if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
       if (state.crossPlot.markerMode) {
@@ -355,20 +355,11 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
      * @returns
      */
     const handleTimeLine = (evt: MouseEvent, svg: SVGSVGElement) => {
-      if (!timeLineElements) {
+      if (!timeLineElements || !state.crossPlot.crossPlotBounds) {
         return;
       }
       const { timeLineX, timeLineY, timeLabelX, timeLabelY } = timeLineElements;
-      const maxX = getMaxX(timeLineX);
-      const minX = getMinX(timeLineX);
-      const topAgeX = getTopAge(timeLineX);
-      const scaleX = getScale(timeLineX);
-
-      const maxY = getMaxY(timeLineY);
-      const minY = getMinY(timeLineY);
-      const topAgeY = getTopAge(timeLineY);
-      const scaleY = getScale(timeLineY);
-
+      const { maxX, minX, maxY, minY, scaleX, scaleY, topAgeX, topAgeY } = state.crossPlot.crossPlotBounds;
       const textsize = getTextSize(svg);
       const point = getCursor(svg, evt);
       const currX = keepInBounds(point.x, minX, maxX);
