@@ -21,9 +21,10 @@ type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
   refList?: React.RefObject<HTMLDivElement>[];
   style?: React.CSSProperties;
+  disableDoubleClick?: boolean;
 };
 
-export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList }) => {
+export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList, disableDoubleClick = false }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
@@ -188,6 +189,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
               limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}
+              doubleClick={{ disabled: disableDoubleClick }}
               disablePadding={true}>
               <TransformComponent
                 wrapperStyle={{

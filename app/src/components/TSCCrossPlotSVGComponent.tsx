@@ -25,6 +25,16 @@ const convertPixelsToSvgCoords = (svg: SVGSVGElement, x: number, y: number) => {
     y: (y / height) * viewBoxHeight
   };
 };
+const getCursor = (svg: SVGSVGElement, evt: MouseEvent) => {
+  const point = new DOMPoint();
+  point.x = evt.clientX;
+  point.y = evt.clientY;
+  if (svg.getScreenCTM()) {
+    //converts coordinates
+    return point.matrixTransform(svg.getScreenCTM()!.inverse());
+  }
+  return point;
+};
 
 const convertPixelWidthToSvgLength = (svg: SVGSVGElement, length: number) => {
   const viewBox = svg.viewBox.baseVal;
@@ -137,7 +147,7 @@ const showCurrAgeY = (
 export const TSCCrossPlotSVGComponent: React.FC = observer(
   forwardRef<HTMLDivElement>(function TSCCrossPlotSVGComponent(_, ref) {
     const { state, actions } = useContext(context);
-    const { chartTabState } = useContext(ChartContext);
+    const { chartTabState, otherChartOptions } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     useEffect(() => {
@@ -177,6 +187,32 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         };
       }
     }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      if (state.crossPlot.markerMode) {
+        const handleDoubleClick = (evt: MouseEvent) => {
+          const svgRect = svg.getBoundingClientRect();
+          const scale = getSvgScale(svg);
+          const point = getCursor(svg, evt);
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", point.x.toString());
+          circle.setAttribute("cy", point.y.toString());
+          circle.setAttribute("r", "5");
+          circle.setAttribute("fill", "red");
+          circle.setAttribute("stroke", "black");
+          circle.setAttribute("stroke-width", "1");
+          svg.appendChild(circle);
+        };
+        svg.addEventListener("dblclick", handleDoubleClick);
+        return () => {
+          svg.removeEventListener("dblclick", handleDoubleClick);
+        };
+      }
+    }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode]);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
@@ -285,14 +321,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       const scaleY = getScale(timeLineY);
 
       const textsize = getTextSize(svg);
-      //cursor location
-      let point = new DOMPoint();
-      point.x = evt.clientX;
-      point.y = evt.clientY;
-      if (svg.getScreenCTM()) {
-        //converts coordinates
-        point = point.matrixTransform(svg.getScreenCTM()!.inverse());
-      }
+      const point = getCursor(svg, evt);
       const currX = keepInBounds(point.x, minX, maxX);
       const currY = keepInBounds(point.y, minY, maxY);
       //move timeline vertically if not locked
