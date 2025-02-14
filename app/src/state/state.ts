@@ -49,6 +49,7 @@ export type State = {
     lockY: boolean;
     markers: Marker[];
     markerMode: boolean;
+    showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
     chartX: ColumnInfo | undefined;
@@ -159,6 +160,7 @@ export const state = observable<State>({
     lockY: false,
     markers: [],
     markerMode: false,
+    showTooltips: true,
     chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartX: undefined,
