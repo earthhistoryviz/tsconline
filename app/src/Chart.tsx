@@ -12,6 +12,8 @@ import { ChartContextType } from "./types";
 import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
+import { HorizontalRule } from "@mui/icons-material";
+import TimeLine from "./assets/icons/axes=one.svg";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -219,9 +221,20 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 });
 
 export const ChartTab: React.FC = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   return (
-    <ChartContext.Provider value={{ chartTabState: state.chartTab.state }}>
+    <ChartContext.Provider
+      value={{
+        chartTabState: state.chartTab.state,
+        otherChartOptions: [
+          {
+            label: "Timeline On/Off",
+            onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+            value: state.chartTab.state.chartTimelineEnabled,
+            icon: <img src={TimeLine} width="24" height="24" />
+          }
+        ]
+      }}>
       <Box className="chart-tab">
         <Chart Component={TSCSvgComponent} />
       </Box>
