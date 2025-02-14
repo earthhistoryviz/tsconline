@@ -51,7 +51,8 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
   },
   borderRadius: 0,
   "&.active": {
-    backgroundColor: Color(theme.palette.button.main).alpha(0.3).toString()
+    backgroundColor: Color(theme.palette.button.main).alpha(0.3).toString(),
+    outline: `0.5px solid ${theme.palette.button.main}`
   }
 }));
 

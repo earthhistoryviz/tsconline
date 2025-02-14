@@ -10,6 +10,9 @@ import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
 
+export const setCrossPlotShowTooltips = action((showTooltips: boolean) => {
+  state.crossPlot.showTooltips = showTooltips;
+});
 export const setCrossPlotLockX = action((lockX: boolean) => {
   state.crossPlot.lockX = lockX;
 });

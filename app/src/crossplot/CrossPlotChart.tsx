@@ -7,6 +7,7 @@ import { CrossPlotSideBar } from "./CrossPlotSideBar";
 import { Box, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
+import { ChatRounded } from "@mui/icons-material";
 
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
@@ -22,6 +23,12 @@ export const CrossPlotChart: React.FC = observer(() => {
             icon: <img src={MarkerIcon} width="24" height="24" />,
             onChange: actions.setCrossPlotMarkerMode,
             value: state.crossPlot.markerMode
+          },
+          {
+            label: "Show Tooltips",
+            icon: <ChatRounded />,
+            onChange: actions.setCrossPlotShowTooltips,
+            value: state.crossPlot.showTooltips
           }
         ]
       }}>
