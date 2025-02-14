@@ -49,6 +49,10 @@ const convertPixelHeightToSvgLength = (svg: SVGSVGElement, length: number) => {
   return (length / height) * viewBoxHeight;
 };
 
+const ageToCoord = (age: number, min: number, max: number, topAge: number, scale: number) => {
+  return Math.min(min + (age > topAge ? Math.round((age - topAge) * scale) : 0), max);
+};
+
 const getX1 = (element: Element) => {
   return Number(element.getAttribute("x1"));
 };
@@ -281,18 +285,14 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
 
       const svgScale = getSvgScale(svg);
 
-      const ageToX = (age: number) => {
-        return Math.min(minX + (age > topAgeX ? Math.round((age - topAgeX) * scaleX) : 0), maxX);
-      };
-      const depthToY = (depth: number) => {
-        return Math.min(minY + (depth > topAgeY ? Math.round((depth - topAgeY) * scaleY) : 0), maxY);
-      };
-      const limitWidth = ageToX(baseLimitX) - ageToX(topLimitX);
-      const limitHeight = depthToY(baseLimitY) - depthToY(topLimitY);
+      const topX = ageToCoord(topLimitX, minX, maxX, topAgeX, scaleX);
+      const topY = ageToCoord(topLimitY, minY, maxY, topAgeY, scaleY);
+      const limitWidth = ageToCoord(baseLimitX, minX, maxX, topAgeX, scaleX) - topX;
+      const limitHeight = ageToCoord(baseLimitY, minY, maxY, topAgeY, scaleY) - topY;
       const textsize = getTextSize(svg);
 
-      limitingBox.setAttributeNS(null, "x", String(ageToX(topLimitX)));
-      limitingBox.setAttributeNS(null, "y", String(depthToY(topLimitY)));
+      limitingBox.setAttributeNS(null, "x", String(topX));
+      limitingBox.setAttributeNS(null, "y", String(topY));
       limitingBox.setAttributeNS(null, "width", String(limitWidth));
       limitingBox.setAttributeNS(null, "height", String(limitHeight));
       limitingBox.setAttributeNS(null, "stroke-width", lineStroke);
