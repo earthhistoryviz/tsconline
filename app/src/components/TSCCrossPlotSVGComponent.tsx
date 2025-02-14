@@ -4,6 +4,7 @@ import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
 import { useTheme } from "@mui/material";
+import { Marker } from "../types";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -15,6 +16,7 @@ type TimeLineElements = {
 };
 
 const lineStroke = "2";
+const tooltipId = "crossplot-tooltip";
 // just a helper function to convert pixels to svg coordinates in case anyone needs
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const convertPixelsToSvgCoords = (svg: SVGSVGElement, x: number, y: number) => {
@@ -166,6 +168,35 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
+    // declare here so that comment is updated when marker changes
+    const showTooltip = (event: MouseEvent, markerId: string) => {
+      if (!state.crossPlot.showTooltips) return;
+      let tooltip = document.getElementById(tooltipId);
+      if (!tooltip) {
+        tooltip = document.createElement("div");
+        tooltip.id = tooltipId;
+        tooltip.style.position = "absolute";
+        tooltip.style.background = "rgba(0,0,0,0.8)";
+        tooltip.style.color = "white";
+        tooltip.style.padding = "5px 10px";
+        tooltip.style.borderRadius = "5px";
+        tooltip.style.pointerEvents = "none";
+        tooltip.style.whiteSpace = "nowrap";
+        document.body.appendChild(tooltip);
+      }
+      const marker = state.crossPlot.markers.find((m) => m.id === markerId);
+      if (!marker) return;
+      tooltip.innerHTML = `
+        <strong>Age:</strong> ${marker.age} <br>
+        <strong>Depth:</strong> ${marker.depth} <br>
+        <strong>Comment:</strong> ${marker.comment || "No Comment"}
+      `;
+      tooltip.style.top = `${event.clientY + 10}px`;
+      tooltip.style.left = `${event.clientX + 10}px`;
+      tooltip.style.display = "block";
+    };
+
+    // setup timeline and label on first load
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
@@ -175,6 +206,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       setupTimelineAndLabel(svg);
       hideOrShowTimeline(chartTimelineEnabled);
     }, [ref, chartContent, chartTimelineEnabled, typeof ref !== "function" && ref ? ref.current : null]);
+
+    // update timeline and label when chart content changes or locking axes or mouse moves on svg
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
@@ -203,53 +236,75 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         };
       }
     }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
-    // add double click listener to add marker
+
+    // add double click listener to add marker and tooltip listeners
     useEffect(() => {
+      if (!state.crossPlot.markerMode) return;
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
       if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
-      if (state.crossPlot.markerMode) {
-        const handleDoubleClick = (evt: MouseEvent) => {
-          const point = getCursor(svg, evt);
-          if (
-            !timeLineElements ||
-            isOutOfBounds(
-              point,
-              getMinX(timeLineElements.timeLineX),
-              getMaxX(timeLineElements.timeLineX),
-              getMinY(timeLineElements.timeLineY),
-              getMaxY(timeLineElements.timeLineY)
-            )
-          ) {
-            return;
-          }
-          const { timeLineX, timeLineY } = timeLineElements;
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          const markerId = `marker-${Date.now()}`;
-          circle.setAttribute("id", markerId);
-          circle.setAttribute("cx", point.x.toString());
-          circle.setAttribute("cy", point.y.toString());
-          circle.setAttribute("r", "5");
-          circle.setAttribute("fill", theme.palette.button.main);
-          circle.setAttribute("stroke", "black");
-          circle.setAttribute("stroke-width", "1");
-          svg.appendChild(circle);
-          actions.addCrossPlotMarker({
-            id: markerId,
-            element: circle,
-            age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
-            depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
-            color: theme.palette.button.main,
-            comment: ""
-          });
+      let cleanup = () => {};
+      // create a circle on double click
+      const handleDoubleClick = (evt: MouseEvent) => {
+        const point = getCursor(svg, evt);
+        // check if point is within bounds, otherwise don't make the point
+        if (
+          !timeLineElements ||
+          isOutOfBounds(
+            point,
+            getMinX(timeLineElements.timeLineX),
+            getMaxX(timeLineElements.timeLineX),
+            getMinY(timeLineElements.timeLineY),
+            getMaxY(timeLineElements.timeLineY)
+          )
+        ) {
+          return;
+        }
+        const { timeLineX, timeLineY } = timeLineElements;
+        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const markerId = `marker-${Date.now()}`;
+        circle.setAttribute("id", markerId);
+        circle.setAttribute("cx", point.x.toString());
+        circle.setAttribute("cy", point.y.toString());
+        circle.setAttribute("r", "5");
+        circle.setAttribute("fill", theme.palette.button.main);
+        circle.setAttribute("stroke", "black");
+        circle.setAttribute("stroke-width", "1");
+        svg.appendChild(circle);
+        const marker = {
+          id: markerId,
+          element: circle,
+          age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
+          depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
+          color: theme.palette.button.main,
+          comment: ""
         };
-        svg.addEventListener("dblclick", handleDoubleClick);
-        return () => {
-          svg.removeEventListener("dblclick", handleDoubleClick);
-        };
-      }
+        actions.addCrossPlotMarker(marker);
+        // check and add tooltip, add event listeners to the circle
+        const tooltip = document.getElementById(tooltipId);
+        // if tooltip is not there, create it (assuming showing tooltips is true)
+        if (state.crossPlot.showTooltips) {
+          const hideTooltip = () => {
+            const tooltip = document.getElementById(tooltipId);
+            if (tooltip) tooltip.style.display = "none";
+          };
+          circle.addEventListener("mousemove", (event) => showTooltip(event, marker.id));
+          circle.addEventListener("mouseleave", hideTooltip);
+          cleanup = () => {
+            circle.removeEventListener("mousemove", (event) => showTooltip(event, marker.id));
+            circle.removeEventListener("mouseleave", hideTooltip);
+            svg.removeChild(circle);
+            if (tooltip) document.body.removeChild(tooltip);
+          };
+        }
+      };
+      svg.addEventListener("dblclick", handleDoubleClick);
+      return () => {
+        svg.removeEventListener("dblclick", handleDoubleClick);
+        cleanup();
+      };
     }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode]);
 
     const getLabelWidthX = () => {
