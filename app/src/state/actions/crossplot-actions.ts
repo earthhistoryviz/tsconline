@@ -9,7 +9,7 @@ import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
-import { ageToCoord } from "../../components/TSCCrossPlotSVGComponent";
+import { MARKER_HEIGHT, MARKER_PADDING, MARKER_WIDTH, ageToCoord } from "../../components/TSCCrossPlotSVGComponent";
 
 export const setCrossPlotBounds = action((bounds: CrossPlotBounds) => {
   state.crossPlot.crossPlotBounds = bounds;
@@ -41,7 +41,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
   }
-  const { scaleX, topAgeX, scaleY, topAgeY } = state.crossPlot.crossPlotBounds;
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
     marker.color = partial.color;
     marker.element.setAttribute("fill", partial.color);
@@ -51,49 +51,61 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.age !== undefined) {
     marker.age = partial.age;
-    marker.element.setAttribute("cx", ageToCoord(partial.age, scaleX, topAgeX).toString());
+    const age = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
+    marker.x = age;
+    marker.element.setAttribute("x", (age - MARKER_WIDTH / 2).toString());
+    marker.line.setAttribute("x1", (age - MARKER_WIDTH / 2 - MARKER_PADDING).toString());
+    marker.line.setAttribute("x2", (age + MARKER_WIDTH / 2 + MARKER_PADDING).toString());
+  }
+  if (partial.depth !== undefined) {
+    marker.depth = partial.depth;
+    const depth = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
+    marker.y = depth;
+    marker.element.setAttribute("y", (depth - MARKER_HEIGHT / 2).toString());
+    switch (marker.type) {
+      case "BASE(FAD)":
+        marker.line.setAttribute("y1", (depth + MARKER_HEIGHT / 2 + MARKER_PADDING).toString());
+        marker.line.setAttribute("y2", (depth + MARKER_HEIGHT / 2 + MARKER_PADDING).toString());
+        break;
+      case "TOP(LAD)":
+        marker.line.setAttribute("y1", (depth - MARKER_HEIGHT / 2 - MARKER_PADDING).toString());
+        marker.line.setAttribute("y2", (depth - MARKER_HEIGHT / 2 - MARKER_PADDING).toString());
+        break;
+    }
   }
   if (partial.type !== undefined) {
+    const { x, y } = marker;
     marker.type = partial.type;
     switch (partial.type) {
       case "Rect":
         marker.element.setAttribute("rx", "0");
         marker.element.setAttribute("ry", "0");
+        marker.line.setAttribute("opacity", "0");
         break;
       case "Circle":
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("opacity", "0");
         break;
       case "BASE(FAD)":
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", (ageToCoord(marker.age, scaleX, topAgeX) - 5).toString());
-        marker.line.setAttribute("x2", (ageToCoord(marker.age, scaleX, topAgeX) + 5).toString());
-        marker.line.setAttribute("y1", ageToCoord(marker.depth, scaleY, topAgeY + 5).toString());
-        marker.line.setAttribute("y2", ageToCoord(marker.depth, scaleY, topAgeY + 5).toString());
-        marker.line.setAttribute("visible", "true");
+        marker.line.setAttribute("x1", (x - MARKER_WIDTH / 2 - MARKER_PADDING).toString());
+        marker.line.setAttribute("x2", (x + MARKER_WIDTH / 2 + MARKER_PADDING).toString());
+        marker.line.setAttribute("y1", (y + MARKER_HEIGHT / 2 + MARKER_PADDING).toString());
+        marker.line.setAttribute("y2", (y + MARKER_HEIGHT / 2 + MARKER_PADDING).toString());
+        marker.line.setAttribute("opacity", "1");
         break;
       case "TOP(LAD)":
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", (ageToCoord(marker.age, scaleX, topAgeX) - 5).toString());
-        marker.line.setAttribute("x2", (ageToCoord(marker.age, scaleX, topAgeX) + 5).toString());
-        marker.line.setAttribute("y1", ageToCoord(marker.depth, scaleY, topAgeY - 5).toString());
-        marker.line.setAttribute("y2", ageToCoord(marker.depth, scaleY, topAgeY - 5).toString());
-        marker.line.setAttribute("visible", "true");
+        marker.line.setAttribute("x1", (x - MARKER_WIDTH / 2 - MARKER_PADDING).toString());
+        marker.line.setAttribute("x2", (x + MARKER_WIDTH / 2 + MARKER_PADDING).toString());
+        marker.line.setAttribute("y1", (y - MARKER_HEIGHT / 2 - MARKER_PADDING).toString());
+        marker.line.setAttribute("y2", (y - MARKER_HEIGHT / 2 - MARKER_PADDING).toString());
+        marker.line.setAttribute("opacity", "1");
         break;
     }
-  }
-  if (partial.depth !== undefined) {
-    marker.depth = partial.depth;
-    marker.element.setAttribute(
-      "cy",
-      ageToCoord(
-        partial.depth,
-        state.crossPlot.crossPlotBounds.scaleY,
-        state.crossPlot.crossPlotBounds.topAgeY
-      ).toString()
-    );
   }
 });
 
