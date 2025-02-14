@@ -15,6 +15,9 @@ type TimeLineElements = {
   timeLabelsGroup: Element;
 };
 
+export const MARKER_WIDTH = 6;
+export const MARKER_HEIGHT = 6;
+export const MARKER_PADDING = 2;
 const lineStroke = "2";
 const tooltipId = "crossplot-tooltip";
 // just a helper function to convert pixels to svg coordinates in case anyone needs
@@ -52,12 +55,8 @@ const convertPixelHeightToSvgLength = (svg: SVGSVGElement, length: number) => {
   return (length / height) * viewBoxHeight;
 };
 
-const ageToCoordWithinBounds = (age: number, min: number, max: number, topAge: number, scale: number) => {
+export const ageToCoord = (age: number, min: number, max: number, topAge: number, scale: number) => {
   return Math.min(min + (age > topAge ? Math.round((age - topAge) * scale) : 0), max);
-};
-
-export const ageToCoord = (age: number, scale: number, topAge: number) => {
-  return age > topAge ? Math.round((age - topAge) * scale) : 0;
 };
 
 const getX1 = (element: Element) => {
@@ -264,20 +263,20 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         }
         const { timeLineX, timeLineY } = timeLineElements;
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("visible", "false");
+        line.setAttribute("opacity", "0");
         line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "1");
+        line.setAttribute("stroke-width", "1.5");
         svg.appendChild(line);
         const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         const markerId = `marker-${Date.now()}`;
         rect.setAttribute("id", markerId);
-        rect.setAttribute("x", (point.x - 5).toString());
-        rect.setAttribute("y", (point.y - 5).toString());
-        rect.setAttribute("width", "10");
-        rect.setAttribute("height", "10");
+        rect.setAttribute("x", (point.x - MARKER_WIDTH / 2).toString());
+        rect.setAttribute("y", (point.y - MARKER_HEIGHT / 2).toString());
+        rect.setAttribute("width", MARKER_WIDTH.toString());
+        rect.setAttribute("height", MARKER_HEIGHT.toString());
         rect.setAttribute("border-radius", "");
-        rect.setAttribute("rx", "5");
-        rect.setAttribute("ry", "5");
+        rect.setAttribute("rx", (MARKER_WIDTH / 2).toString());
+        rect.setAttribute("ry", (MARKER_HEIGHT / 2).toString());
         rect.setAttribute("fill", theme.palette.button.main);
         rect.setAttribute("stroke", "black");
         rect.setAttribute("stroke-width", "1");
@@ -287,6 +286,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           element: rect,
           age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
           depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
+          x: point.x,
+          y: point.y,
           color: theme.palette.button.main,
           type: "Circle" as Marker["type"],
           line,
@@ -305,6 +306,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             hideTooltip();
             svg.removeChild(rect);
             actions.removeCrossPlotMarkers(marker.id);
+            svg.removeChild(line);
           };
           rect.addEventListener("mousemove", (event) => showTooltip(event, marker.id));
           rect.addEventListener("mouseleave", hideTooltip);
@@ -315,8 +317,9 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             rect.removeEventListener("mouseleave", hideTooltip);
             rect.removeEventListener("contextmenu", removeRect);
             rect.removeEventListener("click", removeRect);
-            svg.removeChild(rect);
-            svg.removeChild(line);
+            if (svg.contains(line)) {
+              svg.removeChild(line);
+            }
             if (tooltip) document.body.removeChild(tooltip);
           };
         }
@@ -324,7 +327,9 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         const prev = cleanup;
         cleanup = () => {
           prev();
-          svg.removeChild(rect);
+          if (svg.contains(rect)) {
+            svg.removeChild(rect);
+          }
         };
       };
       svg.addEventListener("dblclick", handleDoubleClick);
@@ -403,10 +408,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
 
       const svgScale = getSvgScale(svg);
 
-      const topX = ageToCoordWithinBounds(topLimitX, minX, maxX, topAgeX, scaleX);
-      const topY = ageToCoordWithinBounds(topLimitY, minY, maxY, topAgeY, scaleY);
-      const limitWidth = ageToCoordWithinBounds(baseLimitX, minX, maxX, topAgeX, scaleX) - topX;
-      const limitHeight = ageToCoordWithinBounds(baseLimitY, minY, maxY, topAgeY, scaleY) - topY;
+      const topX = ageToCoord(topLimitX, minX, maxX, topAgeX, scaleX);
+      const topY = ageToCoord(topLimitY, minY, maxY, topAgeY, scaleY);
+      const limitWidth = ageToCoord(baseLimitX, minX, maxX, topAgeX, scaleX) - topX;
+      const limitHeight = ageToCoord(baseLimitY, minY, maxY, topAgeY, scaleY) - topY;
       const textsize = getTextSize(svg);
 
       limitingBox.setAttributeNS(null, "x", String(topX));
