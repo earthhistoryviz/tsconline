@@ -280,7 +280,15 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
             }}
           />
         </Box>
-        <TextField size="small" label="Comment" fullWidth />
+        <TextField
+          size="small"
+          label="Comment"
+          fullWidth
+          value={marker.comment}
+          onChange={(evt) => {
+            actions.editCrossPlotMarker(marker, { comment: evt.target.value });
+          }}
+        />
       </Box>
     </Box>
   );
