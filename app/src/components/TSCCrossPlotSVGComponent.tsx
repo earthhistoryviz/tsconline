@@ -224,6 +224,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           }
           const { timeLineX, timeLineY } = timeLineElements;
           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          const markerId = `marker-${Date.now()}`;
+          circle.setAttribute("id", markerId);
           circle.setAttribute("cx", point.x.toString());
           circle.setAttribute("cy", point.y.toString());
           circle.setAttribute("r", "5");
@@ -232,6 +234,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           circle.setAttribute("stroke-width", "1");
           svg.appendChild(circle);
           actions.addCrossPlotMarker({
+            id: markerId,
             age: ageToCoord(getX1(timeLineX), getScale(timeLineX), getTopAge(timeLineX)),
             depth: ageToCoord(getY1(timeLineY), getScale(timeLineY), getTopAge(timeLineY)),
             color: theme.palette.button.main,

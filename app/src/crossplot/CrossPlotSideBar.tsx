@@ -243,6 +243,7 @@ const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
 });
 
 const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
+  const { actions } = useContext(context);
   return (
     <Box className={styles.markerContainer}>
       <Box className={styles.checkBoxContainer}>
@@ -250,7 +251,13 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
       </Box>
       <Box className={styles.markerOptions}>
         <Box className={styles.topMarkerRow}>
-          <TSCColorPicker color="#00000" onColorChange={() => {}} className={styles.colorPicker} />
+          <TSCColorPicker
+            color={marker.color}
+            onColorChange={(evt) => {
+              actions.editCrossPlotMarker(marker, { color: evt });
+            }}
+            className={styles.colorPicker}
+          />
           <TextField select size="small" className={styles.selectMarker} label="Type" value="">
             <MenuItem value="a">A</MenuItem>
           </TextField>

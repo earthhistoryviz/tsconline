@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, isObservable, observable } from "mobx";
 import { ChartSettings, CrossPlotTimeSettings, Marker } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -24,15 +24,17 @@ export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
   state.crossPlot.markerMode = markerMode;
 });
 
-export const addCrossPlotMarker = action((temp: Omit<Marker, "id">) => {
-  const marker = {
-    ...temp,
-    id: state.crossPlot.markers[state.crossPlot.markers.length - 1]?.id + 1 || 0
-  };
-  state.crossPlot.markers.push(marker);
+export const addCrossPlotMarker = action((temp: Marker) => {
+  state.crossPlot.markers.push(observable(temp));
 });
-export const removeCrossPlotMarkers = action((id: number) => {
+export const removeCrossPlotMarkers = action((id: string) => {
   state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
+});
+export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Marker>) => {
+  if (!isObservable(marker)) {
+    throw new Error("Marker is not observable");
+  }
+  Object.assign(marker, partial);
 });
 
 export const removeCrossPlotMarker = action((marker: Marker) => {
