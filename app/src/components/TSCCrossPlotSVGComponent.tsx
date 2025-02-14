@@ -82,6 +82,9 @@ const getTopAge = (element: Element) => {
 const keepInBounds = (value: number, min: number, max: number) => {
   return Math.min(max, Math.max(min, value));
 };
+const isOutOfBounds = (point: DOMPoint, minX: number, maxX: number, minY: number, maxY: number) => {
+  return point.x < minX || point.x > maxX || point.y < minY || point.y > maxY;
+};
 const getSvgScale = (svg: SVGSVGElement) => {
   return 1 / svg.getScreenCTM()!.a;
 };
@@ -195,9 +198,19 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!svg) return;
       if (state.crossPlot.markerMode) {
         const handleDoubleClick = (evt: MouseEvent) => {
-          const svgRect = svg.getBoundingClientRect();
-          const scale = getSvgScale(svg);
           const point = getCursor(svg, evt);
+          if (
+            !timeLineElements ||
+            isOutOfBounds(
+              point,
+              getMinX(timeLineElements.timeLineX),
+              getMaxX(timeLineElements.timeLineX),
+              getMinY(timeLineElements.timeLineY),
+              getMaxY(timeLineElements.timeLineY)
+            )
+          ) {
+            return;
+          }
           const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
           circle.setAttribute("cx", point.x.toString());
           circle.setAttribute("cy", point.y.toString());
