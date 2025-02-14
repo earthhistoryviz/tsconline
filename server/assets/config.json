@@ -13,5 +13,6 @@
   "uploadDirectory": "assets/uploads",
   "publicDirectory": "public",
   "privateDatapacksDirectory": "assets/uploads/private",
-  "publicDatapacksDirectory": "assets/uploads/public"
+  "publicDatapacksDirectory": "assets/uploads/public",
+  "translationFilepath": "assets/translation.xlsx"
 }
