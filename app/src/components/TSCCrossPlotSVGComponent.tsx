@@ -176,7 +176,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         tooltip = document.createElement("div");
         tooltip.id = tooltipId;
         tooltip.style.position = "absolute";
-        tooltip.style.background = "rgba(0,0,0,0.8)";
+        tooltip.style.background = "rgba(0,0,0,0.5)";
         tooltip.style.color = "white";
         tooltip.style.padding = "5px 10px";
         tooltip.style.borderRadius = "5px";
@@ -263,42 +263,69 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           return;
         }
         const { timeLineX, timeLineY } = timeLineElements;
-        const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("visible", "false");
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-width", "1");
+        svg.appendChild(line);
+        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         const markerId = `marker-${Date.now()}`;
-        circle.setAttribute("id", markerId);
-        circle.setAttribute("cx", point.x.toString());
-        circle.setAttribute("cy", point.y.toString());
-        circle.setAttribute("r", "5");
-        circle.setAttribute("fill", theme.palette.button.main);
-        circle.setAttribute("stroke", "black");
-        circle.setAttribute("stroke-width", "1");
-        svg.appendChild(circle);
+        rect.setAttribute("id", markerId);
+        rect.setAttribute("x", (point.x - 5).toString());
+        rect.setAttribute("y", (point.y - 5).toString());
+        rect.setAttribute("width", "10");
+        rect.setAttribute("height", "10");
+        rect.setAttribute("border-radius", "");
+        rect.setAttribute("rx", "5");
+        rect.setAttribute("ry", "5");
+        rect.setAttribute("fill", theme.palette.button.main);
+        rect.setAttribute("stroke", "black");
+        rect.setAttribute("stroke-width", "1");
+        svg.appendChild(rect);
         const marker = {
           id: markerId,
-          element: circle,
+          element: rect,
           age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
           depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
           color: theme.palette.button.main,
+          type: "Circle" as Marker["type"],
+          line,
           comment: ""
         };
         actions.addCrossPlotMarker(marker);
-        // check and add tooltip, add event listeners to the circle
         const tooltip = document.getElementById(tooltipId);
-        // if tooltip is not there, create it (assuming showing tooltips is true)
+        // check and add tooltip, add event listeners to the circle
         if (state.crossPlot.showTooltips) {
           const hideTooltip = () => {
             const tooltip = document.getElementById(tooltipId);
             if (tooltip) tooltip.style.display = "none";
           };
-          circle.addEventListener("mousemove", (event) => showTooltip(event, marker.id));
-          circle.addEventListener("mouseleave", hideTooltip);
+          const removeRect = (e: MouseEvent) => {
+            e.preventDefault();
+            hideTooltip();
+            svg.removeChild(rect);
+            actions.removeCrossPlotMarkers(marker.id);
+          };
+          rect.addEventListener("mousemove", (event) => showTooltip(event, marker.id));
+          rect.addEventListener("mouseleave", hideTooltip);
+          rect.addEventListener("contextmenu", removeRect);
+          rect.addEventListener("click", removeRect);
           cleanup = () => {
-            circle.removeEventListener("mousemove", (event) => showTooltip(event, marker.id));
-            circle.removeEventListener("mouseleave", hideTooltip);
-            svg.removeChild(circle);
+            rect.removeEventListener("mousemove", (event) => showTooltip(event, marker.id));
+            rect.removeEventListener("mouseleave", hideTooltip);
+            rect.removeEventListener("contextmenu", removeRect);
+            rect.removeEventListener("click", removeRect);
+            svg.removeChild(rect);
+            svg.removeChild(line);
             if (tooltip) document.body.removeChild(tooltip);
           };
         }
+        // preserve the cleanup function
+        const prev = cleanup;
+        cleanup = () => {
+          prev();
+          svg.removeChild(rect);
+        };
       };
       svg.addEventListener("dblclick", handleDoubleClick);
       return () => {

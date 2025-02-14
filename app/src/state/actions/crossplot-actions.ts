@@ -41,6 +41,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
   }
+  const { scaleX, topAgeX, scaleY, topAgeY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
     marker.color = partial.color;
     marker.element.setAttribute("fill", partial.color);
@@ -50,14 +51,38 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.age !== undefined) {
     marker.age = partial.age;
-    marker.element.setAttribute(
-      "cx",
-      ageToCoord(
-        partial.age,
-        state.crossPlot.crossPlotBounds.scaleX,
-        state.crossPlot.crossPlotBounds.topAgeX
-      ).toString()
-    );
+    marker.element.setAttribute("cx", ageToCoord(partial.age, scaleX, topAgeX).toString());
+  }
+  if (partial.type !== undefined) {
+    marker.type = partial.type;
+    switch (partial.type) {
+      case "Rect":
+        marker.element.setAttribute("rx", "0");
+        marker.element.setAttribute("ry", "0");
+        break;
+      case "Circle":
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        break;
+      case "BASE(FAD)":
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("x1", (ageToCoord(marker.age, scaleX, topAgeX) - 5).toString());
+        marker.line.setAttribute("x2", (ageToCoord(marker.age, scaleX, topAgeX) + 5).toString());
+        marker.line.setAttribute("y1", ageToCoord(marker.depth, scaleY, topAgeY + 5).toString());
+        marker.line.setAttribute("y2", ageToCoord(marker.depth, scaleY, topAgeY + 5).toString());
+        marker.line.setAttribute("visible", "true");
+        break;
+      case "TOP(LAD)":
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("x1", (ageToCoord(marker.age, scaleX, topAgeX) - 5).toString());
+        marker.line.setAttribute("x2", (ageToCoord(marker.age, scaleX, topAgeX) + 5).toString());
+        marker.line.setAttribute("y1", ageToCoord(marker.depth, scaleY, topAgeY - 5).toString());
+        marker.line.setAttribute("y2", ageToCoord(marker.depth, scaleY, topAgeY - 5).toString());
+        marker.line.setAttribute("visible", "true");
+        break;
+    }
   }
   if (partial.depth !== undefined) {
     marker.depth = partial.depth;
