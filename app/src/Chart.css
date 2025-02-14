@@ -41,9 +41,6 @@
   overflow: hidden;
 }
 
-.timeline-button {
-  color: red;
-}
 .chart-and-options-bar {
   display: grid;
   grid-template-rows: 40px 1fr;

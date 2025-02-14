@@ -176,17 +176,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     );
   };
 
-  const TimelineButton = () => {
-    return (
-      <CustomTooltip title="Timeline On/Off">
-        <StyledIconButton
-          className={`${chartTimelineEnabled ? "active" : ""}`}
-          onClick={() => actions.setChartTabState(chartTabState, { chartTimelineEnabled: !chartTimelineEnabled })}>
-          <HorizontalRuleIcon className="timeline-button" />
-        </StyledIconButton>
-      </CustomTooltip>
-    );
-  };
   const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
     const handleDownloadOpen = () => {
@@ -392,7 +381,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        <TimelineButton />
         {(otherChartOptions || []).map(({ icon, label, onChange, value }) => (
           <Box key={label}>
             <CustomTooltip title={label} key="label">
