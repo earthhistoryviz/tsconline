@@ -1,5 +1,5 @@
 import { action, isObservable, observable } from "mobx";
-import { ChartSettings, CrossPlotTimeSettings, Marker } from "../../types";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, Marker } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
@@ -9,7 +9,11 @@ import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
+import { ageToCoord } from "../../components/TSCCrossPlotSVGComponent";
 
+export const setCrossPlotBounds = action((bounds: CrossPlotBounds) => {
+  state.crossPlot.crossPlotBounds = bounds;
+});
 export const setCrossPlotShowTooltips = action((showTooltips: boolean) => {
   state.crossPlot.showTooltips = showTooltips;
 });
@@ -34,7 +38,38 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   if (!isObservable(marker)) {
     throw new Error("Marker is not observable");
   }
-  Object.assign(marker, partial);
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    throw new Error("CrossPlotBounds is undefined");
+  }
+  if (partial.color !== undefined) {
+    marker.color = partial.color;
+    marker.element.setAttribute("fill", partial.color);
+  }
+  if (partial.comment !== undefined) {
+    marker.comment = partial.comment;
+  }
+  if (partial.age !== undefined) {
+    marker.age = partial.age;
+    marker.element.setAttribute(
+      "cx",
+      ageToCoord(
+        partial.age,
+        state.crossPlot.crossPlotBounds.scaleX,
+        state.crossPlot.crossPlotBounds.topAgeX
+      ).toString()
+    );
+  }
+  if (partial.depth !== undefined) {
+    marker.depth = partial.depth;
+    marker.element.setAttribute(
+      "cy",
+      ageToCoord(
+        partial.depth,
+        state.crossPlot.crossPlotBounds.scaleY,
+        state.crossPlot.crossPlotBounds.topAgeY
+      ).toString()
+    );
+  }
 });
 
 export const removeCrossPlotMarker = action((marker: Marker) => {

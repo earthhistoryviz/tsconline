@@ -229,10 +229,26 @@ export type EditableUserProperties = {
 
 export type Marker = {
   id: string;
+  element: SVGCircleElement;
   age: number;
   depth: number;
   color: string;
   comment: string;
+};
+
+export type CrossPlotBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  topLimitX: number;
+  topLimitY: number;
+  baseLimitX: number;
+  baseLimitY: number;
+  scaleX: number;
+  scaleY: number;
+  topAgeX: number;
+  topAgeY: number;
 };
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
