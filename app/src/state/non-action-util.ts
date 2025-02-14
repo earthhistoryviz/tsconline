@@ -11,6 +11,7 @@ import {
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from "./state";
 
 export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
@@ -144,3 +145,11 @@ export function getPastWorkshops(workshops: SharedWorkshop[]) {
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
+export function getWorkshopCoverImage(coverPictureUrl?: string) {
+  const serverURL =
+    coverPictureUrl && coverPictureUrl?.length > 0
+      ? devSafeUrl("/" + coverPictureUrl)
+      : TSCreatorLogo;
+  return serverURL;
+};
+
