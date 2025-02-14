@@ -123,12 +123,11 @@ export async function syncTranslations() {
     console.error("Error loading configs: ", e);
     process.exit(1);
   }
-  
+
   const translationExcel = path.join(assetconfigs.translationFilepath);
   const translationJsonDir = path.join("../shared/translations");
   const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir);
-  
+
   writeTranslationsToExcel(mergedData, translationExcel);
   writeTranslationsToJson(mergedData, translationJsonDir);
-  
 }
