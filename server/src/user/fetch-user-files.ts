@@ -1,6 +1,7 @@
 import { mkdir, readdir } from "fs/promises";
 import path from "path";
 import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util.js";
+import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**
@@ -36,6 +37,56 @@ export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> 
   return userDirectory;
 }
 
+export async function getPublicDatapacksDirectoryFromUUID(uuid: string) {
+  const dir = await getPublicUserUUIDDirectory(uuid);
+  const datpackDir = path.join(dir, "datapacks");
+  if (!(await verifyFilepath(datpackDir))) {
+    if (await verifyNonExistentFilepath(datpackDir)) {
+      await mkdir(datpackDir, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
+  }
+  return datpackDir;
+}
+
+export async function getPrivateDatapacksDirectoryFromUUID(uuid: string) {
+  const dir = await getPrivateUserUUIDDirectory(uuid);
+  const datpackDir = path.join(dir, "datapacks");
+  if (!(await verifyFilepath(datpackDir))) {
+    if (await verifyNonExistentFilepath(datpackDir)) {
+      await mkdir(datpackDir, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
+  }
+  return datpackDir;
+}
+
+export async function getDatapacksDirectoryFromUUIDDirectory(directory: string) {
+  const datpackDir = path.join(directory, "datapacks");
+  if (!(await verifyFilepath(datpackDir))) {
+    if (await verifyNonExistentFilepath(datpackDir)) {
+      await mkdir(datpackDir, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
+  }
+  return datpackDir;
+}
+
+export function getUnsafeCachedDatapackFilePath(directory: string) {
+  return path.join(directory, CACHED_USER_DATAPACK_FILENAME);
+}
+
+export async function getCachedDatapackFilePath(directory: string) {
+  const cachedDatapackFilePath = path.join(directory, CACHED_USER_DATAPACK_FILENAME);
+  if (!(await verifyFilepath(cachedDatapackFilePath))) {
+    throw new Error("Invalid filepath");
+  }
+  return cachedDatapackFilePath;
+}
+
 export async function fetchUserDatapackDirectory(uuid: string, datapack: string): Promise<string> {
   // check both public and private directories
   const directoriesToCheck: string[] = await getAllUserDatapackDirectories(uuid);
@@ -69,8 +120,8 @@ export async function getDirectories(source: string): Promise<string[]> {
  */
 export async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
   return [
-    await getPrivateUserUUIDDirectory(uuid).catch(() => ""),
-    await getPublicUserUUIDDirectory(uuid).catch(() => "")
+    await getPrivateDatapacksDirectoryFromUUID(uuid).catch(() => ""),
+    await getPublicDatapacksDirectoryFromUUID(uuid).catch(() => "")
   ].filter(Boolean);
 }
 /**

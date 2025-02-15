@@ -27,7 +27,12 @@ import {
   deleteDatapackFileAndDecryptedCounterpart,
   doesDatapackFolderExistInAllUUIDDirectories
 } from "./user/user-handler.js";
-import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
+import {
+  fetchUserDatapackDirectory,
+  getDatapacksDirectoryFromUUIDDirectory,
+  getUnsafeCachedDatapackFilePath,
+  getUserUUIDDirectory
+} from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import {
   CACHED_USER_DATAPACK_FILENAME,
@@ -248,7 +253,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   }
   const datapackIndex: DatapackIndex = {};
   const directory = await getUserUUIDDirectory(uuid, metadata.isPublic);
-  const datapackFolder = path.join(directory, metadata.title);
+  const datapackFolder = await getDatapacksDirectoryFromUUIDDirectory(directory);
   await mkdir(datapackFolder, { recursive: true });
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
   const decryptDestination = path.join(datapackFolder, "decrypted");
@@ -275,7 +280,7 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     }
   }
   await writeFile(
-    path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
+    getUnsafeCachedDatapackFilePath(datapackFolder),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
   );
   // could change when we want to allow users make workshops
