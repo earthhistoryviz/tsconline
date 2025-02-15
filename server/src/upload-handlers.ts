@@ -249,7 +249,8 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   }
   const datapackIndex: DatapackIndex = {};
   const directory = await getUserUUIDDirectory(uuid, metadata.isPublic);
-  const datapackFolder = await getDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapacksFolder = await getDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, metadata.title);
   await mkdir(datapackFolder, { recursive: true });
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
   const decryptDestination = path.join(datapackFolder, "decrypted");

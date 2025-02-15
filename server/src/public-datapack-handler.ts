@@ -4,9 +4,7 @@ import {
   fetchUserDatapackDirectory,
   getDirectories,
   getPrivateDatapacksDirectoryFromUUID,
-  getPrivateUserUUIDDirectory,
-  getPublicDatapacksDirectoryFromUUID,
-  getPublicUserUUIDDirectory
+  getPublicDatapacksDirectoryFromUUID
 } from "./user/fetch-user-files.js";
 import { fetchUserDatapack } from "./user/user-handler.js";
 import logger from "./error-logger.js";
@@ -26,7 +24,7 @@ export async function loadPublicUserDatapacks() {
     for (const uuid of uuids) {
       if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {
-        const datapackDirs = await getDirectories(await getPrivateDatapacksDirectoryFromUUID(uuid));
+        const datapackDirs = await getDirectories(await getPublicDatapacksDirectoryFromUUID(uuid));
         for (const datapack of datapackDirs) {
           try {
             const dp = await fetchUserDatapack(uuid, datapack);
