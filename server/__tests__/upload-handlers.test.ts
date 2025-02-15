@@ -29,7 +29,7 @@ vi.mock("../src/database", () => ({
 vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
   getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory"),
-  getDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
+  getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
   getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath")
 }));
 vi.mock("stream/promises", () => ({
