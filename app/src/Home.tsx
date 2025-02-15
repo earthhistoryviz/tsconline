@@ -98,7 +98,6 @@ export const Home = observer(function Home() {
             }}
             onClick={async () => {
               actions.removeCache();
-              actions.resetState();
             }}>
             {t("button.remove-cache")}
           </TSCButton>
@@ -485,7 +484,7 @@ const ChartCreationSteps = observer(
           </Typography>
         </Box>
         {!isMobile && (
-          <Box className="chart-creation-steps">
+          <Box className="chart-creation-steps" key={1}>
             <Box
               sx={{
                 position: "absolute",
@@ -530,25 +529,23 @@ const ChartCreationSteps = observer(
                 background: gradient.dark
               }}></Box>
             {steps.map((step, index) => (
-              <>
-                <Box key={index} className="mobile-chart-creation-step">
-                  <Box className="mobile-chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
-                    {cloneElement(step.icon, {
-                      className: "mobile-chart-creation-step-icon",
-                      sx: { color: "button.contrastText" }
-                    })}
-                  </Box>
-                  <Box className="mobile-chart-creation-step-text-container">
-                    <Typography className="mobile-chart-creation-step-title" variant="h4">
-                      {step.title}
-                    </Typography>
-                    <CustomDivider className="mobile-chart-creation-step-divider" />
-                    <Typography className="mobile-chart-creation-step-description" variant="body1">
-                      {step.description}
-                    </Typography>
-                  </Box>
+              <Box key={index} className="mobile-chart-creation-step">
+                <Box className="mobile-chart-creation-step-icon-container" sx={{ background: gradient.dark }}>
+                  {cloneElement(step.icon, {
+                    className: "mobile-chart-creation-step-icon",
+                    sx: { color: "button.contrastText" }
+                  })}
                 </Box>
-              </>
+                <Box className="mobile-chart-creation-step-text-container">
+                  <Typography className="mobile-chart-creation-step-title" variant="h4">
+                    {step.title}
+                  </Typography>
+                  <CustomDivider className="mobile-chart-creation-step-divider" />
+                  <Typography className="mobile-chart-creation-step-description" variant="body1">
+                    {step.description}
+                  </Typography>
+                </Box>
+              </Box>
             ))}
           </Box>
         )}

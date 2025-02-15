@@ -24,11 +24,22 @@ import { useTranslation } from "react-i18next";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
+  return (
+    <div className="column-top-level-container">
+      <ColumnSearchBar />
+      <div className="column-accordion-and-menu-container">
+        <ColumnDisplay />
+        <ColumnMenu />
+      </div>
+    </div>
+  );
+});
+
+export const ColumnDisplay = observer(() => {
   const { state, actions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -55,61 +66,54 @@ export const Column = observer(function Column() {
       }
     };
   }, []);
-
   return (
-    <div className="column-top-level-container">
-      <ColumnSearchBar />
-      <div className="column-accordion-and-menu-container">
-        <Box
-          id="ResizableColumnAccordionWrapper"
-          ref={scrollRef}
-          border={1}
-          borderColor="divider"
-          bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
-          position="relative">
-          <div className="column-filter-buttons">
-            <CustomTooltip title="Expand All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-                }}>
-                <ExpandIcon />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Collapse All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-                }}>
-                <CompressIcon />
-              </IconButton>
-            </CustomTooltip>
-          </div>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
-          {/* Button to take users to top of column menu when scrolling */}
-
-          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-            <Lottie
-              key="settings-arrow-up"
-              style={{ width: "28px", height: "28px" }}
-              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-              playOnClick
-            />
+    <Box
+      id="ResizableColumnAccordionWrapper"
+      ref={scrollRef}
+      border={1}
+      borderColor="divider"
+      bgcolor="secondaryBackground.main"
+      className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+      position="relative">
+      <div className="column-filter-buttons">
+        <CustomTooltip title="Expand All" placement="top">
+          <IconButton
+            disableRipple
+            className="expand-collapse-column-buttons"
+            onClick={() => {
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+            }}>
+            <ExpandIcon />
           </IconButton>
-        </Box>
-        <ColumnMenu />
+        </CustomTooltip>
+        <CustomTooltip title="Collapse All" placement="top">
+          <IconButton
+            disableRipple
+            className="expand-collapse-column-buttons"
+            onClick={() => {
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+            }}>
+            <CompressIcon />
+          </IconButton>
+        </CustomTooltip>
       </div>
-    </div>
+      {state.settingsTabs.columns &&
+        Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
+          <ColumnAccordion key={childName} details={childDetails} />
+        ))}
+      {/* Button to take users to top of column menu when scrolling */}
+
+      <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+        <Lottie
+          key="settings-arrow-up"
+          style={{ width: "28px", height: "28px" }}
+          animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+          playOnClick
+        />
+      </IconButton>
+    </Box>
   );
 });
 
@@ -184,8 +188,8 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const dataInrange = checkIfDataIsInRange(
     column.minAge,
     column.maxAge,
-    state.settings.timeSettings[column.units].topStageAge,
-    state.settings.timeSettings[column.units].baseStageAge
+    state.settings.timeSettings[column.units]?.topStageAge || 0,
+    state.settings.timeSettings[column.units]?.baseStageAge || 0
   );
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (

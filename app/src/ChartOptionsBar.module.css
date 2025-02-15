@@ -1,0 +1,6 @@
+.saveButton {
+  text-overflow: ellipsis;
+  --web-kit-line-clamp: 1;
+  white-space: nowrap;
+  overflow: hidden;
+}
