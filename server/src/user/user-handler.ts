@@ -21,7 +21,6 @@ import {
   getAllUserDatapackDirectories,
   fetchUserDatapackDirectory,
   getDirectories,
-  getPrivateUserUUIDDirectory,
   getPrivateDatapacksDirectoryFromUUID,
   getCachedDatapackFilePath
 } from "./fetch-user-files.js";
