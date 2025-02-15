@@ -2555,7 +2555,7 @@ __metadata:
     clsx: "npm:^2.1.0"
     color: "npm:^4.2.3"
     dayjs: "npm:^1.11.12"
-    dompurify: "npm:^3.1.3"
+    dompurify: "npm:^3.2.4"
     file-saver: "npm:^2.0.5"
     framer-motion: "npm:^11.15.0"
     i18next: "npm:^23.14.0"
@@ -2621,7 +2621,7 @@ __metadata:
     better-sqlite3: "npm:^9.4.4"
     chalk: "npm:^5.3.0"
     cors: "npm:^2.8.5"
-    dompurify: "npm:^3.1.3"
+    dompurify: "npm:^3.2.4"
     dotenv: "npm:^16.4.5"
     fastify: "npm:^4.27.0"
     fastify-metrics: "npm:^12.1.0"
@@ -3305,7 +3305,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/trusted-types@npm:*":
+"@types/trusted-types@npm:*, @types/trusted-types@npm:^2.0.7":
   version: 2.0.7
   resolution: "@types/trusted-types@npm:2.0.7"
   checksum: 8e4202766a65877efcf5d5a41b7dd458480b36195e580a3b1085ad21e948bc417d55d6f8af1fd2a7ad008015d4117d5fdfe432731157da3c68678487174e4ba3
@@ -5572,10 +5572,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"dompurify@npm:^3.1.3":
-  version: 3.1.4
-  resolution: "dompurify@npm:3.1.4"
-  checksum: be036d5c10bda3ca9cc8069f26f3e586ac0379fc2a2499df7c362eeee53de49594ead3cc7e82e012eadcb071cf7327001fca33751682882e42da87618b10a4e6
+"dompurify@npm:^3.2.4":
+  version: 3.2.4
+  resolution: "dompurify@npm:3.2.4"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.7"
+  dependenciesMeta:
+    "@types/trusted-types":
+      optional: true
+  checksum: 98570c53385518a2f9b617f796926338856acfdd3369c88b5905bddf96bd7d391bf8a5433127155e0046e6faa2bfb767185fcd571b865dfabe624c099e2537f5
   languageName: node
   linkType: hard
 
