@@ -22,7 +22,7 @@
     "syncpack": "^12.3.0",
     "ts-node": "^10.9.2",
     "typescript": "5.2.2",
-    "vitest": "^1.6.0",
+    "vitest": "^1.6.1",
     "wait-on": "^8.0.1"
   },
   "packageManager": "yarn@4.0.2",
