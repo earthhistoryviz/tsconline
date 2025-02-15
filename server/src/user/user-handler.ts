@@ -81,7 +81,6 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 }
 
 export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
-  const directory = await getPrivateUserUUIDDirectory("official");
   const datapacksArray: Datapack[] = [];
   const datapacksDir = await getPrivateDatapacksDirectoryFromUUID("official");
   const datapacks = await getDirectories(datapacksDir);
