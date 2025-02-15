@@ -21,7 +21,7 @@ import {
   getAllUserDatapackDirectories,
   fetchUserDatapackDirectory,
   getDirectories,
-  getPrivateDatapacksDirectoryFromUUID,
+  getUsersPrivateDatapacksDirectoryFromUUID,
   getCachedDatapackFilePath
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
@@ -81,7 +81,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 
 export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
   const datapacksArray: Datapack[] = [];
-  const datapacksDir = await getPrivateDatapacksDirectoryFromUUID("official");
+  const datapacksDir = await getUsersPrivateDatapacksDirectoryFromUUID("official");
   const datapacks = await getDirectories(datapacksDir);
   for (const datapack of datapacks) {
     try {

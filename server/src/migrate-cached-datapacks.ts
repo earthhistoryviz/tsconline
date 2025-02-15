@@ -1,7 +1,7 @@
 import path from "path";
 import {
   getCachedDatapackFilePath,
-  getDatapacksDirectoryFromUUIDDirectory,
+  getUsersDatapacksDirectoryFromUUIDDirectory,
   getDirectories
 } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
@@ -26,7 +26,7 @@ try {
           `\n======================================================\nLoading datapacks for ${user}\n======================================================\n`
         )
       );
-      const datapacksDir = await getDatapacksDirectoryFromUUIDDirectory(directory);
+      const datapacksDir = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
       // TEMPORARY, THIS IS FOR CLEANUP WILL REMOVE IN 2 WEEKS OR SO. IN THAT TIME, NO OTHER FILES ARE OF USE IN USER DIRECTORIES
       await removeOldDatapackFolders(path.join(directory, user));
       const datapacks = await getDirectories(datapacksDir);

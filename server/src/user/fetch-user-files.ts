@@ -37,7 +37,7 @@ export async function getPublicUserUUIDDirectory(uuid: string): Promise<string> 
   return userDirectory;
 }
 
-export async function getPublicDatapacksDirectoryFromUUID(uuid: string) {
+export async function getUsersPublicDatapacksDirectoryFromUUID(uuid: string) {
   const dir = await getPublicUserUUIDDirectory(uuid);
   const datpackDir = path.join(dir, "datapacks");
   if (!(await verifyFilepath(datpackDir))) {
@@ -50,7 +50,7 @@ export async function getPublicDatapacksDirectoryFromUUID(uuid: string) {
   return datpackDir;
 }
 
-export async function getPrivateDatapacksDirectoryFromUUID(uuid: string) {
+export async function getUsersPrivateDatapacksDirectoryFromUUID(uuid: string) {
   const dir = await getPrivateUserUUIDDirectory(uuid);
   const datpackDir = path.join(dir, "datapacks");
   if (!(await verifyFilepath(datpackDir))) {
@@ -63,7 +63,7 @@ export async function getPrivateDatapacksDirectoryFromUUID(uuid: string) {
   return datpackDir;
 }
 
-export async function getDatapacksDirectoryFromUUIDDirectory(directory: string) {
+export async function getUsersDatapacksDirectoryFromUUIDDirectory(directory: string) {
   const datpackDir = path.join(directory, "datapacks");
   if (!(await verifyFilepath(datpackDir))) {
     if (await verifyNonExistentFilepath(datpackDir)) {
@@ -120,8 +120,8 @@ export async function getDirectories(source: string): Promise<string[]> {
  */
 export async function getAllUserDatapackDirectories(uuid: string): Promise<string[]> {
   return [
-    await getPrivateDatapacksDirectoryFromUUID(uuid).catch(() => ""),
-    await getPublicDatapacksDirectoryFromUUID(uuid).catch(() => "")
+    await getUsersPrivateDatapacksDirectoryFromUUID(uuid).catch(() => ""),
+    await getUsersPublicDatapacksDirectoryFromUUID(uuid).catch(() => "")
   ].filter(Boolean);
 }
 /**
