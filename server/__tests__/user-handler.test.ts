@@ -107,7 +107,8 @@ vi.mock("../src/user/fetch-user-files", () => {
     getAllUserDatapackDirectories: vi.fn(async () => ["test1/test"]),
     getDirectories: vi.fn(async () => ["test"]),
     fetchUserDatapackDirectory: vi.fn(async () => "test/test"),
-    getPrivateUserUUIDDirectory: vi.fn(async () => "test")
+    getPrivateUserUUIDDirectory: vi.fn(async () => "test"),
+    getCachedDatapackFilePath: vi.fn(() => "test/test/test-cached-filename")
   };
 });
 const testUser = {
@@ -190,9 +191,9 @@ describe("fetchAllUsersDatapacks test", () => {
 
 describe("fetchUserDatapack test", () => {
   const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
-  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");
   const assertDatapack = vi.spyOn(shared, "assertDatapack");
+  const getCachedDatapackFilePath = vi.spyOn(fetchUserFiles, "getCachedDatapackFilePath");
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -201,15 +202,9 @@ describe("fetchUserDatapack test", () => {
     await expect(fetchUserDatapack("test", "test")).rejects.toThrow("fetchUserDatapackDirectory error");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
   });
-  it("should throw an error if verifyFilepath fails", async () => {
-    verifyFilepath.mockResolvedValueOnce(false);
-    await expect(fetchUserDatapack("test", "test")).rejects.toThrow(`File ${readFileMockReturn.title} doesn't exist`);
-    expect(verifyFilepath).toHaveBeenCalledOnce();
-  });
-  it("should throw an error if verifyFilepath throws an error", async () => {
-    verifyFilepath.mockResolvedValueOnce(false);
-    await expect(fetchUserDatapack("test", "test")).rejects.toThrow(`File ${readFileMockReturn.title} doesn't exist`);
-    expect(verifyFilepath).toHaveBeenCalledOnce();
+  it("should throw an error if getCachedDatapackFilePath fails", async () => {
+    getCachedDatapackFilePath.mockRejectedValueOnce(new Error("getCachedDatapackFilePath error"));
+    await expect(fetchUserDatapack("test", "test")).rejects.toThrow("getCachedDatapackFilePath error");
   });
   it("should throw an error if readFile fails", async () => {
     readFile.mockRejectedValueOnce(new Error("readFile error"));
@@ -388,23 +383,32 @@ describe("fetchAllPrivateOfficialDatapacks test", () => {
 describe("getUploadedDatapackFilepath test", () => {
   const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const getCachedDatapackFilePath = vi.spyOn(fetchUserFiles, "getCachedDatapackFilePath");
   const readFile = vi.spyOn(fsPromises, "readFile");
   const readFileMockReturn = { storedFileName: "test" };
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it("should throw an error if verifyFilepath returns false", async () => {
-    verifyFilepath.mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    verifyFilepath.mockResolvedValueOnce(false);
     readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
     await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("Invalid filepath");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
-    expect(verifyFilepath).toHaveBeenCalledTimes(2);
+    expect(verifyFilepath).toHaveBeenCalledTimes(1);
   });
   it("should throw an error if verifyFilepath throws an error", async () => {
     verifyFilepath.mockRejectedValueOnce(new Error("verifyFilepath error"));
+    readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
     await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("verifyFilepath error");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
     expect(verifyFilepath).toHaveBeenCalledOnce();
+  });
+  it("should throw an error if getCachedDatapackFilePath throws an error", async () => {
+    getCachedDatapackFilePath.mockRejectedValueOnce(new Error("getCachedDatapackFilePath error"));
+    await expect(getUploadedDatapackFilepath("test", "test")).rejects.toThrow("getCachedDatapackFilePath error");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
+    expect(verifyFilepath).toHaveBeenCalledTimes(0);
+    expect(getCachedDatapackFilePath).toHaveBeenCalledOnce();
   });
   it("should return the filepath", async () => {
     readFile.mockResolvedValueOnce(JSON.stringify(readFileMockReturn));
