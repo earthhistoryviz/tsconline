@@ -45,7 +45,7 @@ const server = fastify({
 });
 
 collectDefaultMetrics();
-const httpMetricsLabelNames = ["method", "path"];
+const httpMetricsLabelNames = ["method", "path", "status"];
 const totalHttpRequestCount = new Counter({
   name: "nodejs_http_total_count",
   help: "total request number",
@@ -61,45 +61,42 @@ const activeUsers = new Gauge({
   help: "number of active users"
 });
 
-// Pathing count and call duration
+const ipSet = new Set<string>();
 server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [number, number] }) => {
   request.startTime = process.hrtime();
-});
-server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }) => {
-  const duration = process.hrtime(request.startTime);
-  const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
-  totalHttpRequestCount.labels(request.method, request.routerPath).inc();
-  totalHttpRequestDuration.labels(request.method, request.routerPath).set(durationInMs);
+  const ip = request.ip;
+  if (!ipSet.has(ip)) {
+    ipSet.add(ip);
+    setTimeout(
+      () => {
+        ipSet.delete(ip);
+        activeUsers.set(ipSet.size);
+      },
+      15 * 60 * 1000
+    );
+  }
+  activeUsers.set(ipSet.size);
 });
 
-// Active user metric tracking
-server.addHook("onSend", async (request, reply) => {
-  if (reply.statusCode === 200) {
-    if (request.routerPath === "/auth/login" || request.routerPath === "/auth/signup") {
-      activeUsers.inc();
-    } else if (request.routerPath === "/auth/logout") {
-      activeUsers.dec();
-    }
-  }
+server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }, reply) => {
+  const duration = process.hrtime(request.startTime);
+  const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
+  totalHttpRequestCount.labels(request.method, request.routerPath, reply.statusCode.toString()).inc();
+  totalHttpRequestDuration.labels(request.method, request.routerPath, reply.statusCode.toString()).set(durationInMs);
 });
 
 // Expose the metrics endpoint
-server.get("/metrics", async (_request, reply) => {
+server.get("/metrics", async (request, reply) => {
+  if (request.ip !== "127.0.0.1" && request.ip !== "::1") {
+    reply.code(403).send({ error: "Forbidden" });
+    return;
+  }
   try {
     const metrics = await register.metrics();
     reply.header("Content-Type", register.contentType).send(metrics);
   } catch (e) {
     console.error("Error loading configs: ", e);
     reply.status(500).send(e);
-  }
-});
-
-// Restrict access to /metrics to localhost only
-server.addHook("preHandler", (request, reply, done) => {
-  if (request.raw.url === "/metrics" && request.ip !== "127.0.0.1" && request.ip !== "::1") {
-    reply.code(403).send({ error: "Forbidden" });
-  } else {
-    done();
   }
 });
 
