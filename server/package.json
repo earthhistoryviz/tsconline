@@ -43,7 +43,7 @@
     "svgson": "^5.3.1",
     "validator": "^13.12.0",
     "winston": "^3.14.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.17.1"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.9",
@@ -59,7 +59,6 @@
     "@types/pump": "^1.1.3",
     "@types/validator": "^13",
     "form-auto-content": "^3.2.1",
-    "tsx": "^4.9.3",
     "typescript": "5.2.2",
     "vitest": "^1.6.1"
   },
@@ -73,6 +72,7 @@
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
     "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",
+    "sync-translations": "node dist/sync-translations.js",
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist"
