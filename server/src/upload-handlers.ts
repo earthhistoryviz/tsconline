@@ -34,11 +34,7 @@ import {
   getUserUUIDDirectory
 } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import {
-  CACHED_USER_DATAPACK_FILENAME,
-  DATAPACK_PROFILE_PICTURE_FILENAME,
-  DECRYPTED_DIRECTORY_NAME
-} from "./constants.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";

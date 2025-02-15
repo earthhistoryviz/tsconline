@@ -61,7 +61,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
     const datapacks = await getDirectories(directory);
     for (const datapack of datapacks) {
       try {
-        const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+        const cachedDatapack = await getCachedDatapackFilePath(path.join(directory, datapack));
         const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
         if (await verifyFilepath(cachedDatapack)) {
           if (datapacksArray.find((datapack) => datapack.title === parsedCachedDatapack.title)) {
