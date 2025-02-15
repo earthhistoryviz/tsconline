@@ -31,11 +31,14 @@ import {
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
+import { isDevServer } from "../constants";
+import { useNavigate } from "react-router";
 
 export const Datapacks = observer(function Datapacks() {
   const { state, actions } = useContext(context);
   const [formOpen, setFormOpen] = useState(false);
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const shouldLoadRecaptcha =
     state.isLoggedIn &&
     (state.user.isAdmin ||
@@ -156,6 +159,15 @@ export const Datapacks = observer(function Datapacks() {
           {t("button.confirm-selection")}
         </TSCButton>
       </Box>
+      {isDevServer && (
+        <TSCButton
+          onClick={() => {
+            navigate("/crossplot");
+            actions.setTab(0);
+          }}>
+          {t("crossPlot.create-datapack")}
+        </TSCButton>
+      )}
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm
           close={() => setFormOpen(false)}

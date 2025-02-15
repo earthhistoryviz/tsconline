@@ -1,0 +1,5 @@
+.container {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-rows: calc(100vh - var(--nav-bar-height));
+}

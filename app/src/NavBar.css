@@ -41,3 +41,6 @@
 .language-divider-settings-sub-menu {
   background-color: #8d99ae !important;
 }
+.nav-bar {
+  height: var(--nav-bar-height);
+}

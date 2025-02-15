@@ -1,8 +1,8 @@
 import { roundToDecimalPlace } from "@tsconline/shared";
-import React, { useContext, useEffect } from "react";
-import { RefObject } from "react";
+import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
+import { ChartContext } from "../Chart";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -13,10 +13,6 @@ type TimeLineElements = {
   timeLabelsGroup: Element;
 };
 
-type TSCCrossPlotSVGComponentProps = {
-  svgContainerRef: RefObject<HTMLDivElement>;
-  chartContent: string;
-};
 const lineStroke = "2";
 // just a helper function to convert pixels to svg coordinates in case anyone needs
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -138,31 +134,35 @@ const showCurrAgeY = (
   return currAgeY;
 };
 
-export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> = observer(
-  ({ svgContainerRef, chartContent }) => {
+export const TSCCrossPlotSVGComponent: React.FC = observer(
+  forwardRef<HTMLDivElement>(function TSCCrossPlotSVGComponent(_, ref) {
     const { state, actions } = useContext(context);
+    const { chartTabState } = useContext(ChartContext);
+    const { chartTimelineEnabled, chartContent } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     useEffect(() => {
-      const container = svgContainerRef.current;
-      if (!container) return;
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
       setupTimelineAndLabel(svg);
-      hideOrShowTimeline(state.chartTab.chartTimelineEnabled);
-    }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled]);
+      hideOrShowTimeline(chartTimelineEnabled);
+    }, [ref, chartContent, chartTimelineEnabled, typeof ref !== "function" && ref ? ref.current : null]);
     useEffect(() => {
-      const container = svgContainerRef.current;
-      if (!container) return;
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
       // either timeline or popups
-      if (state.chartTab.chartTimelineEnabled) {
+      if (chartTimelineEnabled) {
         // crossplot or non crossplot
         const eventListenerWrapper = (evt: MouseEvent) => handleTimeLine(evt, svg);
-        const lockX = () => actions.setCrossPlotLockX(!state.chartTab.crossPlot.lockX);
-        const lockY = () => actions.setCrossPlotLockY(!state.chartTab.crossPlot.lockY);
+        const lockX = () => actions.setCrossPlotLockX(!state.crossPlot.lockX);
+        const lockY = () => actions.setCrossPlotLockY(!state.crossPlot.lockY);
         const keydownListener = (evt: KeyboardEvent) => {
-          if (!state.chartTab.chartTimelineEnabled) return;
+          if (!chartTimelineEnabled) return;
           if (evt.key === "x") {
             lockX();
           } else if (evt.key === "y") {
@@ -176,7 +176,7 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
           window.removeEventListener("keydown", keydownListener);
         };
       }
-    }, [svgContainerRef.current, chartContent, state.chartTab.chartTimelineEnabled, timeLineElements]);
+    }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
@@ -296,11 +296,11 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
       const currX = keepInBounds(point.x, minX, maxX);
       const currY = keepInBounds(point.y, minY, maxY);
       //move timeline vertically if not locked
-      if (!state.chartTab.crossPlot.lockY) {
+      if (!state.crossPlot.lockY) {
         timeLineY.setAttribute("y1", String(currY));
         timeLineY.setAttribute("y2", String(currY));
       }
-      if (!state.chartTab.crossPlot.lockX) {
+      if (!state.crossPlot.lockX) {
         timeLineX.setAttribute("x1", String(currX));
         timeLineX.setAttribute("x2", String(currX));
       }
@@ -329,6 +329,6 @@ export const TSCCrossPlotSVGComponent: React.FC<TSCCrossPlotSVGComponentProps> =
         convertPixelWidthToSvgLength(svg, getLabelWidthY())
       );
     };
-    return <div ref={svgContainerRef} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
-  }
+    return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
+  })
 );

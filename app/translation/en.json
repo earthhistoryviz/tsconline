@@ -220,11 +220,15 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
+            "create-datapack": "Create Datapack",
             "time": {
+                "no-unit-selected": "No unit selected",
                 "select-unit": "Please select a unit.",
-                "no-chart-units-available": "No datapacks selected",
+                "no-chart-units-available": "No units available",
                 "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
-                "select-datapack": "Please select a datapack."
+                "select-datapack": "Please select a datapack.",
+                "xAxis": "X Axis (Age-only)",
+                "yAxis": "Y Axis (Age/Depth)"
             }
         },
         "settingsTabs": {

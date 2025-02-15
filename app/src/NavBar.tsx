@@ -76,7 +76,7 @@ export const NavBar = observer(function Navbar() {
     setMenuDrawerOpen(false);
   };
   return (
-    <StyledAppBar position="fixed">
+    <StyledAppBar position="sticky" className="nav-bar">
       <Toolbar>
         {!isMobile && (
           <>

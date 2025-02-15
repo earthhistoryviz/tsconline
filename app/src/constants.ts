@@ -1,4 +1,4 @@
-import { ChartSettings, ChartZoomSettings, CrossPlotTimeSettings } from "./types";
+import { ChartSettings, ChartTabState, ChartZoomSettings, CrossPlotTimeSettings } from "./types";
 
 export const settings: ChartSettings = {
   timeSettings: {
@@ -44,4 +44,17 @@ export const defaultChartZoomSettings: ChartZoomSettings = {
   resetMidX: 0,
   scale: 1,
   enableScrollZoom: false
+};
+
+export const defaultChartTabState: ChartTabState = {
+  chartHash: "",
+  chartContent: "",
+  chartTimelineEnabled: false,
+  chartZoomSettings: defaultChartZoomSettings,
+  downloadFilename: "chart",
+  downloadFiletype: "svg",
+  isSavingChart: false,
+  unsafeChartContent: "",
+  madeChart: false,
+  chartLoading: false
 };
