@@ -130,10 +130,7 @@ export async function getUploadedDatapackFilepath(uuid: string, datapack: string
  */
 export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
   const datapackPath = await fetchUserDatapackDirectory(uuid, datapack);
-  const cachedDatapack = path.join(datapackPath, CACHED_USER_DATAPACK_FILENAME);
-  if (!cachedDatapack || !(await verifyFilepath(cachedDatapack))) {
-    throw new Error(`File ${datapack} doesn't exist`);
-  }
+  const cachedDatapack = await getCachedDatapackFilePath(datapackPath);
   const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
   assertDatapack(parsedCachedDatapack);
   return parsedCachedDatapack;
