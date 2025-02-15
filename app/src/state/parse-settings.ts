@@ -36,7 +36,7 @@ import {
   defaultZoneColumnInfoTSC,
   isRGB
 } from "@tsconline/shared";
-import { ChartSettings } from "../types";
+import { ChartSettings, CrossPlotTimeSettings } from "../types";
 import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
 //for testing purposes
@@ -528,7 +528,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
   return column;
 }
 
-export function columnInfoToSettingsTSC(state: ColumnInfo, settings: ChartSettings): ChartInfoTSC {
+export function columnInfoToSettingsTSC(state: ColumnInfo): ChartInfoTSC {
   const settingsTSC: ChartInfoTSC = <ChartInfoTSC>{};
   settingsTSC["class datastore.RootColumn:Chart Root"] = translateColumnInfoToColumnInfoTSC(state);
   settingsTSC.settings = JSON.parse(JSON.stringify(defaultChartSettingsInfoTSC));
@@ -702,7 +702,7 @@ export function jsonToXml(
 ): string {
   normalizeColumnProperties(state);
   changeManuallyAddedColumns(state, hash);
-  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state, settings)));
+  let settingsTSC = JSON.parse(JSON.stringify(parseSettings.columnInfoToSettingsTSC(state)));
   let xml = `<?xml version="1.0" encoding="UTF-8"?>\n`;
   xml += `<TSCreator version="${version}">\n`;
   xml += '    <settings version="1.0">\n';
