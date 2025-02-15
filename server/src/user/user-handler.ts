@@ -21,7 +21,8 @@ import {
   getAllUserDatapackDirectories,
   fetchUserDatapackDirectory,
   getDirectories,
-  getPrivateUserUUIDDirectory
+  getUsersPrivateDatapacksDirectoryFromUUID,
+  getCachedDatapackFilePath
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
@@ -59,7 +60,7 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
     const datapacks = await getDirectories(directory);
     for (const datapack of datapacks) {
       try {
-        const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+        const cachedDatapack = await getCachedDatapackFilePath(path.join(directory, datapack));
         const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
         if (await verifyFilepath(cachedDatapack)) {
           if (datapacksArray.find((datapack) => datapack.title === parsedCachedDatapack.title)) {
@@ -79,12 +80,12 @@ export async function fetchAllUsersDatapacks(uuid: string): Promise<Datapack[]> 
 }
 
 export async function fetchAllPrivateOfficialDatapacks(): Promise<Datapack[]> {
-  const directory = await getPrivateUserUUIDDirectory("official");
   const datapacksArray: Datapack[] = [];
-  const datapacks = await getDirectories(directory);
+  const datapacksDir = await getUsersPrivateDatapacksDirectoryFromUUID("official");
+  const datapacks = await getDirectories(datapacksDir);
   for (const datapack of datapacks) {
     try {
-      const cachedDatapack = path.join(directory, datapack, CACHED_USER_DATAPACK_FILENAME);
+      const cachedDatapack = await getCachedDatapackFilePath(path.join(datapacksDir, datapack));
       const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
       if (await verifyFilepath(cachedDatapack)) {
         if (datapacksArray.find((datapack) => datapack.title === parsedCachedDatapack.title)) {
@@ -127,10 +128,7 @@ export async function getUploadedDatapackFilepath(uuid: string, datapack: string
  */
 export async function fetchUserDatapack(uuid: string, datapack: string): Promise<Datapack> {
   const datapackPath = await fetchUserDatapackDirectory(uuid, datapack);
-  const cachedDatapack = path.join(datapackPath, CACHED_USER_DATAPACK_FILENAME);
-  if (!cachedDatapack || !(await verifyFilepath(cachedDatapack))) {
-    throw new Error(`File ${datapack} doesn't exist`);
-  }
+  const cachedDatapack = await getCachedDatapackFilePath(datapackPath);
   const parsedCachedDatapack = JSON.parse(await readFile(cachedDatapack, "utf-8"));
   assertDatapack(parsedCachedDatapack);
   return parsedCachedDatapack;
