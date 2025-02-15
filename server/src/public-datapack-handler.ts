@@ -3,7 +3,9 @@ import { Mutex } from "async-mutex";
 import {
   fetchUserDatapackDirectory,
   getDirectories,
+  getPrivateDatapacksDirectoryFromUUID,
   getPrivateUserUUIDDirectory,
+  getPublicDatapacksDirectoryFromUUID,
   getPublicUserUUIDDirectory
 } from "./user/fetch-user-files.js";
 import { fetchUserDatapack } from "./user/user-handler.js";
@@ -24,7 +26,7 @@ export async function loadPublicUserDatapacks() {
     for (const uuid of uuids) {
       if (isUUIDFolderAWorkshopFolder(uuid)) continue;
       try {
-        const datapackDirs = await getDirectories(await getPublicUserUUIDDirectory(uuid));
+        const datapackDirs = await getDirectories(await getPrivateDatapacksDirectoryFromUUID(uuid));
         for (const datapack of datapackDirs) {
           try {
             const dp = await fetchUserDatapack(uuid, datapack);
@@ -57,7 +59,7 @@ export async function switchPrivacySettingsOfDatapack(
   try {
     const oldDatapackPath = await fetchUserDatapackDirectory(uuid, datapack);
     const newDatapackPath = join(
-      newIsPublic ? await getPublicUserUUIDDirectory(uuid) : await getPrivateUserUUIDDirectory(uuid),
+      newIsPublic ? await getPublicDatapacksDirectoryFromUUID(uuid) : await getPrivateDatapacksDirectoryFromUUID(uuid),
       datapack
     );
     if (!(await verifyNonExistentFilepath(newDatapackPath))) {

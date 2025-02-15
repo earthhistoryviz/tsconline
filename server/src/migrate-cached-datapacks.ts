@@ -1,8 +1,11 @@
 import path from "path";
-import { getDirectories } from "./user/fetch-user-files.js";
+import {
+  getCachedDatapackFilePath,
+  getDatapacksDirectoryFromUUIDDirectory,
+  getDirectories
+} from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
 import { mkdir, readdir, readFile, writeFile } from "fs/promises";
-import { CACHED_USER_DATAPACK_FILENAME } from "./constants.js";
 import { DatapackIndex, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import chalk from "chalk";
@@ -23,12 +26,13 @@ try {
           `\n======================================================\nLoading datapacks for ${user}\n======================================================\n`
         )
       );
-      const datapacks = await getDirectories(path.join(directory, user));
+      const datapacksDir = await getDatapacksDirectoryFromUUIDDirectory(directory);
+      const datapacks = await getDirectories(datapacksDir);
       for (const datapack of datapacks) {
-        const datapackDir = path.join(directory, user, datapack);
+        const datapackDir = path.join(datapacksDir, datapack);
         const files = (await readdir(datapackDir)).filter((f) => allowedExtensions.includes(path.extname(f)));
         for (const file of files) {
-          const cachedFilepath = path.join(datapackDir, CACHED_USER_DATAPACK_FILENAME);
+          const cachedFilepath = await getCachedDatapackFilePath(datapackDir);
           const cache = await readFile(cachedFilepath, "utf-8");
           const cachedDatapack = JSON.parse(cache);
           try {
