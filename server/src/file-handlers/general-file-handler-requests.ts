@@ -10,7 +10,6 @@ import { createWriteStream } from "fs";
 import archiver from "archiver";
 import path from "path";
 
-
 export const editDatapackMetadataRequestHandler = async function editDatapackMetadataRequestHandler(
   parts: AsyncIterableIterator<Multipart>,
   uuid: string,

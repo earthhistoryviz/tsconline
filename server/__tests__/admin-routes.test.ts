@@ -28,7 +28,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-r
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => { })
+    editDatapackMetadataRequestHandler: vi.fn(async () => {})
   };
 });
 
@@ -142,7 +142,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -239,7 +239,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => { });
+    file.on("data", () => {});
     file.on("end", () => {
       resolve();
     });
@@ -281,7 +281,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -412,8 +412,6 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
   { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
-  { method: "POST", url: "/admin/workshop/files/:workshopId" },
-  { method: "POST", url: "/admin/workshop/cover/:workshopId" },
   {
     method: "PATCH",
     url: "/admin/user",
@@ -431,7 +429,9 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/admin/workshop/datapack" },
   { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
   { method: "PATCH", url: "/admin/official/datapack/test" },
-  { method: "GET", url: "/admin/official/datapack/test" }
+  { method: "GET", url: "/admin/official/datapack/test" },
+  { method: "POST", url: "/admin/workshop/files/1" },
+  { method: "POST", url: "/admin/workshop/cover/1" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1863,6 +1863,7 @@ describe("adminCreateWorkshop", () => {
   });
   it("should return 200 if successful", async () => {
     createWorkshop.mockResolvedValueOnce(1);
+
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop",

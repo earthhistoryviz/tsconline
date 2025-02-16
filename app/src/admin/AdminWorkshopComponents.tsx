@@ -9,14 +9,20 @@ import {
   InputLabel,
   ListItemText,
   SelectChangeEvent,
-  FormControl,
-  Divider,
-  Avatar
+  Avatar,
+  FormControl
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader, CustomDivider } from "../components";
+import {
+  TSCButton,
+  InputFileUpload,
+  TSCPopup,
+  DatapackUploadForm,
+  TSCDialogLoader,
+  CustomDivider
+} from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -155,8 +161,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     try {
       setLoading(true);
       event.preventDefault();
-      let errorMessages: string[] = [];
-      // let successMessages: string[] = [];
+      const errorMessages: string[] = [];
 
       if (!workshopTitle) {
         errorMessages.push("Invalid form: Workshop title is required.");
@@ -257,7 +262,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       if (errorMessages.length > 0) {
         actions.pushSnackbar(errorMessages.join(" "), "warning");
       }
-      const successMessage = created ? "Workshop created successfully." : edited ? "Workshop edited successfully." : ""
+      const successMessage = created ? "Workshop created successfully." : edited ? "Workshop edited successfully." : "";
 
       if (successMessage.length > 0 && errorMessages.length == 0) {
         actions.pushSnackbar(successMessage, "success");
@@ -274,7 +279,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       setLoading(false);
     }
   };
-
 
   const handleEmailFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];

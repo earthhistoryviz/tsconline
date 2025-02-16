@@ -606,7 +606,6 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
-    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
 };

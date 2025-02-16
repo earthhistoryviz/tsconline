@@ -14,8 +14,6 @@ import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../worksh
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
-import archiver from "archiver";
-import { createWriteStream } from "fs";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import path from "path";
 

@@ -11,7 +11,6 @@ import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 
-
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
   const navigate = useNavigate();

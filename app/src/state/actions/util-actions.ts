@@ -98,10 +98,7 @@ export const downloadFile = async (fileURL: string, filename: string) => {
     document.body.appendChild(aTag);
     aTag.click();
     aTag.remove();
-
   } catch (error) {
     pushError(ErrorCodes.INVALID_PATH);
   }
 };
-
-
