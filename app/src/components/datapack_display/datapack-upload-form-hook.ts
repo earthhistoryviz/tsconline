@@ -28,6 +28,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [pdfFiles, setPDFFiles] = useState<FileList>(new DataTransfer().files);
   const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
@@ -75,7 +76,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    upload(file, metadata, profileImage || undefined);
+    upload(file, metadata, profileImage || undefined, pdfFiles || undefined);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
@@ -113,6 +114,33 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     actions.removeAllErrors();
     setProfileImage(file);
   };
+  const handlePDFFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = event.target.files;
+    if (!newFiles) {
+      return;
+    }
+    actions.removeAllErrors();
+    const dataTransfer = new DataTransfer();
+    const existingFileNames = new Set(Array.from(pdfFiles).map((file) => file.name));
+    Array.from(pdfFiles).forEach((file) => dataTransfer.items.add(file));
+    Array.from(newFiles).forEach((file) => {
+      if (!existingFileNames.has(file.name)) {
+        dataTransfer.items.add(file);
+      }
+    });
+    setPDFFiles(dataTransfer.files);
+  };
+  const handlePDFFileDelete = (fileName: string) => {
+    if (!pdfFiles) {
+      return;
+    }
+    const filesArray = Array.from(pdfFiles);
+    const updatedFiles = filesArray.filter((file) => file.name !== fileName);
+    const updatedFileList = new DataTransfer();
+    updatedFiles.forEach((file) => updatedFileList.items.add(file));
+    actions.removeAllErrors();
+    setPDFFiles(updatedFileList.files);
+  };
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -124,6 +152,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setReferences([]);
     setDate(null);
     setFile(null);
+    setPDFFiles(new DataTransfer().files);
   };
   return {
     state: {
@@ -139,6 +168,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
+      pdfFiles,
       profileImageRef,
       priority
     },
@@ -162,7 +192,9 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       addReference,
       changeReference,
       handleDateChange,
-      handleProfileImageChange
+      handleProfileImageChange,
+      handlePDFFileUpload,
+      handlePDFFileDelete
     }
   };
 };
