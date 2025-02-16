@@ -281,12 +281,15 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     }
   }
   if (pdfFields && Object.keys(pdfFields).length > 0) {
+    const filesDir = path.join(datapackFolder, "files");
+    await mkdir(filesDir, { recursive: true });
     for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
-      const datapackPDFFilepathDest = path.join(datapackFolder, pdfFileName);
+      const datapackPDFFilepathDest = path.join(filesDir, pdfFileName);
       if (!datapackPDFFilepathDest.startsWith(datapackFolder)) {
         throw new Error("Invalid datapack PDF filepath destination path");
       }
+      await copyFile(pdfFilePath, datapackPDFFilepathDest);
       // remove the original file if it was copied from a temp file
       if (!manual && pdfFilePath !== datapackPDFFilepathDest) {
         await rm(pdfFilePath, { force: true });
