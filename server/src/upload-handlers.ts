@@ -282,11 +282,14 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   }
   if (pdfFields && Object.keys(pdfFields).length > 0) {
     const filesDir = path.join(datapackFolder, "files");
+    if (!filesDir.startsWith(datapackFolder)) {
+      throw new Error("Invalid files directory path");
+    }
     await mkdir(filesDir, { recursive: true });
     for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
       const datapackPDFFilepathDest = path.join(filesDir, pdfFileName);
-      if (!datapackPDFFilepathDest.startsWith(datapackFolder)) {
+      if (!datapackPDFFilepathDest.startsWith(filesDir)) {
         throw new Error("Invalid datapack PDF filepath destination path");
       }
       await copyFile(pdfFilePath, datapackPDFFilepathDest);
