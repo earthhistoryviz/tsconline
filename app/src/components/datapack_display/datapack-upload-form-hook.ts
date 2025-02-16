@@ -121,8 +121,13 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     }
     actions.removeAllErrors();
     const dataTransfer = new DataTransfer();
+    const existingFileNames = new Set(Array.from(pdfFiles).map((file) => file.name));
     Array.from(pdfFiles).forEach((file) => dataTransfer.items.add(file));
-    Array.from(newFiles).forEach((file) => dataTransfer.items.add(file));
+    Array.from(newFiles).forEach((file) => {
+      if (!existingFileNames.has(file.name)) {
+        dataTransfer.items.add(file);
+      }
+    });
     setPDFFiles(dataTransfer.files);
   };
   const handlePDFFileDelete = (fileName: string) => {
