@@ -435,10 +435,18 @@ export async function processMultipartPartsForDatapackUpload(
   };
 }
 
+
+function getWorkshopFilesPath(directory: string): string {
+  return path.resolve(directory, "files");
+}
+function getWorkshopCoverPath(directory: string): string {
+  return path.resolve(directory, "cover");
+}
+
 export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.resolve(directory, "files");
+  const filesFolder = getWorkshopFilesPath(directory);
 
   if (!(await verifyNonExistentFilepath(filesFolder))) {
     return { code: 500, message: "Invalid directory path." };
@@ -459,7 +467,7 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.resolve(directory, "cover");
+  const filesFolder = getWorkshopCoverPath(directory);
 
   if (!(await verifyNonExistentFilepath(filesFolder))) {
     return { code: 500, message: "Invalid directory path." };

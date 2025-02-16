@@ -119,7 +119,6 @@ export type State = {
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
-  selectedWorkshops: SharedWorkshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -252,7 +251,6 @@ export const state = observable<State>({
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },
-  selectedWorkshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []

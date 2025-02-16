@@ -575,7 +575,7 @@
                 "ADMIN_ADD_FILES_TO_WORKSHOP_FAILED": "Failed to add files to workshop",
                 "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
                 "INVALID_FILE_FORMAT": "Invalid file format."
-            },
+            }
         },
         "button": {
             "generate": "Generate",

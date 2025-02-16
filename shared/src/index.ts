@@ -686,6 +686,18 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.creatorUUID !== "string") throwError("Workshop", "creatorUUID", "string", o.creatorUUID);
   if (o.regLink != undefined && o.regLink != null && typeof o.regLink !== "string")
     throwError("Workshop", "regLink", "string", o.regLink);
+  if (typeof o.files != undefined) {
+    if (!Array.isArray(o.files)) throwError("Workshop", "files", "array", o.files);
+    for (const file of o.files) {
+      if (typeof file !== "string") throwError("Workshop", "files", "string", file)
+    }
+  }
+  if (typeof o.datapacks != undefined) {
+    if (!Array.isArray(o.datapacks)) throwError("Workshop", "files", "array", o.files);
+    for (const datapack of o.datapacks) {
+      if (typeof datapack !== "string") throwError("Workshop", "datapack", "string", datapack);
+    }
+  }
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
@@ -1552,8 +1564,8 @@ export function assertColumnSpecificSettings(o: any, type: DisplayedColumnTypes)
     default:
       throw new Error(
         "ColumnSpecificSettings must be an object of a valid column type. Found value of " +
-          type +
-          " which is not a valid column type"
+        type +
+        " which is not a valid column type"
       );
   }
 }
