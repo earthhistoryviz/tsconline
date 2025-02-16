@@ -176,17 +176,16 @@ export const Help = observer(function Help() {
          *    - Include past contributors who have made significant contributions. */}
       </div>
       {/* For the demo */}
+      {/*
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <Toolbar>
-            {/* Does work, it just needs more pages so that the style scrollbar actually activates */}
             <StyledScrollbar>
               <HelpDrawer />
             </StyledScrollbar>
           </Toolbar>
         </Grid>
         <Grid item sx={background}>
-          {/* This is where the Breadcrumb is */}
           <HelpBreadcrumbs />
 
           <Routes>
@@ -213,7 +212,7 @@ export const Help = observer(function Help() {
             <Route path="404" element={<PageNotFound />} />
           </Routes>
         </Grid>
-      </Grid>
+      </Grid> */}
 
       {/* The Actual breadcrumb */}
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
