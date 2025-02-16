@@ -594,7 +594,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
       return true;
     });
 
-    const datapackFolder = "uuid-directory/title";
+    const datapackFolder = "uuid-directory/title/files";
 
     const normalizedDatapackFolder = path.join(datapackFolder); // Ensure path is normalized to the platform
     const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
