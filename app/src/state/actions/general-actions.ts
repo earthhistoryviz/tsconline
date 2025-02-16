@@ -915,7 +915,7 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
         throw new Error("Invalid file");
       }
       fileURL = reader.result;
-      downloadFile(fileURL, datapack.originalFileName)
+      downloadFile(fileURL, datapack.originalFileName);
     } catch (error) {
       pushError(ErrorCodes.INVALID_PATH);
     }
@@ -1297,7 +1297,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
         throw new Error("Invalid file");
       }
       fileURL = reader.result;
-      downloadFile(fileURL, `FilesFor${workshop.title}.zip`)
+      downloadFile(fileURL, `FilesFor${workshop.title}.zip`);
     } catch (error) {
       pushError(ErrorCodes.INVALID_PATH);
     }

@@ -18,14 +18,7 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import {
-  assetconfigs,
-  checkFileExists,
-  getBytes,
-  makeTempFilename,
-  verifyFilepath,
-  verifyNonExistentFilepath
-} from "./util.js";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
@@ -49,7 +42,7 @@ import { pipeline } from "stream/promises";
 import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
-import { getWorkshopUUIDFromWorkshopId } from "./workshop/workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId, getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -435,23 +428,16 @@ export async function processMultipartPartsForDatapackUpload(
   };
 }
 
-
-function getWorkshopFilesPath(directory: string): string {
-  return path.resolve(directory, "files");
-}
-function getWorkshopCoverPath(directory: string): string {
-  return path.resolve(directory, "cover");
-}
-
 export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = getWorkshopFilesPath(directory);
-
-  if (!(await verifyNonExistentFilepath(filesFolder))) {
-    return { code: 500, message: "Invalid directory path." };
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopFilesPath(directory);
+  } catch (error) {
+    console.error(error);
+    return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Files Directory." };
   }
-  await mkdir(filesFolder, { recursive: true });
 
   const filename = file.filename;
   const filePath = join(filesFolder, filename);
@@ -467,12 +453,13 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = getWorkshopCoverPath(directory);
-
-  if (!(await verifyNonExistentFilepath(filesFolder))) {
-    return { code: 500, message: "Invalid directory path." };
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopCoverPath(directory);
+  } catch (error) {
+    console.error(error);
+    return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };
   }
-  await mkdir(filesFolder, { recursive: true });
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);
   const filePath = join(filesFolder, `coverPicture${fileExtension}`);
@@ -488,12 +475,15 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.resolve(directory, "cover");
-  const possibleExtensions = [".png", ".jpeg", ".jpg"];
-  if (!(await verifyFilepath(filesFolder))) {
-    console.error("Invalid directory path.");
+
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopCoverPath(directory);
+  } catch (error) {
+    console.error(error);
     return null;
   }
+  const possibleExtensions = [".png", ".jpeg", ".jpg"];
   // Loop through possible extensions and check if the file exists
   for (const ext of possibleExtensions) {
     const coverPicturePath = path.join(filesFolder, "coverPicture" + ext);
@@ -512,15 +502,16 @@ export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
 export async function getWorkshopDatapacksNames(workshopId: number): Promise<string[]> {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  if (!(await verifyFilepath(directory))) {
-    console.error("Invalid directory path");
+  let datapacksDirectory;
+  try {
+    datapacksDirectory = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  } catch (error) {
+    console.error(error);
     return [];
   }
   try {
-    const entries = readdir(directory, { withFileTypes: true });
-    const folders = (await entries)
-      .filter((entry) => entry.isDirectory() && entry.name != "files" && entry.name != "cover")
-      .map((entry) => entry.name);
+    const entries = readdir(datapacksDirectory, { withFileTypes: true });
+    const folders = (await entries).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
     return folders;
   } catch (error) {
     console.error(`Error reading directory ${directory}:`, error);
@@ -536,9 +527,11 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
 export async function getWorkshopFilesNames(workshopId: number): Promise<string[]> {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.resolve(directory, "files");
-  if (!(await verifyFilepath(filesFolder))) {
-    console.error("Invalid directory path");
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopFilesPath(directory);
+  } catch (error) {
+    console.error(error);
     return [];
   }
   try {

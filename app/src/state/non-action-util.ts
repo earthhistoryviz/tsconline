@@ -142,10 +142,6 @@ export function getPastWorkshops(workshops: SharedWorkshop[]) {
   return pastWorkshops;
 }
 export function getWorkshopCoverImage(coverPictureUrl?: string) {
-  const serverURL =
-    coverPictureUrl && coverPictureUrl?.length > 0
-      ? devSafeUrl("/" + coverPictureUrl)
-      : TSCreatorLogo;
+  const serverURL = coverPictureUrl && coverPictureUrl?.length > 0 ? devSafeUrl("/" + coverPictureUrl) : TSCreatorLogo;
   return serverURL;
-};
-
+}
