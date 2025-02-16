@@ -412,6 +412,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
   { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  { method: "POST", url: "/admin/workshop/files/:workshopId" },
+  { method: "POST", url: "/admin/workshop/cover/:workshopId" },
   {
     method: "PATCH",
     url: "/admin/user",
@@ -2016,7 +2018,7 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({
       workshop: {
         ...body,
-        end: testWorkshop.end,
+        end: testWorkshop.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
         active: false,
         regRestrict: 0,
         creatorUUID: ""

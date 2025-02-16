@@ -12,7 +12,7 @@ import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
 import archiver from "archiver";
 import { createWriteStream } from "fs";
@@ -390,22 +390,7 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 
     // If ZIP file doesn't exist, create one
     if (!file) {
-      const output = createWriteStream(zipfile);
-      output.on("close", () => {
-        console.log(`ZIP file created successfully: ${archive.pointer()} total bytes`);
-      });
-
-      output.on("error", (err) => {
-        console.error("Error writing ZIP file:", err);
-        throw err;
-      });
-      const archive = archiver("zip", {
-        zlib: { level: 9 } // Compression level
-      });
-      archive.pipe(output);
-      archive.directory(filesFolder + path.sep, false);
-      await archive.finalize();
-      file = await readFile(zipfile);
+      file = createZipFile(zipfile, filesFolder);
     }
 
     reply.send(file);

@@ -82,6 +82,7 @@ export const WorkshopDetails = observer(() => {
                           • {file}
                         </Typography>
                       ))}
+                      {/* TODO: change this to only be allowed if user is registered to the workshop. Probably need a route for checking this */}
                       <TSCButton
                         variant="contained"
                         color="primary"

@@ -17,7 +17,6 @@ import {
   FormControlLabel,
   Switch
 } from "@mui/material";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
