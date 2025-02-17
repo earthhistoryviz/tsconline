@@ -96,7 +96,7 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
               <Box className="file-upload">
                 <InputFileUpload
                   startIcon={<CloudUploadIcon />}
-                  text={"PDF Upload"}
+                  text={t("settings.datapacks.pdf-upload")}
                   variant="contained"
                   onChange={handlers.handlePDFFileUpload}
                   accept=".pdf"

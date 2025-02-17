@@ -23,6 +23,7 @@ import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
 import path from "path";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import { getPDFFilesDirectoryFromDatapackDirectory } from "../src/user/fetch-user-files";
 
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
@@ -34,7 +35,8 @@ vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
   getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory"),
   getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
-  getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath")
+  getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath"),
+  getPDFFilesDirectoryFromDatapackDirectory: vi.fn().mockReturnValue("files-directory")
 }));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
@@ -87,6 +89,7 @@ vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
   makeTempFilename: vi.fn().mockReturnValue("filename"),
+  verifyNonExistentFilepath: vi.fn().mockReturnValue(true),
   assetconfigs: {
     fileMetadata: "fileMetadata"
   }
@@ -594,7 +597,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
       return true;
     });
 
-    const datapackFolder = "uuid-directory/title/files";
+    const datapackFolder = "datapacks-directory/title";
 
     const normalizedDatapackFolder = path.join(datapackFolder); // Ensure path is normalized to the platform
     const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
@@ -605,8 +608,7 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
     expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
 
-    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file1.pdf");
-    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "file2.pdf");
+    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "storedFileName");
 
     // Restore the spy
     pathJoinSpy.mockRestore();

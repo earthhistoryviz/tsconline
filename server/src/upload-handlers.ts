@@ -18,7 +18,7 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
@@ -32,7 +32,8 @@ import {
   fetchUserDatapackDirectory,
   getUsersDatapacksDirectoryFromUUIDDirectory,
   getUnsafeCachedDatapackFilePath,
-  getUserUUIDDirectory
+  getUserUUIDDirectory,
+  getPDFFilesDirectoryFromDatapackDirectory
 } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME } from "./constants.js";
@@ -281,15 +282,11 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     }
   }
   if (pdfFields && Object.keys(pdfFields).length > 0) {
-    const filesDir = path.join(datapackFolder, "files");
-    if (!filesDir.startsWith(datapackFolder)) {
-      throw new Error("Invalid files directory path");
-    }
-    await mkdir(filesDir, { recursive: true });
+    const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
     for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
-      const datapackPDFFilepathDest = path.join(filesDir, pdfFileName);
-      if (!datapackPDFFilepathDest.startsWith(filesDir)) {
+      const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
+      if (!(await verifyNonExistentFilepath(datapackPDFFilepathDest))) {
         throw new Error("Invalid datapack PDF filepath destination path");
       }
       await copyFile(pdfFilePath, datapackPDFFilepathDest);
