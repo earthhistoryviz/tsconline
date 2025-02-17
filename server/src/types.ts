@@ -100,6 +100,7 @@ export type AssetConfig = {
   privateDatapacksDirectory: string;
   uploadDirectory: string;
   publicDatapacksDirectory: string;
+  translationFilepath: string;
 };
 
 export type Colors = {
