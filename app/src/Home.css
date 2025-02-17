@@ -128,7 +128,7 @@
 
 .landing-page-title {
   line-height: 1.5em;
-  font-size: 2.75rem;
+  font-size: 2.5rem;
 }
 
 .get-started-button-landing-page {
@@ -144,7 +144,7 @@
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr 0.6fr;
+  grid-template-columns: 0.8fr 1.2fr 0.4fr;
   justify-content: center;
   align-items: center;
   width: 100%;
@@ -156,7 +156,8 @@
 }
 
 .sub-header-section-landing-page {
-  gap: 20px;
+  gap: 30px;
+  height: 93vh;
 }
 
 .home-landing-page-carousel {
@@ -521,6 +522,80 @@
   z-index: 0;
 }
 
+.upcoming-workshops-section {
+  display: flex;
+  flex-direction: column;
+  width: 18vw;
+  padding-left: 15px;
+  margin-right: 20px;
+  overflow-y: visible;
+  max-height: 93vh;
+}
+
+/* upcoming workshop */
+.upcoming-workshop-image {
+  /* grid-area: "img"; */
+  border-radius: 20px;
+  width: 16vw;
+  height: 12vh;
+  margin-top: 10px;
+}
+
+.upcoming-workshop-title {
+  position: sticky;
+  font-size: 1.5em;
+  white-space: nowrap;
+  margin-bottom: 10px;
+  margin-top: 30px;
+  line-height: 25.74px;
+  font-weight: 600;
+  letter-spacing: 1%;
+  align-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-workshop-subtitle {
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+.upcoming-workshop-date {
+  font-size: 0.8em;
+  font-weight: 400;
+  text-align: left;
+  line-clamp: 1;
+  -webkit-line-clamp: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-workshop-description {
+  padding-right: 15px;
+  font-size: 0.8rem;
+  line-height: 15.2px;
+  letter-spacing: 1%;
+  font-weight: 300;
+  display: -webkit-box;
+  line-clamp: 3;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.upcoming-workshop-pd {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  line-height: 1;
+  font-size: 0.75em;
+  font-style: italic;
+  text-align: right;
+  font-weight: 400;
+  padding-right: 15px;
+}
+/* end of upcoming workshop */
+
 /* chart creation steps css */
 @media screen and (max-width: 1425px) {
   .chart-creation-steps {
@@ -721,53 +796,112 @@
 /* sub-section-landing-page CSS */
 @media screen and (max-width: 1950px) {
   .landing-page-title {
+    font-size: 4rem;
+  }
+
+  .sub-header-section-landing-page-description {
+    font-size: 2rem;
+  }
+
+  .upcoming-workshop-title {
+    font-size: 1.5rem;
+  }
+
+  .upcoming-workshop-subtitle {
+    font-size: 1.4rem;
+  }
+}
+
+@media screen and (max-width: 1750px) {
+  .landing-page-title {
     font-size: 3.5rem;
   }
 
   .sub-header-section-landing-page-description {
     font-size: 1.75rem;
   }
+
+  .upcoming-workshop-title {
+    font-size: 1.4rem;
+  }
 }
 
-@media screen and (max-width: 1500px) {
+@media screen and (max-width: 1550px) {
   .landing-page-title {
-    font-size: 3rem;
+    font-size: 2.75rem;
   }
 
   .sub-header-section-landing-page-description {
     font-size: 1.5rem;
+  }
+
+  .upcoming-workshop-title {
+    font-size: 1.2rem;
+  }
+
+  .upcoming-workshop-subtitle {
+    font-size: 1.2rem;
   }
 }
 
 @media screen and (max-width: 1350px) {
   .landing-page-title {
-    font-size: 1.75rem;
+    font-size: 2.5rem;
   }
 
   .sub-header-section-landing-page-description {
     font-size: 1.25rem;
   }
+
+  .upcoming-workshop-title {
+    font-size: 1rem;
+  }
+
+  .upcoming-workshop-subtitle {
+    font-size: 1.1rem;
+  }
 }
 
-@media screen and (max-width: 900px) {
-  .sub-header-section-landing-page {
-    display: flex;
-    flex-direction: column;
-    gap: 40px;
-    padding-top: 10px;
-  }
-
-  .sub-header-section-landing-page-text {
-    padding: 0px;
-  }
-
+@media screen and (max-width: 1150px) {
   .landing-page-title {
-    font-size: 1.75rem;
-    text-align: center;
+    font-size: 2rem;
   }
 
   .sub-header-section-landing-page-description {
-    font-size: 1.5rem;
+    font-size: 1rem;
+  }
+
+  .upcoming-workshop-title {
+    font-size: 0.8rem;
+  }
+
+  .upcoming-workshop-subtitle {
+    font-size: 0.8rem;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .home-landing-page-carousel-container {
+    height: 670px;
+  }
+
+  .home-landing-page-carousel {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1.2fr;
+    grid-template-areas: "img" "text";
+    padding: 0;
+    gap: 0;
+  }
+
+  .home-landing-page-carousel-text {
+    padding-left: 50px;
+    padding-top: 0px;
+  }
+
+  .home-landing-page-carousel-image {
+    -webkit-mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 20%, rgba(0, 0, 0, 1) 50%);
+    mask-image: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 20%, rgba(0, 0, 0, 1) 50%);
   }
 }
 
@@ -777,7 +911,7 @@
   }
 
   .landing-page-title {
-    font-size: 2rem;
+    font-size: 1.25rem;
   }
 
   .sub-header-section-landing-page {
@@ -870,61 +1004,3 @@
 }
 
 /* end of carousel css */
-
-/* upcoming workshop */
-.upcoming-workshop-image {
-  margin-top: 5px;
-  position: center;
-  grid-area: "img";
-  border-radius: 20px;
-  width: 25vh;
-  height: 12vh;
-  display: flex;
-  overflow: hidden;
-}
-
-.upcoming-workshop-title1 {
-  position: sticky;
-  font-family: "Typography";
-  margin-top: 5px;
-  font-size: 1.3em;
-  white-space: nowrap;
-  margin-bottom: 10px;
-}
-
-.upcoming-workshop-title2 {
-  font-family: "Typography";
-  font-size: 1em;
-  line-height: 1;
-  font-weight: 600;
-}
-
-.upcoming-workshop-date {
-  font-family: "Typography";
-  font-size: 0.7em;
-  line-height: 1;
-  text-align: left;
-}
-
-.upcoming-workshop-description {
-  font-family: "Typography";
-  font-size: 0.8em;
-  line-height: 1;
-  display: -webkit-box;
-  line-clamp: 3;
-  -webkit-line-clamp: 3; /*Limit to 3 lines */
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.upcoming-workshop-pd {
-  font-family: "Typography";
-  margin-top: 5px;
-  margin-bottom: 5px;
-  line-height: 1;
-  font-size: 0.8em;
-  text-align: right;
-  padding-top: 2px;
-}
-/* end of upcoming workshop */

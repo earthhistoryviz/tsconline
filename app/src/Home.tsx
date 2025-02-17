@@ -16,7 +16,7 @@ import {
 } from "@mui/icons-material";
 import { Typography, Box, IconButton, Chip, useMediaQuery, Divider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCButton, Attribution, CustomDivider } from "./components";
+import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
@@ -57,7 +57,7 @@ export const Home = observer(function Home() {
             loading="lazy"
             rel="preload"
             className="sub-header-section-landing-page-image"
-            src={devSafeUrl("/public/website-images/landing-page2.png")}
+            src={devSafeUrl("/public/website-images/landing-page.png")}
           />
           <UpcomingWorkshops />
           <Box className="get-started-landing-page">
@@ -562,104 +562,84 @@ const UpcomingWorkshops = observer(
     const { t } = useTranslation();
     const workshops = [
       {
-        title: t("landing-page.upcoming-workshop.workshop1.title"),
-        date: t("landing-page.upcoming-workshop.workshop1.time"),
-        description: t("landing-page.upcoming-workshop.workshop1.description"),
-        participants: t("landing-page.upcoming-workshop.workshop1.participants"),
-        dataPacks: t("landing-page.upcoming-workshop.workshop1.datapacks"),
-        image: devSafeUrl("/public/website-images/workshop1.png")
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("landing-page.upcoming-workshop.workshop2.title"),
-        date: t("landing-page.upcoming-workshop.workshop2.time"),
-        description: t("landing-page.upcoming-workshop.workshop2.description"),
-        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
-        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
-        image: devSafeUrl("/public/website-images/workshop2.png")
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("landing-page.upcoming-workshop.workshop2.title"),
-        date: t("landing-page.upcoming-workshop.workshop2.time"),
-        description: t("landing-page.upcoming-workshop.workshop2.description"),
-        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
-        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
-        image: devSafeUrl("/public/website-images/workshop3.png")
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("landing-page.upcoming-workshop.workshop2.title"),
-        date: t("landing-page.upcoming-workshop.workshop2.time"),
-        description: t("landing-page.upcoming-workshop.workshop2.description"),
-        participants: t("landing-page.upcoming-workshop.workshop2.participants"),
-        dataPacks: t("landing-page.upcoming-workshop.workshop2.datapacks"),
-        image: devSafeUrl("/public/website-images/workshop3.png")
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
       }
     ];
     return (
       <Box
-        ref={ref}
+        className="upcoming-workshops-section"
         sx={{
-          display: "flex",
-          width: "300px",
-          marginLeft: "40px",
-          marginBottom: "80px",
-          flexDirection: "column",
-          backgroundColor: "secondaryBackground.main",
-          padding: "20px",
-          marginRight: "20px",
-          minHeight: "50vh",
-          maxHeight: "80vh",
-          marginTop: "40px"
+          alignSelf: "flex-start",
+          backgroundColor: "secondaryBackground.main"
         }}>
+        {" "}
         <Box
           sx={{
             position: "sticky",
-            zIndex: 10,
-            backgroundColor: "secondaryBackground: baseTheme.palette.augmentColor.color.main"
+            zIndex: 10
           }}>
-          <Typography className="upcoming-workshop-title1" variant="h3">
-            {t("landing-page.upcoming-workshop.title")}
+          <Typography className="upcoming-workshop-title" variant="h3">
+            {t("UPCOMING WORKSHOPS")}
           </Typography>
           <CustomDivider />
         </Box>
         <Box
           sx={{
-            overflowY: "auto",
-            paddingRight: "10px",
-            maxHeight: "85vh",
-            "&::-webkit-scrollbar": {
-              width: "8px"
-            },
-            "&::-webkit-scrollbar-track": {
-              background: "white"
-            },
-            "&::-webkit-scrollbar-thumb": {
-              background: "lightgray",
-              borderRadius: "4px"
-            },
-            "&::-webkit-scrollbar-thumb:hover": {
-              background: "gray"
-            }
+            overflowY: "auto"
           }}>
-          {!isMobile &&
-            workshops.map((step, index) => (
-              <Box key={index}>
-                <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
-                <Box
-                  key={index}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column"
-                  }}>
-                  <Typography className="upcoming-workshop-title2">{step.title}</Typography>
-                  <Typography className="upcoming-workshop-date">{step.date}</Typography>
-                  <Typography className="upcoming-workshop-description">{step.description}</Typography>
-                  <Typography className="upcoming-workshop-pd">
-                    Participants:{step.participants} Datapacks:{step.dataPacks}
-                  </Typography>
-                  <CustomDivider />
+          <StyledScrollbar>
+            {!isMobile &&
+              workshops.map((step, index) => (
+                <Box key={index}>
+                  <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
+                  <Box
+                    key={index}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column"
+                    }}>
+                    <Typography className="upcoming-workshop-subtitle">{step.title}</Typography>
+                    <Typography className="upcoming-workshop-date">{step.date}</Typography>
+                    <Typography className="upcoming-workshop-description">{step.description}</Typography>
+                    <Typography className="upcoming-workshop-pd">{step.dataPacks} Datapacks</Typography>
+                    <CustomDivider />
+                  </Box>
                 </Box>
-              </Box>
-            ))}
+              ))}
+          </StyledScrollbar>
         </Box>
       </Box>
     );
