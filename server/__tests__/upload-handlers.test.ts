@@ -23,7 +23,6 @@ import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
 import path from "path";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import { getPDFFilesDirectoryFromDatapackDirectory } from "../src/user/fetch-user-files";
 
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
@@ -89,9 +88,10 @@ vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
   makeTempFilename: vi.fn().mockReturnValue("filename"),
-  verifyNonExistentFilepath: vi.fn().mockReturnValue(true),
+  verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
   assetconfigs: {
-    fileMetadata: "fileMetadata"
+    fileMetadata: "fileMetadata",
+    privateDatapacksDirectory: "/absolute/path/to/private/datapacks"
   }
 }));
 vi.mock("fs", async () => {
@@ -591,28 +591,29 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
   });
   it("should handle pdfFields and remove original PDF files when not manual", async () => {
     const pdfFields = { "file1.pdf": "tempPath1", "file2.pdf": "tempPath2" };
-
     loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
       index[metadata.title] = metadata as shared.Datapack;
       return true;
     });
-
-    const datapackFolder = "datapacks-directory/title";
-
-    const normalizedDatapackFolder = path.join(datapackFolder); // Ensure path is normalized to the platform
+    const datapackFolder = path.normalize("datapacks-directory/title");
+    const expectedPdfFilesDir = path.resolve(datapackFolder, "files");
+    const verifyNonExistentFilepathMock = vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValue(true);
+    const fetchPDFFileDirectory = vi
+      .spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory")
+      .mockResolvedValue(expectedPdfFilesDir);
     const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
-    const fetchPDFFileDirectory = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
-
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, undefined, pdfFields);
-
     expect(fetchPDFFileDirectory).toHaveBeenCalledTimes(1);
+    expect(fetchPDFFileDirectory).toHaveBeenCalledWith(datapackFolder);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledTimes(2);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file1.pdf"));
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file2.pdf"));
     expect(rm).toHaveBeenCalledTimes(3);
     expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
     expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
-
-    expect(pathJoinSpy).toHaveBeenCalledWith(normalizedDatapackFolder, "storedFileName");
-
-    // Restore the spy
+    expect(pathJoinSpy).toHaveBeenCalledWith(datapackFolder, "storedFileName");
+    fetchPDFFileDirectory.mockRestore();
+    verifyNonExistentFilepathMock.mockRestore();
     pathJoinSpy.mockRestore();
   });
 });
