@@ -17,7 +17,8 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray
+  assertDatapackMetadataArray,
+  SharedWorkshop
 } from "@tsconline/shared";
 
 import {
@@ -42,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError } from "./util-actions";
+import { displayServerError, downloadFile } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -67,7 +68,6 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { Workshop } from "../../Workshops";
 import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
@@ -915,18 +915,7 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
         throw new Error("Invalid file");
       }
       fileURL = reader.result;
-      if (fileURL) {
-        const aTag = document.createElement("a");
-        aTag.href = fileURL;
-
-        aTag.setAttribute("download", datapack.originalFileName);
-
-        document.body.appendChild(aTag);
-        aTag.click();
-        aTag.remove();
-      } else {
-        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      }
+      downloadFile(fileURL, datapack.originalFileName);
     } catch (error) {
       pushError(ErrorCodes.INVALID_PATH);
     }
@@ -1267,11 +1256,52 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-// TODO: Change this when the actual backend for rendering all workshops is implemented.
-// Maybe similar to how we handled datapacks.
-// For now, this just loads the selected dummy workshop into the state.
-export const setWorkshopsArray = action((workshop: Workshop[]) => {
-  state.workshops = workshop;
+export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
+  const route = `/user/workshop/download/${workshop.workshopId}`;
+  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
+  if (!recaptchaToken) return null;
+
+  const response = await fetcher(route, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+
+  if (!response.ok) {
+    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+    switch (response.status) {
+      case 404:
+        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        break;
+      case 401:
+        errorCode = ErrorCodes.NOT_LOGGED_IN;
+        break;
+    }
+    displayServerError(response, errorCode, ErrorMessages[errorCode]);
+    return;
+  }
+
+  const file = await response.blob();
+  let fileURL = "";
+  if (file) {
+    try {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      await new Promise((resolve, reject) => {
+        reader.onloadend = resolve;
+        reader.onerror = reject;
+      });
+      if (typeof reader.result !== "string") {
+        throw new Error("Invalid file");
+      }
+      fileURL = reader.result;
+      downloadFile(fileURL, `FilesFor${workshop.title}.zip`);
+    } catch (error) {
+      pushError(ErrorCodes.INVALID_PATH);
+    }
+  }
 });
 
 export const setPresetsLoading = action((loading: boolean) => {

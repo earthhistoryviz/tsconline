@@ -9,12 +9,20 @@ import {
   InputLabel,
   ListItemText,
   SelectChangeEvent,
+  Avatar,
   FormControl
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState } from "react";
 import { context } from "../state";
-import { TSCButton, InputFileUpload, TSCPopup, DatapackUploadForm, TSCDialogLoader } from "../components";
+import {
+  TSCButton,
+  InputFileUpload,
+  TSCPopup,
+  DatapackUploadForm,
+  TSCDialogLoader,
+  CustomDivider
+} from "../components";
 import { ErrorCodes } from "../util/error-codes";
 import { DateTimePicker, renderTimeViewClock } from "@mui/x-date-pickers";
 import dayjs, { Dayjs } from "dayjs";
@@ -125,7 +133,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   onClose
 }) {
   const theme = useTheme();
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const [loading, setLoading] = useState(false);
   const [workshop, setWorkshop] = useState<SharedWorkshop | null>(currentWorkshop);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
@@ -133,29 +141,33 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [startDate, setStartDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.start) : null);
   const [endDate, setEndDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.end) : null);
   const [emails, setEmails] = useState<string>("");
-  const [file, setFile] = useState<File | null>(null);
+  const [emailFile, setEmailFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[] | null>(null);
+  const [coverPicture, setCoverPicture] = useState<File | null>(null);
+  const [regLink, setRegLink] = useState<string | undefined>(undefined);
+  const [regRestrict, setRegRestrict] = useState(0);
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
     setStartDate(null);
     setEndDate(null);
     setEmails("");
-    setFile(null);
+    setEmailFile(null);
+    setFiles(null);
     setWorkshop(null);
     onClose();
   };
-
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       setLoading(true);
       event.preventDefault();
+      const errorMessages: string[] = [];
+
       if (!workshopTitle) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
+        errorMessages.push("Invalid form: Workshop title is required.");
       }
       if (!startDate || !endDate) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
+        errorMessages.push("Invalid form: Start and end dates are required.");
       }
       const start = dayjs(startDate).toISOString();
       const end = dayjs(endDate).toISOString();
@@ -164,12 +176,24 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         return;
       }
 
+      if (errorMessages.length > 0) {
+        actions.pushSnackbar(errorMessages.join(" "), "warning");
+        return;
+      }
+
       let workshopId: number;
       let edited = false;
       let created = false;
 
       if (!editMode) {
-        const createdWorkshopId = await actions.adminCreateWorkshop(workshopTitle, start, end);
+        const createdWorkshopId = await actions.adminCreateWorkshop(
+          workshopTitle,
+          start,
+          end,
+          regRestrict,
+          state.user.uuid,
+          regLink
+        );
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
           return;
@@ -196,46 +220,54 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         if (!isWorkshopUnchanged) {
           const newWorkshop = await actions.adminEditWorkshop(updatedFields);
           if (!newWorkshop) {
+            actions.pushError(ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED);
             return;
           }
           edited = true;
           setWorkshop(newWorkshop);
         }
-        if (isWorkshopUnchanged && !file && !emails) {
-          actions.pushSnackbar("No changes made", "info");
+
+        if (isWorkshopUnchanged && !emailFile && !emails && !regLink && !files && !coverPicture && !regRestrict) {
+          actions.pushSnackbar("No changes made.", "info");
           return;
         }
       }
 
-      if (file || emails) {
+      if (emailFile || emails) {
         const form = new FormData();
         if (emails) form.append("emails", emails);
-        if (file) form.append("file", file);
+        if (emailFile) form.append("file", emailFile);
         form.append("workshopId", workshopId.toString());
         const response = await actions.adminAddUsersToWorkshop(form);
         if (!response.success) {
-          if (created || edited)
-            actions.pushSnackbar(
-              `Workshop ${created ? "created" : "edited"} successfully but users could not be added`,
-              "warning"
-            );
+          errorMessages.push("Users could not be added.");
           setInvalidEmails(response.invalidEmails);
-          if (created) handleDialogClose();
-          return;
-        } else {
-          actions.removeAllErrors();
-          let message = "";
-          if (created || edited) {
-            message = `Workshop ${created ? "created" : "edited"} successfully and users added`;
-          } else {
-            message = "Users added successfully";
-          }
-          actions.pushSnackbar(message, "success");
         }
-      } else {
-        actions.removeAllErrors();
-        actions.pushSnackbar(`Workshop ${created ? "created" : "edited"} successfully`, "success");
       }
+
+      if (coverPicture) {
+        const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
+        if (!response) {
+          errorMessages.push("Cover picture could not be uploaded.");
+        }
+      }
+
+      if (files && files.length !== 0) {
+        const response = await actions.adminAddFilesToWorkshop(workshopId, files);
+        if (!response) {
+          errorMessages.push("Files could not be uploaded.");
+        }
+      }
+
+      if (errorMessages.length > 0) {
+        actions.pushSnackbar(errorMessages.join(" "), "warning");
+      }
+      const successMessage = created ? "Workshop created successfully." : edited ? "Workshop edited successfully." : "";
+
+      if (successMessage.length > 0 && errorMessages.length == 0) {
+        actions.pushSnackbar(successMessage, "success");
+      }
+
       handleDialogClose();
     } catch (error) {
       displayServerError(
@@ -248,7 +280,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleEmailFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files![0];
     if (!file) {
       return;
@@ -266,9 +298,29 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
       return;
     }
-    setFile(file);
+    setEmailFile(file);
   };
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedFiles = event.target.files;
+    if (!uploadedFiles) {
+      return;
+    }
 
+    const filesArray = Array.from(uploadedFiles);
+    setFiles((prevFiles) => (prevFiles ? [...prevFiles, ...filesArray] : filesArray));
+  };
+  const handleCoverPictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedCoverPicture = event.target.files![0];
+    if (!uploadedCoverPicture) {
+      return;
+    }
+    const ext = uploadedCoverPicture.name.split(".").pop();
+    if (!uploadedCoverPicture.type.startsWith("image/") || !ext || !/^(jpg|jpeg|png)$/.test(ext)) {
+      actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE);
+      return;
+    }
+    setCoverPicture(uploadedCoverPicture);
+  };
   return (
     <>
       <TSCPopup
@@ -354,6 +406,31 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 disablePast
               />
             </Box>
+            <TextField
+              label="Workshop Registration Link"
+              name="WorkshopRegLink"
+              placeholder="Enter a registration link for the workshop"
+              fullWidth
+              size="small"
+              value={regLink ? regLink : ""}
+              onChange={(event) => setRegLink(event.target.value)}
+            />
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
+              <Typography>Open for public registration?</Typography>
+              <Select
+                value={regRestrict == 1 ? "Yes" : "No"}
+                sx={{ height: "30px" }}
+                onChange={() => {
+                  setRegRestrict(regRestrict === 0 ? 1 : 0);
+                }}>
+                <MenuItem sx={{ height: "30px" }} value="Yes">
+                  Yes
+                </MenuItem>
+                <MenuItem sx={{ height: "30px" }} value="No">
+                  No
+                </MenuItem>
+              </Select>
+            </Box>
             <Box textAlign="center" width="100%">
               <Typography variant="h5" mb="5px">
                 Add Users
@@ -373,12 +450,85 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
                   <InputFileUpload
                     text="Upload Excel File of Emails"
-                    onChange={handleFileUpload}
+                    onChange={handleEmailFileUpload}
                     accept=".xls,.xlsx"
                     startIcon={<CloudUploadIcon />}
                   />
-                  <Typography ml="10px">{file?.name || "No file selected"}</Typography>
+                  <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
                 </Box>
+                <CustomDivider
+                  style={{
+                    height: "0.05px",
+                    width: "100%",
+                    backgroundColor: theme.palette.outline.main
+                  }}
+                />
+                <Box textAlign="center" width="100%">
+                  <Typography variant="h5" mb="5px">
+                    Add Files
+                  </Typography>
+                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+                    <Typography ml="10px">
+                      {" "}
+                      {files && files.length > 0 ? (
+                        <ul>
+                          {files.map((file, index) => (
+                            <li key={index}>{file.name}</li>
+                          ))}
+                        </ul>
+                      ) : (
+                        "No file selected"
+                      )}
+                    </Typography>
+                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+                      <InputFileUpload
+                        text="Upload Files for the workshop"
+                        onChange={handleFileUpload}
+                        startIcon={<CloudUploadIcon />}
+                        multiple
+                      />
+                    </Box>
+                  </Box>
+
+                  <Typography variant="h5" mb="5px" mt="15px">
+                    Add Cover Picture
+                  </Typography>
+                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+                    {coverPicture ? (
+                      <Avatar
+                        variant="square"
+                        src={URL.createObjectURL(coverPicture)}
+                        alt="Cover Picture"
+                        sx={{ width: 100, height: 100 }}
+                      />
+                    ) : currentWorkshop?.coverPictureUrl ? (
+                      // workshop has a old cover picture
+                      <Avatar
+                        variant="square"
+                        src={currentWorkshop?.coverPictureUrl} //use safeurl
+                        alt="Workshop Avatar"
+                        sx={{ width: 100, height: 100 }}
+                      />
+                    ) : (
+                      <Typography>No cover picture for this workshop</Typography>
+                    )}
+                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+                      <InputFileUpload
+                        text="Upload a Cover Picture for the workshop"
+                        onChange={handleCoverPictureUpload}
+                        startIcon={<CloudUploadIcon />}
+                        multiple
+                      />
+                    </Box>
+                  </Box>
+                </Box>
+                <CustomDivider
+                  style={{
+                    height: "0.05px",
+                    width: "100%",
+                    backgroundColor: theme.palette.outline.main
+                  }}
+                />
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
                   {editMode && (
                     <>
@@ -388,7 +538,11 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setStartDate(dayjs(workshop?.start));
                           setEndDate(dayjs(workshop?.end));
                           setEmails("");
-                          setFile(null);
+                          setEmailFile(null);
+                          setFiles(null);
+                          setCoverPicture(null);
+                          setRegLink(undefined);
+                          setRegRestrict(0);
                         }}>
                         Reset Form
                       </TSCButton>

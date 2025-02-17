@@ -98,9 +98,15 @@ vi.mock("../src/upload-handlers", async () => {
   return {
     uploadUserDatapackHandler: vi.fn().mockImplementation(() => Promise.resolve(testDatapackDescription)),
     setupNewDatapackDirectoryInUUIDDirectory: vi.fn().mockResolvedValue({}),
-    uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file))
+    uploadFileToFileSystem: vi.fn(async (file) => await consumeStream(file)),
+    fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
+    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
+    getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
+    uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file))
   };
 });
+
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof util>();
   return {
@@ -368,7 +374,10 @@ const testWorkshop: Workshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString(),
-  workshopId: 1
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -388,7 +397,14 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   {
     method: "POST",
     url: "/admin/workshop",
-    body: { title: "test", start: "2024-08-29T04:00:00.000Z", end: "2024-08-30T04:00:00.000Z" }
+    body: {
+      title: "test",
+      start: "2024-08-29T04:00:00.000Z",
+      end: "2024-08-30T04:00:00.000Z",
+      regRestrict: 0,
+      creatorUUID: testWorkshop.creatorUUID,
+      regLink: testWorkshop.regLink
+    }
   },
   {
     method: "PATCH",
@@ -413,7 +429,9 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/admin/workshop/datapack" },
   { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
   { method: "PATCH", url: "/admin/official/datapack/test" },
-  { method: "GET", url: "/admin/official/datapack/test" }
+  { method: "GET", url: "/admin/official/datapack/test" },
+  { method: "POST", url: "/admin/workshop/files/1" },
+  { method: "POST", url: "/admin/workshop/cover/1" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 describe("verifyAdmin tests", () => {
@@ -1667,6 +1685,9 @@ describe("adminGetWorkshops", () => {
     vi.clearAllMocks();
   });
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const fetchImageLink = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
+  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
+  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   it("should return 500 if findWorkshop throws an error", async () => {
     findWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
@@ -1679,12 +1700,26 @@ describe("adminGetWorkshops", () => {
   });
   it("should return 200 if successful and workshop active as false", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshop]);
+
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
       headers
     });
-    expect(await response.json()).toEqual({ workshops: [{ ...testWorkshop, active: false }] });
+    expect(fetchImageLink).toHaveBeenCalledOnce();
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({
+      workshops: [
+        {
+          ...testWorkshop,
+          active: false,
+          coverPictureUrl: "",
+          datapacks: [],
+          files: []
+        }
+      ]
+    });
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and workshop active as true", async () => {
@@ -1694,8 +1729,20 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
+    expect(fetchImageLink).toHaveBeenCalledOnce();
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
-      workshops: [{ ...testWorkshop, start: mockDate.toISOString(), active: true }]
+      workshops: [
+        {
+          ...testWorkshop,
+          start: mockDate.toISOString(),
+          active: true,
+          coverPictureUrl: "",
+          datapacks: [],
+          files: []
+        }
+      ]
     });
     expect(response.statusCode).toBe(200);
   });
@@ -1707,7 +1754,10 @@ describe("adminCreateWorkshop", () => {
   const body = {
     title: testWorkshop.title,
     start: testWorkshop.start,
-    end: testWorkshop.end
+    end: testWorkshop.end,
+    regRestrict: testWorkshop.regRestrict,
+    creatorUUID: testWorkshop.creatorUUID,
+    regLink: testWorkshop.regLink
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1813,6 +1863,7 @@ describe("adminCreateWorkshop", () => {
   });
   it("should return 200 if successful", async () => {
     createWorkshop.mockResolvedValueOnce(1);
+
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop",
@@ -1924,7 +1975,9 @@ describe("adminEditWorkshop", () => {
   });
   it("should return 409 if workshop with title and dates already exists", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
-    findWorkshop.mockResolvedValueOnce([{ ...body, end: testWorkshop.end }]);
+    findWorkshop.mockResolvedValueOnce([
+      { ...body, end: testWorkshop.end, regLink: null, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }
+    ]);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1963,7 +2016,15 @@ describe("adminEditWorkshop", () => {
     });
     expect(updateWorkshop).toHaveBeenCalledOnce();
     expect(updateWorkshop).toHaveBeenCalledWith({ workshopId: body.workshopId }, { ...body, workshopId: undefined });
-    expect(await response.json()).toEqual({ workshop: { ...body, end: testWorkshop.end, active: false } });
+    expect(await response.json()).toEqual({
+      workshop: {
+        ...body,
+        end: testWorkshop.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
+        active: false,
+        regRestrict: 0,
+        creatorUUID: ""
+      }
+    });
     expect(response.statusCode).toBe(200);
   });
 });
@@ -2560,6 +2621,134 @@ describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
     });
     expect(await response.json()).toEqual([{ title: "test" }]);
     expect(fetchAllPrivateOfficialDatapacks).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminUploadFilesToWorkshop", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
+      json.file = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should return 404 if workshop ended", async () => {
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should return error code if failed to upload file", async () => {
+    vi.mocked(uploadHandlers.uploadFilesToWorkshop).mockImplementationOnce(async (id, file) => {
+      await consumeStream(file);
+      return { code: 500, message: "Failed to save file" };
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return 200 if successfully uploaded file", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Files added to workshop" });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminUploadCoverPicToWorkshop", () => {
+  let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
+  const createForm = (json: Record<string, unknown> = {}) => {
+    if (!("file" in json)) {
+      json.file = {
+        value: Buffer.from("test"),
+        options: {
+          filename: "coverpic.png",
+          contentType: "image/png"
+        }
+      };
+    }
+    formData = formAutoContent({ ...json }, { payload: "body", forceMultiPart: true });
+    formHeaders = { ...headers, ...(formData.headers as Record<string, string>) };
+  };
+  beforeEach(() => {
+    createForm();
+    vi.clearAllMocks();
+  });
+  it("should return 404 if workshop ended", async () => {
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should return error code if failed to upload cover picture", async () => {
+    vi.mocked(uploadHandlers.uploadCoverPicToWorkshop).mockImplementationOnce(async (id, file) => {
+      await consumeStream(file);
+      return { code: 500, message: "Failed to save file" };
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(response.statusCode).toBe(500);
+  });
+
+  it("should return error code 415 if the cover picture is in wrong type", async () => {
+    vi.mocked(userHandlers.checkFileTypeIsDatapackImage).mockReturnValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type" });
+    expect(response.statusCode).toBe(415);
+  });
+
+  it("should return 200 if successfully uploaded cover picture", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Cover picture added to workshop" });
     expect(response.statusCode).toBe(200);
   });
 });
