@@ -556,7 +556,7 @@ const ChartCreationSteps = observer(
 );
 
 const UpcomingWorkshops = observer(
-  forwardRef<HTMLDivElement>(function UpcomingWorkshops(props, ref) {
+  forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
     const { t } = useTranslation();
