@@ -28,7 +28,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [pdfFiles, setPDFFiles] = useState<FileList>(new DataTransfer().files);
+  const [pdfFiles, setPDFFiles] = useState<File[]>([]);
   const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
@@ -120,27 +120,20 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       return;
     }
     actions.removeAllErrors();
-    const dataTransfer = new DataTransfer();
-    const existingFileNames = new Set(Array.from(pdfFiles).map((file) => file.name));
-    Array.from(pdfFiles).forEach((file) => dataTransfer.items.add(file));
-    Array.from(newFiles).forEach((file) => {
-      if (!existingFileNames.has(file.name)) {
-        dataTransfer.items.add(file);
+    const fileMap = new Map<string, File>();
+    Array.from(newFiles).forEach((file) => fileMap.set(file.name, file));
+    pdfFiles.forEach((file) => {
+      if (!fileMap.has(file.name)) {
+        fileMap.set(file.name, file);
       }
     });
-    setPDFFiles(dataTransfer.files);
+    setPDFFiles(Array.from(fileMap.values()));
   };
   const handlePDFFileDelete = (fileName: string) => {
-    if (!pdfFiles) {
-      return;
-    }
-    const filesArray = Array.from(pdfFiles);
-    const updatedFiles = filesArray.filter((file) => file.name !== fileName);
-    const updatedFileList = new DataTransfer();
-    updatedFiles.forEach((file) => updatedFileList.items.add(file));
+    setPDFFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
     actions.removeAllErrors();
-    setPDFFiles(updatedFileList.files);
   };
+
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -152,7 +145,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setReferences([]);
     setDate(null);
     setFile(null);
-    setPDFFiles(new DataTransfer().files);
+    setPDFFiles([]);
   };
   return {
     state: {

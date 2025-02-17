@@ -29,7 +29,7 @@ export type UploadDatapackMethodType = (
   file: File,
   metadata: DatapackMetadata,
   datapackProfilePicture?: File,
-  pdfFiles?: FileList
+  pdfFiles?: File[]
 ) => Promise<void>;
 
 export type User = SharedUser & {
