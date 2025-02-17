@@ -527,6 +527,7 @@
   flex-direction: column;
   width: 18vw;
   padding-left: 15px;
+  padding-right: 15px;
   margin-right: 20px;
   overflow-y: visible;
   max-height: 93vh;
