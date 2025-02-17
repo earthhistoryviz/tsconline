@@ -286,7 +286,10 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
     for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
       const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
-      if (!(await verifyNonExistentFilepath(datapackPDFFilepathDest))) {
+      if (
+        !datapackPDFFilepathDest.startsWith(filesDir) ||
+        !(await verifyNonExistentFilepath(datapackPDFFilepathDest))
+      ) {
         throw new Error("Invalid datapack PDF filepath destination path");
       }
       await copyFile(pdfFilePath, datapackPDFFilepathDest);
