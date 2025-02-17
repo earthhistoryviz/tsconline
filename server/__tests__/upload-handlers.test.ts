@@ -601,9 +601,11 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
 
     const normalizedDatapackFolder = path.join(datapackFolder); // Ensure path is normalized to the platform
     const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
+    const fetchPDFFileDirectory = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
 
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, undefined, pdfFields);
 
+    expect(fetchPDFFileDirectory).toHaveBeenCalledTimes(1);
     expect(rm).toHaveBeenCalledTimes(3);
     expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
     expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
