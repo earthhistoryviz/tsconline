@@ -59,28 +59,64 @@ export const DatapackUploadForm: React.FC<DatapackUploadFormProps> = ({ close, u
       <CustomDivider />
       <form onSubmit={handlers.handleSubmit}>
         <StyledScrollbar className="datapack-upload-form-container">
-          <Box display="flex" flexDirection="row" justifyContent="flex-start" gap="100px" margin="10px">
+          <Box
+            display="flex"
+            flexDirection={{ xs: "column", md: "row" }}
+            justifyContent="flex-start"
+            gap={{ xs: "15px", md: "50px" }}
+            margin="10px">
             <UploadProfilePicture
               profileImageRef={state.profileImageRef}
               profileImage={state.profileImage}
               handleProfileImageChange={handlers.handleProfileImageChange}
             />
-            <Box className="file-upload">
-              <InputFileUpload
-                startIcon={<CloudUploadIcon />}
-                text={t("settings.datapacks.upload")}
-                variant="contained"
-                onChange={handlers.handleFileUpload}
-                accept=".dpk, .mdpk, .zip, .txt"
-              />
-              <Typography className="file-upload-text" variant="body2">
-                {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
-              </Typography>
-              {state.file && (
-                <IconButton className="icon" onClick={() => setters.setFile(null)}>
-                  <DeleteOutline className="close-icon" />
-                </IconButton>
-              )}
+            <Box
+              display="flex"
+              flexDirection={{ xs: "column", lg: "row" }}
+              justifyContent="flex-start"
+              gap={{ xs: "15px", lg: "50px" }}
+              margin="10px">
+              <Box className="file-upload">
+                <InputFileUpload
+                  startIcon={<CloudUploadIcon />}
+                  text={t("settings.datapacks.upload")}
+                  variant="contained"
+                  onChange={handlers.handleFileUpload}
+                  accept=".dpk, .mdpk, .zip, .txt"
+                />
+                <Typography className="file-upload-text" variant="body2">
+                  {state.file ? state.file.name : t("settings.datapacks.upload-form.no-file")}
+                </Typography>
+                {state.file && (
+                  <IconButton className="icon" onClick={() => setters.setFile(null)}>
+                    <DeleteOutline className="close-icon" />
+                  </IconButton>
+                )}
+              </Box>
+              <Box className="file-upload">
+                <InputFileUpload
+                  startIcon={<CloudUploadIcon />}
+                  text={t("settings.datapacks.pdf-upload")}
+                  variant="contained"
+                  onChange={handlers.handlePDFFileUpload}
+                  accept=".pdf"
+                  multiple={true}
+                />
+                <div className="datapack-pdf-file-div">
+                  {state.pdfFiles.length !== 0
+                    ? Array.from(state.pdfFiles).map((file) => (
+                        <div className="datapack-pdf-file-container" key={file.name}>
+                          <Typography className="file-upload-text" variant="body2">
+                            {file ? file.name : t("settings.datapacks.upload-form.no-file")}
+                          </Typography>
+                          <IconButton className="icon" onClick={() => handlers.handlePDFFileDelete(file.name)}>
+                            <DeleteOutline className="close-icon" />
+                          </IconButton>
+                        </div>
+                      ))
+                    : t("settings.datapacks.upload-form.no-file")}
+                </div>
+              </Box>
             </Box>
           </Box>
           <Box gap="10px" display="flex">

@@ -133,3 +133,19 @@ export async function getAllUserDatapackDirectories(uuid: string): Promise<strin
 export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Promise<string> {
   return isPublic ? getPublicUserUUIDDirectory(uuid) : getPrivateUserUUIDDirectory(uuid);
 }
+
+export async function getPDFFilesDirectoryFromDatapackDirectory(directory: string) {
+  const rootDirectory = path.resolve(assetconfigs.privateDatapacksDirectory);
+  const pdfFileDir = path.resolve(directory, "files");
+  if (!pdfFileDir.startsWith(rootDirectory)) {
+    throw new Error("Invalid filepath");
+  }
+  if (!(await verifyFilepath(pdfFileDir))) {
+    if (await verifyNonExistentFilepath(pdfFileDir)) {
+      await mkdir(pdfFileDir, { recursive: true });
+    } else {
+      throw new Error("Invalid filepath");
+    }
+  }
+  return pdfFileDir;
+}
