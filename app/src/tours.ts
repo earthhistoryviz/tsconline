@@ -1,5 +1,5 @@
-import enTranslation from "../translation/en.json";
-import zhTranslation from "../translation/zh.json";
+import enTranslation from "@tsconline/shared/translations/en.json";
+import zhTranslation from "@tsconline/shared/translations/zh.json";
 
 export const enQsg = [
   {
