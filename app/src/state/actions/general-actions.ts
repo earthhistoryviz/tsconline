@@ -256,7 +256,7 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
@@ -279,6 +279,11 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    if (pdfFiles?.length) {
+      pdfFiles.forEach((pdfFile) => {
+        formData.append("pdfFiles[]", pdfFile);
+      });
+    }
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
