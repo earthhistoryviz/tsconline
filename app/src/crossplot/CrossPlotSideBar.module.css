@@ -79,9 +79,13 @@
   display: flex;
   flex-direction: row;
   gap: 15px;
-  height: 100px;
   padding: 5px 0px;
-  overflow: hidden;
+}
+.markerOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 10px;
 }
 .markersComponent {
   padding: 23px;
@@ -99,13 +103,16 @@
   gap: 10px;
 }
 .colorPicker {
+  min-width: 20px;
   width: 20px;
   height: 20px;
   padding: 0px;
+  align-self: center;
 }
 .topMarkerRow {
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
   gap: 12px;
