@@ -508,7 +508,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       );
     };
     return (
-      <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} style={{ width: "100%" }} />
+      <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />
     );
   })
 );
