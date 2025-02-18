@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -33,7 +33,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const { actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
-  const [setup, setSetup] = useState(false); // used to setup the chart alignment values
+  const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 8;
@@ -58,41 +58,22 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       actions.setChartTabZoomSettings(chartZoomSettings, {
         zoomFitScale: zoomFitX,
         zoomFitMidCoord: midCoord,
-        zoomFitMidCoordIsX: false
+        zoomFitMidCoordIsX: false,
+        resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
       });
     } else {
       const midCoord = (containerRect.right - containerRect.left) / 2 - (originalWidth * zoomFitY) / 2;
       actions.setChartTabZoomSettings(chartZoomSettings, {
         zoomFitScale: zoomFitY,
         zoomFitMidCoord: midCoord,
-        zoomFitMidCoordIsX: true
+        zoomFitMidCoordIsX: true,
+        resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
       });
     }
-    actions.setChartTabZoomSettings(chartZoomSettings, {
-      resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
-    });
   };
-
-  // we need to setup the chart alignment values when the chart content changes
-  // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
   useEffect(() => {
-    if (!chartContent || !madeChart) return;
-    setSetup(false);
-    setChartAlignmentValues();
-    setSetup(true);
-  }, [chartContent, madeChart, svgContainerRef?.current]);
-
-  useEffect(() => {
-    if (!setup) return;
     const container = transformContainerRef.current;
     if (!container) return;
-    if (zoomFitMidCoordIsX) {
-      container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
-    } else {
-      container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
-    }
-    actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
-
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
     };
@@ -136,12 +117,26 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       if (container.instance.wrapperComponent)
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
-  }, [
-    setup,
-    zoomFitMidCoord,
-    zoomFitScale,
-    zoomFitMidCoordIsX
-  ]);
+  });
+
+  // we need to setup the chart alignment values when the chart content changes
+  // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
+  useEffect(() => {
+    if (!chartContent || !madeChart || !svgContainerRef?.current) return;
+    setChartAlignmentValues();
+  }, [chartContent, madeChart, svgContainerRef?.current]);
+
+  useEffect(() => {
+    const container = transformContainerRef.current;
+    if (!container) return;
+    if (zoomFitMidCoordIsX) {
+      container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
+    } else {
+      container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
+    }
+    actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
+    setChartAlignmentInitialized(true);
+  }, [zoomFitMidCoord, zoomFitScale, zoomFitMidCoordIsX]);
 
   // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )
   useEffect(() => {
@@ -186,6 +181,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
               limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}
+              onZoom={(e) => {
+                actions.setChartTabZoomSettings(chartZoomSettings, { scale: e.state.scale });
+              }}
               doubleClick={{ disabled: disableDoubleClick }}
               disablePadding={true}>
               <TransformComponent
@@ -197,7 +195,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
                   overflow: "hidden",
                   border: "2px solid",
                   borderColor: theme.palette.divider,
-                  visibility: !setup ? "hidden" : "visible", // prevent flashing of chart when generating
+                  opacity: chartAlignmentInitialized ? 1 : 0,
                   ...style
                 }}>
                 {<Component ref={svgContainerRef} />}

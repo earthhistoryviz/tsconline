@@ -338,6 +338,28 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       };
     }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode]);
 
+    // set up the scale of the labels when svg changes
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent || !timeLineElements) return;
+      const { timeLabelX, timeLabelY } = timeLineElements;
+      const svg = ref.current?.querySelector("svg");
+      if (!svg) return;
+      const svgScale = getSvgScale(svg);
+      const textsize = getTextSize(svg);
+      timeLabelX.setAttributeNS(
+        null,
+        "font-size",
+        String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
+      );
+      timeLabelY.setAttributeNS(
+        null,
+        "font-size",
+        String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
+      );
+    }, [chartTabState.chartZoomSettings.scale]);
+
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
       const { timeLabelX } = timeLineElements;
@@ -362,6 +384,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       timeLabelsGroup.setAttributeNS(null, "style", show ? "fill: red; fill-opacity: 0.7;" : "fill-opacity: 0;");
       limitingBox.setAttributeNS(null, "style", show ? "stroke: red; stroke-opacity: 1;" : "stroke-opacity: 0;");
     };
+
     const setupTimelineAndLabel = (svg: SVGSVGElement) => {
       setTimeLineElements({
         timeLineX: svg.getElementById("timelineX"),

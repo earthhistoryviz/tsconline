@@ -63,7 +63,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     isSavingChart,
     unsafeChartContent,
     chartZoomSettings,
-    chartTimelineEnabled,
     downloadFilename,
     downloadFiletype
   } = chartTabState;
