@@ -293,7 +293,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           comment: ""
         };
         actions.addCrossPlotMarker(marker);
-        const tooltip = document.getElementById(tooltipId);
         // check and add tooltip, add event listeners to the circle
         if (state.crossPlot.showTooltips) {
           const hideTooltip = () => {
@@ -358,8 +357,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       return () => {
         const tooltip = document.getElementById(tooltipId);
         if (tooltip) document.body.removeChild(tooltip);
-      }
-    })
+      };
+    });
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
@@ -508,6 +507,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         convertPixelWidthToSvgLength(svg, getLabelWidthY())
       );
     };
-    return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
+    return (
+      <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} style={{ width: "100%" }} />
+    );
   })
 );

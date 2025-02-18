@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { createContext, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -12,7 +12,6 @@ import { ChartContextType } from "./types";
 import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
-import { HorizontalRule } from "@mui/icons-material";
 import TimeLine from "./assets/icons/axes=one.svg";
 
 export const ChartContext = createContext<ChartContextType>({
@@ -36,7 +35,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
   const step = 0.1;
   const minScale = 0.1;
-  const maxScale = 8;
+  const maxScale = 2;
   const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
 
   const setChartAlignmentValues = () => {
@@ -135,7 +134,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
     }
     actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
-    setChartAlignmentInitialized(true);
+    setTimeout(() => {
+      setChartAlignmentInitialized(true);
+    }, 10);
   }, [zoomFitMidCoord, zoomFitScale, zoomFitMidCoordIsX]);
 
   // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )

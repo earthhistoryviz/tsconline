@@ -4,7 +4,6 @@ import { context } from "./state";
 import { styled, useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { CustomTooltip, TSCButton } from "./components";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -59,13 +58,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
   const { chartTabState, otherChartOptions } = useContext(ChartContext);
-  const {
-    isSavingChart,
-    unsafeChartContent,
-    chartZoomSettings,
-    downloadFilename,
-    downloadFiletype
-  } = chartTabState;
+  const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
   const theme = useTheme();
   const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
