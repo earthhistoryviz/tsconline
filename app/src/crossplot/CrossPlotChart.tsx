@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Chart, ChartContext } from "../Chart";
-import React, { useContext, useRef } from "react";
+import React, { useContext, useMemo, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar } from "./CrossPlotSideBar";
