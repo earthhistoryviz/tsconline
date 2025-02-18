@@ -233,7 +233,7 @@ const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
   return (
     <Box className={styles.markersComponent}>
       {markers.map((marker, index) => (
-        <Box key={index} display="flex" flexDirection="column" gap="10px" paddingBottom="10px">
+        <Box key={index} className={styles.markerOptions}>
           <MarkerOptions marker={marker} />
           {index !== markers.length - 1 && <CustomDivider />}
         </Box>
@@ -249,15 +249,15 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
       <Box className={styles.checkBoxContainer}>
         <TSCCheckbox />
       </Box>
+      <TSCColorPicker
+        color={marker.color}
+        onColorChange={(evt) => {
+          actions.editCrossPlotMarker(marker, { color: evt });
+        }}
+        className={styles.colorPicker}
+      />
       <Box className={styles.markerOptions}>
         <Box className={styles.topMarkerRow}>
-          <TSCColorPicker
-            color={marker.color}
-            onColorChange={(evt) => {
-              actions.editCrossPlotMarker(marker, { color: evt });
-            }}
-            className={styles.colorPicker}
-          />
           <TextField
             select
             size="small"
