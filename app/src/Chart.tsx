@@ -76,18 +76,16 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   // we need to setup the chart alignment values when the chart content changes
   // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
   useEffect(() => {
+    if (!chartContent || !madeChart) return;
     setSetup(false);
-    const container = transformContainerRef.current;
-    const content = svgContainerRef.current;
-    if (!container || !content) return;
     setChartAlignmentValues();
     setSetup(true);
-  }, [chartContent, transformContainerRef.current, svgContainerRef.current, svgContainerRef, transformContainerRef]);
+  }, [chartContent, madeChart, svgContainerRef?.current]);
 
   useEffect(() => {
+    if (!setup) return;
     const container = transformContainerRef.current;
     if (!container) return;
-
     if (zoomFitMidCoordIsX) {
       container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
     } else {
@@ -140,12 +138,9 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
     };
   }, [
     setup,
-    chartContent,
-    transformContainerRef.current,
-    transformContainerRef,
     zoomFitMidCoord,
-    zoomFitMidCoordIsX,
-    zoomFitScale
+    zoomFitScale,
+    zoomFitMidCoordIsX
   ]);
 
   // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )
@@ -165,7 +160,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         observer.disconnect();
       }
     };
-  }, [refList]);
+  }, [refList?.length]);
   const { t } = useTranslation();
 
   return (
