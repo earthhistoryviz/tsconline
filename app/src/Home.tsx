@@ -16,7 +16,7 @@ import {
 } from "@mui/icons-material";
 import { Typography, Box, IconButton, Chip, useMediaQuery, Divider } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { TSCButton, Attribution, CustomDivider } from "./components";
+import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
 import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
@@ -43,10 +43,10 @@ export const Home = observer(function Home() {
   };
   return (
     <div className="whole_page">
-      <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
+      <Box sx={{ backgroundColor: "baseTheme.palette.augmentColor.color.main" }}>
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
-            <Typography className="landing-page-title" variant="h2" fontWeight="700">
+            <Typography className="landing-page-title" fontWeight="600">
               {t("landing-page.welcome")}
             </Typography>
             <Typography className="sub-header-section-landing-page-description">
@@ -59,29 +59,30 @@ export const Home = observer(function Home() {
             className="sub-header-section-landing-page-image"
             src={devSafeUrl("/public/website-images/landing-page.png")}
           />
-        </Box>
-        <Box className="get-started-landing-page">
-          <Box
-            className="get-started-button-container"
-            onClick={handleScrollToPreset}
-            onMouseEnter={() => setHoveringGetStarted(true)}
-            onMouseLeave={() => setHoveringGetStarted(false)}>
-            <motion.div
-              animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
-              transition={{ type: "spring", stiffness: 300, damping: 11 }}
-              style={{ display: "inline-block" }}>
-              <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
-                {t("landing-page.get-started")}
-              </Typography>
-            </motion.div>
-            <motion.div
-              initial={{ y: 0 }}
-              whileHover={{ y: 10 }}
-              animate={{ y: hoveringGetStarted ? 10 : 0 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              style={{ display: "inline-block" }}>
-              <ChevronRight className="get-started-button-landing-page" />
-            </motion.div>
+          <UpcomingWorkshops />
+          <Box className="get-started-landing-page">
+            <Box
+              className="get-started-button-container"
+              onClick={handleScrollToPreset}
+              onMouseEnter={() => setHoveringGetStarted(true)}
+              onMouseLeave={() => setHoveringGetStarted(false)}>
+              <motion.div
+                animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
+                transition={{ type: "spring", stiffness: 300, damping: 11 }}
+                style={{ display: "inline-block" }}>
+                <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
+                  {t("landing-page.get-started")}
+                </Typography>
+              </motion.div>
+              <motion.div
+                initial={{ y: 0 }}
+                whileHover={{ y: 10 }}
+                animate={{ y: hoveringGetStarted ? 10 : 0 }}
+                transition={{ type: "spring", stiffness: 300 }}
+                style={{ display: "inline-block" }}>
+                <ChevronRight className="get-started-button-landing-page" />
+              </motion.div>
+            </Box>
           </Box>
         </Box>
       </Box>
@@ -549,6 +550,97 @@ const ChartCreationSteps = observer(
             ))}
           </Box>
         )}
+      </Box>
+    );
+  })
+);
+
+const UpcomingWorkshops = observer(
+  forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const { t } = useTranslation();
+    const workshops = [
+      {
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
+      },
+      {
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
+      },
+      {
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
+      },
+      {
+        title: t("Switzerland Workshop"),
+        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+        description: t(
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+        ),
+        dataPacks: t("5"),
+        image: devSafeUrl("/datapack-images//")
+      }
+    ];
+    return (
+      <Box
+        className="upcoming-workshops-section"
+        sx={{
+          alignSelf: "flex-start",
+          backgroundColor: "secondaryBackground.main"
+        }}>
+        {" "}
+        <Box
+          sx={{
+            position: "sticky",
+            zIndex: 10
+          }}>
+          <Typography className="upcoming-workshop-title" variant="h3">
+            {t("UPCOMING WORKSHOPS")}
+          </Typography>
+          <CustomDivider />
+        </Box>
+        <Box
+          sx={{
+            overflowY: "auto"
+          }}>
+          <StyledScrollbar>
+            {!isMobile &&
+              workshops.map((step, index) => (
+                <Box key={index}>
+                  <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
+                  <Box
+                    key={index}
+                    sx={{
+                      display: "flex",
+                      flexDirection: "column"
+                    }}>
+                    <Typography className="upcoming-workshop-subtitle">{step.title}</Typography>
+                    <Typography className="upcoming-workshop-date">{step.date}</Typography>
+                    <Typography className="upcoming-workshop-description">{step.description}</Typography>
+                    <Typography className="upcoming-workshop-pd">{step.dataPacks} Datapacks</Typography>
+                    <CustomDivider />
+                  </Box>
+                </Box>
+              ))}
+          </StyledScrollbar>
+        </Box>
       </Box>
     );
   })
