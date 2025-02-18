@@ -316,19 +316,12 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             rect.removeEventListener("mouseleave", hideTooltip);
             rect.removeEventListener("contextmenu", removeRect);
             rect.removeEventListener("click", removeRect);
-            if (svg.contains(line)) {
-              svg.removeChild(line);
-            }
-            if (tooltip) document.body.removeChild(tooltip);
           };
         }
         // preserve the cleanup function
         const prev = cleanup;
         cleanup = () => {
           prev();
-          if (svg.contains(rect)) {
-            svg.removeChild(rect);
-          }
         };
       };
       svg.addEventListener("dblclick", handleDoubleClick);
@@ -359,6 +352,14 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         String(textsize * svgScale < 20 ? 20 : Math.round(textsize * svgScale))
       );
     }, [chartTabState.chartZoomSettings.scale]);
+
+    // remove the tooltip when the component unmounts (we keep markers)
+    useEffect(() => {
+      return () => {
+        const tooltip = document.getElementById(tooltipId);
+        if (tooltip) document.body.removeChild(tooltip);
+      }
+    })
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;

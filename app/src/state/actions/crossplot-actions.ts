@@ -32,7 +32,19 @@ export const addCrossPlotMarker = action((temp: Marker) => {
   state.crossPlot.markers.push(observable(temp));
 });
 export const removeCrossPlotMarkers = action((id: string) => {
+  const removedCrossPlotMarker = state.crossPlot.markers.find((m) => m.id === id);
+  if (!removedCrossPlotMarker) return;
+  removedCrossPlotMarker.element.remove();
+  removedCrossPlotMarker.line.remove();
   state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
+});
+
+export const resetCrossPlotMarkers = action(() => {
+  state.crossPlot.markers.forEach((marker) => {
+    marker.element.remove();
+    marker.line.remove();
+  });
+  state.crossPlot.markers = [];
 });
 export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Marker>) => {
   if (!isObservable(marker)) {
@@ -181,6 +193,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       return false;
     }
     resetChartTabStateForGeneration(state.crossPlot.state);
+    resetCrossPlotMarkers();
     setTab(0);
     navigate("/crossplot");
     try {
