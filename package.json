@@ -17,10 +17,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
-    "form-auto-content": "^3.2.1",
     "prettier": "^3.2.5",
     "syncpack": "^12.3.0",
-    "ts-node": "^10.9.2",
     "typescript": "5.2.2",
     "vitest": "^1.6.1",
     "wait-on": "^8.0.1"
