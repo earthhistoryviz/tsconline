@@ -5,6 +5,7 @@ import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
 import { useTheme } from "@mui/material";
 import { Marker } from "../types";
+import { getMarkerSizeFromScale } from "../state/actions";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -113,7 +114,7 @@ const keepLabelInXBounds = (x: number, maxX: number, labelWidth: number, gap: nu
 const keepLabelInYBounds = (y: number, minY: number, labelHeight: number, gap: number = 0) => {
   return y - labelHeight - gap < minY ? Math.max(y + labelHeight + gap, minY + labelHeight + gap) : y - gap;
 };
-const coordToAge = (coord: number, scale: number, topAge: number, min: number) => {
+export const coordToAge = (coord: number, scale: number, topAge: number, min: number) => {
   return roundToDecimalPlace(topAge + (coord - min) / scale, 3);
 };
 const showCurrAgeX = (
@@ -165,7 +166,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { state, actions } = useContext(context);
     const theme = useTheme();
     const { chartTabState } = useContext(ChartContext);
-    const { chartTimelineEnabled, chartContent } = chartTabState;
+    const { chartTimelineEnabled, chartContent, chartZoomSettings } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     // declare here so that comment is updated when marker changes
     const showTooltip = (event: MouseEvent, markerId: string) => {
@@ -269,13 +270,15 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         svg.appendChild(line);
         const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         const markerId = `marker-${Date.now()}`;
+        const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, chartZoomSettings.scale);
+        const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, chartZoomSettings.scale);
         rect.setAttribute("id", markerId);
-        rect.setAttribute("x", (point.x - MARKER_WIDTH / 2).toString());
-        rect.setAttribute("y", (point.y - MARKER_HEIGHT / 2).toString());
-        rect.setAttribute("width", MARKER_WIDTH.toString());
-        rect.setAttribute("height", MARKER_HEIGHT.toString());
-        rect.setAttribute("rx", (MARKER_WIDTH / 2).toString());
-        rect.setAttribute("ry", (MARKER_HEIGHT / 2).toString());
+        rect.setAttribute("x", (point.x - markerWidth / 2).toString());
+        rect.setAttribute("y", (point.y - markerHeight / 2).toString());
+        rect.setAttribute("width", markerWidth.toString());
+        rect.setAttribute("height", markerHeight.toString());
+        rect.setAttribute("rx", (markerWidth / 2).toString());
+        rect.setAttribute("ry", (markerHeight / 2).toString());
         rect.setAttribute("fill", theme.palette.button.main);
         rect.setAttribute("stroke", "black");
         rect.setAttribute("stroke-width", "1");
@@ -507,8 +510,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         convertPixelWidthToSvgLength(svg, getLabelWidthY())
       );
     };
-    return (
-      <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />
-    );
+    return <div ref={ref} id="svg-display" dangerouslySetInnerHTML={{ __html: chartContent }} />;
   })
 );

@@ -3,7 +3,12 @@ import React, { createContext, useContext, useEffect, useRef, useState } from "r
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
-import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import {
+  TransformWrapper,
+  TransformComponent,
+  ReactZoomPanPinchContentRef,
+  ReactZoomPanPinchRef
+} from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
 import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
@@ -159,6 +164,10 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   }, [refList?.length]);
   const { t } = useTranslation();
 
+  const onZoom = (e: ReactZoomPanPinchRef) => {
+    actions.setChartTabZoomSettings(chartZoomSettings, { scale: e.state.scale });
+  };
+
   return (
     <Box className="chart-container">
       {chartLoading ? (
@@ -182,9 +191,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
               limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}
-              onZoom={(e) => {
-                actions.setChartTabZoomSettings(chartZoomSettings, { scale: e.state.scale });
-              }}
+              onZoom={onZoom}
               doubleClick={{ disabled: disableDoubleClick }}
               disablePadding={true}>
               <TransformComponent
