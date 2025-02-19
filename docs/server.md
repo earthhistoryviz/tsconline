@@ -40,7 +40,7 @@ Again, make sure to denote the name of your jars in their respective fields. EX.
 
 ---
 
-We hold all the service files here for the app. The app is able to access all files so do not put any sensitive information here (including the decrypted datapacks and jars). The presets, mapimages, and charts cache are all located here.
+We hold all the service files here for the app. The app is able to access all files so do not put any sensitive information here (including the decrypted datapacks and jars). The presets, and charts cache are all located here.
 
 #### public/presets
 
@@ -51,10 +51,6 @@ The presets in `public/presets` will contain specific configurations of certain 
 #### public/charts
 
 This holds the charts in a hashed directory. The hash consists of an `md5` hash of the chart settings and chart datapacks. This ensures that if they request the same chart, we can just use the cached version. Both the chart and settings file used in the java jar are kept here for cache use.
-
-#### public/mapimages
-
-This holds any map images if the datapacks used are those with [map points](#Parse-MapPacks). Everytime the app [requests new datapack info](#get-datapackinfofiles), we delete this directory. The app will service these map images for the settings map points.
 
 ---
 
