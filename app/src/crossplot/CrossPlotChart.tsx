@@ -4,7 +4,7 @@ import React, { useContext, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar } from "./CrossPlotSideBar";
-import { Box, useTheme } from "@mui/material";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import { ChatRounded } from "@mui/icons-material";
@@ -14,6 +14,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
+  const matches = useMediaQuery("(min-width:600px)");
   return (
     <ChartContext.Provider
       value={{

@@ -6,7 +6,8 @@
   overflow-x: hidden;
   resize: horizontal;
   max-width: 70vw;
-  min-width: max(350px, 20vw);
+  width: 350px;
+  min-width: 350px;
 }
 
 .tabs {
