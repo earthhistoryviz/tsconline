@@ -277,8 +277,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         rect.setAttribute("y", (point.y - markerHeight / 2).toString());
         rect.setAttribute("width", markerWidth.toString());
         rect.setAttribute("height", markerHeight.toString());
-        rect.setAttribute("rx", (markerWidth / 2).toString());
-        rect.setAttribute("ry", (markerHeight / 2).toString());
+        rect.setAttribute("rx", "50%");
+        rect.setAttribute("ry", "50%");
         rect.setAttribute("fill", theme.palette.button.main);
         rect.setAttribute("stroke", "black");
         rect.setAttribute("stroke-width", "1");
