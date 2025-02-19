@@ -230,8 +230,8 @@ export type EditableUserProperties = {
 export type Marker = {
   id: string;
   element: SVGRectElement;
-  age: number;
-  depth: number;
+  age: number; // this allows for users to empty the age field
+  depth: number; // this allows for users to empty the depth field
   x: number; // the actual pos with no rounding
   y: number; // the actual pos with no rounding
   color: string;
