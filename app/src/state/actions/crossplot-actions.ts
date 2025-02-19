@@ -28,6 +28,29 @@ export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
   state.crossPlot.markerMode = markerMode;
 });
 
+const getBaseFadLineValues = (marker: Marker) => {
+  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+  return {
+    x1: marker.x - markerWidth / 2 - markerPadding,
+    x2: marker.x + markerWidth / 2 + markerPadding,
+    y1: marker.y + markerHeight / 2 + markerPadding,
+    y2: marker.y + markerHeight / 2 + markerPadding
+  };
+}
+const getTopLadLineValues = (marker: Marker) => {
+  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+  return {
+    x1: marker.x - markerWidth / 2 - markerPadding,
+    x2: marker.x + markerWidth / 2 + markerPadding,
+    y1: marker.y - markerHeight / 2 - markerPadding,
+    y2: marker.y - markerHeight / 2 - markerPadding
+  };
+}
+
 export const adjustScaleOfMarkers = action((scale: number) => {
   state.crossPlot.markers.forEach((marker) => {
     const newWidth = getMarkerSizeFromScale(MARKER_WIDTH, scale);
@@ -38,11 +61,22 @@ export const adjustScaleOfMarkers = action((scale: number) => {
     marker.element.setAttribute("width", newWidth.toString());
     marker.element.setAttribute("height", newHeight.toString());
     if (marker.type !== "Rect") {
-      marker.element.setAttribute("rx", (newWidth / 2).toString());
-      marker.element.setAttribute("ry", (newHeight / 2).toString());
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
     }
-    marker.line.setAttribute("y1", (marker.y - newWidth / 2 - newPadding).toString());
-    marker.line.setAttribute("y2", (marker.y - newHeight / 2 - newPadding).toString());
+    if (marker.type === "TOP(LAD)") {
+      const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+    } else if (marker.type === "BASE(FAD)") {
+      const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+    }
   });
 });
 
@@ -90,8 +124,10 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
     const age = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
     marker.x = age;
     marker.element.setAttribute("x", (age - markerWidth / 2).toString());
-    marker.line.setAttribute("x1", (age - markerWidth / 2 - markerPadding).toString());
-    marker.line.setAttribute("x2", (age + markerWidth / 2 + markerPadding).toString());
+    // x is the same for both base and top
+    const { x1, x2 } = getBaseFadLineValues(marker);
+    marker.line.setAttribute("x1", x1.toString());
+    marker.line.setAttribute("x2", x2.toString());
   }
   if (partial.depth !== undefined) {
     const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
@@ -101,51 +137,57 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
     marker.y = depth;
     marker.element.setAttribute("y", (depth - markerHeight / 2).toString());
     switch (marker.type) {
-      case "BASE(FAD)":
-        marker.line.setAttribute("y1", (depth + markerHeight / 2 + markerPadding).toString());
-        marker.line.setAttribute("y2", (depth + markerHeight / 2 + markerPadding).toString());
+      case "BASE(FAD)": {
+        const { y1, y2 } = getBaseFadLineValues(marker);
+        marker.line.setAttribute("y1", y1.toString());  
+        marker.line.setAttribute("y2", y2.toString());
         break;
-      case "TOP(LAD)":
-        marker.line.setAttribute("y1", (depth - markerHeight / 2 - markerPadding).toString());
-        marker.line.setAttribute("y2", (depth - markerHeight / 2 - markerPadding).toString());
+      }
+      case "TOP(LAD)": {
+        const { y1, y2 } = getTopLadLineValues(marker);
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
         break;
+      }
     }
   }
   if (partial.type !== undefined) {
-    const { x, y } = marker;
-    const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
-    const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
-    const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
     marker.type = partial.type;
     switch (partial.type) {
-      case "Rect":
+      case "Rect": {
         marker.element.setAttribute("rx", "0");
         marker.element.setAttribute("ry", "0");
         marker.line.setAttribute("opacity", "0");
         break;
-      case "Circle":
+      }
+      case "Circle": {
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
         marker.line.setAttribute("opacity", "0");
         break;
-      case "BASE(FAD)":
+      }
+      case "BASE(FAD)": {
+        const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", (x - markerWidth / 2 - markerPadding).toString());
-        marker.line.setAttribute("x2", (x + markerWidth / 2 + markerPadding).toString());
-        marker.line.setAttribute("y1", (y + markerHeight / 2 + markerPadding).toString());
-        marker.line.setAttribute("y2", (y + markerHeight / 2 + markerPadding).toString());
+        marker.line.setAttribute("x1", x1.toString());
+        marker.line.setAttribute("x2", x2.toString());
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
         marker.line.setAttribute("opacity", "1");
         break;
-      case "TOP(LAD)":
+      }
+      case "TOP(LAD)": {
+        const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
         marker.element.setAttribute("rx", "50%");
         marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", (x - markerWidth / 2 - markerPadding).toString());
-        marker.line.setAttribute("x2", (x + markerWidth / 2 + markerPadding).toString());
-        marker.line.setAttribute("y1", (y - markerHeight / 2 - markerPadding).toString());
-        marker.line.setAttribute("y2", (y - markerHeight / 2 - markerPadding).toString());
+        marker.line.setAttribute("x1", x1.toString());
+        marker.line.setAttribute("x2", x2.toString());
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
         marker.line.setAttribute("opacity", "1");
         break;
+      }
     }
   }
 });
