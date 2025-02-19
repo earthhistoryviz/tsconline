@@ -244,6 +244,8 @@ const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
 
 const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
   const { actions } = useContext(context);
+  const [age, setAge] = useState(marker.age.toString());
+  const [depth, setDepth] = useState(marker.depth.toString());
   return (
     <Box className={styles.markerContainer}>
       <Box className={styles.checkBoxContainer}>
@@ -278,18 +280,34 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
             size="small"
             className={styles.ageMarker}
             label="Age"
-            value={marker.age}
+            value={age}
+            type="number"
+            error={isNaN(parseFloat(age))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotMarker(marker, { age: parseFloat(e.target.value) });
+            }}
             onChange={(evt) => {
-              actions.editCrossPlotMarker(marker, { age: parseFloat(evt.target.value) });
+              setAge(evt.target.value);
             }}
           />
           <TextField
             size="small"
             className={styles.depthMarker}
             label="Depth"
-            value={marker.depth}
+            type="number"
+            value={depth}
+            error={isNaN(parseFloat(depth))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotMarker(marker, { depth: parseFloat(e.target.value) });
+            }}
             onChange={(evt) => {
-              actions.editCrossPlotMarker(marker, { depth: parseFloat(evt.target.value) });
+              setDepth(evt.target.value);
             }}
           />
         </Box>
