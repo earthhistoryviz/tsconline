@@ -38,7 +38,7 @@ const getBaseFadLineValues = (marker: Marker) => {
     y1: marker.y + markerHeight / 2 + markerPadding,
     y2: marker.y + markerHeight / 2 + markerPadding
   };
-}
+};
 const getTopLadLineValues = (marker: Marker) => {
   const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
   const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
@@ -49,13 +49,12 @@ const getTopLadLineValues = (marker: Marker) => {
     y1: marker.y - markerHeight / 2 - markerPadding,
     y2: marker.y - markerHeight / 2 - markerPadding
   };
-}
+};
 
 export const adjustScaleOfMarkers = action((scale: number) => {
   state.crossPlot.markers.forEach((marker) => {
     const newWidth = getMarkerSizeFromScale(MARKER_WIDTH, scale);
     const newHeight = getMarkerSizeFromScale(MARKER_HEIGHT, scale);
-    const newPadding = getMarkerSizeFromScale(MARKER_PADDING, scale);
     marker.element.setAttribute("x", (marker.x - newWidth / 2).toString());
     marker.element.setAttribute("y", (marker.y - newHeight / 2).toString());
     marker.element.setAttribute("width", newWidth.toString());
@@ -119,11 +118,10 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.age !== undefined) {
     const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
-    const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
     marker.age = partial.age;
-    const age = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
-    marker.x = age;
-    marker.element.setAttribute("x", (age - markerWidth / 2).toString());
+    const coord = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
+    marker.x = coord;
+    marker.element.setAttribute("x", (coord - markerWidth / 2).toString());
     // x is the same for both base and top
     const { x1, x2 } = getBaseFadLineValues(marker);
     marker.line.setAttribute("x1", x1.toString());
@@ -131,15 +129,14 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.depth !== undefined) {
     const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
-    const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
     marker.depth = partial.depth;
-    const depth = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
-    marker.y = depth;
-    marker.element.setAttribute("y", (depth - markerHeight / 2).toString());
+    const coord = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
+    marker.y = coord;
+    marker.element.setAttribute("y", (coord - markerHeight / 2).toString());
     switch (marker.type) {
       case "BASE(FAD)": {
         const { y1, y2 } = getBaseFadLineValues(marker);
-        marker.line.setAttribute("y1", y1.toString());  
+        marker.line.setAttribute("y1", y1.toString());
         marker.line.setAttribute("y2", y2.toString());
         break;
       }
