@@ -101,6 +101,8 @@ export type AssetConfig = {
   uploadDirectory: string;
   publicDatapacksDirectory: string;
   translationFilepath: string;
+  historyDirectory: string;
+  historyStoreFilepath: string;
 };
 
 export type Colors = {
@@ -116,6 +118,32 @@ export type FileMetadata = {
   lastUpdated: string;
   uuid: string;
 };
+
+export type Counter = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+export type HistoryStore = {
+  [uuid: string]: {
+    counter: Counter;
+    entries: string[][]; // Counter indexes this array (0-9) and each index is an array of datapack paths
+  };
+};
+
+export function assertHistoryStore(o: any): asserts o is HistoryStore {
+  if (typeof o !== "object" || !o) throw "HistoryStore must be an object";
+  for (const key in o) {
+    const userHistory = o[key];
+    if (typeof userHistory !== "object" || !userHistory) throw "HistoryStore must have a user history object";
+    if (typeof userHistory.counter !== "number") throwError("HistoryStore", "counter", "number", userHistory.counter);
+    if (userHistory.counter < 0 || userHistory.counter > 9) throw "HistoryStore counter must be between 0 and 9";
+    if (!Array.isArray(userHistory.entries)) throw "HistoryStore entries must be an array";
+    for (const entry of userHistory.entries) {
+      if (!Array.isArray(entry)) throw "HistoryStore entry must be an array";
+      for (const datapackPath of entry) {
+        if (typeof datapackPath !== "string") throw "HistoryStore datapack path must be a string";
+      }
+    }
+  }
+}
 
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
@@ -170,6 +198,9 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.privateDatapacksDirectory !== "string")
     throw 'AssetConfig must have a "privateDatapacksDirectory" string';
   if (typeof o.publicDatapacksDirectory !== "string") throw 'AssetConfig must have a "publicDatapacksDirectory" string';
+  if (typeof o.translationFilepath !== "string") throw 'AssetConfig must have a "translationFilepath" string';
+  if (typeof o.historyDirectory !== "string") throw 'AssetConfig must have a "historyDirectory" string';
+  if (typeof o.historyStoreFilepath !== "string") throw 'AssetConfig must have a "historyStoreFilepath" string';
 }
 
 export function isAccountType(o: any): o is AccountType {
