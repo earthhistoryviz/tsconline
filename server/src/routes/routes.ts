@@ -29,6 +29,8 @@ import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActi
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
+import { saveChartHistory } from "../user/chart-history.js";
+import logger from "../error-logger.js";
 
 /**
  * Fetches the official datapack with the given name if it is public
@@ -264,6 +266,11 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     } else {
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
       reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
+      // after sending, save to history if user is logged in
+      if (uuid)
+        await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine).catch((e) => {
+          logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
+        });
       return;
     }
   } catch (e) {
@@ -424,6 +431,11 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     reply.send({ chartpath: chartUrlPath, hash: hash });
   }
+  // after sending, save to history if user is logged in
+  if (uuid)
+    await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine).catch((e) => {
+      logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
+    });
 };
 
 // Serve timescale data endpoint
