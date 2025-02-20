@@ -80,9 +80,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   // check if the options bar is overflowing
   useEffect(() => {
     const checkOverflow = () => {
-      console.log([width, optionsBarRef.current?.clientWidth]);
       if (optionsBarRef.current && width > optionsBarRef.current.clientWidth) {
-        console.log("overflow!");
         setIsOverflowing(true);
       } else {
         setIsOverflowing(false);
