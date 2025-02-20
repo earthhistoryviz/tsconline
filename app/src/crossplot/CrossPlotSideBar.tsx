@@ -1,23 +1,24 @@
 import { observer } from "mobx-react-lite";
-import { forwardRef, useContext, useEffect, useState } from "react";
+import React, { forwardRef, useContext, useEffect, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings } from "../types";
+import { CrossPlotTimeSettings, Marker, isMarkerType, markerTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, NotImplemented, TSCButton } from "../components";
+import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
+import TSCColorPicker from "../components/TSCColorPicker";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
     const [sidebarWidth, setSidebarWidth] = useState("300px"); // this is so the sidebar retains the width when resized
-    const { actions } = useContext(context);
+    const { state, actions } = useContext(context);
     const navigate = useNavigate();
     const theme = useTheme();
     useEffect(() => {
@@ -39,7 +40,11 @@ export const CrossPlotSideBar = observer(
         Icon: TableChartRounded,
         component: <ColumnDisplay />
       },
-      { tabName: "Markers", Icon: BookmarkRounded, component: <NotImplemented size="medium" /> }
+      {
+        tabName: "Markers",
+        Icon: BookmarkRounded,
+        component: <Markers markers={state.crossPlot.markers} />
+      }
     ];
     return (
       <Box
@@ -97,6 +102,7 @@ const Time: React.FC = observer(() => {
   return (
     <Box className={styles.timeComponent}>
       <CrossPlotTimeSettingsForm
+        possibleCharts={state.settingsTabs.columns?.children}
         formLabel={t("crossPlot.time.xAxis")}
         disabled
         settings={state.crossPlot.chartXTimeSettings}
@@ -106,6 +112,7 @@ const Time: React.FC = observer(() => {
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
+        possibleCharts={state.settingsTabs.columns?.children}
         formLabel={t("crossPlot.time.yAxis")}
         settings={state.crossPlot.chartYTimeSettings}
         column={state.crossPlot.chartY}
@@ -117,6 +124,7 @@ const Time: React.FC = observer(() => {
 });
 
 type CrossPlotTimeProps = {
+  possibleCharts: ColumnInfo[] | undefined;
   settings: CrossPlotTimeSettings;
   column: ColumnInfo | undefined;
   setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
@@ -125,9 +133,8 @@ type CrossPlotTimeProps = {
   disabled?: boolean;
 };
 const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
-  ({ column, settings, formLabel, setTimeSettings, setCrossPlotChart, disabled }) => {
+  ({ possibleCharts, column, settings, formLabel, setTimeSettings, setCrossPlotChart, disabled }) => {
     const { t } = useTranslation();
-    const { state } = useContext(context);
     const checkAgeRange = () => settings && settings.topStageAge > settings.baseStageAge;
     const pleaseSelectAUnit = t("crossPlot.time.select-unit");
     return (
@@ -144,13 +151,13 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
           disabled={disabled || !column}
           value={column?.units || 0}
           onChange={(evt) => {
-            const col = state.settingsTabs.columns?.children.find((col) => col.units === evt.target.value);
+            const col = possibleCharts?.find((col) => col.units === evt.target.value);
             if (!col) return;
             setCrossPlotChart(col);
           }}
           className={styles.unitSelect}>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([index, column]) => (
+          {possibleCharts &&
+            Object.entries(possibleCharts).map(([index, column]) => (
               <MenuItem key={index} value={column.units}>
                 {`${column.name} (${column.units})`}
               </MenuItem>
@@ -218,3 +225,102 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
     );
   }
 );
+
+type MarkersProps = {
+  markers: Marker[];
+};
+const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
+  return (
+    <Box className={styles.markersComponent}>
+      {markers.map((marker, index) => (
+        <Box key={index} className={styles.markerOptions}>
+          <MarkerOptions marker={marker} />
+          {index !== markers.length - 1 && <CustomDivider />}
+        </Box>
+      ))}
+    </Box>
+  );
+});
+
+const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
+  const { actions } = useContext(context);
+  const [age, setAge] = useState(marker.age.toString());
+  const [depth, setDepth] = useState(marker.depth.toString());
+  return (
+    <Box className={styles.markerContainer}>
+      <Box className={styles.checkBoxContainer}>
+        <TSCCheckbox />
+      </Box>
+      <TSCColorPicker
+        color={marker.color}
+        onColorChange={(evt) => {
+          actions.editCrossPlotMarker(marker, { color: evt });
+        }}
+        className={styles.colorPicker}
+      />
+      <Box className={styles.markerOptions}>
+        <Box className={styles.topMarkerRow}>
+          <TextField
+            select
+            size="small"
+            className={styles.selectMarker}
+            label="Type"
+            value={marker.type}
+            onChange={(e) => {
+              if (!isMarkerType(e.target.value)) return;
+              actions.editCrossPlotMarker(marker, { type: e.target.value });
+            }}>
+            {markerTypes.map((markerType) => (
+              <MenuItem key={markerType} value={markerType}>
+                {markerType}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size="small"
+            className={styles.ageMarker}
+            label="Age"
+            value={age}
+            type="number"
+            error={isNaN(parseFloat(age))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotMarker(marker, { age: parseFloat(e.target.value) });
+            }}
+            onChange={(evt) => {
+              setAge(evt.target.value);
+            }}
+          />
+          <TextField
+            size="small"
+            className={styles.depthMarker}
+            label="Depth"
+            type="number"
+            value={depth}
+            error={isNaN(parseFloat(depth))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotMarker(marker, { depth: parseFloat(e.target.value) });
+            }}
+            onChange={(evt) => {
+              setDepth(evt.target.value);
+            }}
+          />
+        </Box>
+        <TextField
+          size="small"
+          label="Comment"
+          fullWidth
+          value={marker.comment}
+          onChange={(evt) => {
+            actions.editCrossPlotMarker(marker, { comment: evt.target.value });
+          }}
+        />
+      </Box>
+    </Box>
+  );
+});

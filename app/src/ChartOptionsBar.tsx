@@ -1,10 +1,9 @@
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "./state";
-import { useTheme } from "@mui/material/styles";
+import { styled, useTheme } from "@mui/material/styles";
 import "./Chart.css";
 import { CustomTooltip, TSCButton } from "./components";
-import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -36,6 +35,7 @@ import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { t } from "i18next";
 import { ChartContext } from "./Chart";
 import styles from "./ChartOptionsBar.module.css";
+import Color from "color";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -44,17 +44,21 @@ interface OptionsBarProps {
   maxScale: number;
 }
 
+const StyledIconButton = styled(IconButton)(({ theme }) => ({
+  "&:hover": {
+    backgroundColor: Color(theme.palette.icon.main).alpha(0.2).toString()
+  },
+  borderRadius: 0,
+  "&.active": {
+    backgroundColor: Color(theme.palette.button.main).alpha(0.3).toString(),
+    outline: `0.5px solid ${theme.palette.button.main}`
+  }
+}));
+
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
-  const { chartTabState } = useContext(ChartContext);
-  const {
-    isSavingChart,
-    unsafeChartContent,
-    chartZoomSettings,
-    chartTimelineEnabled,
-    downloadFilename,
-    downloadFiletype
-  } = chartTabState;
+  const { chartTabState, otherChartOptions } = useContext(ChartContext);
+  const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
   const theme = useTheme();
   const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
@@ -79,9 +83,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     return (
       <div>
         <CustomTooltip title="Options">
-          <IconButton id="option-button" onClick={handleClick}>
+          <StyledIconButton id="option-button" onClick={handleClick}>
             <SettingsIcon />
-          </IconButton>
+          </StyledIconButton>
         </CustomTooltip>
         <Box
           sx={{
@@ -106,7 +110,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const ZoomInButton = () => {
     return (
       <CustomTooltip title="Zoom In">
-        <IconButton
+        <StyledIconButton
           onClick={() => {
             if (scale < maxScale) {
               container.zoomIn(step, 0);
@@ -114,14 +118,14 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             }
           }}>
           <ZoomInIcon />
-        </IconButton>
+        </StyledIconButton>
       </CustomTooltip>
     );
   };
   const ZoomOutButton = () => {
     return (
       <CustomTooltip title="Zoom Out">
-        <IconButton
+        <StyledIconButton
           onClick={() => {
             if (scale > minScale) {
               container.zoomOut(step, 0);
@@ -129,27 +133,27 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             }
           }}>
           <ZoomOutIcon />
-        </IconButton>
+        </StyledIconButton>
       </CustomTooltip>
     );
   };
   const ResetButton = () => {
     return (
       <CustomTooltip title="Reset Transformation">
-        <IconButton
+        <StyledIconButton
           onClick={() => {
             container.setTransform(resetMidX, 0, 1, 0);
             actions.setChartTabZoomSettings(chartZoomSettings, { scale: 1 });
           }}>
           <RestartAltIcon />
-        </IconButton>
+        </StyledIconButton>
       </CustomTooltip>
     );
   };
   const ZoomFitButton = () => {
     return (
       <CustomTooltip title="Zoom Fit">
-        <IconButton
+        <StyledIconButton
           onClick={() => {
             if (zoomFitMidCoordIsX) {
               container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
@@ -159,21 +163,11 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
           }}>
           <ZoomOutMapIcon />
-        </IconButton>
+        </StyledIconButton>
       </CustomTooltip>
     );
   };
 
-  const TimelineButton = () => {
-    return (
-      <CustomTooltip title="Timeline On/Off">
-        <IconButton
-          onClick={() => actions.setChartTabState(chartTabState, { chartTimelineEnabled: !chartTimelineEnabled })}>
-          <HorizontalRuleIcon className="timeline-button" />
-        </IconButton>
-      </CustomTooltip>
-    );
-  };
   const DownloadButton = observer(() => {
     const [downloadOpen, setDownloadOpen] = React.useState(false);
     const handleDownloadOpen = () => {
@@ -364,9 +358,9 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               Shift + Scroll - Horizontal Scroll
             </>
           }>
-          <IconButton>
+          <StyledIconButton>
             <HelpOutlineIcon />
-          </IconButton>
+          </StyledIconButton>
         </CustomTooltip>
       </div>
     );
@@ -379,7 +373,15 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        <TimelineButton />
+        {(otherChartOptions || []).map(({ icon, label, onChange, value }) => (
+          <Box key={label}>
+            <CustomTooltip title={label} key="label">
+              <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>
+                {icon}
+              </StyledIconButton>
+            </CustomTooltip>
+          </Box>
+        ))}
         <DownloadButton />
       </div>
       <div className="flex-row">
