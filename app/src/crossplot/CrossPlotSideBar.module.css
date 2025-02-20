@@ -9,6 +9,41 @@
   width: 350px;
   min-width: 350px;
 }
+.mobileCrossPlotSideBar {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr var(--side-bar-width);
+  box-shadow: 5px 0px 10px -5px rgba(0, 0, 0, 0.5);
+  overflow-x: hidden;
+  grid-area: sidebar;
+  grid-template-areas: "content" "tabs";
+  resize: vertical;
+  max-width: 100%;
+  width: 100%;
+  max-height: 50vh;
+  height: 350px;
+  min-height: 350px;
+}
+
+.mobileTabs {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  overflow: hidden;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  grid-area: tabs;
+}
+.mobileTabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow: auto;
+  grid-area: content;
+}
 
 .tabs {
   display: flex;
