@@ -1,9 +1,9 @@
 import { observer } from "mobx-react-lite";
-import { useContext } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { styled, useTheme } from "@mui/material/styles";
 import "./Chart.css";
-import { CustomTooltip, TSCButton } from "./components";
+import { CustomTooltip, TSCButton, TSCMenuItem } from "./components";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -24,7 +24,6 @@ import {
   IconButton,
   MenuItem,
   Select,
-  Switch,
   TextField,
   Typography
 } from "@mui/material";
@@ -36,6 +35,7 @@ import { t } from "i18next";
 import { ChartContext } from "./Chart";
 import styles from "./ChartOptionsBar.module.css";
 import Color from "color";
+import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -59,7 +59,42 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   const { actions } = useContext(context);
   const { chartTabState, otherChartOptions } = useContext(ChartContext);
   const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
+  let width = 0;
+  const optionsBarRef = useRef<HTMLDivElement>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const zoomSettingsRef = useRef<HTMLDivElement>(null);
+  const helpRef = useRef<HTMLDivElement>(null);
+  const [menuState, toggleMenu] = useMenuState({ transition: true });
+  const anchorProps = useClick(menuState.state, toggleMenu);
+  const menuRef = useRef(null);
   const theme = useTheme();
+  // store the width of the settings that shouldn't be hidden
+  useEffect(() => {
+    if (optionsBarRef.current && zoomSettingsRef.current && helpRef.current) {
+      width = 0;
+      Object.values([...zoomSettingsRef.current.children, ...helpRef.current.children]).forEach((child) => {
+        width += child.clientWidth;
+      });
+    }
+  }, []);
+  // check if the options bar is overflowing
+  useEffect(() => {
+    const checkOverflow = () => {
+      console.log([width, optionsBarRef.current?.clientWidth]);
+      if (optionsBarRef.current && width > optionsBarRef.current.clientWidth) {
+        console.log("overflow!");
+        setIsOverflowing(true);
+      } else {
+        setIsOverflowing(false);
+      }
+    };
+    checkOverflow();
+    window.addEventListener("resize", checkOverflow);
+    return () => {
+      window.removeEventListener("resize", checkOverflow);
+    };
+  }, [width]);
+
   const { enableScrollZoom, scale, resetMidX, zoomFitMidCoord, zoomFitMidCoordIsX, zoomFitScale } = chartZoomSettings;
 
   const container = transformRef.current;
@@ -73,37 +108,44 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
   //this doesn't happen if I do the function below, which cycles the zoom scroll function of the transform wrapper
   //soft requirement for this workaround: animation time for reset or fit = 0
   const OptionsButton = () => {
-    const [open, setOpen] = React.useState<boolean>(false);
-    const handleClick = () => {
-      setOpen(!open);
-    };
-    const handleSwitch = () => {
+    const handleScrollZoom = () => {
       actions.setChartTabZoomSettings(chartZoomSettings, { enableScrollZoom: !enableScrollZoom });
     };
     return (
       <div>
-        <CustomTooltip title="Options">
-          <StyledIconButton id="option-button" onClick={handleClick}>
-            <SettingsIcon />
-          </StyledIconButton>
-        </CustomTooltip>
-        <Box
-          sx={{
-            bgcolor: theme.palette.backgroundColor.main
+        <StyledIconButton id="option-button" ref={menuRef} {...anchorProps}>
+          <SettingsIcon />
+        </StyledIconButton>
+        <ControlledMenu
+          {...menuState}
+          viewScroll="close"
+          anchorRef={menuRef}
+          onClose={(e) => {
+            if (e.reason === "click") return;
+            toggleMenu(false);
           }}
-          style={{ display: open ? "flex" : "none", position: "absolute", zIndex: "100" }}>
-          <div className="flex-row">
-            <Typography sx={{ p: 2 }}>Zoom on Scroll</Typography>
-            <div style={{ margin: "auto" }}>
-              <Switch
-                inputProps={{ "aria-label": "controlled" }}
-                checked={enableScrollZoom}
-                onChange={handleSwitch}
-                color="info"
-              />
-            </div>
-          </div>
-        </Box>
+          menuStyle={{ backgroundColor: theme.palette.dark.light, color: theme.palette.dark.contrastText }}>
+          <TSCMenuItem
+            type="checkbox"
+            checked={enableScrollZoom}
+            onClick={() => {
+              handleScrollZoom();
+            }}>
+            <Typography>Zoom on Scroll</Typography>
+          </TSCMenuItem>
+          {isOverflowing &&
+            (otherChartOptions || []).map(({ label, onChange, value }) => (
+              <TSCMenuItem
+                key={label}
+                type="checkbox"
+                checked={value}
+                onClick={() => {
+                  onChange(!value);
+                }}>
+                <Typography>{label}</Typography>
+              </TSCMenuItem>
+            ))}
+        </ControlledMenu>
       </div>
     );
   };
@@ -366,25 +408,26 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     );
   };
   return (
-    <div className="options-bar">
-      <div className="flex-row">
+    <div className="options-bar" ref={optionsBarRef}>
+      <div className="flex-row" ref={zoomSettingsRef}>
         <OptionsButton />
         <ZoomInButton />
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        {(otherChartOptions || []).map(({ icon, label, onChange, value }) => (
-          <Box key={label}>
-            <CustomTooltip title={label} key="label">
-              <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>
-                {icon}
-              </StyledIconButton>
-            </CustomTooltip>
-          </Box>
-        ))}
+        {!isOverflowing &&
+          (otherChartOptions || []).map(({ icon, label, onChange, value }) => (
+            <Box key={label}>
+              <CustomTooltip title={label} key="label">
+                <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>
+                  {icon}
+                </StyledIconButton>
+              </CustomTooltip>
+            </Box>
+          ))}
         <DownloadButton />
       </div>
-      <div className="flex-row">
+      <div className="flex-row" ref={helpRef}>
         <HelpButton />
       </div>
     </div>

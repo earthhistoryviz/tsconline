@@ -58,6 +58,7 @@
   width: 100%;
   border: 2px solid gray;
   border-bottom: 0px;
+  min-width: 0;
 }
 .flex-row {
   display: flex;
