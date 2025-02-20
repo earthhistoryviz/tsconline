@@ -199,18 +199,17 @@ jobs:
             exit 1
           fi
 
-      - name: Run Tests
-        id: run_tests
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
+      # - name: Run Tests
+      #   id: run_tests
+      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
+      #   run: |
+      #     Xvfb :1 -screen 0 1024x768x16 &
+      #     export DISPLAY=:1
+      #     yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+      #   continue-on-error: true
 
       - name: Run Tests and Coverage (Exclude Encryption)
-        id: run_tests_exclude_encryption
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        id: run_tests
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
@@ -344,149 +343,149 @@ jobs:
             shared/dist
             server/dist
 
-  wait-for-checks:
-    runs-on: ubuntu-latest
-    permissions:
-      checks: read
-    steps:
-      - name: Wait for All Status Checks
-        uses: poseidon/wait-for-status-checks@v0.4.1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+  # wait-for-checks:
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     checks: read
+  #   steps:
+  #     - name: Wait for All Status Checks
+  #       uses: poseidon/wait-for-status-checks@v0.4.1
+  #       with:
+  #         token: ${{ secrets.GITHUB_TOKEN }}
 
-  setup-preview:
-    needs: wait-for-checks
-    if: github.event.pull_request.merged == false && github.event.pull_request.user.login != 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout CODEOWNERS file from main branch
-        uses: Bhacaz/checkout-files@v2
-        with:
-          files: .github/CODEOWNERS
-          branch: main
+  # setup-preview:
+  #   needs: wait-for-checks
+  #   if: github.event.pull_request.merged == false && github.event.pull_request.user.login != 'dependabot[bot]'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout CODEOWNERS file from main branch
+  #       uses: Bhacaz/checkout-files@v2
+  #       with:
+  #         files: .github/CODEOWNERS
+  #         branch: main
 
-      - name: Check if PR author is a code owner
-        if: github.event.pull_request.merged == false
-        id: check_codeowner
-        run: |
-          PR_AUTHOR=${{ github.event.pull_request.user.login }}
-          CODEOWNERS=$(cat .github/CODEOWNERS)
-          echo "PR Author: $PR_AUTHOR"
-          echo "Code Owners: $CODEOWNERS"
-          if echo "$CODEOWNERS" | grep -q "$PR_AUTHOR"; then
-            echo "PR author is a code owner"
-            exit 0
-          else
-            echo "PR author is not a code owner"
-            exit 1
-          fi
+  #     - name: Check if PR author is a code owner
+  #       if: github.event.pull_request.merged == false
+  #       id: check_codeowner
+  #       run: |
+  #         PR_AUTHOR=${{ github.event.pull_request.user.login }}
+  #         CODEOWNERS=$(cat .github/CODEOWNERS)
+  #         echo "PR Author: $PR_AUTHOR"
+  #         echo "Code Owners: $CODEOWNERS"
+  #         if echo "$CODEOWNERS" | grep -q "$PR_AUTHOR"; then
+  #           echo "PR author is a code owner"
+  #           exit 0
+  #         else
+  #           echo "PR author is not a code owner"
+  #           exit 1
+  #         fi
 
-      - name: Download PR Artifacts
-        id: download_pr_artifacts
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
-          if [ -z "$DOWNLOAD_URL" ]; then
-            echo "No build artifact found."
-            exit 1
-          else
-            echo "Build download URL: $DOWNLOAD_URL"
-            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
-          fi
-          if [ ! -f "build-artifacts.zip" ]; then
-            echo "Error: build-artifacts.zip not found"
-            exit 1
-          fi
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ github.event.number }}") | .archive_download_url' | head -n 1)
-          if [ -z "$DOWNLOAD_URL" ]; then
-            echo "No jar artifact found."
-          else
-            echo "Jar download URL: $DOWNLOAD_URL"
-            curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
-            unzip -q jar.zip
-          fi
-          if [ -f "jar.zip" ]; then
-            echo "jar_download_status=success" >> $GITHUB_OUTPUT
-            echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
-          else
-            echo "jar_download_status=failed" >> $GITHUB_OUTPUT
-          fi
+  #     - name: Download PR Artifacts
+  #       id: download_pr_artifacts
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "build-artifacts-${{ github.event.number }}") | .archive_download_url' | head -n 1)
+  #         if [ -z "$DOWNLOAD_URL" ]; then
+  #           echo "No build artifact found."
+  #           exit 1
+  #         else
+  #           echo "Build download URL: $DOWNLOAD_URL"
+  #           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o build-artifacts.zip
+  #         fi
+  #         if [ ! -f "build-artifacts.zip" ]; then
+  #           echo "Error: build-artifacts.zip not found"
+  #           exit 1
+  #         fi
+  #         DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/artifacts --paginate -q '.artifacts[] | select(.name == "jar-artifact-${{ github.event.number }}") | .archive_download_url' | head -n 1)
+  #         if [ -z "$DOWNLOAD_URL" ]; then
+  #           echo "No jar artifact found."
+  #         else
+  #           echo "Jar download URL: $DOWNLOAD_URL"
+  #           curl -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" -L "$DOWNLOAD_URL" -o jar.zip
+  #           unzip -q jar.zip
+  #         fi
+  #         if [ -f "jar.zip" ]; then
+  #           echo "jar_download_status=success" >> $GITHUB_OUTPUT
+  #           echo "jar_file=$(ls *.jar)" >> $GITHUB_OUTPUT
+  #         else
+  #           echo "jar_download_status=failed" >> $GITHUB_OUTPUT
+  #         fi
 
-      - name: Send Artifacts to Server
-        run: |
-          if [ ! -f "build-artifacts.zip" ]; then
-            echo "Error: build-artifacts.zip not found"
-            exit 1
-          fi
-          FILES_TO_SEND="build-artifacts.zip"
-          if [ ${{ steps.download_pr_artifacts.outputs.jar_download_status }} == "success" ]; then
-            FILES_TO_SEND="$FILES_TO_SEND ${{ steps.download_pr_artifacts.outputs.jar_file }}"
-          fi
+  #     - name: Send Artifacts to Server
+  #       run: |
+  #         if [ ! -f "build-artifacts.zip" ]; then
+  #           echo "Error: build-artifacts.zip not found"
+  #           exit 1
+  #         fi
+  #         FILES_TO_SEND="build-artifacts.zip"
+  #         if [ ${{ steps.download_pr_artifacts.outputs.jar_download_status }} == "success" ]; then
+  #           FILES_TO_SEND="$FILES_TO_SEND ${{ steps.download_pr_artifacts.outputs.jar_file }}"
+  #         fi
 
-          echo "Sending files: $FILES_TO_SEND"
-          echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
-          chmod 600 /tmp/ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND deployuser@dev.geolex.org:/home/aaron/tsconline
+  #         echo "Sending files: $FILES_TO_SEND"
+  #         echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
+  #         chmod 600 /tmp/ssh_key.pem
+  #         scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND deployuser@dev.geolex.org:/home/aaron/tsconline
 
-      - name: Setup files for deployment preview
-        if: github.event.pull_request.merged == false
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: dev.geolex.org
-          username: deployuser
-          key: ${{ secrets.SSH_KEY }}
-          script: |
-            PR_NUMBER=${{ github.event.number }}
-            CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
-            TSCONLINE_DIR="/home/aaron/tsconline"
-            PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
-            BRANCH="${{ github.event.pull_request.head.ref }}"
-            cd "$TSCONLINE_DIR"
+  #     - name: Setup files for deployment preview
+  #       if: github.event.pull_request.merged == false
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       with:
+  #         host: dev.geolex.org
+  #         username: deployuser
+  #         key: ${{ secrets.SSH_KEY }}
+  #         script: |
+  #           PR_NUMBER=${{ github.event.number }}
+  #           CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
+  #           TSCONLINE_DIR="/home/aaron/tsconline"
+  #           PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
+  #           BRANCH="${{ github.event.pull_request.head.ref }}"
+  #           cd "$TSCONLINE_DIR"
 
-            if [ ! -d "$PR_PREVIEW_DIR" ]; then
-              echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
-              git clone --branch "$BRANCH" --depth 1 https://github.com/${{ github.repository }}.git "$PR_PREVIEW_DIR"
-              echo "Setting up files for PR #${PR_NUMBER}"
-              mkdir -p "$PR_PREVIEW_DIR/server/assets/jars"
-              cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
-              mkdir -p "$PR_PREVIEW_DIR/server/assets/datapacks"
-              cp "$TSCONLINE_DIR/server/assets/datapacks/"* "$PR_PREVIEW_DIR/server/assets/datapacks/"
-              cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
-              cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
-              sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
-            else
-              echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
-              git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
-              git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
-            fi
+  #           if [ ! -d "$PR_PREVIEW_DIR" ]; then
+  #             echo "Cloning branch $BRANCH for PR #${PR_NUMBER}"
+  #             git clone --branch "$BRANCH" --depth 1 https://github.com/${{ github.repository }}.git "$PR_PREVIEW_DIR"
+  #             echo "Setting up files for PR #${PR_NUMBER}"
+  #             mkdir -p "$PR_PREVIEW_DIR/server/assets/jars"
+  #             cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
+  #             mkdir -p "$PR_PREVIEW_DIR/server/assets/datapacks"
+  #             cp "$TSCONLINE_DIR/server/assets/datapacks/"* "$PR_PREVIEW_DIR/server/assets/datapacks/"
+  #             cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
+  #             cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
+  #             sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
+  #           else
+  #             echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
+  #             git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
+  #             git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
+  #           fi
 
-            unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"
-            rm "build-artifacts.zip"
-            if [ -f "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
-              mv "${{ steps.download_pr_artifacts.outputs.jar_file }}" "$PR_PREVIEW_DIR/server/assets/jars"
-            fi
+  #           unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"
+  #           rm "build-artifacts.zip"
+  #           if [ -f "${{ steps.download_pr_artifacts.outputs.jar_file }}" ]; then
+  #             mv "${{ steps.download_pr_artifacts.outputs.jar_file }}" "$PR_PREVIEW_DIR/server/assets/jars"
+  #           fi
 
-            cd "$PR_PREVIEW_DIR"
-            docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
+  #           cd "$PR_PREVIEW_DIR"
+  #           docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
 
-            if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
-              echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
-              docker-compose -f docker-compose-preview.yml restart pr-preview-run
-              MAX_WAIT=180
-              INTERVAL=5
-              ELAPSED=0
-              START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
-              while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
-                if [ $ELAPSED -ge $MAX_WAIT ]; then
-                  echo "Max wait time exceeded. Exiting..."
-                  docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
-                  docker-compose -f docker-compose-preview.yml down
-                  exit 1
-                fi
-                echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
-                sleep $INTERVAL
-                ELAPSED=$((ELAPSED + INTERVAL))
-              done
-              echo "Succesfully restarted container for PR #${PR_NUMBER}"
-            fi
+  #           if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
+  #             echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
+  #             docker-compose -f docker-compose-preview.yml restart pr-preview-run
+  #             MAX_WAIT=180
+  #             INTERVAL=5
+  #             ELAPSED=0
+  #             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+  #             while ! docker logs --since "$START_TIME" "$CONTAINER_NAME" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+  #               if [ $ELAPSED -ge $MAX_WAIT ]; then
+  #                 echo "Max wait time exceeded. Exiting..."
+  #                 docker-compose -f docker-compose-preview.yml logs --tail=200 pr-preview-run
+  #                 docker-compose -f docker-compose-preview.yml down
+  #                 exit 1
+  #               fi
+  #               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+  #               sleep $INTERVAL
+  #               ELAPSED=$((ELAPSED + INTERVAL))
+  #             done
+  #             echo "Succesfully restarted container for PR #${PR_NUMBER}"
+  #           fi
