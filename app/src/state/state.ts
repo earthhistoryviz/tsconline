@@ -189,7 +189,8 @@ export const state = observable<State>({
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"
-    }
+    },
+    chartHistoryCount: 0
   },
   admin: {
     displayedUsers: [],
