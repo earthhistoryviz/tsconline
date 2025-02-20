@@ -12,7 +12,9 @@ import {
   GroupedEventSearchInfo,
   EditableDatapackMetadata,
   CrossPlotTimeSettings,
-  ChartTabState
+  ChartTabState,
+  Marker,
+  CrossPlotBounds
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -46,11 +48,15 @@ export type State = {
   crossPlot: {
     lockX: boolean;
     lockY: boolean;
+    markers: Marker[];
+    markerMode: boolean;
+    showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
     chartX: ColumnInfo | undefined;
     chartY: ColumnInfo | undefined;
     state: ChartTabState;
+    crossPlotBounds?: CrossPlotBounds;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -154,11 +160,15 @@ export const state = observable<State>({
   crossPlot: {
     lockX: false,
     lockY: false,
+    markers: [],
+    markerMode: true,
+    showTooltips: true,
     chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartX: undefined,
     chartY: undefined,
-    state: cloneDeep(defaultChartTabState)
+    state: cloneDeep(defaultChartTabState),
+    crossPlotBounds: undefined
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
