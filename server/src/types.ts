@@ -174,6 +174,7 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.publicDatapacksDirectory !== "string") throw 'AssetConfig must have a "publicDatapacksDirectory" string';
   if (typeof o.modelConversionCacheDirectory !== "string")
     throw 'AssetConfig must have a "modelConversionCacheDirectory" string';
+  if (typeof o.translationFilepath !== "string") throw 'AssetConfig must have a "translationFilepath" string';
 }
 
 export function isAccountType(o: any): o is AccountType {

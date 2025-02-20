@@ -36,6 +36,7 @@ export type SharedUser = {
   accountType: string;
   workshopIds?: number[];
   uuid: string;
+  chartHistoryCount: number;
 };
 
 export type AdminSharedUser = {
@@ -790,6 +791,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
       if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
     }
   }
+  if (typeof o.chartHistoryCount !== "number") throwError("User", "chartHistoryCount", "number", o.chartHistoryCount);
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {
