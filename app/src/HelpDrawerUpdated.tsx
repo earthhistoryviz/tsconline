@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useState } from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { links } from "./help-menu-json"; // import the links
+import { links } from "./help-menu-json";
 
 interface LinkPath {
   Title: string;
@@ -10,62 +10,45 @@ interface LinkPath {
   Children: LinkPath[];
 }
 
-function NavItem({ link }: { link: LinkPath }) {
+function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: string }) {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  // Construct full path for navigation
+  const formattedPath = `${parentPath}/${link.Title.toLowerCase().replace(/\s+/g, '-')}`;
+
+  console.log("Generated Path:", formattedPath); // Debugging
 
   const handleClick = () => {
     if (link.Children.length > 0) {
       setOpen(!open);
+    } else {
+      navigate(`/help${formattedPath}`);
     }
   };
-
-  // Added URL path formatting helper
-  const formattedPath = link.Title.toLowerCase().replace(/\s+/g, '-');
 
   return (
     <>
       <ListItem disablePadding>
-        <ListItemButton
-          component={link.Children.length === 0 ? Link : "div"}
-          to={link.Children.length === 0 ? `/help/${formattedPath}` : "#"}
-          onClick={handleClick}
-          sx={{ flexDirection: "row-reverse", py: 0, my: 0 }}
-        >
+        <ListItemButton onClick={handleClick} sx={{ flexDirection: "row-reverse", py: 0, my: 0 }}>
           <ListItemText 
             primary={link.Title}
-            sx={{
-              '& .MuiListItemText-primary': {
-                fontSize: '0.875rem',  
-              },
-            }}
+            sx={{ '& .MuiListItemText-primary': { fontSize: '0.875rem' }}}
           />
-    
           {link.Children.length > 0 && (
-            <div
-              style={{
-                transform: !open ? "rotate(-90deg)" : "rotate(180deg)",
-                transition: 'transform 0.3s'
-              }}
-            >
+            <div style={{ transform: !open ? "rotate(-90deg)" : "rotate(180deg)", transition: 'transform 0.3s' }}>
               {open ? <ExpandLess /> : <ExpandMore />}
             </div>
           )}
         </ListItemButton>
       </ListItem>
 
+      {/* Render children if applicable */}
       {link.Children.length > 0 && (
         <Collapse in={open} timeout="auto" unmountOnExit>
-          <List 
-            component="div" 
-            disablePadding 
-            sx={{ 
-              pl: 1, 
-              borderLeft: "1px solid lightgray", 
-              marginLeft: "27.5px"
-            }}
-          >
+          <List component="div" disablePadding sx={{ pl: 1, borderLeft: "1px solid lightgray", marginLeft: "27.5px", '& .MuiListItem-root': {margin: 0}}}>
             {link.Children.map((child, index) => (
-              <NavItem key={index} link={child} />
+              <NavItem key={index} link={child} parentPath={formattedPath} />
             ))}
           </List>
         </Collapse>
@@ -76,7 +59,11 @@ function NavItem({ link }: { link: LinkPath }) {
 
 function NewHelpDrawer() {
   return (
-    <List disablePadding>
+    <List disablePadding sx={{
+      '& .MuiListItem-root': {
+        margin: 0
+      }
+    }}>
       {links.map((link, index) => (
         <NavItem key={index} link={link} />
       ))}

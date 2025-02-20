@@ -1,23 +1,54 @@
 export const links = [
     { 
-        "Title": "Parent-1",
+        "Title": "Presets",
         "Content": "Insert md file",
         "Children": []
     },
     { 
-        "Title": "Parent-2",
+        "Title": "Datapacks",
+        "Content": "Insert md file",
+        "Children": []
+    },
+    { 
+        "Title": "Chart",
         "Content": "Insert md file",
         "Children": [
             {
-                "Title": "Bob",
+                "Title": "What is a Chart",
                 "Content": "Insert md file",
-                "Children": []
+                "Children": [
+                    {
+                        "Title": "Column Variants",
+                        "Content": "Insert md file",
+                        "Children": []
+                    }
+                ]
             },
             {
-                "Title": "Frank",
+                "Title": "Saving a Chart",
                 "Content": "Insert md file",
                 "Children": []
             }
         ]
-    }
+    },
+    { 
+        "Title": "Settings",
+        "Content": "Insert md file",
+        "Children": []
+    },
+    { 
+        "Title": "Help",
+        "Content": "Insert md file",
+        "Children": []
+    },
+    { 
+        "Title": "Workshops",
+        "Content": "Insert md file",
+        "Children": []
+    },
+    { 
+        "Title": "Options",
+        "Content": "Insert md file",
+        "Children": []
+    },
 ]

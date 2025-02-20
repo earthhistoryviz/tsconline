@@ -217,7 +217,9 @@ export const Help = observer(function Help() {
       {/* The Actual breadcrumb */}
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
-          <NewHelpDrawer/>
+          <StyledScrollbar>
+            <NewHelpDrawer />
+          </StyledScrollbar>
         </Grid>
         <Grid item sx={background}>
           <NewBreadcrumbs />

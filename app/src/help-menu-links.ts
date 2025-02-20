@@ -5,7 +5,7 @@ export const links = [
     to: "/help/chart",
     label: "Chart",
     children: [
-      { to: "/help/chart/what_is_a_chart", label: "What is a chart?" },
+      { to: "/help/chart/what_is_a_chart", label: "What is a chart" },
       {
         to: "/help/chart/column_variants",
         label: "Column Variants",
