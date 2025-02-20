@@ -147,6 +147,16 @@ export default function NewBreadcrumbs() {
     return <PageNotFound />;
   }
 
+  // So that the pages does not reload when you click back on a breadcrumb
+  const handleBreadcrumbClick = (breadcrumbPath: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    // Update the URL without reloading the page
+    window.history.pushState({}, '', `/help${breadcrumbPath}`);
+    
+    // Dispatch a popstate event to simulate a route change
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  };
+
   return (
     <Stack spacing={2}>
       <Breadcrumbs separator="&gt;">
@@ -154,6 +164,7 @@ export default function NewBreadcrumbs() {
           <Link 
             key={index} 
             href={`/help${breadcrumb.to}`} 
+            onClick={(e) => handleBreadcrumbClick(breadcrumb.to, e)} 
             underline="always"
             color={index === breadcrumbs.length - 1 ? "text.primary" : "inherit"}
           >
