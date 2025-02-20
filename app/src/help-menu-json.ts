@@ -16,9 +16,40 @@ export const links = [
             {
                 "Title": "What is a Chart",
                 "Content": "Insert md file",
+                "Children": []
+            },
+            {
+                "Title": "Column Variants",
+                "Content": "Insert md file",
                 "Children": [
-                    {
-                        "Title": "Column Variants",
+                    { 
+                        "Title": "Block Columns",
+                        "Content": "Insert md file",
+                        "Children": []
+                    },
+                    { 
+                        "Title": "Point Columns",
+                        "Content": "Insert md file",
+                        "Children": []
+                    },
+                    { 
+                        "Title": "Event Columns",
+                        "Content": "Insert md file",
+                        "Children": [
+                            { 
+                                "Title": "Dual Column Comparison",
+                                "Content": "Insert md file",
+                                "Children": []
+                            },
+                            { 
+                                "Title": "Data Mining",
+                                "Content": "Insert md file",
+                                "Children": []
+                            },
+                        ]
+                    },
+                    { 
+                        "Title": "Freehand Columns",
                         "Content": "Insert md file",
                         "Children": []
                     }

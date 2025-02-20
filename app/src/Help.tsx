@@ -11,26 +11,6 @@ import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 
 //The Pages for the help
-import HelpDrawer from "./HelpDrawer";
-import { Routes, Route } from "react-router-dom";
-import HelpPresets from "./HelpMenuPages/Presets/HelpPresets";
-import HelpDatapacks from "./HelpMenuPages/Datapacks/HelpDatapacks";
-import HelpChart from "./HelpMenuPages/Chart/HelpChart";
-import HelpColumnVariants from "./HelpMenuPages/Chart/Column Variants/HelpColumnVariants";
-import HelpBreadcrumbs from "./HelpBreadcrumbs";
-import HelpSettings from "./HelpMenuPages/Settings/HelpSettings";
-import HelpHelp from "./HelpMenuPages/Help/HelpHelp";
-import HelpWorkshops from "./HelpMenuPages/Workshops/HelpWorkshops";
-import HelpOptions from "./HelpMenuPages/Options/HelpOptions";
-import HelpWhatIsAChart from "./HelpMenuPages/Chart/HelpWhatIsAChart";
-import HelpSavingAChart from "./HelpMenuPages/Chart/HelpSavingAChart";
-import HelpBlockColumn from "./HelpMenuPages/Chart/Column Variants/HelpBlockColumns";
-import HelpPointColumns from "./HelpMenuPages/Chart/Column Variants/HelpPointColumns";
-import HelpEventColumns from "./HelpMenuPages/Chart/Column Variants/Event Columns/HelpEventColumns";
-import HelpDualColumnComparison from "./HelpMenuPages/Chart/Column Variants/Event Columns/HelpDualColumnComparison";
-import HelpDataMining from "./HelpMenuPages/Chart/Column Variants/Event Columns/HelpDataMining";
-import HelpFreehandColumns from "./HelpMenuPages/Chart/Column Variants/HelpFreehandColumns";
-import { PageNotFound } from "./PageNotFound";
 import NewBreadcrumbs from "./HelpBreadcrumbsUpdated";
 import NewHelpDrawer from "./HelpDrawerUpdated";
 

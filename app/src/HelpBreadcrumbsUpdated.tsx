@@ -49,10 +49,8 @@ export default function NewBreadcrumbs() {
           throw new Error("Expected JSON response, but got something else.");
         }
 
-        // Try parsing the response as JSON
         const data = await response.json();
 
-        // Check if the data structure is as expected
         if (Array.isArray(data.links)) {
           setFetchedData(data.links);
         } else {
@@ -67,7 +65,6 @@ export default function NewBreadcrumbs() {
     loadData();
   }, []);
 
-  // This function traverses the link tree and collects all possible paths
   const getAllPaths = (links: LinkPath[], parentPath = ""): Record<string, LinkPath> => {
     const result: Record<string, LinkPath> = {};
     
@@ -157,7 +154,7 @@ export default function NewBreadcrumbs() {
           <Link 
             key={index} 
             href={`/help${breadcrumb.to}`} 
-            underline={index === breadcrumbs.length - 1 ? "none" : "hover"}
+            underline="always"
             color={index === breadcrumbs.length - 1 ? "text.primary" : "inherit"}
           >
             {breadcrumb.label}
