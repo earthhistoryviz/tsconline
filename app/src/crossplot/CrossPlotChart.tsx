@@ -10,11 +10,13 @@ import MarkerIcon from "../assets/icons/model=Default.svg";
 import { ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
 
+export const CROSSPLOT_MOBILE_WIDTH = 750;
+
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  const mobile = useMediaQuery("(max-width:750px)");
+  const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   return (
     <ChartContext.Provider
       value={{

@@ -161,7 +161,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         observer.disconnect();
       }
     };
-  }, [refList?.map((ref) => ref.current)]);
+  }, [refList?.length]);
   const { t } = useTranslation();
 
   const onZoom = (e: ReactZoomPanPinchRef) => {
