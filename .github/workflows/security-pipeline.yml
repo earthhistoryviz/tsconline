@@ -21,3 +21,5 @@ jobs:
 
       - name: Secret Scanning
         uses: trufflesecurity/trufflehog@main
+        with:
+          path: ${{ github.workspace }}
