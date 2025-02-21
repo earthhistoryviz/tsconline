@@ -103,6 +103,7 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
 }
 .colorPicker {
   min-width: 20px;
@@ -112,23 +113,11 @@
   align-self: center;
 }
 .topMarkerRow {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-rows: 1fr;
   gap: 12px;
 }
-.selectMarker {
-  width: 120px;
-}
-.ageMarker {
-  width: 100px;
-}
-.depthMarker {
-  width: 100px;
-}
-
 .mobileCrossPlotSideBar {
   display: grid;
   grid-template-columns: 1fr;

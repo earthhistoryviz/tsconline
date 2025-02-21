@@ -291,7 +291,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           <TextField
             select
             size="small"
-            className={styles.selectMarker}
             label="Type"
             value={marker.type}
             onChange={(e) => {
@@ -306,7 +305,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           </TextField>
           <TextField
             size="small"
-            className={styles.ageMarker}
             label="Age"
             value={age}
             type="number"
@@ -323,7 +321,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           />
           <TextField
             size="small"
-            className={styles.depthMarker}
             label="Depth"
             type="number"
             value={depth}
