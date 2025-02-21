@@ -18,22 +18,25 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
   checkFileTypeIsDatapackImage,
+  checkFileTypeIsPDF,
   decryptDatapack,
   deleteDatapackFileAndDecryptedCounterpart,
   doesDatapackFolderExistInAllUUIDDirectories
 } from "./user/user-handler.js";
-import { fetchUserDatapackDirectory, getUserUUIDDirectory } from "./user/fetch-user-files.js";
-import { loadDatapackIntoIndex } from "./load-packs.js";
 import {
-  CACHED_USER_DATAPACK_FILENAME,
-  DATAPACK_PROFILE_PICTURE_FILENAME,
-  DECRYPTED_DIRECTORY_NAME
-} from "./constants.js";
+  fetchUserDatapackDirectory,
+  getUsersDatapacksDirectoryFromUUIDDirectory,
+  getUnsafeCachedDatapackFilePath,
+  getUserUUIDDirectory,
+  getPDFFilesDirectoryFromDatapackDirectory
+} from "./user/fetch-user-files.js";
+import { loadDatapackIntoIndex } from "./load-packs.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -231,9 +234,11 @@ export async function replaceDatapackFile(uuid: string, sourceFilePath: string, 
  * THIS DOES NOT SETUP METADATA OR ADD TO ANY EXISTING INDEXES
  * TODO: WRITE TESTS
  * @param uuid
- * @param isPublic
  * @param sourceFilePath
  * @param metadata
+ * @param manual
+ * @param pdfFields
+ * @param datapackImageFilepath
  * @returns
  */
 export async function setupNewDatapackDirectoryInUUIDDirectory(
@@ -241,14 +246,16 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
   sourceFilePath: string,
   metadata: DatapackMetadata,
   manual: boolean, // if true, the source file will not be deleted and admin config will not be updated in memory or in the file system
-  datapackImageFilepath?: string
+  datapackImageFilepath?: string,
+  pdfFields?: { [fileName: string]: string }
 ) {
   if (await doesDatapackFolderExistInAllUUIDDirectories(uuid, metadata.title)) {
     throw new Error("Datapack already exists");
   }
   const datapackIndex: DatapackIndex = {};
   const directory = await getUserUUIDDirectory(uuid, metadata.isPublic);
-  const datapackFolder = path.join(directory, metadata.title);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, metadata.title);
   await mkdir(datapackFolder, { recursive: true });
   const sourceFileDestination = path.join(datapackFolder, metadata.storedFileName);
   const decryptDestination = path.join(datapackFolder, "decrypted");
@@ -274,8 +281,26 @@ export async function setupNewDatapackDirectoryInUUIDDirectory(
       await rm(datapackImageFilepath, { force: true });
     }
   }
+  if (pdfFields && Object.keys(pdfFields).length > 0) {
+    const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+    for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
+      if (!pdfFilePath || !pdfFileName) continue;
+      const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
+      if (
+        !datapackPDFFilepathDest.startsWith(filesDir) ||
+        !(await verifyNonExistentFilepath(datapackPDFFilepathDest))
+      ) {
+        throw new Error("Invalid datapack PDF filepath destination path");
+      }
+      await copyFile(pdfFilePath, datapackPDFFilepathDest);
+      // remove the original file if it was copied from a temp file
+      if (!manual && pdfFilePath !== datapackPDFFilepathDest) {
+        await rm(pdfFilePath, { force: true });
+      }
+    }
+  }
   await writeFile(
-    path.join(datapackFolder, CACHED_USER_DATAPACK_FILENAME),
+    getUnsafeCachedDatapackFilePath(datapackFolder),
     JSON.stringify(datapackIndex[metadata.title]!, null, 2)
   );
   // could change when we want to allow users make workshops
@@ -346,12 +371,16 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
 export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
   parts: AsyncIterableIterator<Multipart>
-): Promise<{ fields: { [key: string]: string }; file: MultipartFile } | OperationResult> {
+): Promise<
+  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields: { [fileName: string]: string } }
+  | OperationResult
+> {
   let file: MultipartFile | undefined;
   let filepath: string | undefined;
   let originalFileName: string | undefined;
   let storedFileName: string | undefined;
   let tempProfilePictureFilepath: string | undefined;
+  const pdfFields: Record<string, string> = {};
   let datapackImage: string | undefined;
   const fields: { [key: string]: string } = {};
   async function cleanupTempFiles() {
@@ -360,6 +389,9 @@ export async function processMultipartPartsForDatapackUpload(
     }
     if (filepath) {
       await rm(filepath, { force: true });
+    }
+    for (const pdfPath of Object.values(pdfFields)) {
+      await rm(pdfPath, { force: true });
     }
   }
   const user = await findUser({ uuid }).catch(() => []);
@@ -402,6 +434,18 @@ export async function processMultipartPartsForDatapackUpload(
           await cleanupTempFiles();
           return { code, message };
         }
+      } else if (part.fieldname == "pdfFiles[]") {
+        if (!checkFileTypeIsPDF(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack pdf file" };
+        }
+        const filePath = join(tmpdir(), part.filename);
+        pdfFields[part.filename] = filePath;
+        const { code, message } = await uploadFileToFileSystem(part, filePath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
       }
     } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
       fields[part.fieldname] = part.value;
@@ -421,6 +465,7 @@ export async function processMultipartPartsForDatapackUpload(
       priority: "0",
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
-    }
+    },
+    pdfFields
   };
 }

@@ -17,7 +17,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
-import { assetconfigs } from "../util.js";
+import { assetconfigs, extractMetadataFromDatapack } from "../util.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -68,6 +68,54 @@ export const getPrivateOfficialDatapacks = async function getPrivateOfficialData
     reply.status(500).send({ error: "Unknown error fetching user datapacks" });
     return;
   }
+};
+
+export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPrivateOfficialDatapacksMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "No session" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0] || !user[0].isAdmin) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+    const datapacks = await fetchAllPrivateOfficialDatapacks();
+    const metadata = datapacks.map((datapack) => {
+      return extractMetadataFromDatapack(datapack);
+    });
+    reply.send(metadata);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown error fetching private official datapacks" });
+    return;
+  }
+};
+
+/**
+ * Fetch a single official datapack, private or public
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminFetchSingleOfficialDatapack = async function fetchSinglePrivateOfficialDatapack(
+  request: FastifyRequest<{ Params: { datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle } = request.params;
+  const datapack = await fetchUserDatapack("official", datapackTitle).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  reply.send(datapack);
 };
 
 /**

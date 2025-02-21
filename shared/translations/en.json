@@ -220,11 +220,15 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
+            "create-datapack": "Create Datapack",
             "time": {
+                "no-unit-selected": "No unit selected",
                 "select-unit": "Please select a unit.",
-                "no-chart-units-available": "No datapacks selected",
+                "no-chart-units-available": "No units available",
                 "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
-                "select-datapack": "Please select a datapack."
+                "select-datapack": "Please select a datapack.",
+                "xAxis": "X Axis (Age-only)",
+                "yAxis": "Y Axis (Age/Depth)"
             }
         },
         "settingsTabs": {
@@ -268,7 +272,8 @@
                     "enable-legend": "Enable legend for the chart",
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
-                    "hide-block-labels": "Hide block labels based on priority"
+                    "hide-block-labels": "Hide block labels based on priority",
+                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
                 },
                 "settings-file": {
                     "load": "Load Settings",
@@ -400,6 +405,7 @@
                 "no": "No",
                 "avaliable": "Avaliable",
                 "upload": "Upload Datapack",
+                "pdf-upload": "PDF Upload",
                 "seeMore": "See More...",
                 "seeLess": "See Less...",
                 "upload-form": {

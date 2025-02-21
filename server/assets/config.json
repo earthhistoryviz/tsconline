@@ -1,5 +1,5 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.1_05February2025.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.1_18February2025.jar",
   "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
   "decryptionDirectory": "assets/decrypted",
   "datapacksDirectory": "assets/datapacks",
@@ -13,5 +13,6 @@
   "uploadDirectory": "assets/uploads",
   "publicDirectory": "public",
   "privateDatapacksDirectory": "assets/uploads/private",
-  "publicDatapacksDirectory": "assets/uploads/public"
+  "publicDatapacksDirectory": "assets/uploads/public",
+  "translationFilepath": "assets/translation.xlsx"
 }

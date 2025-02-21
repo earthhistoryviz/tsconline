@@ -15,6 +15,7 @@ import {
   throwError
 } from "@tsconline/shared";
 import { State } from "./state";
+import React from "react";
 
 export type DatapackFetchParams = {
   isPublic: boolean;
@@ -28,7 +29,8 @@ export type EditableDatapackMetadata = Omit<
 export type UploadDatapackMethodType = (
   file: File,
   metadata: DatapackMetadata,
-  datapackProfilePicture?: File
+  datapackProfilePicture?: File,
+  pdfFiles?: File[]
 ) => Promise<void>;
 
 export type User = SharedUser & {
@@ -58,6 +60,28 @@ export type DownloadPdfMessage = {
 export type DownloadPdfCompleteMessage = {
   status: "success" | "failure";
   value: Blob | undefined;
+};
+
+export type ChartTabState = {
+  chartTimelineEnabled: boolean;
+  downloadFilename: string;
+  downloadFiletype: "svg" | "pdf" | "png";
+  isSavingChart: boolean;
+  unsafeChartContent: string;
+  madeChart: boolean;
+  chartLoading: boolean;
+  chartContent: string;
+  chartZoomSettings: ChartZoomSettings;
+  chartHash: string;
+};
+export type ChartContextType = {
+  chartTabState: ChartTabState;
+  otherChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onChange: (boolean: boolean) => void;
+    value: boolean;
+  }[];
 };
 
 export type SetDatapackConfigMessage = {
@@ -202,6 +226,40 @@ export type EditableUserProperties = {
   isAdmin: boolean;
   pictureUrl: string | undefined;
 };
+
+export type Marker = {
+  id: string;
+  element: SVGRectElement;
+  age: number; // this allows for users to empty the age field
+  depth: number; // this allows for users to empty the depth field
+  x: number; // the actual pos with no rounding
+  y: number; // the actual pos with no rounding
+  color: string;
+  comment: string;
+  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
+  line: SVGLineElement;
+};
+
+export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
+
+export type CrossPlotBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  topLimitX: number;
+  topLimitY: number;
+  baseLimitX: number;
+  baseLimitY: number;
+  scaleX: number;
+  scaleY: number;
+  topAgeX: number;
+  topAgeY: number;
+};
+
+export function isMarkerType(value: string): value is Marker["type"] {
+  return markerTypes.includes(value);
+}
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
   if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");

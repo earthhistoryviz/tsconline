@@ -10,7 +10,22 @@ import {
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
+import { State } from "./state";
 
+export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
+  const {
+    publicOfficialDatapacksLoading,
+    privateOfficialDatapacksLoading,
+    publicUserDatapacksLoading,
+    privateUserDatapacksLoading
+  } = skeletonStates;
+  return (
+    publicOfficialDatapacksLoading ||
+    privateOfficialDatapacksLoading ||
+    publicUserDatapacksLoading ||
+    privateUserDatapacksLoading
+  );
+}
 export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {
   return (
     isOwnedByUser(datapack, user.uuid) ||
