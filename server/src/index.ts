@@ -22,7 +22,8 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import {fetchPublicUserDatapack, fetchUserDatapacksMetadata, uploadTreatiseDatapack, fetchTreatiseDatapack } from "./routes/user-routes.js";
+// import {fetchPublicUserDatapack, fetchUserDatapacksMetadata, uploadTreatiseDatapack, fetchTreatiseDatapack } from "./routes/user-routes.js";
+import {fetchPublicUserDatapack, fetchUserDatapacksMetadata, fetchTreatiseDatapack } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
@@ -311,7 +312,7 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
-server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
+// server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
