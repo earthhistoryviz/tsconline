@@ -9,7 +9,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     environment:
       name: development
       url: ${{ vars.WEBSITE_URL }}
