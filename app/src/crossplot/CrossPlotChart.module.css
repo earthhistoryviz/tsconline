@@ -1,12 +1,13 @@
 .container {
   display: grid;
   grid-template-columns: auto 1fr;
+  grid-template-areas: "sidebar chart";
   grid-template-rows: calc(100vh - var(--nav-bar-height));
 }
 .containerMobile {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas: "chart" "sidebar";
   height: calc(100vh - var(--nav-bar-height));
 }

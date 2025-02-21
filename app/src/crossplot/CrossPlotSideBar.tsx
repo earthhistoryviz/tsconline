@@ -114,7 +114,9 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
-          <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+          <TSCButton
+            className={styles.mobileGenerate}
+            onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Generate Cross Plot
           </TSCButton>
           {tabs[tabIndex].component}
