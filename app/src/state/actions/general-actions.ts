@@ -254,7 +254,7 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
   }
 });
 
-export const fetchTreatiseDatapacks = action("fetchTreatiseDatapacks", async (datapackHash: string) => {
+export const fetchTreatiseDatapack = action("fetchTreatiseDatapack", async (datapackHash: string) => {
   try {
     const response = await fetcher(`/treatise/datapacks/${datapackHash}`, {
       method: "GET"

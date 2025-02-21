@@ -295,7 +295,7 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
   }
 };
 
-export const fetchTreatiseDatapack = async function fetchTreatiseDatapacks(
+export const fetchTreatiseDatapack = async function fetchTreatiseDatapack(
   request: FastifyRequest<{ Params: { datapack: string } }>,
   reply: FastifyReply
 ) {
@@ -474,7 +474,7 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
     }
     reply.status(200).send({ hash: datapackMetadata.title });
   } catch (error) {
-    console.error("Error during /externalChart route:", error);
+    console.error("Error during /external-chart route:", error);
     reply.status(500).send({ error: "Internal server error" });
   }
 };

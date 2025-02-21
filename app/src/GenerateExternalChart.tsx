@@ -50,7 +50,7 @@ export function GenerateExternalChart() {
         setLoading(true);
         try {
           // Call API to load the external datapack
-          await actions.fetchTreatiseDatapacks(datapackHash);
+          await actions.fetchTreatiseDatapack(datapackHash);
           // wait 1 seconds for datapack to load
           await new Promise((resolve) => setTimeout(resolve, 1000));
           const fetchedDatapack = getCurrentUserDatapacks("treatise", state.datapacks).find(
@@ -60,14 +60,17 @@ export function GenerateExternalChart() {
             (dp) => dp.title === "TimeScale Creator Internal Datapack"
           );
 
-          if (!internalDatapack) {
-            console.log("Error: Unable to fetch datapack");
-            return;
-          }
           if (!fetchedDatapack || !internalDatapack) {
+            if (!fetchedDatapack) {
+              console.error("Error: Treatise Datapack not found. DatapackHash:", datapackHash);
+            }
+            if (!internalDatapack) {
+              console.error("Error: Internal Datapack not found.");
+            }
             actions.pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
             return;
           }
+          
           const dataReqTreatise: DatapackConfigForChartRequest = {
             storedFileName: fetchedDatapack.storedFileName,
             title: fetchedDatapack.title,
