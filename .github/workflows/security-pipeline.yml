@@ -16,9 +16,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-
-      - name: TruffleHog OSS
-        id: trufflehog
-        uses: trufflesecurity/trufflehog@main
         with:
-          extra_args: --results=verified,unknown
+          fetch-depth: 0
+
+      - name: Secret Scanning
+        uses: trufflesecurity/trufflehog@main
