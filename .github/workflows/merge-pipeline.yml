@@ -8,7 +8,7 @@ on:
 
 jobs:
   check-files:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
         with:
@@ -67,7 +67,7 @@ jobs:
         run: exit 1
 
   code-quality:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
 
@@ -115,7 +115,7 @@ jobs:
         run: exit 1
 
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -345,7 +345,7 @@ jobs:
             server/dist
 
   wait-for-checks:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       checks: read
     steps:
@@ -357,7 +357,7 @@ jobs:
   setup-preview:
     needs: wait-for-checks
     if: github.event.pull_request.merged == false && github.event.pull_request.user.login != 'dependabot[bot]'
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout CODEOWNERS file from main branch
         uses: Bhacaz/checkout-files@v2

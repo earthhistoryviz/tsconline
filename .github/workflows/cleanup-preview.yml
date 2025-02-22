@@ -6,7 +6,7 @@ on:
 
 jobs:
   clean-up-deployment:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Set up SSH key
         uses: webfactory/ssh-agent@v0.5.3
