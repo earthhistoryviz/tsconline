@@ -11,7 +11,7 @@ on:
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     permissions:
       contents: read
       security-events: write
@@ -24,24 +24,27 @@ jobs:
           - language: javascript-typescript
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: "20"
-      - name: Install jq
-        run: sudo apt-get install jq
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           config-file: ./.codeql-config.yml
           languages: ${{ matrix.language }}
+
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
           category: "/language:${{ matrix.language }}"
+
       - name: Query CodeQL Alerts
         id: codeql-alerts
         run: |
@@ -76,6 +79,7 @@ jobs:
           else
             echo "No CodeQL alerts found."
           fi
+
       - name: Comment if Alerts Found
         if: steps.codeql-alerts.outputs.alerts_found == 'true'
         uses: actions/github-script@v5

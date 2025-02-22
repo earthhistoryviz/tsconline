@@ -7,7 +7,7 @@ on:
 jobs:
   deploy-preview:
     if: ${{ github.event.issue.pull_request && github.event.comment.body == '/deploy' }}
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout CODEOWNERS file from main branch
         uses: Bhacaz/checkout-files@v2
