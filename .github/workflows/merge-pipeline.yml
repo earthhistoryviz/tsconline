@@ -71,8 +71,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install yarn
+        run: npm install -g yarn
+
       - name: Install Dependencies
-        run: corepack yarn install --immutable
+        run: yarn install --immutable
 
       - name: Run ESLint
         id: eslint
@@ -123,9 +131,12 @@ jobs:
           ref: ${{ github.head_ref }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: "20"
+
+      - name: Install yarn
+        run: npm install -g yarn
 
       - name: Install Dependencies
         run: yarn install

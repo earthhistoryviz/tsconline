@@ -77,6 +77,10 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install yarn
+        if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
+        run: npm install -g yarn
+
       - name: Install and build project
         if: steps.download_pr_artifacts.outputs.build_download_status == 'failed'
         run: |
