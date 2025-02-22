@@ -26,6 +26,7 @@ import { TSCStepper } from "./components/TSCStepper";
 export const Home = observer(function Home() {
   const { actions } = useContext(context);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
@@ -43,7 +44,7 @@ export const Home = observer(function Home() {
   };
   return (
     <div className="whole_page">
-      <Box sx={{ backgroundColor: "baseTheme.palette.augmentColor.color.main" }}>
+      <Box sx={{ backgroundColor: "secondaryBackgroud.main" }}>
         <Box className="sub-header-section-landing-page">
           <Box className="sub-header-section-landing-page-text">
             <Typography className="landing-page-title" fontWeight="600">
@@ -59,7 +60,7 @@ export const Home = observer(function Home() {
             className="sub-header-section-landing-page-image"
             src={devSafeUrl("/public/website-images/landing-page.png")}
           />
-          <UpcomingWorkshops />
+          {!isMobile&& <UpcomingWorkshops />}
           <Box className="get-started-landing-page">
             <Box
               className="get-started-button-container"
@@ -596,7 +597,16 @@ const UpcomingWorkshops = observer(
         ),
         dataPacks: t("5"),
         image: devSafeUrl("/datapack-images//")
-      }
+      },
+    //   {
+    //   title: t("Switzerland Workshop"),
+    //   date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+    //   description: t(
+    //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+    //   ),
+    //   dataPacks: t("5"),
+    //   image: devSafeUrl("/datapack-images//")
+    // }
     ];
     return (
       <Box

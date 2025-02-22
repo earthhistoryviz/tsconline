@@ -144,19 +144,20 @@
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
-  grid-template-columns: 0.8fr 1.2fr 0.4fr;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
-  padding-left: 5vw;
-  /* padding: 8%; */
-  padding-bottom: 0;
+  padding-top: 0;
   position: relative;
 }
 
 .sub-header-section-landing-page {
+  grid-template-columns: 0.8fr 1.2fr 0.4fr;
   gap: 30px;
+  padding-right: 3%;
+  padding-left: 3%;
+  padding-bottom: 20%;
   height: 93vh;
 }
 
@@ -300,13 +301,13 @@
   position: absolute;
   left: 50%;
   padding: 2%;
-  margin-bottom: 10%;
   transform: translateX(-50%);
   display: flex;
   justify-content: center;
   align-items: center;
   cursor: pointer;
   flex-direction: column;
+  top: 82%;
 }
 
 .home-landing-page-carousel-title {
@@ -528,17 +529,16 @@
   width: 18vw;
   padding-left: 15px;
   padding-right: 15px;
-  margin-right: 20px;
   overflow-y: visible;
   max-height: 93vh;
 }
 
 /* upcoming workshop */
 .upcoming-workshop-image {
-  /* grid-area: "img"; */
+  grid-area: "img";
   border-radius: 20px;
-  width: 16vw;
-  height: 12vh;
+  width: 100%;
+  height: 100%;
   margin-top: 10px;
 }
 
@@ -547,13 +547,14 @@
   font-size: 1.5em;
   white-space: nowrap;
   margin-bottom: 10px;
-  margin-top: 30px;
+  margin-top: 20px;
   line-height: 25.74px;
   font-weight: 600;
   letter-spacing: 1%;
   align-content: center;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-align: center;
 }
 
 .upcoming-workshop-subtitle {
@@ -794,6 +795,17 @@
 }
 /* end of cards css */
 
+@media screen and (max-height: 600px) {
+  .sub-header-section-landing-page {
+    padding-bottom: 0%;
+    height:100%;
+  }
+
+  .upcoming-workshops-section{
+    min-height: 100%;
+  }
+}
+
 /* sub-section-landing-page CSS */
 @media screen and (max-width: 1950px) {
   .landing-page-title {
@@ -886,13 +898,32 @@
     height: 670px;
   }
 
-  .home-landing-page-carousel {
-    display: grid;
-    grid-template-columns: 1fr;
-    grid-template-rows: 1fr 1.2fr;
-    grid-template-areas: "img" "text";
-    padding: 0;
-    gap: 0;
+  .landing-page-title {
+    font-size: 2.25rem;
+    text-align:center;
+    font-weight:700;
+  }
+
+  .sub-header-section-landing-page-description{
+    font-size:1.5rem;
+    margin-top: 0%;
+  }
+
+  .sub-header-section-landing-page{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 8%;
+    padding-top: 0px;
+    margin-bottom: 12%;
+  }
+
+  .get-started-button-container{
+    top: 95%;
+  }
+
+  .sub-header-section-landing-page-text{
+    padding-top: 0vh;
   }
 
   .home-landing-page-carousel-text {
@@ -912,11 +943,26 @@
   }
 
   .landing-page-title {
-    font-size: 1.25rem;
+    font-size: 2rem;
   }
 
-  .sub-header-section-landing-page {
-    gap: 10px;
+  .sub-header-section-landing-page-description{
+    font-size:1rem;
+    margin-top: 0%;
+  }
+
+  .sub-header-section-landing-page{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 8%;
+    padding-top: 0px;
+    padding-bottom: 8%;
+  }
+
+  .get-started-button-container{
+    top: 93%;
+    display:flex;
   }
 }
 /* end sub-section-landing-page CSS */

@@ -1,634 +1,639 @@
 {
-  "translation": {
-    "landing-page": {
-      "get-started": "Get Started",
-      "welcome": "Welcome to TimeScale Creator!",
-      "welcome-desc": "TimeScale Creator is an online tool for exploring the geologist time scale, with access to over 20,000 global events, ideal for researchers and Earth history enthusiasts.",
-      "carousel": {
-        "customize-chart": {
-          "title": "Customize Your Chart",
-          "customize-chart-appearance": {
-            "title": "Customize Chart Appearance",
-            "description": "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
-          },
-          "save-custom-settings": {
-            "title": "Save Custom Settings",
-            "description": "Save your custom chart settings for future use and easy access to your preferred configurations."
-          },
-          "share-your-charts": {
-            "title": "Share Your Charts",
-            "description": "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
-          }
+    "translation": {
+        "landing-page": {
+            "get-started": "Get Started",
+            "welcome": "Welcome to TimeScale Creator!",
+            "welcome-desc": "TimeScale Creator is an online tool for exploring the geologic time scale, with access to over 20,000 global events, ideal for researchers and Earth history enthusiasts.",
+            "carousel": {
+                "customize-chart": {
+                    "title": "Customize Your Chart",
+                    "customize-chart-appearance": {
+                        "title": "Customize Chart Appearance",
+                        "description": "Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences."
+                    },
+                    "save-custom-settings": {
+                        "title": "Save Custom Settings",
+                        "description": "Save your custom chart settings for future use and easy access to your preferred configurations."
+                    },
+                    "share-your-charts": {
+                        "title": "Share Your Charts",
+                        "description": "Easily share your custom charts with others via a simple link or by downloading the chart as an image."
+                    }
+                },
+                "interactive-map-points": {
+                    "title": "Interactive Map Points",
+                    "toggle-columns": {
+                        "title": "Toggle Columns Directly on the Map",
+                        "description": "Select specific areas to focus on by enabling or disabling chart columns directly on the map."
+                    },
+                    "age-slider": {
+                        "title": "Dynamic Age Slider",
+                        "description": "Explore how rock formations and geologic events change over time with a simple slider."
+                    },
+                    "link-charts": {
+                        "title": "Link Charts to Locations",
+                        "description": "Map points connect chart columns to real-world locations for intuitive visualization."
+                    }
+                },
+                "search-columns": {
+                    "title": "Search Within Columns",
+                    "find-columns": {
+                        "title": "Find Columns/Events Quickly",
+                        "description": "Search for specific columns or events within the chart to quickly locate and focus on relevant information."
+                    },
+                    "age-range": {
+                        "title": "Extend/Center Age Range",
+                        "description": "Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
+                    },
+                    "notes": {
+                        "title": "View Specific Notes",
+                        "description": "Access detailed notes and information about specific events directly from the chart."
+                    }
+                },
+                "upload": {
+                    "title": "Upload Your Own!",
+                    "custom": {
+                        "title": "Create Custom Datapacks",
+                        "description": "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
+                    },
+                    "showcase": {
+                        "title": "Showcase Your Research",
+                        "description": "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
+                    },
+                    "collaborate": {
+                        "title": "Collaborate with Others",
+                        "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
+                    }
+                }
+            },
+            "cards": {
+                "datapack": {
+                    "title": "What Are Datapacks?",
+                    "description": "Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events."
+                },
+                "charts": {
+                    "title": "What Are Charts?",
+                    "description": "Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings."
+                },
+                "help": {
+                    "title": "Need Help?",
+                    "description": "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more."
+                },
+                "more": "Explore More"
+            },
+            "chart-steps": {
+                "title": "Chart Creation Steps",
+                "select-datapack": {
+                    "title": "Select any Datapack",
+                    "description": "Choose from a variety of official datapacks that contain information on global and regional geologic events."
+                },
+                "select-age-range": {
+                    "title": "Select An Age Range",
+                    "description": "Select the desired age range for your chart to focus on specific geologic events and formations."
+                },
+                "select-columns": {
+                    "title": "Select/Edit Columns",
+                    "description": "Choose the columns you want to display on your chart and customize their appearance, colors"
+                },
+                "generate": {
+                    "title": "Generate Your Chart",
+                    "description": "Generate your chart based on the selected datapack and customized settings."
+                }
+            },
+            "upcoming-workshop": {
+                "workshop2": {
+                    "title": "Switzerland Workshop",
+                    "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+                    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+                    "participants": "21",
+                    "datapacks": "5"
+                },
+                "workshop3": {
+                    "title": "Switzerland Workshop",
+                    "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+                    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+                    "participants": "21",
+                    "datapacks": "5"
+                }
+            }
         },
-        "interactive-map-points": {
-          "title": "Interactive Map Points",
-          "toggle-columns": {
-            "title": "Toggle Columns Directly on the Map",
-            "description": "Select specific areas to focus on by enabling or disabling chart columns directly on the map."
-          },
-          "age-slider": {
-            "title": "Dynamic Age Slider",
-            "description": "Explore how rock formations and geologic events change over time with a simple slider."
-          },
-          "link-charts": {
-            "title": "Link Charts to Locations",
-            "description": "Map points connect chart columns to real-world locations for intuitive visualization."
-          }
+        "languages": "LANGUAGES",
+        "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
+        "login": {
+            "signin": "Sign In",
+            "forgot-password": "Forgot password?",
+            "signup": "Don't have an account? Sign Up",
+            "username": "Username",
+            "password": "Password",
+            "tooltip": "Account Settings",
+            "profile": "Profile",
+            "add": "Add another account",
+            "logout": "Logout",
+            "admin": "Admin",
+            "profile-info": "Profile Information",
+            "welcome": "Welcome",
+            "email": "Email",
+            "settings": "Settings",
+            "dark-mode": "Dark Mode",
+            "delete": "Delete Profile",
+            "save": "Save",
+            "cancel": "Cancel",
+            "change": "Change",
+            "current-password": "Current Password",
+            "new-password": "New Password",
+            "new-email": "New Email",
+            "new-username": "New Username",
+            "reset-password": "Enter your email to receive a password reset link.",
+            "enter-new-password": "Please enter your new password.",
+            "recovery": "Password Recovery",
+            "send": "Send"
         },
-        "search-columns": {
-          "title": "Search Within Columns",
-          "find-columns": {
-            "title": "Find Columns/Events Quickly",
-            "description": "Search for specific columns or events within the chart to quickly locate and focus on relevant information."
-          },
-          "age-range": {
-            "title": "Extend/Center Age Range",
-            "description": "Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart."
-          },
-          "notes": {
-            "title": "View Specific Notes",
-            "description": "Access detailed notes and information about specific events directly from the chart."
-          }
+        "signup": {
+            "title": "Sign Up",
+            "email": "Email Address",
+            "username": "Username",
+            "password": "Password",
+            "signin": "Already have an account? Sign in",
+            "email-sent": "Email sent. Please check your email to verify your account."
         },
-        "upload": {
-          "title": "Upload Your Own!",
-          "custom": {
-            "title": "Create Custom Datapacks",
-            "description": "Upload your own data to create custom datapacks and generate charts based on your unique research and findings."
-          },
-          "showcase": {
-            "title": "Showcase Your Research",
-            "description": "Publish your custom datapacks to share your research, findings, and insights with the global scientific community."
-          },
-          "collaborate": {
-            "title": "Collaborate with Others",
-            "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
-          }
-        }
-      },
-      "cards": {
-        "datapack": {
-          "title": "What Are Datapacks?",
-          "description": "Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events."
+        "title": {
+            "about": "About",
+            "main": "Time Scale Creator Online",
+            "settings": "Settings"
         },
-        "charts": {
-          "title": "What Are Charts?",
-          "description": "Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings."
+        "navBar": {
+            "home": "Home",
+            "presets": "Presets",
+            "chart": "Chart",
+            "datapacks": "Datapacks",
+            "settings": "Settings",
+            "help": "Help",
+            "about": "About",
+            "workshops": "Workshops"
+        },
+        "workshops": {
+            "login-first": "You are not logged in. Please sign in to view your workshops.",
+            "header": "Your Registered Workshops",
+            "description-header": "Click a workshop to see more information!",
+            "titles": {
+                "all": "All Workshops",
+                "upcoming": "Upcoming Workshops",
+                "active": "Active Workshops",
+                "past": "Past Workshops"
+            },
+            "messages": {
+                "upcoming": "No upcoming workshops at the moment.",
+                "active": "No active workshops at the moment.",
+                "past": "No past workshops at the moment."
+            },
+            "dates": {
+                "start": "Start Date: ",
+                "end": "End Date: "
+            },
+            "details-page": {
+                "datapacks": "Datapacks",
+                "files": "Files",
+                "download-button": "Download Files",
+                "description": "Description",
+                "messages": {
+                    "no-datapacks": "No datapacks available",
+                    "no-files": "No files available"
+                }
+            },
+            "calendar": {
+                "switchLabel": "Toggle calendar",
+                "month": "Month",
+                "week": "Week",
+                "days": {
+                    "sunday": "Sun",
+                    "monday": "Mon",
+                    "tuesday": "Tue",
+                    "wednesday": "Wed",
+                    "thursday": "Thu",
+                    "friday": "Fri",
+                    "saturday": "Sat"
+                },
+                "months": {
+                    "1": "January",
+                    "2": "February",
+                    "3": "March",
+                    "4": "April",
+                    "5": "May",
+                    "6": "June",
+                    "7": "July",
+                    "8": "August",
+                    "9": "September",
+                    "10": "October",
+                    "11": "November",
+                    "12": "December"
+                }
+            }
+        },
+        "loading": {
+            "loading-chart": "Loading Chart...",
+            "loading-datapacks": "Loading Datapacks",
+            "time": "this could take more than a minute",
+            "fetching-datapacks": "Fetching Datapacks"
+        },
+        "crossPlot": {
+            "time": {
+                "select-unit": "Please select a unit.",
+                "no-chart-units-available": "No units available",
+                "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
+                "select-datapack": "Please select a datapack.",
+                "no-unit-selected": "No unit selected",
+                "xAxis": "X Axis (Age-only)",
+                "yAxis": "Y Axis (Age/Depth)"
+            },
+            "create-datapack": "Create Datapack"
+        },
+        "settingsTabs": {
+            "Time": "Time",
+            "Preferences": "Preferences",
+            "Column": "Column",
+            "Search": "Search",
+            "Font": "Font",
+            "Map Points": "Map Points",
+            "Datapacks": "Datapacks",
+            "General": "General",
+            "Data Mining": "Data Mining",
+            "Curve Drawing": "Curve Drawing",
+            "About": "About",
+            "View Data": "View Data",
+            "Discussion": "Discussion",
+            "Warnings": "Warnings",
+            "Load/Save": "Load/Save",
+            "xAxis": "X Axis (Age-only)",
+            "yAxis": "Y Axis (Age/Depth)"
+        },
+        "settings": {
+            "time": {
+                "interval": {
+                    "top": "Top of Interval",
+                    "base": "Base of Interval",
+                    "top-name": "Top Age/Stage Name",
+                    "base-name": "Base Age/Stage Name",
+                    "not-avaliable": "Not Available for this Unit",
+                    "vertical-scale": "Vertical Scale (cm per 1 ",
+                    "helper-text": "Base age should be older than top age",
+                    "vertical-scale-header": "Vertical Scale"
+                }
+            },
+            "preferences": {
+                "checkboxs": {
+                    "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
+                    "mouse-over-info": "Add MouseOver info (popups)",
+                    "global-priority": "Enabled Global Priority Filtering for block columns",
+                    "stage-background": "Enabled stage background for event columns",
+                    "enable-legend": "Enable legend for the chart",
+                    "lithology-auto-indent": "Do not auto-indent lithology patterns",
+                    "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
+                    "hide-block-labels": "Hide block labels based on priority",
+                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
+                },
+                "settings-file": {
+                    "load": "Load Settings",
+                    "save": "Save Settings",
+                    "load-dialog": {
+                        "message": "This will overwrite any changes you've made!",
+                        "cancel": "Cancel",
+                        "load": "Load"
+                    },
+                    "save-dialog": {
+                        "message": "Please enter the filename below.",
+                        "cancel": "Cancel",
+                        "save": "Save"
+                    }
+                }
+            },
+            "column": {
+                "tooltip": {
+                    "not-in-range": "Data not included in time range",
+                    "auto-scale": "Auto Scale",
+                    "flip": "Flip Range"
+                },
+                "titles": {
+                    "column-menu-title": "Column Customization",
+                    "data-mining-title": "Data Mining Settings",
+                    "font-option-title": "Font Options for \"{{name}}\""
+                },
+                "menu": {
+                    "shift-row": "Shift Row Positions",
+                    "edit-name": "Edit Title",
+                    "background-color": "Background Color",
+                    "enable-title": "Enable Title",
+                    "show-age-label": "Show Age Label",
+                    "info-box": "Information and References",
+                    "add-blank-column": "Add Blank Column",
+                    "add-age-column": "Add Age Column",
+                    "width": "Width",
+                    "orientation": {
+                        "title": "Label Orientation",
+                        "horizontal": "Horizontal",
+                        "vertical": "Vertical"
+                    },
+                    "show-uncertainty": "Show Uncertainty Labels",
+                    "events": "Events",
+                    "ranges": "Ranges",
+                    "first-occurrence": "First Occurrence",
+                    "last-occurrence": "Last Occurrence",
+                    "alphabetical": "Alphabetical",
+                    "ruler": {
+                        "title": "Age Ruler Justification",
+                        "left": "Left",
+                        "right": "Right"
+                    }
+                },
+                "font-menu": {
+                    "change": "Change Font",
+                    "additional": "Additional fonts for child columns"
+                },
+                "datamining-menu": {
+                    "title": "Data Mining Settings",
+                    "window-size": "Window Size",
+                    "step-size": "Step Size",
+                    "options": {
+                        "frequency": "Frequency",
+                        "max-val": "Maximum Value",
+                        "min-val": "Minimum Value",
+                        "avg-val": "Average Value",
+                        "roc": "Rate of Change",
+                        "freq-of-LAD": "Frequency of LAD",
+                        "freq-of-FAD": "Frequency of FAD",
+                        "combined-events": "Combined Events"
+                    },
+                    "options-title": {
+                        "event": "Event Type",
+                        "chron": "Chron Type",
+                        "plot": "Data Type to Plot"
+                    }
+                },
+                "curve-drawing-menu": {
+                    "title": "Point Settings",
+                    "rod": "Range of Data",
+                    "lower-range": "Lower Range",
+                    "upper-range": "Upper Range",
+                    "scale-start": "Scale Start",
+                    "scale-step": "Scale Step",
+                    "show-scale": "Show Scale",
+                    "draw-points": "Draw Points",
+                    "point-shape": "Point Shape",
+                    "line": "Line",
+                    "fill": "Fill",
+                    "background-gradient": "Background Gradient",
+                    "curve-gradient": "Curve Gradient",
+                    "start": "Start",
+                    "end": "End"
+                }
+            },
+            "search": {
+                "search-bar": "Search",
+                "found-result": "Found {{count}} Results",
+                "current-time-settings": "Current Time Settings(Top / Base)",
+                "header": {
+                    "status": "Column On?",
+                    "center": "Center",
+                    "extend": "Extend",
+                    "column": "Column",
+                    "age": "Age",
+                    "qualifier": "Type",
+                    "notes": "Notes"
+                }
+            },
+            "font": {
+                "notes1": "These are the default systemwide fonts.",
+                "notes2": "Changing one here will affect the entire chart.",
+                "notes3": "NOTE: These fonts can be changed on a column by column basis by using the Font button for each column"
+            },
+            "map-points": {
+                "not-avaliable": "No Map Points available for this datapack"
+            },
+            "datapacks": {
+                "see-info-guidance": "Click a datapack to see more information!",
+                "add-datapack-guidance": "Add a datapack by clicking the checkbox",
+                "title": {
+                    "private-official": "Private Official Datapacks",
+                    "public-official": "Official Datapacks",
+                    "contributed": "User Contributed Datapacks",
+                    "workshop": "Workshop Datapacks",
+                    "your": "Your Datapacks"
+                },
+                "no": "No",
+                "avaliable": "Avaliable",
+                "upload": "Upload Datapack",
+                "seeMore": "See More...",
+                "seeLess": "See Less...",
+                "upload-form": {
+                    "title": "Upload Your Own Datapack",
+                    "no-file": "No file selected",
+                    "name": "Datapack Name",
+                    "name-placeholder": "Enter a name for your datapack.",
+                    "author": "Authored By",
+                    "author-placeholder": "Credited to...",
+                    "description": "Datapack Description",
+                    "description-placeholder": "Enter a description for your datapack.",
+                    "tags": "Tags",
+                    "make-public": "Make Datapack Publicly Accessible",
+                    "button": {
+                        "add-ref": "Add Reference",
+                        "more": "More Options",
+                        "finish": "Finish & Upload",
+                        "startover": "Start Over"
+                    },
+                    "reference": "Reference",
+                    "contact": "Contact",
+                    "contact-placeholder": "Enter your contact information",
+                    "contact-helper-text": "(OPTIONAL) If you would like others to contact you about this datapack",
+                    "notes": "Notes",
+                    "notes-placeholder": "Enter notes for the datapack here",
+                    "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
+                },
+                "pdf-upload": "PDF Upload"
+            }
+        },
+        "chart": {
+            "no-chart-yet": "You have not made a chart yet",
+            "save": "Save Chart"
+        },
+        "dialogs": {
+            "confirm-datapack-change": {
+                "title": "Confirm Datapack Selection Change",
+                "message": "You have unsaved changes! Do you want to save your changes?",
+                "yes": "Save",
+                "no": "Discard"
+            },
+            "default-age": {
+                "title": "Use default age range?"
+            },
+            "confirm-changes": {
+                "message": "Are you sure you want to discard your changes?"
+            }
         },
         "help": {
-          "title": "Need Help?",
-          "description": "Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more."
+            "qsg": {
+                "title": "Quick Start Quide",
+                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.",
+                "button": "Start QSG"
+            },
+            "tour": {
+                "title": "Tour",
+                "content": {
+                    "datapacks": "In the datapacks tour you will explore the Datapacks page in depth. Click the button to start your tour!",
+                    "settings": "In the settings tour you will explore the Settings page in depth. Click the button to start your tour!"
+                },
+                "button": {
+                    "datapacks": "Start Datapacks Tour",
+                    "settings": "Start Settings Tour"
+                }
+            },
+            "license": "Software License",
+            "file-format-info": {
+                "title": "File Format Info",
+                "link": "View File Format Info"
+            }
         },
-        "more": "Explore More"
-      },
-      "chart-steps": {
-        "title": "Chart Creation Steps",
-        "select-datapack": {
-          "title": "Select any Datapack",
-          "description": "Choose from a variety of official datapacks that contain information on global and regional geologic events."
-        },
-        "select-age-range": {
-          "title": "Select An Age Range",
-          "description": "Select the desired age range for your chart to focus on specific geologic events and formations."
-        },
-        "select-columns": {
-          "title": "Select/Edit Columns",
-          "description": "Choose the columns you want to display on your chart and customize their appearance, colors"
-        },
-        "generate": {
-          "title": "Generate Your Chart",
-          "description": "Generate your chart based on the selected datapack and customized settings."
-        }
-      },
-      "upcoming-workshop": {
-        "workshop2": {
-          "title": "Switzerland Workshop",
-          "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-          "participants": 21,
-          "datapacks": 5
-        },
-        "workshop3": {
-          "title": "Switzerland Workshop",
-          "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-          "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-          "participants": 21,
-          "datapacks": 5
-        }
-      }
-    },
-    "languages": "LANGUAGES",
-    "about": "TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.",
-    "login": {
-      "signin": "Sign In",
-      "forgot-password": "Forgot password?",
-      "signup": "Don't have an account? Sign Up",
-      "username": "Username",
-      "password": "Password",
-      "tooltip": "Account Settings",
-      "profile": "Profile",
-      "add": "Add another account",
-      "logout": "Logout",
-      "admin": "Admin",
-      "profile-info": "Profile Information",
-      "welcome": "Welcome",
-      "email": "Email",
-      "settings": "Settings",
-      "dark-mode": "Dark Mode",
-      "delete": "Delete Profile",
-      "save": "Save",
-      "cancel": "Cancel",
-      "change": "Change",
-      "current-password": "Current Password",
-      "new-password": "New Password",
-      "new-email": "New Email",
-      "new-username": "New Username",
-      "reset-password": "Enter your email to receive a password reset link.",
-      "enter-new-password": "Please enter your new password.",
-      "recovery": "Password Recovery",
-      "send": "Send"
-    },
-    "signup": {
-      "title": "Sign Up",
-      "email": "Email Address",
-      "username": "Username",
-      "password": "Password",
-      "signin": "Already have an account? Sign in",
-      "email-sent": "Email sent. Please check your email to verify your account."
-    },
-    "title": {
-      "about": "About",
-      "main": "Time Scale Creator Online",
-      "settings": "Settings"
-    },
-    "navBar": {
-      "home": "Home",
-      "presets": "Presets",
-      "chart": "Chart",
-      "datapacks": "Datapacks",
-      "settings": "Settings",
-      "help": "Help",
-      "about": "About",
-      "workshops": "Workshops"
-    },
-    "workshops": {
-      "login-first": "You are not logged in. Please sign in to view your workshops.",
-      "header": "Your Registered Workshops",
-      "description-header": "Click a workshop to see more information!",
-      "titles": {
-        "all": "All Workshops",
-        "upcoming": "Upcoming Workshops",
-        "active": "Active Workshops",
-        "past": "Past Workshops"
-      },
-      "messages": {
-        "upcoming": "No upcoming workshops at the moment.",
-        "active": "No active workshops at the moment.",
-        "past": "No past workshops at the moment."
-      },
-      "dates": {
-        "start": "Start Date: ",
-        "end": "End Date: "
-      },
-      "details-page": {
-        "datapacks": "Datapacks",
-        "files": "Files",
-        "download-button": "Download Files",
-        "description": "Description",
-        "messages": {
-          "no-datapacks": "No datapacks available",
-          "no-files": "No files available"
-        }
-      },
-      "calendar": {
-        "switchLabel": "Toggle calendar",
-        "month": "Month",
-        "week": "Week",
-        "days": {
-          "sunday": "Sun",
-          "monday": "Mon",
-          "tuesday": "Tue",
-          "wednesday": "Wed",
-          "thursday": "Thu",
-          "friday": "Fri",
-          "saturday": "Sat"
-        },
-        "months": {
-          "1": "January",
-          "2": "February",
-          "3": "March",
-          "4": "April",
-          "5": "May",
-          "6": "June",
-          "7": "July",
-          "8": "August",
-          "9": "September",
-          "10": "October",
-          "11": "November",
-          "12": "December"
-        }
-      }
-    },
-    "loading": {
-      "loading-chart": "Loading Chart...",
-      "loading-datapacks": "Loading Datapacks",
-      "time": "this could take more than a minute",
-      "fetching-datapacks": "Fetching Datapacks"
-    },
-    "crossPlot": {
-      "time": {
-        "select-unit": "Please select a unit.",
-        "no-chart-units-available": "No datapacks selected",
-        "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
-        "select-datapack": "Please select a datapack."
-      }
-    },
-    "settingsTabs": {
-      "Time": "Time",
-      "Preferences": "Preferences",
-      "Column": "Column",
-      "Search": "Search",
-      "Font": "Font",
-      "Map Points": "Map Points",
-      "Datapacks": "Datapacks",
-      "General": "General",
-      "Data Mining": "Data Mining",
-      "Curve Drawing": "Curve Drawing",
-      "About": "About",
-      "View Data": "View Data",
-      "Discussion": "Discussion",
-      "Warnings": "Warnings",
-      "Load/Save": "Load/Save",
-      "xAxis": "X Axis (Age-only)",
-      "yAxis": "Y Axis (Age/Depth)"
-    },
-    "settings": {
-      "time": {
-        "interval": {
-          "top": "Top of Interval",
-          "base": "Base of Interval",
-          "top-name": "Top Age/Stage Name",
-          "base-name": "Base Age/Stage Name",
-          "not-avaliable": "Not Available for this Unit",
-          "vertical-scale": "Vertical Scale (cm per 1 ",
-          "helper-text": "Base age should be older than top age",
-          "vertical-scale-header": "Vertical Scale"
-        }
-      },
-      "preferences": {
-        "checkboxs": {
-          "skip-empty-columns": "Gray out (and do not draw) columns which do not have data on the selected time interval",
-          "mouse-over-info": "Add MouseOver info (popups)",
-          "global-priority": "Enabled Global Priority Filtering for block columns",
-          "stage-background": "Enabled stage background for event columns",
-          "enable-legend": "Enable legend for the chart",
-          "lithology-auto-indent": "Do not auto-indent lithology patterns",
-          "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
-          "hide-block-labels": "Hide block labels based on priority",
-          "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
-        },
-        "settings-file": {
-          "load": "Load Settings",
-          "save": "Save Settings",
-          "load-dialog": {
-            "message": "This will overwrite any changes you've made!",
-            "cancel": "Cancel",
-            "load": "Load"
-          },
-          "save-dialog": {
-            "message": "Please enter the filename below.",
-            "cancel": "Cancel",
-            "save": "Save"
-          }
-        }
-      },
-      "column": {
-        "tooltip": {
-          "not-in-range": "Data not included in time range",
-          "auto-scale": "Auto Scale",
-          "flip": "Flip Range"
-        },
-        "titles": {
-          "column-menu-title": "Column Customization",
-          "data-mining-title": "Data Mining Settings",
-          "font-option-title": "Font Options for \"{{name}}\""
-        },
-        "menu": {
-          "shift-row": "Shift Row Positions",
-          "edit-name": "Edit Title",
-          "background-color": "Background Color",
-          "enable-title": "Enable Title",
-          "show-age-label": "Show Age Label",
-          "info-box": "Information and References",
-          "add-blank-column": "Add Blank Column",
-          "add-age-column": "Add Age Column",
-          "width": "Width",
-          "orientation": {
-            "title": "Label Orientation",
-            "horizontal": "Horizontal",
-            "vertical": "Vertical"
-          },
-          "show-uncertainty": "Show Uncertainty Labels",
-          "events": "Events",
-          "ranges": "Ranges",
-          "first-occurrence": "First Occurrence",
-          "last-occurrence": "Last Occurrence",
-          "alphabetical": "Alphabetical",
-          "ruler": {
-            "title": "Age Ruler Justification",
-            "left": "Left",
-            "right": "Right"
-          }
-        },
-        "font-menu": {
-          "change": "Change Font",
-          "additional": "Additional fonts for child columns"
-        },
-        "datamining-menu": {
-          "title": "Data Mining Settings",
-          "window-size": "Window Size",
-          "step-size": "Step Size",
-          "options": {
-            "frequency": "Frequency",
-            "max-val": "Maximum Value",
-            "min-val": "Minimum Value",
-            "avg-val": "Average Value",
-            "roc": "Rate of Change",
-            "freq-of-LAD": "Frequency of LAD",
-            "freq-of-FAD": "Frequency of FAD",
-            "combined-events": "Combined Events"
-          },
-          "options-title": {
-            "event": "Event Type",
-            "chron": "Chron Type",
-            "plot": "Data Type to Plot"
-          }
-        },
-        "curve-drawing-menu": {
-          "title": "Point Settings",
-          "rod": "Range of Data",
-          "lower-range": "Lower Range",
-          "upper-range": "Upper Range",
-          "scale-start": "Scale Start",
-          "scale-step": "Scale Step",
-          "show-scale": "Show Scale",
-          "draw-points": "Draw Points",
-          "point-shape": "Point Shape",
-          "line": "Line",
-          "fill": "Fill",
-          "background-gradient": "Background Gradient",
-          "curve-gradient": "Curve Gradient",
-          "start": "Start",
-          "end": "End"
-        }
-      },
-      "search": {
-        "search-bar": "Search",
-        "found-result": "Found {{count}} Results",
-        "current-time-settings": "Current Time Settings(Top / Base)",
-        "header": {
-          "status": "Column On?",
-          "center": "Center",
-          "extend": "Extend",
-          "column": "Column",
-          "age": "Age",
-          "qualifier": "Type",
-          "notes": "Notes"
-        }
-      },
-      "font": {
-        "notes1": "These are the default systemwide fonts.",
-        "notes2": "Changing one here will affect the entire chart.",
-        "notes3": "NOTE: These fonts can be changed on a column by column basis by using the Font button for each column"
-      },
-      "map-points": {
-        "not-avaliable": "No Map Points available for this datapack"
-      },
-      "datapacks": {
-        "see-info-guidance": "Click a datapack to see more information!",
-        "add-datapack-guidance": "Add a datapack by clicking the checkbox",
-        "title": {
-          "private-official": "Private Official Datapacks",
-          "public-official": "Official Datapacks",
-          "contributed": "User Contributed Datapacks",
-          "workshop": "Workshop Datapacks",
-          "your": "Your Datapacks"
-        },
-        "no": "No",
-        "avaliable": "Avaliable",
-        "upload": "Upload Datapack",
-        "seeMore": "See More...",
-        "seeLess": "See Less...",
-        "upload-form": {
-          "title": "Upload Your Own Datapack",
-          "no-file": "No file selected",
-          "name": "Datapack Name",
-          "name-placeholder": "Enter a name for your datapack.",
-          "author": "Authored By",
-          "author-placeholder": "Credited to...",
-          "description": "Datapack Description",
-          "description-placeholder": "Enter a description for your datapack.",
-          "tags": "Tags",
-          "make-public": "Make Datapack Publicly Accessible",
-          "button": {
-            "add-ref": "Add Reference",
-            "more": "More Options",
-            "finish": "Finish & Upload",
-            "startover": "Start Over"
-          },
-          "reference": "Reference",
-          "contact": "Contact",
-          "contact-placeholder": "Enter your contact information",
-          "contact-helper-text": "(OPTIONAL) If you would like others to contact you about this datapack",
-          "notes": "Notes",
-          "notes-placeholder": "Enter notes for the datapack here",
-          "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
-        }
-      }
-    },
-    "chart": {
-      "no-chart-yet": "You have not made a chart yet",
-      "save": "Save Chart"
-    },
-    "dialogs": {
-      "confirm-datapack-change": {
-        "title": "Confirm Datapack Selection Change",
-        "message": "You have unsaved changes! Do you want to save your changes?",
-        "yes": "Save",
-        "no": "Discard"
-      },
-      "default-age": {
-        "title": "Use default age range?"
-      },
-      "confirm-changes": {
-        "message": "Are you sure you want to discard your changes?"
-      }
-    },
-    "help": {
-      "qsg": {
-        "title": "Quick Start Quide",
-        "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.",
-        "button": "Start QSG"
-      },
-      "tour": {
-        "title": "Tour",
-        "content": {
-          "datapacks": "In the datapacks tour you will explore the Datapacks page in depth. Click the button to start your tour!",
-          "settings": "In the settings tour you will explore the Settings page in depth. Click the button to start your tour!"
+        "errors": {
+            "title": "Error",
+            "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
+            "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
+            "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",
+            "INVALID_PATTERN_INFO": "Invalid pattern info received from server. Please try again later.",
+            "INVALID_TIME_SCALE": "Invalid time scale received from server. Please try again later.",
+            "INVALID_DATAPACK_CONFIG": "Datapacks were not properly set. Please try again later.",
+            "INVALID_SVG_READY_RESPONSE": "Invalid SVG ready response received from server. Please try again later.",
+            "INVALID_SETTINGS_RESPONSE": "Invalid settings response received from server. Please try again later.",
+            "INVALID_CHART_RESPONSE": "Invalid chart response received from server. Please try again later.",
+            "INVALID_PATH": "The requested path was invalid. Please ensure the path is correct.",
+            "INVALID_DATAPACK_UPLOAD": "Invalid datapack upload.",
+            "REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE": "Uploaded datapack is over 3000 characters.",
+            "INVALID_USER_DATAPACKS": "Invalid user datapacks received from server. Please try again later.",
+            "INVALID_PUBLIC_DATAPACKS": "Invalid public datapacks received from server. Please try again later.",
+            "NO_DATAPACK_FILE_FOUND": "No datapack file found. Please upload a datapack file first.",
+            "DATAPACK_FILE_NAME_TOO_LONG": "Datapack file name is too long. Please shorten the file name.",
+            "UNRECOGNIZED_DATAPACK_EXTENSION": "Unrecognized datapack extension. File must be of type .dpk, .mdpk, .map, .txt. Please upload a valid datapack file.",
+            "UNRECOGNIZED_DATAPACK_FILE": "Unrecognized datapack file. Please upload a valid datapack file.",
+            "UNFINISHED_DATAPACK_UPLOAD_FORM": "Please finish the datapack upload form before attempting to upload the file.",
+            "DATAPACK_ALREADY_EXISTS": "Datapack already exists. Please upload a datapack with a unique title.",
+            "NO_DATAPACKS_SELECTED": "No datapacks selected. Please select at least one datapack to generate.",
+            "NO_COLUMNS_SELECTED": "No columns selected. Please select at least one column to generate.",
+            "IS_BAD_RANGE": "Base age must be greater than the top age.",
+            "INVALID_MAPPACK_INFO": "Invalid mappack info received from server. Please try again later.",
+            "UNABLE_TO_LOGIN_SERVER": "Unable to login due to server error. Please try again later.",
+            "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL": "Unable to login with Google credentials. Please try again.",
+            "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD": "Invalid username or password. Please try again.",
+            "UNABLE_TO_LOGIN_EXISTING_USER": "User with that email already exists. Please log in or sign up with a different email.",
+            "UNABLE_TO_LOGOUT": "Unable to logout. Please try again later.",
+            "UNABLE_TO_SIGNUP_SERVER": "Unable to sign up due to server error. Please try again later.",
+            "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL": "Email or username already exists. Please try again with a different email or username.",
+            "INVALID_FORM": "Invalid form. Please ensure all fields are filled out correctly.",
+            "UNABLE_TO_VERIFY_ACCOUNT": "Your email is not verified. Please verify your email first. If you did not receive an email, please resend.",
+            "ALREADY_VERIFIED_ACCOUNT": "Account is already verified. Please log in.",
+            "UNABLE_TO_VERIFY_ACCOUNT_SERVER": "Unable to verify account due to server error. Please try again later.",
+            "TOKEN_EXPIRED_OR_INVALID": "Your token is either invalid or has expired. Please request a new verification email.",
+            "UNABLE_TO_SEND_EMAIL": "Unable to send email. Please try again later.",
+            "UNABLE_TO_RESET_PASSWORD": "Unable to reset password. Please try again later.",
+            "UNABLE_TO_RESET_EMAIL": "Unable to reset email. Please try again later.",
+            "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "Your account has been locked. Please check your email for more information or contact support.",
+            "UNABLE_TO_RECOVER_ACCOUNT": "Unable to recover account. Please contact support for more information.",
+            "NOT_LOGGED_IN": "You are not logged in. Please log in to access this page.",
+            "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "The datapack requested was not found on the server. Please try again later or contact our support team.",
+            "INCORRECT_ENCRYPTION_HEADER": "Unable to encrypt the file, please try again later.",
+            "TOO_MANY_REQUESTS": "You have made too many requests. Please try again later.",
+            "RECAPTCHA_FAILED": "Recaptcha failed. Please try again.",
+            "COOKIE_REJECTED": "You must accept cookies to sign in.",
+            "UNRECOGNIZED_IMAGE_FILE": "Unrecognized image extension. Please upload a valid image file.",
+            "UPLOAD_PROFILE_PICTURE_FAILED": "Unable to upload profile picture. Please try again later.",
+            "UNABLE_TO_CHANGE_USERNAME": "Unable to change username. Please try again later.",
+            "UNABLE_TO_DELETE_PROFILE": "Unable to delete profile. Please try again later.",
+            "INCORRECT_PASSWORD": "Incorrect password. Please try again.",
+            "USERNAME_TAKEN": "Username is already taken. Please try a different username.",
+            "UNABLE_TO_READ_FILE_OR_EMPTY_FILE": "Unable to read file or file is empty. Please try again.",
+            "FETCH_USERS_FAILED": "Unable to fetch users for admin display. Please try again later.",
+            "ADMIN_ADD_USER_FAILED": "Unable to add user. Please try again later.",
+            "SERVER_TIMEOUT": "Server timed out. Please try again later.",
+            "SERVER_BUSY": "Server is too busy. Please try again later.",
+            "ADMIN_DELETE_USER_FAILED": "Unable to delete user. Please try again later.",
+            "UNABLE_TO_FETCH_DATAPACKS": "Unable to fetch datapacks. Please try again later.",
+            "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
+            "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
+            "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "Unable to delete server datapack. Please try again later.",
+            "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "Cannot delete root datapack. Ask server admin for assistance.",
+            "INVALID_SERVER_DATAPACK_REQUEST": "Invalid server datapack request. Please try again later.",
+            "SERVER_FILE_METADATA_ERROR": "Server file metadata error. Please try again later.",
+            "USER_DELETE_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "UNABLE_TO_PROCESS_DATAPACK_CONFIG": "Failed to process datapack config. Please try again later.",
+            "INVALID_SETTINGS": "Invalid settings. Please try again.",
+            "INTERNAL_ERROR": "There was an internal error while generating the chart. Please try again later.",
+            "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "Unable to add users to workshop. Please try again later.",
+            "ADMIN_EMAIL_INVALID": "Invalid email. Please fix the email and try again.",
+            "ADMIN_WORKSHOP_FIELDS_EMPTY": "You must provide at least one field to add users to a workshop.",
+            "UNRECOGNIZED_EXCEL_FILE": "Unrecognized Excel file. Please upload a valid Excel file.",
+            "SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists. Please upload a unique datapack (different title).",
+            "ADMIN_WORKSHOP_START_AFTER_END": "The start date must be before the end date.",
+            "ADMIN_CREATE_WORKSHOP_FAILED": "Unable to create workshop. Please try again later.",
+            "ADMIN_WORKSHOP_ALREADY_EXISTS": "Workshop with that title and dates already exists. Please try again.",
+            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
+            "ADMIN_DELETE_WORKSHOP_FAILED": "Unable to delete workshop. Please try again later.",
+            "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted.",
+            "ADMIN_WORKSHOP_EDIT_FAILED": "Unable to edit workshop. Please try again later.",
+            "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
+            "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later.",
+            "USER_REPLACE_DATAPACK_FILE_FAILED": "Failed to replace user datapack file. Please try again later.",
+            "USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED": "Failed to replace user datapack profile image. Please try again later.",
+            "DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE": "Datapack title cannot have leading or trailing whitespace.",
+            "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
+            "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance.",
+            "ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add official datapack to workshop. Please try again later.",
+            "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
+            "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
+            "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
+            "METADATA_NOT_FOUND": "Metadata not found. Please try again later."
         },
         "button": {
-          "datapacks": "Start Datapacks Tour",
-          "settings": "Start Settings Tour"
+            "generate": "Generate",
+            "generate-chart": "Generate Chart",
+            "remove-cache": "Remove Cache",
+            "confirm-selection": "Confirm Selection",
+            "generate-cross-plot": "Generate Cross Plot"
+        },
+        "yes": "Yes",
+        "no": "No",
+        "languageNames": {
+            "en-US": "English",
+            "en": "English",
+            "zh": "中文"
+        },
+        "tours": {
+            "quit": "Quit Tour",
+            "finish": "Finish Tour",
+            "next": "Next",
+            "back": "Back",
+            "qsg": {
+                "step1": "In the Presets page, we offer pre-configured settings that allow you to rapidly generate specific types of charts without configuring all options from the beginning. Each preset comes equipped with designated data packs, visual styles, and settings, enabling you to create charts with just a single click.",
+                "step2": "In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the \"Tours\" section",
+                "step3": "In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.",
+                "step4": "In the Settings page, you can customize all aspects of your charts. This includes adjusting the scale and time range, selecting which rows to display, setting the background color and font style, etc. Tailor your charts to meet your specific needs and preferences to optimize your visual analysis. For more detailed guidance on Settings, please refer to the Settings Tour under the \"Tours\" section",
+                "step5": "In the Help Page, you can find detailed assistance and information on how to use the website.",
+                "step6": "In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.",
+                "step7": "The About Page provides information about our development team.",
+                "step8": "Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities."
+            },
+            "datapack": {
+                "step1": "Switch between different display types for datapacks: rows, cards, or compact view.",
+                "step2": "Add a datapack by clicking the checkbox",
+                "step3": "Click the deselect icon to deselect all datapacks",
+                "step4": "Remember to confirm your selection"
+            },
+            "settings": {
+                "step1": "In the Time settings, you can Set the \"Top of Interval\" and \"Base of Interval\" for your data. These fields allow you to define the starting and ending ages or stages, which can be adjusted by entering values or using the dropdown selectors. Adjust the vertical scale to change how much vertical space each million years occupies on your charts. For example, setting it higher will spread the intervals further apart, making each period easier to examine closely.",
+                "step2": "In the Preferences settings, you can customize the display options. For instance, you may choose to gray out columns with no data for selected time periods, add tooltips for additional information, or enable filtering and legend options for charts. Furthermore, you can load your settings from a file or save your current settings to a file. This feature is useful for backing up your configurations, sharing them with others, or quickly applying previously saved configurations to your chart.",
+                "step3": "In Column Settings, you can deeply customize the appearance and organization of your charts.In the \"Column Customization\" area, you can adjust titles and shift row positions to streamline how data is displayed on your charts. Enable or disable specific elements like the chart title and Ma markers to suit your presentation needs. In the \"Font Options\" section, refine the appearance of your charts by choosing different fonts, sizes, and styles for headers and labels, ensuring important data stands out or meets formatting requirements. Please note that the advanced settings for columns can vary depending on the datapack you are working with, allowing for tailored configurations that best fit the data characteristics.",
+                "step4": "In the Search Settings, you can quickly locate specific columns by entering keywords and then directly add them to your chart. Simply enter a term related to the setting you are looking for, and the system will display all relevant results.This feature is particularly useful when managing numerous data points or when you need to make quick adjustments without browsing through extensive lists.",
+                "step5": "The Font Settings section allows you to customize the appearance of text within your charts. You can adjust font styles, sizes, and formatting for various elements such as column headers, age labels, and more. Each setting is inheritable, ensuring consistency across related elements unless specified otherwise. Changing a font setting here applies it system-wide, but you can override these for individual columns by using the \"Change Font\" option within each columns settings.Experiment with different fonts and sizes to enhance readability and visual appeal of your charts.",
+                "step6": "In the Map Points Settings, you can access and manage geographic data points for different locations. This feature allows you to view specific location details directly on the interactive map. You can toggle different map layers and visualize data points with detailed descriptions, like latitude, longitude, and additional notes. Please note, however, that not all datapacks contain map points.",
+                "step7": "In the Datapacks Settings, you can select the datapacks you wish to use for generating charts. We offer nine official datapacks, each comprising a curated collection of datasets tailored for specific thematic explorations. You might notice that this page resembles the Datapack page; selections can be configured here or there interchangeably. For more detailed guidance on how to utilize datapacks, please refer to the Datapacks Tour in the Help page \"Tours\" section."
+            }
         }
-      },
-      "license": "Software License",
-      "file-format-info": {
-        "title": "File Format Info",
-        "link": "View File Format Info"
-      }
-    },
-    "errors": {
-      "title": "Error",
-      "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
-      "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
-      "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",
-      "INVALID_PATTERN_INFO": "Invalid pattern info received from server. Please try again later.",
-      "INVALID_TIME_SCALE": "Invalid time scale received from server. Please try again later.",
-      "INVALID_DATAPACK_CONFIG": "Datapacks were not properly set. Please try again later.",
-      "INVALID_SVG_READY_RESPONSE": "Invalid SVG ready response received from server. Please try again later.",
-      "INVALID_SETTINGS_RESPONSE": "Invalid settings response received from server. Please try again later.",
-      "INVALID_CHART_RESPONSE": "Invalid chart response received from server. Please try again later.",
-      "INVALID_PATH": "The requested path was invalid. Please ensure the path is correct.",
-      "INVALID_DATAPACK_UPLOAD": "Invalid datapack upload.",
-      "REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE": "Uploaded datapack is over 3000 characters.",
-      "INVALID_USER_DATAPACKS": "Invalid user datapacks received from server. Please try again later.",
-      "INVALID_PUBLIC_DATAPACKS": "Invalid public datapacks received from server. Please try again later.",
-      "NO_DATAPACK_FILE_FOUND": "No datapack file found. Please upload a datapack file first.",
-      "DATAPACK_FILE_NAME_TOO_LONG": "Datapack file name is too long. Please shorten the file name.",
-      "UNRECOGNIZED_DATAPACK_EXTENSION": "Unrecognized datapack extension. File must be of type .dpk, .mdpk, .map, .txt. Please upload a valid datapack file.",
-      "UNRECOGNIZED_DATAPACK_FILE": "Unrecognized datapack file. Please upload a valid datapack file.",
-      "UNFINISHED_DATAPACK_UPLOAD_FORM": "Please finish the datapack upload form before attempting to upload the file.",
-      "DATAPACK_ALREADY_EXISTS": "Datapack already exists. Please upload a datapack with a unique title.",
-      "NO_DATAPACKS_SELECTED": "No datapacks selected. Please select at least one datapack to generate.",
-      "NO_COLUMNS_SELECTED": "No columns selected. Please select at least one column to generate.",
-      "IS_BAD_RANGE": "Base age must be greater than the top age.",
-      "INVALID_MAPPACK_INFO": "Invalid mappack info received from server. Please try again later.",
-      "UNABLE_TO_LOGIN_SERVER": "Unable to login due to server error. Please try again later.",
-      "UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL": "Unable to login with Google credentials. Please try again.",
-      "UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD": "Invalid username or password. Please try again.",
-      "UNABLE_TO_LOGIN_EXISTING_USER": "User with that email already exists. Please log in or sign up with a different email.",
-      "UNABLE_TO_LOGOUT": "Unable to logout. Please try again later.",
-      "UNABLE_TO_SIGNUP_SERVER": "Unable to sign up due to server error. Please try again later.",
-      "UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL": "Email or username already exists. Please try again with a different email or username.",
-      "INVALID_FORM": "Invalid form. Please ensure all fields are filled out correctly.",
-      "UNABLE_TO_VERIFY_ACCOUNT": "Your email is not verified. Please verify your email first. If you did not receive an email, please resend.",
-      "ALREADY_VERIFIED_ACCOUNT": "Account is already verified. Please log in.",
-      "UNABLE_TO_VERIFY_ACCOUNT_SERVER": "Unable to verify account due to server error. Please try again later.",
-      "TOKEN_EXPIRED_OR_INVALID": "Your token is either invalid or has expired. Please request a new verification email.",
-      "UNABLE_TO_SEND_EMAIL": "Unable to send email. Please try again later.",
-      "UNABLE_TO_RESET_PASSWORD": "Unable to reset password. Please try again later.",
-      "UNABLE_TO_RESET_EMAIL": "Unable to reset email. Please try again later.",
-      "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "Your account has been locked. Please check your email for more information or contact support.",
-      "UNABLE_TO_RECOVER_ACCOUNT": "Unable to recover account. Please contact support for more information.",
-      "NOT_LOGGED_IN": "You are not logged in. Please log in to access this page.",
-      "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "The datapack requested was not found on the server. Please try again later or contact our support team.",
-      "INCORRECT_ENCRYPTION_HEADER": "Unable to encrypt the file, please try again later.",
-      "TOO_MANY_REQUESTS": "You have made too many requests. Please try again later.",
-      "RECAPTCHA_FAILED": "Recaptcha failed. Please try again.",
-      "COOKIE_REJECTED": "You must accept cookies to sign in.",
-      "UNRECOGNIZED_IMAGE_FILE": "Unrecognized image extension. Please upload a valid image file.",
-      "UPLOAD_PROFILE_PICTURE_FAILED": "Unable to upload profile picture. Please try again later.",
-      "UNABLE_TO_CHANGE_USERNAME": "Unable to change username. Please try again later.",
-      "UNABLE_TO_DELETE_PROFILE": "Unable to delete profile. Please try again later.",
-      "INCORRECT_PASSWORD": "Incorrect password. Please try again.",
-      "USERNAME_TAKEN": "Username is already taken. Please try a different username.",
-      "UNABLE_TO_READ_FILE_OR_EMPTY_FILE": "Unable to read file or file is empty. Please try again.",
-      "FETCH_USERS_FAILED": "Unable to fetch users for admin display. Please try again later.",
-      "ADMIN_ADD_USER_FAILED": "Unable to add user. Please try again later.",
-      "SERVER_TIMEOUT": "Server timed out. Please try again later.",
-      "SERVER_BUSY": "Server is too busy. Please try again later.",
-      "ADMIN_DELETE_USER_FAILED": "Unable to delete user. Please try again later.",
-      "UNABLE_TO_FETCH_DATAPACKS": "Unable to fetch datapacks. Please try again later.",
-      "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
-      "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
-      "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
-      "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "Unable to delete server datapack. Please try again later.",
-      "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "Cannot delete root datapack. Ask server admin for assistance.",
-      "INVALID_SERVER_DATAPACK_REQUEST": "Invalid server datapack request. Please try again later.",
-      "SERVER_FILE_METADATA_ERROR": "Server file metadata error. Please try again later.",
-      "USER_DELETE_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
-      "UNABLE_TO_PROCESS_DATAPACK_CONFIG": "Failed to process datapack config. Please try again later.",
-      "INVALID_SETTINGS": "Invalid settings. Please try again.",
-      "INTERNAL_ERROR": "There was an internal error while generating the chart. Please try again later.",
-      "ADMIN_ADD_USERS_TO_WORKSHOP_FAILED": "Unable to add users to workshop. Please try again later.",
-      "ADMIN_EMAIL_INVALID": "Invalid email. Please fix the email and try again.",
-      "ADMIN_WORKSHOP_FIELDS_EMPTY": "You must provide at least one field to add users to a workshop.",
-      "UNRECOGNIZED_EXCEL_FILE": "Unrecognized Excel file. Please upload a valid Excel file.",
-      "SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists. Please upload a unique datapack (different title).",
-      "ADMIN_WORKSHOP_START_AFTER_END": "The start date must be before the end date.",
-      "ADMIN_CREATE_WORKSHOP_FAILED": "Unable to create workshop. Please try again later.",
-      "ADMIN_WORKSHOP_ALREADY_EXISTS": "Workshop with that title and dates already exists. Please try again.",
-      "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
-      "ADMIN_DELETE_WORKSHOP_FAILED": "Unable to delete workshop. Please try again later.",
-      "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted.",
-      "ADMIN_WORKSHOP_EDIT_FAILED": "Unable to edit workshop. Please try again later.",
-      "USER_EDIT_DATAPACK_FAILED": "Failed to edit user datapack. Please try again later.",
-      "USER_FETCH_DATAPACK_FAILED": "Failed to fetch user datapack. Please try again later.",
-      "USER_REPLACE_DATAPACK_FILE_FAILED": "Failed to replace user datapack file. Please try again later.",
-      "USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED": "Failed to replace user datapack profile image. Please try again later.",
-      "DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE": "Datapack title cannot have leading or trailing whitespace.",
-      "ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED": "Failed to fetch private datapacks. Please try again later.",
-      "ADMIN_PRIORITY_BATCH_UPDATE_FAILED": "Failed to update datapack priorities. Please contact a server admin for assistance.",
-      "ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED": "Failed to add official datapack to workshop. Please try again later.",
-      "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
-      "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
-      "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
-      "METADATA_NOT_FOUND": "Metadata not found. Please try again later."
-    },
-    "button": {
-      "generate": "Generate",
-      "generate-chart": "Generate Chart",
-      "remove-cache": "Remove Cache",
-      "confirm-selection": "Confirm Selection",
-      "generate-cross-plot": "Generate Cross Plot"
-    },
-    "yes": "Yes",
-    "no": "No",
-    "languageNames": {
-      "en-US": "English",
-      "en": "English",
-      "zh": "中文"
-    },
-    "tours": {
-      "quit": "Quit Tour",
-      "finish": "Finish Tour",
-      "next": "Next",
-      "back": "Back",
-      "qsg": {
-        "step1": "In the Presets page, we offer pre-configured settings that allow you to rapidly generate specific types of charts without configuring all options from the beginning. Each preset comes equipped with designated data packs, visual styles, and settings, enabling you to create charts with just a single click.",
-        "step2": "In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the \"Tours\" section",
-        "step3": "In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.",
-        "step4": "In the Settings page, you can customize all aspects of your charts. This includes adjusting the scale and time range, selecting which rows to display, setting the background color and font style, etc. Tailor your charts to meet your specific needs and preferences to optimize your visual analysis. For more detailed guidance on Settings, please refer to the Settings Tour under the \"Tours\" section",
-        "step5": "In the Help Page, you can find detailed assistance and information on how to use the website.",
-        "step6": "In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.",
-        "step7": "The About Page provides information about our development team.",
-        "step8": "Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities."
-      },
-      "datapack": {
-        "step1": "Switch between different display types for datapacks: rows, cards, or compact view.",
-        "step2": "Add a datapack by clicking the checkbox",
-        "step3": "Click the deselect icon to deselect all datapacks",
-        "step4": "Remember to confirm your selection"
-      },
-      "settings": {
-        "step1": "In the Time settings, you can Set the \"Top of Interval\" and \"Base of Interval\" for your data. These fields allow you to define the starting and ending ages or stages, which can be adjusted by entering values or using the dropdown selectors. Adjust the vertical scale to change how much vertical space each million years occupies on your charts. For example, setting it higher will spread the intervals further apart, making each period easier to examine closely.",
-        "step2": "In the Preferences settings, you can customize the display options. For instance, you may choose to gray out columns with no data for selected time periods, add tooltips for additional information, or enable filtering and legend options for charts. Furthermore, you can load your settings from a file or save your current settings to a file. This feature is useful for backing up your configurations, sharing them with others, or quickly applying previously saved configurations to your chart.",
-        "step3": "In Column Settings, you can deeply customize the appearance and organization of your charts.In the \"Column Customization\" area, you can adjust titles and shift row positions to streamline how data is displayed on your charts. Enable or disable specific elements like the chart title and Ma markers to suit your presentation needs. In the \"Font Options\" section, refine the appearance of your charts by choosing different fonts, sizes, and styles for headers and labels, ensuring important data stands out or meets formatting requirements. Please note that the advanced settings for columns can vary depending on the datapack you are working with, allowing for tailored configurations that best fit the data characteristics.",
-        "step4": "In the Search Settings, you can quickly locate specific columns by entering keywords and then directly add them to your chart. Simply enter a term related to the setting you are looking for, and the system will display all relevant results.This feature is particularly useful when managing numerous data points or when you need to make quick adjustments without browsing through extensive lists.",
-        "step5": "The Font Settings section allows you to customize the appearance of text within your charts. You can adjust font styles, sizes, and formatting for various elements such as column headers, age labels, and more. Each setting is inheritable, ensuring consistency across related elements unless specified otherwise. Changing a font setting here applies it system-wide, but you can override these for individual columns by using the \"Change Font\" option within each columns settings.Experiment with different fonts and sizes to enhance readability and visual appeal of your charts.",
-        "step6": "In the Map Points Settings, you can access and manage geographic data points for different locations. This feature allows you to view specific location details directly on the interactive map. You can toggle different map layers and visualize data points with detailed descriptions, like latitude, longitude, and additional notes. Please note, however, that not all datapacks contain map points.",
-        "step7": "In the Datapacks Settings, you can select the datapacks you wish to use for generating charts. We offer nine official datapacks, each comprising a curated collection of datasets tailored for specific thematic explorations. You might notice that this page resembles the Datapack page; selections can be configured here or there interchangeably. For more detailed guidance on how to utilize datapacks, please refer to the Datapacks Tour in the Help page \"Tours\" section."
-      }
     }
-  }
 }
