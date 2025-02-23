@@ -1,4 +1,4 @@
-import { AccordionSummary, Typography, AccordionDetails, Divider, Toolbar } from "@mui/material";
+import { AccordionSummary, Typography, AccordionDetails, Divider } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -155,44 +155,6 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
-      {/* For the demo */}
-      {/*
-      <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
-        <Grid item sx={background}>
-          <Toolbar>
-            <StyledScrollbar>
-              <HelpDrawer />
-            </StyledScrollbar>
-          </Toolbar>
-        </Grid>
-        <Grid item sx={background}>
-          <HelpBreadcrumbs />
-
-          <Routes>
-            <Route path="presets" element={<HelpPresets />} />
-            <Route path="datapacks" element={<HelpDatapacks />} />
-            <Route path="chart/*" element={<HelpChart />} />
-            <Route path="chart/what_is_a_chart" element={<HelpWhatIsAChart />} />
-            <Route path="chart/column_variants/*" element={<HelpColumnVariants />} />
-            <Route path="chart/column_variants/block_columns" element={<HelpBlockColumn />} />
-            <Route path="chart/column_variants/point_columns" element={<HelpPointColumns />} />
-            <Route path="chart/column_variants/event_columns" element={<HelpEventColumns />} />
-            <Route
-              path="chart/column_variants/event_columns/dual_column_comparison"
-              element={<HelpDualColumnComparison />}
-            />
-            <Route path="chart/column_variants/event_columns/data_mining" element={<HelpDataMining />} />
-            <Route path="chart/column_variants/freehand_columns" element={<HelpFreehandColumns />} />
-            <Route path="chart/saving_a_chart" element={<HelpSavingAChart />} />
-            <Route path="settings" element={<HelpSettings />} />
-            <Route path="help" element={<HelpHelp />} />
-            <Route path="workshops" element={<HelpWorkshops />} />
-            <Route path="options" element={<HelpOptions />} />
-
-            <Route path="404" element={<PageNotFound />} />
-          </Routes>
-        </Grid>
-      </Grid> */}
 
       {/* The Actual breadcrumb */}
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
@@ -204,7 +166,6 @@ export const Help = observer(function Help() {
         <Grid item sx={background}>
           <NewBreadcrumbs />
         </Grid>
-
       </Grid>
     </div>
   );
