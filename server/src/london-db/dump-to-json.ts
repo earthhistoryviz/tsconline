@@ -3,6 +3,7 @@ import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
 import { mkdir, writeFile } from "fs/promises";
+import { verifyFilepath } from "../util.js";
 
 const outputDir = join("db", "london", "output");
 
@@ -16,7 +17,14 @@ const cleanValue = (value: string) => {
 };
 
 export async function convertSQLDumpToJSON(dumpFile: string) {
+  if (!(await verifyFilepath(dumpFile))) {
+    console.log(chalk.red("SQL dump file not found please check the path"));
+    return;
+  }
   const fileStream = createReadStream(dumpFile);
+  fileStream.on("error", (e) => {
+    console.error(e);
+  });
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
   await mkdir(outputDir, { recursive: true });
 
@@ -187,4 +195,9 @@ function processSchema(statement: string) {
   return "";
 }
 
-await convertSQLDumpToJSON(join("db", "london", "london.sql"));
+try {
+  await convertSQLDumpToJSON(join("db", "london", "london.sql"));
+} catch (e) {
+  console.error(e);
+  console.log(chalk.red("Error converting SQL dump to JSON"));
+}
