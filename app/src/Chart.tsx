@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -25,7 +25,7 @@ export const ChartContext = createContext<ChartContextType>({
 
 type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
-  refList?: { ref: React.RefObject<HTMLDivElement>, id: string }[];
+  refList?: { ref: React.RefObject<HTMLDivElement>; id: string }[];
   style?: React.CSSProperties;
   disableDoubleClick?: boolean;
 };
@@ -165,7 +165,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         observer.observer.disconnect();
       }
     };
-  }, [refList?.map((ref) => ref.id).join('')]);
+  }, [refList?.map((ref) => ref.id).join("")]);
   const { t } = useTranslation();
 
   const onZoom = (e: ReactZoomPanPinchRef) => {
