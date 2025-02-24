@@ -1,11 +1,10 @@
 import * as readline from "readline";
-import { createObjectCsvWriter } from "csv-writer";
 import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
-import { writeFile } from "fs/promises";
+import { mkdir, writeFile } from "fs/promises";
 
-const outputCSVDir = join( "db", "london", "output_csvs");
+const outputDir = join( "db", "london", "output");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const breakWord = "break";
@@ -16,9 +15,10 @@ const cleanValue = (value: string) => {
   return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
 };
 
-export async function convertSQLDumpToCSV(dumpFile: string) {
+export async function convertSQLDumpToJSON(dumpFile: string) {
   const fileStream = createReadStream(dumpFile);
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
+  await mkdir(outputDir, { recursive: true });
 
   const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
   const schemas: string[] = [];
@@ -53,14 +53,9 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
   }
   console.log(chalk.green("SQL dump parsed successfully!"));
 
-  // write the csv
+  // write the json
   for (const [table, { columns, rows }] of Object.entries(tables)) {
     try {
-      const csvWriter = createObjectCsvWriter({
-        path: join(outputCSVDir, `${table}.csv`),
-        header: columns.map((col) => ({ id: col, title: col }))
-      });
-
       const records = rows.map((row) =>
         // create a hash of column name to value for each row
         row.reduce(
@@ -72,25 +67,24 @@ export async function convertSQLDumpToCSV(dumpFile: string) {
           {} as Record<string, string | null>
         )
       );
-
-      await csvWriter.writeRecords(records);
-      console.log(chalk.cyan(`Exported: ${table}.csv to ${outputCSVDir}`));
+      await writeFile(join(outputDir, `${table}.json`), JSON.stringify(records, null, 2));
+      console.log(chalk.cyan(`Exported: ${table}.json to ${outputDir}`));
     } catch (e) {
       console.error(e);
-      console.log(chalk.yellow(`Error exporting ${table} to CSV`));
+      console.log(chalk.yellow(`Error exporting ${table} to JSON`));
     }
   }
 
   try {
     // write the schemas
-    await writeFile(join(outputCSVDir, "kysely-schema.ts"), schemas.join("\n\n"));
-    console.log(chalk.cyan("Exported schemas to kysely_schema.ts"));
+    await writeFile(join(outputDir, "schema.ts"), schemas.join("\n\n"));
+    console.log(chalk.cyan("Exported schemas to schema.ts"));
   } catch (e) {
     console.error(e);
-    console.log(chalk.yellow(`Error exporting schemas to kysely_schema.ts`));
+    console.log(chalk.yellow(`Error exporting schemas to schema.ts`));
   }
 
-  console.log(chalk.green("All tables exported successfully to csv!"));
+  console.log(chalk.green("All tables exported successfully to JSON!"));
 }
 
 function processInsert(
@@ -132,6 +126,7 @@ const typeMapping: Record<string, string> = {
   boolean: "boolean"
 };
 
+// create the type/interface for the tables
 function processSchema(statement: string) {
   const cleanLine = statement.trim();
   let tableName = "";
@@ -192,4 +187,4 @@ function processSchema(statement: string) {
   return "";
 }
 
-await convertSQLDumpToCSV(join( "db", "london", "london.sql"));
+await convertSQLDumpToJSON(join( "db", "london", "london.sql"));
