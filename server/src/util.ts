@@ -310,6 +310,3 @@ export function extractMetadataFromDatapack(datapack: Datapack) {
   assertDatapackMetadata(metadata);
   return metadata;
 }
-export const toCamelCase = (str: string): string => {
-  return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (_, char) => char.toUpperCase());
-};
