@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -121,7 +121,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       if (container.instance.wrapperComponent)
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
-  });
+  }, []);
 
   // we need to setup the chart alignment values when the chart content changes
   // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
@@ -161,7 +161,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
         observer.disconnect();
       }
     };
-  }, [refList?.length]);
+  }, [refList?.map((ref) => ref.current)]);
   const { t } = useTranslation();
 
   const onZoom = (e: ReactZoomPanPinchRef) => {
