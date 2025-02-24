@@ -107,7 +107,6 @@ vi.mock("../src/util", () => ({
     fileMetadata: "fileMetadata",
     privateDatapacksDirectory: "/absolute/path/to/private/datapacks"
   },
-  verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
   verifyFilepath: vi.fn().mockResolvedValue(true)
 }));
 vi.mock("../src/workshop/workshop-util", () => ({
