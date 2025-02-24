@@ -4,7 +4,8 @@ import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
 import { writeFile } from "fs/promises";
-import { outputCSVDir } from "./london-database.js";
+
+const outputCSVDir = join( "db", "london", "output_csvs");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const breakWord = "break";
@@ -190,3 +191,5 @@ function processSchema(statement: string) {
   }
   return "";
 }
+
+await convertSQLDumpToCSV(join( "db", "london", "london.sql"));
