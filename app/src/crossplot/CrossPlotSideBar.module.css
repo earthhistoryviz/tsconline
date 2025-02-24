@@ -122,11 +122,11 @@
 .mobileCrossPlotSideBar {
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr var(--side-bar-width);
+  grid-template-rows: 10px 1fr var(--side-bar-width);
   box-shadow: 5px 0px 10px -5px rgba(0, 0, 0, 0.5);
-  overflow-x: hidden;
+  overflow: hidden;
   grid-area: sidebar;
-  grid-template-areas: "content" "tabs";
+  grid-template-areas: "bar" "content" "tabs";
   resize: vertical;
   max-width: 100%;
   width: 100%;

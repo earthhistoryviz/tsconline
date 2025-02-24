@@ -145,6 +145,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   }, [zoomFitMidCoord, zoomFitScale, zoomFitMidCoordIsX]);
 
   // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )
+  // when switching to inspector console, the resize observer will continuously refresh until the screen is clicked.
   useEffect(() => {
     if (!refList || refList.length == 0) return;
     const observers: ResizeObserver[] = [];
