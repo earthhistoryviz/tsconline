@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { join } from "path";
 import { mkdir, writeFile } from "fs/promises";
 
-const outputDir = join( "db", "london", "output");
+const outputDir = join("db", "london", "output");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const breakWord = "break";
@@ -187,4 +187,4 @@ function processSchema(statement: string) {
   return "";
 }
 
-await convertSQLDumpToJSON(join( "db", "london", "london.sql"));
+await convertSQLDumpToJSON(join("db", "london", "london.sql"));
