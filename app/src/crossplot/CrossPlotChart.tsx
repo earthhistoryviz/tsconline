@@ -48,7 +48,10 @@ export const CrossPlotChart: React.FC = observer(() => {
         <Chart
           Component={TSCCrossPlotSVGComponent}
           disableDoubleClick
-          refList={[ref]}
+          refList={[{
+            ref: ref,
+            id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar",
+          }]}
           style={{
             border: "none",
             borderTop: `2px solid ${theme.palette.divider}`

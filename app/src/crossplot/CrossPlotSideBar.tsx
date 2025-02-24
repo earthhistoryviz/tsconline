@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { forwardRef, useContext, useEffect, useRef, useState } from "react";
+import React, { forwardRef, useContext, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
