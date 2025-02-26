@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { forwardRef, useContext, useEffect, useState } from "react";
+import React, { forwardRef, useContext, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
@@ -17,39 +17,12 @@ import TSCColorPicker from "../components/TSCColorPicker";
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const [sidebarWidth, setSidebarWidth] = useState("300px"); // this is so the sidebar retains the width when resized
-    const { state, actions } = useContext(context);
+    const { actions } = useContext(context);
     const navigate = useNavigate();
     const theme = useTheme();
-    useEffect(() => {
-      if (typeof ref === "function") return;
-      const sidebar = ref?.current;
-      if (!sidebar) return;
-
-      const observer = new ResizeObserver(() => {
-        setSidebarWidth(`${sidebar.offsetWidth}px`); // Save width when resized
-      });
-
-      observer.observe(sidebar);
-      return () => observer.disconnect();
-    }, [ref]);
-    const tabs = [
-      { tabName: "Time", Icon: AccessTimeRounded, component: <Time /> },
-      {
-        tabName: "Columns",
-        Icon: TableChartRounded,
-        component: <ColumnDisplay />
-      },
-      {
-        tabName: "Markers",
-        Icon: BookmarkRounded,
-        component: <Markers markers={state.crossPlot.markers} />
-      }
-    ];
     return (
       <Box
         className={styles.crossPlotSideBar}
-        sx={{ width: sidebarWidth }}
         ref={ref}
         bgcolor="backgroundColor.main"
         borderRight="1px solid"
@@ -87,6 +60,63 @@ export const CrossPlotSideBar = observer(
         </Box>
         <Box className={styles.tabContent}>
           <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+            Generate Cross Plot
+          </TSCButton>
+          {tabs[tabIndex].component}
+        </Box>
+      </Box>
+    );
+  })
+);
+
+export const MobileCrossPlotSideBar = observer(
+  forwardRef<HTMLDivElement>(function MobileCrossPlotSidebar(_, ref) {
+    const [tabIndex, setTabIndex] = useState(0);
+    const { actions } = useContext(context);
+    const navigate = useNavigate();
+    const theme = useTheme();
+    return (
+      <Box
+        className={styles.mobileCrossPlotSideBar}
+        ref={ref}
+        bgcolor="backgroundColor.main"
+        borderTop="1px solid"
+        borderColor="divider">
+        <Box className={styles.mobileTabs} bgcolor={Color(theme.palette.dark.main).alpha(0.9).toString()}>
+          {tabs.map((tab, index) => {
+            const sx = {
+              color: index === tabIndex ? theme.palette.button.main : theme.palette.dark.contrastText
+            };
+            return (
+              <Box
+                className={styles.tab}
+                key={index}
+                sx={{
+                  "&:hover": {
+                    // make the background color of the tab lighter when hovered
+                    backgroundColor:
+                      index === tabIndex
+                        ? Color(theme.palette.button.main).alpha(0.1).toString()
+                        : Color("gray").alpha(0.1).toString()
+                  }
+                }}
+                onClick={() => setTabIndex(index)}>
+                <tab.Icon sx={sx} />
+                <Typography
+                  className={styles.tabText}
+                  sx={sx}
+                  color="dark.contrastText"
+                  onClick={() => setTabIndex(index)}>
+                  {tab.tabName}
+                </Typography>
+              </Box>
+            );
+          })}
+        </Box>
+        <Box className={styles.mobileTabContent}>
+          <TSCButton
+            className={styles.mobileGenerate}
+            onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Generate Cross Plot
           </TSCButton>
           {tabs[tabIndex].component}
@@ -226,16 +256,14 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
   }
 );
 
-type MarkersProps = {
-  markers: Marker[];
-};
-const Markers: React.FC<MarkersProps> = observer(({ markers }) => {
+const Markers: React.FC = observer(() => {
+  const { state } = useContext(context);
   return (
     <Box className={styles.markersComponent}>
-      {markers.map((marker, index) => (
+      {state.crossPlot.markers.map((marker, index) => (
         <Box key={index} className={styles.markerOptions}>
           <MarkerOptions marker={marker} />
-          {index !== markers.length - 1 && <CustomDivider />}
+          {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
         </Box>
       ))}
     </Box>
@@ -263,7 +291,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           <TextField
             select
             size="small"
-            className={styles.selectMarker}
             label="Type"
             value={marker.type}
             onChange={(e) => {
@@ -278,7 +305,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           </TextField>
           <TextField
             size="small"
-            className={styles.ageMarker}
             label="Age"
             value={age}
             type="number"
@@ -295,7 +321,6 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
           />
           <TextField
             size="small"
-            className={styles.depthMarker}
             label="Depth"
             type="number"
             value={depth}
@@ -324,3 +349,17 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
     </Box>
   );
 });
+
+const tabs = [
+  { tabName: "Time", Icon: AccessTimeRounded, component: <Time /> },
+  {
+    tabName: "Columns",
+    Icon: TableChartRounded,
+    component: <ColumnDisplay />
+  },
+  {
+    tabName: "Markers",
+    Icon: BookmarkRounded,
+    component: <Markers />
+  }
+];

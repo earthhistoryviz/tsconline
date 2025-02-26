@@ -3,9 +3,10 @@ import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
-import { useTheme } from "@mui/material";
+import { useMediaQuery, useTheme } from "@mui/material";
 import { Marker } from "../types";
 import { getMarkerSizeFromScale } from "../state/actions";
+import { CROSSPLOT_MOBILE_WIDTH } from "../crossplot/CrossPlotChart";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -32,10 +33,15 @@ const convertPixelsToSvgCoords = (svg: SVGSVGElement, x: number, y: number) => {
     y: (y / height) * viewBoxHeight
   };
 };
-const getCursor = (svg: SVGSVGElement, evt: MouseEvent) => {
+const getCursor = (svg: SVGSVGElement, evt: MouseEvent | TouchEvent) => {
   const point = new DOMPoint();
-  point.x = evt.clientX;
-  point.y = evt.clientY;
+  if (evt instanceof TouchEvent) {
+    point.x = evt.touches[0].clientX;
+    point.y = evt.touches[0].clientY;
+  } else {
+    point.x = evt.clientX;
+    point.y = evt.clientY;
+  }
   if (svg.getScreenCTM()) {
     //converts coordinates
     return point.matrixTransform(svg.getScreenCTM()!.inverse());
@@ -168,6 +174,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { chartTabState } = useContext(ChartContext);
     const { chartTimelineEnabled, chartContent, chartZoomSettings } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
+    const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
     // declare here so that comment is updated when marker changes
     const showTooltip = (event: MouseEvent, markerId: string) => {
       if (!state.crossPlot.showTooltips) return;
@@ -247,7 +254,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!svg) return;
       let cleanup = () => {};
       // create a circle on double click
-      const handleDoubleClick = (evt: MouseEvent) => {
+      const handleDoubleClick = (evt: MouseEvent | TouchEvent) => {
         const point = getCursor(svg, evt);
         // check if point is within bounds, otherwise don't make the point
         if (
@@ -326,12 +333,28 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           prev();
         };
       };
+      let lastTap = 0;
+      const handleTouchStart = (evt: TouchEvent) => {
+        const delay = 300;
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        if (tapLength < delay && tapLength > 0) {
+          // prevent default otherwise it will trigger a click event
+          evt.preventDefault();
+          handleDoubleClick(evt);
+        } else {
+          lastTap = currentTime;
+        }
+      };
+
+      svg.addEventListener("touchstart", handleTouchStart);
       svg.addEventListener("dblclick", handleDoubleClick);
       return () => {
+        svg.removeEventListener("touchstart", handleTouchStart);
         svg.removeEventListener("dblclick", handleDoubleClick);
         cleanup();
       };
-    }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode]);
+    }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode, mobile]);
 
     // set up the scale of the labels when svg changes
     useEffect(() => {

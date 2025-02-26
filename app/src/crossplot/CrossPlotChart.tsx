@@ -3,17 +3,20 @@ import { Chart, ChartContext } from "../Chart";
 import React, { useContext, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
-import { CrossPlotSideBar } from "./CrossPlotSideBar";
-import { Box, useTheme } from "@mui/material";
+import { CrossPlotSideBar, MobileCrossPlotSideBar } from "./CrossPlotSideBar";
+import { Box, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import { ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
 
+export const CROSSPLOT_MOBILE_WIDTH = 750;
+
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
+  const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   return (
     <ChartContext.Provider
       value={{
@@ -40,12 +43,17 @@ export const CrossPlotChart: React.FC = observer(() => {
           }
         ]
       }}>
-      <Box className={styles.container}>
-        <CrossPlotSideBar ref={ref} />
+      <Box className={mobile ? styles.containerMobile : styles.container}>
+        {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}
         <Chart
           Component={TSCCrossPlotSVGComponent}
           disableDoubleClick
-          refList={[ref]}
+          refList={[
+            {
+              ref: ref,
+              id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
+            }
+          ]}
           style={{
             border: "none",
             borderTop: `2px solid ${theme.palette.divider}`
