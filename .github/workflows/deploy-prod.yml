@@ -27,28 +27,34 @@ jobs:
       - name: Verify release build
         id: verify_release
         run: |
-          if [ ! -f "release/build-artifacts.zip" ]; then
-            echo "Error: release/build-artifacts.zip not found"
+          cd release
+          if [ ! -f "build-artifacts.zip" ]; then
+            echo "Error: build-artifacts.zip not found"
             exit 1
           fi
-          jar_name=$(unzip -q -p release/build-artifacts.zip server/assets/config.json | jq -r '.activeJar' | xargs basename)
+          jar_name=$(unzip -q -p build-artifacts.zip server/assets/config.json | jq -r '.activeJar' | xargs basename)
           if [ -z "$jar_name" ]; then
             echo "Error: Failed to parse jar name from config.json"
             exit 1
           fi
-          if [ ! -f "release/$jar_name" ]; then
-            echo "Error: release/$jar_name not found"
+          if [ ! -f "$jar_name" ]; then
+            echo "Error: $jar_name not found"
+            exit 1
+          fi
+          if sha256sum -c checksums.txt; then
+            echo "SHA-256 verification passed."
+          else
+            echo "SHA-256 verification failed! Deployment stopped."
             exit 1
           fi
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
       - name: Send Artifacts to Server
         run: |
-          FILES_TO_SEND="build-artifacts.zip ${{ steps.verify_release.outputs.jar_name }}"
+          FILES_TO_SEND="release/build-artifacts.zip release/${{ steps.verify_release.outputs.jar_name }}"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
           scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
-
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
