@@ -1,12 +1,14 @@
-name: Deploy Release
+name: Deploy Production
 
 concurrency:
-  group: deploy-release
+  group: deploy-prod
 
 on:
-  push:
-    branches:
-      - "release-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy (e.g. v1.0.0)'
+        required: true
 
 jobs:
   deploy:
@@ -17,63 +19,36 @@ jobs:
     env:
       SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: "20"
-
-      - name: Install and build project
+      - name: Download release build
         run: |
-          yarn
-          yarn build
-          zip -q -r build-artifacts.zip app/dist shared/dist server/dist
+          mkdir release
+          gh release download ${{ inputs.tag }} -D release
 
-      - name: Parse Jar Name
-        id: parse_jar_name
+      - name: Verify release build
+        id: verify_release
         run: |
-          jar_name=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
-
-      - name: Set up SSH key
-        run: |
-          eval $(ssh-agent)
-          mkdir -p ~/.ssh
-          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
-          ssh-add ~/.ssh/id_rsa
-          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
-
-      - name: Set up jdk
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: "8"
-          java-package: "jdk"
-
-      - name: Checkout code and build jar
-        run: |
-          git clone git@bitbucket.org:strat/tscreator.git
-          cd ${{ github.workspace }}/tscreator/devel
-          make
-          make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} \;
-          if [ -f  ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} ]; then
-            echo "Successfully made jar."
-          else
-            echo "Failed to make jar."
+          if [ ! -f "release/build-artifacts.zip" ]; then
+            echo "Error: release/build-artifacts.zip not found"
             exit 1
           fi
+          jar_name=$(unzip -q -p release/build-artifacts.zip server/assets/config.json | jq -r '.activeJar' | xargs basename)
+          if [ -z "$jar_name" ]; then
+            echo "Error: Failed to parse jar name from config.json"
+            exit 1
+          fi
+          if [ ! -f "release/$jar_name" ]; then
+            echo "Error: release/$jar_name not found"
+            exit 1
+          fi
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
       - name: Send Artifacts to Server
         run: |
-          FILES_TO_SEND="build-artifacts.zip ${{ steps.parse_jar_name.outputs.jar_name }}"
+          FILES_TO_SEND="build-artifacts.zip ${{ steps.verify_release.outputs.jar_name }}"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
           scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
+
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -84,21 +59,12 @@ jobs:
           script: |
             cd ${{ secrets.RELEASE_PATH }}
 
-            git pull --no-edit
-
-            PULL_STATUS=$?
-
-            if [ $PULL_STATUS -eq 0 ]; then
-              echo "git pull succeeded"
-            else
-              echo "git pull failed with exit status $PULL_STATUS"
-              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
-              exit 1
-            fi
+            git fetch --tags
+            git checkout ${{ inputs.tag }}
 
             unzip -q -o build-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
             rm build-artifacts.zip
-            mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            mv ${{ steps.verify_release.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env

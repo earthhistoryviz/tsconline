@@ -1,0 +1,148 @@
+name: Deploy Staging
+
+concurrency:
+  group: deploy-release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+    branches:
+      - "main"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.WEBSITE_URL }}
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build project
+        run: yarn build
+
+      - name: Parse Jar Name
+        id: parse_jar_name
+        run: |
+          jar_name=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+  
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+  
+      - name: Set up jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+  
+      - name: Checkout code and build jar
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} \;
+          if [ -f  ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build-artifacts.zip
+            ${{ steps.parse_jar_name.outputs.jar_name }}
+  
+      - name: Send Artifacts to Server
+        run: |
+          FILES_TO_SEND="build-artifacts.zip ${{ steps.parse_jar_name.outputs.jar_name }}"
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_PATH }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ secrets.STAGING_PATH }}
+
+            git pull --no-edit
+
+            git fetch --tags
+            git checkout ${{ github.ref_name }}
+
+
+            unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            rm build-artifacts.zip
+            mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
+
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="tsconline.timescalecreator.org"' >> ./server/.env
+
+            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+
+            if [ ! -f "docker-compose-server.yml" ]; then
+              echo "Error: docker-compose-server.yml not found"
+              exit 1
+            fi
+
+            docker compose -f docker-compose-server.yml restart
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
+            sleep 5
+
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Error: Failed to get container ID for tsconline."
+              exit 1
+            fi
+
+            MAX_WAIT=240
+            INTERVAL=5
+            ELAPSED=0
+
+            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                echo "Last 200 lines in container:"
+                docker-compose -f docker-compose-server.yml logs --tail=200
+                docker-compose -f docker-compose-server.yml down
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
