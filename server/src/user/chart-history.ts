@@ -1,7 +1,7 @@
 import { cp, mkdir, readFile, writeFile } from "fs/promises";
 import { assetconfigs } from "../util.js";
 import { join } from "path";
-import { Counter, assertHistoryStore } from "../types.js";
+import { Counter, assertHistoryStore, incrementCounter } from "../types.js";
 import { Mutex } from "async-mutex";
 
 const mutex = new Mutex();
@@ -34,7 +34,7 @@ export async function saveChartHistory(uuid: string, settingsFilePath: string, d
     const userHistory = historyStore[uuid] || { counter: 0, entries: [] };
     await cp(settingsFilePath, join(userHistoryPath, `${userHistory.counter}.tsc`));
     userHistory.entries[userHistory.counter] = datapackPaths;
-    userHistory.counter = ((userHistory.counter + 1) % 10) as Counter; // have to cast because it can't infer modulo 10
+    userHistory.counter = incrementCounter(userHistory.counter);
     historyStore[uuid] = userHistory;
 
     await writeFile(assetconfigs.historyStoreFilepath, JSON.stringify(historyStore, null, 2));

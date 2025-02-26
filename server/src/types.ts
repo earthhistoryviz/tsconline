@@ -121,9 +121,27 @@ export type FileMetadata = {
 
 export type Counter = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 
+// Maps a counter to the next counter, wrapping around to 0 after 9, essentially a modulo 10 operation but with types
+const nextCounter: { [K in Counter]: Counter } = {
+  0: 1,
+  1: 2,
+  2: 3,
+  3: 4,
+  4: 5,
+  5: 6,
+  6: 7,
+  7: 8,
+  8: 9,
+  9: 0,
+};
+
+export function incrementCounter(c: Counter): Counter {
+  return nextCounter[c];
+}
+
 export type HistoryStore = {
   [uuid: string]: {
-    counter: Counter;
+    counter: Counter; // counter for the user's history, wraps around 0-9
     entries: string[][]; // Counter indexes this array (0-9) and each index is an array of datapack paths
   };
 };
