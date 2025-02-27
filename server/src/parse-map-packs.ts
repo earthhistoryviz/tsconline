@@ -34,6 +34,7 @@ export async function parseMapPacks(datapacks: string[], decryptionDirectory: st
   await pmap(mapInfoPaths, async (map_info) => {
     const contents = (await fs.readFile(map_info)).toString();
     const lines = contents.split(/\n|\r/);
+    // this is a hack, it's super inconvenient to naturally get the datapack title and not really worth my time, but we can get the uuid normally
     const datapackFilepath = path.dirname(path.dirname(path.dirname(path.dirname(map_info))));
     const datapackTitle = path.basename(datapackFilepath);
     const map: MapInfo[string] = {
