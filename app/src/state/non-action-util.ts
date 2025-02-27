@@ -148,6 +148,7 @@ export function getPastWorkshops(workshops: SharedWorkshop[]) {
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
+
 export async function downloadFile(blob: Blob, filename: string) {
   const reader = new FileReader();
   reader.readAsDataURL(blob);
@@ -169,7 +170,5 @@ export async function downloadFile(blob: Blob, filename: string) {
   aTag.click();
   aTag.remove();
 }
-export function getWorkshopCoverImage(coverPictureUrl?: string) {
-  const serverURL = coverPictureUrl && coverPictureUrl?.length > 0 ? devSafeUrl("/" + coverPictureUrl) : TSCreatorLogo;
-  return serverURL;
-}
+
+

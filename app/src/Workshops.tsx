@@ -65,7 +65,6 @@ type Event = {
   start: Date;
   end: Date;
   workshopId: number;
-  coverPictureUrl?: string;
 };
 
 const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
@@ -95,7 +94,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={getWorkshopCoverImage(workshop.coverPictureUrl)}
+                    image={getWorkshopCoverImage()}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
                     onError={() => actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE)}
@@ -311,12 +310,7 @@ export const Workshops: React.FC = observer(() => {
           (new Date(event.start) < date && new Date(event.end) >= date)
       )
     ) {
-      const theEvent = events.find(
-        (event) =>
-          new Date(event.start).toDateString() === date.toDateString() ||
-          (new Date(event.start) < date && new Date(event.end) >= date)
-      );
-      newStyle.backgroundImage = getWorkshopCoverImage(theEvent!.coverPictureUrl); // This need to be fix later so leave it as TSCreatorLogo for now.
+      newStyle.backgroundImage = getWorkshopCoverImage(); // This need to be fix later so leave it as TSCreatorLogo for now.
       newStyle.backgroundSize = "cover";
       newStyle.backgroundPosition = "center";
       newStyle.opacity = 0.3;
@@ -355,8 +349,7 @@ export const Workshops: React.FC = observer(() => {
     title: workshop.title,
     start: dayjs(workshop.start).toDate(),
     end: dayjs(workshop.end).toDate(),
-    workshopId: workshop.workshopId,
-    coverPictureUrl: workshop.coverPictureUrl
+    workshopId: workshop.workshopId
   }));
 
   useEffect(() => {
@@ -366,11 +359,11 @@ export const Workshops: React.FC = observer(() => {
     if (shouldLoadRecaptcha) {
       loadRecaptcha().then(async () => {
         if (state.user.isAdmin) {
-          await actions.adminFetchWorkshops();
+          await actions.adminFetchWorkshops({ signal: controller.signal });
         }
       });
     } else {
-      actions.adminFetchWorkshops();
+      actions.adminFetchWorkshops({ signal: controller.signal });
     }
 
     return () => {
