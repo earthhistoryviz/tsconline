@@ -375,7 +375,7 @@ const testWorkshop: Workshop = {
   start: start.toISOString(),
   end: end.toISOString(),
   workshopId: 1,
-  regRestrict: 0,
+  regRestrict: false,
   creatorUUID: "123",
   regLink: ""
 };
@@ -1685,7 +1685,6 @@ describe("adminGetWorkshops", () => {
     vi.clearAllMocks();
   });
   const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const fetchImageLink = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
   const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
   const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   it("should return 500 if findWorkshop throws an error", async () => {
@@ -1706,7 +1705,7 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
-    expect(fetchImageLink).toHaveBeenCalledOnce();
+
     expect(getDatapacksNames).toHaveBeenCalledOnce();
     expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
@@ -1714,7 +1713,6 @@ describe("adminGetWorkshops", () => {
         {
           ...testWorkshop,
           active: false,
-          coverPictureUrl: "",
           datapacks: [],
           files: []
         }
@@ -1729,7 +1727,6 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
-    expect(fetchImageLink).toHaveBeenCalledOnce();
     expect(getDatapacksNames).toHaveBeenCalledOnce();
     expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
@@ -1738,7 +1735,6 @@ describe("adminGetWorkshops", () => {
           ...testWorkshop,
           start: mockDate.toISOString(),
           active: true,
-          coverPictureUrl: "",
           datapacks: [],
           files: []
         }
@@ -1755,7 +1751,7 @@ describe("adminCreateWorkshop", () => {
     title: testWorkshop.title,
     start: testWorkshop.start,
     end: testWorkshop.end,
-    regRestrict: testWorkshop.regRestrict,
+    regRestrict: 0,
     creatorUUID: testWorkshop.creatorUUID,
     regLink: testWorkshop.regLink
   };
@@ -1976,7 +1972,7 @@ describe("adminEditWorkshop", () => {
   it("should return 409 if workshop with title and dates already exists", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
     findWorkshop.mockResolvedValueOnce([
-      { ...body, end: testWorkshop.end, regLink: null, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }
+      { ...body, end: testWorkshop.end, regLink: undefined, regRestrict: false, creatorUUID: testWorkshop.creatorUUID }
     ]);
     const response = await app.inject({
       method: "PATCH",
@@ -2021,7 +2017,7 @@ describe("adminEditWorkshop", () => {
         ...body,
         end: testWorkshop.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
         active: false,
-        regRestrict: 0,
+        regRestrict: false,
         creatorUUID: ""
       }
     });

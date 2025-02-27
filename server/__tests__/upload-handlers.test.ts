@@ -28,7 +28,6 @@ import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
 import * as workshopUtil from "../src/workshop/workshop-util";
-import * as pathModule from "path";
 import { Dirent } from "fs";
 
 import path from "path";
@@ -56,7 +55,8 @@ vi.mock("../src/constants", () => ({
   DATAPACK_PROFILE_PICTURE_FILENAME: "datapack-image",
   CACHED_USER_DATAPACK_FILENAME: "Datapack.json",
   DECRYPTED_DIRECTORY_NAME: "decrypted",
-  MAPPACK_DIRECTORY_NAME: "MapImages"
+  MAPPACK_DIRECTORY_NAME: "MapImages",
+  WORKSHOP_COVER_PICTURE: "coverPicture"
 }));
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
@@ -123,28 +123,7 @@ vi.mock("fs", async () => {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
-vi.mock("path", async (importOriginal) => {
-  const actual = await importOriginal<typeof pathModule>();
-  return {
-    default: {
-      ...actual,
-      join: (...args: string[]) => {
-        return args.join("/");
-      },
-      resolve: (...args: string[]) => {
-        return args.join("/");
-      },
-      basename: (arg: string) => {
-        const split = arg.split(".");
-        split.pop();
-        return split.join(".");
-      }
-    },
-    join: (...args: string[]) => {
-      return args.join("/");
-    }
-  };
-});
+
 describe("uploadUserDatapackHandler", () => {
   const rm = vi.spyOn(fsPromises, "rm");
   const isDateValid = vi.spyOn(shared, "isDateValid");

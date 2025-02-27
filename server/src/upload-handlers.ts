@@ -38,7 +38,7 @@ import {
   getDecryptedDirectory
 } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME, MAPPACK_DIRECTORY_NAME } from "./constants.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME, MAPPACK_DIRECTORY_NAME, WORKSHOP_COVER_PICTURE } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -499,13 +499,20 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 
   const filename = file.filename;
   const filePath = join(filesFolder, filename);
-  const { code, message } = await uploadFileToFileSystem(file, filePath);
-  if (code !== 200) {
+  try {
+    const { code, message } = await uploadFileToFileSystem(file, filePath);
+    if (code !== 200) {
+      await rm(filePath, { force: true }).catch((e) => {
+        console.error(e);
+      });
+    }
+    return { code, message };
+  } catch (error) {
     await rm(filePath, { force: true }).catch((e) => {
       console.error(e);
     });
+    return { code: 500, message: error instanceof Error ? error.message : "Failed to upload file To file System." };
   }
-  return { code, message };
 }
 
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
@@ -520,14 +527,21 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
   }
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);
-  const filePath = join(filesFolder, `coverPicture${fileExtension}`);
-  const { code, message } = await uploadFileToFileSystem(coverPicture, filePath);
-  if (code != 200) {
+  const filePath = join(filesFolder, `${WORKSHOP_COVER_PICTURE}${fileExtension}`);
+  try {
+    const { code, message } = await uploadFileToFileSystem(coverPicture, filePath);
+    if (code !== 200) {
+      await rm(filePath, { force: true }).catch((e) => {
+        console.error(e);
+      });
+    }
+    return { code, message };
+  } catch (error) {
     await rm(filePath, { force: true }).catch((e) => {
       console.error(e);
     });
+    return { code: 500, message: error instanceof Error ? error.message : "Failed to upload file To file System." };
   }
-  return { code, message };
 }
 
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
@@ -544,7 +558,7 @@ export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
   const possibleExtensions = [".png", ".jpeg", ".jpg"];
   // Loop through possible extensions and check if the file exists
   for (const ext of possibleExtensions) {
-    const coverPicturePath = path.join(filesFolder, "coverPicture" + ext);
+    const coverPicturePath = path.join(filesFolder, WORKSHOP_COVER_PICTURE + ext);
     if (await checkFileExists(coverPicturePath)) {
       return coverPicturePath;
     }

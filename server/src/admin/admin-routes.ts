@@ -37,7 +37,6 @@ import {
   assertSharedWorkshopArray
 } from "@tsconline/shared";
 import {
-  fetchWorkshopCoverPictureFilepath,
   getWorkshopDatapacksNames,
   getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -520,7 +519,7 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         const start = new Date(workshop.start);
         const end = new Date(workshop.end);
 
-        const imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || "";
+        //const imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || ""; //TODO: fix this function to serve coverpicture properly
         const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
         const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
 
@@ -530,10 +529,9 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
           end: end.toISOString(),
           workshopId: workshop.workshopId,
           active: start <= now && now <= end,
-          regRestrict: workshop.regRestrict,
+          regRestrict: Number(workshop.regRestrict) === 1,
           creatorUUID: workshop.creatorUUID,
-          regLink: workshop.regLink,
-          coverPictureUrl: imageLink,
+          regLink: workshop.regLink ? workshop.regLink : "",
           datapacks: datapacks,
           files: files
         };
@@ -556,7 +554,7 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
   request: FastifyRequest<{
-    Body: { title: string; start: string; end: string; regRestrict: number; creatorUUID: string; regLink?: string };
+    Body: { title: string; start: string; end: string; regRestrict: boolean; creatorUUID: string; regLink?: string };
   }>,
   reply: FastifyReply
 ) {
@@ -582,12 +580,13 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
+    const regRestrictNum = regRestrict ? 1 : 0;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       creatorUUID: creatorUUID,
-      regRestrict: regRestrict,
+      regRestrict: regRestrictNum,
       regLink: regLink
     });
     if (!workshopId) {
@@ -600,12 +599,13 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       workshopId,
       active: false,
       creatorUUID: creatorUUID,
-      regRestrict: regRestrict,
+      regRestrict: Number(regRestrict) === 1,
       regLink: regLink
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
+    console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
 };
@@ -672,7 +672,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       end: newWorkshop.end,
       workshopId: workshopId,
       active: newStart <= now && now <= newEnd,
-      regRestrict: 0,
+      regRestrict: false,
       creatorUUID: "" //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
     assertSharedWorkshop(workshop);
@@ -852,7 +852,11 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
 ) {
   const parts = request.parts();
   const { workshopId } = request.params;
-
+  const workshop = await getWorkshopIfNotEnded(workshopId);
+  if (!workshop) {
+    reply.status(404).send({ error: "Workshop not found or has ended" });
+    return;
+  }
   try {
     for await (const part of parts) {
       if (part.type === "file" && part.fieldname === "file") {
@@ -862,11 +866,6 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
           return;
         }
       }
-    }
-    const workshop = await getWorkshopIfNotEnded(workshopId);
-    if (!workshop) {
-      reply.status(404).send({ error: "Workshop not found or has ended" });
-      return;
     }
     reply.send({ message: "Files added to workshop" });
     return;
@@ -892,6 +891,16 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
+        if (!workshopId) {
+          console.error("Missing workshopId ");
+          reply.status(400).send({ error: "Missing workshopId" });
+          return;
+        }
+        if (!coverPicture) {
+          console.error("Missing cover picture");
+          reply.status(400).send({ error: "Missing cover picture" });
+          return;
+        }
         const workshop = await getWorkshopIfNotEnded(workshopId);
         if (!workshop) {
           console.error("Workshop not found or has ended");
@@ -906,16 +915,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
         reply.send({ message: "Cover picture added to workshop" });
         return;
       }
-    }
-    if (!workshopId) {
-      console.error("Missing workshopId ");
-      reply.status(400).send({ error: "Missing workshopId" });
-      return;
-    }
-    if (!coverPicture) {
-      console.error("Missing cover picture");
-      reply.status(400).send({ error: "Missing cover picture" });
-      return;
     }
   } catch (error) {
     console.error(error);

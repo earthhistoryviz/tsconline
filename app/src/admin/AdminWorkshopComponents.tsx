@@ -145,7 +145,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [files, setFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>(null);
   const [regLink, setRegLink] = useState<string | undefined>(undefined);
-  const [regRestrict, setRegRestrict] = useState(0);
+  const [regRestrict, setRegRestrict] = useState(false);
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
@@ -227,7 +227,15 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           setWorkshop(newWorkshop);
         }
 
-        if (isWorkshopUnchanged && !emailFile && !emails && !regLink && !files && !coverPicture && !regRestrict) {
+        if (
+          isWorkshopUnchanged &&
+          !emailFile &&
+          !emails &&
+          !regLink &&
+          !files &&
+          !coverPicture &&
+          regRestrict === currentWorkshop?.regRestrict
+        ) {
           actions.pushSnackbar("No changes made.", "info");
           return;
         }
@@ -418,10 +426,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
               <Typography>Open for public registration?</Typography>
               <Select
-                value={regRestrict == 1 ? "Yes" : "No"}
+                value={regRestrict === true ? "Yes" : "No"}
                 sx={{ height: "30px" }}
                 onChange={() => {
-                  setRegRestrict(regRestrict === 0 ? 1 : 0);
+                  setRegRestrict(regRestrict === false ? true : true);
                 }}>
                 <MenuItem sx={{ height: "30px" }} value="Yes">
                   Yes
@@ -501,15 +509,18 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         alt="Cover Picture"
                         sx={{ width: 100, height: 100 }}
                       />
-                    ) : currentWorkshop?.coverPictureUrl ? (
-                      // workshop has a old cover picture
-                      <Avatar
-                        variant="square"
-                        src={currentWorkshop?.coverPictureUrl} //use safeurl
-                        alt="Workshop Avatar"
-                        sx={{ width: 100, height: 100 }}
-                      />
                     ) : (
+                      // TODO: Update this to use the route serving the cover picture (once it's finished) to check if a cover picture exists.
+                      // currentWorkshop?.coverPictureUrl ?
+                      // (
+                      //   // workshop has a old cover picture
+                      //   <Avatar
+                      //     variant="square"
+                      //     src={currentWorkshop?.coverPictureUrl} //use safeurl
+                      //     alt="Workshop Avatar"
+                      //     sx={{ width: 100, height: 100 }}
+                      //   />
+                      // ) : (
                       <Typography>No cover picture for this workshop</Typography>
                     )}
                     <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
@@ -542,7 +553,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setFiles(null);
                           setCoverPicture(null);
                           setRegLink(undefined);
-                          setRegRestrict(0);
+                          setRegRestrict(false);
                         }}>
                         Reset Form
                       </TSCButton>
