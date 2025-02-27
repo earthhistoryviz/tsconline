@@ -2,6 +2,7 @@ import {
   Datapack,
   DatapackMetadata,
   DatapackUniqueIdentifier,
+  MapInfo,
   SharedUser,
   isOfficialDatapack,
   isUserDatapack,
@@ -139,4 +140,7 @@ export function getPastWorkshops(workshops: Workshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
+}
+export function getMapImageUrl(mapInfo: MapInfo[string]) {
+  return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
