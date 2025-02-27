@@ -18,7 +18,7 @@ import {
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import { DatapackMetadata } from "@tsconline/shared";
-import { assetconfigs, checkFileExists, getBytes, makeTempFilename } from "./util.js";
+import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
   checkFileTypeIsDatapack,
