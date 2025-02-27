@@ -503,7 +503,7 @@ export const adminAddUsersToWorkshop = action(
 /**
  * Fetches all workshops
  */
-export const adminFetchWorkshops = action(async () => {
+export const adminFetchWorkshops = action(async (options?: { signal?: AbortSignal }) => {
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
     if (!recaptchaToken) return;
@@ -512,7 +512,8 @@ export const adminFetchWorkshops = action(async () => {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      }
+      },
+      ...options
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
@@ -526,8 +527,10 @@ export const adminFetchWorkshops = action(async () => {
       );
     }
   } catch (error) {
+    if ((error as Error).name === "AbortError") return;
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
   }
 });
 
@@ -544,14 +547,14 @@ export const adminCreateWorkshop = action(
     title: string,
     start: string,
     end: string,
-    regRestrict: number,
+    regRestrict: boolean,
     creatorUUID: string,
     regLink?: string
   ): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      const body: Record<string, string | number | undefined> = {
+      const body: Record<string, string | boolean | undefined> = {
         title,
         start,
         end,

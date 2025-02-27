@@ -47,8 +47,8 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
-  regLink: string | null;
-  regRestrict: number;
+  regLink?: string;
+  regRestrict: number | boolean;
   creatorUUID: string;
 }
 
