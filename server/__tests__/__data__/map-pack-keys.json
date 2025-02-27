@@ -2,6 +2,8 @@
     "map-pack-key-1": {
         "mapInfo": {
           "Africa Bight": {
+            "datapackTitle": "mockedBasename",
+            "uuid": "uuid",
             "name": "Africa Bight",
             "img": "AfricaBight.png",
             "coordtype": "RECTANGULAR",
@@ -29,6 +31,8 @@
     "map-pack-key-2": {
         "mapInfo": {
           "Belgium": {
+            "datapackTitle": "mockedBasename",
+            "uuid": "uuid",
             "name": "Belgium",
             "img": "Belgium_Map_Nov2012.png",
             "coordtype": "RECTANGULAR",
@@ -76,6 +80,8 @@
     "map-pack-key-3": {
         "mapInfo": {
             "MAP TITLE TEST": {
+                "datapackTitle": "mockedBasename",
+                "uuid": "uuid",
                 "name": "MAP TITLE TEST",
                 "img": "maptest.png",
                 "coordtype": "RECTANGULAR",

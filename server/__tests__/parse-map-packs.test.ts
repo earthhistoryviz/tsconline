@@ -1,6 +1,17 @@
 import { vi, describe, beforeEach, it, expect } from "vitest";
 import * as utilModule from "../src/util";
 import { readFileSync } from "fs";
+import path from "path";
+vi.mock("path", async (importOriginal) => {
+  const actual = await importOriginal<typeof path>();
+  return {
+    ...actual,
+    default: {
+      ...actual,
+      basename: vi.fn(() => "mockedBasename")
+    }
+  };
+});
 vi.mock("../src/util", async (importOriginal) => {
   const actual = await importOriginal<typeof utilModule>();
   return {
@@ -65,7 +76,7 @@ const headerTransectsInfo = ["TRANSECT", "TRANSECT 1", "START", "END", "NOTE"];
 
 describe("parseMapPacks tests", () => {
   it("should parse africa general map pack", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"], "");
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-1.txt"], "", "uuid");
     expect(mapPacks).toEqual(key["map-pack-key-1"]);
   });
 
@@ -73,7 +84,7 @@ describe("parseMapPacks tests", () => {
    * parses the belgium map pack with a parent map
    */
   it("should parse belgium map-pack", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"], "");
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt"], "", "uuid");
     expect(mapPacks).toEqual(key["map-pack-key-2"]);
   });
 
@@ -81,7 +92,7 @@ describe("parseMapPacks tests", () => {
    * parses transects, info points, map points, parent, coord, and header
    */
   it("should parse everything", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"], "");
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-3.txt"], "", "uuid");
     expect(mapPacks).toEqual(key["map-pack-key-3"]);
   });
 
@@ -89,7 +100,7 @@ describe("parseMapPacks tests", () => {
    * parses two packs with same parent "World map"
    */
   it("should parse two packs with same parent", async () => {
-    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "");
+    const mapPacks = await parseMapPacks(["parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"], "", "uuid");
     const expected = {
       mapInfo: { ...key["map-pack-key-2"]["mapInfo"], ...key["map-pack-key-3"]["mapInfo"] },
       mapHierarchy: { "World Map": ["Belgium", "MAP TITLE TEST"].sort() }
@@ -104,7 +115,8 @@ describe("parseMapPacks tests", () => {
   it("should parse all packs", async () => {
     const mapPacks = await parseMapPacks(
       ["parse-map-packs-test-1.txt", "parse-map-packs-test-2.txt", "parse-map-packs-test-3.txt"],
-      ""
+      "",
+      "uuid"
     );
     const expected = {
       mapInfo: {
@@ -119,8 +131,8 @@ describe("parseMapPacks tests", () => {
   });
 
   it("should return empty if bad data", async () => {
-    await expect(parseMapPacks(["bad-data.txt"], "")).rejects.toThrow(
-      new Error("Map info file: bad-data is not in the correct format/version")
+    await expect(parseMapPacks(["bad-data.txt"], "", "uuid")).rejects.toThrow(
+      new Error("Map info file: mockedBasename is not in the correct format/version")
     );
   });
 });
@@ -176,6 +188,8 @@ describe("processLine tests", () => {
   beforeEach(() => {
     index = 0;
     map = {
+      datapackTitle: "",
+      uuid: "",
       name: "",
       img: "",
       coordtype: "",
@@ -197,6 +211,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-MAP INFO", async () => {
       const tabSeparated = [headerMapHeaders, headerMapInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "MAP TITLE TEST",
         img: "IMAGE",
         coordtype: "",
@@ -231,6 +247,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-COORD with vertical perspective", async () => {
       const tabSeparated = [vertBoundsHeaders, vertBoundsInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "VERTICAL PERSPECTIVE",
@@ -253,6 +271,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-COORD with rectangular bounds", async () => {
       const tabSeparated = [rectBoundsHeaders, rectBoundsInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "RECTANGULAR",
@@ -307,6 +327,8 @@ describe("processLine tests", () => {
       const mapTest = { ...map };
       mapTest.name = "MAP TEST HEADER-PARENT";
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "MAP TEST HEADER-PARENT",
         img: "",
         coordtype: "",
@@ -370,6 +392,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-DATACOL with max amount of headers", async () => {
       const tabSeparated = [headerDatacolMaxHeaders, headerDatacolMaxInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -401,6 +425,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-DATACOL with min amount of headers", async () => {
       const tabSeparated = [headerDatacolMinHeaders, headerDatacolMinInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -430,6 +456,8 @@ describe("processLine tests", () => {
       secondPoint[1] = "POINT NAME 2";
       const tabSeperated = [headerDatacolMaxHeaders, headerDatacolMaxInfo, secondPoint];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -489,6 +517,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-INFORMATION POINTS", () => {
       const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -520,6 +550,8 @@ describe("processLine tests", () => {
       secondPoint[1] = "POINT NAME 2";
       const tabSeparated = [headerInfoPointsHeaders, headerInfoPointsInfo, secondPoint];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -554,6 +586,8 @@ describe("processLine tests", () => {
     it("should generate info points with no note", () => {
       const tabSeparated = [headerInfoPointsHeaders.slice(0, -1), headerInfoPointsInfo.slice(0, -1)];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -603,6 +637,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-TRANSECTS", () => {
       const tabSeparated = [headerTransectsHeaders, headerTransectsInfo];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -632,6 +668,8 @@ describe("processLine tests", () => {
     it("should process a HEADER-TRANSECTS with no note", () => {
       const tabSeparated = [headerTransectsHeaders.slice(0, -1), headerTransectsInfo.slice(0, -1)];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",
@@ -664,6 +702,8 @@ describe("processLine tests", () => {
       thirdTransect[1] = "TRANSECT 3";
       const tabSeparated = [headerTransectsHeaders, headerTransectsInfo, secondTransect, thirdTransect];
       const expectedMap = {
+        uuid: "",
+        datapackTitle: "",
         name: "",
         img: "",
         coordtype: "",

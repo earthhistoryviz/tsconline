@@ -14,7 +14,8 @@ import {
   assetconfigs,
   verifyFilepath,
   checkFileExists,
-  extractMetadataFromDatapack} from "../util.js";
+  extractMetadataFromDatapack
+} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
