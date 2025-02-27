@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi, test } from "vitest";
 import {
   changeProfilePicture,
+  fetchMapPackImageFilepath,
   getFileNameFromCachedDatapack,
   getTemporaryFilepath,
   processMultipartPartsForDatapackUpload,
@@ -35,7 +36,9 @@ vi.mock("../src/user/fetch-user-files", () => ({
   getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory"),
   getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
   getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath"),
-  getPDFFilesDirectoryFromDatapackDirectory: vi.fn().mockReturnValue("files-directory")
+  getPDFFilesDirectoryFromDatapackDirectory: vi.fn().mockReturnValue("files-directory"),
+  getDecryptedDirectory: vi.fn().mockReturnValue("decrypted-directory"),
+  getDirectories: vi.fn().mockResolvedValue(["directory1", "directory2"])
 }));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
@@ -43,7 +46,8 @@ vi.mock("stream/promises", () => ({
 vi.mock("../src/constants", () => ({
   DATAPACK_PROFILE_PICTURE_FILENAME: "datapack-image",
   CACHED_USER_DATAPACK_FILENAME: "Datapack.json",
-  DECRYPTED_DIRECTORY_NAME: "decrypted"
+  DECRYPTED_DIRECTORY_NAME: "decrypted",
+  MAPPACK_DIRECTORY_NAME: "MapImages"
 }));
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
@@ -894,5 +898,39 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
       expect(data.fields).toHaveProperty("tempProfilePictureFilepath");
       expect(data.fields.datapackImage).toBe(DATAPACK_PROFILE_PICTURE_FILENAME + ".jpg");
     }
+  });
+});
+describe("fetchMapPackImageFilepath", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const getDecryptedDirectory = vi.spyOn(fetchUserFiles, "getDecryptedDirectory");
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if datapack directory doesn't exist", async () => {
+    getDirectories.mockRejectedValueOnce(new Error("error"));
+    await expect(() => fetchMapPackImageFilepath("user", "datapack", "img")).rejects.toThrow();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+  });
+  it("should return null if no image found", async () => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("datapacks-directory");
+    getDirectories.mockResolvedValueOnce(["decrypted-directory"]);
+    checkFileExists.mockResolvedValueOnce(false);
+    const result = await fetchMapPackImageFilepath("user", "datapack", "img");
+    expect(result).toBeNull();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+  });
+  it("should return the image filepath if found", async () => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("datapacks-directory");
+    checkFileExists.mockResolvedValueOnce(true);
+    getDirectories.mockResolvedValueOnce(["decrypted-directory"]);
+    getDecryptedDirectory.mockReturnValue("decrypted-directory");
+    const result = await fetchMapPackImageFilepath("user", "datapack", "img");
+    expect(result).toEqual("decrypted-directory/decrypted-directory/MapImages/img");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+    expect(getDecryptedDirectory).toHaveBeenCalledOnce();
   });
 });

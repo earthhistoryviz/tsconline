@@ -1,7 +1,11 @@
 import { mkdir, readdir } from "fs/promises";
 import path from "path";
 import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util.js";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
+import { CACHED_USER_DATAPACK_FILENAME, DECRYPTED_DIRECTORY_NAME } from "../constants.js";
+
+export function getDecryptedDirectory(directory: string) {
+  return path.join(directory, DECRYPTED_DIRECTORY_NAME);
+}
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**

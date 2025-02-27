@@ -1,6 +1,7 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { spawn } from "child_process";
 import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
+import { writeFile, stat, readFile, mkdir, realpath } from "fs/promises";
 import {
   TimescaleItem,
   assertChartRequest,
@@ -13,8 +14,7 @@ import {
   assetconfigs,
   verifyFilepath,
   checkFileExists,
-  extractMetadataFromDatapack
-} from "../util.js";
+  extractMetadataFromDatapack} from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
 import svgson from "svgson";
@@ -28,7 +28,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
+import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 
 /**
  * Fetches the official datapack with the given name if it is public
@@ -497,33 +497,18 @@ export const fetchDatapackCoverImage = async function (
 };
 
 export async function fetchMapImages(
-  request: FastifyRequest<{ Params: { type: string; "*": string } }>,
+  request: FastifyRequest<{ Params: { title: string; uuid: string; img: string } }>,
   reply: FastifyReply
 ) {
   try {
-    const { type } = request.params;
-    const rawPath = request.params["*"] as string;
-    const baseDir = path.join(process.cwd(), "assets", "uploads", type);
-    const fullPath = path.join(baseDir, path.normalize(rawPath));
-    const isVerified = await verifyFilepath(fullPath);
-    if (!isVerified) {
-      return reply.status(403).send({ error: "Forbidden: invalid path" });
+    const { title, uuid, img } = request.params;
+    const path = await fetchMapPackImageFilepath(decodeURIComponent(uuid), title, img);
+    if (!path) {
+      return reply.status(404).send({ error: "Image not found" });
     }
-    const pathName = `${assetconfigs.uploadDirectory}/${type}/${rawPath}`;
-    const isAllowed =
-      type === "private" ? isAllowedPrivatePath({ pathName, req: request }) : isValidMapImagePath(pathName);
-
-    if (!isAllowed) {
-      return reply.status(403).send({ error: "Forbidden: not allowed" });
-    }
-    try {
-      await access(fullPath);
-    } catch {
-      return reply.status(404).send({ error: "File not found" });
-    }
-    return reply.sendFile(rawPath, baseDir);
+    reply.send(await readFile(path));
   } catch (err) {
-    request.log.error(err);
-    return reply.status(500).send({ error: "Internal Server Error" });
+    console.error(err);
+    reply.status(500).send({ error: "Internal Server Error" });
   }
 }
