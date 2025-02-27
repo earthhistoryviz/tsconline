@@ -82,6 +82,8 @@ jobs:
             checksums.txt
 
       - name: Download release build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
           gh release download ${{ github.ref_name }} -D release
