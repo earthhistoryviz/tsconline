@@ -102,10 +102,11 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -o pipefail
             cd ${{ secrets.STAGING_PATH }}
 
-            unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
-            rm build-artifacts.zip
+            unzip -q -o release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            rm release-artifacts.zip
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
