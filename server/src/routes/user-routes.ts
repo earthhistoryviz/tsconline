@@ -10,7 +10,7 @@ import {
 } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
@@ -362,8 +362,10 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
-  const filesFolder = path.resolve(directory, "files");
-  if (!(await verifyFilepath(filesFolder))) {
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopFilesPath(directory);
+  } catch (error) {
     reply.status(500).send({ error: "Invalid directory path" });
     return;
   }

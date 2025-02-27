@@ -40,7 +40,7 @@ export const WorkshopDetails = observer(() => {
 
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
-          <img className={styles.di} src={getWorkshopCoverImage(workshop.coverPictureUrl)} />
+          <img className={styles.di} src={getWorkshopCoverImage()} />
         </div>
         <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">

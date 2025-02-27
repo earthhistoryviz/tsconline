@@ -28,7 +28,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-r
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => {})
+    editDatapackMetadataRequestHandler: vi.fn(async () => { })
   };
 });
 
@@ -142,7 +142,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => {});
+        readable.on("data", () => { });
         readable.on("end", () => {
           resolve();
         });
@@ -239,7 +239,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => {});
+    file.on("data", () => { });
     file.on("end", () => {
       resolve();
     });
@@ -281,7 +281,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 
@@ -375,7 +375,7 @@ const testWorkshop: Workshop = {
   start: start.toISOString(),
   end: end.toISOString(),
   workshopId: 1,
-  regRestrict: 0,
+  regRestrict: false,
   creatorUUID: "123",
   regLink: ""
 };
@@ -1706,7 +1706,7 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
-    expect(fetchImageLink).toHaveBeenCalledOnce();
+
     expect(getDatapacksNames).toHaveBeenCalledOnce();
     expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
@@ -1714,7 +1714,6 @@ describe("adminGetWorkshops", () => {
         {
           ...testWorkshop,
           active: false,
-          coverPictureUrl: "",
           datapacks: [],
           files: []
         }
@@ -1729,7 +1728,6 @@ describe("adminGetWorkshops", () => {
       url: "/admin/workshops",
       headers
     });
-    expect(fetchImageLink).toHaveBeenCalledOnce();
     expect(getDatapacksNames).toHaveBeenCalledOnce();
     expect(getFilesNames).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({
@@ -1738,7 +1736,6 @@ describe("adminGetWorkshops", () => {
           ...testWorkshop,
           start: mockDate.toISOString(),
           active: true,
-          coverPictureUrl: "",
           datapacks: [],
           files: []
         }
@@ -1755,7 +1752,7 @@ describe("adminCreateWorkshop", () => {
     title: testWorkshop.title,
     start: testWorkshop.start,
     end: testWorkshop.end,
-    regRestrict: testWorkshop.regRestrict,
+    regRestrict: 0,
     creatorUUID: testWorkshop.creatorUUID,
     regLink: testWorkshop.regLink
   };
@@ -1976,7 +1973,7 @@ describe("adminEditWorkshop", () => {
   it("should return 409 if workshop with title and dates already exists", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
     findWorkshop.mockResolvedValueOnce([
-      { ...body, end: testWorkshop.end, regLink: null, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }
+      { ...body, end: testWorkshop.end, regLink: undefined, regRestrict: false, creatorUUID: testWorkshop.creatorUUID }
     ]);
     const response = await app.inject({
       method: "PATCH",
@@ -2021,7 +2018,7 @@ describe("adminEditWorkshop", () => {
         ...body,
         end: testWorkshop.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
         active: false,
-        regRestrict: 0,
+        regRestrict: false,
         creatorUUID: ""
       }
     });
