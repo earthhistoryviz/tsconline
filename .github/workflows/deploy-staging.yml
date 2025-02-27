@@ -21,16 +21,6 @@ jobs:
         with:
           ref: ${{ github.ref }}
 
-      - name: Verify Tag is on Main
-        run: |
-          TAG_COMMIT=$(git rev-parse ${{ github.ref }})
-          MAIN_COMMIT=$(git merge-base $TAG_COMMIT origin/main)
-
-          if [ "$TAG_COMMIT" != "$MAIN_COMMIT" ]; then
-            echo "Tag is not on main. Exiting..."
-            exit 1
-          fi
-
       - name: Install dependencies
         run: yarn install
 
