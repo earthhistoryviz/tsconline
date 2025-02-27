@@ -9,7 +9,6 @@ export async function up(db: Kysely<any>): Promise<void> {
     .addColumn("regLink", "text")
     .addColumn("description", "text")
     .execute();
-
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

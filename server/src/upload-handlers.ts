@@ -513,7 +513,6 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
     });
     return { code: 500, message: error instanceof Error ? error.message : "Failed to upload file To file System." };
   }
-
 }
 
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {

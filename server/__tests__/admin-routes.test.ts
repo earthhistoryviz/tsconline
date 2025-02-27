@@ -28,7 +28,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-r
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn(async () => { })
+    editDatapackMetadataRequestHandler: vi.fn(async () => {})
   };
 });
 
@@ -142,7 +142,7 @@ vi.mock("stream/promises", async () => {
   return {
     pipeline: vi.fn().mockImplementation(async (readable) => {
       return new Promise<void>((resolve, reject) => {
-        readable.on("data", () => { });
+        readable.on("data", () => {});
         readable.on("end", () => {
           resolve();
         });
@@ -239,7 +239,7 @@ vi.mock("../src/parse-excel-file", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => { });
+    file.on("data", () => {});
     file.on("end", () => {
       resolve();
     });
@@ -281,7 +281,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -1685,7 +1685,6 @@ describe("adminGetWorkshops", () => {
     vi.clearAllMocks();
   });
   const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const fetchImageLink = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
   const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
   const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   it("should return 500 if findWorkshop throws an error", async () => {

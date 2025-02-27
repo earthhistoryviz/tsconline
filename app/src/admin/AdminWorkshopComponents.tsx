@@ -227,7 +227,15 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           setWorkshop(newWorkshop);
         }
 
-        if (isWorkshopUnchanged && !emailFile && !emails && !regLink && !files && !coverPicture && (regRestrict === currentWorkshop?.regRestrict)) {
+        if (
+          isWorkshopUnchanged &&
+          !emailFile &&
+          !emails &&
+          !regLink &&
+          !files &&
+          !coverPicture &&
+          regRestrict === currentWorkshop?.regRestrict
+        ) {
           actions.pushSnackbar("No changes made.", "info");
           return;
         }
@@ -501,8 +509,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         alt="Cover Picture"
                         sx={{ width: 100, height: 100 }}
                       />
-                    ) :// TODO: Update this to use the route serving the cover picture (once it's finished) to check if a cover picture exists.
-                      // currentWorkshop?.coverPictureUrl ? 
+                    ) : (
+                      // TODO: Update this to use the route serving the cover picture (once it's finished) to check if a cover picture exists.
+                      // currentWorkshop?.coverPictureUrl ?
                       // (
                       //   // workshop has a old cover picture
                       //   <Avatar
@@ -512,8 +521,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                       //     sx={{ width: 100, height: 100 }}
                       //   />
                       // ) : (
-                      (<Typography>No cover picture for this workshop</Typography>
-                      )}
+                      <Typography>No cover picture for this workshop</Typography>
+                    )}
                     <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
                       <InputFileUpload
                         text="Upload a Cover Picture for the workshop"

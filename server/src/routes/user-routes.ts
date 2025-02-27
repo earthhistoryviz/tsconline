@@ -1,16 +1,14 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import {
-  assetconfigs,
-  checkHeader,
-  extractMetadataFromDatapack,
-  verifyFilepath,
-  verifyNonExistentFilepath
-} from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack, verifyNonExistentFilepath } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import {
+  getWorkshopFilesPath,
+  getWorkshopUUIDFromWorkshopId,
+  verifyWorkshopValidity
+} from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";

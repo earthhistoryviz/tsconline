@@ -269,9 +269,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-          })
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+            })
         }}
         onClick={() => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}>
         {/* timing details on card */}
@@ -310,11 +310,6 @@ export const Workshops: React.FC = observer(() => {
           (new Date(event.start) < date && new Date(event.end) >= date)
       )
     ) {
-      const theEvent = events.find(
-        (event) =>
-          new Date(event.start).toDateString() === date.toDateString() ||
-          (new Date(event.start) < date && new Date(event.end) >= date)
-      );
       newStyle.backgroundImage = getWorkshopCoverImage(); // This need to be fix later so leave it as TSCreatorLogo for now.
       newStyle.backgroundSize = "cover";
       newStyle.backgroundPosition = "center";
@@ -354,7 +349,7 @@ export const Workshops: React.FC = observer(() => {
     title: workshop.title,
     start: dayjs(workshop.start).toDate(),
     end: dayjs(workshop.end).toDate(),
-    workshopId: workshop.workshopId,
+    workshopId: workshop.workshopId
   }));
 
   useEffect(() => {
