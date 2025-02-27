@@ -80,13 +80,18 @@ jobs:
             build-artifacts.zip
             ${{ steps.parse_jar_name.outputs.jar_name }}
             checksums.txt
-  
-      - name: Send Artifacts to Server
+
+      - name: Download release build
         run: |
-          FILES_TO_SEND="build-artifacts.zip ${{ steps.parse_jar_name.outputs.jar_name }}"
+          mkdir release
+          gh release download ${{ github.ref_name }} -D release
+          zip -r -q release-artifacts.zip release/*
+  
+      - name: Send Release Artifacts to Server
+        run: |
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_PATH }}
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem release-artifacts.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_PATH }}
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -96,12 +101,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd ${{ secrets.STAGING_PATH }}
-
-            git pull --no-edit
-
-            git fetch --tags
-            git checkout ${{ github.ref_name }}
-
 
             unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm build-artifacts.zip
