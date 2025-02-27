@@ -27,6 +27,10 @@ jobs:
       - name: Build project
         run: yarn build
 
+      - name: Archive build artifacts
+        run: |
+          zip -r -q build-artifacts.zip app/dist server/dist shared/dist
+
       - name: Parse Jar Name
         id: parse_jar_name
         run: |
