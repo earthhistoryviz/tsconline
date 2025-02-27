@@ -90,7 +90,6 @@ export type AssetConfig = {
   decryptionDirectory: string;
   datapacksDirectory: string;
   chartsDirectory: string;
-  imagesDirectory: string;
   timescaleFilepath: string;
   patternsDirectory: string;
   colors: string;
@@ -159,7 +158,6 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.decryptionDirectory !== "string") throw 'AssetConfig must have a "decryptionDirectory" string';
   if (typeof o.datapacksDirectory !== "string") throw 'AssetConfig must have a "datapackDirectory" string';
   if (typeof o.chartsDirectory !== "string") throw 'AssetConfig must have a "chartsDirectory" string';
-  if (typeof o.imagesDirectory !== "string") throw 'AssetConfig must have a "imagesDirectory" string';
   if (typeof o.patternsDirectory !== "string") throw 'AssetConfig must have a "patternsDirectory" string';
   if (typeof o.colors !== "string") throw 'AssetConfig must have a "colors" string';
   if (typeof o.fileMetadata !== "string") throw 'AssetConfig must have a "fileMetadata" string';
