@@ -93,7 +93,7 @@ jobs:
             --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
             --output datapacks.zip
 
-      - name: Download release build
+      - name: Download release build and create release-artifacts.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -119,10 +119,13 @@ jobs:
 
             unzip -q -o release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
+            unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            rm build-artifacts.zip
             mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/jars
             mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/datapacks
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
             unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets/datapacks
+            rm datapacks.zip
             touch secrets.env
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
