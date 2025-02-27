@@ -85,6 +85,12 @@ jobs:
           files: |
             build-artifacts.zip
             ${{ steps.parse_jar_name.outputs.jar_name }}
+            package.json
+            yarn.lock
+            .yarnrc.yml
+            entrypoint-no-build.sh
+            docker-compose-server.yml
+            Dockerfile
             checksums.txt
   
       - name: Send Artifacts to Server
