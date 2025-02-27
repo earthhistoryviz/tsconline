@@ -108,7 +108,7 @@ export const isAllowedPrivatePath = ({ pathName, req }: { pathName: string; req:
   const uuid = req.session.get("uuid");
   if (!uuid) return false;
   const pathSegments = pathName.split("/");
-  const [uuidFolder] = pathSegments.slice(4);
+  const [uuidFolder] = pathSegments.slice(3);
   return uuidFolder === uuid && isValidMapImagePath(pathName);
 };
 
