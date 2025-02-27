@@ -598,7 +598,6 @@ const UpcomingWorkshops = observer(
         dataPacks: t("5"),
         image: devSafeUrl("/datapack-images//")
       }
-    
     ];
     return (
       <Box
