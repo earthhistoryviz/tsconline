@@ -102,6 +102,7 @@ jobs:
           cd release
           ls
           unzip -q tsconline-*.zip
+          rm tsconline-*.zip
           cd tsconline-*
           ls
           rm checksums.txt
