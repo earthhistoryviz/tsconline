@@ -81,12 +81,23 @@ jobs:
             ${{ steps.parse_jar_name.outputs.jar_name }}
             checksums.txt
 
+      - name: Download Datapacks from Dropbox
+        run: |
+          # --- Get the access token ---
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+
+          # --- Download the datapacks ---
+          DATAPACKS_PATH="${{ secrets.DROPBOX_PATH}}/datapacks"
+          curl -X POST https://content.dropboxapi.com/2/files/download_zip \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
+            --output datapacks.zip
+
       - name: Download release build
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh release download ${{ github.ref_name }} -A=zip
-          ls
           rm checksums.txt
           zip -r -q release-artifacts.zip *
   
@@ -108,7 +119,11 @@ jobs:
 
             unzip -q -o release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
+            mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/jars
+            mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/datapacks
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
+            unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets/datapacks
+            touch secrets.env
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
