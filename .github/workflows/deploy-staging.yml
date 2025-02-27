@@ -85,12 +85,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir release
-          gh release download ${{ github.ref_name }} -D release -A=zip
+          gh release download ${{ github.ref_name }} -A=zip
           ls
-          cd release
           rm checksums.txt
-          zip -r -q ../release-artifacts.zip *
+          zip -r -q release-artifacts.zip *
   
       - name: Send Release Artifacts to Server
         run: |
