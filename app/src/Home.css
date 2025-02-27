@@ -161,6 +161,8 @@
   padding-right: 1%;
   padding-left: 3%;
   height: 93vh;
+  align-items: center;
+  max-height: 93vh;
 }
 
 .home-landing-page-carousel {
@@ -531,7 +533,9 @@
   padding-left: 15px;
   padding-right: 15px;
   overflow-y: auto;
-  height: inherit;
+  height: auto;
+  max-height: inherit;
+  align-self: center;
   grid-column: 3 / 4;
 }
 
