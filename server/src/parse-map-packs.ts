@@ -113,8 +113,7 @@ export function processLine(
         );
       }
       map.name = formatColumnName(String(info[1]));
-      const trimmedPath = path.dirname(path.dirname(map_info));
-      map.img = `/${trimmedPath}/MapImages/${String(info[2])}`;
+      map.img = String(info[2])
       map.note = String(info[3]);
       break;
     case "HEADER-COORD":

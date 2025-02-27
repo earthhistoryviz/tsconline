@@ -198,7 +198,7 @@ describe("processLine tests", () => {
       const tabSeparated = [headerMapHeaders, headerMapInfo];
       const expectedMap = {
         name: "MAP TITLE TEST",
-        img: "/./MapImages/IMAGE",
+        img: "IMAGE",
         coordtype: "",
         note: "NOTE",
         bounds: {

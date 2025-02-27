@@ -3,7 +3,7 @@
         "mapInfo": {
           "Africa Bight": {
             "name": "Africa Bight",
-            "img": "/server/__tests__/MapImages/AfricaBight.png",
+            "img": "AfricaBight.png",
             "coordtype": "RECTANGULAR",
             "bounds": {
               "upperLeftLon": -11,
@@ -30,7 +30,7 @@
         "mapInfo": {
           "Belgium": {
             "name": "Belgium",
-            "img": "/server/__tests__/MapImages/Belgium_Map_Nov2012.png",
+            "img": "Belgium_Map_Nov2012.png",
             "coordtype": "RECTANGULAR",
             "bounds": {
               "upperLeftLon": 2.5,
@@ -77,7 +77,7 @@
         "mapInfo": {
             "MAP TITLE TEST": {
                 "name": "MAP TITLE TEST",
-                "img": "/server/__tests__/MapImages/maptest.png",
+                "img": "maptest.png",
                 "coordtype": "RECTANGULAR",
                 "bounds": {
                     "upperLeftLat": 7,
