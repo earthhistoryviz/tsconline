@@ -7,7 +7,7 @@ export type NestedTranslations = {
   [key: string]: string | NestedTranslations;
 };
 
-syncTranslations()
+syncTranslations();
 
 function mergeData(excelFilePath: string, translationJsonDir: string): Record<string, NestedTranslations> {
   // Read the Excel file
