@@ -29,7 +29,7 @@ jobs:
 
       - name: Archive build artifacts
         run: |
-          zip -r -q build-artifacts.zip app/dist server/dist shared/dist
+          zip -r -q build-artifacts.zip app/dist server/dist shared/dist package.json yarn.lock .yarnrc.yml entrypoint-no-build.sh docker-compose-server.yml Dockerfile server/assets server/public
 
       - name: Parse Jar Name
         id: parse_jar_name
@@ -79,12 +79,6 @@ jobs:
           files: |
             build-artifacts.zip
             ${{ steps.parse_jar_name.outputs.jar_name }}
-            package.json
-            yarn.lock
-            .yarnrc.yml
-            entrypoint-no-build.sh
-            docker-compose-server.yml
-            Dockerfile
             checksums.txt
   
       - name: Send Artifacts to Server
