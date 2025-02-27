@@ -16,10 +16,17 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
   parts: AsyncIterableIterator<Multipart>
 ): Promise<
   | OperationResult
-  | { file: MultipartFile; filepath: string; datapackMetadata: DatapackMetadata; tempProfilePictureFilepath?: string }
+  | {
+      file: MultipartFile;
+      filepath: string;
+      datapackMetadata: DatapackMetadata;
+      tempProfilePictureFilepath?: string;
+      pdfFields: { [fileName: string]: string };
+    }
 > => {
   let fields: Record<string, string> = {};
   let file: MultipartFile | undefined;
+  let pdfFields: { [fileName: string]: string } = {};
   try {
     const result = await processMultipartPartsForDatapackUpload(uuid, parts);
     if (isOperationResult(result)) {
@@ -27,6 +34,7 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     }
     file = result.file;
     fields = result.fields;
+    pdfFields = result.pdfFields;
   } catch (error) {
     return { code: 500, message: "Failed to process multipart parts" };
   }
@@ -44,7 +52,8 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     file,
     filepath: fields.filepath,
     tempProfilePictureFilepath: fields.tempProfilePictureFilepath,
-    datapackMetadata
+    datapackMetadata,
+    pdfFields
   };
 };
 export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>) => {
@@ -59,7 +68,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   if (isOperationResult(result)) {
     return result;
   }
-  const { filepath, tempProfilePictureFilepath, datapackMetadata } = result;
+  const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
     if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && !isAdmin) {
       return { code: 401, message: "Only admins can upload official or workshop datapacks" };
@@ -89,7 +98,8 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
         filepath,
         datapackMetadata,
         false,
-        tempProfilePictureFilepath
+        tempProfilePictureFilepath,
+        pdfFields
       );
     } catch (e) {
       await deleteUserDatapack(uuidDirectoryToDownloadTo, datapackMetadata.title);

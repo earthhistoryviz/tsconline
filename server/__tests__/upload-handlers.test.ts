@@ -15,11 +15,15 @@ import * as streamPromises from "stream/promises";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
+import * as uploadHandlers from "../src/upload-handlers";
 import * as loadPacks from "../src/load-packs";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
+import path from "path";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
 }));
@@ -28,7 +32,10 @@ vi.mock("../src/database", () => ({
 }));
 vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
-  getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory")
+  getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory"),
+  getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
+  getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath"),
+  getPDFFilesDirectoryFromDatapackDirectory: vi.fn().mockReturnValue("files-directory")
 }));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
@@ -63,6 +70,8 @@ vi.mock("../src/load-packs", () => ({
 }));
 vi.mock("../src/user/user-handler", () => ({
   checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
+  checkFileTypeIsPDF: vi.fn().mockReturnValue(true),
+  checkFileTypeIsDatapackImage: vi.fn().mockReturnValue(true),
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
   deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
   doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
@@ -79,8 +88,10 @@ vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
   makeTempFilename: vi.fn().mockReturnValue("filename"),
+  verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
   assetconfigs: {
-    fileMetadata: "fileMetadata"
+    fileMetadata: "fileMetadata",
+    privateDatapacksDirectory: "/absolute/path/to/private/datapacks"
   }
 }));
 vi.mock("fs", async () => {
@@ -440,14 +451,17 @@ describe("changeProfilePicture tests", () => {
     checkFileExists.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
     await changeProfilePicture("user", "datapack", "sourceFile");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
-    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+    const expectedRenamePath = path.join("directory", "datapack-image");
+    expect(rename).toHaveBeenCalledWith("sourceFile", expectedRenamePath);
   });
   it("should move the file to the correct location if previous profile picture exists", async () => {
     checkFileExists.mockResolvedValueOnce(true);
     await changeProfilePicture("user", "datapack", "sourceFile");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith("directory/datapack-image.png", { force: true });
-    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+    const expectedPath = path.join("directory", "datapack-image.png");
+    expect(rm).toHaveBeenCalledWith(expectedPath, { force: true });
+    const expectedRenamePath = path.join("directory", "datapack-image");
+    expect(rename).toHaveBeenCalledWith("sourceFile", expectedRenamePath);
   });
 });
 
@@ -575,6 +589,33 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true);
     expect(writeFileMetadata).not.toHaveBeenCalled();
   });
+  it("should handle pdfFields and remove original PDF files when not manual", async () => {
+    const pdfFields = { "file1.pdf": "tempPath1", "file2.pdf": "tempPath2" };
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    const datapackFolder = path.normalize("datapacks-directory/title");
+    const expectedPdfFilesDir = path.resolve(datapackFolder, "files");
+    const verifyNonExistentFilepathMock = vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValue(true);
+    const fetchPDFFileDirectory = vi
+      .spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory")
+      .mockResolvedValue(expectedPdfFilesDir);
+    const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, undefined, pdfFields);
+    expect(fetchPDFFileDirectory).toHaveBeenCalledTimes(1);
+    expect(fetchPDFFileDirectory).toHaveBeenCalledWith(datapackFolder);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledTimes(2);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file1.pdf"));
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file2.pdf"));
+    expect(rm).toHaveBeenCalledTimes(3);
+    expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
+    expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
+    expect(pathJoinSpy).toHaveBeenCalledWith(datapackFolder, "storedFileName");
+    fetchPDFFileDirectory.mockRestore();
+    verifyNonExistentFilepathMock.mockRestore();
+    pathJoinSpy.mockRestore();
+  });
 });
 
 describe("getFileNameFromCachedDatapack tests", () => {
@@ -608,12 +649,15 @@ describe("getFileNameFromCachedDatapack tests", () => {
 it("should return the directory and filename", async () => {
   const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
-  expect(await getTemporaryFilepath("uuid", "filename")).toEqual("uuid-directory/filename");
+  const result = await getTemporaryFilepath("uuid", "filename");
+  expect(path.normalize(result)).toEqual(path.normalize("uuid-directory/filename"));
   expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
 });
 describe("processMultipartPartsForDatapackUpload tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const checkFileTypeIsPDF = vi.spyOn(userHandlers, "checkFileTypeIsPDF");
+  const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const rm = vi.spyOn(fsPromises, "rm");
   let formData: AsyncIterableIterator<Multipart>;
@@ -738,5 +782,117 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     expect(rm).toHaveBeenCalledOnce();
     expect(data.code).toBe(500);
     expect(data.message).toBe("Failed to save file");
+  });
+  it("should return a 415 error if invalid file type for datapack pdf file", async () => {
+    checkFileTypeIsPDF.mockReturnValueOnce(false);
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "text/plain",
+        filename: "file1.txt",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack pdf file");
+  });
+  it("should return pdfFields with correct file paths and names", async () => {
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    pipeline.mockResolvedValueOnce(undefined);
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    if ("pdfFields" in data) {
+      expect(data.pdfFields).toEqual({
+        tempPDFFilePaths: expect.arrayContaining([expect.any(String)]),
+        pdfFileNames: ["file1.pdf"]
+      });
+    }
+  });
+  it("should clean up temporary files if upload fails for pdf file", async () => {
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    pipeline.mockRejectedValueOnce(new Error("upload failed"));
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(pipeline).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(500);
+    expect(data.message).toBe("Failed to save file");
+  });
+  it("should return a 415 error if invalid file type for datapack image", async () => {
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(false);
+
+    createFormData({
+      [DATAPACK_PROFILE_PICTURE_FILENAME]: {
+        mimetype: "text/plain",
+        filename: "invalid.txt",
+        fieldname: DATAPACK_PROFILE_PICTURE_FILENAME
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapackImage).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack image");
+  });
+  it("should process datapack image upload correctly", async () => {
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(true);
+    findUser.mockResolvedValueOnce([{ isAdmin: 0 } as User]);
+
+    createFormData({
+      [DATAPACK_PROFILE_PICTURE_FILENAME]: {
+        mimetype: "image/jpeg",
+        filename: "profile_picture.jpg",
+        fieldname: DATAPACK_PROFILE_PICTURE_FILENAME
+      }
+    });
+
+    const uploadFileMock = vi.fn().mockResolvedValueOnce({ code: 200, message: "Success" });
+    vi.spyOn(uploadHandlers, "uploadFileToFileSystem").mockImplementation(uploadFileMock);
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapackImage).toHaveBeenCalledOnce();
+
+    expect(isOperationResult(data)).toBe(true);
+    if ("fields" in data) {
+      expect(data.fields).toHaveProperty("datapackImage");
+      expect(data.fields).toHaveProperty("tempProfilePictureFilepath");
+      expect(data.fields.datapackImage).toBe(DATAPACK_PROFILE_PICTURE_FILENAME + ".jpg");
+    }
   });
 });

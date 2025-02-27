@@ -10,7 +10,11 @@ import {
   SettingsTabs,
   User,
   GroupedEventSearchInfo,
-  EditableDatapackMetadata
+  EditableDatapackMetadata,
+  CrossPlotTimeSettings,
+  ChartTabState,
+  Marker,
+  CrossPlotBounds
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -30,33 +34,35 @@ import type {
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
-import { settings } from "../constants";
+import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
+import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
 export type State = {
   chartTab: {
-    chartTimelineEnabled: boolean;
     chartTimelineLocked: boolean;
-    scale: number;
-    zoomFitScale: number;
-    resetMidX: number;
-    zoomFitMidCoord: number;
-    zoomFitMidCoordIsX: boolean;
-    downloadFilename: string;
-    downloadFiletype: "svg" | "pdf" | "png";
-    isSavingChart: boolean;
-    enableScrollZoom: boolean;
-    unsafeChartContent: string;
+    state: ChartTabState;
+  };
+  crossPlot: {
+    lockX: boolean;
+    lockY: boolean;
+    markers: Marker[];
+    markerMode: boolean;
+    showTooltips: boolean;
+    chartXTimeSettings: CrossPlotTimeSettings;
+    chartYTimeSettings: CrossPlotTimeSettings;
+    chartX: ColumnInfo | undefined;
+    chartY: ColumnInfo | undefined;
+    state: ChartTabState;
+    crossPlotBounds?: CrossPlotBounds;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
   isLoggedIn: boolean;
   user: User;
-  chartLoading: boolean;
   tab: number;
-  madeChart: boolean;
   showSuggestedAgePopup: boolean;
   isFullscreen: boolean;
   showPresetInfo: boolean;
@@ -126,8 +132,6 @@ export type State = {
     sortedPatterns: Patterns[string][];
   };
   selectedPreset: ChartConfig | null;
-  chartContent: string;
-  chartHash: string;
   settingsXML: string;
   settings: ChartSettings;
   prevSettings: ChartSettings;
@@ -150,18 +154,21 @@ export type State = {
 
 export const state = observable<State>({
   chartTab: {
-    chartTimelineEnabled: false,
     chartTimelineLocked: false,
-    scale: 1,
-    zoomFitScale: 1,
-    resetMidX: 0,
-    zoomFitMidCoord: 0,
-    zoomFitMidCoordIsX: true,
-    downloadFilename: "chart",
-    downloadFiletype: "svg",
-    isSavingChart: false,
-    enableScrollZoom: false,
-    unsafeChartContent: "" // this is used to store the chart content for download which is vulnerable to XSS
+    state: cloneDeep(defaultChartTabState)
+  },
+  crossPlot: {
+    lockX: false,
+    lockY: false,
+    markers: [],
+    markerMode: true,
+    showTooltips: true,
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartX: undefined,
+    chartY: undefined,
+    state: cloneDeep(defaultChartTabState),
+    crossPlotBounds: undefined
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -196,8 +203,6 @@ export const state = observable<State>({
     editRequestInProgress: false,
     datapackImageVersion: 0
   },
-  chartLoading: false,
-  madeChart: false,
   tab: 0,
   showSuggestedAgePopup: false,
   isFullscreen: false,
@@ -264,8 +269,6 @@ export const state = observable<State>({
     sortedPatterns: []
   },
   selectedPreset: null,
-  chartContent: "",
-  chartHash: "",
   settingsXML: "",
   settings: JSON.parse(JSON.stringify(settings)),
   prevSettings: JSON.parse(JSON.stringify(settings)),

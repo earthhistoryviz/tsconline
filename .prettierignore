@@ -1,3 +1,4 @@
 shared/dist/
 app/dist
 server/dist
+.yarn

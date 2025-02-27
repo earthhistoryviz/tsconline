@@ -1,4 +1,4 @@
-import fastify from "fastify";
+import fastify, { FastifyRequest } from "fastify";
 import cors from "@fastify/cors";
 import fastifyStatic from "@fastify/static";
 import process from "process";
@@ -6,6 +6,7 @@ import { deleteDirectory, checkFileExists, assetconfigs, loadAssetConfigs } from
 import * as routes from "./routes/routes.js";
 import * as loginRoutes from "./routes/login-routes.js";
 import fastifyCompress from "@fastify/compress";
+import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
 import { Email } from "./types.js";
@@ -24,12 +25,15 @@ import { userRoutes } from "./routes/user-auth.js";
 import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
+import { syncTranslations } from "./sync-translations.js";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
 
 const server = fastify({
   logger: false,
+  trustProxy: true,
   bodyLimit: 1024 * 1024 * 100 // 10 mb
   /*{  // uncomment for detailed logs from fastify
     transport: {
@@ -40,6 +44,62 @@ const server = fastify({
       },
     }
   }*/
+});
+
+collectDefaultMetrics();
+const httpMetricsLabelNames = ["method", "path", "status"];
+const totalHttpRequestCount = new Counter({
+  name: "nodejs_http_total_count",
+  help: "total request number",
+  labelNames: httpMetricsLabelNames
+});
+const totalHttpRequestDuration = new Gauge({
+  name: "nodejs_http_total_duration",
+  help: "the last duration or response time of last request",
+  labelNames: httpMetricsLabelNames
+});
+const activeUsers = new Gauge({
+  name: "nodejs_active_users",
+  help: "number of active users"
+});
+
+const ipSet = new Set<string>();
+server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [number, number] }) => {
+  request.startTime = process.hrtime();
+  const ip = request.ip;
+  if (!ipSet.has(ip)) {
+    ipSet.add(ip);
+    setTimeout(
+      () => {
+        ipSet.delete(ip);
+        activeUsers.set(ipSet.size);
+      },
+      15 * 60 * 1000
+    );
+  }
+  activeUsers.set(ipSet.size);
+});
+
+server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }, reply) => {
+  const duration = process.hrtime(request.startTime);
+  const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
+  totalHttpRequestCount.labels(request.method, request.routerPath, reply.statusCode.toString()).inc();
+  totalHttpRequestDuration.labels(request.method, request.routerPath, reply.statusCode.toString()).set(durationInMs);
+});
+
+// Expose the metrics endpoint
+server.get("/metrics", async (request, reply) => {
+  if (request.ip != "172.27.0.1") {
+    reply.code(403).send({ error: "Forbidden" });
+    return;
+  }
+  try {
+    const metrics = await register.metrics();
+    reply.header("Content-Type", register.contentType).send(metrics);
+  } catch (e) {
+    console.error("Error loading configs: ", e);
+    reply.status(500).send(e);
+  }
 });
 
 // Load up all the chart configs found in presets:
@@ -170,7 +230,7 @@ server.get("/presets", async (_request, reply) => {
   reply.send(presets);
 });
 
-server.get("/server/datapack/:name", routes.fetchOfficialDatapack);
+server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
 
 server.get("/facies-patterns", (_request, reply) => {
@@ -228,10 +288,13 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+// these are seperate from the admin routes because they don't require recaptcha
+server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
+
 server.register(workshopRoutes, { prefix: "/workshop" });
 
 server.register(userRoutes, { prefix: "/user" });
-// these are seperate from the user routes because they doesn't require recaptcha
+// these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 
@@ -340,6 +403,10 @@ server.setNotFoundHandler((_request, reply) => {
 });
 
 export const queue = new PQueue({ concurrency: maxConcurrencySize });
+
+if (process.env.NODE_ENV !== "production") {
+  syncTranslations();
+}
 
 //Start the server...
 try {

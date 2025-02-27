@@ -32,7 +32,13 @@ import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
 
-export const fetchOfficialDatapack = async function fetchOfficialDatapack(
+/**
+ * Fetches the official datapack with the given name if it is public
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const fetchPublicOfficialDatapack = async function fetchPublicOfficialDatapack(
   request: FastifyRequest<{ Params: { name: string } }>,
   reply: FastifyReply
 ) {
@@ -44,6 +50,10 @@ export const fetchOfficialDatapack = async function fetchOfficialDatapack(
   const officialDatapack = await fetchUserDatapack("official", name);
   if (!officialDatapack) {
     reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  if (!officialDatapack.isPublic) {
+    reply.status(403).send({ error: "Datapack is not public" });
     return;
   }
   reply.send(officialDatapack);
@@ -189,13 +199,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     return;
   }
-  const { useCache } = chartrequest;
+  const { useCache, isCrossPlot } = chartrequest;
   const uuid = request.session.get("uuid");
   const userId = (await findUser({ uuid }))[0]?.userId;
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
   const settingsXml = chartrequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(settingsXml + chartrequest.datapacks.join(","));
+  const hash = md5(isCrossPlot + settingsXml + chartrequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
@@ -296,7 +306,8 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "-o",
       chartFilePath,
       // Don't use datapacks suggested age (if useSuggestedAge is true then ignore datapack ages)
-      "-a"
+      "-a",
+      ...(isCrossPlot ? ["-cross"] : [])
     ];
     return new Promise<void>((resolve, reject) => {
       const cmd = "java";

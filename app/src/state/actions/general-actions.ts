@@ -1,4 +1,4 @@
-import { action, observable, runInAction, toJS } from "mobx";
+import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -46,6 +46,8 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  ChartTabState,
+  ChartZoomSettings,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -66,9 +68,11 @@ import {
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
+import { adjustScaleOfMarkers, setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
- * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * Fetches datapacks of any type from the server. If used to fetch private user/official datapacks or workshop datapacks, it requires recaptcha to be loaded.
  * @param metadata
  * @param options - Optional signal for aborting the fetch request
  */
@@ -86,7 +90,11 @@ export const fetchDatapack = action(
         break;
       }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicOfficialDatapack(metadata.title, options);
+        } else {
+          datapack = await actions.adminFetchOfficialDatapack(metadata.title, options);
+        }
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
@@ -97,11 +105,14 @@ export const fetchDatapack = action(
   }
 );
 
-export const fetchOfficialDatapack = action(
+/**
+ * Fetch a public official datapack (see adminFetchOfficialDatapack for private)
+ */
+export const fetchPublicOfficialDatapack = action(
   "fetchOfficialDatapack",
   async (datapack: string, options?: { signal?: AbortSignal }) => {
     try {
-      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const response = await fetcher(`/official/datapack/${encodeURIComponent(datapack)}`, options);
       const data = await response.json();
       if (response.ok) {
         assertOfficialDatapack(data);
@@ -195,7 +206,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     console.error(e);
   } finally {
     setPublicOfficialDatapacksLoading(false);
-    setPublicDatapacksLoading(false);
+    setPublicUserDatapacksLoading(false);
   }
 });
 
@@ -245,7 +256,7 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
@@ -268,6 +279,11 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    if (pdfFiles?.length) {
+      pdfFiles.forEach((pdfFile) => {
+        formData.append("pdfFiles[]", pdfFile);
+      });
+    }
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
@@ -568,6 +584,8 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
+      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
@@ -630,29 +648,6 @@ export const removeCache = action("removeCache", async () => {
     displayServerError(e, msg, "Server could not remove cache");
     return;
   }
-});
-
-/**
- * Resets state
- * Only implementation is used when we remove cache
- * If error from server, this is really bad. Will loop forever
- */
-export const resetState = action("resetState", () => {
-  setChartMade(true);
-  setChartLoading(true);
-  processDatapackConfig([]);
-  setChartHash("");
-  setChartContent("");
-  setUseCache(true);
-  setUsePreset(true);
-  setTab(0);
-  setSettingsTabsSelected("time");
-  setSettingsColumns(undefined);
-  setMapInfo({});
-  state.columnMenu.columnSelected = null;
-  state.columnMenu.tabValue = 0;
-  state.columnMenu.tabs = ["General", "Font"];
-  state.settingsXML = "";
 });
 
 export const loadPresets = action("loadPresets", (presets: Presets) => {
@@ -756,11 +751,11 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * Constantly ping the server for the pdf status
  * TODO DEPRECATE FOR SVGS
  */
-export const checkSVGStatus = action(async () => {
+export const checkSVGStatus = action(async (hash: string) => {
   let SVGReady = false;
   try {
     while (!SVGReady) {
-      SVGReady = await fetchSVGStatus();
+      SVGReady = await fetchSVGStatus(hash);
       if (!SVGReady) {
         // Wait for some time before checking again
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -770,18 +765,17 @@ export const checkSVGStatus = action(async () => {
     console.log(`Error fetching svg status: ${e}`);
     return;
   }
-  setChartLoading(false);
 });
 
 /**
  * The request for pdf status
  * @returns
  */
-async function fetchSVGStatus(): Promise<boolean> {
-  if (state.chartHash === "") {
+async function fetchSVGStatus(hash: string): Promise<boolean> {
+  if (hash === "") {
     return false;
   }
-  const response = await fetcher(`/svgstatus/${state.chartHash}`, {
+  const response = await fetcher(`/svgstatus/${hash}`, {
     method: "GET"
   });
   const data = await response.json();
@@ -966,6 +960,7 @@ export const logout = action("logout", async () => {
 export const sessionCheck = action("sessionCheck", async () => {
   const cookieConsentValue = localStorage.getItem("cookieConsent");
   state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
+  let fetchStarted = false;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -976,12 +971,23 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
+      fetchStarted = true;
+      if (data.user.isAdmin) {
+        adminFetchPrivateOfficialDatapacksMetadata();
+      } else {
+        setPrivateOfficialDatapacksLoading(false);
+      }
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
     }
   } catch (error) {
     console.error("Failed to check session:", error);
+  } finally {
+    if (!fetchStarted) {
+      setPrivateOfficialDatapacksLoading(false);
+      setPrivateUserDatapacksLoading(false);
+    }
   }
 });
 
@@ -1036,10 +1042,6 @@ export const listenForSystemDarkMode = () => {
   };
 };
 
-export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
-  state.chartTab.chartTimelineEnabled = enabled;
-});
-
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
 });
@@ -1065,13 +1067,10 @@ export const setLanguage = action("setLanguage", (newval: string) => {
 export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
-export const setuseDatapackSuggestedAge = action((isChecked: boolean) => {
-  state.settings.useDatapackSuggestedAge = isChecked;
-});
 export const setTab = action("setTab", (newval: number) => {
   if (
     newval == 2 &&
-    state.chartContent &&
+    state.chartTab.state.chartContent &&
     (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
   ) {
     pushSnackbar("Chart settings are different from the displayed chart.", "warning");
@@ -1086,9 +1085,6 @@ export const setUseCache = action((temp: boolean) => {
 });
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
-});
-export const setChartContent = action("setChartContent", (chartContent: string) => {
-  state.chartContent = chartContent;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;
@@ -1128,19 +1124,8 @@ export const setMouseOverPopupsEnabled = action((checked: boolean) => {
   state.settings.mouseOverPopupsEnabled = checked;
 });
 
-export const setChartLoading = action((value: boolean) => {
-  state.chartLoading = value;
-});
-
-export const setChartMade = action((value: boolean) => {
-  state.madeChart = value;
-});
-
 export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
   state.mapState.mapHierarchy = mapHierarchy;
-});
-export const setChartHash = action("setChartHash", (charthash: string) => {
-  state.chartHash = charthash;
 });
 export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
   state.datapackProfilePage.editMode = editMode;
@@ -1223,39 +1208,40 @@ export const setCookies = action("setCookies", (newval: boolean) => {
   localStorage.setItem("cookieConsent", newval.toString());
 });
 
-export const setChartTabScale = action("setChartTabScale", (newval: number) => {
-  state.chartTab.scale = newval;
+export const setChartTabState = action("setChartTabState", (oldval: ChartTabState, newval: Partial<ChartTabState>) => {
+  if (!isObservable(oldval)) {
+    throw new Error("oldval is not observable");
+  }
+  if (newval.chartZoomSettings !== undefined)
+    setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
+  if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
+  if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
+  if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
+  if (newval.downloadFilename !== undefined) oldval.downloadFilename = newval.downloadFilename;
+  if (newval.isSavingChart !== undefined) oldval.isSavingChart = newval.isSavingChart;
+  if (newval.unsafeChartContent !== undefined) oldval.unsafeChartContent = newval.unsafeChartContent;
+  if (newval.chartContent !== undefined) oldval.chartContent = newval.chartContent;
+  if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });
 
-export const setChartTabZoomFitScale = action("setChartTabZoomFitScale", (newval: number) => {
-  state.chartTab.zoomFitScale = newval;
-});
-export const setChartTabResetMidX = action("setChartTabResetMidX", (newval: number) => {
-  state.chartTab.resetMidX = newval;
-});
-export const setChartTabZoomFitMidCoord = action("setChartTabZoomFitMidCoord", (newval: number) => {
-  state.chartTab.zoomFitMidCoord = newval;
-});
-export const setChartTabZoomFitMidCoordIsX = action("setChartTabZoomFitMidCoordIsX", (newval: boolean) => {
-  state.chartTab.zoomFitMidCoordIsX = newval;
-});
-export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
-  state.chartTab.downloadFilename = newval;
-});
+export const setChartTabZoomSettings = action(
+  "setChartTabZoomSettings",
+  (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
+    if (!isObservable(oldval)) {
+      throw new Error("oldval is not observable");
+    }
+    if (newval.enableScrollZoom !== undefined) oldval.enableScrollZoom = newval.enableScrollZoom;
+    if (newval.resetMidX !== undefined) oldval.resetMidX = newval.resetMidX;
+    if (newval.zoomFitMidCoord !== undefined) oldval.zoomFitMidCoord = newval.zoomFitMidCoord;
+    if (newval.zoomFitMidCoordIsX !== undefined) oldval.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+    if (newval.zoomFitScale !== undefined) oldval.zoomFitScale = newval.zoomFitScale;
+    if (newval.scale !== undefined) {
+      adjustScaleOfMarkers(newval.scale);
+      oldval.scale = newval.scale;
+    }
+  }
+);
 
-export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
-  state.chartTab.downloadFiletype = newval;
-});
-export const setChartTabEnableScrollZoom = action("setChartTabEnableScrollZoom", (newval: boolean) => {
-  state.chartTab.enableScrollZoom = newval;
-});
-
-export const setChartTabIsSavingChart = action((term: boolean) => {
-  state.chartTab.isSavingChart = term;
-});
-export const setUnsafeChartContent = action((content: string) => {
-  state.chartTab.unsafeChartContent = content;
-});
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   if (!metadata) {
@@ -1306,7 +1292,7 @@ export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateOfficialDatapacksLoading = fetching;
 });
-export const setPublicDatapacksLoading = action((fetching: boolean) => {
+export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {

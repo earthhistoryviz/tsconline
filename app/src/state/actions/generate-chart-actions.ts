@@ -3,22 +3,19 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action } from "mobx";
 import { fetcher } from "../../util";
-import { ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
+import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
-import { ChartSettings } from "../../types";
+import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
+import { defaultChartZoomSettings } from "../../constants";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
-  if (state.settings.useDatapackSuggestedAge != response) {
-    state.settings.useDatapackSuggestedAge = response;
-    generalActions.setUseCache(false);
-  }
   if (response) setDatapackTimeDefaults();
-  fetchChartFromServer(navigate);
+  compileChartRequest(navigate);
 });
 
 type UnitValues = {
@@ -74,7 +71,7 @@ export const initiateChartGeneration = action(
     ) {
       state.showSuggestedAgePopup = true;
     } else {
-      fetchChartFromServer(navigate);
+      compileChartRequest(navigate);
     }
   }
 );
@@ -105,45 +102,74 @@ function areSettingsValidForGeneration() {
   return true;
 }
 
-export const fetchChartFromServer = action("fetchChartFromServer", async (navigate: NavigateFunction) => {
+export const resetChartTabStateForGeneration = action("resetChartTabStateForGeneration", (oldval: ChartTabState) => {
+  generalActions.setChartTabState(oldval, {
+    madeChart: false,
+    chartLoading: true,
+    chartContent: "",
+    unsafeChartContent: "",
+    chartZoomSettings: cloneDeep(defaultChartZoomSettings),
+    chartTimelineEnabled: false
+  });
+});
+
+export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
   // asserts column is not null
   if (!areSettingsValidForGeneration()) return;
   state.showSuggestedAgePopup = false;
   navigate("/chart");
   //set the loading screen and make sure the chart isn't up
   savePreviousSettings();
+  resetChartTabStateForGeneration(state.chartTab.state);
   generalActions.setTab(3);
-  generalActions.setChartMade(true);
-  generalActions.setChartLoading(true);
-  generalActions.setChartHash("");
-  generalActions.setChartContent("");
-  generalActions.setChartTabScale(1);
-  generalActions.setChartTabZoomFitScale(1);
-  generalActions.setChartTabResetMidX(0);
-  generalActions.setChartTabZoomFitMidCoord(0);
-  generalActions.setChartTabZoomFitMidCoordIsX(true);
-  let body;
   try {
-    const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-    const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    body = JSON.stringify({
-      settings: xmlSettings,
-      datapacks: state.config.datapacks,
-      username: "username",
-      useCache: state.useCache,
-      useSuggestedAge: state.settings.useDatapackSuggestedAge
+    let chartRequest: ChartRequest | null = null;
+    try {
+      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+      chartRequest = {
+        settings: xmlSettings,
+        datapacks: state.config.datapacks,
+        useCache: state.useCache,
+        isCrossPlot: false
+      };
+    } catch (e) {
+      console.error(e);
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    if (!chartRequest) {
+      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+      return;
+    }
+    const response = await sendChartRequestToServer(chartRequest);
+    if (!response) {
+      // error SHOULD already displayed
+      return;
+    }
+    generalActions.setChartTabState(state.chartTab.state, {
+      chartContent: response.chartContent,
+      chartHash: response.hash,
+      madeChart: true,
+      unsafeChartContent: response.unsafeChartContent,
+      chartTimelineEnabled: false
     });
-  } catch (e) {
-    console.error(e);
-    generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-    return;
+  } finally {
+    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
-  console.log("Sending settings to server...");
+});
+
+const savePreviousSettings = action("savePreviousSettings", () => {
+  state.prevSettings = JSON.parse(JSON.stringify(state.settings));
+  state.prevConfig = JSON.parse(JSON.stringify(state.config));
+});
+
+export const sendChartRequestToServer = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
   try {
     const response = await fetcher(`/chart`, {
       method: "POST",
-      body,
+      body: JSON.stringify(chartRequest),
       credentials: "include"
     });
     const answer = await response.json();
@@ -173,26 +199,37 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
           break;
       }
       displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      generalActions.setChartLoading(false);
       return;
     }
     try {
       assertChartInfo(answer);
-      generalActions.setChartHash(answer.hash);
-      await generalActions.checkSVGStatus();
+      await generalActions.checkSVGStatus(answer.hash);
       const content = await (await fetcher(answer.chartpath)).text();
       const domPurifyConfig = {
-        ADD_ATTR: ["docbase", "popuptext", "minY", "maxY", "vertScale", "topAge", "baseAge"],
+        ADD_ATTR: [
+          "docbase",
+          "popuptext",
+          "minY",
+          "maxY",
+          "vertScale",
+          "topAge",
+          "baseAge",
+          "minX",
+          "maxX",
+          "baseLimit",
+          "topLimit",
+          "x1",
+          "y1"
+        ],
         ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
       };
       const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
-      // for download ONLY
-      generalActions.setUnsafeChartContent(content);
-      // the display version
-      generalActions.setChartContent(sanitizedSVG);
-      generalActions.setChartTimelineEnabled(false);
-      generalActions.setChartTimelineLocked(false);
       generalActions.pushSnackbar("Successfully generated chart", "success");
+      return {
+        chartContent: sanitizedSVG,
+        unsafeChartContent: content,
+        hash: answer.hash
+      };
     } catch (e) {
       let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
       switch (response.status) {
@@ -210,9 +247,4 @@ export const fetchChartFromServer = action("fetchChartFromServer", async (naviga
     console.error(e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
-});
-
-const savePreviousSettings = action("savePreviousSettings", () => {
-  state.prevSettings = JSON.parse(JSON.stringify(state.settings));
-  state.prevConfig = JSON.parse(JSON.stringify(state.config));
 });

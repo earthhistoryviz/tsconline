@@ -32,7 +32,7 @@ import { toJS } from "mobx";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import React from "react";
-import languageList from "../translation/avaliable-language.json";
+import languageList from "@tsconline/shared/translations/avaliable-language.json";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -76,7 +76,7 @@ export const NavBar = observer(function Navbar() {
     setMenuDrawerOpen(false);
   };
   return (
-    <StyledAppBar position="fixed">
+    <StyledAppBar position="sticky" className="nav-bar">
       <Toolbar>
         {!isMobile && (
           <>
@@ -99,7 +99,7 @@ export const NavBar = observer(function Navbar() {
             <Tabs
               value={state.tab || false}
               onChange={(_e, value) => {
-                if (value === 3) settingsMenuToggle(false);
+                if (value === 4) settingsMenuToggle(false);
                 actions.setTab(value);
               }}
               //override the TSCTabs since it has the dark navbar

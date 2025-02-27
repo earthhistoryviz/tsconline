@@ -1,23 +1,47 @@
 import { observer } from "mobx-react-lite";
-import { useContext, useEffect, useRef } from "react";
-import { context } from "./state";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
-import { TransformWrapper, TransformComponent, ReactZoomPanPinchContentRef } from "react-zoom-pan-pinch";
+import {
+  TransformWrapper,
+  TransformComponent,
+  ReactZoomPanPinchContentRef,
+  ReactZoomPanPinchRef
+} from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
+import { ChartContextType } from "./types";
+import { context } from "./state";
+import { defaultChartTabState } from "./constants";
+import { cloneDeep } from "lodash";
+import TimeLine from "./assets/icons/axes=one.svg";
 
-export const Chart = observer(() => {
-  const { state, actions } = useContext(context);
+export const ChartContext = createContext<ChartContextType>({
+  chartTabState: cloneDeep(defaultChartTabState)
+});
+
+type ChartProps = {
+  Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
+  refList?: { ref: React.RefObject<HTMLDivElement>; id: string }[];
+  style?: React.CSSProperties;
+  disableDoubleClick?: boolean;
+};
+
+export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList, disableDoubleClick = false }) => {
   const theme = useTheme();
+  const { chartTabState } = useContext(ChartContext);
+  const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
+  const { actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
+  const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
   const step = 0.1;
   const minScale = 0.1;
-  const maxScale = 8;
+  const maxScale = 2;
+  const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
 
   const setChartAlignmentValues = () => {
     const container = transformContainerRef.current;
@@ -34,39 +58,26 @@ export const Chart = observer(() => {
     const zoomFitX = (containerRect.right - containerRect.left) / originalWidth;
 
     if (zoomFitX < zoomFitY) {
-      actions.setChartTabZoomFitScale(zoomFitX);
-      actions.setChartTabZoomFitMidCoord(
-        (containerRect.bottom - containerRect.top) / 2 - (originalHeight * state.chartTab.zoomFitScale) / 2
-      );
-      state.chartTab.zoomFitMidCoordIsX = false;
+      const midCoord = (containerRect.bottom - containerRect.top) / 2 - (originalHeight * zoomFitX) / 2;
+      actions.setChartTabZoomSettings(chartZoomSettings, {
+        zoomFitScale: zoomFitX,
+        zoomFitMidCoord: midCoord,
+        zoomFitMidCoordIsX: false,
+        resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
+      });
     } else {
-      actions.setChartTabZoomFitScale(zoomFitY);
-      actions.setChartTabZoomFitMidCoord(
-        (containerRect.right - containerRect.left) / 2 - (originalWidth * state.chartTab.zoomFitScale) / 2
-      );
-      state.chartTab.zoomFitMidCoordIsX = true;
+      const midCoord = (containerRect.right - containerRect.left) / 2 - (originalWidth * zoomFitY) / 2;
+      actions.setChartTabZoomSettings(chartZoomSettings, {
+        zoomFitScale: zoomFitY,
+        zoomFitMidCoord: midCoord,
+        zoomFitMidCoordIsX: true,
+        resetMidX: (containerRect.right - containerRect.left) / 2 - originalWidth / 2
+      });
     }
-
-    actions.setChartTabResetMidX((containerRect.right - containerRect.left) / 2 - originalWidth / 2);
   };
-
   useEffect(() => {
     const container = transformContainerRef.current;
     if (!container) return;
-
-    setChartAlignmentValues();
-
-    if (state.chartTab.zoomFitMidCoordIsX) {
-      container.setTransform(state.chartTab.zoomFitMidCoord, 0, state.chartTab.zoomFitScale, 0);
-    } else {
-      container.setTransform(0, state.chartTab.zoomFitMidCoord, state.chartTab.zoomFitScale, 0);
-    }
-    actions.setChartTabScale(state.chartTab.zoomFitScale);
-
-    //small update
-    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
-    actions.setChartTabEnableScrollZoom(!state.chartTab.enableScrollZoom);
-
     const windowResizeListenerWrapper = () => {
       setChartAlignmentValues();
     };
@@ -84,16 +95,16 @@ export const Chart = observer(() => {
     const eventListenerWrapper = (evt: KeyboardEvent) => {
       if ((evt.metaKey || evt.ctrlKey) && evt.code === "Equal") {
         evt.preventDefault();
-        if (state.chartTab.scale < maxScale) {
+        if (scale < maxScale) {
           container.zoomIn(step, 0);
-          actions.setChartTabScale(state.chartTab.scale + step);
+          actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale + step });
         }
       }
       if ((evt.metaKey || evt.ctrlKey) && evt.code === "Minus") {
         evt.preventDefault();
-        if (state.chartTab.scale > minScale) {
+        if (scale > minScale) {
           container.zoomOut(step, 0);
-          actions.setChartTabScale(state.chartTab.scale - step);
+          actions.setChartTabZoomSettings(chartZoomSettings, { scale: scale - step });
         }
       }
     };
@@ -110,22 +121,63 @@ export const Chart = observer(() => {
       if (container.instance.wrapperComponent)
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
-  }, [state.chartContent]);
+  }, [setChartAlignmentValues]);
+
+  // we need to setup the chart alignment values when the chart content changes
+  // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
+  useEffect(() => {
+    if (!chartContent || !madeChart || !svgContainerRef?.current) return;
+    setChartAlignmentValues();
+  }, [chartContent, madeChart, svgContainerRef?.current]);
+
+  useEffect(() => {
+    const container = transformContainerRef.current;
+    if (!container) return;
+    if (zoomFitMidCoordIsX) {
+      container.setTransform(zoomFitMidCoord, 0, zoomFitScale, 0);
+    } else {
+      container.setTransform(0, zoomFitMidCoord, zoomFitScale, 0);
+    }
+    actions.setChartTabZoomSettings(chartZoomSettings, { scale: zoomFitScale });
+    setTimeout(() => {
+      setChartAlignmentInitialized(true);
+    }, 10);
+  }, [zoomFitMidCoord, zoomFitScale, zoomFitMidCoordIsX]);
+
+  const map = new Map();
+  // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )
+  // when switching to inspector console, the resize observer will continuously refresh until the screen is clicked.
+  useEffect(() => {
+    if (!refList || refList.length == 0) return;
+    const observers: { observer: ResizeObserver; id: string }[] = [];
+    for (const ref of refList) {
+      if (!ref.ref.current || map.has(ref.id)) continue;
+      const resizeObserver = new ResizeObserver(() => {
+        setChartAlignmentValues();
+      });
+      resizeObserver.observe(ref.ref.current);
+      map.set(ref.id, resizeObserver);
+      observers.push({ observer: resizeObserver, id: ref.id });
+    }
+    return () => {
+      for (const observer of observers) {
+        map.delete(observer.id);
+        observer.observer.disconnect();
+      }
+    };
+  }, [refList?.map((ref) => ref.id).join("")]);
   const { t } = useTranslation();
 
+  const onZoom = (e: ReactZoomPanPinchRef) => {
+    actions.setChartTabZoomSettings(chartZoomSettings, { scale: e.state.scale });
+  };
+
   return (
-    <div
-      style={{
-        height: "94vh",
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        alignContent: "center"
-      }}>
-      {state.chartLoading ? (
+    <Box className="chart-container">
+      {chartLoading ? (
         <LoadingChart />
-      ) : state.madeChart ? (
-        <div id="wrapper" className="chart-and-options-bar">
+      ) : madeChart ? (
+        <div className="chart-and-options-bar">
           {transformContainerRef?.current && svgContainerRef?.current && (
             <OptionsBar
               transformRef={transformContainerRef}
@@ -138,20 +190,27 @@ export const Chart = observer(() => {
           <div id="chart-transform-wrapper">
             <TransformWrapper
               ref={transformContainerRef}
-              wheel={{ wheelDisabled: !state.chartTab.enableScrollZoom }}
-              panning={{ wheelPanning: !state.chartTab.enableScrollZoom }}
+              wheel={{ wheelDisabled: !enableScrollZoom }}
+              panning={{ wheelPanning: !enableScrollZoom }}
               limitToBounds={true}
               minScale={minScale}
               maxScale={maxScale}
+              onZoom={onZoom}
+              doubleClick={{ disabled: disableDoubleClick }}
               disablePadding={true}>
               <TransformComponent
                 wrapperStyle={{
-                  height: "84vh",
-                  width: "80vw",
+                  width: "100%",
+                  height: "100%",
+                  maxWidth: "100%",
+                  maxHeight: "100%",
+                  overflow: "hidden",
                   border: "2px solid",
-                  borderColor: theme.palette.divider
+                  borderColor: theme.palette.divider,
+                  opacity: chartAlignmentInitialized ? 1 : 0,
+                  ...style
                 }}>
-                <TSCSvgComponent svgContainerRef={svgContainerRef} chartContent={state.chartContent} />
+                {<Component ref={svgContainerRef} />}
               </TransformComponent>
             </TransformWrapper>
           </div>
@@ -162,6 +221,28 @@ export const Chart = observer(() => {
         </div>
       )}
       <TSCPopupManager />
-    </div>
+    </Box>
+  );
+});
+
+export const ChartTab: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  return (
+    <ChartContext.Provider
+      value={{
+        chartTabState: state.chartTab.state,
+        otherChartOptions: [
+          {
+            label: "Timeline On/Off",
+            onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+            value: state.chartTab.state.chartTimelineEnabled,
+            icon: <img src={TimeLine} width="24" height="24" />
+          }
+        ]
+      }}>
+      <Box className="chart-tab">
+        <Chart Component={TSCSvgComponent} />
+      </Box>
+    </ChartContext.Provider>
   );
 });

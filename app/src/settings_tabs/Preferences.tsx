@@ -101,17 +101,6 @@ export const Preferences = observer(function Preferences() {
             }
             label={t("settings.preferences.checkboxs.hide-block-labels")}
           />
-          <FormControlLabel
-            name="use-suggested-age-spans"
-            control={
-              <TSCCheckbox
-                className="preferences-checkbox"
-                onChange={(e) => actions.setuseDatapackSuggestedAge(!e.target.checked)}
-                checked={!state.settings.useDatapackSuggestedAge}
-              />
-            }
-            label={t("settings.preferences.checkboxs.use-suggested-age-spans")}
-          />
         </FormGroup>
       </Box>
     </div>
