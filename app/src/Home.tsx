@@ -60,7 +60,6 @@ export const Home = observer(function Home() {
             className="sub-header-section-landing-page-image"
             src={devSafeUrl("/public/website-images/landing-page.png")}
           />
-          {!isMobile&& <UpcomingWorkshops />}
           <Box className="get-started-landing-page">
             <Box
               className="get-started-button-container"
@@ -85,6 +84,7 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
+          {!isMobile && <UpcomingWorkshops />}
         </Box>
       </Box>
       <CustomDivider />
@@ -597,16 +597,16 @@ const UpcomingWorkshops = observer(
         ),
         dataPacks: t("5"),
         image: devSafeUrl("/datapack-images//")
-      },
-    //   {
-    //   title: t("Switzerland Workshop"),
-    //   date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-    //   description: t(
-    //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-    //   ),
-    //   dataPacks: t("5"),
-    //   image: devSafeUrl("/datapack-images//")
-    // }
+      }
+      //   {
+      //   title: t("Switzerland Workshop"),
+      //   date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
+      //   description: t(
+      //     "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
+      //   ),
+      //   dataPacks: t("5"),
+      //   image: devSafeUrl("/datapack-images//")
+      // }
     ];
     return (
       <Box
