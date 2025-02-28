@@ -1,24 +1,14 @@
 # Pull base image.
-FROM ubuntu:latest
+FROM node:20
 
-RUN apt-get update && \
-    apt-get install -y curl wget openbox x11vnc xvfb build-essential
-
-RUN apt-get install -y python3
+RUN apt update && \
+    apt install -y curl wget openbox x11vnc xvfb build-essential
 
 # Download Java and necessary tools
-RUN apt-get install -y openjdk-17-jdk
-RUN apt-get install -y apt-utils
-RUN apt-get install -y git
-RUN apt-get install -y xterm
+RUN apt install -y openjdk-17-jdk apt git xterm python3
 
 # Command to save a password (the entrypoint.sh script actually runs x11 and it uses the environment for the password)
 # RUN x11vnc -storepasswd 1234 ~/.vnc/passwd
-
-# Install yarn/npm/node via nvm
-RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash 
-# Note: you need the --login option and the PS1 variable to be set in order for /root/.bashrc to run properly
-RUN bash --login -c "export PS1=':' && source /root/.bashrc && nvm install 20 && nvm use 20 && npm install -g yarn"
 
 # Setup the container to run the code from the local machine:
 WORKDIR /code
