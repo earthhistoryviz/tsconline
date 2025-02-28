@@ -244,7 +244,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
-        <ColumnContainer className="dcc-column-leaf">
+        <ColumnContainer sx={{
+              opacity: 1,
+              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : "pointer"
+            }} className="dcc-column-leaf">
           {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
             <Tooltip
               title={t("settings.column.tooltip.not-in-range")}
@@ -288,25 +291,25 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
     ? { opacity: 1 }
     : {};
   return (
-    <div className="dcc-accordion-container">
+    <div className="dcc-accordion-container"
+    >
       {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
       <Accordion
         //checks if column name is in expand list
         expanded={expanded}
         className="column-accordion">
         <MuiAccordionSummary
-          onClick={() => {}}
           tabIndex={0}
           expandIcon={
             <ArrowForwardIosSharpIcon
               color="icon"
               sx={{ fontSize: "0.9rem" }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpanded(!expanded);
-              }}
             />
           }
+          onClick={(e) => {
+            setExpanded(!expanded);
+            e.stopPropagation();
+          }}
           aria-controls="panel-content"
           className={`column-accordion-summary ${selectedClass}`}>
           <ColumnContainer
