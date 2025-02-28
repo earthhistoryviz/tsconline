@@ -121,6 +121,13 @@ export const addCrossPlotModel = action((temp: Model) => {
   state.crossPlot.models.push(observable(temp));
   sortModels();
 });
+export const removeCrossPlotModel = action((modelId: string) => {
+  const removedCrossPlotModel = state.crossPlot.models.find((m) => m.id === modelId);
+  if (!removedCrossPlotModel) return;
+  removedCrossPlotModel.element.remove();
+  state.crossPlot.models = state.crossPlot.models.filter((m) => m.id !== modelId);
+  sortModels();
+});
 export const sortModels = action(() => {
   const models = state.crossPlot.models.slice().sort((a, b) => {
     if (a.age !== b.age) {
