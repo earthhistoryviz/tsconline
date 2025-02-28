@@ -17,7 +17,8 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray
+  assertDatapackMetadataArray,
+  assertTreatiseDatapack
 } from "@tsconline/shared";
 
 import {
@@ -100,6 +101,10 @@ export const fetchDatapack = action(
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
         break;
       }
+      case "treatise": {
+        datapack = await actions.fetchTreatiseDatapack(metadata.title, options);
+        break;
+      }
     }
     return datapack;
   }
@@ -125,6 +130,7 @@ export const fetchPublicOfficialDatapack = action(
           ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
         );
       }
+      return data;
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -253,25 +259,27 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     setPrivateUserDatapacksLoading(false);
   }
 });
-
-export const fetchTreatiseDatapack = action("fetchTreatiseDatapack", async (datapackHash: string) => {
-  try {
-    const response = await fetcher(`/treatise/datapacks/${datapackHash}`, {
-      method: "GET"
-    });
-    const data = await response.json();
+export const fetchTreatiseDatapack = action(
+  "fetchTreatiseDatapack",
+  async (datapackHash: string, options?: { signal?: AbortSignal }) => {
     try {
-      assertDatapack(data);
-      addDatapack(data);
+      const response = await fetcher(`/treatise/datapacks/${datapackHash}`, options);
+      const data = await response.json();
+      try {
+        assertDatapack(data);
+        assertTreatiseDatapack(data);
+        return data;
+      } catch (e) {
+        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+        console.error(e);
+      }
     } catch (e) {
-      displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
       console.error(e);
     }
-  } catch (e) {
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-    console.error(e);
   }
-});
+);
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",

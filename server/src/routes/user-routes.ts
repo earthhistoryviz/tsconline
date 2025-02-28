@@ -8,8 +8,6 @@ import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../worksh
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
-import { MultipartFile } from "@fastify/multipart";
-import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -364,10 +362,10 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  async function errorHandler(message: string, errorStatus: number, e?: unknown) {
-    e && console.error(e);
-    reply.status(errorStatus).send({ error: message });
-  }
+  // async function errorHandler(message: string, errorStatus: number, e?: unknown) {
+  //   e && console.error(e);
+  //   reply.status(errorStatus).send({ error: message });
+  // }
 
   try {
     // Check token
@@ -395,86 +393,13 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
 
     const treatiseUUID = "treatise";
     const parts = request.parts();
-    const fields: Record<string, string> = {};
-    let uploadedFile: MultipartFile | undefined;
-    let filepath: string | undefined;
-    let originalFilename: string | undefined;
-    let storedFilename: string | undefined;
-
-    const cleanupTempFiles = async () => {
-      filepath && (await rm(filepath, { force: true }));
-      if (fields.title) {
-        await deleteUserDatapack(treatiseUUID, fields.title);
-      }
-    };
-
-    const extDirectory = await getPrivateUserUUIDDirectory(treatiseUUID);
-
-    // try {
-    //   for await (const part of parts) {
-    //     if (part.type === "file") {
-    //       if (part.fieldname === "datapack") {
-    //         uploadedFile = part;
-    //         storedFilename = makeTempFilename(uploadedFile.filename);
-    //         filepath = path.join(extDirectory, storedFilename);
-    //         originalFilename = uploadedFile.filename;
-    //         if (!checkFileTypeIsDatapack(uploadedFile)) {
-    //           reply.status(415).send({ error: "Invalid file type" });
-    //           return;
-    //         }
-    //         const { code, message } = await uploadFileToFileSystem(uploadedFile, filepath);
-    //         if (code !== 200) {
-    //           reply.status(code).send({ error: message });
-    //           await cleanupTempFiles();
-    //           return;
-    //         }
-    //       }
-    //     } else if (part.type === "field" && typeof part.fieldname === "string" && typeof part.value === "string") {
-    //       fields[part.fieldname] = part.value;
-    //     }
-    //   }
-    // } catch (e) {
-    //   await cleanupTempFiles();
-    //   reply.status(500).send({ error: "Failed to upload file with error " + e });
-    //   return;
-    // }
-
-//     if (!uploadedFile || !filepath || !originalFilename || !storedFilename) {
-//       await cleanupTempFiles();
-//       reply.status(400).send({ error: "No file uploaded" });
-//       return;
-//     }
-
-//     fields.storedFileName = storedFilename;
-//     fields.originalFileName = originalFilename;
-//     fields.filepath = filepath;
-
-//     const datapackMetadata = await uploadUserDatapackHandler(reply, fields, uploadedFile.file.bytesRead).catch(
-//       async (e) => {
-//         await cleanupTempFiles();
-//         reply.status(500).send({ error: "Failed to upload datapack with error " + e });
-//       }
-//     );
-
-//     if (!datapackMetadata) {
-//       return;
-//     }
-
-//     if (await doesDatapackFolderExistInAllUUIDDirectories(treatiseUUID, datapackMetadata.title)) {
-//       // delete temp file because dataoack already exists
-//       filepath && (await rm(filepath, { force: true }));
-//       reply.status(200).send({ hash: datapackMetadata.title });
-//       return;
-//     }
-
-//     try {
-//       // Set up the new datapack directory
-//       await setupNewDatapackDirectoryInUUIDDirectory(treatiseUUID, filepath, datapackMetadata, false, undefined);
-//     } catch (e) {
-//       await errorHandler("Failed to load and write metadata for file", 500, e);
-//       return;
-//     }
-//     reply.status(200).send({ hash: datapackMetadata.title });
+    const result = await processAndUploadDatapack(treatiseUUID, parts);
+    if (result.code === 200 || result.code === 409) {
+      reply.status(200).send({ hash: result.hashname });
+    } else {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
   } catch (error) {
     console.error("Error during /external-chart route:", error);
     reply.status(500).send({ error: "Internal server error" });

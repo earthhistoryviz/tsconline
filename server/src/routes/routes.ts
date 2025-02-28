@@ -230,16 +230,16 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         uuidFolder = "official";
         break;
       case "user":
-        if (datapack.uuid === "treatise") {
-          uuidFolder = "treatise";
-          break;
-        } else if (uuid !== datapack.uuid && !datapack.isPublic) {
+        if (uuid !== datapack.uuid && !datapack.isPublic) {
           reply.send({ error: "ERROR: user does not have access to requested datapack" });
           return;
         } else {
           uuidFolder = datapack.uuid;
           break;
         }
+      case "treatise":
+        uuidFolder = "treatise";
+        break;
     }
     if (!uuidFolder) {
       reply.send({ error: "ERROR: unknown user associated with datapack" });

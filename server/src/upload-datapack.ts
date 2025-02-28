@@ -60,10 +60,11 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
-  if (!uuid || !user || !user[0]) {
+  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
     return { code: 404, message: "Error finding user" };
   }
-  const isAdmin = !!user[0].isAdmin;
+
+  const isAdmin = user[0] ? !!user[0].isAdmin : false;
   const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(uuid, parts);
   if (isOperationResult(result)) {
     return result;
@@ -90,7 +91,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       }
     }
     if (await doesDatapackFolderExistInAllUUIDDirectories(uuidDirectoryToDownloadTo, datapackMetadata.title)) {
-      return { code: 409, message: "Datapack with the same title already exists" };
+      return { code: 409, message: "Datapack with the same title already exists", hashname: datapackMetadata.title };
     }
     try {
       await setupNewDatapackDirectoryInUUIDDirectory(
@@ -105,7 +106,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       await deleteUserDatapack(uuidDirectoryToDownloadTo, datapackMetadata.title);
       return { code: 500, message: "Failed to setup new datapack directory" };
     }
-    return { code: 200, message: "Datapack uploaded successfully" };
+    return { code: 200, message: "Datapack uploaded successfully", hashname: datapackMetadata.title };
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));

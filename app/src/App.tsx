@@ -155,7 +155,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/Generate-external-chart" element={<GenerateExternalChart />} />
+            <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
             <Route path="/datapacks" element={<Datapacks />} />
             <Route path="/presets" element={<Presets />} />
             <Route path="/workshops" element={<Workshops />} />
