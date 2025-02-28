@@ -1,13 +1,14 @@
 .dcc-accordion-wrapper {
   min-width: 10vw;
   width: 45vw;
-  max-width: 45vw;
+  max-width: 42vw;
   overflow: auto;
   border-radius: 4px;
   z-index: 0;
   padding-left: 10px;
   height: 40vh;
   resize: horizontal;
+  margin: 20px;
 }
 
 .MuiTypography-root.dcc-not-allowed {
