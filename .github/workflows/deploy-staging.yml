@@ -172,7 +172,7 @@ jobs:
 
             sleep 5
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            CONTAINER_ID=$(docker-compose -f docker-compose-server.yml ps -q)
             if [ -z "$CONTAINER_ID" ]; then
               echo "Error: Failed to get container ID for tsconline."
               exit 1
