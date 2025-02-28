@@ -14,7 +14,8 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   Marker,
-  CrossPlotBounds
+  CrossPlotBounds,
+  Models
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -50,6 +51,8 @@ export type State = {
     lockY: boolean;
     markers: Marker[];
     markerMode: boolean;
+    modelMode: boolean;
+    models: Models[];
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
@@ -161,7 +164,9 @@ export const state = observable<State>({
     lockX: false,
     lockY: false,
     markers: [],
-    markerMode: true,
+    markerMode: false,
+    modelMode: true,
+    models: [],
     showTooltips: true,
     chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),

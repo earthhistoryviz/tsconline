@@ -240,6 +240,10 @@ export type Marker = {
   line: SVGLineElement;
 };
 
+export type Models = Omit<Marker, "type" | "line"> & {
+  type: "Rect" | "Circle";
+};
+
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 
 export type CrossPlotBounds = {

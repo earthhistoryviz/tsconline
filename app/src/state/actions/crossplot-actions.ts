@@ -24,7 +24,17 @@ export const setCrossPlotLockY = action((lockY: boolean) => {
   state.crossPlot.lockY = lockY;
 });
 
+export const setCrossPlotModelMode = action((modelMode: boolean) => {
+  if (modelMode) {
+    state.crossPlot.markerMode = false;
+  }
+  state.crossPlot.modelMode = modelMode;
+});
+
 export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
+  if (markerMode) {
+    state.crossPlot.modelMode = false;
+  }
   state.crossPlot.markerMode = markerMode;
 });
 
