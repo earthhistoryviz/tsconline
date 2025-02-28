@@ -126,7 +126,8 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            rm -r ${{ secrets.STAGING_PATH }}/*
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" -exec rm -r {} +
+
             cd ${{ secrets.STAGING_PATH }}
 
             unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
