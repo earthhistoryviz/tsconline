@@ -1,0 +1,21 @@
+# This file is a copy of docker-compose-server.yml, and only used because at the time of making this the staging server was not yet up. This file was needed to define a different service name
+# to avoid conflicts with the prod container on the same server. This file can be deleted once the staging server is up and running.
+version: "3"
+services:
+  staging:
+    build: .
+    restart: on-failure
+    #image: tscreator/tscreator_online:v2
+    env_file:
+      - secrets.env
+    volumes:
+      - .:/code
+    environment:
+      - NODE_ENV=production
+    networks:
+      - shared_network
+    command: bash -c "yarn workspaces focus -A --production && /code/entrypoint-no-build.sh"
+
+networks:
+  shared_network:
+    external: true
