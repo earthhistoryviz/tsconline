@@ -1,7 +1,7 @@
 name: Deploy Staging
 
 concurrency:
-  group: deploy-release
+  group: deploy-staging
 
 on:
   push:
@@ -86,6 +86,16 @@ jobs:
             --header "Authorization: Bearer $ACCESS_TOKEN" \
             --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
             --output ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
+          if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
+            echo "Error: Failed to download required files from Dropbox."
+            exit 1
+          fi
+
+      - name: Delete existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete ${{ github.ref_name }} -y || true
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
@@ -126,9 +136,10 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
-
             cd ${{ secrets.STAGING_PATH }}
+            docker compose -f docker-compose-server.yml down || true
+            
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
