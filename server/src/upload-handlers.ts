@@ -38,7 +38,12 @@ import {
   getDecryptedDirectory
 } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME, MAPPACK_DIRECTORY_NAME, WORKSHOP_COVER_PICTURE } from "./constants.js";
+import {
+  DATAPACK_PROFILE_PICTURE_FILENAME,
+  DECRYPTED_DIRECTORY_NAME,
+  MAPPACK_DIRECTORY_NAME,
+  WORKSHOP_COVER_PICTURE
+} from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";

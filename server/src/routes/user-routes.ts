@@ -388,9 +388,8 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 
     // If ZIP file doesn't exist, create one
     if (!file) {
-      file = createZipFile(zipfile, filesFolder);
+      file = await createZipFile(zipfile, filesFolder);
     }
-
     reply.send(file);
   } catch (e) {
     const error = e as NodeJS.ErrnoException;

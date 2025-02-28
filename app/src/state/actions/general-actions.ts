@@ -1261,21 +1261,20 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
       "recaptcha-token": recaptchaToken
     }
   });
-
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
     switch (response.status) {
       case 404:
-        errorCode = ErrorCodes.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
         break;
       case 401:
+        1;
         errorCode = ErrorCodes.NOT_LOGGED_IN;
         break;
     }
     displayServerError(response, errorCode, ErrorMessages[errorCode]);
     return;
   }
-
   const file = await response.blob();
   let fileURL = "";
   if (file) {
