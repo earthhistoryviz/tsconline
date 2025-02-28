@@ -4,9 +4,11 @@
   grid-template-rows: 1fr;
   box-shadow: 5px 0px 10px -5px rgba(0, 0, 0, 0.5);
   overflow-x: hidden;
+  grid-area: sidebar;
   resize: horizontal;
   max-width: 70vw;
-  min-width: max(350px, 20vw);
+  width: 350px;
+  min-width: 350px;
 }
 
 .tabs {
@@ -24,6 +26,7 @@
   justify-content: center;
   height: fit-content;
   padding: 20px;
+  width: 100%;
   gap: 7px;
   cursor: pointer;
 }
@@ -35,7 +38,7 @@
   position: relative;
 }
 
-.tabContent > *:not(.generate) {
+.tabContent > *:not(.generate, .mobileGenerate) {
   resize: none;
   width: 100%;
   height: 100%;
@@ -73,4 +76,95 @@
   bottom: 10px;
   left: 5%;
   z-index: 10;
+}
+
+.markerContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 15px;
+  padding: 5px 0px;
+}
+.markerOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+.markersComponent {
+  padding: 23px;
+  width: 100%;
+  height: 100%;
+}
+.checkBoxContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.markerOptions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.colorPicker {
+  min-width: 20px;
+  width: 20px;
+  height: 20px;
+  padding: 0px;
+  align-self: center;
+}
+.topMarkerRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  grid-template-rows: 1fr;
+  gap: 12px;
+}
+.mobileCrossPlotSideBar {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr var(--side-bar-width);
+  box-shadow: 5px 0px 10px -5px rgba(0, 0, 0, 0.5);
+  overflow-x: hidden;
+  grid-area: sidebar;
+  grid-template-areas: "content" "tabs";
+  resize: vertical;
+  max-width: 100%;
+  width: 100%;
+  max-height: 50vh;
+  height: 350px;
+  min-height: 350px;
+}
+.mobileGenerate {
+  position: fixed;
+  bottom: calc(var(--side-bar-width) + 10px);
+  right: 5%;
+  z-index: 10;
+}
+
+.mobileTabs {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  align-items: center;
+  overflow: hidden;
+  gap: 10px;
+  padding: 10px;
+  border-bottom: 1px solid var(--border-color);
+  grid-area: tabs;
+}
+.mobileTabContent > *:not(.generate, .mobileGenerate) {
+  resize: none;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  border: none;
+  background-color: transparent;
+}
+.mobileTabContent {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  overflow: auto;
+  grid-area: content;
 }

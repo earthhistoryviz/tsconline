@@ -33,10 +33,12 @@ import {
   getUsersDatapacksDirectoryFromUUIDDirectory,
   getUnsafeCachedDatapackFilePath,
   getUserUUIDDirectory,
-  getPDFFilesDirectoryFromDatapackDirectory
+  getPDFFilesDirectoryFromDatapackDirectory,
+  getDirectories,
+  getDecryptedDirectory
 } from "./user/fetch-user-files.js";
 import { loadDatapackIntoIndex } from "./load-packs.js";
-import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME } from "./constants.js";
+import { DATAPACK_PROFILE_PICTURE_FILENAME, DECRYPTED_DIRECTORY_NAME, MAPPACK_DIRECTORY_NAME } from "./constants.js";
 import { writeFileMetadata } from "./file-metadata-handler.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { createWriteStream } from "fs";
@@ -363,6 +365,19 @@ export async function fetchDatapackProfilePictureFilepath(uuid: string, datapack
     const profilePicturePath = path.join(directory, DATAPACK_PROFILE_PICTURE_FILENAME + ext);
     if (await checkFileExists(profilePicturePath)) {
       return profilePicturePath;
+    }
+  }
+  return null;
+}
+
+export async function fetchMapPackImageFilepath(uuid: string, datapackTitle: string, img: string) {
+  const directory = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  const decryptedDirectory = getDecryptedDirectory(directory);
+  const dirs = await getDirectories(decryptedDirectory);
+  for (const dir of dirs) {
+    const mapImagePath = path.join(decryptedDirectory, dir, MAPPACK_DIRECTORY_NAME, img);
+    if (await checkFileExists(mapImagePath)) {
+      return mapImagePath;
     }
   }
   return null;

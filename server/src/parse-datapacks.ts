@@ -66,7 +66,8 @@ import {
   DefaultChronostrat,
   DatapackMetadata,
   allFontOptions,
-  Datapack
+  Datapack,
+  getUUIDOfDatapackType
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -308,7 +309,11 @@ export async function parseDatapacks(
       (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "datapack-images"))) +
       (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    mapPack: await parseMapPacks([datapackMetadata.storedFileName], decryptFilePath)
+    mapPack: await parseMapPacks(
+      [datapackMetadata.storedFileName],
+      decryptFilePath,
+      getUUIDOfDatapackType(datapackMetadata)
+    )
   };
   const datapack: Datapack = {
     ...baseDatapackProps,

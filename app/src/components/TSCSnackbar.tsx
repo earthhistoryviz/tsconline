@@ -34,7 +34,6 @@ export const TSCSnackbar: React.FC<TSCSnackbarProps> = observer(({ text, count, 
   const fontSize = text.length < 56 ? 1 : text.length < 59 ? 0.9 : 0.85;
   function handleCloseSnackbar(_event: React.SyntheticEvent | Event, reason?: string) {
     if (reason === "clickaway") return;
-
     actions.removeSnackbar(text);
   }
   const iconMapping = {

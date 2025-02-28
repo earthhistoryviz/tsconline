@@ -4,12 +4,12 @@ import { useTheme } from "@mui/material/styles";
 import { Typography, Dialog, List, Box, ListItemButton, ListItemAvatar, ListItemText, Avatar } from "@mui/material";
 import { type MapInfo } from "@tsconline/shared";
 import { styled } from "@mui/material/styles";
-import { devSafeUrl } from "../../util";
 import { observer } from "mobx-react-lite";
 import React from "react";
 import { MapViewer } from "./MapViewer";
 import "./MapPoints.css";
 import { useTranslation } from "react-i18next";
+import { getMapImageUrl } from "../../state/non-action-util";
 
 const MapListItemButton = styled(ListItemButton)(({ theme }) => ({
   "&:hover": {
@@ -87,7 +87,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
                 selected={state.mapState.selectedMap === name}
                 onClick={() => handleRowClick(name)}>
                 <ListItemAvatar>
-                  <Avatar alt={name} src={devSafeUrl(map.img)} />
+                  <Avatar alt={name} src={getMapImageUrl(map)} />
                 </ListItemAvatar>
                 <ListItemText primary={`${name}`} />
               </MapListItemButton>

@@ -33,6 +33,7 @@ export const maxQueueSize = 30;
 
 const server = fastify({
   logger: false,
+  trustProxy: true,
   bodyLimit: 1024 * 1024 * 100 // 10 mb
   /*{  // uncomment for detailed logs from fastify
     transport: {
@@ -88,7 +89,7 @@ server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [num
 
 // Expose the metrics endpoint
 server.get("/metrics", async (request, reply) => {
-  if (request.ip !== "127.0.0.1" && request.ip !== "::1") {
+  if (request.ip != "172.27.0.1") {
     reply.code(403).send({ error: "Forbidden" });
     return;
   }
@@ -270,6 +271,12 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
+
+server.get<{ Params: { title: string; uuid: string; img: string } }>(
+  "/map-image/:title/:uuid/:img",
+  moderateRateLimit,
+  routes.fetchMapImages
+);
 
 server.get<{ Params: { title: string; uuid: string } }>(
   "/datapack-images/:title/:uuid",

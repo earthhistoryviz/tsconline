@@ -1,5 +1,5 @@
-import { action } from "mobx";
-import { ChartSettings, CrossPlotTimeSettings } from "../../types";
+import { action, isObservable, observable } from "mobx";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, Marker } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
@@ -9,12 +9,188 @@ import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
+import { MARKER_HEIGHT, MARKER_PADDING, MARKER_WIDTH, ageToCoord } from "../../components/TSCCrossPlotSVGComponent";
 
+export const setCrossPlotBounds = action((bounds: CrossPlotBounds) => {
+  state.crossPlot.crossPlotBounds = bounds;
+});
+export const setCrossPlotShowTooltips = action((showTooltips: boolean) => {
+  state.crossPlot.showTooltips = showTooltips;
+});
 export const setCrossPlotLockX = action((lockX: boolean) => {
   state.crossPlot.lockX = lockX;
 });
 export const setCrossPlotLockY = action((lockY: boolean) => {
   state.crossPlot.lockY = lockY;
+});
+
+export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
+  state.crossPlot.markerMode = markerMode;
+});
+
+const getBaseFadLineValues = (marker: Marker) => {
+  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+  return {
+    x1: marker.x - markerWidth / 2 - markerPadding,
+    x2: marker.x + markerWidth / 2 + markerPadding,
+    y1: marker.y + markerHeight / 2 + markerPadding,
+    y2: marker.y + markerHeight / 2 + markerPadding
+  };
+};
+const getTopLadLineValues = (marker: Marker) => {
+  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+  return {
+    x1: marker.x - markerWidth / 2 - markerPadding,
+    x2: marker.x + markerWidth / 2 + markerPadding,
+    y1: marker.y - markerHeight / 2 - markerPadding,
+    y2: marker.y - markerHeight / 2 - markerPadding
+  };
+};
+
+export const adjustScaleOfMarkers = action((scale: number) => {
+  state.crossPlot.markers.forEach((marker) => {
+    const newWidth = getMarkerSizeFromScale(MARKER_WIDTH, scale);
+    const newHeight = getMarkerSizeFromScale(MARKER_HEIGHT, scale);
+    marker.element.setAttribute("x", (marker.x - newWidth / 2).toString());
+    marker.element.setAttribute("y", (marker.y - newHeight / 2).toString());
+    marker.element.setAttribute("width", newWidth.toString());
+    marker.element.setAttribute("height", newHeight.toString());
+    if (marker.type !== "Rect") {
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+    }
+    if (marker.type === "TOP(LAD)") {
+      const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+    } else if (marker.type === "BASE(FAD)") {
+      const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+    }
+  });
+});
+
+export const addCrossPlotMarker = action((temp: Marker) => {
+  state.crossPlot.markers.push(observable(temp));
+});
+export const removeCrossPlotMarkers = action((id: string) => {
+  const removedCrossPlotMarker = state.crossPlot.markers.find((m) => m.id === id);
+  if (!removedCrossPlotMarker) return;
+  removedCrossPlotMarker.element.remove();
+  removedCrossPlotMarker.line.remove();
+  state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
+});
+
+export const resetCrossPlotMarkers = action(() => {
+  state.crossPlot.markers.forEach((marker) => {
+    marker.element.remove();
+    marker.line.remove();
+  });
+  state.crossPlot.markers = [];
+});
+
+export const getMarkerSizeFromScale = (size: number, scale: number) => {
+  return Math.min(size * Math.pow(scale, -0.8), 3 * size);
+};
+export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Marker>) => {
+  if (!isObservable(marker)) {
+    throw new Error("Marker is not observable");
+  }
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    throw new Error("CrossPlotBounds is undefined");
+  }
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
+  if (partial.color !== undefined) {
+    marker.color = partial.color;
+    marker.element.setAttribute("fill", partial.color);
+  }
+  if (partial.comment !== undefined) {
+    marker.comment = partial.comment;
+  }
+  if (partial.age !== undefined) {
+    const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+    marker.age = partial.age;
+    const coord = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
+    marker.x = coord;
+    marker.element.setAttribute("x", (coord - markerWidth / 2).toString());
+    // x is the same for both base and top
+    const { x1, x2 } = getBaseFadLineValues(marker);
+    marker.line.setAttribute("x1", x1.toString());
+    marker.line.setAttribute("x2", x2.toString());
+  }
+  if (partial.depth !== undefined) {
+    const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+    marker.depth = partial.depth;
+    const coord = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
+    marker.y = coord;
+    marker.element.setAttribute("y", (coord - markerHeight / 2).toString());
+    switch (marker.type) {
+      case "BASE(FAD)": {
+        const { y1, y2 } = getBaseFadLineValues(marker);
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
+        break;
+      }
+      case "TOP(LAD)": {
+        const { y1, y2 } = getTopLadLineValues(marker);
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
+        break;
+      }
+    }
+  }
+  if (partial.type !== undefined) {
+    marker.type = partial.type;
+    switch (partial.type) {
+      case "Rect": {
+        marker.element.setAttribute("rx", "0");
+        marker.element.setAttribute("ry", "0");
+        marker.line.setAttribute("opacity", "0");
+        break;
+      }
+      case "Circle": {
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("opacity", "0");
+        break;
+      }
+      case "BASE(FAD)": {
+        const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("x1", x1.toString());
+        marker.line.setAttribute("x2", x2.toString());
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
+        marker.line.setAttribute("opacity", "1");
+        break;
+      }
+      case "TOP(LAD)": {
+        const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
+        marker.element.setAttribute("rx", "50%");
+        marker.element.setAttribute("ry", "50%");
+        marker.line.setAttribute("x1", x1.toString());
+        marker.line.setAttribute("x2", x2.toString());
+        marker.line.setAttribute("y1", y1.toString());
+        marker.line.setAttribute("y2", y2.toString());
+        marker.line.setAttribute("opacity", "1");
+        break;
+      }
+    }
+  }
+});
+
+export const removeCrossPlotMarker = action((marker: Marker) => {
+  state.crossPlot.markers = state.crossPlot.markers.filter((m) => m !== marker);
 });
 
 export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
@@ -85,6 +261,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       return false;
     }
     resetChartTabStateForGeneration(state.crossPlot.state);
+    resetCrossPlotMarkers();
     setTab(0);
     navigate("/crossplot");
     try {
