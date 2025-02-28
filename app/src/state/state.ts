@@ -15,7 +15,7 @@ import {
   ChartTabState,
   Marker,
   CrossPlotBounds,
-  Models
+  Model
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -52,7 +52,7 @@ export type State = {
     markers: Marker[];
     markerMode: boolean;
     modelMode: boolean;
-    models: Models[];
+    models: Model[];
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;

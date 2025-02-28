@@ -240,7 +240,7 @@ export type Marker = {
   line: SVGLineElement;
 };
 
-export type Models = Omit<Marker, "type" | "line"> & {
+export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
 
