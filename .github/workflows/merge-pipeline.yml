@@ -459,6 +459,7 @@ jobs:
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
               git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
+              cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
             fi
 
             unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"

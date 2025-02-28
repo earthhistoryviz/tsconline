@@ -212,17 +212,8 @@ jobs:
           script: |
             cd ${{ secrets.DEV_PATH }}
 
-            git pull --no-edit
-
-            PULL_STATUS=$?
-
-            if [ $PULL_STATUS -eq 0 ]; then
-              echo "git pull succeeded"
-            else
-              echo "git pull failed with exit status $PULL_STATUS"
-              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
-              exit 1
-            fi
+            git fetch origin main
+            git reset --hard origin/main
 
             unzip -q -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
             rm build-artifacts.zip
