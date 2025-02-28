@@ -44,6 +44,15 @@ const userColDefs: ColDef[] = [
     cellRenderer: checkboxRenderer
   },
   {
+    headerName: "Pro",
+    field: "accountType",
+    width: 90,
+    autoHeaderHeight: true,
+    wrapHeaderText: true,
+    flex: 1,
+    cellRenderer: (params: { value: string }) => checkboxRenderer({ value: params.value === "pro" })
+  },
+  {
     headerName: "Email Verified",
     field: "emailVerified",
     width: 90,
