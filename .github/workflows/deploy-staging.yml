@@ -126,16 +126,17 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            rm -r ${{ secrets.STAGING_PATH }}/*
             cd ${{ secrets.STAGING_PATH }}
 
-            unzip -q -o release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
-            unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            unzip -q build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm build-artifacts.zip
             mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/jars
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
             mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
-            unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets
+            unzip -q datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets
             rm datapacks.zip
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
