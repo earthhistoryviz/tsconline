@@ -266,6 +266,11 @@ const Models: React.FC = observer(() => {
           {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
         </Box>
       ))}
+      {state.crossPlot.models.length === 0 && (
+        <Typography className={styles.noModelsText}>
+          No Models Available (Please Add a Model by Clicking the Chart in the Main View)
+        </Typography>
+      )}
     </Box>
   );
 });
@@ -382,13 +387,18 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
 const Markers: React.FC = observer(() => {
   const { state } = useContext(context);
   return (
-    <Box className={styles.markersComponent}>
+    <Box className={styles.markersComponent} display={state.crossPlot.markers.length === 0 ? "flex" : ""}>
       {state.crossPlot.markers.map((marker, index) => (
         <Box key={index} className={styles.markerOptions}>
           <MarkerOptions marker={marker} />
           {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
         </Box>
       ))}
+      {state.crossPlot.markers.length === 0 && (
+        <Typography className={styles.noMarkersText}>
+          No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)
+        </Typography>
+      )}
     </Box>
   );
 });

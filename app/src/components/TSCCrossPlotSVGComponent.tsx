@@ -23,6 +23,22 @@ export const MARKER_PADDING = 2;
 const CROSSPLOT_MODELS_GROUP = "CrossPlotModelsGroup";
 const lineStroke = "2";
 const tooltipId = "crossplot-tooltip";
+const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
+  const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+  const newWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, scale);
+  const newHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, scale);
+  rect.setAttribute("id", id);
+  rect.setAttribute("x", (point.x - newWidth / 2).toString());
+  rect.setAttribute("y", (point.y - newHeight / 2).toString());
+  rect.setAttribute("width", newWidth.toString());
+  rect.setAttribute("height", newHeight.toString());
+  rect.setAttribute("rx", "50%");
+  rect.setAttribute("ry", "50%");
+  rect.setAttribute("fill", fill);
+  rect.setAttribute("stroke", "black");
+  rect.setAttribute("stroke-width", "1");
+  return rect;
+};
 // just a helper function to convert pixels to svg coordinates in case anyone needs
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const convertPixelsToSvgCoords = (svg: SVGSVGElement, x: number, y: number) => {
@@ -243,7 +259,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           window.removeEventListener("keydown", keydownListener);
         };
       }
-    }, [ref, chartContent, chartTimelineEnabled, timeLineElements]);
+    }, [chartContent, chartTimelineEnabled, timeLineElements]);
 
     // add double click listener to adding models
     useEffect(() => {
@@ -277,23 +293,11 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           return;
         }
         const { timeLineX, timeLineY } = timeLineElements;
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-        const modelId = `model-${Date.now()}`;
-        const modelWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, chartZoomSettings.scale);
-        const modelHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, chartZoomSettings.scale);
-        rect.setAttribute("id", modelId);
-        rect.setAttribute("x", (point.x - modelWidth / 2).toString());
-        rect.setAttribute("y", (point.y - modelHeight / 2).toString());
-        rect.setAttribute("width", modelWidth.toString());
-        rect.setAttribute("height", modelHeight.toString());
-        rect.setAttribute("rx", "50%");
-        rect.setAttribute("ry", "50%");
-        rect.setAttribute("fill", theme.palette.button.main);
-        rect.setAttribute("stroke", "black");
-        rect.setAttribute("stroke-width", "1");
+        const id = `model-${Date.now()}`;
+        const rect = getDotRect(id, point, chartZoomSettings.scale, theme.palette.button.main);
         modelsGroup.appendChild(rect);
         const model = {
-          id: modelId,
+          id,
           element: rect,
           age: coordToAge(point.x, getScale(timeLineX), getTopAge(timeLineX), getMinX(timeLineX)),
           depth: coordToAge(point.y, getScale(timeLineY), getTopAge(timeLineY), getMinY(timeLineY)),
@@ -341,12 +345,46 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       return () => {
         svg.removeEventListener("touchstart", handleTouchStart);
         svg.removeEventListener("dblclick", handleDoubleClick);
+      };
+    }, [timeLineElements, state.crossPlot.modelMode, mobile]);
+
+    // setup any previous models/markers
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      const modelsGroup = svg.getElementById(CROSSPLOT_MODELS_GROUP);
+      if (!modelsGroup) return;
+      // draw models
+      state.crossPlot.models.forEach((model) => {
+        // if model already exists, we don't need to draw it again
+        if (modelsGroup.querySelector(`#${model.id}`)) return;
+        const rect = getDotRect(model.id, { x: model.x, y: model.y }, chartZoomSettings.scale, model.color);
+        modelsGroup.appendChild(rect);
+      });
+      // draw markers
+      const markersGroup = svg.getElementById("CrossPlotMarkersGroup");
+      if (!markersGroup) return;
+      // remove all markers since we will redraw them (they could be sorted different)
+      while (markersGroup.firstChild) {
+        markersGroup.removeChild(markersGroup.firstChild);
+      }
+      state.crossPlot.markers.forEach((marker) => {
+        if (markersGroup.querySelector(`#${marker.id}`)) return;
+        const rect = getDotRect(marker.id, { x: marker.x, y: marker.y }, chartZoomSettings.scale, marker.color);
+        markersGroup.appendChild(rect);
+      });
+      return () => {
         while (modelsGroup.firstChild) {
           modelsGroup.removeChild(modelsGroup.firstChild);
         }
-        svg.removeChild(modelsGroup);
+        while (markersGroup.firstChild) {
+          markersGroup.removeChild(markersGroup.firstChild);
+        }
       };
-    }, [ref, chartContent, timeLineElements, state.crossPlot.modelMode, mobile]);
+    }, [state.crossPlot.models, state.crossPlot.markers]);
 
     // draw lines that connect models
     useEffect(() => {
@@ -425,20 +463,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         line.setAttribute("stroke", "black");
         line.setAttribute("stroke-width", "1.5");
         markersGroup.appendChild(line);
-        const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
         const markerId = `marker-${Date.now()}`;
-        const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, chartZoomSettings.scale);
-        const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, chartZoomSettings.scale);
-        rect.setAttribute("id", markerId);
-        rect.setAttribute("x", (point.x - markerWidth / 2).toString());
-        rect.setAttribute("y", (point.y - markerHeight / 2).toString());
-        rect.setAttribute("width", markerWidth.toString());
-        rect.setAttribute("height", markerHeight.toString());
-        rect.setAttribute("rx", "50%");
-        rect.setAttribute("ry", "50%");
-        rect.setAttribute("fill", theme.palette.button.main);
-        rect.setAttribute("stroke", "black");
-        rect.setAttribute("stroke-width", "1");
+        const rect = getDotRect(markerId, point, chartZoomSettings.scale, theme.palette.button.main);
         markersGroup.appendChild(rect);
         const marker = {
           id: markerId,
@@ -491,12 +517,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       return () => {
         svg.removeEventListener("touchstart", handleTouchStart);
         svg.removeEventListener("dblclick", handleDoubleClick);
-        while (markersGroup.firstChild) {
-          markersGroup.removeChild(markersGroup.firstChild);
-        }
-        svg.removeChild(markersGroup);
       };
-    }, [ref, chartContent, timeLineElements, state.crossPlot.markerMode, mobile]);
+    }, [timeLineElements, state.crossPlot.markerMode, mobile]);
 
     // set up the scale of the labels when svg changes
     useEffect(() => {

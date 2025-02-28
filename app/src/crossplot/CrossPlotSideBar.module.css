@@ -102,6 +102,7 @@
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  padding: 10px;
 }
 .colorPicker {
   min-width: 20px;
@@ -165,4 +166,11 @@
   padding: 10px;
   overflow: auto;
   grid-area: content;
+}
+
+.noMarkersText,
+.noModelsText {
+  align-self: center;
+  text-align: center;
+  justify-self: center;
 }

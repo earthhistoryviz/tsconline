@@ -167,6 +167,13 @@ export const removeCrossPlotMarkers = action((id: string) => {
   state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
 });
 
+export const resetCrossPlotModels = action(() => {
+  state.crossPlot.models.forEach((model) => {
+    model.element.remove();
+  });
+  state.crossPlot.models = [];
+});
+
 export const resetCrossPlotMarkers = action(() => {
   state.crossPlot.markers.forEach((marker) => {
     marker.element.remove();
@@ -381,6 +388,7 @@ export const compileAndSendCrossPlotChartRequest = action(
     }
     resetChartTabStateForGeneration(state.crossPlot.state);
     resetCrossPlotMarkers();
+    resetCrossPlotModels();
     setTab(0);
     navigate("/crossplot");
     try {
