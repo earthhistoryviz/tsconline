@@ -3,6 +3,7 @@ import {
   DatapackMetadata,
   DatapackUniqueIdentifier,
   MapInfo,
+  DisplayedColumnTypes,
   SharedUser,
   isOfficialDatapack,
   isUserDatapack,
@@ -143,4 +144,15 @@ export function getPastWorkshops(workshops: Workshop[]) {
 }
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }
