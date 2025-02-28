@@ -99,14 +99,17 @@ jobs:
         run: |
           mkdir release
           gh release download ${{ github.ref_name }} -A=zip -D release
+          gh release download ${{ github.ref_name }} -D release
           cd release
           ls
           unzip -q tsconline-*.zip
           rm tsconline-*.zip
-          cd tsconline-*
+          mv tsconline-*/* .
+          rm -r tsconline-*
           ls
           rm checksums.txt
-          zip -r -q ../../release-artifacts.zip *
+          touch secrets.env
+          zip -r -q ../release-artifacts.zip *
   
       - name: Send Release Artifacts to Server
         run: |
@@ -133,7 +136,6 @@ jobs:
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
             unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets/datapacks
             rm datapacks.zip
-            touch secrets.env
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
