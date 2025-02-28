@@ -68,13 +68,6 @@ jobs:
             exit 1
           fi
 
-      - name: Create Github Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            build-artifacts.zip
-            ${{ steps.parse_jar_name.outputs.jar_name }}
-
       - name: Download Datapacks And Decryption Jar From Dropbox
         run: |
           # --- Get the access token ---
@@ -94,13 +87,20 @@ jobs:
             --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
             --output ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
 
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build-artifacts.zip
+            ${{ steps.parse_jar_name.outputs.jar_name }}
+            ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
+            datapacks.zip
+
       - name: Download release build and create release-artifacts.zip
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
-          mv datapacks.zip release
-          mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} release
           gh release download ${{ github.ref_name }} -A=zip -D release
           gh release download ${{ github.ref_name }} -D release
           cd release

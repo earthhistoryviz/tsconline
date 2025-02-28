@@ -24,19 +24,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.tag}}
+          ref: ${{ inputs.tag }}
 
       - name: Download release build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
-          gh release download ${{ inputs.tag }} -D release
+          gh release download ${{ github.ref_name }} -A=zip -D release
+          gh release download ${{ github.ref_name }} -D release
+          cd release
+          unzip -q tsconline-*.zip
+          rm tsconline-*.zip
+          mv tsconline-*/* .
+          rm -r tsconline-*
+          touch secrets.env
 
       - name: Verify release build
         id: verify_release
         run: |
           cd release
-          if [ ! -f "build-artifacts.zip" ]; then
-            echo "Error: build-artifacts.zip not found"
+          if [ ! -f "build-artifacts.zip"  ] || [ ! -f "datapacks.zip" ]; then
+            echo "Error: build-artifacts.zip or datapacks.zip not found"
             exit 1
           fi
           jar_name=$(jq -r '.activeJar' server/assets/config.json | xargs basename)
@@ -48,14 +57,25 @@ jobs:
             echo "Error: $jar_name not found"
             exit 1
           fi
+          decryption_jar_name=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          if [ -z "$decryption_jar_name" ]; then
+            echo "Error: Failed to parse decryption jar name from config.json"
+            exit 1
+          fi
+          if [ ! -f "$decryption_jar_name" ]; then
+            echo "Error: $decryption_jar_name not found"
+            exit 1
+          fi
+          cd release
+          zip -r -q ../release-artifacts.zip *
+          echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
       - name: Send Artifacts to Server
         run: |
-          FILES_TO_SEND="release/build-artifacts.zip release/${{ steps.verify_release.outputs.jar_name }}"
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
-          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem $FILES_TO_SEND ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem release-artifacts.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
 
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
@@ -64,13 +84,19 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
+            set -e
+            rsync -a --delete --exclude="release-artifacts.zip" --exclude=".yarn" --exclude=".yarn/*" --exclude="server/assets/*" /dev/null ${{ secrets.RELEASE_PATH }}/
             cd ${{ secrets.RELEASE_PATH }}
 
             git fetch --tags
             git checkout ${{ inputs.tag }}
 
-            unzip -q -o build-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
+            unzip -q release-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
+            rm release-artifacts.zip
+            unzip -q build-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
             rm build-artifacts.zip
+            mkdir -p ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            mv ${{ steps.verify_release.outputs.decryption_jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
             mv ${{ steps.verify_release.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
