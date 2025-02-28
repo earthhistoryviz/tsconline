@@ -122,9 +122,8 @@ jobs:
             unzip -q -o build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm build-artifacts.zip
             mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/jars
-            mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/datapacks
             mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
-            unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets/datapacks
+            unzip -q -o datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets
             rm datapacks.zip
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
@@ -158,7 +157,7 @@ jobs:
               exit 1
             fi
 
-            MAX_WAIT=240
+            MAX_WAIT=60
             INTERVAL=5
             ELAPSED=0
 
