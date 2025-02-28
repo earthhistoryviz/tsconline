@@ -981,6 +981,7 @@ export const setDefaultUserState = action(() => {
     email: "",
     pictureUrl: "",
     isAdmin: false,
+    accountType: "",
     isGoogleUser: false,
     uuid: "",
     settings: {

@@ -2,6 +2,8 @@ import { AdminSharedUser } from "@tsconline/shared";
 import { useState, useEffect } from "react";
 import { EditableUserProperties } from "../types";
 import { SelectChangeEvent } from "@mui/material/Select";
+import { useContext } from "react";
+import { context } from "../state";
 
 type UseUserStatsProps = {
   data: AdminSharedUser;
@@ -18,6 +20,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     username: data.username,
     email: data.email,
     isAdmin: data.isAdmin,
+    accountType: data.accountType,
     pictureUrl: data.pictureUrl || undefined
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -26,6 +29,9 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
   const [isConfirmRemovalOfUserFromWorkshopDialogOpen, setIsConfirmRemovalOfUserFromWorkshopDialogOpen] =
     useState(false);
+
+  const { actions } = useContext(context);
+
   // Function to remove a workshop
   const removeUserFromWorkshop = () => {
     if (currentWorkshops) {
@@ -42,36 +48,29 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setOriginalUserInfo(userInfo);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUnsavedChanges(true);
-    const { name } = e.target;
-    if (!(name in userInfo)) {
-      console.error("Requested input change while editing UserInfo for field " + name + "doesn't exist");
-      handleDiscardUserInfoChanges();
-      return;
-    }
-    setUserInfo({
-      ...userInfo,
-      [name]: e.target.value
-    });
-  };
-
   const handleSelectChange = (e: SelectChangeEvent) => {
     setUnsavedChanges(true);
 
-    const { value } = e.target;
-
-    setUserInfo({
-      ...userInfo,
-      isAdmin: value === "Yes"
-    });
+    const { name, value } = e.target;
+    setUserInfo((prevUserInfo) => ({
+      ...prevUserInfo,
+      [name]: name === "isAdmin" ? value === "Yes" : value === "Yes" ? "pro" : "default"
+    }));
   };
 
-  const handleSaveChanges = () => {
+  const handleSaveChanges = async () => {
     if (selectedFile) {
       const newAvatarUrl = URL.createObjectURL(selectedFile); // Preview URL for the uploaded image
       setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
     }
+    const modifiedUser = {
+      username: userInfo.username,
+      email: userInfo.email,
+      accountType: userInfo.accountType,
+      isAdmin: userInfo.isAdmin ? 1 : 0
+    };
+
+    await actions.adminModifyUsers(modifiedUser);
     setUnsavedChanges(false);
     setEditMode(false);
   };
@@ -165,7 +164,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     },
     handlers: {
       handleEditToggle,
-      handleInputChange,
       handleSelectChange,
       handleSaveChanges,
       handleDiscardUserInfoChanges,

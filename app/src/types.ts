@@ -228,6 +228,7 @@ export type EditableUserProperties = {
   username: string;
   email: string;
   isAdmin: boolean;
+  accountType: string;
   pictureUrl: string | undefined;
 };
 

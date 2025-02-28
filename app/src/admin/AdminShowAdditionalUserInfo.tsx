@@ -5,7 +5,6 @@ import {
   Dialog,
   Box,
   Avatar,
-  TextField,
   Select,
   MenuItem,
   TableRow,
@@ -29,7 +28,6 @@ type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
 };
 
-//TODO: Need to implement backend
 export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (props) => {
   const { state } = useContext(context);
   const { editState, setters, handlers } = useEditUser({ data: props.data });
@@ -156,47 +154,52 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
                 )}
               </Box>
 
-              {editState.editMode ? (
-                <TextField
-                  label="Username"
-                  name="username"
-                  value={editState.userInfo.username}
-                  onChange={handlers.handleInputChange}
-                />
-              ) : (
-                <Typography variant="h6">{editState.userInfo.username}</Typography>
-              )}
+              {/* User Name */}
+              <Typography variant="h6">{editState.userInfo.username}</Typography>
             </Box>
 
             {/* User Email */}
             <Box mb={1}>
-              {editState.editMode ? (
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={editState.userInfo.email}
-                  onChange={handlers.handleInputChange}
-                  fullWidth
-                />
-              ) : (
-                <Typography variant="body1">
-                  <strong>Email:</strong> {editState.userInfo.email}
-                </Typography>
-              )}
+              <Typography variant="body1">
+                <strong>Email:</strong> {editState.userInfo.email}
+              </Typography>
             </Box>
 
             {/* Admin Status */}
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={2}>
               <Typography variant="body1" mr={1} fontWeight={"bold"}>
                 Admin:
               </Typography>
               {editState.editMode ? (
-                <Select value={editState.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
+                <Select
+                  name="isAdmin"
+                  value={editState.userInfo.isAdmin ? "Yes" : "No"}
+                  onChange={handlers.handleSelectChange}
+                  sx={{ width: 70, maxHeight: 30, fontSize: "0.875rem" }}>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
                 </Select>
               ) : (
                 <Typography variant="body1">{editState.userInfo.isAdmin ? "Yes" : "No"}</Typography>
+              )}
+            </Box>
+
+            {/* Account Type */}
+            <Box display="flex" alignItems="center" mb={2}>
+              <Typography variant="body1" mr={1} fontWeight={"bold"}>
+                Pro:
+              </Typography>
+              {editState.editMode ? (
+                <Select
+                  name="accountType"
+                  value={editState.userInfo.accountType === "pro" ? "Yes" : "No"}
+                  onChange={handlers.handleSelectChange}
+                  sx={{ width: 70, maxHeight: 30, fontSize: "0.875rem" }}>
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
+                </Select>
+              ) : (
+                <Typography variant="body1">{editState.userInfo.accountType === "pro" ? "Yes" : "No"}</Typography>
               )}
             </Box>
           </Box>
