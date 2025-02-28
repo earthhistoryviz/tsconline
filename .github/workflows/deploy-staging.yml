@@ -14,8 +14,6 @@ jobs:
     environment:
       name: staging
       url: ${{ vars.WEBSITE_URL }}
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -98,17 +96,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
+          mv datapacks.zip release
           gh release download ${{ github.ref_name }} -A=zip -D release
           gh release download ${{ github.ref_name }} -D release
           cd release
-          ls
           unzip -q tsconline-*.zip
           rm tsconline-*.zip
           mv tsconline-*/* .
           rm -r tsconline-*
-          ls
           rm checksums.txt
           touch secrets.env
+          ls
           zip -r -q ../release-artifacts.zip *
   
       - name: Send Release Artifacts to Server
@@ -124,7 +122,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            set -o pipefail
+            set -e
             cd ${{ secrets.STAGING_PATH }}
 
             unzip -q -o release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
