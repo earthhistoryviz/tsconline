@@ -13,7 +13,7 @@ import fastifySecureSession from "@fastify/secure-session";
 import { resolve } from "path";
 import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import formAutoContent from "form-auto-content";
-import { DatapackMetadata } from "@tsconline/shared";
+import { DatapackMetadata, SharedWorkshop } from "@tsconline/shared";
 import * as uploadHandlers from "../src/upload-handlers";
 import * as excel from "../src/parse-excel-file";
 import * as userHandlers from "../src/user/user-handler";
@@ -370,14 +370,24 @@ const start = new Date(mockDate);
 start.setHours(mockDate.getHours() + 1);
 const end = new Date(mockDate);
 end.setHours(mockDate.getHours() + 2);
-const testWorkshop: Workshop = {
+const testWorkshopDatabase: Workshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
+};
+const testWorkshop: SharedWorkshop = {
   title: "test",
   start: start.toISOString(),
   end: end.toISOString(),
   workshopId: 1,
   regRestrict: false,
   creatorUUID: "123",
-  regLink: ""
+  regLink: "",
+  active: false
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -1078,7 +1088,7 @@ describe("getUsers", () => {
   });
   it("should return user with workshopIds and one without", async () => {
     findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser, testNonAdminUser]);
-    findWorkshop.mockResolvedValueOnce([testWorkshop]).mockResolvedValueOnce([]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]).mockResolvedValueOnce([]);
     findUsersWorkshops.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "POST",
@@ -1698,7 +1708,7 @@ describe("adminGetWorkshops", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and workshop active as false", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
 
     const response = await app.inject({
       method: "GET",
@@ -1721,7 +1731,7 @@ describe("adminGetWorkshops", () => {
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and workshop active as true", async () => {
-    findWorkshop.mockResolvedValueOnce([{ ...testWorkshop, start: mockDate.toISOString() }]);
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, start: mockDate.toISOString() }]);
     const response = await app.inject({
       method: "GET",
       url: "/admin/workshops",
@@ -1831,7 +1841,7 @@ describe("adminCreateWorkshop", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 409 if workshop with title and dates already exists", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop",
@@ -1946,7 +1956,7 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should return 400 if end is an invalid date", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1958,7 +1968,7 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if start is after end", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1970,9 +1980,9 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should return 409 if workshop with title and dates already exists", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     findWorkshop.mockResolvedValueOnce([
-      { ...body, end: testWorkshop.end, regLink: undefined, regRestrict: false, creatorUUID: testWorkshop.creatorUUID }
+      { ...body, end: testWorkshop.end, regLink: undefined, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }
     ]);
     const response = await app.inject({
       method: "PATCH",
@@ -1989,7 +1999,7 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(409);
   });
   it("should return 500 if findWorkshop throws an error", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     findWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "PATCH",
@@ -2002,7 +2012,7 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and update workshop", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshop);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     findWorkshop.mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "PATCH",
@@ -2011,7 +2021,10 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).toHaveBeenCalledOnce();
-    expect(updateWorkshop).toHaveBeenCalledWith({ workshopId: body.workshopId }, { ...body, workshopId: undefined });
+    expect(updateWorkshop).toHaveBeenCalledWith(
+      { workshopId: body.workshopId },
+      { ...body, regRestrict: 0, workshopId: undefined }
+    );
     expect(await response.json()).toEqual({
       workshop: {
         ...body,
@@ -2073,7 +2086,7 @@ describe("adminDeleteWorkshop", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should return 500 if deleteWorkshop fails", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     deleteWorkshop.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "DELETE",
@@ -2087,7 +2100,7 @@ describe("adminDeleteWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshop]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     const response = await app.inject({
       method: "DELETE",
       url: "/admin/workshop",

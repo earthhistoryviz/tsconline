@@ -584,7 +584,8 @@
             "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes.",
             "ADMIN_ADD_FILES_TO_WORKSHOP_FAILED": "Failed to add files to workshop",
             "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
-            "INVALID_FILE_FORMAT": "Invalid file format."
+            "INVALID_FILE_FORMAT": "Invalid file format.",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
         },
         "button": {
             "generate": "Generate",
