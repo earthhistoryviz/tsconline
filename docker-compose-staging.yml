@@ -14,7 +14,7 @@ services:
       - NODE_ENV=production
     networks:
       - shared_network
-    command: bash -c "yarn workspaces focus -A --production && /code/entrypoint-no-build.sh"
+    command: bash -c "yarn workspaces focus -A --production && yarn dev:config && /code/entrypoint-no-build.sh"
 
 networks:
   shared_network:
