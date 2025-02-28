@@ -89,7 +89,18 @@ jobs:
               exit 1
             fi
 
-            docker compose -f docker-compose-server.yml restart
+            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
+            if [ -z "$CONTAINER_ID" ]; then
+              echo "Container is not running. Bringing up the container..."
+              docker-compose -f docker-compose-server.yml up -d
+              if [ $? -ne 0 ]; then
+                echo "Error: Failed to bring up the container."
+                exit 1
+              fi
+            else
+              echo "Container is already running. Restarting..."
+              docker-compose -f docker-compose-server.yml restart
+            fi
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
