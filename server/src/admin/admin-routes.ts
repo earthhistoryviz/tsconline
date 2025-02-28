@@ -519,7 +519,6 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
         const start = new Date(workshop.start);
         const end = new Date(workshop.end);
 
-        //const imageLink = (await fetchWorkshopCoverPictureFilepath(workshop.workshopId)) || ""; //TODO: fix this function to serve coverpicture properly
         const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
         const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
 
@@ -662,7 +661,11 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
-    await updateWorkshop({ workshopId }, fieldsToUpdate);
+    const fieldsToUpdateForDatabase = {
+      ...fieldsToUpdate,
+      regRestrict: 0 // TODO: change this to the real updated regRestrict value when editing workshop functionality is completed
+    };
+    await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
     const now = new Date();
     const newStart = new Date(newWorkshop.start);
     const newEnd = new Date(newWorkshop.end);
@@ -857,9 +860,11 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
     reply.status(404).send({ error: "Workshop not found or has ended" });
     return;
   }
+  let file: MultipartFile | undefined;
   try {
     for await (const part of parts) {
       if (part.type === "file" && part.fieldname === "file") {
+        file = part;
         const { code, message } = await uploadFilesToWorkshop(workshopId, part);
         if (code !== 200) {
           reply.status(code).send({ error: message });
@@ -867,8 +872,12 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
         }
       }
     }
+    if (!file) {
+      console.error("No files were uploaded");
+      reply.status(400).send({ error: "No files were uploaded" });
+      return;
+    }
     reply.send({ message: "Files added to workshop" });
-    return;
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Error uploading files to workshop" });
@@ -896,11 +905,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
           reply.status(400).send({ error: "Missing workshopId" });
           return;
         }
-        if (!coverPicture) {
-          console.error("Missing cover picture");
-          reply.status(400).send({ error: "Missing cover picture" });
-          return;
-        }
         const workshop = await getWorkshopIfNotEnded(workshopId);
         if (!workshop) {
           console.error("Workshop not found or has ended");
@@ -915,6 +919,11 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
         reply.send({ message: "Cover picture added to workshop" });
         return;
       }
+    }
+    if (!coverPicture) {
+      console.error("No cover picture were uploaded");
+      reply.status(400).send({ error: "No cover picture were uploaded" });
+      return;
     }
   } catch (error) {
     console.error(error);
