@@ -11,7 +11,8 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
 import { useState } from "react";
-import LoadingButton from "@mui/lab/LoadingButton";
+import { TSCLoadingButton } from "./components/TSCLoadingButton";
+import { CustomTooltip } from "./components";
 
 // TODO: change this when backend is finished
 
@@ -21,24 +22,32 @@ export const WorkshopDetails = observer(() => {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const [isRegistered] = useState(true);
-  const [buttonSwitchNotReg, setButtonBool] = useState(false);
-  const [switchColorsBool, setColorBool] = useState(false);
+  const isRegistered = false;
+  const isPublicWorkshop = false;
+  const [isDisabled, setIsDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [switchButtonVar, setSwitchButtonVar] = useState(
+    t("workshops.details-page.register-button") // Default to "Register"
+  );
 
-  const handleRegisterClick = () => {
-    setColorBool(true);
-    setLoading(true);
-    setTimeout(() => {
-      if (isRegistered) {
-        setButtonBool(true);
+    const handleRegisterClick = () => {
+      setLoading(true);
+      setIsDisabled(true);
+      setTimeout(() => {
+        if (isRegistered) {
+          setSwitchButtonVar(t("workshops.details-page.alrRegistered-button"));
+        }
+        if(!isRegistered && isPublicWorkshop)
+        {
+          setSwitchButtonVar(t("workshops.details-page.registered-button"));
+        }
+        if(!isRegistered && !isPublicWorkshop){
+          setShowTooltip(true);
+        }
         setLoading(false);
-      } else {
-        alert(t("workshops.details-page.messages.not-registered"));
-        setLoading(false);
-      }
-    }, 2000);
-  };
+      }, 2000);
+    };
 
   const fetchWorkshop = () => {
     if (!id) return;
@@ -59,7 +68,6 @@ export const WorkshopDetails = observer(() => {
           <IconButton className={styles.back} onClick={() => navigate("/workshops")}>
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
-
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
           <img className={styles.di} src={TSCreatorLogo} />
@@ -106,18 +114,20 @@ export const WorkshopDetails = observer(() => {
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
                   <Box sx={{ display: "flex", marginTop: 2 }}>
-                    <LoadingButton
-                      variant="contained"
-                      sx={{
-                        marginRight: 2,
-                        backgroundColor: switchColorsBool ? "grey" : "tan"
-                      }}
-                      onClick={handleRegisterClick}
-                      loading={loading}>
-                      {buttonSwitchNotReg
-                        ? t("workshops.details-page.registered-button")
-                        : t("workshops.details-page.register-button")}
-                    </LoadingButton>
+
+                  <CustomTooltip title= {t("workshops.details-page.messages.not-registered")} open={showTooltip}>
+                        <TSCLoadingButton
+                          variant="contained"
+                          sx={{
+                            marginRight: 2,
+                            backgroundColor: "primary"
+                          }} 
+                          onClick={handleRegisterClick}
+                          disabled={isDisabled}
+                          loading={loading}>
+                          {switchButtonVar}
+                        </TSCLoadingButton>
+                      </CustomTooltip>
 
                     <TSCButton variant="contained" color="primary" href={fetchWorkshopFiles()}>
                       {t("workshops.details-page.download-button")}

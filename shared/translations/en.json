@@ -180,7 +180,8 @@
                 "download-button": "Download Files",
                 "description": "Description",
                 "register-button": "Register",
-                "registered-button": "Already Registered",
+                "alrRegistered-button": "Already Registered",
+                "registered-button": "Registered",
                 "messages": {
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available",
