@@ -7,6 +7,8 @@ RUN apt update && \
 # Download Java and necessary tools
 RUN apt install -y openjdk-17-jdk apt git xterm python3
 
+RUN corepack enable
+
 # Command to save a password (the entrypoint.sh script actually runs x11 and it uses the environment for the password)
 # RUN x11vnc -storepasswd 1234 ~/.vnc/passwd
 
