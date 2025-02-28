@@ -33,7 +33,7 @@ jobs:
         id: parse_jar_name
         run: |
           jar_name=$(jq -r '.activeJar' server/assets/config.json | xargs basename)
-          decryption_jar_name=${jq -r '.decryptionJar' server/assets/config.json | xargs basename}
+          decryption_jar_name=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
           echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
   
