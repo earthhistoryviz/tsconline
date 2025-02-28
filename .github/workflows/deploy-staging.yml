@@ -126,7 +126,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            rsync -a --delete --exclude="release-artifacts.zip" --exclude=".yarn" --exclude=".yarn/*" /dev/null ${{ secrets.STAGING_PATH }}/
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
 
             cd ${{ secrets.STAGING_PATH }}
 

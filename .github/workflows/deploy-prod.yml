@@ -82,7 +82,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
-            rsync -a --delete --exclude="release-artifacts.zip" --exclude=".yarn" --exclude=".yarn/*" --exclude="server/assets/*" /dev/null ${{ secrets.RELEASE_PATH }}/
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" -exec rm -rf {} +
             cd ${{ secrets.RELEASE_PATH }}
 
             git fetch --tags
