@@ -5,8 +5,8 @@ import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
-import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker, isMarkerType, markerTypes } from "../types";
+import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
+import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
@@ -255,6 +255,98 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
     );
   }
 );
+const Models: React.FC = observer(() => {
+  const { state } = useContext(context);
+  return (
+    <Box className={styles.modelsComponent}>
+      {state.crossPlot.models.map((model, index) => (
+        <Box key={index} className={styles.modelOptions}>
+          <ModelOptions model={model} />
+          {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
+        </Box>
+      ))}
+    </Box>
+  );
+});
+const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
+  const { actions } = useContext(context);
+  const [age, setAge] = useState(model.age.toString());
+  const [depth, setDepth] = useState(model.depth.toString());
+  return (
+    <Box className={styles.modelContainer}>
+      <Box className={styles.checkBoxContainer}>
+        <TSCCheckbox />
+      </Box>
+      <TSCColorPicker
+        color={model.color}
+        onColorChange={(evt) => {
+          actions.editCrossPlotModel(model, { color: evt });
+        }}
+        className={styles.colorPicker}
+      />
+      <Box className={styles.modelOptions}>
+        <Box className={styles.topMarkerRow}>
+          <TextField
+            select
+            size="small"
+            label="Type"
+            value={model.type}
+            onChange={(e) => {
+              if (!isModelType(e.target.value)) return;
+              actions.editCrossPlotModel(model, { type: e.target.value });
+            }}>
+            {modelTypes.map((modelType) => (
+              <MenuItem key={modelType} value={modelType}>
+                {modelType}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size="small"
+            label="Age"
+            value={age}
+            type="number"
+            error={isNaN(parseFloat(age))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotModel(model, { age: parseFloat(e.target.value) });
+            }}
+            onChange={(evt) => {
+              setAge(evt.target.value);
+            }}
+          />
+          <TextField
+            size="small"
+            label="Depth"
+            type="number"
+            value={depth}
+            error={isNaN(parseFloat(depth))}
+            onBlur={(e) => {
+              if (isNaN(parseFloat(e.target.value))) {
+                return;
+              }
+              actions.editCrossPlotModel(model, { depth: parseFloat(e.target.value) });
+            }}
+            onChange={(evt) => {
+              setDepth(evt.target.value);
+            }}
+          />
+        </Box>
+        <TextField
+          size="small"
+          label="Comment"
+          fullWidth
+          value={model.comment}
+          onChange={(evt) => {
+            actions.editCrossPlotModel(model, { comment: evt.target.value });
+          }}
+        />
+      </Box>
+    </Box>
+  );
+});
 
 const Markers: React.FC = observer(() => {
   const { state } = useContext(context);
@@ -361,5 +453,10 @@ const tabs = [
     tabName: "Markers",
     Icon: BookmarkRounded,
     component: <Markers />
+  },
+  {
+    tabName: "Models",
+    Icon: Timeline,
+    component: <Models />
   }
 ];

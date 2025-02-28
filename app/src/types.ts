@@ -245,6 +245,7 @@ export type Model = Omit<Marker, "type" | "line"> & {
 };
 
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
+export const modelTypes = ["Rect", "Circle"];
 
 export type CrossPlotBounds = {
   minX: number;
@@ -263,6 +264,9 @@ export type CrossPlotBounds = {
 
 export function isMarkerType(value: string): value is Marker["type"] {
   return markerTypes.includes(value);
+}
+export function isModelType(value: string): value is Model["type"] {
+  return modelTypes.includes(value);
 }
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {

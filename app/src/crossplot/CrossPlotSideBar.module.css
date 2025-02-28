@@ -78,19 +78,15 @@
   z-index: 10;
 }
 
-.markerContainer {
+.markerContainer,
+.modelContainer {
   display: flex;
   flex-direction: row;
   gap: 15px;
   padding: 5px 0px;
 }
-.markerOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 10px;
-}
-.markersComponent {
+.markersComponent,
+.modelsComponent {
   padding: 23px;
   width: 100%;
   height: 100%;
@@ -100,7 +96,8 @@
   align-items: center;
   justify-content: center;
 }
-.markerOptions {
+.markerOptions,
+.modelOptions {
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -113,7 +110,8 @@
   padding: 0px;
   align-self: center;
 }
-.topMarkerRow {
+.topMarkerRow,
+.topModelRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   grid-template-rows: 1fr;

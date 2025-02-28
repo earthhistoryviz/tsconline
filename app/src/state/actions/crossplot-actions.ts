@@ -156,6 +156,51 @@ export const resetCrossPlotMarkers = action(() => {
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
 };
+export const editCrossPlotModel = action((model: Model, partial: Partial<Model>) => {
+  if (!isObservable(model)) {
+    throw new Error("Model is not observable");
+  }
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    throw new Error("CrossPlotBounds is undefined");
+  }
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
+  if (partial.color !== undefined) {
+    model.color = partial.color;
+    model.element.setAttribute("fill", partial.color);
+  }
+  if (partial.comment !== undefined) {
+    model.comment = partial.comment;
+  }
+  if (partial.age !== undefined) {
+    const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+    model.age = partial.age;
+    const coord = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
+    model.x = coord;
+    model.element.setAttribute("x", (coord - markerWidth / 2).toString());
+  }
+  if (partial.depth !== undefined) {
+    const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+    model.depth = partial.depth;
+    const coord = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
+    model.y = coord;
+    model.element.setAttribute("y", (coord - markerHeight / 2).toString());
+  }
+  if (partial.type !== undefined) {
+    model.type = partial.type;
+    switch (partial.type) {
+      case "Rect": {
+        model.element.setAttribute("rx", "0");
+        model.element.setAttribute("ry", "0");
+        break;
+      }
+      case "Circle": {
+        model.element.setAttribute("rx", "50%");
+        model.element.setAttribute("ry", "50%");
+        break;
+      }
+    }
+  }
+});
 export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Marker>) => {
   if (!isObservable(marker)) {
     throw new Error("Marker is not observable");
