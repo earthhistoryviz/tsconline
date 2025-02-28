@@ -10,6 +10,7 @@ import LightArrowUpIcon from "../../assets/icons/light-arrow-up.json";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 import {
   checkIfDataIsInRange,
@@ -175,6 +176,71 @@ function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, user
   return true;
 }
 
+function OutOfRangeIcon() {
+  const theme = useTheme();
+  const { t } = useTranslation();
+  return (
+    <Tooltip
+      title={t("settings.column.tooltip.not-in-range")}
+      placement="top"
+      arrow
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, -10]
+              }
+            }
+          ]
+        }
+      }}>
+      <ErrorOutlineIcon
+        className="column-error-icon"
+        style={{
+          color: theme.palette.error.main
+        }}
+      />
+    </Tooltip>
+  );
+}
+function NotValidColumnIcon() {
+  const theme = useTheme();
+  const { t } = useTranslation();
+  return (
+    <Tooltip
+      title={t("settings.column.overlay-menu.column-not-valid")}
+      placement="top"
+      arrow
+      slotProps={{
+        popper: {
+          modifiers: [
+            {
+              name: "offset",
+              options: {
+                offset: [0, -10]
+              }
+            }
+          ]
+        }
+      }}>
+      <WarningAmberIcon
+        className="column-error-icon"
+        style={{
+          color: theme.palette.error.main
+        }}
+      />
+    </Tooltip>
+  );
+}
+
+enum ColumnStatus {
+  NotValid,
+  OutOfRange,
+  Valid
+}
+
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
   const { t } = useTranslation();
@@ -214,6 +280,15 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         state.settings.timeSettings[column.units].baseStageAge
       );
 
+  let columnStatus: ColumnStatus = ColumnStatus.NotValid;
+
+  //column can be chosen for overlay column
+  if (column.columnDisplayType === "Event" || column.columnDisplayType === "Point") {
+    if (!dataInRange && !(column.name === "Ma" || column.name === "Root")) {
+      columnStatus = ColumnStatus.OutOfRange;
+    } else columnStatus = ColumnStatus.Valid;
+  }
+
   // if there are no children, don't make an accordion
   if (column.children.length == 0) {
     return (
@@ -221,12 +296,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         className={`column-leaf-row-container ${selectedClass}`}
         onClick={() => {
           if (
-            (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-            column.name === state.columnMenu.columnSelected
+            columnStatus === ColumnStatus.NotValid ||
+            column.name === state.columnMenu.columnSelected ||
+            !state.columnMenu.columnSelected
           ) {
-            return;
-          }
-          if (!state.columnMenu.columnSelected) {
             return;
           }
           const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
@@ -244,42 +317,14 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             `class datastore.${column.columnDisplayType}Column:` + column.name;
         }}
         tabIndex={0}>
-        <ColumnContainer sx={{
-              opacity: 1,
-              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : "pointer"
-            }} className="dcc-column-leaf">
-          {!dataInRange && !(column.name === "Ma" || column.name === "Root") && (
-            <Tooltip
-              title={t("settings.column.tooltip.not-in-range")}
-              placement="top"
-              arrow
-              slotProps={{
-                popper: {
-                  modifiers: [
-                    {
-                      name: "offset",
-                      options: {
-                        offset: [0, -10]
-                      }
-                    }
-                  ]
-                }
-              }}>
-              <ErrorOutlineIcon
-                className="column-error-icon"
-                style={{
-                  color: theme.palette.error.main
-                }}
-              />
-            </Tooltip>
-          )}
-          <Typography
-            className={
-              (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") ||
-              column.name === state.columnMenu.columnSelected
-                ? "dcc-not-allowed"
-                : "column-display-name"
-            }>
+        <ColumnContainer
+          sx={{
+            opacity: 1,
+            cursor: columnStatus === ColumnStatus.NotValid ? "default" : "pointer"
+          }}
+          className="dcc-column-leaf">
+          {columnStatus === ColumnStatus.NotValid ? <NotValidColumnIcon /> : <OutOfRangeIcon />}
+          <Typography className={columnStatus === ColumnStatus.NotValid ? "dcc-not-allowed" : "column-display-name"}>
             {column.editName}
           </Typography>
         </ColumnContainer>
@@ -291,8 +336,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
     ? { opacity: 1 }
     : {};
   return (
-    <div className="dcc-accordion-container"
-    >
+    <div className="dcc-accordion-container">
       {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
       <Accordion
         //checks if column name is in expand list
@@ -300,12 +344,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         className="column-accordion">
         <MuiAccordionSummary
           tabIndex={0}
-          expandIcon={
-            <ArrowForwardIosSharpIcon
-              color="icon"
-              sx={{ fontSize: "0.9rem" }}
-            />
-          }
+          expandIcon={<ArrowForwardIosSharpIcon color="icon" sx={{ fontSize: "0.9rem" }} />}
           onClick={(e) => {
             setExpanded(!expanded);
             e.stopPropagation();
@@ -316,7 +355,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             className="column-row-container"
             sx={{
               opacity: 1,
-              cursor: column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point" ? "default" : ""
+              cursor: columnStatus === ColumnStatus.NotValid ? "default" : ""
             }}
             onClick={() => setExpanded(!expanded)}>
             <Typography className="column-display-name">{column.editName}</Typography>
