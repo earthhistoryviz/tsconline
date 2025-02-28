@@ -51,6 +51,15 @@ async function verify(token: string, expectedAction: string): Promise<any> {
 }
 
 /**
+ * Generates a token for the given UUID. The token is encrypted using AES-256-CBC.
+ * @param uuid The UUID to generate a token for
+ * @returns The generated token
+ */
+export function generateToken(uuid: string): string {
+  return randomBytes(16).toString("hex") + encrypt(uuid);
+}
+
+/**
  * Encrypts the data using AES-256-CBC. The key and IV are read from the environment variables AES_SECRET_KEY and AES_IV. If these are not set, random keys are generated.
  * @param data The data to encrypt
  * @returns The encrypted data
