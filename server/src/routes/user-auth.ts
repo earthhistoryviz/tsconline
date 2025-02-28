@@ -40,7 +40,7 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptcha);
+    const score = await checkRecaptchaToken(recaptcha, "verifyRecaptcha");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
