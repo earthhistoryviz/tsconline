@@ -66,18 +66,12 @@ jobs:
             exit 1
           fi
 
-      - name: Generate SHA256 checksum
-        run: |
-          sha256sum build-artifacts.zip > checksums.txt
-          sha256sum ${{ steps.parse_jar_name.outputs.jar_name }} >> checksums.txt
-
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
             build-artifacts.zip
             ${{ steps.parse_jar_name.outputs.jar_name }}
-            checksums.txt
 
       - name: Download Datapacks from Dropbox
         run: |
@@ -104,9 +98,7 @@ jobs:
           rm tsconline-*.zip
           mv tsconline-*/* .
           rm -r tsconline-*
-          rm checksums.txt
           touch secrets.env
-          ls
           zip -r -q ../release-artifacts.zip *
   
       - name: Send Release Artifacts to Server

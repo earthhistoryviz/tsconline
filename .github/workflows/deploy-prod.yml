@@ -45,12 +45,6 @@ jobs:
             echo "Error: $jar_name not found"
             exit 1
           fi
-          if sha256sum -c checksums.txt; then
-            echo "SHA-256 verification passed."
-          else
-            echo "SHA-256 verification failed! Deployment stopped."
-            exit 1
-          fi
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
 
       - name: Send Artifacts to Server
