@@ -100,7 +100,7 @@ jobs:
         run: |
           mkdir release
           mv datapacks.zip release
-          mv ${{ steps.parse_jar_name.outputs.jar_name }} release
+          mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} release
           gh release download ${{ github.ref_name }} -A=zip -D release
           gh release download ${{ github.ref_name }} -D release
           cd release
