@@ -23,6 +23,26 @@ import "./OverlaySettings.css";
 type OverlaySettingsProps = {
   column: ColumnInfo;
 };
+
+function getSelectedOverlayColumn(): string | null {
+  const { state } = useContext(context);
+  if (!state.columnMenu.columnSelected) {
+    return null;
+  }
+  const selectedColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
+  if (!selectedColumn) {
+    return null;
+  }
+  if (selectedColumn.columnDisplayType === "Point") {
+    assertPointSettings(selectedColumn.columnSpecificSettings);
+  } else if (selectedColumn.columnDisplayType === "Event") {
+    assertEventSettings(selectedColumn.columnSpecificSettings);
+  } else {
+    return null;
+  }
+  return discardTscPrefix(selectedColumn.columnSpecificSettings.drawDualColCompColumn);
+}
+
 export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ column }) => {
   if (column.columnDisplayType === "Point") {
     assertPointSettings(column.columnSpecificSettings);
@@ -90,6 +110,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                     state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name)) !== undefined
                   }
                   className="overlay-checkbox"
+                  disabled={getSelectedOverlayColumn() !== "" ? false : true}
                   onClick={() => {
                     if (!state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name))) {
                       actions.addDualColCompColumn(column);
@@ -98,7 +119,11 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                     }
                   }}
                 />
-                <Typography>{t("settings.column.overlay-menu.display-overlay")}</Typography>
+                {getSelectedOverlayColumn() !== "" ? (
+                  <Typography>{t("settings.column.overlay-menu.display-overlay")}</Typography>
+                ) : (
+                  <Typography color={"gray"}>{t("settings.column.overlay-menu.choose-column-empty")}</Typography>
+                )}
               </Box>
             </Box>
             <Box>
@@ -243,27 +268,7 @@ enum ColumnStatus {
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
-  const { t } = useTranslation();
-  const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
-
-  function getSelectedOverlayColumn(): string | null {
-    if (!state.columnMenu.columnSelected) {
-      return null;
-    }
-    const selectedColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-    if (!selectedColumn) {
-      return null;
-    }
-    if (selectedColumn.columnDisplayType === "Point") {
-      assertPointSettings(selectedColumn.columnSpecificSettings);
-    } else if (selectedColumn.columnDisplayType === "Event") {
-      assertEventSettings(selectedColumn.columnSpecificSettings);
-    } else {
-      return null;
-    }
-    return discardTscPrefix(selectedColumn.columnSpecificSettings.drawDualColCompColumn);
-  }
 
   const selectedClass = column.name === getSelectedOverlayColumn() ? "selected-column" : "";
 
