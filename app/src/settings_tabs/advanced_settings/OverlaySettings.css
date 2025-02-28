@@ -1,7 +1,7 @@
 .dcc-accordion-wrapper {
   min-width: 10vw;
   width: 45vw;
-  max-width: 70vw;
+  max-width: 45vw;
   overflow: auto;
   border-radius: 4px;
   z-index: 0;
