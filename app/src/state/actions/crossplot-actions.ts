@@ -15,6 +15,28 @@ import {
   CROSSPLOT_DOT_WIDTH,
   ageToCoord
 } from "../../components/TSCCrossPlotSVGComponent";
+import { getDotSizeFromScale } from "../non-action-util";
+export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
+  const models = state.crossPlot.models;
+  if (models.length === 0) {
+    return true;
+  }
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    return false;
+  }
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
+  const x = "x" in model ? model.x : ageToCoord(model.age, minX, maxX, topAgeX, scaleX);
+  const y = "y" in model ? model.y : ageToCoord(model.depth, minY, maxY, topAgeY, scaleY);
+  const tempModels = [...models.slice().map((m) => ({ x: m.x, y: m.y })), { x, y }];
+  tempModels.sort((a, b) => a.x - b.x || a.y - b.y);
+  return tempModels.every((model, index) => {
+    if (index === 0) {
+      return true;
+    }
+    const prevModel = tempModels[index - 1];
+    return model.x >= prevModel.x && model.y >= prevModel.y;
+  });
+});
 
 export const setCrossPlotBounds = action((bounds: CrossPlotBounds) => {
   state.crossPlot.crossPlotBounds = bounds;
@@ -153,9 +175,6 @@ export const resetCrossPlotMarkers = action(() => {
   state.crossPlot.markers = [];
 });
 
-export const getDotSizeFromScale = (size: number, scale: number) => {
-  return Math.min(size * Math.pow(scale, -0.8), 3 * size);
-};
 export const editCrossPlotModel = action((model: Model, partial: Partial<Model>) => {
   if (!isObservable(model)) {
     throw new Error("Model is not observable");

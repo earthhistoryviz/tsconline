@@ -13,6 +13,7 @@ import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
+import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -269,9 +270,11 @@ const Models: React.FC = observer(() => {
   );
 });
 const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const [age, setAge] = useState(model.age.toString());
+  const [ageError, setAgeError] = useState(false);
   const [depth, setDepth] = useState(model.depth.toString());
+  const [depthError, setDepthError] = useState(false);
   return (
     <Box className={styles.modelContainer}>
       <Box className={styles.checkBoxContainer}>
@@ -306,11 +309,25 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
             label="Age"
             value={age}
             type="number"
-            error={isNaN(parseFloat(age))}
+            error={ageError}
             onBlur={(e) => {
-              if (isNaN(parseFloat(e.target.value))) {
+              if (
+                isNaN(parseFloat(e.target.value)) ||
+                !actions.checkValidityOfNewModel({
+                  x: ageToCoord(
+                    parseFloat(e.target.value),
+                    state.crossPlot.crossPlotBounds!.minX,
+                    state.crossPlot.crossPlotBounds!.maxX,
+                    state.crossPlot.crossPlotBounds!.topAgeX,
+                    state.crossPlot.crossPlotBounds!.scaleX
+                  ),
+                  y: model.depth
+                })
+              ) {
+                setAgeError(true);
                 return;
               }
+              setAgeError(false);
               actions.editCrossPlotModel(model, { age: parseFloat(e.target.value) });
             }}
             onChange={(evt) => {
@@ -322,11 +339,25 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
             label="Depth"
             type="number"
             value={depth}
-            error={isNaN(parseFloat(depth))}
+            error={depthError}
             onBlur={(e) => {
-              if (isNaN(parseFloat(e.target.value))) {
+              if (
+                isNaN(parseFloat(e.target.value)) ||
+                !actions.checkValidityOfNewModel({
+                  x: model.x,
+                  y: ageToCoord(
+                    parseFloat(e.target.value),
+                    state.crossPlot.crossPlotBounds!.minY,
+                    state.crossPlot.crossPlotBounds!.maxY,
+                    state.crossPlot.crossPlotBounds!.topAgeY,
+                    state.crossPlot.crossPlotBounds!.scaleY
+                  )
+                })
+              ) {
+                setDepthError(true);
                 return;
               }
+              setDepthError(false);
               actions.editCrossPlotModel(model, { depth: parseFloat(e.target.value) });
             }}
             onChange={(evt) => {

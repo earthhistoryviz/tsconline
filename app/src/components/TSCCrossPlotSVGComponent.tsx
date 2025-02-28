@@ -5,8 +5,8 @@ import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
 import { useMediaQuery, useTheme } from "@mui/material";
 import { Marker, Model } from "../types";
-import { getDotSizeFromScale } from "../state/actions";
 import { CROSSPLOT_MOBILE_WIDTH } from "../crossplot/CrossPlotChart";
+import { getDotSizeFromScale } from "../state/non-action-util";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -33,17 +33,6 @@ const convertPixelsToSvgCoords = (svg: SVGSVGElement, x: number, y: number) => {
     x: (x / width) * viewBoxWidth,
     y: (y / height) * viewBoxHeight
   };
-};
-const isWithinModelConstraints = (point: DOMPoint, models: Model[]) => {
-  // there should be at least one model point that is less than the point
-  if (models.length === 0) return true;
-  const tempModels = [...models.map((model) => ({ x: model.x, y: model.y })), { x: point.x, y: point.y }];
-  tempModels.sort((a, b) => a.x - b.x || a.y - b.y);
-  // check if the point is greater than one of the x or y of the previous model
-  return tempModels.every((model, index) => {
-    if (index === 0) return true;
-    return model.x >= tempModels[index - 1].x && model.y >= tempModels[index - 1].y;
-  });
 };
 const getCursor = (svg: SVGSVGElement, evt: MouseEvent | TouchEvent) => {
   const point = new DOMPoint();
@@ -283,7 +272,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             getMinY(timeLineElements.timeLineY),
             getMaxY(timeLineElements.timeLineY)
           ) ||
-          !isWithinModelConstraints(point, state.crossPlot.models)
+          !actions.checkValidityOfNewModel(point)
         ) {
           return;
         }
