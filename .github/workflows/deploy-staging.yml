@@ -139,7 +139,7 @@ jobs:
             cd ${{ secrets.STAGING_PATH }}
             docker compose -f docker-compose-server.yml down || true
             
-            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec sudo rm -rf {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
