@@ -6,7 +6,7 @@ import { Settings } from "./Settings";
 import { ChartTab } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
-import { ddeDarkTheme, originalDarkTheme, originalLightTheme } from "./theme";
+import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
 import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { About } from "./About";
@@ -44,7 +44,7 @@ export default observer(function App() {
   const { t } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
   const darkTheme = isDDEServer ? ddeDarkTheme : originalDarkTheme;
-  const lightTheme = isDDEServer ? ddeDarkTheme : originalLightTheme;
+  const lightTheme = isDDEServer ? ddeLightTheme : originalLightTheme;
   const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
   const backgroundColor = theme.palette.backgroundColor.main;
   document.documentElement.style.backgroundColor = backgroundColor;
