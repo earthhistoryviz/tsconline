@@ -84,8 +84,15 @@ jobs:
               echo "Error: RELEASE_PATH is empty. Exiting..."
               exit 1
             fi
+            
             cd ${{ secrets.RELEASE_PATH }}
-            docker-compose -f docker-compose-server.yml down || true
+            COMPOSE_FILE=docker-compose-${{ vars.COMPOSE_FILE }}.yml
+             if [ ! -f "docker-compose-${{ vars.COMPOSE_FILE }}" ]; then
+              echo "Error: docker-compose-${{ vars.COMPOSE_FILE }} not found"
+              exit 1
+            fi
+
+            docker-compose -f $COMPOSE_FILE down || true
             find ${{ secrets.RELEASE_PATH }} -mindepth 1 \
               ! -name "release-artifacts.zip" \
               ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" \
@@ -117,22 +124,17 @@ jobs:
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
-            if [ ! -f "docker-compose-server.yml" ]; then
-              echo "Error: docker-compose-server.yml not found"
-              exit 1
-            fi
-
             CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
             if [ -z "$CONTAINER_ID" ]; then
               echo "Container is not running. Bringing up the container..."
-              docker-compose -f docker-compose-server.yml up -d
+              docker-compose -f docker-compose-${{ vars.COMPOSE_FILE }} up -d
               if [ $? -ne 0 ]; then
                 echo "Error: Failed to bring up the container."
                 exit 1
               fi
             else
               echo "Container is already running. Restarting..."
-              docker-compose -f docker-compose-server.yml restart
+              docker-compose -f docker-compose-${{ vars.COMPOSE_FILE }} restart
             fi
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
@@ -153,8 +155,8 @@ jobs:
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"
-                docker-compose -f docker-compose-server.yml logs --tail=200
-                docker-compose -f docker-compose-server.yml down
+                docker-compose -f docker-compose-${{ vars.COMPOSE_FILE }} logs --tail=200
+                docker-compose -f docker-compose-${{ vars.COMPOSE_FILE }} down
                 exit 1
               fi
               echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
