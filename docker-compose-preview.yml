@@ -1,4 +1,3 @@
-version: "3"
 networks:
   shared_network:
     external: true
