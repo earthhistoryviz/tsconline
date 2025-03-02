@@ -15,6 +15,7 @@ services:
     networks:
       - shared_network
     command: bash -c "yarn workspaces focus -A --production && yarn dev:config && /code/entrypoint-no-build.sh"
+    user: "deployuser"
 
 networks:
   shared_network:
