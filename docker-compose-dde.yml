@@ -9,12 +9,6 @@ services:
       - .:/code
     environment:
       - NODE_ENV=production
-    networks:
-      - shared_network
     command: bash -c "yarn workspaces focus -A --production && /code/entrypoint-no-build.sh"
     ports:
       - "3000:3000"
-
-networks:
-  shared_network:
-    external: true
