@@ -21,6 +21,7 @@ export const CROSSPLOT_DOT_WIDTH = 6;
 export const CROSSPLOT_DOT_HEIGHT = 6;
 export const MARKER_PADDING = 2;
 const CROSSPLOT_MODELS_GROUP = "CrossPlotModelsGroup";
+const CROSSPLOT_MARKERS_GROUP = "CrossPlotMarkersGroup";
 const lineStroke = "2";
 const tooltipId = "crossplot-tooltip";
 const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
@@ -38,6 +39,33 @@ const getDotRect = (id: string, point: { x: number; y: number }, scale: number, 
   rect.setAttribute("stroke", "black");
   rect.setAttribute("stroke-width", "1");
   return rect;
+};
+const getCrossPlotMarkersGroup = (svg: SVGSVGElement) => {
+  let markersGroup = svg.getElementById(CROSSPLOT_MARKERS_GROUP);
+  if (!markersGroup) {
+    markersGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    markersGroup.setAttribute("id", CROSSPLOT_MARKERS_GROUP);
+    svg.appendChild(markersGroup);
+  }
+  return markersGroup;
+};
+const getCrossPlotModelsGroup = (svg: SVGSVGElement) => {
+  let modelsGroup = svg.getElementById(CROSSPLOT_MODELS_GROUP);
+  if (!modelsGroup) {
+    modelsGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    modelsGroup.setAttribute("id", CROSSPLOT_MODELS_GROUP);
+    svg.appendChild(modelsGroup);
+  }
+  return modelsGroup;
+};
+const getCrossPlotLinesGroup = (svg: SVGSVGElement) => {
+  let linesGroup = svg.getElementById("CrossPlotLinesGroup");
+  if (!linesGroup) {
+    linesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    linesGroup.setAttribute("id", "CrossPlotLinesGroup");
+    svg.appendChild(linesGroup);
+  }
+  return linesGroup;
 };
 // just a helper function to convert pixels to svg coordinates in case anyone needs
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -315,6 +343,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             if (tooltip) tooltip.style.display = "none";
           };
           const removeRect = (e: MouseEvent) => {
+            if (!state.crossPlot.modelMode) return;
             e.preventDefault();
             hideTooltip();
             modelsGroup.removeChild(rect);
@@ -355,26 +384,27 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!container || !chartContent) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
-      const modelsGroup = svg.getElementById(CROSSPLOT_MODELS_GROUP);
-      if (!modelsGroup) return;
+
+      const modelsGroup = getCrossPlotModelsGroup(svg);
+      while (modelsGroup.firstChild) {
+        modelsGroup.removeChild(modelsGroup.firstChild);
+      }
       // draw models
       state.crossPlot.models.forEach((model) => {
         // if model already exists, we don't need to draw it again
         if (modelsGroup.querySelector(`#${model.id}`)) return;
-        const rect = getDotRect(model.id, { x: model.x, y: model.y }, chartZoomSettings.scale, model.color);
-        modelsGroup.appendChild(rect);
+        modelsGroup.appendChild(model.element);
       });
       // draw markers
-      const markersGroup = svg.getElementById("CrossPlotMarkersGroup");
-      if (!markersGroup) return;
+      const markersGroup = getCrossPlotMarkersGroup(svg);
       // remove all markers since we will redraw them (they could be sorted different)
       while (markersGroup.firstChild) {
         markersGroup.removeChild(markersGroup.firstChild);
       }
       state.crossPlot.markers.forEach((marker) => {
         if (markersGroup.querySelector(`#${marker.id}`)) return;
-        const rect = getDotRect(marker.id, { x: marker.x, y: marker.y }, chartZoomSettings.scale, marker.color);
-        markersGroup.appendChild(rect);
+        markersGroup.appendChild(marker.element);
+        markersGroup.appendChild(marker.line);
       });
       return () => {
         while (modelsGroup.firstChild) {
@@ -384,7 +414,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           markersGroup.removeChild(markersGroup.firstChild);
         }
       };
-    }, [state.crossPlot.models, state.crossPlot.markers]);
+    }, [ref]);
 
     // draw lines that connect models
     useEffect(() => {
@@ -393,14 +423,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
-      const modelsGroup = svg.getElementById(CROSSPLOT_MODELS_GROUP);
-      if (!modelsGroup) return;
-      let linesGroup = svg.getElementById("CrossPlotLinesGroup");
-      if (!linesGroup) {
-        linesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        linesGroup.setAttribute("id", "CrossPlotLinesGroup");
-        svg.insertBefore(linesGroup, modelsGroup);
-      }
+      const linesGroup = getCrossPlotLinesGroup(svg);
       // remove all lines since we will redraw them (they could be sorted different)
       while (linesGroup.firstChild) {
         linesGroup.removeChild(linesGroup.firstChild);
@@ -435,13 +458,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
       const svg = container.querySelector("svg");
       if (!svg) return;
-      let markersGroup = svg.getElementById("CrossPlotMarkersGroup");
-      if (!markersGroup) {
-        markersGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        markersGroup.setAttribute("id", "CrossPlotMarkersGroup");
-        svg.appendChild(markersGroup);
-      }
-      // create a circle on double click
+      const markersGroup = getCrossPlotMarkersGroup(svg);
       const handleDoubleClick = (evt: MouseEvent | TouchEvent) => {
         const point = getCursor(svg, evt);
         // check if point is within bounds, otherwise don't make the point
@@ -486,6 +503,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
             if (tooltip) tooltip.style.display = "none";
           };
           const removeRect = (e: MouseEvent) => {
+            if (!state.crossPlot.markerMode) return;
             e.preventDefault();
             hideTooltip();
             markersGroup.removeChild(rect);
@@ -548,7 +566,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         const tooltip = document.getElementById(tooltipId);
         if (tooltip) document.body.removeChild(tooltip);
       };
-    });
+    }, []);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;
