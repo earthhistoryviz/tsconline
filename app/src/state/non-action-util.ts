@@ -4,13 +4,14 @@ import {
   DatapackUniqueIdentifier,
   MapInfo,
   SharedUser,
+  SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
-import { Workshop } from "../Workshops";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from "./state";
 
 export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
@@ -124,23 +125,29 @@ export function hasLeadingTrailingWhiteSpace(input: string) {
   return input.trim() !== input;
 }
 
-export function getActiveWorkshops(workshops: Workshop[]) {
+export function getActiveWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const activeWorkshops = workshops.filter(
     (workshop) => workshop.active && new Date(workshop.start) <= now && new Date(workshop.end) >= now
   );
   return activeWorkshops;
 }
-export function getUpcomingWorkshops(workshops: Workshop[]) {
+export function getUpcomingWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const upcomingWorkshops = workshops.filter((workshop) => !workshop.active && new Date(workshop.start) > now);
   return upcomingWorkshops;
 }
-export function getPastWorkshops(workshops: Workshop[]) {
+export function getPastWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
 }
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
+}
+
+//TODO: remove this function once the route serving cover picture is finished
+export function getWorkshopCoverImage(coverPictureUrl?: string) {
+  const serverURL = coverPictureUrl && coverPictureUrl?.length > 0 ? devSafeUrl("/" + coverPictureUrl) : TSCreatorLogo;
+  return serverURL;
 }

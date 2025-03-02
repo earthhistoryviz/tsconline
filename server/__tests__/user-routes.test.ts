@@ -200,7 +200,7 @@ beforeAll(async () => {
   await app.register(userRoutes, { prefix: "/user" });
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
