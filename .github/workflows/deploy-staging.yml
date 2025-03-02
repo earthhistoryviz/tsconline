@@ -136,10 +136,14 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            if [ -z "${{ secrets.STAGING_PATH }}" ]; then
+              echo "Error: STAGING_PATH is empty. Exiting..."
+              exit 1
+            fi
             cd ${{ secrets.STAGING_PATH }}
             docker compose -f docker-compose-server.yml down || true
             
-            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec sudo rm -rf {} +
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip

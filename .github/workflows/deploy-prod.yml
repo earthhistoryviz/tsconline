@@ -81,9 +81,18 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             set -e
+            if [ -z "${{ secrets.RELEASE_PATH }}" ]; then
+              echo "Error: RELEASE_PATH is empty. Exiting..."
+              exit 1
+            fi
             cd ${{ secrets.RELEASE_PATH }}
             docker-compose -f docker-compose-server.yml down || true
-            find ${{ secrets.RELEASE_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.RELEASE_PATH }}/.yarn*"  ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" -exec rm -rf {} +
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 \
+              ! -name "release-artifacts.zip" \
+              ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" \
+              ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" \
+              -type f -exec rm -f {} +
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 -type d -empty -exec rmdir {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
             rm release-artifacts.zip
@@ -92,6 +101,8 @@ jobs:
             mkdir -p ${{ secrets.RELEASE_PATH }}/server/assets/jars
             mv ${{ steps.verify_release.outputs.decryption_jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
             mv ${{ steps.verify_release.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            unzip -q datapacks.zip -d ${{ secrets.RELEASE_PATH }}/server/assets
+            rm datapacks.zip
 
             echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
             echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
