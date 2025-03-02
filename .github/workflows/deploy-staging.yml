@@ -127,7 +127,6 @@ jobs:
           chmod 600 /tmp/ssh_key.pem
           scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem release-artifacts.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_PATH }}
 
-      # At some point replace docker-compose-staging.yml with docker-compose-server.yml, see the comments in the docker-compose-staging.yml file
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -143,7 +142,7 @@ jobs:
             cd ${{ secrets.STAGING_PATH }}
             docker compose -f docker-compose-server.yml down || true
             
-            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec rm -rf {} +
+            find ${{ secrets.STAGING_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.STAGING_PATH }}/.yarn*" -exec sudo rm -rf {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
             rm release-artifacts.zip
