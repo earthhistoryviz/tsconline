@@ -83,11 +83,8 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.RELEASE_PATH }}
-            docker compose -f docker-compose-server.yml down || true
+            docker-compose -f docker-compose-server.yml down || true
             find ${{ secrets.RELEASE_PATH }} -mindepth 1 ! -name "release-artifacts.zip" ! -path "${{ secrets.RELEASE_PATH }}/.yarn*"  ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" -exec rm -rf {} +
-
-            git fetch --tags
-            git checkout ${{ inputs.tag }}
 
             unzip -q release-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
             rm release-artifacts.zip
