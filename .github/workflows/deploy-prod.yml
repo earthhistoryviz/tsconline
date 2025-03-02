@@ -13,11 +13,10 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: ${{ vars.WEBSITE_URL }}
-    env:
-      SSH_HOST: ${{ secrets.SSH_HOST }}
+    strategy:
+      matrix:
+        environment: ["production", "dde"]
+    environment: ${{ matrix.environment }}
     steps:
       - uses: actions/checkout@v4
         with:
