@@ -87,10 +87,6 @@ jobs:
 
             cd ${{ secrets.RELEASE_PATH }}
             COMPOSE_FILE=docker-compose-${{ vars.COMPOSE_FILE }}.yml
-             if [ ! -f "$COMPOSE_FILE" ]; then
-              echo "Error: $COMPOSE_FILE not found"
-              exit 1
-            fi
 
             docker-compose -f $COMPOSE_FILE down || true
             find ${{ secrets.RELEASE_PATH }} -mindepth 1 \
@@ -123,6 +119,11 @@ jobs:
 
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "Error: $COMPOSE_FILE not found"
+              exit 1
+            fi
 
             CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
             if [ -z "$CONTAINER_ID" ]; then
