@@ -61,10 +61,11 @@ const getCrossPlotModelsGroup = (svg: SVGSVGElement) => {
 };
 const getCrossPlotLinesGroup = (svg: SVGSVGElement) => {
   let linesGroup = svg.getElementById("CrossPlotLinesGroup");
+  const modelsGroup = getCrossPlotModelsGroup(svg);
   if (!linesGroup) {
     linesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     linesGroup.setAttribute("id", "CrossPlotLinesGroup");
-    svg.appendChild(linesGroup);
+    svg.insertBefore(linesGroup, modelsGroup);
   }
   return linesGroup;
 };

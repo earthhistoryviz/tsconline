@@ -258,8 +258,9 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
 );
 const Models: React.FC = observer(() => {
   const { state } = useContext(context);
+  const { t } = useTranslation();
   return (
-    <Box className={styles.modelsComponent}>
+    <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
       {state.crossPlot.models.map((model, index) => (
         <Box key={index} className={styles.modelOptions}>
           <ModelOptions model={model} />
@@ -267,9 +268,7 @@ const Models: React.FC = observer(() => {
         </Box>
       ))}
       {state.crossPlot.models.length === 0 && (
-        <Typography className={styles.noModelsText}>
-          No Models Available (Please Add a Model by Clicking the Chart in the Main View)
-        </Typography>
+        <Typography className={styles.noModelsText}>{t("crossPlot.sidebar.no-models")}</Typography>
       )}
     </Box>
   );
@@ -390,6 +389,7 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
 
 const Markers: React.FC = observer(() => {
   const { state } = useContext(context);
+  const { t } = useTranslation();
   return (
     <Box className={styles.markersComponent} display={state.crossPlot.markers.length === 0 ? "flex" : ""}>
       {state.crossPlot.markers.map((marker, index) => (
@@ -399,9 +399,7 @@ const Markers: React.FC = observer(() => {
         </Box>
       ))}
       {state.crossPlot.markers.length === 0 && (
-        <Typography className={styles.noMarkersText}>
-          No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)
-        </Typography>
+        <Typography className={styles.noMarkersText}>{t("crossPlot.sidebar.no-markers")}</Typography>
       )}
     </Box>
   );
