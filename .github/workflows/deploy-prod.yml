@@ -92,7 +92,7 @@ jobs:
               ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" \
               ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" \
               -type f -exec sudo rm -f {} +
-            find ${{ secrets.RELEASE_PATH }} -mindepth 1 -type d -empty -exec rmdir {} +
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 -type d -empty -exec sudo rmdir {} +
 
             unzip -q release-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
             rm release-artifacts.zip
