@@ -40,7 +40,8 @@ jobs:
       - name: Verify release build
         id: verify_release
         run: |
-          cd release
+          echo "Current directory: $(pwd)"
+          ls -l
           if [ ! -f "build-artifacts.zip"  ] || [ ! -f "datapacks.zip" ]; then
             echo "Error: build-artifacts.zip or datapacks.zip not found"
             exit 1
