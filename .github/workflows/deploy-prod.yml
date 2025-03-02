@@ -40,8 +40,7 @@ jobs:
       - name: Verify release build
         id: verify_release
         run: |
-          echo "Current directory: $(pwd)"
-          ls -l
+          cd release
           if [ ! -f "build-artifacts.zip"  ] || [ ! -f "datapacks.zip" ]; then
             echo "Error: build-artifacts.zip or datapacks.zip not found"
             exit 1
@@ -64,7 +63,6 @@ jobs:
             echo "Error: $decryption_jar_name not found"
             exit 1
           fi
-          cd release
           zip -r -q ../release-artifacts.zip *
           echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
