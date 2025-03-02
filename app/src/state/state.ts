@@ -1,4 +1,4 @@
-import { configure, observable } from "mobx";
+import { configure, observable, reaction } from "mobx";
 
 import {
   SnackbarInfo,
@@ -36,7 +36,7 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
-import { getInitialDarkMode } from "./actions";
+import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
@@ -293,3 +293,11 @@ export const state = observable<State>({
     isWorkshopsTourOpen: false
   }
 });
+
+reaction(
+  () => state.crossPlot.state.chartZoomSettings.scale,
+  (scale: number) => {
+    adjustScaleOfMarkers(scale);
+    adjustScaleOfModels(scale);
+  }
+);

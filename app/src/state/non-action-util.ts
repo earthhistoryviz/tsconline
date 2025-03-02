@@ -11,8 +11,6 @@ import {
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
-import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
-import { Model } from "../types";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);

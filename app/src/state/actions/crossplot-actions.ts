@@ -65,7 +65,7 @@ export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
   state.crossPlot.markerMode = markerMode;
 });
 
-const getBaseFadLineValues = (marker: Marker) => {
+const getBaseFadLineValues = action((marker: Marker) => {
   const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
   const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
   const markerPadding = getDotSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
@@ -75,8 +75,8 @@ const getBaseFadLineValues = (marker: Marker) => {
     y1: marker.y + markerHeight / 2 + markerPadding,
     y2: marker.y + markerHeight / 2 + markerPadding
   };
-};
-const getTopLadLineValues = (marker: Marker) => {
+});
+const getTopLadLineValues = action((marker: Marker) => {
   const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
   const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
   const markerPadding = getDotSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
@@ -86,7 +86,7 @@ const getTopLadLineValues = (marker: Marker) => {
     y1: marker.y - markerHeight / 2 - markerPadding,
     y2: marker.y - markerHeight / 2 - markerPadding
   };
-};
+});
 
 export const adjustScaleOfMarkers = action((scale: number) => {
   state.crossPlot.markers.forEach((marker) => {
@@ -115,11 +115,6 @@ export const adjustScaleOfMarkers = action((scale: number) => {
     }
   });
 });
-
-export const adjustScaleOfCrossPlot = (scale: number) => {
-  adjustScaleOfMarkers(scale);
-  adjustScaleOfModels(scale);
-};
 
 export const adjustScaleOfModels = action((scale: number) => {
   state.crossPlot.models.forEach((model) => {
