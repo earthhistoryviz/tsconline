@@ -7,6 +7,7 @@ import { useMediaQuery, useTheme } from "@mui/material";
 import { Marker, Model } from "../types";
 import { CROSSPLOT_MOBILE_WIDTH } from "../crossplot/CrossPlotChart";
 import { getDotSizeFromScale } from "../state/non-action-util";
+import { reaction } from "mobx";
 type TimeLineElements = {
   timeLineX: Element;
   timeLineY: Element;
@@ -421,29 +422,40 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       const svg = container.querySelector("svg");
       if (!svg) return;
       const linesGroup = getCrossPlotLinesGroup(svg);
-      // remove all lines since we will redraw them (they could be sorted different)
-      while (linesGroup.firstChild) {
-        linesGroup.removeChild(linesGroup.firstChild);
-      }
-      // draw lines between models
-      state.crossPlot.models.forEach((model, index) => {
-        if (index < state.crossPlot.models.length - 1) {
-          const nextModel = state.crossPlot.models[index + 1];
-          const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-          line.setAttribute("x1", model.x.toString());
-          line.setAttribute("y1", model.y.toString());
-          line.setAttribute("x2", nextModel.x.toString());
-          line.setAttribute("y2", nextModel.y.toString());
-          line.setAttribute("stroke", theme.palette.button.main);
-          line.setAttribute("stroke-width", "1.5");
-          linesGroup.appendChild(line);
+      const updateLines = () => {
+        // remove all lines since we will redraw them (they could be sorted different)
+        while (linesGroup.firstChild) {
+          linesGroup.removeChild(linesGroup.firstChild);
         }
-      });
+        // draw lines between models
+        state.crossPlot.models.forEach((model, index) => {
+          if (index < state.crossPlot.models.length - 1) {
+            const nextModel = state.crossPlot.models[index + 1];
+            const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", model.x.toString());
+            line.setAttribute("y1", model.y.toString());
+            line.setAttribute("x2", nextModel.x.toString());
+            line.setAttribute("y2", nextModel.y.toString());
+            line.setAttribute("stroke", theme.palette.button.main);
+            line.setAttribute("stroke-width", "1.5");
+            linesGroup.appendChild(line);
+          }
+        });
+      };
+      updateLines();
+      const disposer = reaction(
+        () =>
+          state.crossPlot.models.map((model) => {
+            return { x: model.x, y: model.y };
+          }),
+        updateLines
+      );
       return () => {
         while (linesGroup.firstChild) {
           linesGroup.removeChild(linesGroup.firstChild);
         }
         svg.removeChild(linesGroup);
+        disposer();
       };
     }, [state.crossPlot.models]);
 

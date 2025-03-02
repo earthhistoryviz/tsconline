@@ -316,24 +316,26 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
             type="number"
             error={ageError}
             onBlur={(e) => {
+              const num = parseFloat(e.target.value);
               if (
-                isNaN(parseFloat(e.target.value)) ||
+                isNaN(num) ||
+                num < 0 ||
                 !actions.checkValidityOfNewModel({
                   x: ageToCoord(
-                    parseFloat(e.target.value),
+                    num,
                     state.crossPlot.crossPlotBounds!.minX,
                     state.crossPlot.crossPlotBounds!.maxX,
                     state.crossPlot.crossPlotBounds!.topAgeX,
                     state.crossPlot.crossPlotBounds!.scaleX
                   ),
-                  y: model.depth
+                  y: model.y
                 })
               ) {
                 setAgeError(true);
                 return;
               }
               setAgeError(false);
-              actions.editCrossPlotModel(model, { age: parseFloat(e.target.value) });
+              actions.editCrossPlotModel(model, { age: num });
             }}
             onChange={(evt) => {
               setAge(evt.target.value);
@@ -346,12 +348,14 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
             value={depth}
             error={depthError}
             onBlur={(e) => {
+              const num = parseFloat(e.target.value);
               if (
-                isNaN(parseFloat(e.target.value)) ||
+                isNaN(num) ||
+                num < 0 ||
                 !actions.checkValidityOfNewModel({
                   x: model.x,
                   y: ageToCoord(
-                    parseFloat(e.target.value),
+                    num,
                     state.crossPlot.crossPlotBounds!.minY,
                     state.crossPlot.crossPlotBounds!.maxY,
                     state.crossPlot.crossPlotBounds!.topAgeY,
@@ -363,7 +367,7 @@ const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
                 return;
               }
               setDepthError(false);
-              actions.editCrossPlotModel(model, { depth: parseFloat(e.target.value) });
+              actions.editCrossPlotModel(model, { depth: num });
             }}
             onChange={(evt) => {
               setDepth(evt.target.value);
