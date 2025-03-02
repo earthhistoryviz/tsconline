@@ -28,8 +28,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
-          gh release download ${{ github.ref_name }} -A=zip -D release
-          gh release download ${{ github.ref_name }} -D release
+          gh release download ${{ inputs.tag }} -A=zip -D release
+          gh release download ${{ inputs.tag }} -D release
           cd release
           unzip -q tsconline-*.zip
           rm tsconline-*.zip
