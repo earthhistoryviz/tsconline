@@ -1,4 +1,4 @@
-import { ColumnInfo, RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
+import { ColumnInfo, RGB, assertEventSettings, assertPointSettings, Datapack } from "@tsconline/shared";
 import Color from "color";
 import { dualColCompPrefix } from "./constant";
 

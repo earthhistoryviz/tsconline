@@ -2,8 +2,8 @@ import { Multipart } from "@fastify/multipart";
 import { rm, readFile } from "fs/promises";
 import { OperationResult, isOperationResult } from "../types.js";
 import {
-  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
-  processEditDatapackRequest
+    convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
+    processEditDatapackRequest
 } from "../user/user-handler.js";
 import { editDatapack } from "./edit-handler.js";
 import { createWriteStream } from "fs";
