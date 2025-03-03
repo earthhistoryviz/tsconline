@@ -8,8 +8,14 @@ on:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
   release:
-    types: 
-      - created
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.0.0)"
+        required: true
+  
 
 jobs:
   build-and-deploy:
@@ -20,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ inputs.tag || github.ref }}
 
       - name: Install dependencies
         run: yarn install
@@ -98,7 +104,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release delete ${{ github.ref_name }} -y || true
+          gh release delete ${{ inputs.tag || github.ref_name }} -y || true
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
@@ -114,8 +120,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir release
-          gh release download ${{ github.ref_name }} -A=zip -D release
-          gh release download ${{ github.ref_name }} -D release
+          gh release download ${{ inputs.tag || github.ref_name }} -A=zip -D release
+          gh release download ${{ inputs.tag || github.ref_name }} -D release
           cd release
           unzip -q tsconline-*.zip
           rm tsconline-*.zip
