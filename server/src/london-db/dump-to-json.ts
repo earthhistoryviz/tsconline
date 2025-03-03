@@ -8,8 +8,7 @@ import { verifyFilepath } from "../util.js";
 const outputDir = join("db", "london", "output");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
-const breakWord = "break";
-const insertRegex = new RegExp(`^INSERT INTO \`?(\\w+)\`? \\(([^)]+)\\)${breakWord}VALUES`, "i");
+const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\)/i;
 
 const cleanValue = (value: string) => {
   if (value === "NULL") return null;
@@ -30,28 +29,55 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
 
   const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
   const schemas: string[] = [];
-  let currentLine = "";
+
+  // parsing create table variables
+  let interfaceLines: string[] = [];
+  let uniqueConstraints: string[] = [];
+  let schemaTableName = "";
+  let parsingCreateTable = false;
+
+  // parsing insert into variables
+  let currentInsertTableName = "";
+  let parsingInsertInto = false;
 
   try {
-    for await (const line of rl) {
-      // statements shouln't have empty lines
-      if (line.trim() === "") {
-        currentLine = "";
-        continue;
-      }
-      currentLine += line.trim() + breakWord;
-      if (!line.trim().endsWith(";")) continue; // keep going until a statement is completed
-
-      if (tableRegex.test(currentLine)) {
-        const schema = processSchema(currentLine);
-        currentLine = "";
-        if (schema) schemas.push(schema);
-        continue;
-      }
-      const insertMatch = currentLine.match(insertRegex);
-      if (insertMatch) {
-        processInsert(tables, insertMatch, currentLine);
-        currentLine = "";
+    // we have to process line by line because the file is too big to read at once
+    for await (let line of rl) {
+      line = line.trim();
+      const tableHeaderMatch = line.match(tableRegex);
+      const insertIntoMatch = line.match(insertRegex);
+      // end parsing
+      if (line.endsWith(";")) {
+        if (parsingCreateTable) {
+          schemas.push(processSchema(interfaceLines, uniqueConstraints, schemaTableName));
+          interfaceLines = [];
+          uniqueConstraints = [];
+          parsingCreateTable = false;
+        } else if (parsingInsertInto) {
+          currentInsertTableName = "";
+          parsingInsertInto = false;
+        }
+        parsingInsertInto = false;
+        parsingCreateTable = false;
+      } else if (tableHeaderMatch && tableHeaderMatch[1]) {
+        // start parsing a create table
+        parsingCreateTable = true;
+        schemaTableName = tableHeaderMatch[1];
+        uniqueConstraints = [];
+        interfaceLines = [];
+        parsingInsertInto = false;
+      } else if (parsingCreateTable) {
+        processSchemaLine(line, interfaceLines, uniqueConstraints);
+      } else if (insertIntoMatch && insertIntoMatch[1] && insertIntoMatch[2]) {
+        parsingInsertInto = true;
+        parsingCreateTable = false;
+        currentInsertTableName = insertIntoMatch[1];
+        const columns = insertIntoMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
+        if (!tables[currentInsertTableName]) {
+          tables[currentInsertTableName] = { columns, rows: [] };
+        }
+      } else if (parsingInsertInto && tables[currentInsertTableName]) {
+        processInsertLine(tables[currentInsertTableName]!, line);
       }
     }
   } catch (e) {
@@ -95,28 +121,27 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
   console.log(chalk.green("All tables exported successfully to JSON!"));
 }
 
-function processInsert(
-  tables: Record<string, { columns: string[]; rows: (string | null)[][] }>,
-  insertMatch: RegExpMatchArray,
-  currentLine: string
-) {
-  if (!insertMatch[1] || !insertMatch[2]) return;
-  const tableName = insertMatch[1];
-  const columns = insertMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
-
-  if (!tables[tableName]) {
-    tables[tableName] = { columns, rows: [] };
+function processInsertLine(tables: { columns: string[]; rows: (string | null)[][] }, row: string) {
+  if (!row.startsWith("(") || !/\)(;|,)?$/.test(row)) return;
+  const trimmedRow = row
+    .trim()
+    .replace(/^\(/, "")
+    .replace(/\)(;|,)?$/, "");
+  const valueRegex = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|([^,]+)/g;
+  const arr: string[] = [];
+  let match;
+  while ((match = valueRegex.exec(trimmedRow)) !== null) {
+    if (match[1] !== undefined) {
+      arr.push(cleanValue(match[1])!);
+    } else if (match[2] !== undefined) {
+      arr.push(cleanValue(match[2])!);
+    } else if (match[3] !== undefined) {
+      arr.push(cleanValue(match[3])!);
+    } else if (match[4] !== undefined) {
+      arr.push(cleanValue(match[4])!);
+    }
   }
-
-  let valuesPart = currentLine.split("VALUES")[1];
-  if (valuesPart) {
-    valuesPart = valuesPart.replace(new RegExp(`^${breakWord}\\(`), "");
-    const regex = new RegExp("\\)," + breakWord + "\\(");
-    const valueGroups = valuesPart
-      .split(regex)
-      .map((row) => row.trim().replace(/^\(/, "").replace(/\);?$/, "").split(",").map(cleanValue));
-    tables[tableName]!.rows.push(...valueGroups);
-  }
+  tables.rows.push(arr);
 }
 
 const typeMapping: Record<string, string> = {
@@ -134,48 +159,39 @@ const typeMapping: Record<string, string> = {
   boolean: "boolean"
 };
 
-// create the type/interface for the tables
-function processSchema(statement: string) {
+function processSchema(interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
+  const unique =
+    uniqueConstraints.length > 0 ? uniqueConstraints.map((constraint) => `// ${constraint}`).join("\n") : "";
+  const kyselySchema = `${unique}\nexport interface ${tableName} {\n${interfaceLines.join("\n")}\n}`;
+  return kyselySchema;
+}
+
+function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[]) {
   const cleanLine = statement.trim();
-  let tableName = "";
-  const columns: string[] = [];
-  const interfaceLines: string[] = [];
-  const uniqueConstraints: string[] = [];
-  const tableMatch = cleanLine.match(tableRegex);
-  if (tableMatch && tableMatch[1]) {
-    tableName = tableMatch[1];
-  } else {
-    return;
-  }
   const columnRegex = /`([\w-]+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
-  let columnMatch;
-  while ((columnMatch = columnRegex.exec(cleanLine)) !== null) {
-    if (columnMatch) {
-      const [, columnName, type, size, unsigned, notNull, , defaultValue] = columnMatch;
-      if (columnName && type) {
-        const tsColumnName = /^\d|\w+-\w+/.test(columnName) ? `"${columnName}"` : columnName;
-        let tsType = "string";
-        const mappedType = typeMapping[type.toLowerCase()];
-        if (mappedType) {
-          tsType = mappedType;
-        }
-        if (!notNull) {
-          tsType += " | null";
-        }
-        columns.push(tsColumnName);
-        interfaceLines.push(
-          `  ${tsColumnName}: ${tsType}; // ${type}${size || ""}${unsigned || ""}${notNull || ""}${defaultValue ? " DEFAULT " + defaultValue : ""}`
-        );
+  const columnMatch = columnRegex.exec(cleanLine);
+  if (columnMatch) {
+    const [, columnName, type, size, unsigned, notNull, , defaultValue] = columnMatch;
+    if (columnName && type) {
+      const tsColumnName = /^\d|\w+-\w+/.test(columnName) ? `"${columnName}"` : columnName;
+      let tsType = "string";
+      const mappedType = typeMapping[type.toLowerCase()];
+      if (mappedType) {
+        tsType = mappedType;
       }
+      if (!notNull) {
+        tsType += " | null";
+      }
+      interfaceLines.push(
+        `  ${tsColumnName}: ${tsType}; // ${type}${size || ""}${unsigned || ""}${notNull || ""}${defaultValue ? " DEFAULT " + defaultValue : ""}`
+      );
     }
   }
   const uniqueKeyRegex = /UNIQUE KEY `?(\w+)`? \(([^)]+)\)/g;
-  let uniqueMatch;
-  while ((uniqueMatch = uniqueKeyRegex.exec(cleanLine)) !== null) {
-    if (uniqueMatch[2]) {
-      const uniqueColumns = uniqueMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
-      uniqueConstraints.push(`  UNIQUE: [${uniqueColumns.map((col) => `"${col}"`).join(", ")}],`);
-    }
+  const uniqueMatch = uniqueKeyRegex.exec(cleanLine);
+  if (uniqueMatch && uniqueMatch[2]) {
+    const uniqueColumns = uniqueMatch[2].split(",").map((col) => col.trim().replace(/`/g, ""));
+    uniqueConstraints.push(`  UNIQUE: [${uniqueColumns.map((col) => `"${col}"`).join(", ")}],`);
   }
   const primaryKeyRegex = /PRIMARY KEY \(([^)]+)\)/;
   if (primaryKeyRegex.test(cleanLine)) {
@@ -185,14 +201,6 @@ function processSchema(statement: string) {
       uniqueConstraints.push(`  PRIMARY KEY: [${primaryColumns.map((col) => `"${col}"`).join(", ")}],`);
     }
   }
-
-  if (tableName && columns.length > 0) {
-    const unique =
-      uniqueConstraints.length > 0 ? uniqueConstraints.map((constraint) => `// ${constraint}`).join("\n") : "";
-    const kyselySchema = `${unique}\nexport interface ${tableName} {\n${interfaceLines.join("\n")}\n}`;
-    return kyselySchema;
-  }
-  return "";
 }
 
 try {
