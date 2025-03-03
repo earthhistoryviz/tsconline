@@ -11,44 +11,40 @@ export async function checkRecaptchaToken(token: string, action: string): Promis
   try {
     if (process.env.NODE_ENV !== "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
 
-    const response = await verify(token, action);
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
+    const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
+    const httpResponse = await fetch(url, { method: "POST" });
 
-    if (!response.success) {
-      console.error("Recaptcha failed:", response);
-      throw new Error("Recaptcha failed");
+    if (httpResponse.ok) {
+      const data: RecaptchaResponse = await httpResponse.json();
+      console.log(data);
+
+      // Ensure the verification was successful
+      if (!data.success) {
+        throw new Error("Recaptcha verification failed");
+      }
+
+      // Check if the action matches the expected action
+      if (data.action !== action) {
+        throw new Error(`Recaptcha action mismatch: expected "${action}", got "${data.action}"`);
+      }
+
+      return data.score;
     }
 
-    return response.score;
+    throw new Error("Network response was not ok");
   } catch (error) {
     console.error("Recaptcha error:", error);
     throw new Error("Recaptcha failed");
   }
 }
 
-async function verify(token: string, expectedAction: string): Promise<any> {
-  const secret = process.env.RECAPTCHA_SECRET_KEY;
-  const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
-  const httpResponse = await fetch(url, { method: "POST" });
-
-  if (httpResponse.ok) {
-    const data = await httpResponse.json();
-    console.log(data);
-
-    // Ensure the verification was successful
-    if (!data.success) {
-      throw new Error("Recaptcha verification failed");
-    }
-
-    // Check if the action matches the expected action
-    if (data.action !== expectedAction) {
-      throw new Error(`Recaptcha action mismatch: expected "${expectedAction}", got "${data.action}"`);
-    }
-
-    return data;
-  }
-
-  throw new Error("Network response was not ok");
+interface RecaptchaResponse {
+  success: boolean;
+  score: number;
+  action: string;
 }
+
 
 /**
  * Generates a token for the given UUID. The token is encrypted using AES-256-CBC.
