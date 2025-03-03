@@ -84,6 +84,15 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       workshopId: { type: "number" }
     },
     required: ["workshopId"]
+  }
+  const downloadDatapackFilesZipParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" },
+      uuid: { type: "string" },
+      isPublic: {type: "boolean"}
+    },
+    required: ["datapackTitle", "uuid", "isPublic"]
   };
   const downloadDatapackFilesZipParams = {
     type: "object",
