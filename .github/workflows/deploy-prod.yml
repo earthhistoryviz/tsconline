@@ -62,6 +62,10 @@ jobs:
             echo "Error: $decryption_jar_name not found"
             exit 1
           fi
+          if [ -z "$jar_name" ] || [ -z "$decryption_jar_name" ]; then
+            echo "Error: Missing jar names in config.json"
+            exit 1
+          fi
           zip -r -q ../release-artifacts.zip *
           echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
           echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
@@ -115,7 +119,7 @@ jobs:
             echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
-            echo 'DOMAIN="tsconline.timescalecreator.org"' >> ./server/.env
+            echo 'DOMAIN="${{ vars.DOMAIN }}"' >> ./server/.env
 
             echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
             echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
@@ -125,18 +129,7 @@ jobs:
               exit 1
             fi
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Container is not running. Bringing up the container..."
-              docker-compose -f $COMPOSE_FILE up -d
-              if [ $? -ne 0 ]; then
-                echo "Error: Failed to bring up the container."
-                exit 1
-              fi
-            else
-              echo "Container is already running. Restarting..."
-              docker-compose -f $COMPOSE_FILE restart
-            fi
+            docker-compose -f $COMPOSE_FILE up -d
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
 
