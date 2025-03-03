@@ -1,5 +1,5 @@
 services:
-  staging:
+  tsconline:
     build: .
     restart: on-failure
     #image: tscreator/tscreator_online:v2
