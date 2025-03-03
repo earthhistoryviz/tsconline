@@ -125,6 +125,7 @@
 .sub-header-section-landing-page-image {
   grid-column: 2 / 3;
   width: 100%;
+  align-self: center;
 }
 
 .landing-page-title {
@@ -133,6 +134,7 @@
 }
 
 .get-started-button-landing-page {
+  top: 5%;
   display: flex;
   margin-top: 4px;
   rotate: 90deg;
@@ -218,8 +220,7 @@
 .sub-header-section-landing-page-text {
   display: flex;
   flex-direction: column;
-  align-self: flex-start;
-  padding-top: 20vh;
+  align-self: center;
   gap: 5px;
 }
 
@@ -533,10 +534,10 @@
   padding-left: 15px;
   padding-right: 15px;
   overflow-y: auto;
-  height: auto;
-  max-height: inherit;
-  align-self: center;
   grid-column: 3 / 4;
+  max-height: inherit;
+  max-height: -webkit-fill-available;
+  align-self: center;
 }
 
 /* upcoming workshop */
@@ -826,7 +827,7 @@
   }
 
   .sub-header-section-landing-page-description {
-    font-size: 1.75rem;
+    font-size: 1.5rem;
   }
 
   .upcoming-workshop-title {
@@ -907,18 +908,19 @@
   .sub-header-section-landing-page {
     display: flex;
     flex-direction: column;
+    max-height: none;
     height: 100%;
     padding: 8%;
-    padding-top: 0px;
-    margin-bottom: 12%;
+    padding-bottom: 0%;
+    padding-top: 0%;
   }
 
   .get-started-button-container {
-    top: 95%;
+    position: relative;
   }
 
   .sub-header-section-landing-page-text {
-    padding-top: 0vh;
+    align-self: center;
   }
 
   .home-landing-page-carousel-text {
@@ -963,10 +965,14 @@
 
 @media screen and (max-height: 700px) {
   .sub-header-section-landing-page {
-    height: auto;
+    height: 100%;
+    max-height: none;
   }
+
   .upcoming-workshops-section {
-    height: 680px;
+    height: 650px;
+    max-height: inherit;
+    align-self: center;
   }
 }
 /* end sub-section-landing-page CSS */
@@ -1020,12 +1026,10 @@
   }
 
   .home-landing-page-carousel {
-    display: grid;
-    grid-template-columns: 1fr;
     grid-template-rows: 1fr 1.2fr;
     grid-template-areas: "img" "text";
-    padding: 0;
-    gap: 0;
+    padding-top: 40%;
+    margin-top: 90px;
   }
 
   .home-landing-page-carousel-text {
