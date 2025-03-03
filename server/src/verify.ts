@@ -19,12 +19,10 @@ export async function checkRecaptchaToken(token: string, action: string): Promis
       const data: RecaptchaResponse = await httpResponse.json();
       console.log(data);
 
-      // Ensure the verification was successful
       if (!data.success) {
         throw new Error("Recaptcha verification failed");
       }
 
-      // Check if the action matches the expected action
       if (data.action !== action) {
         throw new Error(`Recaptcha action mismatch: expected "${action}", got "${data.action}"`);
       }
@@ -44,7 +42,6 @@ interface RecaptchaResponse {
   score: number;
   action: string;
 }
-
 
 /**
  * Generates a token for the given UUID. The token is encrypted using AES-256-CBC.
