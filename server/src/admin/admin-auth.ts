@@ -71,7 +71,6 @@ async function verifyRecaptcha(
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
     }
-
   } catch (e) {
     reply.status(500).send({ error: "Recaptcha error" });
     return;
