@@ -113,8 +113,7 @@ jobs:
           zip -q secrets.zip ${{ steps.parse_jar_name.outputs.decryption_jar_name }} ${{ steps.parse_jar_name.outputs.jar_name }} datapacks.zip
           echo "${{ secrets.SSL_ENCRYPTION_KEY }}" > key.txt
           openssl enc -aes-256-cbc -salt -pbkdf2 -in secrets.zip -out secrets.enc -pass file:key.txt
-          rm secrets.zip
-          rm key.txt
+          rm secrets.zip key.txt
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
@@ -135,13 +134,13 @@ jobs:
           mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} release
           mv ${{ steps.parse_jar_name.outputs.jar_name }} release
           mv datapacks.zip release
-          rm secrets.enc checksums.sha256
           cd release
           unzip -q tsconline-*.zip
           rm tsconline-*.zip
           mv tsconline-*/* .
           rm -r tsconline-*
           touch secrets.env
+          rm secrets.enc checksums.sha256
           zip -r -q ../release-artifacts.zip *
 
       - name: Send Release Artifacts to Server
