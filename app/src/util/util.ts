@@ -223,3 +223,7 @@ export function findSerialNum(name: string) {
   }
   return serialNumber;
 }
+
+export function getDatapackOfficialOrUUID(datapack: Datapack) {
+  return datapack.type === "user" ? datapack.uuid : "official";
+}
