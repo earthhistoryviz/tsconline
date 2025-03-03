@@ -90,6 +90,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm = () => {
     discardUserInfoChanges();
     setIsMoreUserInfoFormOpen(false);
+    setIsConfirmUserInfoChangesOnExitFormOpen(false);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
