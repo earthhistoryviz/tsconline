@@ -43,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError } from "./util-actions";
+import { displayServerError, downloadFile } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -136,6 +136,54 @@ export const fetchPublicOfficialDatapack = action(
     }
   }
 );
+
+export const fetchDatapackFilesForDownload = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+  const recaptchaToken = await getRecaptchaToken("fetchDatapackFilesForDownload");
+  if (!recaptchaToken) return null;
+  try {
+    const response = await fetcher(
+      `/user/datapack/download/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      }
+    );
+    const file = await response.blob();
+    let fileURL = "";
+    if (response.ok) {
+      if (file) {
+        try {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          await new Promise((resolve, reject) => {
+            reader.onloadend = resolve;
+            reader.onerror = reject;
+          });
+          if (typeof reader.result !== "string") {
+            throw new Error("Invalid File");
+          }
+          fileURL = reader.result;
+          await downloadFile(fileURL, `FilesFor${datapackTitle}.zip`);
+        } catch (e) {
+          pushError(ErrorCodes.INVALID_PATH);
+        }
+      }
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      );
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") return;
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
