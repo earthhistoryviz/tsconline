@@ -1,4 +1,4 @@
-import { configure, observable } from "mobx";
+import { configure, observable, reaction } from "mobx";
 
 import {
   SnackbarInfo,
@@ -14,7 +14,8 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   Marker,
-  CrossPlotBounds
+  CrossPlotBounds,
+  Model
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -35,7 +36,7 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
-import { getInitialDarkMode } from "./actions";
+import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
 import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
@@ -50,6 +51,8 @@ export type State = {
     lockY: boolean;
     markers: Marker[];
     markerMode: boolean;
+    modelMode: boolean;
+    models: Model[];
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
@@ -161,7 +164,9 @@ export const state = observable<State>({
     lockX: false,
     lockY: false,
     markers: [],
-    markerMode: true,
+    markerMode: false,
+    modelMode: true,
+    models: [],
     showTooltips: true,
     chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
@@ -288,3 +293,11 @@ export const state = observable<State>({
     isWorkshopsTourOpen: false
   }
 });
+
+reaction(
+  () => state.crossPlot.state.chartZoomSettings.scale,
+  (scale: number) => {
+    adjustScaleOfMarkers(scale);
+    adjustScaleOfModels(scale);
+  }
+);

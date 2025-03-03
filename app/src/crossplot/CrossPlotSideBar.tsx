@@ -5,14 +5,15 @@ import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
-import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker, isMarkerType, markerTypes } from "../types";
+import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
+import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
+import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -255,17 +256,151 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
     );
   }
 );
+const Models: React.FC = observer(() => {
+  const { state } = useContext(context);
+  const { t } = useTranslation();
+  return (
+    <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
+      {state.crossPlot.models.map((model, index) => (
+        <Box key={index} className={styles.modelOptions}>
+          <ModelOptions model={model} />
+          {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
+        </Box>
+      ))}
+      {state.crossPlot.models.length === 0 && (
+        <Typography className={styles.noModelsText}>{t("crossPlot.sidebar.no-models")}</Typography>
+      )}
+    </Box>
+  );
+});
+const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
+  const { state, actions } = useContext(context);
+  const [age, setAge] = useState(model.age.toString());
+  const [ageError, setAgeError] = useState(false);
+  const [depth, setDepth] = useState(model.depth.toString());
+  const [depthError, setDepthError] = useState(false);
+  return (
+    <Box className={styles.modelContainer}>
+      <Box className={styles.checkBoxContainer}>
+        <TSCCheckbox />
+      </Box>
+      <TSCColorPicker
+        color={model.color}
+        onColorChange={(evt) => {
+          actions.editCrossPlotModel(model, { color: evt });
+        }}
+        className={styles.colorPicker}
+      />
+      <Box className={styles.modelOptions}>
+        <Box className={styles.topMarkerRow}>
+          <TextField
+            select
+            size="small"
+            label="Type"
+            value={model.type}
+            onChange={(e) => {
+              if (!isModelType(e.target.value)) return;
+              actions.editCrossPlotModel(model, { type: e.target.value });
+            }}>
+            {modelTypes.map((modelType) => (
+              <MenuItem key={modelType} value={modelType}>
+                {modelType}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size="small"
+            label="Age"
+            value={age}
+            type="number"
+            error={ageError}
+            onBlur={(e) => {
+              const num = parseFloat(e.target.value);
+              if (
+                isNaN(num) ||
+                num < 0 ||
+                !actions.checkValidityOfNewModel({
+                  x: ageToCoord(
+                    num,
+                    state.crossPlot.crossPlotBounds!.minX,
+                    state.crossPlot.crossPlotBounds!.maxX,
+                    state.crossPlot.crossPlotBounds!.topAgeX,
+                    state.crossPlot.crossPlotBounds!.scaleX
+                  ),
+                  y: model.y
+                })
+              ) {
+                setAgeError(true);
+                return;
+              }
+              setAgeError(false);
+              actions.editCrossPlotModel(model, { age: num });
+            }}
+            onChange={(evt) => {
+              setAge(evt.target.value);
+            }}
+          />
+          <TextField
+            size="small"
+            label="Depth"
+            type="number"
+            value={depth}
+            error={depthError}
+            onBlur={(e) => {
+              const num = parseFloat(e.target.value);
+              if (
+                isNaN(num) ||
+                num < 0 ||
+                !actions.checkValidityOfNewModel({
+                  x: model.x,
+                  y: ageToCoord(
+                    num,
+                    state.crossPlot.crossPlotBounds!.minY,
+                    state.crossPlot.crossPlotBounds!.maxY,
+                    state.crossPlot.crossPlotBounds!.topAgeY,
+                    state.crossPlot.crossPlotBounds!.scaleY
+                  )
+                })
+              ) {
+                setDepthError(true);
+                return;
+              }
+              setDepthError(false);
+              actions.editCrossPlotModel(model, { depth: num });
+            }}
+            onChange={(evt) => {
+              setDepth(evt.target.value);
+            }}
+          />
+        </Box>
+        <TextField
+          size="small"
+          label="Comment"
+          fullWidth
+          value={model.comment}
+          onChange={(evt) => {
+            actions.editCrossPlotModel(model, { comment: evt.target.value });
+          }}
+        />
+      </Box>
+    </Box>
+  );
+});
 
 const Markers: React.FC = observer(() => {
   const { state } = useContext(context);
+  const { t } = useTranslation();
   return (
-    <Box className={styles.markersComponent}>
+    <Box className={styles.markersComponent} display={state.crossPlot.markers.length === 0 ? "flex" : ""}>
       {state.crossPlot.markers.map((marker, index) => (
         <Box key={index} className={styles.markerOptions}>
           <MarkerOptions marker={marker} />
           {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
         </Box>
       ))}
+      {state.crossPlot.markers.length === 0 && (
+        <Typography className={styles.noMarkersText}>{t("crossPlot.sidebar.no-markers")}</Typography>
+      )}
     </Box>
   );
 });
@@ -361,5 +496,10 @@ const tabs = [
     tabName: "Markers",
     Icon: BookmarkRounded,
     component: <Markers />
+  },
+  {
+    tabName: "Models",
+    Icon: Timeline,
+    component: <Models />
   }
 ];
