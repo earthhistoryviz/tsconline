@@ -102,15 +102,28 @@ jobs:
         run: |
           gh release delete ${{ inputs.tag || github.ref_name }} -y || true
 
+      - name: Generate SHA256 checksum
+        run: |
+          sha256sum build-artifacts.zip datapacks.zip > checksums.sha256
+          sha256sum ${{ steps.parse_jar_name.outputs.decryption_jar_name }} \
+              ${{ steps.parse_jar_name.outputs.jar_name }} >> checksums.sha256
+
+      - name: Encrypt Jars and Datapacks
+        run: |
+          zip -q secrets.zip ${{ steps.parse_jar_name.outputs.decryption_jar_name }} ${{ steps.parse_jar_name.outputs.jar_name }} datapacks.zip
+          echo "${{ secrets.SSL_ENCRYPTION_KEY }}" > key.txt
+          openssl enc -aes-256-cbc -salt -pbkdf2 -in secrets.zip -out secrets.enc -pass file:key.txt
+          rm secrets.zip
+          rm key.txt
+
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ inputs.tag || github.ref_name }}
           files: |
             build-artifacts.zip
-            ${{ steps.parse_jar_name.outputs.jar_name }}
-            ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
-            datapacks.zip
+            secrets.enc
+            checksums.sha256
 
       - name: Download release build and create release-artifacts.zip
         env:
@@ -119,6 +132,10 @@ jobs:
           mkdir release
           gh release download ${{ inputs.tag || github.ref_name }} -A=zip -D release
           gh release download ${{ inputs.tag || github.ref_name }} -D release
+          mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} release
+          mv ${{ steps.parse_jar_name.outputs.jar_name }} release
+          mv datapacks.zip release
+          rm secrets.enc checksums.sha256
           cd release
           unzip -q tsconline-*.zip
           rm tsconline-*.zip

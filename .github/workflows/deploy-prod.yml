@@ -36,21 +36,36 @@ jobs:
           rm -r tsconline-*
           touch secrets.env
 
+      - name: Decrypt secret files
+        run: |
+          cd release
+          if [ ! -f "secrets.enc" ]; then
+            echo "Error: secrets.enc not found"
+            exit 1
+          fi
+          echo "${{ secrets.SSL_ENCRYPTION_KEY }}" > key.txt
+          openssl enc -d -aes-256-cbc -salt -pbkdf2 -in secrets.enc -out secrets.zip -pass file:key.txt
+          unzip -q secrets.zip
+          rm secrets.enc secrets.zip key.txt
+
       - name: Verify release build
         id: verify_release
         run: |
           cd release
-          if [ ! -f "build-artifacts.zip"  ] || [ ! -f "datapacks.zip" ]; then
-            echo "Error: build-artifacts.zip or datapacks.zip not found"
+          if [ ! -f "checksums.sha256" ]; then
+            echo "Error: checksums.sha256 not found"
             exit 1
           fi
+          sha256sum -c checksums.sha256 | tee checksum.log
+          if grep -q "FAILED" checksum.log; then
+            echo "Error: SHA-256 checksum verification failed!"
+            echo "Checksum log:" && cat checksum.log
+            exit 1
+          fi
+          rm checksums.sha256 checksum.log
           jar_name=$(jq -r '.activeJar' server/assets/config.json | xargs basename)
           if [ -z "$jar_name" ]; then
             echo "Error: Failed to parse jar name from config.json"
-            exit 1
-          fi
-          if [ ! -f "$jar_name" ]; then
-            echo "Error: $jar_name not found"
             exit 1
           fi
           decryption_jar_name=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
@@ -58,12 +73,8 @@ jobs:
             echo "Error: Failed to parse decryption jar name from config.json"
             exit 1
           fi
-          if [ ! -f "$decryption_jar_name" ]; then
-            echo "Error: $decryption_jar_name not found"
-            exit 1
-          fi
-          if [ -z "$jar_name" ] || [ -z "$decryption_jar_name" ]; then
-            echo "Error: Missing jar names in config.json"
+          if [ -f "secrets.enc" ] || [ -f "secrets.zip" ] || [ -f "key.txt" ]; then
+            echo "Error: Found unexpected files"
             exit 1
           fi
           zip -r -q ../release-artifacts.zip *
