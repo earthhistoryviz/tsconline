@@ -12,7 +12,6 @@ on:
       tag:
         description: "Tag to deploy (e.g. v1.0.0)"
         required: true
-  
 
 jobs:
   build-and-deploy:
@@ -148,7 +147,7 @@ jobs:
             fi
             cd ${{ secrets.STAGING_PATH }}
             docker compose -f docker-compose-staging.yml down || true
-            
+
             find "${{ secrets.STAGING_PATH }}" -type f \
               ! -name "release-artifacts.zip" \
               ! -path "${{ secrets.STAGING_PATH }}/.yarn*" \
