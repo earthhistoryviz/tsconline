@@ -229,6 +229,10 @@
                 "select-datapack": "Please select a datapack.",
                 "xAxis": "X Axis (Age-only)",
                 "yAxis": "Y Axis (Age/Depth)"
+            },
+            "sidebar": {
+                "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
+                "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             }
         },
         "settingsTabs": {

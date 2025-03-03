@@ -1,5 +1,5 @@
 import { action, isObservable, observable } from "mobx";
-import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, Marker } from "../../types";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, Marker, Model } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
@@ -9,7 +9,34 @@ import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
 import { resetChartTabStateForGeneration, sendChartRequestToServer } from "./generate-chart-actions";
-import { MARKER_HEIGHT, MARKER_PADDING, MARKER_WIDTH, ageToCoord } from "../../components/TSCCrossPlotSVGComponent";
+import {
+  CROSSPLOT_DOT_HEIGHT,
+  MARKER_PADDING,
+  CROSSPLOT_DOT_WIDTH,
+  ageToCoord
+} from "../../components/TSCCrossPlotSVGComponent";
+import { getDotSizeFromScale } from "../non-action-util";
+export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
+  const models = state.crossPlot.models;
+  if (models.length === 0) {
+    return true;
+  }
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    return false;
+  }
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
+  const x = "x" in model ? model.x : ageToCoord(model.age, minX, maxX, topAgeX, scaleX);
+  const y = "y" in model ? model.y : ageToCoord(model.depth, minY, maxY, topAgeY, scaleY);
+  const tempModels = [...models.slice().map((m) => ({ x: m.x, y: m.y })), { x, y }];
+  tempModels.sort((a, b) => a.x - b.x || a.y - b.y);
+  return tempModels.every((model, index) => {
+    if (index === 0) {
+      return true;
+    }
+    const prevModel = tempModels[index - 1];
+    return model.x >= prevModel.x && model.y >= prevModel.y;
+  });
+});
 
 export const setCrossPlotBounds = action((bounds: CrossPlotBounds) => {
   state.crossPlot.crossPlotBounds = bounds;
@@ -24,37 +51,47 @@ export const setCrossPlotLockY = action((lockY: boolean) => {
   state.crossPlot.lockY = lockY;
 });
 
+export const setCrossPlotModelMode = action((modelMode: boolean) => {
+  if (modelMode) {
+    state.crossPlot.markerMode = false;
+  }
+  state.crossPlot.modelMode = modelMode;
+});
+
 export const setCrossPlotMarkerMode = action((markerMode: boolean) => {
+  if (markerMode) {
+    state.crossPlot.modelMode = false;
+  }
   state.crossPlot.markerMode = markerMode;
 });
 
-const getBaseFadLineValues = (marker: Marker) => {
-  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
-  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
-  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+const getBaseFadLineValues = action((marker: Marker) => {
+  const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getDotSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
   return {
     x1: marker.x - markerWidth / 2 - markerPadding,
     x2: marker.x + markerWidth / 2 + markerPadding,
     y1: marker.y + markerHeight / 2 + markerPadding,
     y2: marker.y + markerHeight / 2 + markerPadding
   };
-};
-const getTopLadLineValues = (marker: Marker) => {
-  const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
-  const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
-  const markerPadding = getMarkerSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
+});
+const getTopLadLineValues = action((marker: Marker) => {
+  const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+  const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+  const markerPadding = getDotSizeFromScale(MARKER_PADDING, state.crossPlot.state.chartZoomSettings.scale);
   return {
     x1: marker.x - markerWidth / 2 - markerPadding,
     x2: marker.x + markerWidth / 2 + markerPadding,
     y1: marker.y - markerHeight / 2 - markerPadding,
     y2: marker.y - markerHeight / 2 - markerPadding
   };
-};
+});
 
 export const adjustScaleOfMarkers = action((scale: number) => {
   state.crossPlot.markers.forEach((marker) => {
-    const newWidth = getMarkerSizeFromScale(MARKER_WIDTH, scale);
-    const newHeight = getMarkerSizeFromScale(MARKER_HEIGHT, scale);
+    const newWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, scale);
+    const newHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, scale);
     marker.element.setAttribute("x", (marker.x - newWidth / 2).toString());
     marker.element.setAttribute("y", (marker.y - newHeight / 2).toString());
     marker.element.setAttribute("width", newWidth.toString());
@@ -79,8 +116,43 @@ export const adjustScaleOfMarkers = action((scale: number) => {
   });
 });
 
+export const adjustScaleOfModels = action((scale: number) => {
+  state.crossPlot.models.forEach((model) => {
+    const newWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, scale);
+    const newHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, scale);
+    model.element.setAttribute("x", (model.x - newWidth / 2).toString());
+    model.element.setAttribute("y", (model.y - newHeight / 2).toString());
+    model.element.setAttribute("width", newWidth.toString());
+    model.element.setAttribute("height", newHeight.toString());
+    if (model.type !== "Rect") {
+      model.element.setAttribute("rx", "50%");
+      model.element.setAttribute("ry", "50%");
+    }
+  });
+});
+
 export const addCrossPlotMarker = action((temp: Marker) => {
   state.crossPlot.markers.push(observable(temp));
+});
+export const addCrossPlotModel = action((temp: Model) => {
+  state.crossPlot.models.push(observable(temp));
+  sortModels();
+});
+export const removeCrossPlotModel = action((modelId: string) => {
+  const removedCrossPlotModel = state.crossPlot.models.find((m) => m.id === modelId);
+  if (!removedCrossPlotModel) return;
+  removedCrossPlotModel.element.remove();
+  state.crossPlot.models = state.crossPlot.models.filter((m) => m.id !== modelId);
+  sortModels();
+});
+export const sortModels = action(() => {
+  const models = state.crossPlot.models.slice().sort((a, b) => {
+    if (a.age !== b.age) {
+      return a.age - b.age;
+    }
+    return a.depth - b.depth;
+  });
+  state.crossPlot.models = observable(models);
 });
 export const removeCrossPlotMarkers = action((id: string) => {
   const removedCrossPlotMarker = state.crossPlot.markers.find((m) => m.id === id);
@@ -88,6 +160,13 @@ export const removeCrossPlotMarkers = action((id: string) => {
   removedCrossPlotMarker.element.remove();
   removedCrossPlotMarker.line.remove();
   state.crossPlot.markers = state.crossPlot.markers.filter((m) => m.id !== id);
+});
+
+export const resetCrossPlotModels = action(() => {
+  state.crossPlot.models.forEach((model) => {
+    model.element.remove();
+  });
+  state.crossPlot.models = [];
 });
 
 export const resetCrossPlotMarkers = action(() => {
@@ -98,9 +177,51 @@ export const resetCrossPlotMarkers = action(() => {
   state.crossPlot.markers = [];
 });
 
-export const getMarkerSizeFromScale = (size: number, scale: number) => {
-  return Math.min(size * Math.pow(scale, -0.8), 3 * size);
-};
+export const editCrossPlotModel = action((model: Model, partial: Partial<Model>) => {
+  if (!isObservable(model)) {
+    throw new Error("Model is not observable");
+  }
+  if (state.crossPlot.crossPlotBounds === undefined) {
+    throw new Error("CrossPlotBounds is undefined");
+  }
+  const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
+  if (partial.color !== undefined) {
+    model.color = partial.color;
+    model.element.setAttribute("fill", partial.color);
+  }
+  if (partial.comment !== undefined) {
+    model.comment = partial.comment;
+  }
+  if (partial.age !== undefined) {
+    const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+    model.age = partial.age;
+    const coord = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
+    model.x = coord;
+    model.element.setAttribute("x", (coord - markerWidth / 2).toString());
+  }
+  if (partial.depth !== undefined) {
+    const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+    model.depth = partial.depth;
+    const coord = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
+    model.y = coord;
+    model.element.setAttribute("y", (coord - markerHeight / 2).toString());
+  }
+  if (partial.type !== undefined) {
+    model.type = partial.type;
+    switch (partial.type) {
+      case "Rect": {
+        model.element.setAttribute("rx", "0");
+        model.element.setAttribute("ry", "0");
+        break;
+      }
+      case "Circle": {
+        model.element.setAttribute("rx", "50%");
+        model.element.setAttribute("ry", "50%");
+        break;
+      }
+    }
+  }
+});
 export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Marker>) => {
   if (!isObservable(marker)) {
     throw new Error("Marker is not observable");
@@ -117,7 +238,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
     marker.comment = partial.comment;
   }
   if (partial.age !== undefined) {
-    const markerWidth = getMarkerSizeFromScale(MARKER_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
+    const markerWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, state.crossPlot.state.chartZoomSettings.scale);
     marker.age = partial.age;
     const coord = ageToCoord(partial.age, minX, maxX, topAgeX, scaleX);
     marker.x = coord;
@@ -128,7 +249,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
     marker.line.setAttribute("x2", x2.toString());
   }
   if (partial.depth !== undefined) {
-    const markerHeight = getMarkerSizeFromScale(MARKER_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
+    const markerHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, state.crossPlot.state.chartZoomSettings.scale);
     marker.depth = partial.depth;
     const coord = ageToCoord(partial.depth, minY, maxY, topAgeY, scaleY);
     marker.y = coord;
@@ -262,6 +383,7 @@ export const compileAndSendCrossPlotChartRequest = action(
     }
     resetChartTabStateForGeneration(state.crossPlot.state);
     resetCrossPlotMarkers();
+    resetCrossPlotModels();
     setTab(0);
     navigate("/crossplot");
     try {
