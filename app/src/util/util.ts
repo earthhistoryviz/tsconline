@@ -1,4 +1,4 @@
-import { ColumnInfo, RGB } from "@tsconline/shared";
+import { ColumnInfo, Datapack, RGB } from "@tsconline/shared";
 import Color from "color";
 
 /**
@@ -186,4 +186,8 @@ export function findSerialNum(name: string) {
     return 0;
   }
   return serialNumber;
+}
+
+export function getDatapackOfficialOrUUID(datapack: Datapack) {
+  return datapack.type === "user" ? datapack.uuid : "official";
 }
