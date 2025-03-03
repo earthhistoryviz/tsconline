@@ -146,7 +146,7 @@ jobs:
             INTERVAL=5
             ELAPSED=0
 
-            while ! docker-compose -f $COMPOSE_FILE exec tsconline curl -s http://localhost:3000; do
+            while ! docker-compose -f $COMPOSE_FILE exec -T tsconline curl -s http://localhost:3000; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"
