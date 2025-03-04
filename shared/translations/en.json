@@ -99,22 +99,6 @@
                     "title": "Generate Your Chart",
                     "description": "Generate your chart based on the selected datapack and customized settings."
                 }
-            },
-            "upcoming-workshop": {
-                "workshop2": {
-                    "title": "Switzerland Workshop",
-                    "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-                    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-                    "participants": "21",
-                    "datapacks": "5"
-                },
-                "workshop3": {
-                    "title": "Switzerland Workshop",
-                    "time": "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-                    "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-                    "participants": "21",
-                    "datapacks": "5"
-                }
             }
         },
         "languages": "LANGUAGES",
