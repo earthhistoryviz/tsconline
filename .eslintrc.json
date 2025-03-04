@@ -69,7 +69,8 @@
             "files": [
                 "shared/**/*",
                 "app/src/types.ts",
-                "server/src/types.ts"
+                "server/src/types.ts",
+                "server/src/db/london/schema.ts"
             ],
             "rules": {
                 "@typescript-eslint/no-explicit-any": "off"
