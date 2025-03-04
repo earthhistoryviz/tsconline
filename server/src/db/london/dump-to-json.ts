@@ -183,11 +183,19 @@ function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: str
     if (!key || !typeWithoutComment) continue;
     if (typeWithoutComment.includes("|")) {
       const types = typeWithoutComment.split("|").map((t) => t.trim());
-      assertFunction += `\tif (!(${types.map((t) => `typeof o.${key} === "${t}"`).join(" || ")})) throwError("${tableName}", "${key}", "${types.join(" | ")}", o.${key});\n`;
+      assertFunction += `\tif (!(${types
+        .map((t) => {
+          if (t === "null") return `o.${key} === null`;
+          return `typeof o.${key} === "${t}"`;
+        })
+        .join(" || ")})) throwError("${tableName}", "${key}", "${types.join(" | ")}", o.${key});\n`;
     } else {
-      assertFunction += `\tif (typeof o.${key} !== "${typeWithoutComment}") throwError("${tableName}", "${key}", "${typeWithoutComment}", o.${key});\n`;
+      if (typeWithoutComment === "null") {
+        assertFunction += `\tif (o.${key} !== null) throwError("${tableName}", "${key}", "null", o.${key});\n`;
+      } else {
+        assertFunction += `\tif (typeof o.${key} !== "${typeWithoutComment}") throwError("${tableName}", "${key}", "${typeWithoutComment}", o.${key});\n`;
+      }
     }
-    assertFunction = assertFunction.replace(/=== "null"/g, "=== null");
   }
   assertFunction += "}";
   return { kyselySchema, assertFunction };
