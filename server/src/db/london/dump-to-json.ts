@@ -3,9 +3,10 @@ import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
 import { mkdir, writeFile } from "fs/promises";
-import { verifyFilepath } from "../util.js";
+import { verifyFilepath } from "../../util.js";
 
 const outputDir = join("db", "london", "output");
+const schemaFile = join("src", "db", "london", "schema.ts");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\)/i;
@@ -29,6 +30,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
 
   const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
   const schemas: string[] = [];
+  const assertFunctions: string[] = [];
 
   // parsing create table variables
   let interfaceLines: string[] = [];
@@ -49,7 +51,13 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
       // end parsing
       if (line.endsWith(";")) {
         if (parsingCreateTable) {
-          schemas.push(processSchema(interfaceLines, uniqueConstraints, schemaTableName));
+          const { kyselySchema, assertFunction } = processSchemaAndAssert(
+            interfaceLines,
+            uniqueConstraints,
+            schemaTableName
+          );
+          schemas.push(kyselySchema);
+          assertFunctions.push(assertFunction);
           interfaceLines = [];
           uniqueConstraints = [];
           parsingCreateTable = false;
@@ -111,7 +119,12 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
 
   try {
     // write the schemas
-    await writeFile(join(outputDir, "schema.ts"), schemas.join("\n\n"));
+    await writeFile(
+      schemaFile,
+      'import { throwError } from "@tsconline/shared";\n\n'.concat(
+        schemas.join("\n\n").concat("\n\n").concat(assertFunctions.join("\n\n"))
+      )
+    );
     console.log(chalk.cyan("Exported schemas to schema.ts"));
   } catch (e) {
     console.error(e);
@@ -159,11 +172,25 @@ const typeMapping: Record<string, string> = {
   boolean: "boolean"
 };
 
-function processSchema(interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
+function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
   const unique =
     uniqueConstraints.length > 0 ? uniqueConstraints.map((constraint) => `// ${constraint}`).join("\n") : "";
   const kyselySchema = `${unique}\nexport interface ${tableName} {\n${interfaceLines.join("\n")}\n}`;
-  return kyselySchema;
+  let assertFunction = `export function assert${tableName}(o: any): asserts o is ${tableName} {\n`;
+  for (const line of interfaceLines) {
+    const [key, type] = line.split(":").map((s) => s.trim());
+    const typeWithoutComment = type?.split(";")[0];
+    if (!key || !typeWithoutComment) continue;
+    if (typeWithoutComment.includes("|")) {
+      const types = typeWithoutComment.split("|").map((t) => t.trim());
+      assertFunction += `\tif (!(${types.map((t) => `typeof o.${key} === "${t}"`).join(" || ")})) throwError("${tableName}", "${key}", "${types.join(" | ")}", o.${key});\n`;
+    } else {
+      assertFunction += `\tif (typeof o.${key} !== "${typeWithoutComment}") throwError("${tableName}", "${key}", "${typeWithoutComment}", o.${key});\n`;
+    }
+    assertFunction = assertFunction.replace(/=== "null"/g, "=== null");
+  }
+  assertFunction += "}";
+  return { kyselySchema, assertFunction };
 }
 
 function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[]) {
