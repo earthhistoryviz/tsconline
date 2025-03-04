@@ -1,0 +1,233 @@
+name: Deploy Staging
+
+concurrency:
+  group: deploy-staging
+
+on:
+  release:
+    types:
+      - published
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.0.0)"
+        required: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: ${{ vars.WEBSITE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Install dependencies
+        run: yarn install
+
+      - name: Build project
+        run: yarn build
+
+      - name: Archive build artifacts
+        run: |
+          zip -r -q build-artifacts.zip app/dist server/dist shared/dist
+
+      - name: Parse Jar Name
+        id: parse_jar_name
+        run: |
+          jar_name=$(jq -r '.activeJar' server/assets/config.json | xargs basename)
+          decryption_jar_name=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+          echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
+
+      - name: Set up SSH key
+        run: |
+          eval $(ssh-agent)
+          mkdir -p ~/.ssh
+          echo "${{ secrets.JAVA_DEPLOY_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          echo -e "Host bitbucket.org\n\tAddKeysToAgent yes\n\tIdentityFile ~/.ssh/id_rsa" > ~/.ssh/config
+          ssh-add ~/.ssh/id_rsa
+          ssh-keyscan -H bitbucket.org >> ~/.ssh/known_hosts
+
+      - name: Set up jdk
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "8"
+          java-package: "jdk"
+
+      - name: Checkout code and build jar
+        run: |
+          git clone git@bitbucket.org:strat/tscreator.git
+          cd ${{ github.workspace }}/tscreator/devel
+          make
+          make jar
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} \;
+          if [ -f  ${{ github.workspace }}/${{ steps.parse_jar_name.outputs.jar_name }} ]; then
+            echo "Successfully made jar."
+          else
+            echo "Failed to make jar."
+            exit 1
+          fi
+
+      - name: Download Datapacks And Decryption Jar From Dropbox
+        run: |
+          # --- Get the access token ---
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+
+          # --- Download the datapacks ---
+          DATAPACKS_PATH="${{ secrets.DROPBOX_PATH}}/datapacks"
+          curl -X POST https://content.dropboxapi.com/2/files/download_zip \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Dropbox-API-Arg: {\"path\":\"$DATAPACKS_PATH\"}" \
+            --output datapacks.zip
+
+          # --- Download the decryption jar ---
+          DECRYPTION_JAR_PATH="${{ secrets.DROPBOX_PATH}}/${{ steps.parse_jar_name.outputs.decryption_jar_name }}"
+          curl -X POST https://content.dropboxapi.com/2/files/download \
+            --header "Authorization: Bearer $ACCESS_TOKEN" \
+            --header "Dropbox-API-Arg: {\"path\":\"$DECRYPTION_JAR_PATH\"}" \
+            --output ${{ steps.parse_jar_name.outputs.decryption_jar_name }}
+          if [ ! -f "datapacks.zip" ] || [ ! -f "${{ steps.parse_jar_name.outputs.decryption_jar_name }}" ]; then
+            echo "Error: Failed to download required files from Dropbox."
+            exit 1
+          fi
+
+      - name: Delete existing release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release delete ${{ inputs.tag || github.ref_name }} -y || true
+
+      - name: Generate SHA256 checksum
+        run: |
+          sha256sum build-artifacts.zip datapacks.zip > checksums.sha256
+          sha256sum ${{ steps.parse_jar_name.outputs.decryption_jar_name }} \
+              ${{ steps.parse_jar_name.outputs.jar_name }} >> checksums.sha256
+
+      - name: Encrypt Jars and Datapacks
+        run: |
+          zip -q secrets.zip ${{ steps.parse_jar_name.outputs.decryption_jar_name }} ${{ steps.parse_jar_name.outputs.jar_name }} datapacks.zip
+          echo "${{ secrets.SSL_ENCRYPTION_KEY }}" > key.txt
+          openssl enc -aes-256-cbc -salt -pbkdf2 -in secrets.zip -out secrets.enc -pass file:key.txt
+          rm secrets.zip key.txt
+
+      - name: Create Github Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          files: |
+            build-artifacts.zip
+            secrets.enc
+            checksums.sha256
+
+      - name: Download release build and create release-artifacts.zip
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir release
+          gh release download ${{ inputs.tag || github.ref_name }} -A=zip -D release
+          gh release download ${{ inputs.tag || github.ref_name }} -D release
+          mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} release
+          mv ${{ steps.parse_jar_name.outputs.jar_name }} release
+          mv datapacks.zip release
+          cd release
+          unzip -q tsconline-*.zip
+          rm tsconline-*.zip
+          mv tsconline-*/* .
+          rm -r tsconline-*
+          touch secrets.env
+          rm secrets.enc checksums.sha256
+          zip -r -q ../release-artifacts.zip *
+
+      - name: Send Release Artifacts to Server
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem release-artifacts.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.STAGING_PATH }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            if [ -z "${{ secrets.STAGING_PATH }}" ]; then
+              echo "Error: STAGING_PATH is empty. Exiting..."
+              exit 1
+            fi
+            cd ${{ secrets.STAGING_PATH }}
+            docker compose -f docker-compose-staging.yml down || true
+
+            find "${{ secrets.STAGING_PATH }}" -type f \
+              ! -name "release-artifacts.zip" \
+              ! -path "${{ secrets.STAGING_PATH }}/.yarn*" \
+              -exec sudo rm -f {} +
+            find "${{ secrets.STAGING_PATH }}" -type d -empty -exec sudo rmdir {} +
+
+            unzip -q release-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            rm release-artifacts.zip
+            unzip -q build-artifacts.zip -d ${{ secrets.STAGING_PATH }}
+            rm build-artifacts.zip
+            mkdir -p ${{ secrets.STAGING_PATH }}/server/assets/jars
+            mv ${{ steps.parse_jar_name.outputs.jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
+            mv ${{ steps.parse_jar_name.outputs.decryption_jar_name }} ${{ secrets.STAGING_PATH }}/server/assets/jars
+            unzip -q datapacks.zip -d ${{ secrets.STAGING_PATH }}/server/assets
+            rm datapacks.zip
+
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="stage.timescalecreator.org"' >> ./server/.env
+
+            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+
+            if [ ! -f "docker-compose-staging.yml" ]; then
+              echo "Error: docker-compose-staging.yml not found"
+              exit 1
+            fi
+
+            if ! docker-compose -f docker-compose-staging.yml ps | grep -q "Up"; then
+              echo "Container is not running. Bringing up the container..."
+              docker-compose -f docker-compose-staging.yml up -d
+              if [ $? -ne 0 ]; then
+                echo "Error: Failed to bring up the container."
+                exit 1
+              fi
+            else
+              echo "Container is already running. Restarting..."
+              docker-compose -f docker-compose-staging.yml restart
+            fi
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
+            sleep 5
+
+            MAX_WAIT=60
+            INTERVAL=5
+            ELAPSED=0
+
+            while ! docker-compose -f docker-compose-staging.yml exec -T tsconline curl -s http://localhost:3000; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                echo "Last 200 lines in container:"
+                docker-compose -f docker-compose-staging.yml logs --tail=200
+                docker-compose -f docker-compose-staging.yml down
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done

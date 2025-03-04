@@ -259,17 +259,11 @@ jobs:
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
             sleep 5
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for tsconline."
-              exit 1
-            fi
-
             MAX_WAIT=480
             INTERVAL=5
             ELAPSED=0
 
-            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            while ! docker-compose -f docker-compose-server.yml exec -T tsconline curl -s http://localhost:3000; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"

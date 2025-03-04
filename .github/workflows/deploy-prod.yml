@@ -1,0 +1,164 @@
+name: Deploy Production
+
+concurrency:
+  group: deploy-prod
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.0.0)"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        environment: ["production", "dde"]
+    environment: ${{ matrix.environment }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+
+      - name: Download release build
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir release
+          gh release download ${{ inputs.tag }} -A=zip -D release
+          gh release download ${{ inputs.tag }} -D release
+          cd release
+          unzip -q tsconline-*.zip
+          rm tsconline-*.zip
+          mv tsconline-*/* .
+          rm -r tsconline-*
+          touch secrets.env
+
+      - name: Decrypt secret files
+        run: |
+          cd release
+          if [ ! -f "secrets.enc" ]; then
+            echo "Error: secrets.enc not found"
+            exit 1
+          fi
+          echo "${{ secrets.SSL_ENCRYPTION_KEY }}" > key.txt
+          openssl enc -d -aes-256-cbc -salt -pbkdf2 -in secrets.enc -out secrets.zip -pass file:key.txt
+          unzip -q secrets.zip
+          rm secrets.enc secrets.zip key.txt
+
+      - name: Verify release build
+        id: verify_release
+        run: |
+          cd release
+          if [ ! -f "checksums.sha256" ]; then
+            echo "Error: checksums.sha256 not found"
+            exit 1
+          fi
+          sha256sum -c checksums.sha256 | tee checksum.log
+          if grep -q "FAILED" checksum.log; then
+            echo "Error: SHA-256 checksum verification failed!"
+            echo "Checksum log:" && cat checksum.log
+            exit 1
+          fi
+          rm checksums.sha256 checksum.log
+          jar_name=$(jq -r '.activeJar' server/assets/config.json | xargs basename)
+          if [ -z "$jar_name" ]; then
+            echo "Error: Failed to parse jar name from config.json"
+            exit 1
+          fi
+          decryption_jar_name=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          if [ -z "$decryption_jar_name" ]; then
+            echo "Error: Failed to parse decryption jar name from config.json"
+            exit 1
+          fi
+          if [ -f "secrets.enc" ] || [ -f "secrets.zip" ] || [ -f "key.txt" ]; then
+            echo "Error: Found unexpected files"
+            exit 1
+          fi
+          zip -r -q ../release-artifacts.zip *
+          echo "decryption_jar_name=$decryption_jar_name" >> $GITHUB_OUTPUT
+          echo "jar_name=$jar_name" >> $GITHUB_OUTPUT
+
+      - name: Send Artifacts to Server
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh_key.pem
+          chmod 600 /tmp/ssh_key.pem
+          scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem release-artifacts.zip ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.RELEASE_PATH }}
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            if [ -z "${{ secrets.RELEASE_PATH }}" ]; then
+              echo "Error: RELEASE_PATH is empty. Exiting..."
+              exit 1
+            fi
+
+            cd ${{ secrets.RELEASE_PATH }}
+            COMPOSE_FILE=docker-compose-${{ vars.COMPOSE_FILE }}.yml
+
+            docker-compose -f $COMPOSE_FILE down || true
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 \
+              ! -name "release-artifacts.zip" \
+              ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" \
+              ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" \
+              -type f -exec sudo rm -f {} +
+            find ${{ secrets.RELEASE_PATH }} -mindepth 1 -type d -empty -exec sudo rmdir {} +
+
+            unzip -q release-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
+            rm release-artifacts.zip
+            unzip -q build-artifacts.zip -d ${{ secrets.RELEASE_PATH }}
+            rm build-artifacts.zip
+            mkdir -p ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            mv ${{ steps.verify_release.outputs.decryption_jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            mv ${{ steps.verify_release.outputs.jar_name }} ${{ secrets.RELEASE_PATH }}/server/assets/jars
+            unzip -q datapacks.zip -d ${{ secrets.RELEASE_PATH }}/server/assets
+            rm datapacks.zip
+
+            echo 'EMAIL_USER="${{ secrets.EMAIL_USER }}"' > ./server/.env
+            echo 'EMAIL_PASS="${{ secrets.EMAIL_PASS }}"' >> ./server/.env
+            echo 'SESSION_KEY="${{ secrets.SESSION_KEY }}"' >> ./server/.env
+            echo 'NODE_ENV="production"' >> ./server/.env
+            echo 'RECAPTCHA_SECRET_KEY="${{ secrets.RECAPTCHA_SECRET_KEY }}"' >> ./server/.env
+            echo 'APP_URL="${{ vars.WEBSITE_URL }}"' >> ./server/.env
+            echo 'ADMIN_USER="${{ secrets.ADMIN_USER }}"' >> ./server/.env
+            echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
+            echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
+            echo 'DOMAIN="${{ vars.DOMAIN }}"' >> ./server/.env
+
+            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
+            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
+
+            if [ ! -f "$COMPOSE_FILE" ]; then
+              echo "Error: $COMPOSE_FILE not found"
+              exit 1
+            fi
+
+            docker-compose -f $COMPOSE_FILE up -d
+
+            START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
+
+            sleep 5
+
+            MAX_WAIT=240
+            INTERVAL=5
+            ELAPSED=0
+
+            while ! docker-compose -f $COMPOSE_FILE exec -T tsconline curl -s http://localhost:3000; do
+              if [ $ELAPSED -ge $MAX_WAIT ]; then
+                echo "Max wait time exceeded. Exiting..."
+                echo "Last 200 lines in container:"
+                docker-compose -f $COMPOSE_FILE logs --tail=200
+                docker-compose -f $COMPOSE_FILE down
+                exit 1
+              fi
+              echo "Waiting for server to start... (elapsed: ${ELAPSED}s)"
+              sleep $INTERVAL
+              ELAPSED=$((ELAPSED + INTERVAL))
+            done
