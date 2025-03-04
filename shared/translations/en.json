@@ -576,7 +576,8 @@
             "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
             "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
             "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
-            "METADATA_NOT_FOUND": "Metadata not found. Please try again later."
+            "METADATA_NOT_FOUND": "Metadata not found. Please try again later.",
+            "INVALID_CROSSPLOT_CONVERSION": "Invalid crossplot conversion. Please select a valid chart for the Y Axis."
         },
         "button": {
             "generate": "Generate",

@@ -147,3 +147,10 @@ export function getPastWorkshops(workshops: Workshop[]) {
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
+export function getDatapackFromChartName(chartName: string, datapacks: Datapack[]) {
+  const datapack = datapacks.find((d) => d.columnInfo.name === chartName);
+  if (!datapack) {
+    throw new Error(`No datapack found for chart name: ${chartName}`);
+  }
+  return datapack;
+}
