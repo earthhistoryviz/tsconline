@@ -15,6 +15,12 @@ export type SharedWorkshop = {
   active: boolean;
 };
 
+export type ConvertCrossPlotRequest = {
+  datapackTitle: string;
+  uuid: string;
+  models: string;
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -609,6 +615,14 @@ export type DatapackPriorityUpdateSuccess = {
 };
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
+
+export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
+  if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
+  if (typeof o.datapackTitle !== "string")
+    throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
+  if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
+  if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
+}
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
   return datapackType.type === "official" ? "official" : datapackType.uuid;

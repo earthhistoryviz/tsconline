@@ -27,6 +27,7 @@ import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
+import * as crossPlotRoutes from "./routes/crossplot-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -325,6 +326,8 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
+
+server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossplot);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

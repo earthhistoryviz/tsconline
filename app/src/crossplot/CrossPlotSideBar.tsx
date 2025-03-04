@@ -91,7 +91,7 @@ export const CrossPlotSideBar = observer(
         <Box className={styles.tabContent}>
           <TSCButton
             className={styles.convert}
-            onClick={() => {
+            onClick={async () => {
               try {
                 if (!state.crossPlot.chartY) {
                   actions.pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
@@ -101,7 +101,7 @@ export const CrossPlotSideBar = observer(
                 const datapacks = state.config.datapacks.map((d) => getDatapackFromArray(d, state.datapacks));
                 assertDatapackArray(datapacks);
                 const datapack = getDatapackFromChartName(state.crossPlot.chartY.name, datapacks);
-                sendCrossPlotConversionRequest(state.crossPlot.models, datapack);
+                await sendCrossPlotConversionRequest(state.crossPlot.models, datapack);
               } catch (e) {
                 console.log(e);
               }
