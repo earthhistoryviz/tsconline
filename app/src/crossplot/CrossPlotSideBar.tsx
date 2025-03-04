@@ -7,18 +7,47 @@ import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
 import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
-import { ColumnInfo } from "@tsconline/shared";
+import { ColumnInfo, DatapackUniqueIdentifier, assertDatapackArray, getUUIDOfDatapackType } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
+import { getDatapackFromArray, getDatapackFromChartName } from "../state/non-action-util";
+import { ErrorCodes } from "../util/error-codes";
+
+const sendCrossPlotConversionRequest = async (models: Model[], datapackUniqueIdentifier: DatapackUniqueIdentifier) => {
+  try {
+    const body = {
+      datapackTitle: datapackUniqueIdentifier.title,
+      uuid: getUUIDOfDatapackType(datapackUniqueIdentifier),
+      models: models
+        .map(
+          (model) =>
+            `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}\t${model.type}`
+        )
+        .join("\n")
+    };
+    const response = await fetch("/crossplot/convert", {
+      method: "POST",
+      body: JSON.stringify({ body }),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to convert datapack");
+    }
+  } catch (e) {
+    console.error(e);
+  }
+};
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { actions } = useContext(context);
+    const { state, actions } = useContext(context);
     const navigate = useNavigate();
     const theme = useTheme();
     return (
@@ -60,6 +89,25 @@ export const CrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.tabContent}>
+          <TSCButton
+            className={styles.convert}
+            onClick={() => {
+              try {
+                if (!state.crossPlot.chartY) {
+                  actions.pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+                  return;
+                }
+                // we have to get the actual datapack to verify the chart name and which datapack it came from.
+                const datapacks = state.config.datapacks.map((d) => getDatapackFromArray(d, state.datapacks));
+                assertDatapackArray(datapacks);
+                const datapack = getDatapackFromChartName(state.crossPlot.chartY.name, datapacks);
+                sendCrossPlotConversionRequest(state.crossPlot.models, datapack);
+              } catch (e) {
+                console.log(e);
+              }
+            }}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Generate Cross Plot
           </TSCButton>
@@ -115,6 +163,9 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
+          <TSCButton className={styles.mobileConvert} onClick={() => {}}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton
             className={styles.mobileGenerate}
             onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
