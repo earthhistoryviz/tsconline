@@ -113,7 +113,10 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                   disabled={getSelectedOverlayColumn() !== "" ? false : true}
                   onClick={() => {
                     if (!state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name))) {
-                      actions.addDualColCompColumn(column);
+                      const dccName = actions.addDualColCompColumn(column);
+                      if (dccName && state.settingsTabs.columnHashMap.get(dccName)) {
+                        actions.toggleSettingsTabColumn(state.settingsTabs.columnHashMap.get(dccName)!);
+                      }
                     } else {
                       actions.removeDualColCompColumn(column);
                     }
@@ -328,7 +331,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             cursor: columnStatus === ColumnStatus.NotValid ? "default" : "pointer"
           }}
           className="dcc-column-leaf">
-          {columnStatus === ColumnStatus.NotValid ? <NotValidColumnIcon /> : <OutOfRangeIcon />}
+          {columnStatus === ColumnStatus.OutOfRange && <OutOfRangeIcon />}
+          {/* {columnStatus === ColumnStatus.NotValid ? <NotValidColumnIcon /> : <OutOfRangeIcon />} */}
           <Typography className={columnStatus === ColumnStatus.NotValid ? "dcc-not-allowed" : "column-display-name"}>
             {column.editName}
           </Typography>
