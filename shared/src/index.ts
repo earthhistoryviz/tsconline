@@ -616,6 +616,12 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
+  o: DatapackConfigForChartRequest
+): DatapackUniqueIdentifier {
+  return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
+}
+
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
   if (typeof o.datapackTitle !== "string")

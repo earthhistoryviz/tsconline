@@ -584,8 +584,14 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
-      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      for (const child of state.settingsTabs.columns.children) {
+        if (child.units === "Ma") {
+          setCrossPlotChartX(child);
+        }
+      }
+      if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
       setCrossPlotChartY(state.settingsTabs.columns.children[0]);
+      console.log("chart name", state.crossPlot.chartY?.name);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {

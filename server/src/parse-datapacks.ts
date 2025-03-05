@@ -409,6 +409,7 @@ export async function getAllEntries(
           continue;
         case "date:":
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
+          else if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) value = value.split("/").reverse().join("-");
           date = new Date(value).toISOString().split("T")[0] || null;
           filePropertyLines++;
           continue;

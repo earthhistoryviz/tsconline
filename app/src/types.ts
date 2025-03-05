@@ -50,6 +50,9 @@ export type WindowStats = {
   windowEnd: number;
   value: number;
 };
+export type ColumnInfoRoot = ColumnInfo & {
+  datapackUniqueIdentifier: DatapackUniqueIdentifier;
+};
 
 export type DownloadPdfMessage = {
   imgURI: string;
@@ -261,6 +264,13 @@ export type CrossPlotBounds = {
   topAgeX: number;
   topAgeY: number;
 };
+
+export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
+  if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");
+  if (!o.datapackUniqueIdentifier)
+    throwError("ColumnInfoRoot", "datapackUniqueIdentifier", "object", o.datapackUniqueIdentifier);
+  assertColumnInfo(o);
+}
 
 export function isMarkerType(value: string): value is Marker["type"] {
   return markerTypes.includes(value);

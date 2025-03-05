@@ -4,12 +4,15 @@ import {
   FontsInfo,
   MapHierarchy,
   MapInfo,
+  convertDatapackConfigForChartRequestToUniqueDatapackIdentifier,
   defaultColumnRoot
 } from "@tsconline/shared";
 import {
+  ColumnInfoRoot,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SetDatapackConfigReturnValue,
+  assertColumnInfoRoot,
   assertSetDatapackConfigReturnValue
 } from "../../types";
 import { cloneDeep } from "lodash";
@@ -47,7 +50,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   self.postMessage(message);
 };
 const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy: State) => {
-  const unitMap: Map<string, ColumnInfo> = new Map();
+  const unitMap: Map<string, ColumnInfoRoot> = new Map();
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
   let foundDefaultAge = false;
@@ -78,6 +81,9 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
     } else {
       const columnInfo = cloneDeep(datapack.columnInfo);
       columnInfo.parent = columnRoot.name;
+      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifier =
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest);
+      assertColumnInfoRoot(columnInfo);
       unitMap.set(datapack.ageUnits, columnInfo);
     }
     const mapPack = datapack.mapPack;
