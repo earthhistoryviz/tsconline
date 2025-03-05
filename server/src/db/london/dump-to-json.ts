@@ -197,6 +197,10 @@ function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: str
       }
     }
   }
+  assertFunction += "}\n\n";
+  assertFunction += `export function assert${tableName}Array(o: any[]): asserts o is ${tableName}[] {\n`;
+  assertFunction += `\tif (!Array.isArray(o)) throwError("${tableName}", "Array", "Array", o);\n`;
+  assertFunction += `\tfor (const item of o) assert${tableName}(item);\n`;
   assertFunction += "}";
   return { kyselySchema, assertFunction };
 }

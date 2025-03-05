@@ -127,6 +127,11 @@ export function assertarkL_datasets(o: any): asserts o is arkL_datasets {
 	if (!(typeof o.compilation_notes_Jur === "string" || o.compilation_notes_Jur === null)) throwError("arkL_datasets", "compilation_notes_Jur", "string | null", o.compilation_notes_Jur);
 }
 
+export function assertarkL_datasetsArray(o: any[]): asserts o is arkL_datasets[] {
+	if (!Array.isArray(o)) throwError("arkL_datasets", "Array", "Array", o);
+	for (const item of o) assertarkL_datasets(item);
+}
+
 export function assertarkL_events(o: any): asserts o is arkL_events {
 	if (typeof o.id !== "number") throwError("arkL_events", "id", "number", o.id);
 	if (!(typeof o.eventx === "string" || o.eventx === null)) throwError("arkL_events", "eventx", "string | null", o.eventx);
@@ -162,6 +167,11 @@ export function assertarkL_events(o: any): asserts o is arkL_events {
 	if (!(typeof o.refstoadd === "string" || o.refstoadd === null)) throwError("arkL_events", "refstoadd", "string | null", o.refstoadd);
 }
 
+export function assertarkL_eventsArray(o: any[]): asserts o is arkL_events[] {
+	if (!Array.isArray(o)) throwError("arkL_events", "Array", "Array", o);
+	for (const item of o) assertarkL_events(item);
+}
+
 export function assertarkL_intervals(o: any): asserts o is arkL_intervals {
 	if (typeof o.id !== "number") throwError("arkL_intervals", "id", "number", o.id);
 	if (!(typeof o.intervalx === "string" || o.intervalx === null)) throwError("arkL_intervals", "intervalx", "string | null", o.intervalx);
@@ -195,6 +205,11 @@ export function assertarkL_intervals(o: any): asserts o is arkL_intervals {
 	if (!(typeof o.block_label === "string" || o.block_label === null)) throwError("arkL_intervals", "block_label", "string | null", o.block_label);
 }
 
+export function assertarkL_intervalsArray(o: any[]): asserts o is arkL_intervals[] {
+	if (!Array.isArray(o)) throwError("arkL_intervals", "Array", "Array", o);
+	for (const item of o) assertarkL_intervals(item);
+}
+
 export function assertarkL_taxon_links(o: any): asserts o is arkL_taxon_links {
 	if (typeof o.id !== "number") throwError("arkL_taxon_links", "id", "number", o.id);
 	if (!(typeof o.event_id === "number" || o.event_id === null)) throwError("arkL_taxon_links", "event_id", "number | null", o.event_id);
@@ -208,4 +223,9 @@ export function assertarkL_taxon_links(o: any): asserts o is arkL_taxon_links {
 	if (!(typeof o.taxon_in_datasource === "string" || o.taxon_in_datasource === null)) throwError("arkL_taxon_links", "taxon_in_datasource", "string | null", o.taxon_in_datasource);
 	if (!(typeof o.taxon_qualification === "string" || o.taxon_qualification === null)) throwError("arkL_taxon_links", "taxon_qualification", "string | null", o.taxon_qualification);
 	if (!(typeof o.id_in_datasource === "string" || o.id_in_datasource === null)) throwError("arkL_taxon_links", "id_in_datasource", "string | null", o.id_in_datasource);
+}
+
+export function assertarkL_taxon_linksArray(o: any[]): asserts o is arkL_taxon_links[] {
+	if (!Array.isArray(o)) throwError("arkL_taxon_links", "Array", "Array", o);
+	for (const item of o) assertarkL_taxon_links(item);
 }
