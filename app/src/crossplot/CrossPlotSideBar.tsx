@@ -16,7 +16,14 @@ import {
   markerTypes,
   modelTypes
 } from "../types";
-import { ColumnInfo, DatapackUniqueIdentifier, assertDatapackArray, getUUIDOfDatapackType } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  Datapack,
+  DatapackUniqueIdentifier,
+  assertDatapackArray,
+  defaultColumnRoot,
+  getUUIDOfDatapackType
+} from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
@@ -25,19 +32,27 @@ import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 import { ErrorCodes } from "../util/error-codes";
 import { fetcher } from "../util";
+import { getDatapackFromArray } from "../state/non-action-util";
+import { cloneDeep } from "lodash";
+import { jsonToXml } from "../state/parse-settings";
 
-const sendCrossPlotConversionRequest = async (models: Model[], datapackUniqueIdentifier: DatapackUniqueIdentifier) => {
+const sendCrossPlotConversionRequest = async (
+  models: Model[],
+  datapack: DatapackUniqueIdentifier,
+  xmlSettings: string
+) => {
   if (models.length === 0) {
     console.error("No models to convert");
     return;
   }
   try {
     const body = {
-      datapackTitle: datapackUniqueIdentifier.title,
-      uuid: getUUIDOfDatapackType(datapackUniqueIdentifier),
+      datapackTitle: datapack.title,
+      uuid: getUUIDOfDatapackType(datapack),
       models: models
         .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
-        .join("\n")
+        .join("\n"),
+      settings: xmlSettings
     };
     const response = await fetcher("/crossplot/convert", {
       method: "POST",
@@ -110,10 +125,17 @@ export const CrossPlotSideBar = observer(
                   return;
                 }
                 assertColumnInfoRoot(state.crossPlot.chartY);
-                await sendCrossPlotConversionRequest(
-                  state.crossPlot.models,
-                  state.crossPlot.chartY.datapackUniqueIdentifier
-                );
+                const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
+                if (!datapack) {
+                  actions.pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+                  return;
+                }
+                const columnRoot = cloneDeep(defaultColumnRoot);
+                columnRoot.children.push(datapack.columnInfo);
+                const columnCopy = cloneDeep(columnRoot);
+                const chartSettingsCopy = cloneDeep(state.settings);
+                const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+                await sendCrossPlotConversionRequest(state.crossPlot.models, datapack, xmlSettings);
               } catch (e) {
                 console.log(e);
               }
