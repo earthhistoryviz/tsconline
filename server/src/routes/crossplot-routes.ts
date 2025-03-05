@@ -4,8 +4,13 @@ import { assetconfigs, verifyFilepath } from "../util.js";
 import { mkdir, readdir, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
-import { getUploadedDatapackFilepath } from "../user/user-handler";
 import { spawn } from "child_process";
+import {
+  fetchUserDatapackDirectory,
+  getDecryptedDatapackFilePath,
+  getDecryptedDirectory,
+  getUsersDatapacksDirectoryFromUUIDDirectory
+} from "../user/fetch-user-files.js";
 
 export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -37,7 +42,7 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
     await writeFile(modelsTextFilepath, body.models);
   } catch (e) {}
   try {
-    const datapackFilepath = await getUploadedDatapackFilepath(body.uuid, body.datapackTitle);
+    const datapackFilepath = await getDecryptedDatapackFilePath(body.uuid, body.datapackTitle);
     const execJavaCommand = async (timeout: number) => {
       const args = [
         "-jar",
@@ -81,6 +86,7 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
         resolve();
       });
     };
+    await execJavaCommand(20000);
   } catch (error) {
     reply.code(500).send({ message: "Error converting to crossplot" });
   }
