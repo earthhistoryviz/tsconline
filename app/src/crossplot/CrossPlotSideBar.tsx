@@ -6,17 +6,8 @@ import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } f
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
-import {
-  CrossPlotTimeSettings,
-  Marker,
-  Model,
-  isMarkerType,
-  isModelType,
-  markerTypes,
-  modelTypes
-} from "../types";
-import {
-  ColumnInfo} from "@tsconline/shared";
+import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
+import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
@@ -27,7 +18,7 @@ import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { state, actions } = useContext(context);
+    const { actions } = useContext(context);
     const navigate = useNavigate();
     const theme = useTheme();
     return (

@@ -518,7 +518,7 @@ export const processDatapackConfig = action(
 
         const message: SetDatapackConfigMessage = {
           datapacks,
-          stateCopy: toJS(state)
+          datapacksArray: toJS(state.datapacks)
         };
         setDatapackConfigWorker.postMessage(message);
 

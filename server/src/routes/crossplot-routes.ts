@@ -5,8 +5,7 @@ import { mkdir, readFile, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
 import { spawn } from "child_process";
-import {
-  getDecryptedDatapackFilePath} from "../user/fetch-user-files.js";
+import { getDecryptedDatapackFilePath } from "../user/fetch-user-files.js";
 import chalk from "chalk";
 
 export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
@@ -43,7 +42,10 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
     await writeFile(modelsTextFilepath, body.models);
     settingsTextFilepath = path.join(dir, "settings.xml");
     await writeFile(settingsTextFilepath, body.settings);
-  } catch (e) {}
+  } catch (e) {
+    reply.code(500).send({ message: "Error writing files for conversion" });
+    return;
+  }
   try {
     const datapackFilepath = await getDecryptedDatapackFilePath(body.uuid, body.datapackTitle);
     const execJavaCommand = async (timeout: number) => {

@@ -167,5 +167,4 @@ export async function downloadFile(blob: Blob, filename: string) {
   document.body.appendChild(aTag);
   aTag.click();
   aTag.remove();
-  document.removeChild(aTag);
 }

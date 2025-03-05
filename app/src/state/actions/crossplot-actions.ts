@@ -9,15 +9,9 @@ import {
 } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
+import { pushError, pushSnackbar, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import {
-  ColumnInfo,
-  FontsInfo,
-  defaultColumnRoot,
-  ChartRequest,
-  getUUIDOfDatapackType
-} from "@tsconline/shared";
+import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, getUUIDOfDatapackType } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -341,10 +335,10 @@ export const sendCrossPlotConversionRequest = action(async () => {
     const chartSettingsCopy = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
     if (state.crossPlot.models.length === 0) {
-      console.error("No models to convert");
+      pushError(ErrorCodes.NO_MODELS);
       return;
     }
-    if (datapack.ageUnits.toLowerCase() !== "ma") {
+    if (datapack.ageUnits.toLowerCase() === "ma") {
       pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
       return;
     }
@@ -367,9 +361,9 @@ export const sendCrossPlotConversionRequest = action(async () => {
       throw new Error("Failed to convert datapack");
     }
     await downloadFile(await response.blob(), `${datapack.title}.txt`);
-    console.log("Successfully converted datapack");
-    console.log(await response.json());
+    pushSnackbar("Successfully converted datapack", "success");
   } catch (e) {
+    console.error(e);
     pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
   }
 });

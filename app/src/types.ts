@@ -1,6 +1,7 @@
 import {
   ColumnInfo,
   DataMiningPointDataType,
+  Datapack,
   DatapackConfigForChartRequest,
   DatapackMetadata,
   DatapackUniqueIdentifier,
@@ -14,7 +15,6 @@ import {
   assertMapInfo,
   throwError
 } from "@tsconline/shared";
-import { State } from "./state";
 import React from "react";
 
 export type DatapackFetchParams = {
@@ -89,7 +89,7 @@ export type ChartContextType = {
 
 export type SetDatapackConfigMessage = {
   datapacks: DatapackConfigForChartRequest[];
-  stateCopy: State;
+  datapacksArray: Datapack[];
 };
 
 export type SetDatapackConfigCompleteMessage = {
