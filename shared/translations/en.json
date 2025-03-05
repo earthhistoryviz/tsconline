@@ -577,7 +577,9 @@
             "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
             "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
             "METADATA_NOT_FOUND": "Metadata not found. Please try again later.",
-            "INVALID_CROSSPLOT_CONVERSION": "Invalid crossplot conversion. Please select a valid chart for the Y Axis."
+            "INVALID_CROSSPLOT_CONVERSION": "Invalid crossplot conversion. Please select a valid chart for the Y Axis.",
+            "INVALID_CROSSPLOT_UNITS": "Please select a different unit for the Y Axis. This unit cannot be converted.",
+            "CROSSPLOT_CONVERSION_FAILED": "Crossplot conversion failed. Please try again later."
         },
         "button": {
             "generate": "Generate",

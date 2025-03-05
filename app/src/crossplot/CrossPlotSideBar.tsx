@@ -10,66 +10,19 @@ import {
   CrossPlotTimeSettings,
   Marker,
   Model,
-  assertColumnInfoRoot,
   isMarkerType,
   isModelType,
   markerTypes,
   modelTypes
 } from "../types";
 import {
-  ColumnInfo,
-  Datapack,
-  DatapackUniqueIdentifier,
-  assertDatapackArray,
-  defaultColumnRoot,
-  getUUIDOfDatapackType
-} from "@tsconline/shared";
+  ColumnInfo} from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
-import { ErrorCodes } from "../util/error-codes";
-import { fetcher } from "../util";
-import { getDatapackFromArray } from "../state/non-action-util";
-import { cloneDeep } from "lodash";
-import { jsonToXml } from "../state/parse-settings";
-
-const sendCrossPlotConversionRequest = async (
-  models: Model[],
-  datapack: DatapackUniqueIdentifier,
-  xmlSettings: string
-) => {
-  if (models.length === 0) {
-    console.error("No models to convert");
-    return;
-  }
-  try {
-    const body = {
-      datapackTitle: datapack.title,
-      uuid: getUUIDOfDatapackType(datapack),
-      models: models
-        .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
-        .join("\n"),
-      settings: xmlSettings
-    };
-    const response = await fetcher("/crossplot/convert", {
-      method: "POST",
-      body: JSON.stringify(body),
-      headers: {
-        "Content-Type": "application/json"
-      }
-    });
-    if (!response.ok) {
-      throw new Error("Failed to convert datapack");
-    }
-    console.log("Successfully converted datapack");
-    console.log(await response.json());
-  } catch (e) {
-    console.error(e);
-  }
-};
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -116,30 +69,7 @@ export const CrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.tabContent}>
-          <TSCButton
-            className={styles.convert}
-            onClick={async () => {
-              try {
-                if (!state.crossPlot.chartY) {
-                  actions.pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
-                  return;
-                }
-                assertColumnInfoRoot(state.crossPlot.chartY);
-                const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
-                if (!datapack) {
-                  actions.pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
-                  return;
-                }
-                const columnRoot = cloneDeep(defaultColumnRoot);
-                columnRoot.children.push(datapack.columnInfo);
-                const columnCopy = cloneDeep(columnRoot);
-                const chartSettingsCopy = cloneDeep(state.settings);
-                const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-                await sendCrossPlotConversionRequest(state.crossPlot.models, datapack, xmlSettings);
-              } catch (e) {
-                console.log(e);
-              }
-            }}>
+          <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
             Convert Datapack
           </TSCButton>
           <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
@@ -197,7 +127,7 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
-          <TSCButton className={styles.mobileConvert} onClick={() => {}}>
+          <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
             Convert Datapack
           </TSCButton>
           <TSCButton

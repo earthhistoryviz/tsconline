@@ -63,6 +63,7 @@ import {
   compareExistingDatapacks,
   doesDatapackAlreadyExist,
   doesMetadataAlreadyExist,
+  downloadFile,
   getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
@@ -591,7 +592,6 @@ export const setDatapackConfig = action(
       }
       if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
       setCrossPlotChartY(state.settingsTabs.columns.children[0]);
-      console.log("chart name", state.crossPlot.chartY?.name);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
@@ -913,34 +913,10 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
     return;
   }
   const file = await response.blob();
-  let fileURL = "";
-  if (file) {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve, reject) => {
-        reader.onloadend = resolve;
-        reader.onerror = reject;
-      });
-      if (typeof reader.result !== "string") {
-        throw new Error("Invalid file");
-      }
-      fileURL = reader.result;
-      if (fileURL) {
-        const aTag = document.createElement("a");
-        aTag.href = fileURL;
-
-        aTag.setAttribute("download", datapack.originalFileName);
-
-        document.body.appendChild(aTag);
-        aTag.click();
-        aTag.remove();
-      } else {
-        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      }
-    } catch (error) {
-      pushError(ErrorCodes.INVALID_PATH);
-    }
+  try {
+    await downloadFile(file, datapack.title);
+  } catch (error) {
+    pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
   }
 });
 

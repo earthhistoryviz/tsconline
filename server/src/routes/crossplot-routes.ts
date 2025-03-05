@@ -1,16 +1,12 @@
 import { assertConvertCrossPlotRequest } from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { assetconfigs, verifyFilepath } from "../util.js";
-import { mkdir, readdir, writeFile } from "fs/promises";
+import { mkdir, readFile, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
 import { spawn } from "child_process";
 import {
-  fetchUserDatapackDirectory,
-  getDecryptedDatapackFilePath,
-  getDecryptedDirectory,
-  getUsersDatapacksDirectoryFromUUIDDirectory
-} from "../user/fetch-user-files.js";
+  getDecryptedDatapackFilePath} from "../user/fetch-user-files.js";
 import chalk from "chalk";
 
 export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
@@ -28,11 +24,13 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
   let settingsTextFilepath: string;
   try {
     const hashedDir = md5(JSON.stringify(body));
+    console.log("Hashed dir: " + hashedDir);
     dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
     if (await verifyFilepath(outputTextFilepath)) {
-      reply.code(200).send({ message: "Conversion already exists for this request", path: outputTextFilepath });
+      const file = await readFile(outputTextFilepath, "utf-8");
+      reply.code(200).send(file);
       console.log(chalk.green("Conversion already exists for this request"));
       return;
     }
@@ -90,14 +88,19 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
           console.log("Java error param: " + error);
           console.log("Java stdout: " + stdout);
           console.log("Java stderr: " + stderr);
+          resolve();
         });
-        resolve();
       });
     };
     await execJavaCommand(20000);
+    if (await verifyFilepath(outputTextFilepath)) {
+      const file = await readFile(outputTextFilepath, "utf-8");
+      reply.code(200).send(file);
+    } else {
+      throw new Error("Conversion failed");
+    }
   } catch (error) {
     console.error(error);
     reply.code(500).send({ message: "Error converting to crossplot" });
   }
-  reply.code(200).send({ message: "Conversion successful" });
 };
