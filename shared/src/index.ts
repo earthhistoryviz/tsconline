@@ -19,6 +19,7 @@ export type ConvertCrossPlotRequest = {
   datapackTitle: string;
   uuid: string;
   models: string;
+  settings: string;
 };
 
 export type SharedUser = {
@@ -628,6 +629,7 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
     throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
   if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
+  if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {

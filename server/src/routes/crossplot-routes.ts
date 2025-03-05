@@ -11,6 +11,7 @@ import {
   getDecryptedDirectory,
   getUsersDatapacksDirectoryFromUUIDDirectory
 } from "../user/fetch-user-files.js";
+import chalk from "chalk";
 
 export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -24,13 +25,15 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
   let dir: string;
   let outputTextFilepath: string;
   let modelsTextFilepath: string;
+  let settingsTextFilepath: string;
   try {
     const hashedDir = md5(JSON.stringify(body));
     dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
     if (await verifyFilepath(outputTextFilepath)) {
-      reply.code(400).send({ message: "Conversion already exists for this request", path: outputTextFilepath });
+      reply.code(200).send({ message: "Conversion already exists for this request", path: outputTextFilepath });
+      console.log(chalk.green("Conversion already exists for this request"));
       return;
     }
   } catch (error) {
@@ -40,6 +43,8 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
   try {
     modelsTextFilepath = path.join(dir, "models.txt");
     await writeFile(modelsTextFilepath, body.models);
+    settingsTextFilepath = path.join(dir, "settings.xml");
+    await writeFile(settingsTextFilepath, body.settings);
   } catch (e) {}
   try {
     const datapackFilepath = await getDecryptedDatapackFilePath(body.uuid, body.datapackTitle);
@@ -48,9 +53,12 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
         "-jar",
         assetconfigs.activeJar,
         "-node",
+        "-s",
+        settingsTextFilepath,
         "-o",
         outputTextFilepath,
         "-convert",
+        "-d",
         datapackFilepath,
         "-models",
         modelsTextFilepath
@@ -88,6 +96,7 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
     };
     await execJavaCommand(20000);
   } catch (error) {
+    console.error(error);
     reply.code(500).send({ message: "Error converting to crossplot" });
   }
   reply.code(200).send({ message: "Conversion successful" });

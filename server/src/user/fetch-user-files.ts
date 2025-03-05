@@ -13,7 +13,7 @@ export async function getDecryptedDatapackFilePath(uuid: string, datapackTitle: 
   const datapackJson = await fetchUserDatapack(uuid, datapackTitle);
   const decryptedDatapackDirectory = path.join(
     decryptedDirectory,
-    path.parse(datapackJson.originalFileName).name,
+    path.parse(datapackJson.storedFileName).name,
     "datapacks"
   );
   const dirs = await readdir(decryptedDatapackDirectory, { withFileTypes: true });
