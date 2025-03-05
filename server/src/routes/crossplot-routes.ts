@@ -7,6 +7,8 @@ import path from "path";
 import { spawn } from "child_process";
 import { getDecryptedDatapackFilePath } from "../user/fetch-user-files.js";
 import chalk from "chalk";
+import { setupConversionDirectory } from "../crossplot-handler.js";
+import { isOperationResult } from "../types.js";
 
 export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -16,37 +18,18 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
     reply.code(400).send({ message: "Incorrect request body for converting to crossplot" });
     return;
   }
-  // create a new directory for this request
-  let dir: string;
-  let outputTextFilepath: string;
-  let modelsTextFilepath: string;
-  let settingsTextFilepath: string;
   try {
-    const hashedDir = md5(JSON.stringify(body));
-    console.log("Hashed dir: " + hashedDir);
-    dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
-    await mkdir(dir, { recursive: true });
-    outputTextFilepath = path.join(dir, "output.txt");
-    if (await verifyFilepath(outputTextFilepath)) {
-      const file = await readFile(outputTextFilepath, "utf-8");
-      reply.code(200).send(file);
-      console.log(chalk.green("Conversion already exists for this request"));
+    const result = await setupConversionDirectory(body);
+    // If the result is a string, it means the conversion already exists
+    if (typeof result === "string") {
+      reply.code(200).send(result);
       return;
     }
-  } catch (error) {
-    reply.code(500).send({ message: "Error creating directory for this conversion" });
-    return;
-  }
-  try {
-    modelsTextFilepath = path.join(dir, "models.txt");
-    await writeFile(modelsTextFilepath, body.models);
-    settingsTextFilepath = path.join(dir, "settings.xml");
-    await writeFile(settingsTextFilepath, body.settings);
-  } catch (e) {
-    reply.code(500).send({ message: "Error writing files for conversion" });
-    return;
-  }
-  try {
+    if (isOperationResult(result)) {
+      reply.code(result.code).send(result);
+      return;
+    }
+    const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
     const datapackFilepath = await getDecryptedDatapackFilePath(body.uuid, body.datapackTitle);
     const execJavaCommand = async (timeout: number) => {
       const args = [
