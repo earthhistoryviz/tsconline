@@ -327,7 +327,7 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   routes.fetchChart
 );
 
-server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossplot);
+server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

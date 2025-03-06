@@ -1,16 +1,11 @@
 import { assertConvertCrossPlotRequest } from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { assetconfigs, verifyFilepath } from "../util.js";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import md5 from "md5";
-import path from "path";
-import { spawn } from "child_process";
-import { getDecryptedDatapackFilePath } from "../user/fetch-user-files.js";
-import chalk from "chalk";
-import { setupConversionDirectory } from "../crossplot-handler.js";
+import { verifyFilepath } from "../util.js";
+import { readFile } from "fs/promises";
+import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../crossplot-handler.js";
 import { isOperationResult } from "../types.js";
 
-export const convertCrossplot = async function convertCrossplot(request: FastifyRequest, reply: FastifyReply) {
+export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
   try {
     assertConvertCrossPlotRequest(body);
@@ -30,55 +25,17 @@ export const convertCrossplot = async function convertCrossplot(request: Fastify
       return;
     }
     const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
-    const datapackFilepath = await getDecryptedDatapackFilePath(body.uuid, body.datapackTitle);
-    const execJavaCommand = async (timeout: number) => {
-      const args = [
-        "-jar",
-        assetconfigs.activeJar,
-        "-node",
-        "-s",
-        settingsTextFilepath,
-        "-o",
+
+    if (
+      (await convertCrossPlotWithModelsInJar(
+        body.uuid,
+        body.datapackTitle,
         outputTextFilepath,
-        "-convert",
-        "-d",
-        datapackFilepath,
-        "-models",
-        modelsTextFilepath
-      ];
-      return new Promise<void>((resolve, reject) => {
-        const cmd = "java";
-        const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
-        let stdout = "";
-        let stderr = "";
-        let error = "";
-        javaProcess.stdout.on("data", (data) => {
-          stdout += data;
-        });
-
-        javaProcess.stderr.on("data", (data) => {
-          stderr += data;
-        });
-
-        javaProcess.on("error", (err) => {
-          error = err.message;
-        });
-
-        javaProcess.on("close", (code, signal) => {
-          if (signal == "SIGKILL") {
-            reject(new Error("Java process timed out"));
-            return;
-          }
-          console.log("Java finished, sending reply to browser");
-          console.log("Java error param: " + error);
-          console.log("Java stdout: " + stdout);
-          console.log("Java stderr: " + stderr);
-          resolve();
-        });
-      });
-    };
-    await execJavaCommand(20000);
-    if (await verifyFilepath(outputTextFilepath)) {
+        modelsTextFilepath,
+        settingsTextFilepath
+      )) &&
+      (await verifyFilepath(outputTextFilepath))
+    ) {
       const file = await readFile(outputTextFilepath, "utf-8");
       reply.code(200).send(file);
     } else {

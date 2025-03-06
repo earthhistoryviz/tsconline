@@ -3,13 +3,76 @@ import chalk from "chalk";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
-import { assetconfigs, verifyFilepath } from "./util.js";
+import { assetconfigs, getActiveJar, verifyFilepath } from "./util.js";
 import { OperationResult } from "./types.js";
-export const setupConversionDirectory = async function(request: ConvertCrossPlotRequest): Promise<OperationResult | string | {
-    outputTextFilepath: string;
-    modelsTextFilepath: string;
-    settingsTextFilepath: string;
-}>  {
+import { getDecryptedDatapackFilePath } from "./user/fetch-user-files.js";
+import { spawn } from "child_process";
+export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWithModelsInJar(
+  uuid: string,
+  datapackTitle: string,
+  outputTextFilepath: string,
+  modelsTextFilepath: string,
+  settingsTextFilepath: string
+) {
+  const datapackFilepath = await getDecryptedDatapackFilePath(uuid, datapackTitle);
+  const execJavaCommand = async (timeout: number) => {
+    const args = [
+      "-jar",
+      getActiveJar(),
+      "-node",
+      "-s",
+      settingsTextFilepath,
+      "-o",
+      outputTextFilepath,
+      "-convert",
+      "-d",
+      datapackFilepath,
+      "-models",
+      modelsTextFilepath
+    ];
+    return new Promise<void>((resolve, reject) => {
+      const cmd = "java";
+      const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
+      let stdout = "";
+      let stderr = "";
+      let error = "";
+      javaProcess.stdout.on("data", (data) => {
+        stdout += data;
+      });
+
+      javaProcess.stderr.on("data", (data) => {
+        stderr += data;
+      });
+
+      javaProcess.on("error", (err) => {
+        error = err.message;
+      });
+
+      javaProcess.on("close", (code, signal) => {
+        if (signal == "SIGKILL") {
+          reject(new Error("Java process timed out"));
+          return;
+        }
+        console.log("Java finished, sending reply to browser");
+        console.log("Java error param: " + error);
+        console.log("Java stdout: " + stdout);
+        console.log("Java stderr: " + stderr);
+        resolve();
+      });
+    });
+  };
+  await execJavaCommand(20000);
+  return true;
+};
+export const setupConversionDirectory = async function (request: ConvertCrossPlotRequest): Promise<
+  | OperationResult
+  | string
+  | {
+      outputTextFilepath: string;
+      modelsTextFilepath: string;
+      settingsTextFilepath: string;
+    }
+> {
   // create a new directory for this request
   let dir: string;
   let outputTextFilepath: string;
@@ -38,4 +101,4 @@ export const setupConversionDirectory = async function(request: ConvertCrossPlot
     return { message: "Error writing files for conversion", code: 500 };
   }
   return { outputTextFilepath, modelsTextFilepath, settingsTextFilepath };
-}
+};
