@@ -614,8 +614,9 @@ export type DatapackPriorityUpdateSuccess = {
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
-  return datapackType.type === "official" ? "official" : datapackType.uuid;
+  return datapackType.type === "official" || datapackType.type === "treatise" ? datapackType.type : datapackType.uuid;
 }
+
 export function isOfficialUUID(uuid: string): boolean {
   return uuid === "official";
 }
