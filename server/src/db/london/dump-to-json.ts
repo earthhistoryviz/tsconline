@@ -16,6 +16,8 @@ const cleanValue = (value: string) => {
   return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
 };
 
+const tableColumnTypes: Record<string, Record<string, string>> = {};
+
 export async function convertSQLDumpToJSON(dumpFile: string) {
   if (!(await verifyFilepath(dumpFile))) {
     console.log(chalk.red("SQL dump file not found please check the path"));
@@ -28,7 +30,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
   await mkdir(outputDir, { recursive: true });
 
-  const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
+  const tables: Record<string, { columns: string[]; rows: (string | number | null)[][] }> = {};
   const schemas: string[] = [];
   const assertFunctions: string[] = [];
 
@@ -75,7 +77,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
         interfaceLines = [];
         parsingInsertInto = false;
       } else if (parsingCreateTable) {
-        processSchemaLine(line, interfaceLines, uniqueConstraints);
+        processSchemaLine(line, interfaceLines, uniqueConstraints, schemaTableName);
       } else if (insertIntoMatch && insertIntoMatch[1] && insertIntoMatch[2]) {
         parsingInsertInto = true;
         parsingCreateTable = false;
@@ -85,7 +87,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
           tables[currentInsertTableName] = { columns, rows: [] };
         }
       } else if (parsingInsertInto && tables[currentInsertTableName]) {
-        processInsertLine(tables[currentInsertTableName]!, line);
+        processInsertLine(tables[currentInsertTableName]!, line, schemaTableName);
       }
     }
   } catch (e) {
@@ -106,7 +108,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
             acc[columns[i]!] = val;
             return acc;
           },
-          {} as Record<string, string | null>
+          {} as Record<string, string | number | null>
         )
       );
       await writeFile(join(outputDir, `${table}.json`), JSON.stringify(records, null, 2));
@@ -125,35 +127,50 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
         schemas.join("\n\n").concat("\n\n").concat(assertFunctions.join("\n\n"))
       )
     );
-    console.log(chalk.cyan("Exported schemas to schema.ts"));
+    console.log(chalk.cyan("Exported schemas to src/db/london/schema.ts"));
   } catch (e) {
     console.error(e);
-    console.log(chalk.yellow(`Error exporting schemas to schema.ts`));
+    console.log(chalk.yellow(`Error exporting schemas to src/db/london/schema.ts`));
   }
 
   console.log(chalk.green("All tables exported successfully to JSON!"));
 }
 
-function processInsertLine(tables: { columns: string[]; rows: (string | null)[][] }, row: string) {
+function processInsertLine(tables: { columns: string[]; rows: (string | number | null)[][] }, row: string, schemaTableName: string) {
   if (!row.startsWith("(") || !/\)(;|,)?$/.test(row)) return;
   const trimmedRow = row
     .trim()
     .replace(/^\(/, "")
     .replace(/\)(;|,)?$/, "");
   const valueRegex = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|([^,]+)/g;
-  const arr: string[] = [];
-  let match;
+  const arr: (string | number | null)[] = [];
+  let match, columnIndex = 0;
+
   while ((match = valueRegex.exec(trimmedRow)) !== null) {
-    if (match[1] !== undefined) {
-      arr.push(cleanValue(match[1])!);
-    } else if (match[2] !== undefined) {
-      arr.push(cleanValue(match[2])!);
-    } else if (match[3] !== undefined) {
-      arr.push(cleanValue(match[3])!);
-    } else if (match[4] !== undefined) {
-      arr.push(cleanValue(match[4])!);
+    let value: string | number | null = null;
+    if (match[1] !== undefined) value = cleanValue(match[1]);
+    else if (match[2] !== undefined) value = cleanValue(match[2]);
+    else if (match[3] !== undefined) value = cleanValue(match[3]);
+    else if (match[4] !== undefined) value = cleanValue(match[4]);
+
+    const columnName = tables.columns[columnIndex];
+    if (!columnName) {
+      console.log(chalk.yellow(`Skipping undefined column at index ${columnIndex} in table ${schemaTableName}`));
+      columnIndex++;
+      continue;
     }
+    const expectedType = tableColumnTypes[schemaTableName]?.[columnName];
+
+    if (value === "NULL") value = null;
+    else if (expectedType === "number") {
+      const numValue = Number(value);
+      value = isNaN(numValue) ? value : numValue;
+    }
+
+    arr.push(value);
+    columnIndex++;
   }
+
   tables.rows.push(arr);
 }
 
@@ -205,7 +222,7 @@ function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: str
   return { kyselySchema, assertFunction };
 }
 
-function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[]) {
+function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
   const cleanLine = statement.trim();
   const columnRegex = /`([\w-]+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
   const columnMatch = columnRegex.exec(cleanLine);
@@ -224,6 +241,10 @@ function processSchemaLine(statement: string, interfaceLines: string[], uniqueCo
       interfaceLines.push(
         `  ${tsColumnName}: ${tsType}; // ${type}${size || ""}${unsigned || ""}${notNull || ""}${defaultValue ? " DEFAULT " + defaultValue : ""}`
       );
+
+      // store the column types for later use
+      tableColumnTypes[tableName] ??= {};
+      tableColumnTypes[tableName]![columnName] = tsType.replace(" | null", "");
     }
   }
   const uniqueKeyRegex = /UNIQUE KEY `?(\w+)`? \(([^)]+)\)/g;
