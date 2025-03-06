@@ -184,6 +184,7 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    accountType: "",
     uuid: "",
     workshopIds: [],
     settings: {

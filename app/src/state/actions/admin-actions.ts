@@ -193,6 +193,45 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
   }
 });
 
+export const adminModifyUsers = action(
+  async (user: { username: string; email: string; accountType?: string; isAdmin?: number }) => {
+    const { username, email, accountType, isAdmin } = user;
+    if (!username || !email || (!accountType && isAdmin === undefined)) {
+      pushSnackbar("Missing required fields", "warning");
+      return;
+    }
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminModifyUsers");
+      if (!recaptchaToken) return;
+
+      const response = await fetcher("/admin/user", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ username, email, accountType, isAdmin }),
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        pushSnackbar("User modified successfully", "success");
+        adminFetchUsers(); // Refresh the user list if applicable
+      } else {
+        const serverResponse = await response.json();
+        displayServerError(
+          serverResponse,
+          ErrorCodes.ADMIN_MODIFY_USER_FAILED,
+          ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]
+        );
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+);
+
 /**
  * Deletes a user's datapack (datapack's "id" is the filename)
  */
