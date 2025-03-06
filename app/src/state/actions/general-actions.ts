@@ -358,6 +358,7 @@ export const uploadUserDatapack = action(
         formData.append("pdfFiles[]", pdfFile);
       });
     }
+
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
@@ -376,10 +377,14 @@ export const uploadUserDatapack = action(
           pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
           return;
         }
+        if (pdfFiles?.length) {
+          datapack.hasFiles = true;
+        }
         addDatapack(datapack);
         if (metadata.isPublic) {
           refreshPublicDatapacks();
         }
+
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         if (response.status === 403) {

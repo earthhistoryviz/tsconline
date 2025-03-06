@@ -90,7 +90,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     properties: {
       datapackTitle: { type: "string" },
       uuid: { type: "string" },
-      isPublic: {type: "boolean"}
+      isPublic: { type: "boolean" }
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };
@@ -142,8 +142,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   fastify.get(
     "/datapack/download/files/:datapackTitle/:uuid/:isPublic",
     {
-        config: { rateLimit: moderateRateLimit },
-        schema: { params: downloadDatapackFilesZipParams }
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: downloadDatapackFilesZipParams }
     },
     downloadDatapackFilesZip
   );

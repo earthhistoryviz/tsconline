@@ -375,6 +375,9 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
         if (!pack) {
           return;
         }
+        if (pdfFiles?.length) {
+          pack.hasFiles = true;
+        }
         addDatapack(pack);
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
