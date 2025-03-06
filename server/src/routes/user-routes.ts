@@ -536,51 +536,51 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
 }
 
 export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
-    request: FastifyRequest<{ Params: { datapackTitle: string, uuid: string; isPublic: boolean}}>,
-    reply: FastifyReply
+  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
+  reply: FastifyReply
 ) {
-    const { datapackTitle, uuid, isPublic } = request.params;
+  const { datapackTitle, uuid, isPublic } = request.params;
 
-    if (!datapackTitle) {
-        reply.status(400).send({ error: "Missing datapack title" });
-        return;
-    }
+  if (!datapackTitle) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
 
-    const directory = await getUserUUIDDirectory(uuid, isPublic);
-    const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-    const datapackFolder = path.join(datapacksFolder, datapackTitle);
-    const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
-    if (!(await verifyFilepath(filesDir))) {
-        reply.status(500).send({ error: "Invalid directory path" });
-        return;
-    }
-    const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
-    if (!(await verifyNonExistentFilepath(zipfile))) {
-        reply.status(500).send({ error: "Invalid directory path" });
-        return;
-    }
+  const directory = await getUserUUIDDirectory(uuid, isPublic);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+  if (!(await verifyFilepath(filesDir))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
+  if (!(await verifyNonExistentFilepath(zipfile))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  try {
+    let file;
     try {
-        let file;
-        try {
-            file = await readFile(zipfile);
-        } catch (e) {
-            const error = e as NodeJS.ErrnoException;
-            if (error.code !== "ENOENT") {
-                reply.status(500).send({ error: "An error occurred: " + e });
-                return;
-            }
-        }
-
-        if (!file) {
-            file = createZipFile(zipfile, filesDir);
-        }
-        reply.send(file);
+      file = await readFile(zipfile);
     } catch (e) {
-        const error = e as NodeJS.ErrnoException;
-        if (error.code === "ENOENT") {
-            reply.status(404).send({ error: "Failed to process the file" });
-        } else {
-            reply.status(500).send({ error: "An error occurred: " + e });
-        }
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
     }
+
+    if (!file) {
+      file = createZipFile(zipfile, filesDir);
+    }
+    reply.send(file);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "Failed to process the file" });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
+  }
 };

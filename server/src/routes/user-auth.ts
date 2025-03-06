@@ -90,7 +90,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     properties: {
       datapackTitle: { type: "string" },
       uuid: { type: "string" },
-      isPublic: {type: "boolean"}
+      isPublic: { type: "boolean" }
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };
