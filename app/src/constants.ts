@@ -37,7 +37,7 @@ export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
 };
 
 export const isDevServer =
-  window.location.hostname === "dev.timescalecreator.org" || window.location.hostname === "pr-preview.geolex.org";
+  window.location.hostname === "dev.timescalecreator.org" || window.location.hostname === "pr-preview.geolex.org" || window.location.hostname === "localhost";
 
 export const isDDEServer = window.location.hostname === "timescalecreator.deep-time.org";
 
