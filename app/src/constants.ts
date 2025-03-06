@@ -35,10 +35,11 @@ export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   baseStageAge: 10,
   unitsPerMY: 2
 };
-export const isDevServer = window.location.hostname === "www.dev.timescalecreator.org" || "www.pr-preview.geolex.org";
 
-// TODO fix this to the correct url when it gets finished and deployed
-export const isDDEServer = window.location.hostname === "https://timescalecreator.deep-time.org";
+export const isDevServer =
+  window.location.hostname === "dev.timescalecreator.org" || window.location.hostname === "pr-preview.geolex.org";
+
+export const isDDEServer = window.location.hostname === "timescalecreator.deep-time.org";
 
 export const defaultChartZoomSettings: ChartZoomSettings = {
   zoomFitScale: 1,
