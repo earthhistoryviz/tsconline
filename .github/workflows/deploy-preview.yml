@@ -64,7 +64,7 @@ jobs:
               docker rm $RUNNING_CONTAINER
             fi 
 
-            docker-compose -f docker-compose-preview.yml up -d --remove-orphans pr-preview-run
+            docker-compose -f docker-compose-preview.yml up -d --build --remove-orphans pr-preview-run
 
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
 

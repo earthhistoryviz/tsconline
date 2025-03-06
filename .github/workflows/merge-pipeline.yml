@@ -469,7 +469,7 @@ jobs:
             fi
 
             cd "$PR_PREVIEW_DIR"
-            docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
+            docker-compose -f docker-compose-preview.yml up  --build --remove-orphans pr-preview-install
 
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."
