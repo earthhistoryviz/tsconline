@@ -35,7 +35,8 @@ import {
   DatapackUniqueIdentifier,
   isDatapackTypeString,
   isUserDatapack,
-  isOfficialDatapack
+  isOfficialDatapack,
+  checkUserAllowedDownloadDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -385,7 +386,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   }, [state.datapackProfilePage.unsavedChanges]);
 
   function downloadDatapackFiles() {
-    actions.fetchDatapackFilesForDownload(datapack.title, getDatapackOfficialOrUUID(datapack), datapack.isPublic);
+    if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
+      actions.fetchDatapackFilesForDownload(datapack.title, getDatapackOfficialOrUUID(datapack), datapack.isPublic);
+    }
   }
 
   return (
@@ -423,9 +426,15 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <Tags tags={datapack.tags} />
         </div>
         <div className={styles.ai}>
-          <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} onClick={() => downloadDatapackFiles()}>
-            {t("workshops.details-page.download-button")}
-          </TSCButton>
+          {datapack.hasFiles && (
+            <TSCButton
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: 2 }}
+              onClick={() => downloadDatapackFiles()}>
+              {t("workshops.details-page.download-button")}
+            </TSCButton>
+          )}
         </div>
       </div>
       <div className={styles.additional}>
