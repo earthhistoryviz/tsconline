@@ -75,7 +75,8 @@
     "sync-translations": "node dist/sync-translations.js",
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "london": "node dist/london-db/dump-to-json.js"
   },
   "type": "module"
 }

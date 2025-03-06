@@ -69,7 +69,7 @@ import {
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
 import { Workshop } from "../../Workshops";
-import { adjustScaleOfMarkers, setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
+import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
@@ -1262,10 +1262,7 @@ export const setChartTabZoomSettings = action(
     if (newval.zoomFitMidCoord !== undefined) oldval.zoomFitMidCoord = newval.zoomFitMidCoord;
     if (newval.zoomFitMidCoordIsX !== undefined) oldval.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
     if (newval.zoomFitScale !== undefined) oldval.zoomFitScale = newval.zoomFitScale;
-    if (newval.scale !== undefined) {
-      adjustScaleOfMarkers(newval.scale);
-      oldval.scale = newval.scale;
-    }
+    if (newval.scale !== undefined) oldval.scale = newval.scale;
   }
 );
 

@@ -6,7 +6,7 @@ import { Settings } from "./Settings";
 import { ChartTab } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
-import { originalDarkTheme, originalLightTheme } from "./theme";
+import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
 import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { About } from "./About";
@@ -36,6 +36,7 @@ import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours"
 import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
+import { isDDEServer } from "./constants";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -43,7 +44,9 @@ export default observer(function App() {
   const location = useLocation();
   const { t } = useTranslation();
   const [stepIndex, setStepIndex] = useState(0);
-  const theme = state.user.settings.darkMode ? originalDarkTheme : originalLightTheme;
+  const darkTheme = isDDEServer ? ddeDarkTheme : originalDarkTheme;
+  const lightTheme = isDDEServer ? ddeLightTheme : originalLightTheme;
+  const theme = state.user.settings.darkMode ? darkTheme : lightTheme;
   const backgroundColor = theme.palette.backgroundColor.main;
   document.documentElement.style.backgroundColor = backgroundColor;
   document.body.style.backgroundColor = backgroundColor;

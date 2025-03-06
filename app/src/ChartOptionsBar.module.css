@@ -4,3 +4,7 @@
   white-space: nowrap;
   overflow: hidden;
 }
+.optionsButton {
+  border: 0;
+  background-color: transparent;
+}

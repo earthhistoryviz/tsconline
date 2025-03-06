@@ -554,6 +554,8 @@ export type InfoPoints = {
 export type MapInfo = {
   [name: string]: {
     name: string;
+    datapackTitle: string;
+    uuid: string;
     img: string; // the image corresponding to the map image
     note?: string; // any notes on the map
     parent?: ParentMap; // the parent map this map exists in
@@ -611,6 +613,9 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function getUUIDOfDatapackType(datapackType: DatapackType): string {
+  return datapackType.type === "official" ? "official" : datapackType.uuid;
+}
 export function isOfficialUUID(uuid: string): boolean {
   return uuid === "official";
 }
@@ -1609,6 +1614,8 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     if (typeof map !== "object" || map === null) {
       throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
     }
+    if (typeof map.datapackTitle !== "string") throwError("MapInfo", "datapackTitle", "string", map.datapackTitle);
+    if (typeof map.uuid !== "string") throwError("MapInfo", "uuid", "string", map.uuid);
     if (typeof map.name !== "string") throwError("MapInfo", "name", "string", map.name);
     if (typeof map.img !== "string") {
       throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);
