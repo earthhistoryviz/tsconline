@@ -10,7 +10,7 @@ type AboutCardProps = {
   timeWorked: string;
   proPic: string | undefined;
 };
-const serverURL = `${import.meta.env.VITE_SERVER_URL ?? "http://localhost:3000"}/public/aboutPictures`;
+const serverURL = `${import.meta.env.DEV ? "http://localhost:3000" : ""}/public/aboutPictures`;
 export const AboutCard = ({
   name,
   role,

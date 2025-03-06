@@ -130,7 +130,7 @@ export const DatapackProfile = observer(() => {
       // a second issue is that due to strict mode the initial fetch will be aborted because React will call the cleanup before fetching is done causing the page to flicker to the 404 page for a split second
       // the second fetch in the second useEffect will be successful and the page will render correctly
       // this is not an issue in prod since strict mode is disabled
-      if (import.meta.env.MODE !== "development") {
+      if (import.meta.env.PROD) {
         // if we're in prod, we do want to abort to prevent errors and zombie fetch requests
         // but if we're in dev, skip aborting so we don’t see that flicker, will see occasional recaptcha errors
         controller.abort();
