@@ -295,26 +295,6 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
   }
 };
 
-export const fetchTreatiseDatapack = async function fetchTreatiseDatapack(
-  request: FastifyRequest<{ Params: { datapack: string } }>,
-  reply: FastifyReply
-) {
-  const { datapack } = request.params;
-  const uuid = "treatise";
-  try {
-    const treatiseDatapack = await fetchUserDatapack(uuid, datapack).catch(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    });
-    if (!treatiseDatapack) {
-      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
-      return;
-    }
-    reply.send(treatiseDatapack);
-  } catch (e) {
-    reply.status(500).send({ error: "Failed to fetch datapacks" });
-  }
-};
-
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -362,11 +342,6 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  // async function errorHandler(message: string, errorStatus: number, e?: unknown) {
-  //   e && console.error(e);
-  //   reply.status(errorStatus).send({ error: message });
-  // }
-
   try {
     // Check token
     const authHeader = request.headers["authorization"];
@@ -394,6 +369,7 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
     const treatiseUUID = "treatise";
     const parts = request.parts();
     const result = await processAndUploadDatapack(treatiseUUID, parts);
+    // 409 means already uploaded
     if (result.code === 200 || result.code === 409) {
       reply.status(200).send({ hash: result.hashname });
     } else {
