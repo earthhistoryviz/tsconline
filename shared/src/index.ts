@@ -108,6 +108,7 @@ export type DatapackMetadata = {
   notes?: string;
   datapackImage?: string;
   priority: number;
+  hasFiles?: boolean;
 } & DatapackType;
 
 export type BaseDatapackProps = {
