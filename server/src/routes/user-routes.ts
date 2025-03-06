@@ -336,3 +336,48 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   }
   reply.status(200).send({ message: "Datapack deleted" });
 };
+
+// Title of the datapack from treatise is a hash generated on Treatise side
+export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  try {
+    // Check token
+    const authHeader = request.headers["authorization"];
+    if (!authHeader) {
+      reply.status(401).send({ error: "Token missing" });
+      return;
+    }
+    const token = authHeader.split(" ")[1];
+    if (!token) {
+      reply.status(401).send({ error: "Token missing" });
+      return;
+    }
+    const validToken = process.env.BEARER_TOKEN;
+    if (!validToken) {
+      reply.status(500).send({
+        error: "Server misconfiguration: Missing BEARER_TOKEN on TSC Online. Contact admin"
+      });
+      return;
+    }
+    if (token !== validToken) {
+      reply.status(403).send({ error: "Token mismatch" });
+      return;
+    }
+
+    const treatiseUUID = "treatise";
+    const parts = request.parts();
+    const result = await processAndUploadDatapack(treatiseUUID, parts);
+    // 409 means already uploaded
+    if (result.code === 200 || result.code === 409) {
+      reply.status(200).send({ hash: result.hashname });
+    } else {
+      reply.status(result.code).send({ error: result.message });
+      return;
+    }
+  } catch (error) {
+    console.error("Error during /external-chart route:", error);
+    reply.status(500).send({ error: "Internal server error" });
+  }
+};

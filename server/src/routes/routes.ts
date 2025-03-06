@@ -68,6 +68,26 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
   reply.send(datapackMetadata);
 };
 
+export const fetchTreatiseDatapack = async function fetchTreatiseDatapack(
+  request: FastifyRequest<{ Params: { datapack: string } }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.params;
+  const uuid = "treatise";
+  try {
+    const treatiseDatapack = await fetchUserDatapack(uuid, datapack).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
+    if (!treatiseDatapack) {
+      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
+      return;
+    }
+    reply.send(treatiseDatapack);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to fetch datapacks" });
+  }
+};
+
 export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {
   const tryReadFile = async (filepath: string) => {
     if (!(await verifyFilepath(filepath))) {
@@ -233,8 +253,12 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         if (uuid !== datapack.uuid && !datapack.isPublic) {
           reply.send({ error: "ERROR: user does not have access to requested datapack" });
           return;
+        } else {
+          uuidFolder = datapack.uuid;
+          break;
         }
-        uuidFolder = datapack.uuid;
+      case "treatise":
+        uuidFolder = "treatise";
         break;
     }
     if (!uuidFolder) {
