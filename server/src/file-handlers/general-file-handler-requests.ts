@@ -2,11 +2,11 @@ import { Multipart } from "@fastify/multipart";
 import { rm, readFile } from "fs/promises";
 import { isOperationResult, OperationResult } from "../types.js";
 import {
-    convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
-    processEditDatapackRequest
+  convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest,
+  processEditDatapackRequest
 } from "../user/user-handler.js";
 import { editDatapack } from "./edit-handler.js";
-import {createWriteStream} from "fs";
+import { createWriteStream } from "fs";
 import archiver from "archiver";
 import path from "path";
 
@@ -51,24 +51,24 @@ export const editDatapackMetadataRequestHandler = async function editDatapackMet
  * @throws An error if the ZIP creation or reading fails.
  */
 export async function createZipFile(zipFilePath: string, filesFolder: string): Promise<Buffer> {
-    try {
-        const output = createWriteStream(zipFilePath);
-        output.on("close", () => {
-            console.log(`ZIP file created successfully: ${archive.pointer()} total bytes`);
-        });
+  try {
+    const output = createWriteStream(zipFilePath);
+    output.on("close", () => {
+      console.log(`ZIP file created successfully: ${archive.pointer()} total bytes`);
+    });
 
-        output.on("error", (err) => {
-            console.error("Error writing ZIP file:", err);
-            throw err;
-        });
-        const archive = archiver("zip", {
-            zlib: { level: 9 } // Compression level
-        });
-        archive.pipe(output);
-        archive.directory(filesFolder + path.sep, false);
-        await archive.finalize();
-        return await readFile(zipFilePath);
-    } catch (error) {
-        throw new Error(`ZIP file creation failed: ${error}`);
-    }
+    output.on("error", (err) => {
+      console.error("Error writing ZIP file:", err);
+      throw err;
+    });
+    const archive = archiver("zip", {
+      zlib: { level: 9 } // Compression level
+    });
+    archive.pipe(output);
+    archive.directory(filesFolder + path.sep, false);
+    await archive.finalize();
+    return await readFile(zipFilePath);
+  } catch (error) {
+    throw new Error(`ZIP file creation failed: ${error}`);
+  }
 }
