@@ -1,7 +1,6 @@
 import { useEffect, useContext, useState } from "react";
 import { context } from "./state";
 import { ErrorCodes } from "./util/error-codes";
-// import { ColumnInfo, DatapackConfigForChartRequest } from "@tsconline/shared";
 import { DatapackConfigForChartRequest } from "@tsconline/shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
@@ -15,28 +14,6 @@ const GenerateExternalChart: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [errorPushed, setErrorPushed] = useState(false);
-
-  // const toggleSpecificColumns = (columnNames: string[]) => {
-  //   const findAndToggleColumn = (columns: ColumnInfo[], targetName: string) => {
-  //     for (const column of columns) {
-  //       if (column.name === targetName) {
-  //         actions.toggleSettingsTabColumn(column);
-  //         return true;
-  //       }
-  //       if (column.children && column.children.length > 0) {
-  //         const found = findAndToggleColumn(column.children, targetName);
-  //         if (found) return true;
-  //       }
-  //     }
-  //     return false;
-  //   };
-
-  //   columnNames.forEach((name) => {
-  //     if (state.settingsTabs.columns && !findAndToggleColumn(state.settingsTabs.columns.children, name)) {
-  //       console.warn(`Column with name "${name}" not found.`);
-  //     }
-  //   });
-  // };
 
   const fetchData = async (controller: AbortController) => {
     if (datapackHash) {
@@ -89,21 +66,16 @@ const GenerateExternalChart: React.FC = () => {
         };
 
         await actions.processDatapackConfig([internalDatapackConfig, treatiseDatapackConfig]);
-        // await actions.processDatapackConfig([treatiseDatapackConfig]);
-        // await actions.processDatapackConfig([internalDatapackConfig]);
-        // const columnNamesToToggle = [
-        //   "Geomagnetic Polarity",
-        //   "Marine Macrofossils (Mesozoic-Paleozoic)",
-        //   "Microfossils"
-        // ];
-        // toggleSpecificColumns(columnNamesToToggle);
 
-        // const parts = datapackHash.split("-");
-        // const oldestTime = parseInt(parts[1], 10);
-        // const newestTime = parseInt(parts[2], 10);
-        // actions.setBaseStageAge(oldestTime, "Ma");
-        // actions.setTopStageAge(newestTime, "Ma");
-        // actions.setUnitsPerMY(0.1, "Ma");
+        actions.toggleSettingsTabColumn("Geomagnetic Polarity");
+        actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
+        actions.toggleSettingsTabColumn("Microfossils");
+        const parts = datapackHash.split("-");
+        const oldestTime = parseInt(parts[1], 10);
+        const newestTime = parseInt(parts[2], 10);
+        actions.setBaseStageAge(oldestTime, "Ma");
+        actions.setTopStageAge(newestTime, "Ma");
+        actions.setUnitsPerMY(0.1, "Ma");
 
         actions.initiateChartGeneration(navigate, location.pathname);
       } catch (error) {

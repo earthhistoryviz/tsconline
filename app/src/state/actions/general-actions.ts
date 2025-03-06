@@ -263,7 +263,7 @@ export const fetchTreatiseDatapack = action(
   "fetchTreatiseDatapack",
   async (datapackHash: string, options?: { signal?: AbortSignal }) => {
     try {
-      const response = await fetcher(`/treatise/datapacks/${datapackHash}`, options);
+      const response = await fetcher(`/treatise/datapack/${datapackHash}`, options);
       const data = await response.json();
       try {
         assertDatapack(data);

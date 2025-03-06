@@ -495,7 +495,19 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
  * parents: list of names that indicates the path from top to the toggled column
  */
 
-export const toggleSettingsTabColumn = action((column: ColumnInfo) => {
+export const toggleSettingsTabColumn = action((columnOrName: ColumnInfo | string) => {
+  let column: ColumnInfo | undefined;
+
+  if (typeof columnOrName === "string") {
+    column = state.settingsTabs.columnHashMap.get(columnOrName);
+    if (!column) {
+      console.log("WARNING: Column with name", columnOrName, "not found in columnHashMap.");
+      return;
+    }
+  } else {
+    column = columnOrName;
+  }
+
   column.on = !column.on;
   if (!column.on || !column.parent) return;
   if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
