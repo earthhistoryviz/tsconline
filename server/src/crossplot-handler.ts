@@ -62,6 +62,9 @@ export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWi
     });
   };
   await execJavaCommand(20000);
+  if (!(await verifyFilepath(outputTextFilepath))) {
+    return false;
+  }
   return true;
 };
 export const setupConversionDirectory = async function (request: ConvertCrossPlotRequest): Promise<
