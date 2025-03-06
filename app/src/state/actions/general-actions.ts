@@ -52,9 +52,7 @@ import {
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
-  SettingsTabs,
-  equalChartSettings,
-  equalConfig
+  SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
@@ -1050,13 +1048,6 @@ export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
 export const setTab = action("setTab", (newval: number) => {
-  if (
-    newval == 2 &&
-    state.chartTab.state.chartContent &&
-    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
-  ) {
-    pushSnackbar("Chart settings are different from the displayed chart.", "warning");
-  }
   state.tab = newval;
 });
 export const setSettingsColumns = action((temp?: ColumnInfo) => {

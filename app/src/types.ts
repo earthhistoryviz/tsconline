@@ -76,6 +76,7 @@ export type ChartTabState = {
   chartContent: string;
   chartZoomSettings: ChartZoomSettings;
   chartHash: string;
+  matchesSettings: boolean;
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;

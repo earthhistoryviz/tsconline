@@ -323,6 +323,10 @@ export const sendCrossPlotConversionRequest = action(async () => {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
     }
+    if (!state.crossPlot.state.matchesSettings) {
+      pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
+      return;
+    }
     assertColumnInfoRoot(state.crossPlot.chartY);
     const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
     if (!datapack) {
