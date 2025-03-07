@@ -50,10 +50,11 @@ async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
 }
 
 async function verifyRecaptcha(
-  request: FastifyRequest<{ Body: { recaptchaToken: string; action: string } }>,
+  request: FastifyRequest<{ Headers: { "recaptcha-token": string; "recaptcha-action": string } }>,
   reply: FastifyReply
 ) {
-  const { recaptchaToken, action } = request.body;
+  const recaptchaToken = request.headers["recaptcha-token"];
+  const action = request.headers["recaptcha-action"];
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });

@@ -31,14 +31,25 @@ async function verifyAuthority<T extends FastifyRequest = FastifyRequest>(reques
   }
 }
 
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
-  const recaptcha = request.headers["recaptcha-token"];
-  if (!recaptcha || typeof recaptcha !== "string") {
+async function verifyRecaptcha(
+  request: FastifyRequest<{ Headers: { "recaptcha-token": string; "recaptcha-action": string } }>,
+  reply: FastifyReply
+) {
+  const recaptchaToken = request.headers["recaptcha-token"];
+  const action = request.headers["recaptcha-action"];
+
+  if (!recaptchaToken || typeof recaptchaToken !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });
     return;
   }
+
+  if (!action || typeof action !== "string") {
+    reply.status(400).send({ error: "Missing recaptcha action" });
+    return;
+  }
+
   try {
-    const score = await checkRecaptchaToken(recaptcha, "verifyRecaptcha");
+    const score = await checkRecaptchaToken(recaptchaToken, action);
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
