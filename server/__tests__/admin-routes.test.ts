@@ -481,6 +481,63 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token", "recaptcha-action": "test-action" };
 
+describe("verifyAdmin tests", () => {
+  describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
+    const findUser = vi.spyOn(database, "findUser");
+    beforeEach(() => {
+      findUser.mockClear();
+    });
+    test("should return 401 if not logged in", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body
+      });
+      expect(findUser).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+      expect(response.statusCode).toBe(401);
+    });
+    test("should return 401 if not found in database", async () => {
+      findUser.mockResolvedValueOnce([]);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers
+      });
+      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+      expect(findUser).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+      expect(response.statusCode).toBe(401);
+    });
+    test("should return 401 if not admin", async () => {
+      findUser.mockResolvedValueOnce([testNonAdminUser]);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers
+      });
+      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+      expect(findUser).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+      expect(response.statusCode).toBe(401);
+    });
+    test("should return 500 if findUser throws error", async () => {
+      findUser.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers
+      });
+      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+      expect(findUser).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Database error" });
+      expect(response.statusCode).toBe(500);
+    });
+  });
+});
 describe("verifyRecaptcha tests", () => {
   describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
     const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
