@@ -542,64 +542,6 @@ describe("verifyRecaptcha tests", () => {
   });
 });
 
-describe("verifyRecaptcha tests", () => {
-  describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
-    const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
-    beforeEach(() => {
-      checkRecaptchaToken.mockClear();
-    });
-    it("should return 400 if missing recaptcha token", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: { ...headers, "recaptcha-token": "", "recaptcha-action": "test-action" }
-      });
-      expect(checkRecaptchaToken).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-      expect(response.statusCode).toBe(400);
-    });
-
-    it("should return 400 if missing recaptcha action", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
-      });
-      expect(checkRecaptchaToken).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Missing reCAPTCHA action" });
-      expect(response.statusCode).toBe(400);
-    });
-
-    it("should return 422 if recaptcha failed", async () => {
-      checkRecaptchaToken.mockResolvedValueOnce(0);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
-      });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-      expect(response.statusCode).toBe(422);
-    });
-    it("should return 500 if checkRecaptchaToken throws error", async () => {
-      checkRecaptchaToken.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
-      });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha error" });
-      expect(response.statusCode).toBe(500);
-    });
-  });
-});
 
 describe("adminCreateUser tests", () => {
   const body = {
