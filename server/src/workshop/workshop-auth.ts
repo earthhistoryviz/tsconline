@@ -51,11 +51,11 @@ async function verifyRecaptcha(
   try {
     const score = await checkRecaptchaToken(recaptchaToken, action);
     if (score < googleRecaptchaBotThreshold) {
-      reply.status(422).send({ error: "Recaptcha failed" });
+      reply.status(422).send({ error: "recaptcha failed" });
       return;
     }
   } catch (e) {
-    reply.status(500).send({ error: "Recaptcha error" });
+    reply.status(500).send({ error: "recaptcha error" });
     return;
   }
 }
