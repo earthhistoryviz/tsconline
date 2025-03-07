@@ -23,33 +23,30 @@ export const WorkshopDetails = observer(() => {
   const { t } = useTranslation();
 
   const isRegistered = true;
-  const isPublicWorkshop = true;
+  const isPublicWorkshop = false;
   const [isDisabled, setIsDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [switchButtonVar, setSwitchButtonVar] = useState(
-    isRegistered 
-      ? t("workshops.details-page.registered-button") 
-      : t("workshops.details-page.register-button")
+    isRegistered ? t("workshops.details-page.registered-button") : t("workshops.details-page.register-button")
   );
-    
-    const handleRegisterClick = () => {
-      if(!isRegistered){
-        setLoading(true);
-        setIsDisabled(true);
+
+  const handleRegisterClick = () => {
+    if (!isRegistered) {
+      setLoading(true);
+      setIsDisabled(true);
+    }
+
+    setTimeout(() => {
+      if (!isRegistered && isPublicWorkshop) {
+        setSwitchButtonVar(t("workshops.details-page.registered-button"));
       }
-      
-      setTimeout(() => {
-        if(!isRegistered && isPublicWorkshop)
-        {
-          setSwitchButtonVar(t("workshops.details-page.registered-button"));
-        }
-        if(!isRegistered && !isPublicWorkshop){
-          setShowTooltip(true);
-        }
-        setLoading(false);
-      }, 2000);
-    };
+      if (!isRegistered && !isPublicWorkshop) {
+        setShowTooltip(true);
+      }
+      setLoading(false);
+    }, 2000);
+  };
 
   const fetchWorkshop = () => {
     if (!id) return;
@@ -116,20 +113,19 @@ export const WorkshopDetails = observer(() => {
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
                   <Box sx={{ display: "flex", marginTop: 2 }}>
-
-                  <CustomTooltip title= {t("workshops.details-page.messages.not-registered")} open={showTooltip}>
-                        <TSCLoadingButton
-                          variant="contained"
-                          sx={{
-                            marginRight: 2,
-                            backgroundColor: "primary"
-                          }} 
-                          onClick={handleRegisterClick}
-                          disabled={isRegistered || (!isRegistered && !isPublicWorkshop)? true : isDisabled}
-                          loading={loading}>
-                          {switchButtonVar}
-                        </TSCLoadingButton>
-                      </CustomTooltip>
+                    <CustomTooltip title={t("workshops.details-page.messages.not-registered")} open={showTooltip}>
+                      <TSCLoadingButton
+                        variant="contained"
+                        sx={{
+                          marginRight: 2,
+                          backgroundColor: "primary"
+                        }}
+                        onClick={handleRegisterClick}
+                        disabled={isRegistered ? true : isDisabled}
+                        loading={loading}>
+                        {switchButtonVar}
+                      </TSCLoadingButton>
+                    </CustomTooltip>
 
                     <TSCButton variant="contained" color="primary" href={fetchWorkshopFiles()}>
                       {t("workshops.details-page.download-button")}
