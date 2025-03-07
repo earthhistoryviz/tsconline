@@ -1,10 +1,17 @@
 import { action, isObservable, observable } from "mobx";
-import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, Marker, Model } from "../../types";
+import {
+  ChartSettings,
+  CrossPlotBounds,
+  CrossPlotTimeSettings,
+  Marker,
+  Model,
+  assertColumnInfoRoot
+} from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
-import { pushError, removeError, setChartTabState, setTab } from "./general-actions";
+import { pushError, pushSnackbar, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest } from "@tsconline/shared";
+import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, getUUIDOfDatapackType } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -15,7 +22,8 @@ import {
   CROSSPLOT_DOT_WIDTH,
   ageToCoord
 } from "../../components/TSCCrossPlotSVGComponent";
-import { getDotSizeFromScale } from "../non-action-util";
+import { downloadFile, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
+import { fetcher } from "../../util";
 export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
   const models = state.crossPlot.models;
   if (models.length === 0) {
@@ -307,6 +315,60 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
         break;
       }
     }
+  }
+});
+export const sendCrossPlotConversionRequest = action(async () => {
+  try {
+    if (!state.crossPlot.chartY) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    if (!state.crossPlot.state.matchesSettings) {
+      pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
+      return;
+    }
+    assertColumnInfoRoot(state.crossPlot.chartY);
+    const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
+    if (!datapack) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    const columnRoot = cloneDeep(defaultColumnRoot);
+    columnRoot.children.push(datapack.columnInfo);
+    const columnCopy = cloneDeep(columnRoot);
+    const chartSettingsCopy = cloneDeep(state.settings);
+    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+    if (state.crossPlot.models.length === 0) {
+      pushError(ErrorCodes.NO_MODELS);
+      return;
+    }
+    if (datapack.ageUnits.toLowerCase() === "ma") {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
+      return;
+    }
+    const body = {
+      datapackTitle: datapack.title,
+      uuid: getUUIDOfDatapackType(datapack),
+      models: state.crossPlot.models
+        .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
+        .join("\n"),
+      settings: xmlSettings
+    };
+    const response = await fetcher("/crossplot/convert", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to convert datapack");
+    }
+    await downloadFile(await response.blob(), `${datapack.title}.txt`);
+    pushSnackbar("Successfully converted datapack", "success");
+  } catch (e) {
+    console.error(e);
+    pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
   }
 });
 

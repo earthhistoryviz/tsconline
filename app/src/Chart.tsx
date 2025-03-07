@@ -33,7 +33,7 @@ type ChartProps = {
 export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList, disableDoubleClick = false }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
-  const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
+  const { matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
   const { actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,15 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 2;
+  const triggeredDifferentSettings = useRef(false);
   const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
+
+  useEffect(() => {
+    if (!matchesSettings && !triggeredDifferentSettings.current) {
+      triggeredDifferentSettings.current = true;
+      actions.pushSnackbar("Chart settings are different from the displayed chart.", "warning");
+    }
+  }, [matchesSettings]);
 
   const setChartAlignmentValues = () => {
     const container = transformContainerRef.current;

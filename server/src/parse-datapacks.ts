@@ -408,8 +408,29 @@ export async function getAllEntries(
           defaultChronostrat = value;
           continue;
         case "date:":
-          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
-          date = new Date(value).toISOString().split("T")[0] || null;
+          try {
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
+          try {
+            if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) value = value.split("/").reverse().join("-");
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
+          try {
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
           filePropertyLines++;
           continue;
         case "format version:":

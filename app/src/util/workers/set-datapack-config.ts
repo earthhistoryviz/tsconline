@@ -1,26 +1,29 @@
 import {
   ColumnInfo,
+  Datapack,
   DatapackConfigForChartRequest,
   FontsInfo,
   MapHierarchy,
   MapInfo,
+  convertDatapackConfigForChartRequestToUniqueDatapackIdentifier,
   defaultColumnRoot
 } from "@tsconline/shared";
 import {
+  ColumnInfoRoot,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
   SetDatapackConfigReturnValue,
+  assertColumnInfoRoot,
   assertSetDatapackConfigReturnValue
 } from "../../types";
 import { cloneDeep } from "lodash";
-import { State } from "../../state";
 import { getDatapackFromArray } from "../../state/non-action-util";
 
 /**
  * sets chart to newval and requests info on the datapacks from the server
  */
 self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
-  const { datapacks, stateCopy } = e.data;
+  const { datapacks, datapacksArray } = e.data;
 
   const timeoutThreshold = 120000; // 2 min
   const timeoutPromise = new Promise((_, reject) => {
@@ -31,7 +34,7 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   const message: SetDatapackConfigCompleteMessage = { status: "success", value: undefined };
   async function runWithTimeout() {
     try {
-      const result = await Promise.race([setDatapackConfig(datapacks, stateCopy), timeoutPromise]);
+      const result = await Promise.race([setDatapackConfig(datapacks, datapacksArray), timeoutPromise]);
       if (result) {
         assertSetDatapackConfigReturnValue(result);
         message.value = result;
@@ -46,8 +49,8 @@ self.onmessage = async (e: MessageEvent<SetDatapackConfigMessage>) => {
   await runWithTimeout();
   self.postMessage(message);
 };
-const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy: State) => {
-  const unitMap: Map<string, ColumnInfo> = new Map();
+const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacksArray: Datapack[]) => {
+  const unitMap: Map<string, ColumnInfoRoot> = new Map();
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
   let foundDefaultAge = false;
@@ -59,7 +62,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
   // add everything together
   // uses preparsed data on server start and appends items together
   for (const datapackConfigForChartRequest of datapacks) {
-    const datapack = getDatapackFromArray(datapackConfigForChartRequest, stateCopy.datapacks);
+    const datapack = getDatapackFromArray(datapackConfigForChartRequest, datapacksArray);
     if (!datapack) throw new Error(`File requested doesn't exist on server: ${datapack}`);
     if (
       ((datapack.topAge || datapack.topAge === 0) && (datapack.baseAge || datapack.baseAge === 0)) ||
@@ -78,6 +81,9 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], stateCopy
     } else {
       const columnInfo = cloneDeep(datapack.columnInfo);
       columnInfo.parent = columnRoot.name;
+      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifier =
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest);
+      assertColumnInfoRoot(columnInfo);
       unitMap.set(datapack.ageUnits, columnInfo);
     }
     const mapPack = datapack.mapPack;

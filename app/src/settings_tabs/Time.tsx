@@ -17,7 +17,7 @@ export const Time = observer(function Time() {
   if (units === null || units === undefined) {
     throw new Error("There must be a unit used in the config");
   }
-  const disabled = units !== "Ma";
+  const disabled = units.toLowerCase() !== "ma";
 
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;

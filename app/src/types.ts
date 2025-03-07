@@ -1,6 +1,7 @@
 import {
   ColumnInfo,
   DataMiningPointDataType,
+  Datapack,
   DatapackConfigForChartRequest,
   DatapackMetadata,
   DatapackUniqueIdentifier,
@@ -14,7 +15,6 @@ import {
   assertMapInfo,
   throwError
 } from "@tsconline/shared";
-import { State } from "./state";
 import React from "react";
 
 export type DatapackFetchParams = {
@@ -50,6 +50,9 @@ export type WindowStats = {
   windowEnd: number;
   value: number;
 };
+export type ColumnInfoRoot = ColumnInfo & {
+  datapackUniqueIdentifier: DatapackUniqueIdentifier;
+};
 
 export type DownloadPdfMessage = {
   imgURI: string;
@@ -73,6 +76,7 @@ export type ChartTabState = {
   chartContent: string;
   chartZoomSettings: ChartZoomSettings;
   chartHash: string;
+  matchesSettings: boolean;
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;
@@ -86,7 +90,7 @@ export type ChartContextType = {
 
 export type SetDatapackConfigMessage = {
   datapacks: DatapackConfigForChartRequest[];
-  stateCopy: State;
+  datapacksArray: Datapack[];
 };
 
 export type SetDatapackConfigCompleteMessage = {
@@ -261,6 +265,13 @@ export type CrossPlotBounds = {
   topAgeX: number;
   topAgeY: number;
 };
+
+export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
+  if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");
+  if (!o.datapackUniqueIdentifier)
+    throwError("ColumnInfoRoot", "datapackUniqueIdentifier", "object", o.datapackUniqueIdentifier);
+  assertColumnInfo(o);
+}
 
 export function isMarkerType(value: string): value is Marker["type"] {
   return markerTypes.includes(value);

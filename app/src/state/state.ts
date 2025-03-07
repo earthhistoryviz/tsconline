@@ -1,4 +1,4 @@
-import { configure, observable, reaction } from "mobx";
+import { configure, observable, reaction, toJS } from "mobx";
 
 import {
   SnackbarInfo,
@@ -299,5 +299,24 @@ reaction(
   (scale: number) => {
     adjustScaleOfMarkers(scale);
     adjustScaleOfModels(scale);
+  }
+);
+reaction(
+  () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
+  () => {
+    if (state.chartTab.state.madeChart === false) return;
+    state.chartTab.state.matchesSettings = false;
+  }
+);
+reaction(
+  () => [
+    state.crossPlot.chartX,
+    state.crossPlot.chartY,
+    state.crossPlot.chartXTimeSettings,
+    state.crossPlot.chartYTimeSettings
+  ],
+  () => {
+    if (state.crossPlot.state.madeChart === false) return;
+    state.crossPlot.state.matchesSettings = false;
   }
 );
