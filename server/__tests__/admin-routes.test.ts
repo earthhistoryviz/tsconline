@@ -474,7 +474,6 @@ describe("verifyRecaptcha tests", () => {
   });
 });
 
-
 describe("adminCreateUser tests", () => {
   const body = {
     username: "username",
