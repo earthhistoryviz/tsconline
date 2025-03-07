@@ -50,10 +50,7 @@ export const TSCPopupManager = () => {
     };
 
     const handleMessage = async (event: MessageEvent) => {
-      let url = "http://localhost:5173";
-      if (import.meta.env.VITE_APP_URL) {
-        url = import.meta.env.VITE_APP_URL;
-      }
+      const url = window.location.origin;
       if (event.origin !== url) {
         actions.pushError(ErrorCodes.INVALID_PATH);
         setIsValidPath(false);

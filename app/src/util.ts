@@ -9,13 +9,12 @@ export function devSafeUrl(url: string) {
         Therefore, you will probably encounter bugs on the dev side. The call stack here (to show you where you made the call) is: ${new Error().stack}`
     );
   }
-  const baseUrl = import.meta.env.VITE_DEV_SERVER_URL || "http://localhost:3000";
   // vite sets this variable to true if you are running `yarn dev`, but if you
   // are running from the built files in dist/ (i.e. they are served to the
   // browser from the node server instead of the vite dev server), then it
   // will be false.
   if (import.meta.env.DEV) {
-    return baseUrl + url;
+    return `http://localhost:3000${url}`;
   }
   return url;
 }
