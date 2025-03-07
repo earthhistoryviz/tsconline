@@ -63,7 +63,7 @@ const returnFilepaths = async (testCaseDir: string) => {
 
 const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
 const keys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
-describe("jar tests", async () => {
+describe("convertCrossPlotWithModelsInJar", async () => {
   const getActiveJar = vi.spyOn(util, "getActiveJar");
   const spawn = vi.spyOn(child_process, "spawn");
   const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");

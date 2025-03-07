@@ -411,6 +411,7 @@ export async function getAllEntries(
           try {
             if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
             date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
             continue;
           } catch (e) {
             // eslint-disable-next-line no-console
@@ -418,12 +419,14 @@ export async function getAllEntries(
           try {
             if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) value = value.split("/").reverse().join("-");
             date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
             continue;
           } catch (e) {
             // eslint-disable-next-line no-console
           }
           try {
             date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
             continue;
           } catch (e) {
             // eslint-disable-next-line no-console

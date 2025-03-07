@@ -2,4 +2,4 @@ charts/*
 presets/*
 !presets/*-TEST
 mapimages
-model-conversion-cache/*
+model-conversion-cache
