@@ -22,22 +22,24 @@ export const WorkshopDetails = observer(() => {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const isRegistered = false;
-  const isPublicWorkshop = false;
+  const isRegistered = true;
+  const isPublicWorkshop = true;
   const [isDisabled, setIsDisabled] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [switchButtonVar, setSwitchButtonVar] = useState(
-    t("workshops.details-page.register-button") // Default to "Register"
+    isRegistered 
+      ? t("workshops.details-page.registered-button") 
+      : t("workshops.details-page.register-button")
   );
-
+    
     const handleRegisterClick = () => {
-      setLoading(true);
-      setIsDisabled(true);
+      if(!isRegistered){
+        setLoading(true);
+        setIsDisabled(true);
+      }
+      
       setTimeout(() => {
-        if (isRegistered) {
-          setSwitchButtonVar(t("workshops.details-page.alrRegistered-button"));
-        }
         if(!isRegistered && isPublicWorkshop)
         {
           setSwitchButtonVar(t("workshops.details-page.registered-button"));
@@ -123,7 +125,7 @@ export const WorkshopDetails = observer(() => {
                             backgroundColor: "primary"
                           }} 
                           onClick={handleRegisterClick}
-                          disabled={isDisabled}
+                          disabled={isRegistered || (!isRegistered && !isPublicWorkshop)? true : isDisabled}
                           loading={loading}>
                           {switchButtonVar}
                         </TSCLoadingButton>

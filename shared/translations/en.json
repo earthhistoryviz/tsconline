@@ -180,13 +180,11 @@
                 "download-button": "Download Files",
                 "description": "Description",
                 "register-button": "Register",
-                "alrRegistered-button": "Already Registered",
                 "registered-button": "Registered",
                 "messages": {
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available",
                     "not-registered": "Contact profogg@gmail.com to register!"
-
                 }
             },
             "calendar": {
