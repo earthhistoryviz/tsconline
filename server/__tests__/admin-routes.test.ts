@@ -479,7 +479,8 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/admin/workshop/files/1" },
   { method: "POST", url: "/admin/workshop/cover/1" }
 ];
-const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
+const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token", "recaptcha-action": "test-action" };
+
 describe("verifyAdmin tests", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
     const findUser = vi.spyOn(database, "findUser");
@@ -549,12 +550,25 @@ describe("verifyRecaptcha tests", () => {
         method: method as InjectOptions["method"],
         url: url,
         payload: body,
-        headers: { ...headers, "recaptcha-token": "" }
+        headers: { ...headers, "recaptcha-token": "", "recaptcha-action": "test-action" }
       });
       expect(checkRecaptchaToken).not.toHaveBeenCalled();
       expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
       expect(response.statusCode).toBe(400);
     });
+
+    it("should return 400 if missing recaptcha action", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
+      });
+      expect(checkRecaptchaToken).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({ error: "Missing reCAPTCHA action" });
+      expect(response.statusCode).toBe(400);
+    });
+
     it("should return 422 if recaptcha failed", async () => {
       checkRecaptchaToken.mockResolvedValueOnce(0);
       const response = await app.inject({
@@ -563,7 +577,7 @@ describe("verifyRecaptcha tests", () => {
         payload: body,
         headers: headers
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
+      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
       expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
       expect(await response.json()).toEqual({ error: "Recaptcha failed" });
       expect(response.statusCode).toBe(422);
@@ -576,7 +590,7 @@ describe("verifyRecaptcha tests", () => {
         payload: body,
         headers: headers
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
+      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
       expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
       expect(await response.json()).toEqual({ error: "Recaptcha error" });
       expect(response.statusCode).toBe(500);
