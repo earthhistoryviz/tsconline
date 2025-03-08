@@ -75,6 +75,7 @@ export const Login: React.FC = observer(() => {
         } else {
           actions.removeAllErrors();
           actions.pushSnackbar("Successfully signed in", "success");
+          await actions.adminFetchWorkshops();
           navigate("/");
         }
       } else {
