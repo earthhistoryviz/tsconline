@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
-import { Breadcrumbs, Link, Stack } from "@mui/material";
-import { links as defaultLinks } from "./help-menu-json";
+import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
+import { links as defaultLinks } from "./components/help-menu-json";
 import { fetcher } from "./util";
 import { PageNotFound } from "./PageNotFound";
+import { useLocation, useNavigate } from "react-router";
 
 interface LinkPath {
   Title: string;
@@ -16,22 +17,32 @@ interface Breadcrumb {
   content?: string;
 }
 
-const generatePath = (title: string, parentPath = ""): string => {
-  const formattedTitle = title.toLowerCase().replace(/\s+/g, "-");
-  return parentPath ? `${parentPath}/${formattedTitle}` : `/${formattedTitle}`;
+const normalizeForComparison = (path: string): string => {
+  return decodeURIComponent(path)
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "-")
+    .replace(/-+/g, "-") // Replace multiple hyphens with a single one
+    .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
 };
 
-// Tried fixing the ? in What is a chart, but I don't think it's working
-const normalizePath = (path: string): string => {
-  return path.split(/[?#]/)[0];
+// The Helper function
+const isLinkValid = (path: string, allPaths: Record<string, LinkPath>, pathMap: Record<string, string>): boolean => {
+  const fullPath = path.startsWith("/help") ? path : "/help" + path;
+  const normalizedSearchPath = normalizeForComparison(fullPath);
+  return Object.keys(pathMap).some((key) => normalizedSearchPath === key);
+};
+
+const generatePath = (title: string, parentPath = ""): string => {
+  const encoded = encodeURIComponent(title);
+  return parentPath ? `${parentPath}/${encoded}` : `/${encoded}`;
 };
 
 export default function NewBreadcrumbs() {
   const [notFound, setNotFound] = useState(false);
   const [fetchedData, setFetchedData] = useState<LinkPath[]>(defaultLinks);
-  const currentPath = window.location.pathname.startsWith("/help")
-    ? window.location.pathname.substring("/help".length)
-    : window.location.pathname;
+
+  const currentPath = useLocation().pathname;
+  const navigate = useNavigate();
 
   // Grabbing data from "simulated server"
   useEffect(() => {
@@ -51,6 +62,7 @@ export default function NewBreadcrumbs() {
 
         const data = await response.json();
 
+        // Leave this in because I am fetching from the server and not the actual content
         if (Array.isArray(data.links)) {
           setFetchedData(data.links);
         } else {
@@ -58,95 +70,89 @@ export default function NewBreadcrumbs() {
         }
       } catch (error) {
         console.error("Error loading data:", error);
-        setFetchedData(defaultLinks); // Fall back to default links
+        setFetchedData(defaultLinks);
       }
     };
 
     loadData();
   }, []);
 
-  const getAllPaths = (links: LinkPath[], parentPath = ""): Record<string, LinkPath> => {
+  const getAllPaths = (links: LinkPath[], parentPath = "/help"): [Record<string, LinkPath>, Record<string, string>] => {
     const result: Record<string, LinkPath> = {};
+    const normalizedMap: Record<string, string> = {};
 
     links.forEach((link) => {
       const path = generatePath(link.Title, parentPath);
       result[path] = link;
 
+      const normalizedPath = normalizeForComparison(path);
+      normalizedMap[normalizedPath] = path;
+
       if (link.Children && link.Children.length > 0) {
-        const childPaths = getAllPaths(link.Children, path);
+        const [childPaths, childNormalizedMap] = getAllPaths(link.Children, path);
         Object.assign(result, childPaths);
+        Object.assign(normalizedMap, childNormalizedMap);
       }
     });
+
+    return [result, normalizedMap];
+  };
+
+  const buildBreadcrumbsForPath = (
+    path: string,
+    allPaths: Record<string, LinkPath>,
+    pathMap: Record<string, string>
+  ): Breadcrumb[] => {
+    const fullPath = path.startsWith("/help") ? path : "/help" + path;
+    const normalizedSearchPath = normalizeForComparison(fullPath);
+
+    const matchingOriginalPath = pathMap[normalizedSearchPath];
+
+    if (!matchingOriginalPath) {
+      console.log("No matching path found");
+      return [];
+    }
+
+    const result: Breadcrumb[] = [];
+    let currentPath = matchingOriginalPath;
+
+    while (currentPath && currentPath !== "/help") {
+      const link = allPaths[currentPath];
+
+      if (link) {
+        // Add this path to the beginning of our breadcrumbs
+        result.unshift({
+          to: currentPath.substring(5), // Remove /help for navigation
+          label: link.Title,
+          content: link.Content
+        });
+      }
+
+      // Move up to parent path (remove last segment)
+      const lastSlashIndex = currentPath.lastIndexOf("/");
+      currentPath = lastSlashIndex <= 5 ? "/help" : currentPath.substring(0, lastSlashIndex);
+    }
 
     return result;
   };
 
-  // This function builds breadcrumbs for a given path
-  const buildBreadcrumbsForPath = (path: string, allPaths: Record<string, LinkPath>): Breadcrumb[] => {
-    const normalizedPath = normalizePath(path); // Normalize current path
-
-    // If path exists directly, we need to build its ancestry
-    if (allPaths[normalizedPath]) {
-      const result: Breadcrumb[] = [];
-      let currentPath = normalizedPath;
-
-      // Keep extracting parent paths until we reach the root
-      while (currentPath) {
-        const link = allPaths[currentPath];
-        if (!link) break;
-
-        // Add this path to the beginning of our breadcrumbs
-        result.unshift({
-          to: currentPath,
-          label: link.Title,
-          content: link.Content
-        });
-
-        // Move up to parent path (remove last segment)
-        const lastSlashIndex = currentPath.lastIndexOf("/");
-        if (lastSlashIndex <= 0) {
-          // We've reached the top level
-          currentPath = "";
-        } else {
-          currentPath = currentPath.substring(0, lastSlashIndex);
-        }
-      }
-
-      return result;
-    }
-
-    return [];
-  };
-
-  // Generate all possible paths
-  const allPaths = getAllPaths(fetchedData);
-
-  // Generate breadcrumbs for current path
-  const pathBreadcrumbs = buildBreadcrumbsForPath(currentPath, allPaths);
-
+  const [allPaths, pathMap] = getAllPaths(fetchedData);
+  const pathBreadcrumbs = buildBreadcrumbsForPath(currentPath, allPaths, pathMap);
   const breadcrumbs: Breadcrumb[] = [{ to: "", label: "All Categories" }, ...pathBreadcrumbs];
-
-  // For debugging
-  useEffect(() => {
-    console.log("All available paths:", Object.keys(allPaths));
-    console.log("Current path:", currentPath);
-    console.log("Generated breadcrumbs:", breadcrumbs);
-  }, [fetchedData, currentPath]);
+  const isValidPath = isLinkValid(currentPath, allPaths, pathMap);
 
   useEffect(() => {
-    setNotFound(breadcrumbs.length <= 1 && currentPath !== "" && currentPath !== "/");
-  }, [breadcrumbs, currentPath]);
+    setNotFound(!isValidPath && currentPath !== "/help");
+  }, [isValidPath, currentPath]);
+
+  const handleBreadcrumbClick = (breadcrumbPath: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    navigate(`/help${breadcrumbPath}`);
+  };
 
   if (notFound) {
     return <PageNotFound />;
   }
-
-  // So that the pages does not reload when you click back on a breadcrumb
-  const handleBreadcrumbClick = (breadcrumbPath: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    window.history.pushState({}, "", `/help${breadcrumbPath}`);
-    window.dispatchEvent(new PopStateEvent("popstate"));
-  };
 
   return (
     <Stack spacing={2}>
@@ -165,8 +171,8 @@ export default function NewBreadcrumbs() {
 
       {breadcrumbs.length > 0 && (
         <div>
-          <h2>{breadcrumbs[breadcrumbs.length - 1].label}</h2>
-          <p>{breadcrumbs[breadcrumbs.length - 1].content}</p>
+          <Typography variant="h4">{breadcrumbs[breadcrumbs.length - 1].label}</Typography>
+          <Typography variant="body1">{breadcrumbs[breadcrumbs.length - 1].content}</Typography>
         </div>
       )}
     </Stack>

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useState } from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { links } from "./help-menu-json";
+import { links } from "./components/help-menu-json";
 
 interface LinkPath {
   Title: string;
@@ -16,8 +16,6 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
 
   // Construct full path for navigation
   const formattedPath = `${parentPath}/${link.Title.toLowerCase().replace(/\s+/g, "-")}`;
-
-  console.log("Generated Path:", formattedPath); // Debugging
 
   const handleClick = () => {
     if (link.Children.length > 0) {

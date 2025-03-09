@@ -14,7 +14,7 @@ export const links = [
     Content: "Insert md file",
     Children: [
       {
-        Title: "What is a Chart",
+        Title: "What is a Chart?",
         Content: "Insert md file",
         Children: []
       },
