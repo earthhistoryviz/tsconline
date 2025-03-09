@@ -235,8 +235,6 @@ jobs:
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
-            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
-            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
             if [ ! -f "docker-compose-server.yml" ]; then
               echo "Error: docker-compose-server.yml not found"
