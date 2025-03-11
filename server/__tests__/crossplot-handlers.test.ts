@@ -132,9 +132,9 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     expect(spawn).toHaveBeenCalledOnce();
     expect(correctOutput).toEqual(generatedOutput);
     expect(util.verifyFilepath).toHaveBeenCalledOnce();
-    await fsPromises.rm(outputFileLocation, { force: true }).catch(() => {
+    // await fsPromises.rm(outputFileLocation, { force: true }).catch(() => {
       // eslint-disable-next-line no-console
-    });
+    // });
   });
 });
 
