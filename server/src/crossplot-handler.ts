@@ -1,6 +1,6 @@
 import { ConvertCrossPlotRequest } from "@tsconline/shared";
 import chalk from "chalk";
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, readdir, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
 import { assetconfigs, getActiveJar, verifyFilepath } from "./util.js";
@@ -62,6 +62,9 @@ export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWi
     });
   };
   await execJavaCommand(20000);
+  console.log("outputTextFilepath directory's files are: ");
+  const files = await readdir(path.dirname(outputTextFilepath));
+  console.log(files);
   if (!(await verifyFilepath(outputTextFilepath))) {
     return false;
   }
