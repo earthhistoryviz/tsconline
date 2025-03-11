@@ -60,7 +60,6 @@ const returnFilepaths = async (testCaseDir: string) => {
   const datapackFilepath = path.join(testCaseDir, "datapack.txt");
   return { modelTextFilepath, settingsTextFilepath, outputTextFilepath, datapackFilepath };
 };
-console.log(process.cwd());
 const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
 const keys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
 describe("convertCrossPlotWithModelsInJar", async () => {
@@ -72,8 +71,8 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     vi.clearAllMocks();
   });
   beforeAll(async () => {
-    // vi.spyOn(console, "error").mockImplementation(() => undefined);
-    // vi.spyOn(console, "log").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
     if (await checkFileExists(generatedOutputFileDirectory)) {
       await fsPromises.rm(generatedOutputFileDirectory, { recursive: true, force: true });
     }
