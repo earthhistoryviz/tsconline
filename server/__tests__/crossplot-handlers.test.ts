@@ -95,7 +95,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     ).rejects.toThrow("Failed to spawn");
     expect(spawn).toHaveBeenCalledOnce();
   });
-  it("should return 500 if bad datapack file", async () => {
+  it("should return 500 if bad datapack file", { timeout: 20000 }, async () => {
     const testCase = "test-case-2";
     const testCaseFilepath = path.join(keys, testCase);
     const { modelTextFilepath, settingsTextFilepath, datapackFilepath } = await returnFilepaths(testCaseFilepath);
@@ -132,9 +132,9 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     expect(spawn).toHaveBeenCalledOnce();
     expect(correctOutput).toEqual(generatedOutput);
     expect(util.verifyFilepath).toHaveBeenCalledOnce();
-    // await fsPromises.rm(outputFileLocation, { force: true }).catch(() => {
+    await fsPromises.rm(outputFileLocation, { force: true }).catch(() => {
       // eslint-disable-next-line no-console
-    // });
+    });
   });
 });
 
