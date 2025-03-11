@@ -136,7 +136,11 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
   console.log(chalk.green("All tables exported successfully to JSON!"));
 }
 
-function processInsertLine(tables: { columns: string[]; rows: (string | number | null)[][] }, row: string, schemaTableName: string) {
+function processInsertLine(
+  tables: { columns: string[]; rows: (string | number | null)[][] },
+  row: string,
+  schemaTableName: string
+) {
   if (!row.startsWith("(") || !/\)(;|,)?$/.test(row)) return;
   const trimmedRow = row
     .trim()
@@ -144,7 +148,8 @@ function processInsertLine(tables: { columns: string[]; rows: (string | number |
     .replace(/\)(;|,)?$/, "");
   const valueRegex = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|([^,]+)/g;
   const arr: (string | number | null)[] = [];
-  let match, columnIndex = 0;
+  let match,
+    columnIndex = 0;
 
   while ((match = valueRegex.exec(trimmedRow)) !== null) {
     let value: string | number | null = null;
@@ -222,7 +227,12 @@ function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: str
   return { kyselySchema, assertFunction };
 }
 
-function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
+function processSchemaLine(
+  statement: string,
+  interfaceLines: string[],
+  uniqueConstraints: string[],
+  tableName: string
+) {
   const cleanLine = statement.trim();
   const columnRegex = /`([\w-]+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
   const columnMatch = columnRegex.exec(cleanLine);
