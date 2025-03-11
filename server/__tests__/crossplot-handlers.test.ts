@@ -72,6 +72,8 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     vi.clearAllMocks();
   });
   beforeAll(async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
     if (await checkFileExists(generatedOutputFileDirectory)) {
       await fsPromises.rm(generatedOutputFileDirectory, { recursive: true, force: true });
     }
