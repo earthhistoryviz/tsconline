@@ -2,3 +2,4 @@ shared/dist/
 app/dist
 server/dist
 .yarn
+server/src/db/london/schema.ts

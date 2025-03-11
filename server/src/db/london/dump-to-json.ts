@@ -3,9 +3,10 @@ import { createReadStream } from "fs";
 import chalk from "chalk";
 import { join } from "path";
 import { mkdir, writeFile } from "fs/promises";
-import { verifyFilepath } from "../util.js";
+import { verifyFilepath } from "../../util.js";
 
 const outputDir = join("db", "london", "output");
+const schemaFile = join("src", "db", "london", "schema.ts");
 
 const tableRegex = /CREATE TABLE `?(\w+)`? \(/;
 const insertRegex = /^INSERT INTO `?(\w+)`? \(([^)]+)\)/i;
@@ -14,6 +15,8 @@ const cleanValue = (value: string) => {
   if (value === "NULL") return null;
   return value.trim().replace(/^'|'$/g, '"').replace(/\\'/g, "'");
 };
+
+const tableColumnTypes: Record<string, Record<string, string>> = {};
 
 export async function convertSQLDumpToJSON(dumpFile: string) {
   if (!(await verifyFilepath(dumpFile))) {
@@ -27,8 +30,9 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
   const rl = readline.createInterface({ input: fileStream, crlfDelay: Infinity });
   await mkdir(outputDir, { recursive: true });
 
-  const tables: Record<string, { columns: string[]; rows: (string | null)[][] }> = {};
+  const tables: Record<string, { columns: string[]; rows: (string | number | null)[][] }> = {};
   const schemas: string[] = [];
+  const assertFunctions: string[] = [];
 
   // parsing create table variables
   let interfaceLines: string[] = [];
@@ -49,7 +53,13 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
       // end parsing
       if (line.endsWith(";")) {
         if (parsingCreateTable) {
-          schemas.push(processSchema(interfaceLines, uniqueConstraints, schemaTableName));
+          const { kyselySchema, assertFunction } = processSchemaAndAssert(
+            interfaceLines,
+            uniqueConstraints,
+            schemaTableName
+          );
+          schemas.push(kyselySchema);
+          assertFunctions.push(assertFunction);
           interfaceLines = [];
           uniqueConstraints = [];
           parsingCreateTable = false;
@@ -67,7 +77,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
         interfaceLines = [];
         parsingInsertInto = false;
       } else if (parsingCreateTable) {
-        processSchemaLine(line, interfaceLines, uniqueConstraints);
+        processSchemaLine(line, interfaceLines, uniqueConstraints, schemaTableName);
       } else if (insertIntoMatch && insertIntoMatch[1] && insertIntoMatch[2]) {
         parsingInsertInto = true;
         parsingCreateTable = false;
@@ -77,7 +87,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
           tables[currentInsertTableName] = { columns, rows: [] };
         }
       } else if (parsingInsertInto && tables[currentInsertTableName]) {
-        processInsertLine(tables[currentInsertTableName]!, line);
+        processInsertLine(tables[currentInsertTableName]!, line, schemaTableName);
       }
     }
   } catch (e) {
@@ -98,7 +108,7 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
             acc[columns[i]!] = val;
             return acc;
           },
-          {} as Record<string, string | null>
+          {} as Record<string, string | number | null>
         )
       );
       await writeFile(join(outputDir, `${table}.json`), JSON.stringify(records, null, 2));
@@ -111,36 +121,61 @@ export async function convertSQLDumpToJSON(dumpFile: string) {
 
   try {
     // write the schemas
-    await writeFile(join(outputDir, "schema.ts"), schemas.join("\n\n"));
-    console.log(chalk.cyan("Exported schemas to schema.ts"));
+    await writeFile(
+      schemaFile,
+      'import { throwError } from "@tsconline/shared";\n\n'.concat(
+        schemas.join("\n\n").concat("\n\n").concat(assertFunctions.join("\n\n"))
+      )
+    );
+    console.log(chalk.cyan("Exported schemas to src/db/london/schema.ts"));
   } catch (e) {
     console.error(e);
-    console.log(chalk.yellow(`Error exporting schemas to schema.ts`));
+    console.log(chalk.yellow(`Error exporting schemas to src/db/london/schema.ts`));
   }
 
   console.log(chalk.green("All tables exported successfully to JSON!"));
 }
 
-function processInsertLine(tables: { columns: string[]; rows: (string | null)[][] }, row: string) {
+function processInsertLine(
+  tables: { columns: string[]; rows: (string | number | null)[][] },
+  row: string,
+  schemaTableName: string
+) {
   if (!row.startsWith("(") || !/\)(;|,)?$/.test(row)) return;
   const trimmedRow = row
     .trim()
     .replace(/^\(/, "")
     .replace(/\)(;|,)?$/, "");
   const valueRegex = /'((?:[^'\\]|\\.)*)'|"((?:[^"\\]|\\.)*)"|`((?:[^`\\]|\\.)*)`|([^,]+)/g;
-  const arr: string[] = [];
-  let match;
+  const arr: (string | number | null)[] = [];
+  let match,
+    columnIndex = 0;
+
   while ((match = valueRegex.exec(trimmedRow)) !== null) {
-    if (match[1] !== undefined) {
-      arr.push(cleanValue(match[1])!);
-    } else if (match[2] !== undefined) {
-      arr.push(cleanValue(match[2])!);
-    } else if (match[3] !== undefined) {
-      arr.push(cleanValue(match[3])!);
-    } else if (match[4] !== undefined) {
-      arr.push(cleanValue(match[4])!);
+    let value: string | number | null = null;
+    if (match[1] !== undefined) value = cleanValue(match[1]);
+    else if (match[2] !== undefined) value = cleanValue(match[2]);
+    else if (match[3] !== undefined) value = cleanValue(match[3]);
+    else if (match[4] !== undefined) value = cleanValue(match[4]);
+
+    const columnName = tables.columns[columnIndex];
+    if (!columnName) {
+      console.log(chalk.yellow(`Skipping undefined column at index ${columnIndex} in table ${schemaTableName}`));
+      columnIndex++;
+      continue;
     }
+    const expectedType = tableColumnTypes[schemaTableName]?.[columnName];
+
+    if (value === "NULL") value = null;
+    else if (expectedType === "number") {
+      const numValue = Number(value);
+      value = isNaN(numValue) ? value : numValue;
+    }
+
+    arr.push(value);
+    columnIndex++;
   }
+
   tables.rows.push(arr);
 }
 
@@ -159,14 +194,45 @@ const typeMapping: Record<string, string> = {
   boolean: "boolean"
 };
 
-function processSchema(interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
+function processSchemaAndAssert(interfaceLines: string[], uniqueConstraints: string[], tableName: string) {
   const unique =
     uniqueConstraints.length > 0 ? uniqueConstraints.map((constraint) => `// ${constraint}`).join("\n") : "";
   const kyselySchema = `${unique}\nexport interface ${tableName} {\n${interfaceLines.join("\n")}\n}`;
-  return kyselySchema;
+  let assertFunction = `export function assert${tableName}(o: any): asserts o is ${tableName} {\n`;
+  for (const line of interfaceLines) {
+    const [key, type] = line.split(":").map((s) => s.trim());
+    const typeWithoutComment = type?.split(";")[0];
+    if (!key || !typeWithoutComment) continue;
+    if (typeWithoutComment.includes("|")) {
+      const types = typeWithoutComment.split("|").map((t) => t.trim());
+      assertFunction += `\tif (!(${types
+        .map((t) => {
+          if (t === "null") return `o.${key} === null`;
+          return `typeof o.${key} === "${t}"`;
+        })
+        .join(" || ")})) throwError("${tableName}", "${key}", "${types.join(" | ")}", o.${key});\n`;
+    } else {
+      if (typeWithoutComment === "null") {
+        assertFunction += `\tif (o.${key} !== null) throwError("${tableName}", "${key}", "null", o.${key});\n`;
+      } else {
+        assertFunction += `\tif (typeof o.${key} !== "${typeWithoutComment}") throwError("${tableName}", "${key}", "${typeWithoutComment}", o.${key});\n`;
+      }
+    }
+  }
+  assertFunction += "}\n\n";
+  assertFunction += `export function assert${tableName}Array(o: any[]): asserts o is ${tableName}[] {\n`;
+  assertFunction += `\tif (!Array.isArray(o)) throwError("${tableName}", "Array", "Array", o);\n`;
+  assertFunction += `\tfor (const item of o) assert${tableName}(item);\n`;
+  assertFunction += "}";
+  return { kyselySchema, assertFunction };
 }
 
-function processSchemaLine(statement: string, interfaceLines: string[], uniqueConstraints: string[]) {
+function processSchemaLine(
+  statement: string,
+  interfaceLines: string[],
+  uniqueConstraints: string[],
+  tableName: string
+) {
   const cleanLine = statement.trim();
   const columnRegex = /`([\w-]+)` (\w+)(\([\d,]+\))?( unsigned)?( NOT NULL)?( DEFAULT ([^,]+))?/g;
   const columnMatch = columnRegex.exec(cleanLine);
@@ -185,6 +251,10 @@ function processSchemaLine(statement: string, interfaceLines: string[], uniqueCo
       interfaceLines.push(
         `  ${tsColumnName}: ${tsType}; // ${type}${size || ""}${unsigned || ""}${notNull || ""}${defaultValue ? " DEFAULT " + defaultValue : ""}`
       );
+
+      // store the column types for later use
+      tableColumnTypes[tableName] ??= {};
+      tableColumnTypes[tableName]![columnName] = tsType.replace(" | null", "");
     }
   }
   const uniqueKeyRegex = /UNIQUE KEY `?(\w+)`? \(([^)]+)\)/g;
