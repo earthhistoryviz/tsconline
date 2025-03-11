@@ -34,7 +34,9 @@ export default defineConfig({
         "server/src/workshop/workshop-auth.ts": thresholdConfig,
         "server/src/workshop/workshop-routes.ts": thresholdConfig,
         "server/src/constants.ts": thresholdConfig,
-        "server/src/error-logger.ts": thresholdConfig
+        "server/src/error-logger.ts": thresholdConfig,
+        "server/src/crossplot-handler.ts": thresholdConfig,
+        "server/src/routes/crossplot-routes.ts": thresholdConfig
         // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig
       },
