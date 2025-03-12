@@ -38,6 +38,7 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
   }
   try {
     const score = await checkRecaptchaToken(recaptcha);
+    console.error("here1");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -127,7 +128,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   );
   fastify.get(
     "/workshop/download/:workshopId",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopTitleParams } },
+    { config: { rateLimit: looseRateLimit }, schema: { params: workshopTitleParams } },
     downloadWorkshopFilesZip
   );
 };
