@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
@@ -10,6 +10,7 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
+import { loadRecaptcha, removeRecaptcha } from "./util";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -24,6 +25,13 @@ export const WorkshopDetails = observer(() => {
   const workshop = fetchWorkshop();
   if (!state.isLoggedIn) return <NotLoggedIn />;
   if (!workshop || !id) return <PageNotFound />;
+  const shouldLoadRecaptcha = state.user.isAdmin || state.isLoggedIn;
+  useEffect(() => {
+    if (shouldLoadRecaptcha) loadRecaptcha();
+    return () => {
+      if (shouldLoadRecaptcha) removeRecaptcha();
+    };
+  }, [shouldLoadRecaptcha]);
   function downloadWorkshopFiles() {
     if (workshop) {
       actions.fetchWorkshopFilesForDownload(workshop);

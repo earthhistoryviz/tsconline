@@ -365,14 +365,17 @@ export const Workshops: React.FC = observer(() => {
       await actions.adminFetchWorkshops({ signal: controller.signal });
     };
 
-    fetchWorkshops();
+    (async () => {
+      await fetchWorkshops();
+    })();
 
     return () => {
-      removeRecaptcha();
+      if (shouldLoadRecaptcha) {
+        removeRecaptcha();
+      }
       controller.abort();
     };
   }, [state.isLoggedIn, state.user?.isAdmin]);
-
   return (
     <>
       {state.isLoggedIn ? (

@@ -69,7 +69,6 @@ declare global {
 export async function executeRecaptcha(action: string): Promise<string> {
   try {
     const token = await window.grecaptcha.execute("6LegnOApAAAAACIFXyvL_6_ejS2CHnt3rRzkDGL2", { action });
-    console.log("action is " + action);
     return token;
   } catch (error) {
     console.error("reCAPTCHA execution failed:", error);
