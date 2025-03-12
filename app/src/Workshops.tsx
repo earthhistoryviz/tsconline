@@ -353,17 +353,22 @@ export const Workshops: React.FC = observer(() => {
   }));
 
   useEffect(() => {
+    const shouldLoadRecaptcha = state.user.isAdmin || state.isLoggedIn;
+    if (!shouldLoadRecaptcha) {
+      return;
+    }
+
     const controller = new AbortController();
 
-    loadRecaptcha().then(async () => {
-      if (state.user.isAdmin) {
-        await actions.adminFetchWorkshops({ signal: controller.signal });
-      }
-    });
+    const fetchWorkshops = async () => {
+      await loadRecaptcha();
+      await actions.adminFetchWorkshops({ signal: controller.signal });
+    };
+
+    fetchWorkshops();
 
     return () => {
       removeRecaptcha();
-
       controller.abort();
     };
   }, [state.isLoggedIn, state.user?.isAdmin]);
