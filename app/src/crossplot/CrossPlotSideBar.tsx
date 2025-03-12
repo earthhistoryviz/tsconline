@@ -5,7 +5,14 @@ import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, IconButton, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
-import { AccessTimeRounded, BookmarkRounded, Delete, TableChartRounded, Timeline } from "@mui/icons-material";
+import {
+  AccessTimeRounded,
+  BookmarkRounded,
+  Delete,
+  NoEncryptionGmailerrorredRounded,
+  TableChartRounded,
+  Timeline
+} from "@mui/icons-material";
 import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
@@ -267,7 +274,7 @@ const Models: React.FC = observer(() => {
   const { t } = useTranslation();
   return (
     <Box className={styles.modelsContainer}>
-      <ModelsOptionsBar selectedModels={state.crossPlot.models} />
+      <GeneralOptionsBar selected={state.crossPlot.models} />
       {state.crossPlot.models.length > 0 && (
         <StyledScrollbar>
           <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
@@ -288,7 +295,7 @@ const Models: React.FC = observer(() => {
     </Box>
   );
 });
-const ModelsOptionsBar: React.FC<{ selectedModels: Model[] }> = observer(({ selectedModels }) => {
+const GeneralOptionsBar: React.FC<{ selected: Marker[] | Model[] }> = observer(({ selected }) => {
   return (
     <Box
       className={styles.modelsOptionsBar}
@@ -420,15 +427,24 @@ const Markers: React.FC = observer(() => {
   const { state } = useContext(context);
   const { t } = useTranslation();
   return (
-    <Box className={styles.markersComponent} display={state.crossPlot.markers.length === 0 ? "flex" : ""}>
-      {state.crossPlot.markers.map((marker, index) => (
-        <Box key={index} className={styles.markerOptions}>
-          <MarkerOptions marker={marker} />
-          {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
-        </Box>
-      ))}
+    <Box className={styles.markersContainer}>
+      <GeneralOptionsBar selected={state.crossPlot.markers} />
+      {state.crossPlot.markers.length > 0 && (
+        <StyledScrollbar>
+          <Box className={styles.markersComponent}>
+            {state.crossPlot.markers.map((marker, index) => (
+              <Box key={index} className={styles.markerOptions}>
+                <MarkerOptions marker={marker} />
+                {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
+              </Box>
+            ))}
+          </Box>
+        </StyledScrollbar>
+      )}
       {state.crossPlot.markers.length === 0 && (
-        <Typography className={styles.noMarkersText}>{t("crossPlot.sidebar.no-markers")}</Typography>
+        <Box display="flex" justifyContent="center" alignItems="center" padding="23px">
+          <Typography className={styles.noMarkersText}>{t("crossPlot.sidebar.no-markers")}</Typography>
+        </Box>
       )}
     </Box>
   );

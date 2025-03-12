@@ -100,7 +100,8 @@
   height: 100%;
   overflow: hidden;
 }
-.modelsContainer {
+.modelsContainer,
+.markersContainer {
   display: grid;
   grid-template-rows: var(--options-bar-height) calc(100% - var(--options-bar-height));
   height: 100%;
