@@ -79,7 +79,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
     "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js",
-    "pull-jar": "node dist/pull-jar.js"
+    "pull-supporting-files": "node dist/pull-supporting-files.js"
   },
   "type": "module"
 }
