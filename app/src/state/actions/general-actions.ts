@@ -43,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError, downloadFile } from "./util-actions";
+import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -1275,22 +1275,11 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     return;
   }
   const file = await response.blob();
-  let fileURL = "";
   if (file) {
     try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve, reject) => {
-        reader.onloadend = resolve;
-        reader.onerror = reject;
-      });
-      if (typeof reader.result !== "string") {
-        throw new Error("Invalid file");
-      }
-      fileURL = reader.result;
-      downloadFile(fileURL, `FilesFor${workshop.title}.zip`);
+      await downloadFile(file, `FilesFor${workshop.title}.zip`);
     } catch (error) {
-      pushError(ErrorCodes.INVALID_PATH);
+      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
     }
   }
 });

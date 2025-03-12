@@ -170,5 +170,7 @@ export async function downloadFile(blob: Blob, filename: string) {
   aTag.click();
   aTag.remove();
 }
-
-
+// TODO: remove this when route for fetching cover image is finished
+export function getWorkshopCoverImage() {
+  return TSCreatorLogo;
+}
