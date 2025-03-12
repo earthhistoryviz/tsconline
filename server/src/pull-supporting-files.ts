@@ -96,6 +96,8 @@ export async function downloadDatapacks(access_token: string) {
   if (!datapackResponse.ok) {
     throw new Error("Failed to download datapack file, file may not exist in dropbox => please check with team leads");
   }
+  // make sure the datapacks directory is fully clean
+  await rm(assetconfigs.datapacksDirectory, { recursive: true });
   await mkdir(assetconfigs.datapacksDirectory, { recursive: true });
   const datapackZip = join(assetconfigs.datapacksDirectory, "datapacks.zip");
   await writeFile(datapackZip, Buffer.from(await datapackResponse.arrayBuffer()));
