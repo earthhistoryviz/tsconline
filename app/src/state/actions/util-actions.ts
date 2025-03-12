@@ -84,21 +84,3 @@ export function checkDatapackValidity(file: File) {
   }
   return true;
 }
-
-export const downloadFile = async (fileURL: string, filename: string) => {
-  try {
-    if (!fileURL) {
-      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      return;
-    }
-
-    const aTag = document.createElement("a");
-    aTag.href = fileURL;
-    aTag.setAttribute("download", filename);
-    document.body.appendChild(aTag);
-    aTag.click();
-    aTag.remove();
-  } catch (error) {
-    pushError(ErrorCodes.INVALID_PATH);
-  }
-};
