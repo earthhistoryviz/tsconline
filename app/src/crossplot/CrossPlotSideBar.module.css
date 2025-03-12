@@ -1,5 +1,6 @@
 .crossPlotSideBar {
   --generate-button-size: 175px;
+  --options-bar-height: 50px;
   display: grid;
   grid-template-columns: var(--side-bar-width) 1fr;
   grid-template-rows: 1fr;
@@ -97,6 +98,14 @@
   padding: 23px;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+.modelsContainer {
+  display: grid;
+  grid-template-rows: var(--options-bar-height) calc(100% - var(--options-bar-height));
+  height: 100%;
+  grid-template-columns: 1fr;
+  overflow: hidden;
 }
 .checkBoxContainer {
   display: flex;
@@ -125,6 +134,16 @@
   grid-template-rows: 1fr;
   gap: 12px;
 }
+.modelsOptionsBar {
+  position: sticky;
+  top: 0;
+  overflow: hidden;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+}
+/* Mobile */
 .mobileCrossPlotSideBar {
   display: grid;
   grid-template-columns: 1fr;

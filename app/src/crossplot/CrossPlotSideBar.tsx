@@ -2,15 +2,15 @@ import { observer } from "mobx-react-lite";
 import React, { forwardRef, useContext, useState } from "react";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, FormControl, IconButton, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
-import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
+import { AccessTimeRounded, BookmarkRounded, Delete, TableChartRounded, Timeline } from "@mui/icons-material";
 import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
+import { CustomDivider, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
@@ -266,16 +266,39 @@ const Models: React.FC = observer(() => {
   const { state } = useContext(context);
   const { t } = useTranslation();
   return (
-    <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
-      {state.crossPlot.models.map((model, index) => (
-        <Box key={index} className={styles.modelOptions}>
-          <ModelOptions model={model} />
-          {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
-        </Box>
-      ))}
-      {state.crossPlot.models.length === 0 && (
-        <Typography className={styles.noModelsText}>{t("crossPlot.sidebar.no-models")}</Typography>
+    <Box className={styles.modelsContainer}>
+      <ModelsOptionsBar selectedModels={state.crossPlot.models} />
+      {state.crossPlot.models.length > 0 && (
+        <StyledScrollbar>
+          <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
+            {state.crossPlot.models.map((model, index) => (
+              <Box key={index} className={styles.modelOptions}>
+                <ModelOptions model={model} />
+                {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
+              </Box>
+            ))}
+          </Box>
+        </StyledScrollbar>
       )}
+      {state.crossPlot.models.length === 0 && (
+        <Box display="flex" justifyContent="center" alignItems="center" padding="23px">
+          <Typography className={styles.noModelsText}>{t("crossPlot.sidebar.no-models")}</Typography>
+        </Box>
+      )}
+    </Box>
+  );
+});
+const ModelsOptionsBar: React.FC<{ selectedModels: Model[] }> = observer(({ selectedModels }) => {
+  return (
+    <Box
+      className={styles.modelsOptionsBar}
+      sx={{
+        borderBottom: "1px solid",
+        borderColor: "divider"
+      }}>
+      <IconButton>
+        <Delete />
+      </IconButton>
     </Box>
   );
 });

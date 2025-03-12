@@ -22,56 +22,56 @@ export const CrossPlotChart: React.FC = observer(() => {
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   return (
     <>
-    <ChartContext.Provider
-      value={{
-        chartTabState: state.crossPlot.state,
-        otherChartOptions: [
-          {
-            label: "Timeline On/Off",
-            icon: <img src={TimeLine} width="24" height="24" />,
-            onChange: (bool: boolean) =>
-              actions.setChartTabState(state.crossPlot.state, { chartTimelineEnabled: bool }),
-            value: state.crossPlot.state.chartTimelineEnabled
-          },
-          {
-            label: "Models",
-            icon: <img src={ModelsIcon} width="24" height="24" />,
-            onChange: actions.setCrossPlotModelMode,
-            value: state.crossPlot.modelMode
-          },
-          {
-            label: "Markers",
-            icon: <img src={MarkerIcon} width="24" height="24" />,
-            onChange: actions.setCrossPlotMarkerMode,
-            value: state.crossPlot.markerMode
-          },
-          {
-            label: "Show Tooltips",
-            icon: <ChatRounded />,
-            onChange: actions.setCrossPlotShowTooltips,
-            value: state.crossPlot.showTooltips
-          }
-        ]
-      }}>
-      <Box className={mobile ? styles.containerMobile : styles.container}>
-        {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}
-        <Chart
-          Component={TSCCrossPlotSVGComponent}
-          disableDoubleClick
-          refList={[
+      <ChartContext.Provider
+        value={{
+          chartTabState: state.crossPlot.state,
+          otherChartOptions: [
             {
-              ref: ref,
-              id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
+              label: "Timeline On/Off",
+              icon: <img src={TimeLine} width="24" height="24" />,
+              onChange: (bool: boolean) =>
+                actions.setChartTabState(state.crossPlot.state, { chartTimelineEnabled: bool }),
+              value: state.crossPlot.state.chartTimelineEnabled
+            },
+            {
+              label: "Models",
+              icon: <img src={ModelsIcon} width="24" height="24" />,
+              onChange: actions.setCrossPlotModelMode,
+              value: state.crossPlot.modelMode
+            },
+            {
+              label: "Markers",
+              icon: <img src={MarkerIcon} width="24" height="24" />,
+              onChange: actions.setCrossPlotMarkerMode,
+              value: state.crossPlot.markerMode
+            },
+            {
+              label: "Show Tooltips",
+              icon: <ChatRounded />,
+              onChange: actions.setCrossPlotShowTooltips,
+              value: state.crossPlot.showTooltips
             }
-          ]}
-          style={{
-            border: "none",
-            borderTop: `2px solid ${theme.palette.divider}`
-          }}
-        />
-      </Box>
-    </ChartContext.Provider>
-    <TSCDialogLoader open={state.crossPlot.converting} transparentBackground/>
+          ]
+        }}>
+        <Box className={mobile ? styles.containerMobile : styles.container}>
+          {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}
+          <Chart
+            Component={TSCCrossPlotSVGComponent}
+            disableDoubleClick
+            refList={[
+              {
+                ref: ref,
+                id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
+              }
+            ]}
+            style={{
+              border: "none",
+              borderTop: `2px solid ${theme.palette.divider}`
+            }}
+          />
+        </Box>
+      </ChartContext.Provider>
+      <TSCDialogLoader open={state.crossPlot.converting} transparentBackground />
     </>
   );
 });

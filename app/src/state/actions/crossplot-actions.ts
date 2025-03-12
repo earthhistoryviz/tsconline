@@ -567,4 +567,4 @@ const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: Column
 
 export const setCrossPlotConverting = action((converting: boolean) => {
   state.crossPlot.converting = converting;
-})
+});
