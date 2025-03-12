@@ -76,7 +76,8 @@
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
-    "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js"
+    "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js",
+    "pull-jar": "node dist/pull-jar.js"
   },
   "type": "module"
 }
