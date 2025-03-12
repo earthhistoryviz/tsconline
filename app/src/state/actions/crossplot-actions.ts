@@ -327,10 +327,18 @@ export const sendCrossPlotConversionRequest = action(async () => {
       pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
       return;
     }
+    if (state.crossPlot.models.length <= 1) {
+      pushError(ErrorCodes.NO_MODELS);
+      return;
+    }
     assertColumnInfoRoot(state.crossPlot.chartY);
     const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
     if (!datapack) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    if (datapack.ageUnits.toLowerCase() === "ma") {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
       return;
     }
     const columnRoot = cloneDeep(defaultColumnRoot);
@@ -338,14 +346,6 @@ export const sendCrossPlotConversionRequest = action(async () => {
     const columnCopy = cloneDeep(columnRoot);
     const chartSettingsCopy = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    if (state.crossPlot.models.length === 0) {
-      pushError(ErrorCodes.NO_MODELS);
-      return;
-    }
-    if (datapack.ageUnits.toLowerCase() === "ma") {
-      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
-      return;
-    }
     const body = {
       datapackTitle: datapack.title,
       uuid: getUUIDOfDatapackType(datapack),
