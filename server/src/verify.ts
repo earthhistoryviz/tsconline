@@ -8,14 +8,11 @@ import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
  */
 export async function checkRecaptchaToken(token: string): Promise<number> {
   try {
-    console.error("here0");
     if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
-    console.error("here0.1");
     const response = await fetch(
       `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
       { method: "POST" }
     );
-    console.error("here0.2");
     const data = await response.json();
     if (!data.success) {
       console.error("Recaptcha failed:", data);
