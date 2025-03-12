@@ -6,8 +6,10 @@
     "allowJs": true,
     "declaration": false
   },
-  "exclude": ["assets/uploads"],
-  "include": [ 
+  "exclude": [
+    "assets/uploads"
+  ],
+  "include": [
     "src",
   ]
 }
