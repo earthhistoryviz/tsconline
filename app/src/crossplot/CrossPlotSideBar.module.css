@@ -105,7 +105,7 @@
   display: grid;
   grid-template-rows: var(--options-bar-height) calc(100% - var(--options-bar-height));
   height: 100%;
-  grid-template-columns: 1fr;
+  grid-template-columns: 100%;
   overflow: hidden;
 }
 .checkBoxContainer {
@@ -135,14 +135,17 @@
   grid-template-rows: 1fr;
   gap: 12px;
 }
-.modelsOptionsBar {
-  position: sticky;
-  top: 0;
+.optionsBar {
+  padding: 0px 33px;
   overflow: hidden;
   width: 100%;
   align-items: center;
-  justify-content: center;
   display: flex;
+  justify-content: space-between;
+}
+.deleteIcon {
+  width: 20px;
+  height: 20px;
 }
 /* Mobile */
 .mobileCrossPlotSideBar {

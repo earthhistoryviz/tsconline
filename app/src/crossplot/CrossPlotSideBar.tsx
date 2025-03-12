@@ -1,15 +1,14 @@
 import { observer } from "mobx-react-lite";
 import React, { forwardRef, useContext, useState } from "react";
+import TrashCanIcon from "../assets/icons/trash-icon.json";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, FormControl, IconButton, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import {
   AccessTimeRounded,
   BookmarkRounded,
-  Delete,
-  NoEncryptionGmailerrorredRounded,
   TableChartRounded,
   Timeline
 } from "@mui/icons-material";
@@ -17,7 +16,7 @@ import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, marker
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
+import { CustomDivider, CustomTooltip, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
@@ -298,14 +297,24 @@ const Models: React.FC = observer(() => {
 const GeneralOptionsBar: React.FC<{ selected: Marker[] | Model[] }> = observer(({ selected }) => {
   return (
     <Box
-      className={styles.modelsOptionsBar}
+      className={styles.optionsBar}
       sx={{
         borderBottom: "1px solid",
         borderColor: "divider"
       }}>
-      <IconButton>
-        <Delete />
-      </IconButton>
+      <TSCCheckbox />
+      <CustomTooltip title={"Delete Selected"}>
+        <Box>
+          <Lottie
+            className={styles.lottie}
+            animationData={TrashCanIcon}
+            width={20}
+            height={20}
+            playOnHover
+            speed={1.7}
+          />
+        </Box>
+      </CustomTooltip>
     </Box>
   );
 });
