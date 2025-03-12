@@ -319,6 +319,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
 });
 export const sendCrossPlotConversionRequest = action(async () => {
   try {
+    setCrossPlotConverting(true);
     if (!state.crossPlot.chartY) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
@@ -369,6 +370,8 @@ export const sendCrossPlotConversionRequest = action(async () => {
   } catch (e) {
     console.error(e);
     pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+  } finally {
+    setCrossPlotConverting(false);
   }
 });
 
@@ -561,3 +564,7 @@ const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: Column
   columnRoot.fontOptions = Array.from(new Set([...columnOne.fontOptions, ...columnTwo.fontOptions]));
   return columnRoot;
 });
+
+export const setCrossPlotConverting = action((converting: boolean) => {
+  state.crossPlot.converting = converting;
+})
