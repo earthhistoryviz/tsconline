@@ -1,11 +1,22 @@
 import "dotenv/config";
 import { loadAssetConfigs, assetconfigs } from "./util.js";
-import { writeFile } from "fs/promises";
-import { basename } from "path";
+import { access, mkdir, rm, writeFile } from "fs/promises";
+import { basename, dirname, join } from "path";
+import chalk from "chalk"
+import AdmZip from "adm-zip";
 
 const { DROPBOX_REFRESH_TOKEN, DROPBOX_APP_KEY, DROPBOX_APP_SECRET } = process.env;
 
-export async function pullJar(): Promise<void> {
+async function verifyFile(file: string): Promise<boolean> {
+    try {
+        await access(file);
+        return true;
+    } catch {
+        return false;
+    }
+}
+
+export async function pullFiles(): Promise<void> {
     try {
         await loadAssetConfigs();
     } catch(e) {
@@ -32,25 +43,63 @@ export async function pullJar(): Promise<void> {
         if (!data.access_token) {
             throw new Error("Failed to get access token");
         }
-        // download the jar file
-        const jarResponse = await fetch("https://content.dropboxapi.com/2/files/download", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${data.access_token}`,
-                "Dropbox-API-Arg": JSON.stringify({
-                    path: `/VIP-Fall2023 EarthHistoryVisualization/Supporting\ TSCOnline\ Files/${basename(assetconfigs.activeJar)}`
-                })
-            }
-        });
-        console.log(jarResponse);
-        if (!jarResponse.ok) {
-            throw new Error("Failed to download jar file");
+        if (await verifyFile(assetconfigs.activeJar)) {
+            console.log(chalk.blue("Jar file already exists, skipping download"));
+        } else { 
+            await downloadJars(data.access_token);
         }
-        await writeFile(assetconfigs.activeJar, Buffer.from(await jarResponse.arrayBuffer()));
-        console.log(jarResponse);
+        await downloadDatapacks(data.access_token);
     } catch (e) {
         console.error(e);
     }
 }
 
-await pullJar();
+// download the datapacks
+export async function downloadDatapacks(access_token: string) {
+    // download the datapack file
+    const datapackResponse = await fetch("https://content.dropboxapi.com/2/files/download_zip", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${access_token}`,
+            "Dropbox-API-Arg": JSON.stringify({
+                path: `/VIP-Fall2023 EarthHistoryVisualization/Supporting\ TSCOnline\ Files/datapacks`
+            })
+        }}
+    );
+    if (!datapackResponse.ok) {
+        throw new Error("Failed to download datapack file, file may not exist in dropbox => please check with team leads");
+    }
+    await mkdir(assetconfigs.datapacksDirectory, { recursive: true });
+    const datapackZip = join(assetconfigs.datapacksDirectory, "datapacks.zip");
+    await writeFile(datapackZip, Buffer.from(await datapackResponse.arrayBuffer()));
+    const zip = new AdmZip(datapackZip);
+    zip.extractAllTo(assetconfigs.datapacksDirectory, true);
+    await rm(datapackZip);
+    console.log(chalk.green("Datapacks downloaded successfully"));
+}
+
+
+export async function downloadJars(access_token: string) {
+        // download the jar file
+        const jarResponse = await fetch("https://content.dropboxapi.com/2/files/download", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${access_token}`,
+                "Dropbox-API-Arg": JSON.stringify({
+                    path: `/VIP-Fall2023 EarthHistoryVisualization/Supporting\ TSCOnline\ Files/${basename(assetconfigs.activeJar)}`
+                })
+            }
+        });
+        if (!jarResponse.ok) {
+            throw new Error("Failed to download jar file, file may not exist in dropbox => please check with team leads");
+        }
+        await mkdir(dirname(assetconfigs.activeJar), { recursive: true });
+        await writeFile(assetconfigs.activeJar, Buffer.from(await jarResponse.arrayBuffer()));
+        if (await verifyFile(assetconfigs.activeJar)) {
+            console.log(chalk.green("Jar file downloaded successfully"));
+        } else {
+            throw new Error("Failed to download jar file");
+        }
+}
+
+await pullFiles();
