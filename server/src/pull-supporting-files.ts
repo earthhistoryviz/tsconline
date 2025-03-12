@@ -74,7 +74,7 @@ export async function areDropboxDatapacksDifferent(access_token: string): Promis
   }
   const data = await response.json();
   const files = data.entries.map((entry: { name: string }) => entry.name);
-  if (!verifyFile(assetconfigs.datapacksDirectory)) {
+  if (!(await verifyFile(assetconfigs.datapacksDirectory))) {
     return true;
   }
   const localFiles = await readdir(assetconfigs.datapacksDirectory);
