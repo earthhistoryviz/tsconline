@@ -233,41 +233,6 @@ function OutOfRangeIcon() {
     </Tooltip>
   );
 }
-function NotValidColumnIcon() {
-  const theme = useTheme();
-  const { t } = useTranslation();
-  return (
-    <Tooltip
-      title={t("settings.column.overlay-menu.column-not-valid")}
-      placement="top"
-      arrow
-      slotProps={{
-        popper: {
-          modifiers: [
-            {
-              name: "offset",
-              options: {
-                offset: [0, -10]
-              }
-            }
-          ]
-        }
-      }}>
-      <WarningAmberIcon
-        className="column-error-icon"
-        style={{
-          color: theme.palette.error.main
-        }}
-      />
-    </Tooltip>
-  );
-}
-
-enum ColumnStatus {
-  NotValid,
-  OutOfRange,
-  Valid
-}
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
@@ -288,14 +253,8 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         state.settings.timeSettings[column.units].baseStageAge
       );
 
-  let columnStatus: ColumnStatus = ColumnStatus.NotValid;
-
   //column can be chosen for overlay column
-  if (column.columnDisplayType === "Event" || column.columnDisplayType === "Point") {
-    if (!dataInRange && !(column.name === "Ma" || column.name === "Root")) {
-      columnStatus = ColumnStatus.OutOfRange;
-    } else columnStatus = ColumnStatus.Valid;
-  }
+  let validForOverlay = true ? column.columnDisplayType === "Event" || column.columnDisplayType === "Point" : false;
 
   // if there are no children, don't make an accordion
   if (column.children.length == 0) {
@@ -304,7 +263,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         className={`column-leaf-row-container ${selectedClass}`}
         onClick={() => {
           if (
-            columnStatus === ColumnStatus.NotValid ||
+            !validForOverlay ||
             column.name === state.columnMenu.columnSelected ||
             !state.columnMenu.columnSelected
           ) {
@@ -328,12 +287,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         <ColumnContainer
           sx={{
             opacity: 1,
-            cursor: columnStatus === ColumnStatus.NotValid ? "default" : "pointer"
+            cursor: !validForOverlay ? "default" : "pointer"
           }}
           className="dcc-column-leaf">
-          {columnStatus === ColumnStatus.OutOfRange && <OutOfRangeIcon />}
-          {/* {columnStatus === ColumnStatus.NotValid ? <NotValidColumnIcon /> : <OutOfRangeIcon />} */}
-          <Typography className={columnStatus === ColumnStatus.NotValid ? "dcc-not-allowed" : "column-display-name"}>
+          <Typography className={!validForOverlay ? "dcc-not-allowed" : "column-display-name"}>
             {column.editName}
           </Typography>
         </ColumnContainer>
@@ -364,7 +321,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
             className="column-row-container"
             sx={{
               opacity: 1,
-              cursor: columnStatus === ColumnStatus.NotValid ? "default" : ""
+              cursor: !validForOverlay ? "default" : ""
             }}
             onClick={() => setExpanded(!expanded)}>
             <Typography className="column-display-name">{column.editName}</Typography>
