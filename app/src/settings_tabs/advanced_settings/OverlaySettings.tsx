@@ -179,14 +179,14 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       </ColumnContainer>
     );
     const NotValidOverlay = () => (
-      <CustomTooltip title="Not an Event or Point Column" placement="left">
+      <CustomTooltip title="Not an Event or Point Column" placement="left" offset={[0, 10]}>
         <ColumnContainer
           sx={{
             opacity: 1,
             cursor: "default"
           }}
           className="dcc-column-leaf">
-          <Typography className="dcc-not-allowed">{column.editName}</Typography>
+          <Typography className="dcc-not-allowed column-display-name">{column.editName}</Typography>
         </ColumnContainer>
       </CustomTooltip>
     );

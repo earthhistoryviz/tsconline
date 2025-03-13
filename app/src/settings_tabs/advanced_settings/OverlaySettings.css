@@ -24,11 +24,6 @@
   margin-left: 23.2px;
 }
 
-.dcc-column-leaf-not-allowed {
-  margin-left: 23.2px;
-  cursor: default;
-}
-
 .overlay-name {
   white-space: nowrap;
   overflow: hidden;
@@ -65,9 +60,4 @@
 
 .overlay-settings-content {
   align-self: flex-start;
-}
-
-.overlay-search-bar {
-  width: 40vw;
-  margin: 10px;
 }
