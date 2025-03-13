@@ -3,6 +3,7 @@ import {
   DatapackMetadata,
   DatapackUniqueIdentifier,
   MapInfo,
+  DisplayedColumnTypes,
   SharedUser,
   isOfficialDatapack,
   isUserDatapack,
@@ -167,4 +168,15 @@ export async function downloadFile(blob: Blob, filename: string) {
   document.body.appendChild(aTag);
   aTag.click();
   aTag.remove();
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }
