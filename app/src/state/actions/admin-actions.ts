@@ -224,6 +224,7 @@ export const adminModifyUsers = action(
           ErrorCodes.ADMIN_MODIFY_USER_FAILED,
           ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]
         );
+        return `${ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]}`;
       }
     } catch (error) {
       console.error(error);

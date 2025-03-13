@@ -70,7 +70,11 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       isAdmin: userInfo.isAdmin ? 1 : 0
     };
 
-    await actions.adminModifyUsers(modifiedUser);
+    const resp = await actions.adminModifyUsers(modifiedUser);
+    console.log(resp);
+    if (resp && resp === "Unable to modify user. Please try again later."){
+      discardUserInfoChanges();   
+    }
     setUnsavedChanges(false);
     setEditMode(false);
   };
