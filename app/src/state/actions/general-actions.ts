@@ -43,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError, downloadFile } from "./util-actions";
+import { displayServerError, downloadFiles } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -166,7 +166,7 @@ export const fetchDatapackFilesForDownload = action(async (datapackTitle: string
             throw new Error("Invalid File");
           }
           fileURL = reader.result;
-          await downloadFile(fileURL, `FilesFor${datapackTitle}.zip`);
+          await downloadFiles(fileURL, `FilesFor${datapackTitle}.zip`);
         } catch (e) {
           pushError(ErrorCodes.INVALID_PATH);
         }
@@ -357,6 +357,9 @@ export const uploadUserDatapack = action(
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
+      formData.append("hasFiles", "true")
+    } else {
+      formData.append("hasFiles", "false")
     }
 
     formData.append("priority", String(metadata.priority));
@@ -1322,7 +1325,8 @@ export const resetEditableDatapackMetadata = action((metadata: EditableDatapackM
     type: metadata.type,
     authoredBy: metadata.authoredBy,
     priority: metadata.priority,
-    references: metadata.references
+    references: metadata.references,
+    hasFiles: metadata.hasFiles
   };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
