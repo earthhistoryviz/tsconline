@@ -10,8 +10,7 @@ import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
 import { ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
-import { Loader, TSCDialogLoader } from "../components";
-import LoadingChart from "../LoadingChart";
+import { TSCDialogLoader } from "../components";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 

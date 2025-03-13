@@ -192,6 +192,9 @@ export const editCrossPlotModel = action((model: Model, partial: Partial<Model>)
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
   }
+  if (partial.selected !== undefined) {
+    model.selected = partial.selected;
+  }
   const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
     model.color = partial.color;
@@ -236,6 +239,9 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
+  }
+  if (partial.selected !== undefined) {
+    marker.selected = partial.selected;
   }
   const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
