@@ -18,7 +18,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [isConfirmUserInfoChangesOnExitFormOpen, setIsConfirmUserInfoChangesOnExitFormOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
     isAdmin: data.isAdmin,
-    accountType: data.accountType,
+    accountType: data.accountType
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
@@ -56,7 +56,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   };
 
   const handleSaveChanges = async () => {
-   
     const modifiedUser = {
       username: data.username,
       email: data.email,

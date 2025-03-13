@@ -1,4 +1,4 @@
-import { School, PersonRemove, Close, Edit, FileUpload } from "@mui/icons-material";
+import { School, PersonRemove, Close, Edit } from "@mui/icons-material";
 import {
   Typography,
   IconButton,
