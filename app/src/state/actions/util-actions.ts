@@ -85,7 +85,7 @@ export function checkDatapackValidity(file: File) {
   return true;
 }
 
-export const downloadFile = async (fileURL: string, filename: string) => {
+export const downloadFiles = async (fileURL: string, filename: string) => {
   try {
     if (!fileURL) {
       pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
