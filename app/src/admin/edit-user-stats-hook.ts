@@ -17,8 +17,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [isConfirmDiscardUserInfoChangeOpen, setIsConfirmDiscardUserInfoChangeOpen] = useState(false);
   const [isConfirmUserInfoChangesOnExitFormOpen, setIsConfirmUserInfoChangesOnExitFormOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
-    username: data.username,
-    email: data.email,
     isAdmin: data.isAdmin,
     accountType: data.accountType,
     pictureUrl: data.pictureUrl || undefined
@@ -64,14 +62,13 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
     }
     const modifiedUser = {
-      username: userInfo.username,
-      email: userInfo.email,
+      username: data.username,
+      email: data.email,
       accountType: userInfo.accountType,
       isAdmin: userInfo.isAdmin ? 1 : 0
     };
 
     const resp = await actions.adminModifyUsers(modifiedUser);
-    console.log(resp);
     if (resp && resp === "Unable to modify user. Please try again later.") {
       discardUserInfoChanges();
     }

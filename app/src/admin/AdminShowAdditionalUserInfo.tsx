@@ -112,7 +112,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         {/* Overall Header */}
         <Box textAlign={"center"} width="100%" pt={3} pr={3} pb={0} pl={3}>
           <Typography variant="h5" mb={2} sx={{ fontWeight: "bold" }}>
-            Additional Information about {editState.userInfo.username}
+            {props.data.username}
           </Typography>
         </Box>
         {/* Basic Information Title */}
@@ -133,11 +133,11 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
                   {editState.selectedFile ? (
-                    <img src={URL.createObjectURL(editState.selectedFile)} alt={editState.userInfo.username} />
+                    <img src={URL.createObjectURL(editState.selectedFile)} alt={props.data.username} />
                   ) : editState.userInfo.pictureUrl ? (
-                    <img src={editState.userInfo.pictureUrl} alt={editState.userInfo.username} />
+                    <img src={editState.userInfo.pictureUrl} alt={props.data.username} />
                   ) : (
-                    editState.userInfo.username[0].toUpperCase()
+                    props.data.username[0].toUpperCase()
                   )}
                 </Avatar>
                 {editState.editMode && (
@@ -155,13 +155,13 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
               </Box>
 
               {/* User Name */}
-              <Typography variant="h6">{editState.userInfo.username}</Typography>
+              <Typography variant="h6">{props.data.username}</Typography>
             </Box>
 
             {/* User Email */}
             <Box mb={1}>
               <Typography variant="body1">
-                <strong>Email:</strong> {editState.userInfo.email}
+                <strong>Email:</strong> {props.data.email}
               </Typography>
             </Box>
 
