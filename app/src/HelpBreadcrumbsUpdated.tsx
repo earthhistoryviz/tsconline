@@ -4,6 +4,7 @@ import { links as defaultLinks } from "./components/help-menu-json";
 import { fetcher } from "./util";
 import { PageNotFound } from "./PageNotFound";
 import { useLocation, useNavigate } from "react-router";
+import { useTheme } from "@mui/material/styles";
 
 interface LinkPath {
   Title: string;
@@ -40,6 +41,7 @@ const generatePath = (title: string, parentPath = ""): string => {
 export default function NewBreadcrumbs() {
   const [notFound, setNotFound] = useState(false);
   const [fetchedData, setFetchedData] = useState<LinkPath[]>(defaultLinks);
+  const theme = useTheme();
 
   const currentPath = useLocation().pathname;
   const navigate = useNavigate();
@@ -156,18 +158,22 @@ export default function NewBreadcrumbs() {
 
   return (
     <Stack spacing={2}>
-      <Breadcrumbs separator="&gt;">
-        {breadcrumbs.map((breadcrumb: Breadcrumb, index: number) => (
-          <Link
-            key={index}
-            href={`/help${breadcrumb.to}`}
-            onClick={(e) => handleBreadcrumbClick(breadcrumb.to, e)}
-            underline="always"
-            color={index === breadcrumbs.length - 1 ? "text.primary" : "inherit"}>
-            {breadcrumb.label}
-          </Link>
-        ))}
-      </Breadcrumbs>
+      <Stack spacing={2}>
+        <Breadcrumbs
+          separator={<span style={{ color: theme.palette.button.main }}>{">"}</span>}
+          sx={{ color: theme.palette.button.main }}>
+          {breadcrumbs.map((breadcrumb: Breadcrumb, index: number) => (
+            <Link
+              key={index}
+              href={`/help${breadcrumb.to}`}
+              onClick={(e) => handleBreadcrumbClick(breadcrumb.to, e)}
+              underline="always"
+              sx={{ color: theme.palette.button.main }}>
+              {breadcrumb.label}
+            </Link>
+          ))}
+        </Breadcrumbs>
+      </Stack>
 
       {breadcrumbs.length > 0 && (
         <div>

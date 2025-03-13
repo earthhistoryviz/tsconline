@@ -3,22 +3,28 @@ import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/mat
 import { useState } from "react";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { links } from "./components/help-menu-json";
+import { useTheme } from "@mui/material/styles";
 
 interface LinkPath {
   Title: string;
   Content: string;
-  Children: LinkPath[];
+  Children?: LinkPath[];
 }
 
 function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: string }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
   const formattedPath = `${parentPath}/${link.Title.toLowerCase().replace(/\s+/g, "-")}`;
 
+  const hasChildren = (link: LinkPath): boolean => {
+    return (link.Children?.length || 0) > 0;
+  };
+
   const handleClick = () => {
-    if (link.Children.length > 0) {
+    if (hasChildren(link)) {
       setOpen(!open);
     } else {
       navigate(`/help${formattedPath}`);
@@ -28,10 +34,18 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
   return (
     <>
       <ListItem disablePadding>
-        <ListItemButton onClick={handleClick} sx={{ flexDirection: "row-reverse", py: 0, my: 0 }}>
+        <ListItemButton
+          onClick={handleClick}
+          sx={{
+            flexDirection: "row-reverse",
+            py: 0,
+            my: 0,
+            height: "24px",
+            width: "300px"
+          }}>
           <ListItemText primary={link.Title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
-          {link.Children.length > 0 && (
-            <div style={{ transform: !open ? "rotate(-90deg)" : "rotate(180deg)", transition: "transform 0.3s" }}>
+          {hasChildren(link) && (
+            <div style={{ transform: !open ? "rotate(-90deg)" : "rotate(180deg)", color: theme.palette.button.main }}>
               {open ? <ExpandLess /> : <ExpandMore />}
             </div>
           )}
@@ -39,20 +53,19 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
       </ListItem>
 
       {/* Render children if applicable */}
-      {link.Children.length > 0 && (
+      {hasChildren(link) && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List
             component="div"
             disablePadding
             sx={{
               pl: 1,
-              borderLeft: "1px solid lightgray",
+              borderLeft: `1px solid ${theme.palette.divider}`,
               marginLeft: "27.5px",
               "& .MuiListItem-root": { margin: 0 }
             }}>
-            {link.Children.map((child, index) => (
-              <NavItem key={index} link={child} parentPath={formattedPath} />
-            ))}
+            {link.Children &&
+              link.Children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
           </List>
         </Collapse>
       )}
