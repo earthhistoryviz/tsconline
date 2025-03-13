@@ -132,26 +132,12 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
             <Box display="flex" alignItems="center" mb={2}>
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {editState.selectedFile ? (
-                    <img src={URL.createObjectURL(editState.selectedFile)} alt={props.data.username} />
-                  ) : editState.userInfo.pictureUrl ? (
-                    <img src={editState.userInfo.pictureUrl} alt={props.data.username} />
+                  {props.data.pictureUrl ? (
+                    <img src={props.data.pictureUrl} alt={props.data.username} />
                   ) : (
                     props.data.username[0].toUpperCase()
                   )}
                 </Avatar>
-                {editState.editMode && (
-                  <Box position="absolute" bottom={-3} right={12} zIndex={1}>
-                    <CustomTooltip title="Upload avatar">
-                      <IconButton
-                        component="label"
-                        sx={{ padding: 0, backgroundColor: "transparent", borderRadius: "50%" }}>
-                        <FileUpload fontSize="small" />
-                        <input type="file" hidden onChange={handlers.handleFileChange} accept="image/*" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                )}
               </Box>
 
               {/* User Name */}

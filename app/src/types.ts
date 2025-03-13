@@ -227,7 +227,6 @@ export type ChartSettings = {
 export type EditableUserProperties = {
   isAdmin: boolean;
   accountType: string;
-  pictureUrl: string | undefined;
 };
 
 export type Marker = {

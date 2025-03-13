@@ -19,7 +19,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
     isAdmin: data.isAdmin,
     accountType: data.accountType,
-    pictureUrl: data.pictureUrl || undefined
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
@@ -57,10 +56,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   };
 
   const handleSaveChanges = async () => {
-    if (selectedFile) {
-      const newAvatarUrl = URL.createObjectURL(selectedFile); // Preview URL for the uploaded image
-      setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
-    }
+   
     const modifiedUser = {
       username: data.username,
       email: data.email,
@@ -92,13 +88,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     discardUserInfoChanges();
     setIsMoreUserInfoFormOpen(false);
     setIsConfirmUserInfoChangesOnExitFormOpen(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-    setUnsavedChanges(true);
   };
 
   const handleOpenConfirmRemovalOfUserFromWorkshop = (id: number) => {
@@ -169,7 +158,6 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       handleSelectChange,
       handleSaveChanges,
       handleDiscardUserInfoChanges,
-      handleFileChange,
       handleOpenConfirmRemovalOfUserFromWorkshop,
       cancelRemovalOfUserFromWorkshop,
       handleCloseConfirmUserInfoChangesDialog,
