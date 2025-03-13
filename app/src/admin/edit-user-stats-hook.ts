@@ -2,6 +2,8 @@ import { AdminSharedUser } from "@tsconline/shared";
 import { useState, useEffect } from "react";
 import { EditableUserProperties } from "../types";
 import { SelectChangeEvent } from "@mui/material/Select";
+import { useContext } from "react";
+import { context } from "../state";
 
 type UseUserStatsProps = {
   data: AdminSharedUser;
@@ -15,10 +17,8 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [isConfirmDiscardUserInfoChangeOpen, setIsConfirmDiscardUserInfoChangeOpen] = useState(false);
   const [isConfirmUserInfoChangesOnExitFormOpen, setIsConfirmUserInfoChangesOnExitFormOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<EditableUserProperties>({
-    username: data.username,
-    email: data.email,
     isAdmin: data.isAdmin,
-    pictureUrl: data.pictureUrl || undefined
+    accountType: data.accountType
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [originalUserInfo, setOriginalUserInfo] = useState(userInfo);
@@ -26,6 +26,9 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const [selectedWorkshop, setSelectedWorkshop] = useState<number | null>(null);
   const [isConfirmRemovalOfUserFromWorkshopDialogOpen, setIsConfirmRemovalOfUserFromWorkshopDialogOpen] =
     useState(false);
+
+  const { actions } = useContext(context);
+
   // Function to remove a workshop
   const removeUserFromWorkshop = () => {
     if (currentWorkshops) {
@@ -42,35 +45,27 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     setOriginalUserInfo(userInfo);
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setUnsavedChanges(true);
-    const { name } = e.target;
-    if (!(name in userInfo)) {
-      console.error("Requested input change while editing UserInfo for field " + name + "doesn't exist");
-      handleDiscardUserInfoChanges();
-      return;
-    }
-    setUserInfo({
-      ...userInfo,
-      [name]: e.target.value
-    });
-  };
-
   const handleSelectChange = (e: SelectChangeEvent) => {
     setUnsavedChanges(true);
 
-    const { value } = e.target;
-
-    setUserInfo({
-      ...userInfo,
-      isAdmin: value === "Yes"
-    });
+    const { name, value } = e.target;
+    setUserInfo((prevUserInfo) => ({
+      ...prevUserInfo,
+      [name]: name === "isAdmin" ? value === "Yes" : value === "Yes" ? "pro" : "default"
+    }));
   };
 
-  const handleSaveChanges = () => {
-    if (selectedFile) {
-      const newAvatarUrl = URL.createObjectURL(selectedFile); // Preview URL for the uploaded image
-      setUserInfo({ ...userInfo, pictureUrl: newAvatarUrl });
+  const handleSaveChanges = async () => {
+    const modifiedUser = {
+      username: data.username,
+      email: data.email,
+      accountType: userInfo.accountType,
+      isAdmin: userInfo.isAdmin ? 1 : 0
+    };
+
+    const resp = await actions.adminModifyUsers(modifiedUser);
+    if (resp && resp === "Unable to modify user. Please try again later.") {
+      discardUserInfoChanges();
     }
     setUnsavedChanges(false);
     setEditMode(false);
@@ -91,13 +86,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const handleDiscardUserInfoChangesThenCloseTheMoreUserInfoForm = () => {
     discardUserInfoChanges();
     setIsMoreUserInfoFormOpen(false);
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0]);
-    }
-    setUnsavedChanges(true);
+    setIsConfirmUserInfoChangesOnExitFormOpen(false);
   };
 
   const handleOpenConfirmRemovalOfUserFromWorkshop = (id: number) => {
@@ -165,11 +154,9 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     },
     handlers: {
       handleEditToggle,
-      handleInputChange,
       handleSelectChange,
       handleSaveChanges,
       handleDiscardUserInfoChanges,
-      handleFileChange,
       handleOpenConfirmRemovalOfUserFromWorkshop,
       cancelRemovalOfUserFromWorkshop,
       handleCloseConfirmUserInfoChangesDialog,
