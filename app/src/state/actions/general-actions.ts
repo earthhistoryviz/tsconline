@@ -53,9 +53,7 @@ import {
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
-  SettingsTabs,
-  equalChartSettings,
-  equalConfig
+  SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
@@ -64,6 +62,7 @@ import {
   compareExistingDatapacks,
   doesDatapackAlreadyExist,
   doesMetadataAlreadyExist,
+  downloadFile,
   getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
@@ -544,7 +543,7 @@ export const processDatapackConfig = action(
 
         const message: SetDatapackConfigMessage = {
           datapacks,
-          stateCopy: toJS(state)
+          datapacksArray: toJS(state.datapacks)
         };
         setDatapackConfigWorker.postMessage(message);
 
@@ -611,7 +610,12 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
-      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      for (const child of state.settingsTabs.columns.children) {
+        if (child.units === "Ma") {
+          setCrossPlotChartX(child);
+        }
+      }
+      if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
       setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
@@ -934,34 +938,10 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
     return;
   }
   const file = await response.blob();
-  let fileURL = "";
-  if (file) {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve, reject) => {
-        reader.onloadend = resolve;
-        reader.onerror = reject;
-      });
-      if (typeof reader.result !== "string") {
-        throw new Error("Invalid file");
-      }
-      fileURL = reader.result;
-      if (fileURL) {
-        const aTag = document.createElement("a");
-        aTag.href = fileURL;
-
-        aTag.setAttribute("download", datapack.originalFileName);
-
-        document.body.appendChild(aTag);
-        aTag.click();
-        aTag.remove();
-      } else {
-        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      }
-    } catch (error) {
-      pushError(ErrorCodes.INVALID_PATH);
-    }
+  try {
+    await downloadFile(file, datapack.title);
+  } catch (error) {
+    pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
   }
 });
 
@@ -1095,13 +1075,6 @@ export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
 export const setTab = action("setTab", (newval: number) => {
-  if (
-    newval == 2 &&
-    state.chartTab.state.chartContent &&
-    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
-  ) {
-    pushSnackbar("Chart settings are different from the displayed chart.", "warning");
-  }
   state.tab = newval;
 });
 export const setSettingsColumns = action((temp?: ColumnInfo) => {

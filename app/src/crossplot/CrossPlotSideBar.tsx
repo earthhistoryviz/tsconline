@@ -60,6 +60,9 @@ export const CrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.tabContent}>
+          <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Generate Cross Plot
           </TSCButton>
@@ -115,6 +118,9 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
+          <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton
             className={styles.mobileGenerate}
             onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>

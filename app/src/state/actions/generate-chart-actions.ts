@@ -1,7 +1,7 @@
 import * as generalActions from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { state } from "../state";
-import { action } from "mobx";
+import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
 import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
@@ -110,6 +110,9 @@ export const resetChartTabStateForGeneration = action("resetChartTabStateForGene
     unsafeChartContent: "",
     chartZoomSettings: cloneDeep(defaultChartZoomSettings),
     chartTimelineEnabled: false
+  });
+  runInAction(() => {
+    oldval.matchesSettings = true;
   });
 });
 
