@@ -5,8 +5,10 @@ import { DatapackConfigForChartRequest } from "@tsconline/shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import LoadingChart from "./LoadingChart";
+import { useTranslation } from "react-i18next";
+import "./Chart.css";
 
-const GenerateExternalChart: React.FC = () => {
+export const GenerateExternalChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const datapackHash = queryParams.get("hash");
@@ -91,30 +93,30 @@ const GenerateExternalChart: React.FC = () => {
     if (!datapackHash && !errorPushed) {
       actions.pushError(ErrorCodes.INVALID_DATAPACK_HASH);
       setErrorPushed(true);
+      setLoading(false);
       return;
     }
     fetchData(controller).catch((e) => {
       console.error("Error fetching datapack", e);
+      setLoading(false);
     });
     return () => {
-      if (import.meta.env.MODE !== "development") {
-        controller.abort();
-      }
+      // In dev, because react calls use effect twice, the first call will be aborted, causing an error to be pushed
+      // and the screen to flicker
+      // This is not an issue in production
+      controller.abort();
     };
   }, [datapackHash, errorPushed]);
-
-  if (!datapackHash) {
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="100vh" textAlign="center">
-        <Typography variant="h3">Error: Unable to Generate Chart</Typography>
-      </Box>
-    );
-  }
-
-  if (loading) {
-    return <LoadingChart />;
-  }
-  return null;
+  const { t } = useTranslation();
+  return (
+    <Box
+      sx={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh"
+      }}>
+      {loading ? <LoadingChart /> : <Typography variant="h4">{t("chart.no-chart-yet")}</Typography>}
+    </Box>
+  );
 };
-
-export default GenerateExternalChart;
