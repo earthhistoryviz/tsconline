@@ -143,6 +143,9 @@
   display: flex;
   justify-content: space-between;
 }
+.delete {
+  cursor: pointer;
+}
 .deleteIcon {
   width: 20px;
   height: 20px;

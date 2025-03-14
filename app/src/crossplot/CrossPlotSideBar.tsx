@@ -3,7 +3,7 @@ import React, { forwardRef, useContext, useState } from "react";
 import TrashCanIcon from "../assets/icons/trash-icon.json";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
@@ -11,7 +11,7 @@ import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, marker
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, CustomTooltip, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
+import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
@@ -268,7 +268,11 @@ const Models: React.FC = observer(() => {
   const { t } = useTranslation();
   return (
     <Box className={styles.modelsContainer}>
-      <GeneralOptionsBar<Model> selected={state.crossPlot.models} editSelected={actions.editCrossPlotModel} />
+      <GeneralOptionsBar<Model>
+        selected={state.crossPlot.models}
+        editSelected={actions.editCrossPlotModel}
+        clear={actions.removeCrossPlotModel}
+      />
       {state.crossPlot.models.length > 0 && (
         <StyledScrollbar>
           <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
@@ -292,9 +296,10 @@ const Models: React.FC = observer(() => {
 type GeneralOptionsBarProps<T extends Marker | Model> = {
   selected: T[];
   editSelected: (obj: T, partial: Partial<T>) => void;
+  clear: (id: string) => void;
 };
 const GeneralOptionsBar = observer(
-  <T extends Marker | Model>({ selected, editSelected }: GeneralOptionsBarProps<T>) => {
+  <T extends Marker | Model>({ selected, editSelected, clear }: GeneralOptionsBarProps<T>) => {
     const selectAll = () => {
       for (const obj of selected) {
         if (!obj.selected) {
@@ -307,7 +312,7 @@ const GeneralOptionsBar = observer(
         if (obj.selected) editSelected(obj, { selected: false } as Partial<T>);
       }
     };
-    const [selectedAll, setSelectedAll] = useState(false);
+    const selectedAll = selected.length > 0 && selected.every((obj) => obj.selected);
     const indeterminate =
       selected.length > 0 && selected.some((obj) => !obj.selected) && selected.some((obj) => obj.selected);
     return (
@@ -318,11 +323,10 @@ const GeneralOptionsBar = observer(
           borderColor: "divider"
         }}>
         <TSCCheckbox
-          checked={selectedAll}
+          checked={selectedAll && !indeterminate}
           indeterminate={indeterminate}
           onClick={() => {
             const newValue = !selectedAll;
-            setSelectedAll(newValue);
             if (newValue) {
               selectAll();
             } else {
@@ -330,8 +334,16 @@ const GeneralOptionsBar = observer(
             }
           }}
         />
-        <CustomTooltip title={"Delete Selected"}>
-          <Box>
+        <Tooltip title={"Delete Selected"}>
+          <Box
+            className={styles.delete}
+            onClick={() => {
+              for (const obj of selected) {
+                if (obj.selected) {
+                  clear(obj.id);
+                }
+              }
+            }}>
             <Lottie
               className={styles.lottie}
               animationData={TrashCanIcon}
@@ -341,7 +353,7 @@ const GeneralOptionsBar = observer(
               speed={1.7}
             />
           </Box>
-        </CustomTooltip>
+        </Tooltip>
       </Box>
     );
   }
@@ -470,7 +482,11 @@ const Markers: React.FC = observer(() => {
   const { t } = useTranslation();
   return (
     <Box className={styles.markersContainer}>
-      <GeneralOptionsBar<Marker> selected={state.crossPlot.markers} editSelected={actions.editCrossPlotMarker} />
+      <GeneralOptionsBar<Marker>
+        selected={state.crossPlot.markers}
+        editSelected={actions.editCrossPlotMarker}
+        clear={actions.removeCrossPlotMarkers}
+      />
       {state.crossPlot.markers.length > 0 && (
         <StyledScrollbar>
           <Box className={styles.markersComponent}>
