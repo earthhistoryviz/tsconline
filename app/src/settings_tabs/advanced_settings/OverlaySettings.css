@@ -30,8 +30,7 @@
   text-overflow: ellipsis;
   max-width: 300px;
   margin: 1;
-  border-radius: 5px;
-  background-color: #767bb3;
+  /* background-color: #767bb3; */
 }
 
 .empty-overlay-name {

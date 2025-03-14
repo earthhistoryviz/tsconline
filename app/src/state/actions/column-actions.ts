@@ -685,7 +685,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     );
     return;
   }
-  const dualColCompColumnName = prependDualColCompColumnName(column.name)
+  const dualColCompColumnName = prependDualColCompColumnName(column.name);
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
@@ -731,7 +731,7 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const columnToRemove = prependDualColCompColumnName(column.name)
+  const columnToRemove = prependDualColCompColumnName(column.name);
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;

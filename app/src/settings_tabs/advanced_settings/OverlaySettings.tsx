@@ -86,16 +86,43 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
         <div className="overlay-settings-content">
           <Box className="overlay-settings-container">
             <Box className="overlay-name-and-checkbox">
-              <Typography>{t("settings.column.overlay-menu.current-overlay")}</Typography>
-              {column.columnSpecificSettings.drawDualColCompColumn ? (
-                <Typography className="overlay-name">
-                  {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
-                </Typography>
+              <Box>
+                <Typography>Overlaying</Typography>
+                {column.columnSpecificSettings.drawDualColCompColumn ? (
+                  <Typography
+                    style={{
+                      backgroundColor: theme.palette.secondaryBackground.dark
+                    }}
+                    className="overlay-name">
+                    {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
+                  </Typography>
+                ) : (
+                  <Typography className="empty-overlay-name">
+                    {t("settings.column.overlay-menu.choose-column-empty")}
+                  </Typography>
+                )}
+
+                <Typography>Over</Typography>
+                <Typography className="overlay-name">{state.columnMenu.columnSelected}</Typography>
+              </Box>
+              {/* {column.columnSpecificSettings.drawDualColCompColumn ? (
+                <Box>
+                  <Typography>Overlaying</Typography>
+                  <Typography
+                    style={{
+                      backgroundColor: theme.palette.secondaryBackground.dark
+                    }}
+                    className="overlay-name">
+                    {discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)}
+                  </Typography>
+                  <Typography>Over</Typography>
+                  <Typography  className="overlay-name">{state.columnMenu.columnSelected}</Typography>
+                </Box>
               ) : (
                 <Typography className="empty-overlay-name">
                   {t("settings.column.overlay-menu.choose-column-empty")}
                 </Typography>
-              )}
+              )} */}
 
               <Box className="overlay-checkbox-container">
                 <TSCCheckbox
@@ -123,6 +150,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
               </Box>
             </Box>
             <Box>
+              <Typography>Grayed out columns are disabled for Overlay (not Event or Point column)</Typography>
               <Box
                 id="DccColumnAccordionWrapper"
                 ref={scrollRef}
