@@ -550,7 +550,7 @@ describe("verifyRecaptcha tests", () => {
         method: method as InjectOptions["method"],
         url: url,
         payload: body,
-        headers: { ...headers, "recaptcha-token": "", "recaptcha-action": "test-action" }
+        headers: { ...headers, "recaptcha-token": "" }
       });
       expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
       expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
@@ -579,7 +579,7 @@ describe("verifyRecaptcha tests", () => {
       });
       expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
       expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "recaptcha failed" });
+      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
       expect(response.statusCode).toBe(422);
     });
 
@@ -593,7 +593,7 @@ describe("verifyRecaptcha tests", () => {
       });
       expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
       expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "recaptcha error" });
+      expect(await response.json()).toEqual({ error: "Recaptcha error" });
       expect(response.statusCode).toBe(500);
     });
   });
