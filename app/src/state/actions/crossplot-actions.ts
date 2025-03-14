@@ -192,6 +192,9 @@ export const editCrossPlotModel = action((model: Model, partial: Partial<Model>)
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
   }
+  if (partial.selected !== undefined) {
+    model.selected = partial.selected;
+  }
   const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
     model.color = partial.color;
@@ -236,6 +239,9 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (state.crossPlot.crossPlotBounds === undefined) {
     throw new Error("CrossPlotBounds is undefined");
+  }
+  if (partial.selected !== undefined) {
+    marker.selected = partial.selected;
   }
   const { scaleX, topAgeX, scaleY, topAgeY, minX, minY, maxX, maxY } = state.crossPlot.crossPlotBounds;
   if (partial.color !== undefined) {
@@ -319,6 +325,7 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
 });
 export const sendCrossPlotConversionRequest = action(async () => {
   try {
+    setCrossPlotConverting(true);
     if (!state.crossPlot.chartY) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
@@ -327,10 +334,18 @@ export const sendCrossPlotConversionRequest = action(async () => {
       pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
       return;
     }
+    if (state.crossPlot.models.length <= 1) {
+      pushError(ErrorCodes.NO_MODELS);
+      return;
+    }
     assertColumnInfoRoot(state.crossPlot.chartY);
     const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
     if (!datapack) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    if (datapack.ageUnits.toLowerCase() === "ma") {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
       return;
     }
     const columnRoot = cloneDeep(defaultColumnRoot);
@@ -338,14 +353,6 @@ export const sendCrossPlotConversionRequest = action(async () => {
     const columnCopy = cloneDeep(columnRoot);
     const chartSettingsCopy = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    if (state.crossPlot.models.length === 0) {
-      pushError(ErrorCodes.NO_MODELS);
-      return;
-    }
-    if (datapack.ageUnits.toLowerCase() === "ma") {
-      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
-      return;
-    }
     const body = {
       datapackTitle: datapack.title,
       uuid: getUUIDOfDatapackType(datapack),
@@ -369,6 +376,8 @@ export const sendCrossPlotConversionRequest = action(async () => {
   } catch (e) {
     console.error(e);
     pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+  } finally {
+    setCrossPlotConverting(false);
   }
 });
 
@@ -560,4 +569,8 @@ const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: Column
   columnRoot.children.push(columnTwo);
   columnRoot.fontOptions = Array.from(new Set([...columnOne.fontOptions, ...columnTwo.fontOptions]));
   return columnRoot;
+});
+
+export const setCrossPlotConverting = action((converting: boolean) => {
+  state.crossPlot.converting = converting;
 });

@@ -593,7 +593,9 @@ export const setDatapackConfig = action(
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
-      delete state.settings.timeSettings["Ma"];
+      runInAction(() => {
+        delete state.settings.timeSettings["Ma"];
+      });
     }
 
     if (chartSettings !== null) {
@@ -603,7 +605,9 @@ export const setDatapackConfig = action(
       // set any new units in the time
       for (const chart of columnRoot.children) {
         if (!state.settings.timeSettings[chart.units]) {
-          state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          runInAction(() => {
+            state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          });
         }
       }
     }
