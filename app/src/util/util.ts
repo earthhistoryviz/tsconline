@@ -13,6 +13,10 @@ export function discardTscPrefix(name: string | null) {
   if (!name) {
     return "";
   }
+  //doesn't have colon delimiter
+  if (name.split(":").length < 2) {
+    return name;
+  }
   return name.split(":")[1];
 }
 

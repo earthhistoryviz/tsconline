@@ -50,8 +50,8 @@ import {
   findRangeOfWindowStats
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
-import { altUnitNamePrefix, dualColCompPrefix } from "../../util/constant";
-import { discardTscPrefix, findSerialNum } from "../../util/util";
+import { altUnitNamePrefix } from "../../util/constant";
+import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -685,7 +685,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     );
     return;
   }
-  const dualColCompColumnName = dualColCompPrefix + column.name;
+  const dualColCompColumnName = prependDualColCompColumnName(column.name)
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
@@ -731,7 +731,7 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const columnToRemove = dualColCompPrefix + column.name;
+  const columnToRemove = prependDualColCompColumnName(column.name)
   const index = parent.children.findIndex((child) => child.name === columnToRemove);
   if (index === -1) {
     return;
