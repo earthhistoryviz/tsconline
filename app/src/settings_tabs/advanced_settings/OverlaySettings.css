@@ -8,7 +8,15 @@
   padding-left: 10px;
   height: 40vh;
   resize: horizontal;
-  margin: 20px;
+  margin: 0px 19px;
+}
+.dcc-accordion-and-caption {
+  display: flex;
+  flex-direction: column;
+}
+.dcc-accordion-caption {
+  align-self: flex-end;
+  padding-right: 30px;
 }
 
 .MuiTypography-root.dcc-not-allowed {
