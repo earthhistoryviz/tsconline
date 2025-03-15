@@ -2,6 +2,7 @@ import {
   Datapack,
   DatapackMetadata,
   DatapackUniqueIdentifier,
+  MapInfo,
   SharedUser,
   isOfficialDatapack,
   isUserDatapack,
@@ -10,7 +11,10 @@ import {
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
 import { Workshop } from "../Workshops";
-import { State } from "./state";
+import { State } from ".";
+export const getDotSizeFromScale = (size: number, scale: number) => {
+  return Math.min(size * Math.pow(scale, -0.8), 3 * size);
+};
 
 export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
   const {
@@ -139,4 +143,28 @@ export function getPastWorkshops(workshops: Workshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
+}
+export function getMapImageUrl(mapInfo: MapInfo[string]) {
+  return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
+}
+export async function downloadFile(blob: Blob, filename: string) {
+  const reader = new FileReader();
+  reader.readAsDataURL(blob);
+  await new Promise((resolve, reject) => {
+    reader.onloadend = resolve;
+    reader.onerror = reject;
+  });
+  if (typeof reader.result !== "string") {
+    throw new Error("Invalid file");
+  }
+  const fileURL = reader.result;
+  if (!fileURL) throw new Error("Invalid file");
+  const aTag = document.createElement("a");
+  aTag.href = fileURL;
+
+  aTag.setAttribute("download", filename);
+
+  document.body.appendChild(aTag);
+  aTag.click();
+  aTag.remove();
 }

@@ -1,7 +1,29 @@
 import { mkdir, readdir } from "fs/promises";
 import path from "path";
 import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util.js";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
+import { CACHED_USER_DATAPACK_FILENAME, DECRYPTED_DIRECTORY_NAME } from "../constants.js";
+import { fetchUserDatapack } from "./user-handler.js";
+
+export function getDecryptedDirectory(directory: string) {
+  return path.join(directory, DECRYPTED_DIRECTORY_NAME);
+}
+export async function getDecryptedDatapackFilePath(uuid: string, datapackTitle: string) {
+  const directory = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  const decryptedDirectory = getDecryptedDirectory(directory);
+  const datapackJson = await fetchUserDatapack(uuid, datapackTitle);
+  const decryptedDatapackDirectory = path.join(
+    decryptedDirectory,
+    path.parse(datapackJson.storedFileName).name,
+    "datapacks"
+  );
+  const dirs = await readdir(decryptedDatapackDirectory, { withFileTypes: true });
+  for (const file of dirs) {
+    if (path.extname(file.name) === ".txt") {
+      return path.join(decryptedDatapackDirectory, file.name);
+    }
+  }
+  throw new Error("No decrypted datapack found");
+}
 
 // TODO WRITE TESTS FOR WHOLE FILE
 /**

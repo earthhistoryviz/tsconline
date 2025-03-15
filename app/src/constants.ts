@@ -35,7 +35,13 @@ export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   baseStageAge: 10,
   unitsPerMY: 2
 };
-export const isDevServer = window.location.hostname === "www.dev.timescalecreator.org" || "www.pr-preview.geolex.org";
+
+export const isDevServer =
+  window.location.hostname === "dev.timescalecreator.org" ||
+  window.location.hostname === "pr-preview.geolex.org" ||
+  window.location.hostname === "localhost";
+
+export const isDDEServer = window.location.hostname === "timescalecreator.deep-time.org";
 
 export const defaultChartZoomSettings: ChartZoomSettings = {
   zoomFitScale: 1,
@@ -56,5 +62,6 @@ export const defaultChartTabState: ChartTabState = {
   isSavingChart: false,
   unsafeChartContent: "",
   madeChart: false,
-  chartLoading: false
+  chartLoading: false,
+  matchesSettings: true
 };

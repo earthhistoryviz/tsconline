@@ -212,17 +212,8 @@ jobs:
           script: |
             cd ${{ secrets.DEV_PATH }}
 
-            git pull --no-edit
-
-            PULL_STATUS=$?
-
-            if [ $PULL_STATUS -eq 0 ]; then
-              echo "git pull succeeded"
-            else
-              echo "git pull failed with exit status $PULL_STATUS"
-              echo "General error: Possible reasons could include merge conflicts, network issues, or authentication problems."
-              exit 1
-            fi
+            git fetch origin main
+            git reset --hard origin/main
 
             unzip -q -o build-artifacts.zip -d ${{ secrets.DEV_PATH }}
             rm build-artifacts.zip
@@ -244,8 +235,6 @@ jobs:
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
-            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
-            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
             if [ ! -f "docker-compose-server.yml" ]; then
               echo "Error: docker-compose-server.yml not found"
@@ -268,17 +257,11 @@ jobs:
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
             sleep 5
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for tsconline."
-              exit 1
-            fi
-
             MAX_WAIT=480
             INTERVAL=5
             ELAPSED=0
 
-            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            while ! docker-compose -f docker-compose-server.yml exec -T tsconline curl -s http://localhost:3000; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"

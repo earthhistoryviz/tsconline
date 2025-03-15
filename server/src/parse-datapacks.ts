@@ -66,7 +66,8 @@ import {
   DefaultChronostrat,
   DatapackMetadata,
   allFontOptions,
-  Datapack
+  Datapack,
+  getUUIDOfDatapackType
 } from "@tsconline/shared";
 import {
   grabFilepaths,
@@ -308,7 +309,11 @@ export async function parseDatapacks(
       (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "datapack-images"))) +
       (await countFiles(join(decryptFilePath, parse(datapackMetadata.storedFileName).name, "MapImages"))),
     totalColumns: Object.values(columnTypeCounter).reduce((a, b) => a + b, 0),
-    mapPack: await parseMapPacks([datapackMetadata.storedFileName], decryptFilePath)
+    mapPack: await parseMapPacks(
+      [datapackMetadata.storedFileName],
+      decryptFilePath,
+      getUUIDOfDatapackType(datapackMetadata)
+    )
   };
   const datapack: Datapack = {
     ...baseDatapackProps,
@@ -403,8 +408,29 @@ export async function getAllEntries(
           defaultChronostrat = value;
           continue;
         case "date:":
-          if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
-          date = new Date(value).toISOString().split("T")[0] || null;
+          try {
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(value)) value = value.split("/").reverse().join("-");
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
+          try {
+            if (/^\d{2}\/\d{2}\/\d{2}$/.test(value)) value = value.split("/").reverse().join("-");
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
+          try {
+            date = new Date(value).toISOString().split("T")[0] || null;
+            filePropertyLines++;
+            continue;
+          } catch (e) {
+            // eslint-disable-next-line no-console
+          }
           filePropertyLines++;
           continue;
         case "format version:":

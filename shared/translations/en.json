@@ -229,6 +229,10 @@
                 "select-datapack": "Please select a datapack.",
                 "xAxis": "X Axis (Age-only)",
                 "yAxis": "Y Axis (Age/Depth)"
+            },
+            "sidebar": {
+                "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
+                "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             }
         },
         "settingsTabs": {
@@ -572,7 +576,12 @@
             "ADMIN_SERVER_DATAPACK_ALREADY_EXISTS": "Server datapack already exists in workshop. Please choose a different datapack.",
             "ADMIN_WORKSHOP_ENDED": "Workshop has ended. You can no longer edit or add datapacks to it.",
             "WORKSHOP_FETCH_DATAPACK_FAILED": "Failed to fetch workshop datapacks. Please try again later.",
-            "METADATA_NOT_FOUND": "Metadata not found. Please try again later."
+            "METADATA_NOT_FOUND": "Metadata not found. Please try again later.",
+            "INVALID_CROSSPLOT_CONVERSION": "Invalid crossplot conversion. Please select a valid chart for the Y Axis.",
+            "INVALID_CROSSPLOT_UNITS": "Please select a different unit for the Y Axis. This unit cannot be converted.",
+            "CROSSPLOT_CONVERSION_FAILED": "Crossplot conversion failed. Please try again later.",
+            "NO_MODELS": "No models available. Please add a model by clicking the chart in the main view.",
+            "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes."
         },
         "button": {
             "generate": "Generate",

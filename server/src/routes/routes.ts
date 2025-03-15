@@ -28,7 +28,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { fetchDatapackProfilePictureFilepath } from "../upload-handlers.js";
+import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 
 /**
  * Fetches the official datapack with the given name if it is public
@@ -495,3 +495,20 @@ export const fetchDatapackCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
+
+export async function fetchMapImages(
+  request: FastifyRequest<{ Params: { title: string; uuid: string; img: string } }>,
+  reply: FastifyReply
+) {
+  try {
+    const { title, uuid, img } = request.params;
+    const path = await fetchMapPackImageFilepath(decodeURIComponent(uuid), title, img);
+    if (!path) {
+      return reply.status(404).send({ error: "Image not found" });
+    }
+    reply.send(await readFile(path));
+  } catch (err) {
+    console.error(err);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
+}

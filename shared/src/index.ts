@@ -15,6 +15,13 @@ export type SharedWorkshop = {
   active: boolean;
 };
 
+export type ConvertCrossPlotRequest = {
+  datapackTitle: string;
+  uuid: string;
+  models: string;
+  settings: string;
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -551,6 +558,8 @@ export type InfoPoints = {
 export type MapInfo = {
   [name: string]: {
     name: string;
+    datapackTitle: string;
+    uuid: string;
     img: string; // the image corresponding to the map image
     note?: string; // any notes on the map
     parent?: ParentMap; // the parent map this map exists in
@@ -608,6 +617,24 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
+  o: DatapackConfigForChartRequest
+): DatapackUniqueIdentifier {
+  return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
+}
+
+export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
+  if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
+  if (typeof o.datapackTitle !== "string")
+    throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
+  if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
+  if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
+  if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
+}
+
+export function getUUIDOfDatapackType(datapackType: DatapackType): string {
+  return datapackType.type === "official" ? "official" : datapackType.uuid;
+}
 export function isOfficialUUID(uuid: string): boolean {
   return uuid === "official";
 }
@@ -1599,6 +1626,8 @@ export function assertMapInfo(o: any): asserts o is MapInfo {
     if (typeof map !== "object" || map === null) {
       throw new Error(`MapInfo' value for key '${key}' must be a non-null object`);
     }
+    if (typeof map.datapackTitle !== "string") throwError("MapInfo", "datapackTitle", "string", map.datapackTitle);
+    if (typeof map.uuid !== "string") throwError("MapInfo", "uuid", "string", map.uuid);
     if (typeof map.name !== "string") throwError("MapInfo", "name", "string", map.name);
     if (typeof map.img !== "string") {
       throw new Error(`MapInfo' value for key '${key}' must have an 'img' string property`);

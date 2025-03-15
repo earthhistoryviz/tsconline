@@ -27,6 +27,7 @@ import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
+import * as crossPlotRoutes from "./routes/crossplot-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -272,6 +273,12 @@ server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, rou
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
 
+server.get<{ Params: { title: string; uuid: string; img: string } }>(
+  "/map-image/:title/:uuid/:img",
+  moderateRateLimit,
+  routes.fetchMapImages
+);
+
 server.get<{ Params: { title: string; uuid: string } }>(
   "/datapack-images/:title/:uuid",
   {
@@ -319,6 +326,8 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
+
+server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

@@ -25,7 +25,7 @@ export const ChartContext = createContext<ChartContextType>({
 
 type ChartProps = {
   Component: React.FC<{ ref: React.RefObject<HTMLDivElement> }>;
-  refList?: React.RefObject<HTMLDivElement>[];
+  refList?: { ref: React.RefObject<HTMLDivElement>; id: string }[];
   style?: React.CSSProperties;
   disableDoubleClick?: boolean;
 };
@@ -33,7 +33,7 @@ type ChartProps = {
 export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList, disableDoubleClick = false }) => {
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
-  const { chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
+  const { matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
   const { actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
@@ -41,7 +41,15 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 2;
+  const triggeredDifferentSettings = useRef(false);
   const { scale, zoomFitScale, zoomFitMidCoord, zoomFitMidCoordIsX, enableScrollZoom } = chartZoomSettings;
+
+  useEffect(() => {
+    if (!matchesSettings && !triggeredDifferentSettings.current) {
+      triggeredDifferentSettings.current = true;
+      actions.pushSnackbar("Chart settings are different from the displayed chart.", "warning");
+    }
+  }, [matchesSettings]);
 
   const setChartAlignmentValues = () => {
     const container = transformContainerRef.current;
@@ -121,7 +129,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
       if (container.instance.wrapperComponent)
         container.instance.wrapperComponent.removeEventListener("wheel", horizontalScrollWrapper);
     };
-  });
+  }, [setChartAlignmentValues]);
 
   // we need to setup the chart alignment values when the chart content changes
   // if the user generates again on the chart tab, we have to toggle the change by making sure to set setup false
@@ -144,24 +152,28 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
     }, 10);
   }, [zoomFitMidCoord, zoomFitScale, zoomFitMidCoordIsX]);
 
+  const map = new Map();
   // resize the transform wrapper to fix alignment of the chart when any component resizes ( that we give it )
+  // when switching to inspector console, the resize observer will continuously refresh until the screen is clicked.
   useEffect(() => {
     if (!refList || refList.length == 0) return;
-    const observers: ResizeObserver[] = [];
+    const observers: { observer: ResizeObserver; id: string }[] = [];
     for (const ref of refList) {
-      if (!ref.current) continue;
+      if (!ref.ref.current || map.has(ref.id)) continue;
       const resizeObserver = new ResizeObserver(() => {
         setChartAlignmentValues();
       });
-      resizeObserver.observe(ref.current);
-      observers.push(resizeObserver);
+      resizeObserver.observe(ref.ref.current);
+      map.set(ref.id, resizeObserver);
+      observers.push({ observer: resizeObserver, id: ref.id });
     }
     return () => {
       for (const observer of observers) {
-        observer.disconnect();
+        map.delete(observer.id);
+        observer.observer.disconnect();
       }
     };
-  }, [refList?.length]);
+  }, [refList?.map((ref) => ref.id).join("")]);
   const { t } = useTranslation();
 
   const onZoom = (e: ReactZoomPanPinchRef) => {
