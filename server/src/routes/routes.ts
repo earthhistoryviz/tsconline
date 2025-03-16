@@ -257,9 +257,6 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
           uuidFolder = datapack.uuid;
           break;
         }
-      case "treatise":
-        uuidFolder = "treatise";
-        break;
     }
     if (!uuidFolder) {
       reply.send({ error: "ERROR: unknown user associated with datapack" });

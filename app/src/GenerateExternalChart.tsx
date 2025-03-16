@@ -72,6 +72,8 @@ export const GenerateExternalChart: React.FC = () => {
         actions.toggleSettingsTabColumn("Geomagnetic Polarity");
         actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
         actions.toggleSettingsTabColumn("Microfossils");
+        actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
+
         const parts = datapackHash.split("-");
         const oldestTime = parseInt(parts[1], 10);
         const newestTime = parseInt(parts[2], 10);
