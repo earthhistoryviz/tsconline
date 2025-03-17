@@ -366,10 +366,9 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
       return;
     }
 
-    // const treatiseUUID = "treatise";
+    const treatiseUUID = "treatise";
     const parts = request.parts();
-    // const result = await processAndUploadDatapack(treatiseUUID, parts);
-    const result = await processAndUploadDatapack("official", parts);
+    const result = await processAndUploadDatapack(treatiseUUID, parts);
     // 409 means already uploaded
     if (result.code === 200 || result.code === 409) {
       reply.status(200).send({ hash: result.hashname });
