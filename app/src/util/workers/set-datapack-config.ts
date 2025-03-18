@@ -69,7 +69,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
       datapack.verticalScale
     )
       foundDefaultAge = true;
-    if (unitMap.has(datapack.ageUnits)) {
+    if (unitMap.has(datapack.ageUnits.toLowerCase())) {
       const existingUnitColumnInfo = unitMap.get(datapack.ageUnits)!;
       const newUnitChart = datapack.columnInfo;
       // slice off the existing unit column
@@ -84,7 +84,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
       (columnInfo as ColumnInfoRoot).datapackUniqueIdentifier =
         convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest);
       assertColumnInfoRoot(columnInfo);
-      unitMap.set(datapack.ageUnits, columnInfo);
+      unitMap.set(datapack.ageUnits.toLowerCase(), columnInfo);
     }
     const mapPack = datapack.mapPack;
     Object.assign(mapInfo, mapPack.mapInfo);
