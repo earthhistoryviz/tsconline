@@ -28,8 +28,7 @@ export type ConvertCrossPlotRequest = {
 };
 
 export type AutoPlotRequest = {
-  ageDatapack: DatapackUniqueIdentifier;
-  depthDatapack: DatapackUniqueIdentifier;
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[]; // require at least 2
   settings: string;
 };
 
@@ -629,6 +628,34 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export type Marker = {
+  selected: boolean;
+  id: string;
+  element: SVGRectElement;
+  age: number; // this allows for users to empty the age field
+  depth: number; // this allows for users to empty the depth field
+  x: number; // the actual pos with no rounding
+  y: number; // the actual pos with no rounding
+  color: string;
+  comment: string;
+  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
+  line: SVGLineElement;
+};
+
+export type Model = Omit<Marker, "type" | "line"> & {
+  type: "Rect" | "Circle";
+};
+
+export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
+export const modelTypes = ["Rect", "Circle"];
+
+export function isMarkerType(value: string): value is Marker["type"] {
+  return markerTypes.includes(value);
+}
+export function isModelType(value: string): value is Model["type"] {
+  return modelTypes.includes(value);
+}
+
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   o: DatapackConfigForChartRequest
 ): DatapackUniqueIdentifier {
@@ -637,8 +664,12 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
 
 export function assertAutoPlotRequest(o: any): asserts o is AutoPlotRequest {
   if (!o || typeof o !== "object") throw new Error("AutoPlotRequest must be a non-null object");
-  assertDatapackUniqueIdentifier(o.ageDatapack);
-  assertDatapackUniqueIdentifier(o.depthDatapack);
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
+  if (o.datapackUniqueIdentifiers.length < 2) {
+    throw new Error("AutoPlotRequest must have at least 2 datapackUniqueIdentifiers");
+  }
   if (typeof o.settings !== "string") throwError("AutoPlotRequest", "settings", "string", o.settings);
 }
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
