@@ -62,15 +62,17 @@ export const CrossPlotSideBar = observer(
         </Box>
         <Box className={styles.tabContent}>
           <Box className={styles.buttons}>
-          <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-            Generate Cross Plot
-          </TSCButton>
-          <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
-            Convert Datapack
-          </TSCButton>
-          <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
-            Auto Plot
-          </TSCButton>
+            <TSCButton
+              className={styles.generate}
+              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+              Generate Cross Plot
+            </TSCButton>
+            <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+              Convert Datapack
+            </TSCButton>
+            <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
+              Auto Plot
+            </TSCButton>
           </Box>
           {tabs[tabIndex].component}
         </Box>
