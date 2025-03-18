@@ -42,6 +42,7 @@ import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
 export type State = {
+  initializingApp: boolean;
   chartTab: {
     chartTimelineLocked: boolean;
     state: ChartTabState;
@@ -157,6 +158,7 @@ export type State = {
 };
 
 export const state = observable<State>({
+  initializingApp: false,
   chartTab: {
     chartTimelineLocked: false,
     state: cloneDeep(defaultChartTabState)

@@ -102,7 +102,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       } finally {
                         actions.setLoadingDatapacks(false);
                       }
-                      const success = await actions.processDatapackConfig(datapacks, preset.settings);
+                      const success = await actions.processDatapackConfig(datapacks, { settingsPath: preset.settings });
                       if (!success) return;
                       actions.initiateChartGeneration(navigate, "/home");
                     }}

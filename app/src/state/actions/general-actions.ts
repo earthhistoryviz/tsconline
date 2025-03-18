@@ -481,14 +481,21 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: {
+      settingsPath?: string;
+      force?: boolean;
+    }
+  ) => {
+    const { settingsPath, force } = options || {};
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
-    setIsProcessingDatapacks(true);
+      setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settingsPath && settingsPath.length !== 0) {
         try {
@@ -533,8 +540,9 @@ export const processDatapackConfig = action(
                 value.datapacks,
                 chartSettings
               );
-
-              pushSnackbar("Datapack Config Updated", "success");
+              if (!state.initializingApp) {
+                pushSnackbar("Datapack Config Updated", "success");
+              }
               setUnsavedDatapackConfig(datapacks);
               resolve("Datapack Config Updated successfully.");
             } catch (e) {
@@ -562,6 +570,10 @@ export const processDatapackConfig = action(
     return true;
   }
 );
+
+export const setInitializingApp = action("setInitializingApp", (initializingApp: boolean) => {
+  state.initializingApp = initializingApp;
+});
 
 export const setDatapackConfig = action(
   "setDatapackConfig",
