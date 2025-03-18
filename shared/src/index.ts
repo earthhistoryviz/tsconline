@@ -16,8 +16,7 @@ export type SharedWorkshop = {
 };
 
 export type ConvertCrossPlotRequest = {
-  datapackTitle: string;
-  uuid: string;
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
   models: string;
   settings: string;
 };
@@ -625,9 +624,9 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
 
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
-  if (typeof o.datapackTitle !== "string")
-    throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
-  if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
   if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
 }

@@ -1,4 +1,4 @@
-import { ConvertCrossPlotRequest } from "@tsconline/shared";
+import { ConvertCrossPlotRequest, DatapackUniqueIdentifier, getUUIDOfDatapackType } from "@tsconline/shared";
 import chalk from "chalk";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import md5 from "md5";
@@ -8,13 +8,16 @@ import { OperationResult } from "./types.js";
 import { getDecryptedDatapackFilePath } from "./user/fetch-user-files.js";
 import { spawn } from "child_process";
 export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWithModelsInJar(
-  uuid: string,
-  datapackTitle: string,
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[],
   outputTextFilepath: string,
   modelsTextFilepath: string,
   settingsTextFilepath: string
 ) {
-  const datapackFilepath = await getDecryptedDatapackFilePath(uuid, datapackTitle);
+  const datapackFilepaths = await Promise.all(
+    datapackUniqueIdentifiers.map((identifier) =>
+      getDecryptedDatapackFilePath(getUUIDOfDatapackType(identifier), identifier.title)
+    )
+  );
   const execJavaCommand = async (timeout: number) => {
     const args = [
       "-jar",
@@ -26,7 +29,7 @@ export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWi
       outputTextFilepath,
       "-convert",
       "-d",
-      datapackFilepath,
+      ...datapackFilepaths,
       "-models",
       modelsTextFilepath
     ];

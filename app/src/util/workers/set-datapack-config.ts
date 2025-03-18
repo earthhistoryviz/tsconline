@@ -78,11 +78,15 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
         child.parent = existingUnitColumnInfo.name;
       }
       existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
+      existingUnitColumnInfo.datapackUniqueIdentifiers.push(
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest)
+      );
     } else {
       const columnInfo = cloneDeep(datapack.columnInfo);
       columnInfo.parent = columnRoot.name;
-      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifier =
-        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest);
+      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifiers = [
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest)
+      ];
       assertColumnInfoRoot(columnInfo);
       unitMap.set(datapack.ageUnits.toLowerCase(), columnInfo);
     }
