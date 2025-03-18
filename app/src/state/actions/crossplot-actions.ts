@@ -580,5 +580,6 @@ export const setCrossPlotConverting = action((converting: boolean) => {
 });
 
 export const autoPlotCrossPlot = action(() => {
-  console.log("Auto plotting crossplot");
+  assertColumnInfoRoot(state.crossPlot.chartY);
+  assertColumnInfoRoot(state.crossPlot.chartX);
 });
