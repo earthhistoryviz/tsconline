@@ -18,6 +18,7 @@ export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWi
       getDecryptedDatapackFilePath(getUUIDOfDatapackType(identifier), identifier.title)
     )
   );
+  console.log("Datapack filepaths: " + datapackFilepaths);
   const execJavaCommand = async (timeout: number) => {
     const args = [
       "-jar",
