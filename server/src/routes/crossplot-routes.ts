@@ -1,16 +1,22 @@
-import { assertConvertCrossPlotRequest } from "@tsconline/shared";
+import { assertAutoPlotRequest, assertConvertCrossPlotRequest } from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { verifyFilepath } from "../util.js";
 import { readFile } from "fs/promises";
-import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../crossplot-handler.js";
+import {
+  autoPlotPointsWithJar,
+  convertCrossPlotWithModelsInJar,
+  setupAutoPlotDirectory,
+  setupConversionDirectory
+} from "../crossplot-handler.js";
 import { isOperationResult } from "../types.js";
+import logger from "../error-logger.js";
 
 export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
   try {
     assertConvertCrossPlotRequest(body);
   } catch (error) {
-    reply.code(400).send({ message: "Incorrect request body for converting to crossplot" });
+    reply.code(400).send({ error: "Incorrect request body for converting to crossplot" });
     return;
   }
   try {
@@ -42,6 +48,38 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
     }
   } catch (error) {
     console.error(error);
-    reply.code(500).send({ message: "Error converting to crossplot" });
+    reply.code(500).send({ error: "Error converting to crossplot" });
+  }
+};
+
+export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequest, reply: FastifyReply) {
+  const body = request.body;
+  try {
+    assertAutoPlotRequest(body);
+  } catch (error) {
+    reply.code(400).send({ error: "Incorrect request body for auto plotting points" });
+    return;
+  }
+  try {
+    const result = await setupAutoPlotDirectory(body);
+    if (typeof result === "string") {
+      reply.code(200).send(result);
+      return;
+    }
+    if (isOperationResult(result)) {
+      reply.code(result.code).send(result);
+      return;
+    }
+    const { outputTextFilepath, settingsTextFilepath } = result;
+    if (
+      (await autoPlotPointsWithJar(body.ageDatapack, body.depthDatapack, settingsTextFilepath, outputTextFilepath)) &&
+      (await verifyFilepath(outputTextFilepath))
+    ) {
+      const file = await readFile(outputTextFilepath, "utf-8");
+      reply.code(200).send(file);
+    }
+  } catch (e) {
+    logger.error(e);
+    reply.code(500).send({ error: "Error auto plotting" });
   }
 };

@@ -27,6 +27,12 @@ export type ConvertCrossPlotRequest = {
   settings: string;
 };
 
+export type AutoPlotRequest = {
+  ageDatapack: DatapackUniqueIdentifier;
+  depthDatapack: DatapackUniqueIdentifier;
+  settings: string;
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -629,6 +635,12 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
 }
 
+export function assertAutoPlotRequest(o: any): asserts o is AutoPlotRequest {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotRequest must be a non-null object");
+  assertDatapackUniqueIdentifier(o.ageDatapack);
+  assertDatapackUniqueIdentifier(o.depthDatapack);
+  if (typeof o.settings !== "string") throwError("AutoPlotRequest", "settings", "string", o.settings);
+}
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
   for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
