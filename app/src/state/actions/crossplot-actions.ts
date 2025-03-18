@@ -1,17 +1,18 @@
 import { action, isObservable, observable } from "mobx";
-import {
-  ChartSettings,
-  CrossPlotBounds,
-  CrossPlotTimeSettings,
-  Marker,
-  Model,
-  assertColumnInfoRoot
-} from "../../types";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, assertColumnInfoRoot } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, pushSnackbar, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, assertDatapackArray } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  FontsInfo,
+  defaultColumnRoot,
+  ChartRequest,
+  assertDatapackArray,
+  Marker,
+  Model
+} from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";

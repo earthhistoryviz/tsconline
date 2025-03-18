@@ -1,10 +1,9 @@
-import { roundToDecimalPlace } from "@tsconline/shared";
+import { Marker, Model, roundToDecimalPlace } from "@tsconline/shared";
 import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
 import { useMediaQuery, useTheme } from "@mui/material";
-import { Marker, Model } from "../types";
 import { CROSSPLOT_MOBILE_WIDTH } from "../crossplot/CrossPlotChart";
 import { getDotSizeFromScale } from "../state/non-action-util";
 import { reaction } from "mobx";
