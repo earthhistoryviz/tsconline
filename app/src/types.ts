@@ -232,6 +232,7 @@ export type EditableUserProperties = {
 };
 
 export type Marker = {
+  selected: boolean;
   id: string;
   element: SVGRectElement;
   age: number; // this allows for users to empty the age field
