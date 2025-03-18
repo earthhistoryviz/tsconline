@@ -3,7 +3,6 @@ import { Route, Routes, useNavigate, useLocation } from "react-router-dom";
 import { NavBar } from "./NavBar";
 import { Home } from "./Home";
 import { Settings } from "./Settings";
-import { ChartTab } from "./Chart";
 import { Help } from "./Help";
 import { ThemeProvider, StyledEngineProvider } from "@mui/material/styles";
 import { ddeDarkTheme, ddeLightTheme, originalDarkTheme, originalLightTheme } from "./theme";
@@ -36,6 +35,7 @@ import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
+import { ChartTab } from "./Chart";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -147,7 +147,7 @@ export default observer(function App() {
             <Route path="/" element={<Home />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/chart" element={<ChartTab />} />
-            <Route path="/help" element={<Help />} />
+            <Route path="/help/*" element={<Help />} />
             <Route path="/about" element={<About />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
