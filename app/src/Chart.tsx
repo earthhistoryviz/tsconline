@@ -10,14 +10,16 @@ import {
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton, Drawer, List, ListItemButton, ListItemText, Paper } from "@mui/material";
+import HistoryIcon from "@mui/icons-material/History";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
-import { context } from "./state";
+import { context, state } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
+import { formatDate } from "./state/non-action-util";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -182,6 +184,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
   return (
     <Box className="chart-container">
+      {state.isLoggedIn && <HistorySideBar />}
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
@@ -252,5 +255,57 @@ export const ChartTab: React.FC = observer(() => {
         <Chart Component={TSCSvgComponent} />
       </Box>
     </ChartContext.Provider>
+  );
+});
+
+const HistorySideBar: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [selectedHistory, setSelectedHistory] = useState(state.user.historyEntries[0]);
+  return (
+    <>
+      <Paper
+        onClick={() => setDrawerOpen(true)}
+        sx={{
+          position: "fixed",
+          left: 0,
+          top: "50%",
+          width: "40px",
+          height: "80px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "backgroundColor.main",
+          borderRadius: "0 8px 8px 0",
+          cursor: "pointer",
+          boxShadow: 3,
+          zIndex: 1000
+        }}>
+        <HistoryIcon fontSize="medium" />
+      </Paper>
+      <Drawer
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main" } }}>
+        <Box padding={2}>
+          <Box display="flex" alignItems="center">
+            <IconButton>
+              <HistoryIcon fontSize="medium" />
+            </IconButton>
+            <Typography variant="h5">
+              History
+            </Typography>
+          </Box>
+          <List>
+            {state.user.historyEntries.map((entry) => (
+              <ListItemButton key={entry.id} onClick={() => setSelectedHistory(entry)}>
+                <ListItemText primary={formatDate(entry.timestamp)} />
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 });
