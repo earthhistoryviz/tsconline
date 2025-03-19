@@ -400,3 +400,17 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     }
   }
 };
+
+// export const fetchUserHistory = async function fetchUserHistory(request: FastifyRequest, reply: FastifyReply) {
+//   const uuid = request.session.get("uuid");
+//   if (!uuid) {
+//     reply.status(401).send({ error: "User not logged in" });
+//     return;
+//   }
+//   try {
+//     const history = await getChartHistoryMetadata(uuid);
+//     reply.send(history);
+//   } catch (e) {
+//     reply.status(500).send({ error: "Failed to fetch history" });
+//   }
+// }
