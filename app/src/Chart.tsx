@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
-import { TSCPopupManager, TSCSvgComponent } from "./components";
+import { TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -261,9 +261,10 @@ export const ChartTab: React.FC = observer(() => {
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const [isDrawerOpen, setDrawerOpen] = useState(false);
-  const [selectedHistory, setSelectedHistory] = useState(state.user.historyEntries[0]);
+  const [loading, setLoading] = useState(false);
   return (
     <>
+      <TSCDialogLoader open={loading} transparentBackground />
       <Paper
         onClick={() => setDrawerOpen(true)}
         sx={{
@@ -293,13 +294,23 @@ const HistorySideBar: React.FC = observer(() => {
             <IconButton>
               <HistoryIcon fontSize="medium" />
             </IconButton>
-            <Typography variant="h5">
-              History
-            </Typography>
+            <Typography variant="h5">History</Typography>
           </Box>
           <List>
             {state.user.historyEntries.map((entry) => (
-              <ListItemButton key={entry.id} onClick={() => setSelectedHistory(entry)}>
+              <ListItemButton
+                key={entry.id}
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    const history = await actions.fetchUserHistory(entry.id);
+                    if (!history) return;
+                    await actions.setUserHistory(history);
+                    setDrawerOpen(false);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
                 <ListItemText primary={formatDate(entry.timestamp)} />
               </ListItemButton>
             ))}

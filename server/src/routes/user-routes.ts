@@ -14,6 +14,7 @@ import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handl
 import { DatapackMetadata } from "@tsconline/shared";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import path from "path";
+import { getChartHistory } from "../user/chart-history.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -401,16 +402,21 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
   }
 };
 
-// export const fetchUserHistory = async function fetchUserHistory(request: FastifyRequest, reply: FastifyReply) {
-//   const uuid = request.session.get("uuid");
-//   if (!uuid) {
-//     reply.status(401).send({ error: "User not logged in" });
-//     return;
-//   }
-//   try {
-//     const history = await getChartHistoryMetadata(uuid);
-//     reply.send(history);
-//   } catch (e) {
-//     reply.status(500).send({ error: "Failed to fetch history" });
-//   }
-// }
+export const fetchUserHistory = async function fetchUserHistory(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { id } = request.params;
+  try {
+    const history = await getChartHistory(uuid, id);
+    reply.send(history);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to fetch history" });
+  }
+};

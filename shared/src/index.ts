@@ -27,6 +27,13 @@ export type ConvertCrossPlotRequest = {
   settings: string;
 };
 
+export type ChartHistory = {
+  settings: string;
+  datapacks: Datapack[];
+  chartContent: string;
+  chartHash: string;
+};
+
 export type HistoryEntry = {
   id: string;
   timestamp: string;
@@ -633,6 +640,14 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   o: DatapackConfigForChartRequest
 ): DatapackUniqueIdentifier {
   return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
+}
+
+export function assertChartHistory(o: any): asserts o is ChartHistory {
+  if (!o || typeof o !== "object") throw new Error("ChartHistory must be a non-null object");
+  if (typeof o.settings !== "string") throwError("ChartHistory", "settings", "string", o.settings);
+  if (typeof o.chartContent !== "string") throwError("ChartHistory", "chartContent", "string", o.chartContent);
+  if (typeof o.chartHash !== "string") throwError("ChartHistory", "chartHash", "string", o.chartHash);
+  assertDatapackArray(o.datapacks);
 }
 
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
