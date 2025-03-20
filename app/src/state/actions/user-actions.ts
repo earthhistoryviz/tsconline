@@ -1,4 +1,4 @@
-import { action } from "mobx";
+import { action, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
   addDatapack,
@@ -6,19 +6,27 @@ import {
   pushError,
   pushSnackbar,
   removeDatapack,
-  fetchDatapack
+  fetchDatapack,
+  setChartTabState,
+  applySettings,
+  processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { DatapackFetchParams } from "../../types";
 import {
+  ChartHistory,
   Datapack,
   DatapackUniqueIdentifier,
+  assertChartHistory,
   assertDatapack,
   assertUserDatapack,
-  assertWorkshopDatapack
+  assertWorkshopDatapack,
+  extractDatapackType
 } from "@tsconline/shared";
 import { state } from "../state";
+import { purifyChartContent } from "./generate-chart-actions";
+import { xmlToJson } from "../parse-settings";
 
 export const setEditRequestInProgress = action((inProgress: boolean) => {
   state.datapackProfilePage.editRequestInProgress = inProgress;
@@ -153,4 +161,51 @@ export const setDatapackImageOnDatapack = action((datapack: Datapack, image: str
   datapack.datapackImage = image;
 });
 
-// export const fetchUserHistory = action((id: string) => {)
+export const fetchUserHistory = action(async (id: string) => {
+  try {
+    const response = await fetcher(`/user/history/${id}`, {
+      credentials: "include"
+    });
+    if (response.ok) {
+      const history = await response.json();
+      assertChartHistory(history);
+      return history;
+    } else {
+      displayServerError(
+        response.statusText,
+        ErrorCodes.USER_FETCH_HISTORY_FAILED,
+        ErrorMessages[ErrorCodes.USER_FETCH_HISTORY_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const setUserHistory = action(async (history: ChartHistory) => {
+  for (const datapack of history.datapacks) {
+    addDatapack(datapack);
+  }
+  await Promise.all([
+    processDatapackConfig(
+      toJS(
+        history.datapacks.map((d) => {
+          return {
+            title: d.title,
+            isPublic: d.isPublic,
+            storedFileName: d.storedFileName,
+            ...extractDatapackType(d)
+          };
+        })
+      )
+    ),
+    applySettings(xmlToJson(history.settings))
+  ]);
+  setChartTabState(state.chartTab.state, {
+    chartContent: purifyChartContent(history.chartContent),
+    chartHash: history.chartHash,
+    madeChart: true,
+    unsafeChartContent: history.chartContent,
+    chartTimelineEnabled: false
+  });
+});

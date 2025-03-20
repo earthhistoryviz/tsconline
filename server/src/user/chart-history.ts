@@ -1,9 +1,9 @@
 import { assetconfigs } from "../util.js";
-import { join, basename } from "path";
-import { cp, mkdir, readdir, realpath, rm, symlink } from "fs/promises";
+import { join, basename, dirname } from "path";
+import { cp, mkdir, readFile, readdir, realpath, rm, symlink } from "fs/promises";
 import logger from "../error-logger.js";
-import { entries } from "lodash";
-import { HistoryEntry } from "@tsconline/shared";
+import { HistoryEntry, assertDatapack } from "@tsconline/shared";
+import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
 
 /**
  * Save chart history to the user's history file
@@ -11,7 +11,13 @@ import { HistoryEntry } from "@tsconline/shared";
  * @param settingsFilePath File path to the settings file
  * @param datapackPaths File paths to the datapacks
  */
-export async function saveChartHistory(uuid: string, settingsFilePath: string, datapackPaths: string[], chartPath: string) {
+export async function saveChartHistory(
+  uuid: string,
+  settingsFilePath: string,
+  datapackPaths: string[],
+  chartPath: string,
+  chartHash: string
+) {
   const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
   const newHistoryEntry = join(historyDir, Date.now().toString());
   try {
@@ -24,13 +30,14 @@ export async function saveChartHistory(uuid: string, settingsFilePath: string, d
 
     await mkdir(newHistoryEntry);
     await cp(settingsFilePath, join(newHistoryEntry, "settings.tsc"));
-    await cp(chartPath, join(newHistoryEntry, "chart.svg"));
+    await cp(chartPath, join(newHistoryEntry, `${chartHash}.svg`));
 
     const datapacksDir = join(newHistoryEntry, "datapacks");
     await mkdir(datapacksDir);
     for (const datapackPath of datapackPaths) {
       const absoluteDatapackPath = await realpath(datapackPath);
-      await symlink(absoluteDatapackPath, join(datapacksDir, basename(datapackPath)));
+      const datapackDir = dirname(absoluteDatapackPath);
+      await symlink(datapackDir, join(datapacksDir, basename(datapackDir)));
     }
   } catch (error) {
     logger.error("Failed to save chart history", error);
@@ -56,15 +63,40 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
 /**
  * Get the settings and datapacks for a specific chart history entry
  * @param uuid User's UUID
- * @param id ID of the history entry when sorted by timestamp
- * @returns 
+ * @param id ID of the history entry when sorted by timestamp, must be between 0 and 9
  */
-export async function getChartHistory(uuid: string, id: string): Promise<{ settings: string; datapacks: string[] }> {
-  const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history", id);
-  const settings = await realpath(join(historyDir, "settings.tsc"));
-  const datapacks = await readdir(join(historyDir, "datapacks"));
+export async function getChartHistory(uuid: string, id: string) {
+  if (isNaN(parseInt(id)) || parseInt(id) < 0 || parseInt(id) > 9) throw new Error("Invalid history ID");
+  const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
+  const entries = await readdir(historyDir);
+  const entry = entries.sort()[parseInt(id)];
+  if (!entry) throw new Error("History entry not found");
+
+  const historyEntryDir = join(historyDir, entry);
+  const settings = await readFile(join(historyEntryDir, "settings.tsc"), "utf-8");
+  const chartPath = await readdir(historyEntryDir).then((files) => files.find((file) => file.endsWith(".svg")));
+  if (!chartPath) throw new Error("Chart not found");
+
+  const chartContent = await readFile(join(historyEntryDir, chartPath), "utf-8");
+  const chartHash = chartPath.replace(".svg", "");
+  const datapackDirsPath = join(historyEntryDir, "datapacks");
+  const datapackDirs = await readdir(datapackDirsPath);
+
+  const datapacks = await Promise.all(
+    datapackDirs.map(async (datapackDir) => {
+      const datapackDirPath = join(datapackDirsPath, datapackDir);
+      const resolvedPath = await realpath(datapackDirPath);
+      const datapackJsonPath = join(resolvedPath, CACHED_USER_DATAPACK_FILENAME);
+      const datapackJson = JSON.parse(await readFile(datapackJsonPath, "utf-8"));
+      assertDatapack(datapackJson);
+      return datapackJson;
+    })
+  );
+
   return {
     settings,
-    datapacks: datapacks.map(datapack => join(historyDir, "datapacks", datapack))
+    datapacks,
+    chartContent,
+    chartHash
   };
 }

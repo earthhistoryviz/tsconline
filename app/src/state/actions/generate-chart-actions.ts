@@ -208,25 +208,7 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
       assertChartInfo(answer);
       await generalActions.checkSVGStatus(answer.hash);
       const content = await (await fetcher(answer.chartpath)).text();
-      const domPurifyConfig = {
-        ADD_ATTR: [
-          "docbase",
-          "popuptext",
-          "minY",
-          "maxY",
-          "vertScale",
-          "topAge",
-          "baseAge",
-          "minX",
-          "maxX",
-          "baseLimit",
-          "topLimit",
-          "x1",
-          "y1"
-        ],
-        ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
-      };
-      const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
+      const sanitizedSVG = purifyChartContent(content);
       generalActions.pushSnackbar("Successfully generated chart", "success");
       return {
         chartContent: sanitizedSVG,
@@ -251,3 +233,25 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
+
+export function purifyChartContent(content: string) {
+  const domPurifyConfig = {
+    ADD_ATTR: [
+      "docbase",
+      "popuptext",
+      "minY",
+      "maxY",
+      "vertScale",
+      "topAge",
+      "baseAge",
+      "minX",
+      "maxX",
+      "baseLimit",
+      "topLimit",
+      "x1",
+      "y1"
+    ],
+    ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
+  };
+  return DOMPurify.sanitize(content, domPurifyConfig);
+}

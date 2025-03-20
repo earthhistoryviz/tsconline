@@ -58,7 +58,7 @@ export type ColumnInfoTSC =
   | ZoneColumnInfoTSC
   | EventColumnInfoTSC
   | SequenceColumnInfoTSC
-  | RangeColumnInfoTSC 
+  | RangeColumnInfoTSC
   | PointColumnInfoTSC
   | RulerColumnInfoTSC
   | ChronColumnInfoTSC;
