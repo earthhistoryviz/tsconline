@@ -873,13 +873,12 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
       }
     }
     if (!file) {
-      console.error("No files were uploaded");
       reply.status(400).send({ error: "No files were uploaded" });
       return;
     }
     reply.send({ message: "Files added to workshop" });
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply.status(500).send({ error: "Error uploading files to workshop" });
   }
 };
@@ -901,13 +900,11 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
           return;
         }
         if (!workshopId) {
-          console.error("Missing workshopId ");
           reply.status(400).send({ error: "Missing workshopId" });
           return;
         }
         const workshop = await getWorkshopIfNotEnded(workshopId);
         if (!workshop) {
-          console.error("Workshop not found or has ended");
           reply.status(404).send({ error: "Workshop not found or has ended" });
           return;
         }
@@ -921,12 +918,11 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
       }
     }
     if (!coverPicture) {
-      console.error("No cover picture were uploaded");
       reply.status(400).send({ error: "No cover picture were uploaded" });
       return;
     }
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     reply.status(500).send({ error: "Error uploading cover picture to workshop" });
   }
 };

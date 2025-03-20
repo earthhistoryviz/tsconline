@@ -32,9 +32,9 @@ export const WorkshopDetails = observer(() => {
       if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, [shouldLoadRecaptcha]);
-  function downloadWorkshopFiles() {
+  async function downloadWorkshopFiles() {
     if (workshop) {
-      actions.fetchWorkshopFilesForDownload(workshop);
+      await actions.fetchWorkshopFilesForDownload(workshop);
     }
   }
 

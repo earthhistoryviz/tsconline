@@ -164,20 +164,19 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       const errorMessages: string[] = [];
 
       if (!workshopTitle) {
-        errorMessages.push("Invalid form: Workshop title is required.");
+        console.log("here");
+        actions.pushError(ErrorCodes.INVALID_FORM);
+        return;
       }
       if (!startDate || !endDate) {
-        errorMessages.push("Invalid form: Start and end dates are required.");
+        console.log("here");
+        actions.pushError(ErrorCodes.INVALID_FORM);
+        return;
       }
       const start = dayjs(startDate).toISOString();
       const end = dayjs(endDate).toISOString();
       if (dayjs(start).isAfter(dayjs(end)) || dayjs(start).isSame(dayjs(end))) {
         actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
-        return;
-      }
-
-      if (errorMessages.length > 0) {
-        actions.pushSnackbar(errorMessages.join(" "), "warning");
         return;
       }
 
@@ -315,8 +314,28 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
 
     const filesArray = Array.from(uploadedFiles);
-    setFiles((prevFiles) => (prevFiles ? [...prevFiles, ...filesArray] : filesArray));
+
+    setFiles((prevFiles) => {
+      const fileMap = new Map<string, File>();
+      let duplicated = false;
+
+      prevFiles?.forEach((file) => fileMap.set(file.name, file));
+
+      filesArray.forEach((file) => {
+        if (fileMap.has(file.name)) {
+          duplicated = true;
+        }
+        fileMap.set(file.name, file);
+      });
+
+      if (duplicated) {
+        actions.pushSnackbar("Duplicate file detected. The newest uploaded versions have been kept.", "warning");
+      }
+
+      return Array.from(fileMap.values());
+    });
   };
+
   const handleCoverPictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedCoverPicture = event.target.files![0];
     if (!uploadedCoverPicture) {
@@ -468,7 +487,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   style={{
                     height: "0.05px",
                     width: "100%",
-                    backgroundColor: theme.palette.outline.main
+                    backgroundColor: theme.palette.divider
                   }}
                 />
                 <Box textAlign="center" width="100%">
@@ -537,7 +556,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                   style={{
                     height: "0.05px",
                     width: "100%",
-                    backgroundColor: theme.palette.outline.main
+                    backgroundColor: theme.palette.divider
                   }}
                 />
                 <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">

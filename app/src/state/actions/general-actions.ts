@@ -1253,7 +1253,10 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
   const route = `/user/workshop/download/${workshop.workshopId}`;
   const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
   if (!recaptchaToken) return null;
-  console.error(recaptchaToken);
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return null;
+  }
   const response = await fetcher(route, {
     method: "GET",
     credentials: "include",
