@@ -7,8 +7,8 @@ import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, use
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
-import { ColumnInfo } from "@tsconline/shared";
+import { CrossPlotTimeSettings } from "../types";
+import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";

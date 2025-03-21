@@ -1,5 +1,5 @@
 {
-  "activeJar": "assets/jars/TSCreatorBASE-8.1_18March2025.jar",
+  "activeJar": "assets/jars/TSCreatorBASE-8.1_21March2025.jar",
   "decryptionJar": "assets/jars/datapack-decrypter_21Jun2024.jar",
   "decryptionDirectory": "assets/decrypted",
   "datapacksDirectory": "assets/datapacks",
@@ -14,5 +14,6 @@
   "privateDatapacksDirectory": "assets/uploads/private",
   "publicDatapacksDirectory": "assets/uploads/public",
   "translationFilepath": "assets/translation.xlsx",
-  "modelConversionCacheDirectory": "public/model-conversion-cache"
+  "modelConversionCacheDirectory": "public/model-conversion-cache",
+  "autoPlotCacheDirectory": "public/auto-plot-cache"
 }

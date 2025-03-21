@@ -72,7 +72,7 @@ export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequ
     }
     const { outputTextFilepath, settingsTextFilepath } = result;
     if (
-      (await autoPlotPointsWithJar(body.ageDatapack, body.depthDatapack, settingsTextFilepath, outputTextFilepath)) &&
+      (await autoPlotPointsWithJar(body.datapackUniqueIdentifiers, outputTextFilepath, settingsTextFilepath)) &&
       (await verifyFilepath(outputTextFilepath))
     ) {
       const file = await readFile(outputTextFilepath, "utf-8");

@@ -11,7 +11,8 @@ import {
   ChartRequest,
   assertDatapackArray,
   Marker,
-  Model
+  Model,
+  AutoPlotRequest
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
@@ -580,7 +581,57 @@ export const setCrossPlotConverting = action((converting: boolean) => {
   state.crossPlot.converting = converting;
 });
 
-export const autoPlotCrossPlot = action(() => {
-  assertColumnInfoRoot(state.crossPlot.chartY);
-  assertColumnInfoRoot(state.crossPlot.chartX);
+export const autoPlotCrossPlot = action(async () => {
+  try {
+    if (!state.crossPlot.chartY) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    if (!state.crossPlot.state.matchesSettings) {
+      pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
+      return;
+    }
+    if (state.crossPlot.chartY.units.toLowerCase() === "ma") {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
+      return;
+    }
+    assertColumnInfoRoot(state.crossPlot.chartY);
+    assertColumnInfoRoot(state.crossPlot.chartX);
+    const datapacks = [
+      ...state.crossPlot.chartY.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks)),
+      ...state.crossPlot.chartX.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks))
+    ];
+    if (datapacks.length === 0 || datapacks.some((datapack) => !datapack)) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    assertDatapackArray(datapacks);
+    const columnRoot = cloneDeep(defaultColumnRoot);
+    columnRoot.children = [state.crossPlot.chartX, state.crossPlot.chartY];
+    const columnCopy = cloneDeep(columnRoot);
+    const chartSettingsCopy = cloneDeep(
+      createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
+    );
+    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+    const body: AutoPlotRequest = {
+      datapackUniqueIdentifiers: [
+        ...state.crossPlot.chartY.datapackUniqueIdentifiers,
+        ...state.crossPlot.chartX.datapackUniqueIdentifiers
+      ],
+      settings: xmlSettings
+    };
+    const response = await fetcher("/crossplot/autoplot", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to autoplot");
+    }
+    pushSnackbar("Successfully autoplotted", "success");
+  } catch (e) {
+  } finally {
+  }
 });
