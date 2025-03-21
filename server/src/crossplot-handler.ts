@@ -127,10 +127,10 @@ export const setupAutoPlotDirectory = async function (request: AutoPlotRequest):
   let settingsTextFilepath: string;
   try {
     const hashedDir = md5(JSON.stringify(request));
-    dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
+    dir = path.join(assetconfigs.autoPlotCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
-    if (await verifyFilepath(outputTextFilepath)) {
+    if (false && (await verifyFilepath(outputTextFilepath))) {
       const file = await readFile(outputTextFilepath, "utf-8");
       console.log(chalk.green("Auto Plot already exists for this request"));
       return file;
@@ -148,15 +148,14 @@ export const setupAutoPlotDirectory = async function (request: AutoPlotRequest):
 };
 
 export const autoPlotPointsWithJar = async function autoPlotPointsWithJar(
-  ageDatapack: DatapackUniqueIdentifier,
-  depthDatapack: DatapackUniqueIdentifier,
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[],
   outputTextFilepath: string,
   settingsTextFilepath: string
 ) {
-  const ageDatapackFilepath = await getDecryptedDatapackFilePath(getUUIDOfDatapackType(ageDatapack), ageDatapack.title);
-  const depthDatapackFilepath = await getDecryptedDatapackFilePath(
-    getUUIDOfDatapackType(depthDatapack),
-    depthDatapack.title
+  const datapacks = await Promise.all(
+    datapackUniqueIdentifiers.map((identifier) =>
+      getDecryptedDatapackFilePath(getUUIDOfDatapackType(identifier), identifier.title)
+    )
   );
   const execJavaCommand = async (timeout: number) => {
     const args = [
@@ -169,8 +168,7 @@ export const autoPlotPointsWithJar = async function autoPlotPointsWithJar(
       outputTextFilepath,
       "-autoplot",
       "-d",
-      ageDatapackFilepath,
-      depthDatapackFilepath
+      ...datapacks
     ];
     return new Promise<void>((resolve, reject) => {
       const cmd = "java";

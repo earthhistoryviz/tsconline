@@ -3,3 +3,4 @@ presets/*
 !presets/*-TEST
 mapimages
 model-conversion-cache
+auto-plot-cache
