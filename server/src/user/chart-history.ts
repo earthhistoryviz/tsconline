@@ -1,6 +1,6 @@
 import { assetconfigs } from "../util.js";
 import { join, basename, dirname } from "path";
-import { cp, mkdir, readFile, readdir, realpath, rm, symlink } from "fs/promises";
+import { cp, mkdir, readFile, readdir, realpath, rm, symlink, access } from "fs/promises";
 import logger from "../error-logger.js";
 import { HistoryEntry, assertDatapack } from "@tsconline/shared";
 import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
@@ -53,6 +53,12 @@ export async function saveChartHistory(
  */
 export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntry[]> {
   const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
+  try {
+    await access(historyDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+    return [];
+  }
   const entries = await readdir(historyDir);
   return entries.sort().map((entry, index) => ({
     id: index.toString(),
@@ -99,4 +105,23 @@ export async function getChartHistory(uuid: string, id: string) {
     chartContent,
     chartHash
   };
+}
+
+/**
+ * Delete a chart history entry or all entries, -1 deletes all entries
+ * @param uuid 
+ * @param id The ID of the history entry to delete (0-9), -1 to delete all entries
+ */
+export async function deleteChartHistory(uuid: string, id: string) {
+  if (isNaN(parseInt(id)) || parseInt(id) < -1 || parseInt(id) > 9) throw new Error("Invalid history ID");
+  const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
+  const entries = await readdir(historyDir);
+  if (parseInt(id) === -1) {
+    await Promise.all(entries.map((entry) => rm(join(historyDir, entry), { recursive: true })));
+    return;
+  } else {
+    const entry = entries.sort()[parseInt(id)];
+    if (!entry) throw new Error("History entry not found");
+    await rm(join(historyDir, entry), { recursive: true });
+  }
 }

@@ -209,3 +209,37 @@ export const setUserHistory = action(async (history: ChartHistory) => {
     chartTimelineEnabled: false
   });
 });
+
+export const deleteUserHistory = action(async (id: string) => {
+  try {
+    const response = await fetcher(`/user/history/${id}`, {
+      method: "DELETE",
+      credentials: "include"
+    });
+    if (response.ok) {
+      if (id === "-1") {
+        pushSnackbar("All history entries deleted", "success");
+        clearUserHistory();
+      } else {
+        pushSnackbar("History entry deleted", "success");
+        removeUserHistoryEntry(id);
+      }
+    } else {
+      displayServerError(
+        response.statusText,
+        ErrorCodes.USER_DELETE_HISTORY_FAILED,
+        ErrorMessages[ErrorCodes.USER_DELETE_HISTORY_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+export const removeUserHistoryEntry = action((id: string) => {
+  state.user.historyEntries = state.user.historyEntries.filter((entry) => entry.id !== id);
+});
+
+export const clearUserHistory = action(() => {
+  state.user.historyEntries = [];
+});

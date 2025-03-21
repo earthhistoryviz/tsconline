@@ -22,7 +22,7 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata, fetchUserHistory } from "./routes/user-routes.js";
+import { deleteUserHistory, fetchPublicUserDatapack, fetchUserDatapacksMetadata, fetchUserHistory } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
@@ -303,6 +303,7 @@ server.register(userRoutes, { prefix: "/user" });
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 server.get("/user/history/:id", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:id", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

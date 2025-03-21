@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
-import { TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
+import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -12,6 +12,7 @@ import {
 import { OptionsBar } from "./ChartOptionsBar";
 import { Box, Typography, IconButton, Drawer, List, ListItemButton, ListItemText, Paper } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
@@ -20,6 +21,7 @@ import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { formatDate } from "./state/non-action-util";
+import { runInAction } from "mobx";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -260,7 +262,7 @@ export const ChartTab: React.FC = observer(() => {
 
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);
-  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [isDrawerOpen, setDrawerOpen] = useState(true);
   const [loading, setLoading] = useState(false);
   return (
     <>
@@ -295,6 +297,22 @@ const HistorySideBar: React.FC = observer(() => {
               <HistoryIcon fontSize="medium" />
             </IconButton>
             <Typography variant="h5">History</Typography>
+            <CustomTooltip title="Delete all history entries" >
+              <IconButton onClick={async () => {
+                if (state.user.historyEntries.length === 0) {
+                  actions.pushSnackbar("No history entries to delete", "warning");
+                  return;
+                }
+                setLoading(true);
+                try {
+                  await actions.deleteUserHistory("-1");
+                } finally {
+                  setLoading(false);
+                }
+              }}>
+                <DeleteForeverIcon fontSize="medium"/>
+              </IconButton>
+            </CustomTooltip>
           </Box>
           <List>
             {state.user.historyEntries.map((entry) => (
@@ -312,6 +330,16 @@ const HistorySideBar: React.FC = observer(() => {
                   }
                 }}>
                 <ListItemText primary={formatDate(entry.timestamp)} />
+                <IconButton onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await actions.deleteUserHistory(entry.id);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                  <DeleteForeverIcon fontSize="small"/>
+                </IconButton>
               </ListItemButton>
             ))}
           </List>
