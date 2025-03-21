@@ -8,7 +8,7 @@ import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../worksh
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
-import { getChartHistory } from "../user/chart-history.js";
+import { deleteChartHistory, getChartHistory } from "../user/chart-history.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -356,3 +356,22 @@ export const fetchUserHistory = async function fetchUserHistory(
     reply.status(500).send({ error: "Failed to fetch history" });
   }
 };
+
+export const deleteUserHistory = async function deleteUserHistory(
+  request: FastifyRequest<{ Params: { id: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { id } = request.params;
+  try {
+    await deleteChartHistory(uuid, id);
+    reply.send({ message: "History deleted" });
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to delete history" });
+  }
+}
