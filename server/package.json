@@ -13,6 +13,7 @@
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "0.8.10",
     "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "async-mutex": "^0.5.0",
     "bcrypt-ts": "^5.0.2",
     "better-sqlite3": "^9.4.4",
@@ -48,6 +49,7 @@
   },
   "devDependencies": {
     "@types/adm-zip": "^0",
+    "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.9",
     "@types/dompurify": "^3",
     "@types/js-levenshtein": "^1",

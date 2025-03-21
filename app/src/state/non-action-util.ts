@@ -4,13 +4,14 @@ import {
   DatapackUniqueIdentifier,
   MapInfo,
   SharedUser,
+  SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
-import { Workshop } from "../Workshops";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
@@ -127,19 +128,19 @@ export function hasLeadingTrailingWhiteSpace(input: string) {
   return input.trim() !== input;
 }
 
-export function getActiveWorkshops(workshops: Workshop[]) {
+export function getActiveWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const activeWorkshops = workshops.filter(
     (workshop) => workshop.active && new Date(workshop.start) <= now && new Date(workshop.end) >= now
   );
   return activeWorkshops;
 }
-export function getUpcomingWorkshops(workshops: Workshop[]) {
+export function getUpcomingWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const upcomingWorkshops = workshops.filter((workshop) => !workshop.active && new Date(workshop.start) > now);
   return upcomingWorkshops;
 }
-export function getPastWorkshops(workshops: Workshop[]) {
+export function getPastWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
@@ -147,6 +148,7 @@ export function getPastWorkshops(workshops: Workshop[]) {
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
+
 export async function downloadFile(blob: Blob, filename: string) {
   const reader = new FileReader();
   reader.readAsDataURL(blob);
@@ -167,4 +169,8 @@ export async function downloadFile(blob: Blob, filename: string) {
   document.body.appendChild(aTag);
   aTag.click();
   aTag.remove();
+}
+// TODO: remove this when route for fetching cover image is finished
+export function getWorkshopCoverImage() {
+  return TSCreatorLogo;
 }

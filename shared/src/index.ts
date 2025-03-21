@@ -13,6 +13,12 @@ export type SharedWorkshop = {
   end: string;
   workshopId: number;
   active: boolean;
+  regRestrict: boolean;
+  creatorUUID: string;
+  regLink?: string;
+  description?: string;
+  files?: string[];
+  datapacks?: string[];
 };
 
 export type ConvertCrossPlotRequest = {
@@ -697,6 +703,21 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
   if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
+  if (o.description !== undefined && typeof o.description !== "string")
+    throwError("Workshop", "description", "string", o.description);
+  if (typeof o.regRestrict !== "boolean") throwError("Workshop", "regRestrict", "boolean", o.regRestrict);
+  if (typeof o.creatorUUID !== "string") throwError("Workshop", "creatorUUID", "string", o.creatorUUID);
+  if (o.regLink !== undefined && typeof o.regLink !== "string") throwError("Workshop", "regLink", "string", o.regLink);
+  if (o.files !== undefined && o.files !== null) {
+    for (const file of o.files) {
+      if (typeof file !== "string") throwError("Workshop", "files", "string", file);
+    }
+  }
+  if (o.datapacks !== undefined && o.datapacks !== null) {
+    for (const datapack of o.datapacks) {
+      if (typeof datapack !== "string") throwError("Workshop", "datapack", "string", datapack);
+    }
+  }
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {

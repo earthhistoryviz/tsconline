@@ -414,7 +414,8 @@
             "ADMIN_CREATE_WORKSHOP_FAILED": "无法创建工作坊。请稍后再试。",
             "ADMIN_WORKSHOP_ALREADY_EXISTS": "该工作坊名称已存在。请另选名称。",
             "ADMIN_FETCH_WORKSHOPS_FAILED": "无法抓取工作坊。请稍后再试。",
-            "ADMIN_WORKSHOP_NOT_FOUND": "服务器未找到工作坊。该工作坊可能已结束或被删除。"
+            "ADMIN_WORKSHOP_NOT_FOUND": "服务器未找到工作坊。该工作坊可能已结束或被删除。",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "请求文件不存在，请稍后再试或联系开发团队"
         },
         "button": {
             "generate": "绘制",
