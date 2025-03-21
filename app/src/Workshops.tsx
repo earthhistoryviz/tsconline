@@ -365,9 +365,7 @@ export const Workshops: React.FC = observer(() => {
       await actions.adminFetchWorkshops({ signal: controller.signal });
     };
 
-    (async () => {
-      await fetchWorkshops();
-    })();
+    fetchWorkshops();
 
     return () => {
       if (shouldLoadRecaptcha) {
