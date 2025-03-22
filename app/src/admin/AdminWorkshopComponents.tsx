@@ -263,7 +263,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       if (errorMessages.length > 0) {
         actions.pushSnackbar(errorMessages.join("\n"), "warning");
       } else {
-        const successMessage = editMode ? "Workshop created successfully." : "Workshop edited successfully.";
+        const successMessage = editMode ? "Workshop edited successfully." : "Workshop created successfully.";
         actions.pushSnackbar(successMessage, "success");
       }
 
