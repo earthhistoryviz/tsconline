@@ -229,6 +229,30 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { chartTimelineEnabled, chartContent, chartZoomSettings } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+    const hideTooltip = () => {
+      const tooltip = document.getElementById(tooltipId);
+      if (tooltip) tooltip.style.display = "none";
+    };
+    const removeMarkerRect = (e: MouseEvent, markerId: string) => {
+      if (!state.crossPlot.markerMode) return;
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      const markersGroup = getCrossPlotMarkersGroup(svg);
+      e.preventDefault();
+      hideTooltip();
+      const rect = svg.querySelector(CSS.escape(`#${markerId}`));
+      if (rect) {
+        markersGroup.removeChild(rect);
+      }
+      const line = svg.querySelector(CSS.escape(`#${markerId}-line`));
+      if (line) {
+        markersGroup.removeChild(line);
+      }
+      actions.removeCrossPlotMarkers(markerId);
+    };
     // declare here so that comment is updated when marker changes
     const showTooltip = (event: MouseEvent, age: number, depth: number, comment: string) => {
       let tooltip = document.getElementById(tooltipId);
@@ -338,10 +362,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           selected: false
         };
         actions.addCrossPlotModel(model);
-        const hideTooltip = () => {
-          const tooltip = document.getElementById(tooltipId);
-          if (tooltip) tooltip.style.display = "none";
-        };
         const removeRect = (e: MouseEvent) => {
           if (!state.crossPlot.modelMode) return;
           e.preventDefault();
@@ -404,10 +424,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         markersGroup.removeChild(markersGroup.firstChild);
       }
       state.crossPlot.markers.forEach((marker) => {
-        if (!markersGroup.querySelector(`#${marker.id}`)) {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}`))) {
           markersGroup.appendChild(marker.element);
         }
-        if (!markersGroup.querySelector(`#${marker.id}-line`)) {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}-line`))) {
           markersGroup.appendChild(marker.line);
         }
       });
@@ -512,28 +532,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           selected: false
         };
         actions.addCrossPlotMarker(marker);
-        const hideTooltip = () => {
-          const tooltip = document.getElementById(tooltipId);
-          if (tooltip) tooltip.style.display = "none";
-        };
-        const removeRect = (e: MouseEvent) => {
-          if (!state.crossPlot.markerMode) return;
-          e.preventDefault();
-          hideTooltip();
-          const rect = svg.querySelector(`#${markerId}`);
-          if (rect) {
-            markersGroup.removeChild(rect);
-          }
-          const line = svg.querySelector(`#${markerId}-line`);
-          if (line) {
-            markersGroup.removeChild(line);
-          }
-          actions.removeCrossPlotMarkers(marker.id);
-        };
         rect.addEventListener("mousemove", (event) => showTooltip(event, marker.age, marker.depth, marker.comment));
         rect.addEventListener("mouseleave", hideTooltip);
-        rect.addEventListener("contextmenu", removeRect);
-        rect.addEventListener("click", removeRect);
+        rect.addEventListener("contextmenu", (e) => removeMarkerRect(e, markerId));
+        rect.addEventListener("click", (e) => removeMarkerRect(e, markerId));
       };
       let lastTap = 0;
       const handleTouchStart = (evt: TouchEvent) => {
@@ -586,6 +588,35 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         if (tooltip) document.body.removeChild(tooltip);
       };
     }, []);
+
+    // add auto plot markers
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      const markersGroup = getCrossPlotMarkersGroup(svg);
+      state.crossPlot.markers.forEach((marker) => {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}`))) {
+          const rect = marker.element;
+          rect.addEventListener("mousemove", (event) => showTooltip(event, marker.age, marker.depth, marker.comment));
+          rect.addEventListener("mouseleave", hideTooltip);
+          rect.addEventListener("click", (e) => removeMarkerRect(e, marker.id));
+          rect.addEventListener("contextmenu", (e) => removeMarkerRect(e, marker.id));
+          markersGroup.appendChild(marker.element);
+        }
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}-line`))) {
+          markersGroup.appendChild(marker.line);
+        }
+      });
+      return () => {
+        while (markersGroup.firstChild) {
+          markersGroup.removeChild(markersGroup.firstChild);
+        }
+        markersGroup.remove();
+      };
+    }, [state.crossPlot.markers.length]);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;

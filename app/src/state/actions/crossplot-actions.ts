@@ -13,7 +13,6 @@ import {
   Marker,
   Model,
   AutoPlotRequest,
-  assertAutoPlotMarker,
   assertAutoPlotResponse
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
@@ -591,6 +590,7 @@ export const setCrossPlotConverting = action((converting: boolean) => {
 
 export const autoPlotCrossPlot = action(async () => {
   try {
+    state.crossPlot.autoPlotting = true;
     if (!state.crossPlot.chartY) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
@@ -642,7 +642,10 @@ export const autoPlotCrossPlot = action(async () => {
     assertAutoPlotResponse(responseJson);
     const { markers } = responseJson;
     markers.forEach((marker) => {
-      addCrossPlotMarker({
+      if (state.crossPlot.markers.some((m) => m.id === marker.id)) {
+        return;
+      }
+      const crossPlotMarker = {
         ...marker,
         element: getDotRect(
           marker.id,
@@ -651,11 +654,14 @@ export const autoPlotCrossPlot = action(async () => {
           marker.color
         ),
         line: getLine(marker.id)
-      });
+      };
+      addCrossPlotMarker(crossPlotMarker);
+      setCrossPlotMarkerType(crossPlotMarker, marker.type);
     });
     pushSnackbar("Successfully autoplotted", "success");
   } catch (e) {
     console.log(e);
   } finally {
+    state.crossPlot.autoPlotting = false;
   }
 });
