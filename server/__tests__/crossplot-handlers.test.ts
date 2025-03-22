@@ -4,8 +4,14 @@ import * as util from "../src/util";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as child_process from "child_process";
 import * as fsPromises from "fs/promises";
+import * as extractMarkers from "../src/crossplot/extract-markers";
+import * as shared from "@tsconline/shared";
 import md5 from "md5";
-import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../src/crossplot/crossplot-handler";
+import {
+  convertCrossPlotWithModelsInJar,
+  setupAutoPlotDirectory,
+  setupConversionDirectory
+} from "../src/crossplot/crossplot-handler";
 import { assertAssetConfig } from "../src/types";
 import { ConvertCrossPlotRequest } from "@tsconline/shared";
 
@@ -17,6 +23,17 @@ async function checkFileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
+vi.mock("../src/crossplot/extract-markers", async () => {
+  return {
+    getMarkersFromTextFile: vi.fn().mockResolvedValueOnce([
+      {
+        x: 1,
+        y: 2,
+        type: "test"
+      }
+    ])
+  };
+});
 vi.mock("md5", async () => {
   return {
     default: vi.fn().mockReturnValue("test-hash")
@@ -28,7 +45,8 @@ vi.mock("../src/util", async (importOriginal) => {
     getActiveJar: vi.fn(() => "test.jar"),
     verifyFilepath: vi.fn(actual.verifyFilepath),
     assetconfigs: {
-      modelConversionCacheDirectory: "test-cache-dir"
+      modelConversionCacheDirectory: "test-cache-dir",
+      autoPlotCacheDirectory: "test-cache-dir"
     }
   };
 });
@@ -38,7 +56,8 @@ vi.mock("fs/promises", async (importOriginal) => {
     ...actual,
     readFile: vi.fn(actual.readFile),
     mkdir: vi.fn(actual.mkdir),
-    writeFile: vi.fn(() => {})
+    writeFile: vi.fn(() => {}),
+    rm: vi.fn(async () => {})
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -66,6 +85,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
   const getActiveJar = vi.spyOn(util, "getActiveJar");
   const spawn = vi.spyOn(child_process, "spawn");
   const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const generatedOutputFileDirectory = path.join(keys, "generated-file");
   beforeEach(() => {
     vi.clearAllMocks();
@@ -122,8 +142,8 @@ describe("convertCrossPlotWithModelsInJar", async () => {
       settingsTextFilepath
     );
     expect(getDecryptedDatapackFilePath).toHaveBeenCalledOnce();
-    expect(util.verifyFilepath).toHaveBeenCalledOnce();
-    expect(util.verifyFilepath).toHaveReturnedWith(false);
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveReturnedWith(false);
   });
   it("should return 200 and file if successful", { timeout: 20000 }, async () => {
     const testCase = "test-case-1";
@@ -148,7 +168,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     expect(getDecryptedDatapackFilePath).toHaveBeenCalledOnce();
     expect(spawn).toHaveBeenCalledOnce();
     expect(correctOutput).toEqual(generatedOutput);
-    expect(util.verifyFilepath).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
     await fsPromises.rm(outputFileLocation, { force: true }).catch(() => {
       // eslint-disable-next-line no-console
     });
@@ -215,8 +235,96 @@ describe("setupConversionDirectory", async () => {
 describe("setupAutoPlotDirectory", async () => {
   const mkdir = vi.spyOn(fsPromises, "mkdir");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const readFile = vi.spyOn(fsPromises, "readFile");
+  const writeFile = vi.spyOn(fsPromises, "writeFile");
+  const getMarkersFromTextFile = vi.spyOn(extractMarkers, "getMarkersFromTextFile");
+  const rm = vi.spyOn(fsPromises, "rm");
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  it("should return 500 if error creating directory", async () => {
+    mkdir.mockRejectedValueOnce(new Error("Failed to create directory"));
+    const output = await setupAutoPlotDirectory({
+      datapackUniqueIdentifiers: [
+        {
+          type: "official",
+          title: "datapackTitle"
+        }
+      ],
+      settings: "settings"
+    });
+    expect(output).toEqual({ message: "Error creating directory for this conversion", code: 500 });
+    expect(verifyFilepath).not.toHaveBeenCalled();
+  });
+  it("should return 500 if file exists in cache but can't read the file", async () => {
+    verifyFilepath.mockResolvedValueOnce(true);
+    getMarkersFromTextFile.mockRejectedValueOnce(new Error("Failed to read file"));
+    const output = await setupAutoPlotDirectory({
+      datapackUniqueIdentifiers: [
+        {
+          type: "official",
+          title: "datapackTitle"
+        }
+      ],
+      settings: "settings"
+    });
+    expect(output).toEqual({ message: "Error reading file for this conversion", code: 500 });
+    expect(rm).toHaveBeenCalledOnce();
+    expect(mkdir).toHaveBeenCalledOnce();
+  });
+  it("should return markers if file exists in cache and successfully reads the file", async () => {
+    const autoPlotMarker = {
+      x: 1,
+      y: 2
+    } as shared.AutoPlotMarker;
+    verifyFilepath.mockResolvedValueOnce(true);
+    getMarkersFromTextFile.mockResolvedValueOnce([autoPlotMarker]);
+    const output = await setupAutoPlotDirectory({
+      datapackUniqueIdentifiers: [
+        {
+          type: "official",
+          title: "datapackTitle"
+        }
+      ],
+      settings: "settings"
+    });
+    expect(output).toEqual([autoPlotMarker]);
+    expect(rm).not.toHaveBeenCalled();
+    expect(getMarkersFromTextFile).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+  });
+  it("should return 500 if error writing files", async () => {
+    verifyFilepath.mockResolvedValueOnce(false);
+    writeFile.mockRejectedValueOnce(new Error("Failed to write file"));
+    const output = await setupAutoPlotDirectory({
+      datapackUniqueIdentifiers: [
+        {
+          type: "official",
+          title: "datapackTitle"
+        }
+      ],
+      settings: "settings"
+    });
+    expect(output).toEqual({ message: "Error writing files for conversion", code: 500 });
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+  });
+  it("should return filepaths if successful", async () => {
+    const output = await setupAutoPlotDirectory({
+      datapackUniqueIdentifiers: [
+        {
+          type: "official",
+          title: "datapackTitle"
+        }
+      ],
+      settings: "settings"
+    });
+    expect(output).toEqual({
+      outputTextFilepath: "test-cache-dir/test-hash/output.txt",
+      settingsTextFilepath: "test-cache-dir/test-hash/settings.xml"
+    });
+    expect(mkdir).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(getMarkersFromTextFile).not.toHaveBeenCalled();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(writeFile).toHaveBeenCalledTimes(1);
   });
 });
