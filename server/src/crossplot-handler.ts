@@ -119,7 +119,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
 };
 export const setupAutoPlotDirectory = async function (request: AutoPlotRequest): Promise<
   | OperationResult
-  | string
+  | AutoPlotMarker[]
   | {
       outputTextFilepath: string;
       settingsTextFilepath: string;
@@ -134,10 +134,13 @@ export const setupAutoPlotDirectory = async function (request: AutoPlotRequest):
     dir = path.join(assetconfigs.autoPlotCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
-    if (false && (await verifyFilepath(outputTextFilepath))) {
-      const file = await readFile(outputTextFilepath, "utf-8");
-      console.log(chalk.green("Auto Plot already exists for this request"));
-      return file;
+    if (await verifyFilepath(outputTextFilepath)) {
+      try {
+        const markers = await getMarkersFromTextFile(outputTextFilepath);
+        return markers;
+      } catch (e) {
+        return { message: "Error reading file for this conversion", code: 500 };
+      }
     }
   } catch (error) {
     return { message: "Error creating directory for this conversion", code: 500 };

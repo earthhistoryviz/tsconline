@@ -1,10 +1,16 @@
-import { assertAutoPlotRequest, assertConvertCrossPlotRequest } from "@tsconline/shared";
+import {
+  AutoPlotResponse,
+  isAutoPlotMarkerArray,
+  assertAutoPlotRequest,
+  assertConvertCrossPlotRequest
+} from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { verifyFilepath } from "../util.js";
 import { readFile } from "fs/promises";
 import {
   autoPlotPointsWithJar,
   convertCrossPlotWithModelsInJar,
+  getMarkersFromTextFile,
   setupAutoPlotDirectory,
   setupConversionDirectory
 } from "../crossplot-handler.js";
@@ -62,8 +68,9 @@ export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequ
   }
   try {
     const result = await setupAutoPlotDirectory(body);
-    if (typeof result === "string") {
-      reply.code(200).send(result);
+    if (isAutoPlotMarkerArray(result)) {
+      const response: AutoPlotResponse = { markers: result };
+      reply.code(200).send(response);
       return;
     }
     if (isOperationResult(result)) {
@@ -75,8 +82,9 @@ export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequ
       (await autoPlotPointsWithJar(body.datapackUniqueIdentifiers, outputTextFilepath, settingsTextFilepath)) &&
       (await verifyFilepath(outputTextFilepath))
     ) {
-      const file = await readFile(outputTextFilepath, "utf-8");
-      reply.code(200).send(file);
+      const result = await getMarkersFromTextFile(outputTextFilepath);
+      const response: AutoPlotResponse = { markers: result };
+      reply.code(200).send(response);
     }
   } catch (e) {
     logger.error(e);

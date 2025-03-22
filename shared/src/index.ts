@@ -31,6 +31,9 @@ export type AutoPlotRequest = {
   datapackUniqueIdentifiers: DatapackUniqueIdentifier[]; // require at least 2
   settings: string;
 };
+export type AutoPlotResponse = {
+  markers: AutoPlotMarker[];
+};
 
 export type SharedUser = {
   username: string;
@@ -664,6 +667,23 @@ export function isModelType(value: string): value is Model["type"] {
   return modelTypes.includes(value);
 }
 
+export function isAutoPlotMarkerArray(o: any): o is AutoPlotMarker[] {
+  return Array.isArray(o) && o.every(isAutoPlotMarker);
+}
+export function isAutoPlotMarker(o: any): o is AutoPlotMarker {
+  return (
+    o &&
+    typeof o === "object" &&
+    typeof o.id === "string" &&
+    typeof o.age === "number" &&
+    typeof o.depth === "number" &&
+    typeof o.x === "number" &&
+    typeof o.y === "number" &&
+    typeof o.color === "string" &&
+    typeof o.comment === "string" &&
+    typeof o.type === "string"
+  );
+}
 export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
   if (!o || typeof o !== "object") throw new Error("AutoPlotMarker must be a non-null object");
   if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
