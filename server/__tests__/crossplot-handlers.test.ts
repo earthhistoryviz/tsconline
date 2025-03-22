@@ -8,7 +8,6 @@ import md5 from "md5";
 import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../src/crossplot/crossplot-handler";
 import { assertAssetConfig } from "../src/types";
 import { ConvertCrossPlotRequest } from "@tsconline/shared";
-import { read } from "fs";
 
 async function checkFileExists(filePath: string): Promise<boolean> {
   try {
