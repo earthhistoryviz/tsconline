@@ -7,6 +7,12 @@ const thresholdConfig = {
   functions: 90,
   lines: 90
 };
+const fullThresholdConfig = {
+  statements: 100,
+  branches: 100,
+  functions: 100,
+  lines: 100
+};
 
 export default defineConfig({
   test: {
@@ -36,7 +42,8 @@ export default defineConfig({
         "server/src/constants.ts": thresholdConfig,
         "server/src/error-logger.ts": thresholdConfig,
         "server/src/crossplot-handler.ts": thresholdConfig,
-        "server/src/routes/crossplot-routes.ts": thresholdConfig
+        "server/src/routes/crossplot-routes.ts": thresholdConfig,
+        "server/src/crossplot/extract-markers.ts": fullThresholdConfig
         // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig
       },

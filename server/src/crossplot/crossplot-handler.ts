@@ -6,7 +6,7 @@ import {
   getUUIDOfDatapackType
 } from "@tsconline/shared";
 import chalk from "chalk";
-import { mkdir, readFile, writeFile } from "fs/promises";
+import { mkdir, readFile, rm, writeFile } from "fs/promises";
 import md5 from "md5";
 import path from "path";
 import { assetconfigs, getActiveJar, verifyFilepath } from "../util.js";
@@ -137,6 +137,7 @@ export const setupAutoPlotDirectory = async function (request: AutoPlotRequest):
         const markers = await getMarkersFromTextFile(outputTextFilepath);
         return markers;
       } catch (e) {
+        await rm(dir, { recursive: true });
         return { message: "Error reading file for this conversion", code: 500 };
       }
     }
