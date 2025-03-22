@@ -22,7 +22,12 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { deleteUserHistory, fetchPublicUserDatapack, fetchUserDatapacksMetadata, fetchUserHistory } from "./routes/user-routes.js";
+import {
+  deleteUserHistory,
+  fetchPublicUserDatapack,
+  fetchUserDatapacksMetadata,
+  fetchUserHistory
+} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";

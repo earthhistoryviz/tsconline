@@ -438,4 +438,4 @@ export const deleteUserHistory = async function deleteUserHistory(
     console.error(e);
     reply.status(500).send({ error: "Failed to delete history" });
   }
-}
+};
