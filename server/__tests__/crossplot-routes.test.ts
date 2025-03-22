@@ -1,10 +1,26 @@
 import fastify, { FastifyInstance } from "fastify";
-import { convertCrossPlot } from "../src/routes/crossplot-routes";
+import { autoPlotPoints, convertCrossPlot } from "../src/routes/crossplot-routes";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
 import * as fsPromises from "fs/promises";
 import * as util from "../src/util";
+import * as extractMarkers from "../src/crossplot/extract-markers";
+import * as types from "../src/types";
+import * as errorLogger from "../src/error-logger";
+
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockResolvedValue(undefined)
+    }
+  };
+});
+vi.mock("../src/types", async () => {
+  return {
+    isOperationResult: vi.fn().mockReturnValue(false)
+  };
+});
 
 vi.mock("fs/promises", async () => {
   return {
@@ -19,7 +35,10 @@ vi.mock("../src/util", async () => {
 
 vi.mock("@tsconline/shared", async () => {
   return {
-    assertConvertCrossPlotRequest: vi.fn().mockReturnValue(true)
+    assertConvertCrossPlotRequest: vi.fn().mockReturnValue(true),
+    isAutoPlotMarkerArray: vi.fn().mockReturnValue(false),
+    assertAutoPlotRequest: vi.fn().mockReturnValue(false),
+    isOperationResult: vi.fn().mockReturnValue(false)
   };
 });
 vi.mock("../src/crossplot/crossplot-handler", async () => {
@@ -29,7 +48,23 @@ vi.mock("../src/crossplot/crossplot-handler", async () => {
       modelsTextFilepath: "models.txt",
       settingsTextFilepath: "settings.xml"
     })),
-    convertCrossPlotWithModelsInJar: vi.fn().mockResolvedValueOnce(true)
+    convertCrossPlotWithModelsInJar: vi.fn().mockResolvedValue(true),
+    setupAutoPlotDirectory: vi.fn().mockResolvedValue({
+      outputTextFilepath: "output.txt",
+      settingsTextFilepath: "settings.xml"
+    }),
+    autoPlotPointsWithJar: vi.fn().mockResolvedValue(true)
+  };
+});
+vi.mock("../src/crossplot/extract-markers", async () => {
+  return {
+    getMarkersFromTextFile: vi.fn().mockResolvedValueOnce([
+      {
+        x: 1,
+        y: 2,
+        type: "test"
+      }
+    ])
   };
 });
 const request = {
@@ -40,9 +75,10 @@ let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   app.post("/crossplot/convert", convertCrossPlot);
+  app.post("/crossplot/autoplot", autoPlotPoints);
   await app.listen({ host: "localhost", port: 1210 });
   vi.spyOn(console, "error").mockImplementation(() => {});
-  //   vi.spyOn(console, "log").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -55,6 +91,7 @@ describe("convertCrossplot", async () => {
   const url = "/crossplot/convert";
   const convertCrossPlotRequest = vi.spyOn(shared, "assertConvertCrossPlotRequest");
   const setupConversionDirectory = vi.spyOn(crossplotHandler, "setupConversionDirectory");
+  const isOperationResult = vi.spyOn(types, "isOperationResult");
   const convertCrossplotWithModelsInJar = vi.spyOn(crossplotHandler, "convertCrossPlotWithModelsInJar");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");
@@ -81,6 +118,7 @@ describe("convertCrossplot", async () => {
   });
   it("should return conversion code if conversion fails", async () => {
     setupConversionDirectory.mockResolvedValueOnce({ code: 500, message: "Conversion failed" });
+    isOperationResult.mockReturnValueOnce(true);
     const response = await app.inject({
       method: "POST",
       url
@@ -110,5 +148,121 @@ describe("convertCrossplot", async () => {
     expect(readFile).toHaveBeenCalledOnce();
     expect(response.statusCode).toEqual(200);
     expect(response.rawPayload).toEqual(Buffer.from("success"));
+  });
+});
+
+describe("autoPlotPoints", async () => {
+  const request = {
+    datapackUniqueIdentifiers: ["test"]
+  };
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const assertAutoPlotRequest = vi.spyOn(shared, "assertAutoPlotRequest");
+  const autoPlotPointsWithJar = vi.spyOn(crossplotHandler, "autoPlotPointsWithJar");
+  const setupAutoPlotDirectory = vi.spyOn(crossplotHandler, "setupAutoPlotDirectory");
+  const isAutoPlotMarkerArray = vi.spyOn(shared, "isAutoPlotMarkerArray");
+  const isOperationResult = vi.spyOn(types, "isOperationResult");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const getMarkersFromTextFile = vi.spyOn(extractMarkers, "getMarkersFromTextFile");
+  const loggerError = vi.spyOn(errorLogger.default, "error");
+  const url = "/crossplot/autoplot";
+  it("should return 400 if the request body is incorrect", async () => {
+    assertAutoPlotRequest.mockImplementationOnce(() => {
+      throw new Error("Invalid request body");
+    });
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: { invalid: "request" }
+    });
+    expect(response.statusCode).toEqual(400);
+    expect(response.json()).toEqual({ error: "Incorrect request body for auto plotting points" });
+    expect(assertAutoPlotRequest).toHaveBeenCalledOnce();
+  });
+  it("should return 500 if setupAutoPlotDirectory fails", async () => {
+    setupAutoPlotDirectory.mockImplementationOnce(() => {
+      throw new Error("Failed to setup directory");
+    });
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual({ error: "Error auto plotting" });
+    expect(loggerError).toHaveBeenCalledOnce();
+    expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
+  });
+  it("should return operation result if setupAutoPlotDirectory returns one", async () => {
+    setupAutoPlotDirectory.mockResolvedValueOnce({ code: 500, message: "Failed to setup directory" });
+    isOperationResult.mockReturnValueOnce(true);
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual({ error: "Failed to setup directory" });
+  });
+  it("should return 200 if setupAutoPlotDirectory returns markers", async () => {
+    isAutoPlotMarkerArray.mockReturnValueOnce(true);
+    const autoPlotMarkerArray = [
+      {
+        x: 1,
+        y: 2
+      }
+    ] as shared.AutoPlotMarker[];
+    setupAutoPlotDirectory.mockResolvedValueOnce(autoPlotMarkerArray);
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(autoPlotPointsWithJar).not.toHaveBeenCalled();
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual({ markers: autoPlotMarkerArray });
+  });
+  it("should return 500 if autoPlotPointsWithJar returns false", async () => {
+    autoPlotPointsWithJar.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual({ error: "Error auto plotting" });
+    expect(errorLogger).toHaveBeenCalledOnce();
+  });
+  it("should return 500 if file doesn't exist after calling autoPlotPointsWithJar", async () => {
+    autoPlotPointsWithJar.mockResolvedValueOnce(true);
+    verifyFilepath.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(response.statusCode).toEqual(500);
+    expect(response.json()).toEqual({ error: "Error auto plotting" });
+    expect(errorLogger).toHaveBeenCalledOnce();
+    expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
+  });
+  it("should return 200 if autoPlotPointsWithJar and getMarkersFromTextFile succeed", async () => {
+    autoPlotPointsWithJar.mockResolvedValueOnce(true);
+    verifyFilepath.mockResolvedValueOnce(true);
+    const response = await app.inject({
+      method: "POST",
+      url,
+      payload: request
+    });
+    expect(response.statusCode).toEqual(200);
+    expect(response.json()).toEqual({ markers: [{ x: 1, y: 2, type: "test" }] });
+    expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(getMarkersFromTextFile).toHaveBeenCalledOnce();
   });
 });

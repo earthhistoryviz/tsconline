@@ -74,7 +74,7 @@ export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequ
       return;
     }
     if (isOperationResult(result)) {
-      reply.code(result.code).send(result);
+      reply.code(result.code).send({ error: result.message });
       return;
     }
     const { outputTextFilepath, settingsTextFilepath } = result;
@@ -85,6 +85,8 @@ export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequ
       const result = await getMarkersFromTextFile(outputTextFilepath);
       const response: AutoPlotResponse = { markers: result };
       reply.code(200).send(response);
+    } else {
+      throw new Error("Error auto plotting");
     }
   } catch (e) {
     logger.error(e);
