@@ -1,4 +1,4 @@
-import { configure, observable, reaction } from "mobx";
+import { configure, observable, reaction, toJS } from "mobx";
 
 import {
   SnackbarInfo,
@@ -37,7 +37,6 @@ import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
-import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -60,6 +59,7 @@ export type State = {
     chartY: ColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
+    converting: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -129,7 +129,6 @@ export type State = {
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
-  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -173,7 +172,8 @@ export const state = observable<State>({
     chartX: undefined,
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined
+    crossPlotBounds: undefined,
+    converting: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -268,7 +268,6 @@ export const state = observable<State>({
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },
-  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
@@ -299,5 +298,24 @@ reaction(
   (scale: number) => {
     adjustScaleOfMarkers(scale);
     adjustScaleOfModels(scale);
+  }
+);
+reaction(
+  () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
+  () => {
+    if (state.chartTab.state.madeChart === false) return;
+    state.chartTab.state.matchesSettings = false;
+  }
+);
+reaction(
+  () => [
+    state.crossPlot.chartX,
+    state.crossPlot.chartY,
+    state.crossPlot.chartXTimeSettings,
+    state.crossPlot.chartYTimeSettings
+  ],
+  () => {
+    if (state.crossPlot.state.madeChart === false) return;
+    state.crossPlot.state.matchesSettings = false;
   }
 );

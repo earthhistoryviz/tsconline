@@ -327,7 +327,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           y: point.y,
           color: theme.palette.button.main,
           type: "Circle" as Model["type"],
-          comment: ""
+          comment: "",
+          selected: false
         };
         actions.addCrossPlotModel(model);
         const hideTooltip = () => {
@@ -504,7 +505,8 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           color: theme.palette.button.main,
           type: "Circle" as Marker["type"],
           line,
-          comment: ""
+          comment: "",
+          selected: false
         };
         actions.addCrossPlotMarker(marker);
         const hideTooltip = () => {

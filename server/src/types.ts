@@ -47,6 +47,9 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
+  regLink?: string;
+  regRestrict: number;
+  creatorUUID: string;
 }
 
 export interface UsersWorkshopsTable {
@@ -100,6 +103,7 @@ export type AssetConfig = {
   uploadDirectory: string;
   publicDatapacksDirectory: string;
   translationFilepath: string;
+  modelConversionCacheDirectory: string;
 };
 
 export type Colors = {
@@ -168,6 +172,8 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.privateDatapacksDirectory !== "string")
     throw 'AssetConfig must have a "privateDatapacksDirectory" string';
   if (typeof o.publicDatapacksDirectory !== "string") throw 'AssetConfig must have a "publicDatapacksDirectory" string';
+  if (typeof o.modelConversionCacheDirectory !== "string")
+    throw 'AssetConfig must have a "modelConversionCacheDirectory" string';
 }
 
 export function isAccountType(o: any): o is AccountType {
