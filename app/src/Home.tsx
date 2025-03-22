@@ -617,10 +617,7 @@ const UpcomingWorkshops = observer(
           </Typography>
           <CustomDivider />
         </Box>
-        <Box
-          sx={{
-            overflowY: "auto"
-          }}>
+        <Box sx={{ height: "100%", overflowY: "auto" }}>
           <StyledScrollbar>
             {!isMobile &&
               workshops.map((step, index) => (

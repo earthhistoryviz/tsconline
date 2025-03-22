@@ -123,7 +123,8 @@
 }
 
 .sub-header-section-landing-page-image {
-  grid-column: 2 / 3;
+  grid-column: 2;
+  grid-row: 1;
   width: 100%;
   align-self: center;
 }
@@ -158,13 +159,14 @@
 .sub-header-section-landing-page {
   display: grid;
   grid-template-columns: 0.8fr 1.2fr 0.4fr;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr 0.1fr;
   column-gap: 30px;
   padding-right: 1%;
   padding-left: 3%;
   height: 93vh;
   align-items: center;
   max-height: 93vh;
+  overflow-y: hidden;
 }
 
 .home-landing-page-carousel {
@@ -222,6 +224,8 @@
   flex-direction: column;
   align-self: center;
   gap: 5px;
+  grid-column: 1;
+  grid-row: 1 / span 2;
 }
 
 .home-landing-page-carousel-text {
@@ -301,7 +305,7 @@
   justify-content: center;
   align-items: center;
   grid-column: 1 / span 3;
-  grid-row: 3 / 4;
+  grid-row: 2;
 }
 
 .get-started-button-container {
@@ -311,7 +315,6 @@
   align-items: center;
   cursor: pointer;
   flex-direction: column;
-  top: 85%;
 }
 
 .home-landing-page-carousel-title {
@@ -533,11 +536,13 @@
   width: 18vw;
   padding-left: 15px;
   padding-right: 15px;
-  overflow-y: auto;
-  grid-column: 3 / 4;
   max-height: inherit;
   max-height: -webkit-fill-available;
+  min-height: 0;
   align-self: center;
+  overflow: hidden;
+  grid-column: 3;
+  grid-row: 1 / span 2;
 }
 
 /* upcoming workshop */
@@ -547,6 +552,11 @@
   width: 100%;
   height: 100%;
   margin-top: 10px;
+}
+
+.scroll_bar {
+  height: 100%;
+  overflow-y: auto;
 }
 
 .upcoming-workshop-title {
@@ -963,7 +973,7 @@
   }
 }
 
-@media screen and (max-height: 700px) {
+@media screen and (max-height: 650px) {
   .sub-header-section-landing-page {
     height: 100%;
     max-height: none;
