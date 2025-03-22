@@ -589,9 +589,9 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
       };
     }, []);
 
-    // add auto plot markers (not sure if there are better solutions to this but with the way that 
+    // add auto plot markers (not sure if there are better solutions to this but with the way that
     // this is currentl implemented, i believe this is the best way to do it)
-    // let me know if you have any better ideas, but they would probably require a different marker/model setup to implement 
+    // let me know if you have any better ideas, but they would probably require a different marker/model setup to implement
     // if i had to guess
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;

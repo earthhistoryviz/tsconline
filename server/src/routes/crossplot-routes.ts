@@ -10,10 +10,10 @@ import { readFile } from "fs/promises";
 import {
   autoPlotPointsWithJar,
   convertCrossPlotWithModelsInJar,
-  getMarkersFromTextFile,
   setupAutoPlotDirectory,
   setupConversionDirectory
-} from "../crossplot-handler.js";
+} from "../crossplot/crossplot-handler.js";
+import { getMarkersFromTextFile } from "../crossplot/extract-markers.js";
 import { isOperationResult } from "../types.js";
 import logger from "../error-logger.js";
 
@@ -33,7 +33,7 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       return;
     }
     if (isOperationResult(result)) {
-      reply.code(result.code).send(result);
+      reply.code(result.code).send({ error: result.message });
       return;
     }
     const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
