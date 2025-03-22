@@ -124,8 +124,7 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   const handleIsConfirmDiscardUserInfoChangeOpen = () => {
     if (unsavedChanges) {
       setIsConfirmDiscardUserInfoChangeOpen(true);
-    }
-    else {
+    } else {
       handleDiscardUserInfoChanges();
     }
   };
