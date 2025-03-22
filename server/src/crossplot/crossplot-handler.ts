@@ -3,7 +3,6 @@ import {
   AutoPlotRequest,
   ConvertCrossPlotRequest,
   DatapackUniqueIdentifier,
-  getMarkerTypeFromNum,
   getUUIDOfDatapackType
 } from "@tsconline/shared";
 import chalk from "chalk";
@@ -14,8 +13,6 @@ import { assetconfigs, getActiveJar, verifyFilepath } from "../util.js";
 import { OperationResult } from "../types.js";
 import { getDecryptedDatapackFilePath } from "../user/fetch-user-files.js";
 import { spawn } from "child_process";
-import { createReadStream } from "fs";
-import { createInterface } from "readline";
 import { getMarkersFromTextFile } from "./extract-markers.js";
 export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWithModelsInJar(
   datapackUniqueIdentifiers: DatapackUniqueIdentifier[],
