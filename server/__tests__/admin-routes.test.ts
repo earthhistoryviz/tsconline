@@ -379,6 +379,15 @@ const testWorkshopDatabase: Workshop = {
   creatorUUID: "123",
   regLink: ""
 };
+const testUpdatedWorkshopDatabase: Workshop = {
+  title: "new-title",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
+};
 const testWorkshop: SharedWorkshop = {
   title: "test",
   start: start.toISOString(),
@@ -1998,6 +2007,20 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Workshop with same title and dates already exists" });
     expect(response.statusCode).toBe(409);
   });
+
+  it("should return 404 if updated workshop does not exist", async () => {
+    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(testWorkshopDatabase).mockResolvedValueOnce(null);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: body,
+      headers
+    });
+    expect(updateWorkshop).toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Failed to update workshop: not found or already ended." });
+    expect(response.statusCode).toBe(404);
+  });
+
   it("should return 500 if findWorkshop throws an error", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     findWorkshop.mockRejectedValueOnce(new Error());
@@ -2012,7 +2035,9 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(500);
   });
   it("should return 200 if successful and update workshop", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
+    getWorkshopIfNotEnded
+      .mockResolvedValueOnce(testWorkshopDatabase)
+      .mockResolvedValueOnce(testUpdatedWorkshopDatabase);
     findWorkshop.mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "PATCH",
@@ -2028,10 +2053,10 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({
       workshop: {
         ...body,
-        end: testWorkshop.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
+        end: testUpdatedWorkshopDatabase.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
         active: false,
         regRestrict: false,
-        creatorUUID: ""
+        creatorUUID: "123"
       }
     });
     expect(response.statusCode).toBe(200);

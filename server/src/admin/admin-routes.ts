@@ -666,17 +666,22 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       regRestrict: 0 // TODO: change this to the real updated regRestrict value when editing workshop functionality is completed
     };
     await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
+    const updatedWorkshop = await getWorkshopIfNotEnded(workshopId);
+    if (!updatedWorkshop) {
+      reply.status(404).send({ error: "Failed to update workshop: not found or already ended." });
+      return;
+    }
     const now = new Date();
-    const newStart = new Date(newWorkshop.start);
-    const newEnd = new Date(newWorkshop.end);
+    const newStart = new Date(updatedWorkshop.start);
+    const newEnd = new Date(updatedWorkshop.end);
     const workshop = {
-      title: newWorkshop.title,
-      start: newWorkshop.start,
-      end: newWorkshop.end,
+      title: updatedWorkshop.title,
+      start: updatedWorkshop.start,
+      end: updatedWorkshop.end,
       workshopId: workshopId,
       active: newStart <= now && now <= newEnd,
-      regRestrict: false,
-      creatorUUID: "" //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
+      regRestrict: Number(updatedWorkshop.regRestrict) === 1,
+      creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
