@@ -164,12 +164,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       const errorMessages: string[] = [];
 
       if (!workshopTitle) {
-        console.log("here");
         actions.pushError(ErrorCodes.INVALID_FORM);
         return;
       }
       if (!startDate || !endDate) {
-        console.log("here");
         actions.pushError(ErrorCodes.INVALID_FORM);
         return;
       }
@@ -181,8 +179,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       }
 
       let workshopId: number;
-      let edited = false;
-      let created = false;
 
       if (!editMode) {
         const createdWorkshopId = await actions.adminCreateWorkshop(
@@ -198,7 +194,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           return;
         }
         workshopId = createdWorkshopId;
-        created = true;
       } else {
         if (!workshop) {
           actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
@@ -222,7 +217,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             actions.pushError(ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED);
             return;
           }
-          edited = true;
           setWorkshop(newWorkshop);
         }
 
@@ -267,11 +261,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       }
 
       if (errorMessages.length > 0) {
-        actions.pushSnackbar(errorMessages.join(" "), "warning");
-      }
-      const successMessage = created ? "Workshop created successfully." : edited ? "Workshop edited successfully." : "";
-
-      if (successMessage.length > 0 && errorMessages.length == 0) {
+        actions.pushSnackbar(errorMessages.join("\n"), "warning");
+      } else {
+        const successMessage = editMode ? "Workshop created successfully." : "Workshop edited successfully.";
         actions.pushSnackbar(successMessage, "success");
       }
 
