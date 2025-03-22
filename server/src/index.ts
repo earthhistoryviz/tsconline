@@ -26,7 +26,8 @@ import {
   deleteUserHistory,
   fetchPublicUserDatapack,
   fetchUserDatapacksMetadata,
-  fetchUserHistory
+  fetchUserHistory,
+  fetchUserHistoryMetadata
 } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
@@ -307,6 +308,7 @@ server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
+server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:id", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:id", looseRateLimit, deleteUserHistory);
 

@@ -20,6 +20,7 @@ import {
   DatapackUniqueIdentifier,
   assertChartHistory,
   assertDatapack,
+  assertHistoryEntryArray,
   assertUserDatapack,
   assertWorkshopDatapack,
   extractDatapackType
@@ -161,6 +162,27 @@ export const setDatapackImageOnDatapack = action((datapack: Datapack, image: str
   datapack.datapackImage = image;
 });
 
+export const fetchUserHistoryMetadata = action(async () => {
+  try {
+    const response = await fetcher("/user/history", {
+      credentials: "include"
+    });
+    if (response.ok) {
+      const historyEntries = await response.json();
+      assertHistoryEntryArray(historyEntries);
+      state.user.historyEntries = historyEntries;
+    } else {
+      displayServerError(
+        response.statusText,
+        ErrorCodes.USER_FETCH_HISTORY_METADATA_FAILED,
+        ErrorMessages[ErrorCodes.USER_FETCH_HISTORY_METADATA_FAILED]
+      );
+    }
+  } catch (e) {
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
 export const loadUserHistory = action(async (id: string) => {
   try {
     const response = await fetcher(`/user/history/${id}`, {
@@ -212,6 +234,10 @@ export const setUserHistory = action(async (history: ChartHistory) => {
   });
 });
 
+/**
+ * Deletes a user's history entry or all entries. If id is -1, all entries are deleted.
+ * @param id ID of the history entry to delete, or -1 to delete all entries
+ */
 export const deleteUserHistory = action(async (id: string) => {
   try {
     const response = await fetcher(`/user/history/${id}`, {

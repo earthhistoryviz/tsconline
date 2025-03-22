@@ -12,6 +12,7 @@ import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
+import { fetchUserHistoryMetadata } from "./user-actions";
 
 export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
   if (response) setDatapackTimeDefaults();
@@ -158,6 +159,7 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
       unsafeChartContent: response.unsafeChartContent,
       chartTimelineEnabled: false
     });
+    fetchUserHistoryMetadata();
   } finally {
     generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
