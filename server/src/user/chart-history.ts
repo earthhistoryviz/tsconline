@@ -10,6 +10,8 @@ import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
  * @param uuid User's UUID
  * @param settingsFilePath File path to the settings file
  * @param datapackPaths File paths to the datapacks
+ * @param chartPath File path to the chart
+ * @param chartHash Hash of the chart
  */
 export async function saveChartHistory(
   uuid: string,
@@ -82,12 +84,11 @@ export async function getChartHistory(uuid: string, id: string) {
   const settings = await readFile(join(historyEntryDir, "settings.tsc"), "utf-8");
   const chartPath = await readdir(historyEntryDir).then((files) => files.find((file) => file.endsWith(".svg")));
   if (!chartPath) throw new Error("Chart not found");
-
   const chartContent = await readFile(join(historyEntryDir, chartPath), "utf-8");
   const chartHash = chartPath.replace(".svg", "");
+
   const datapackDirsPath = join(historyEntryDir, "datapacks");
   const datapackDirs = await readdir(datapackDirsPath);
-
   const datapacks = await Promise.all(
     datapackDirs.map(async (datapackDir) => {
       const datapackDirPath = join(datapackDirsPath, datapackDir);
@@ -109,7 +110,7 @@ export async function getChartHistory(uuid: string, id: string) {
 
 /**
  * Delete a chart history entry or all entries, -1 deletes all entries
- * @param uuid 
+ * @param uuid
  * @param id The ID of the history entry to delete (0-9), -1 to delete all entries
  */
 export async function deleteChartHistory(uuid: string, id: string) {

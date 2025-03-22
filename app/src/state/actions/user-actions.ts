@@ -161,7 +161,7 @@ export const setDatapackImageOnDatapack = action((datapack: Datapack, image: str
   datapack.datapackImage = image;
 });
 
-export const fetchUserHistory = action(async (id: string) => {
+export const loadUserHistory = action(async (id: string) => {
   try {
     const response = await fetcher(`/user/history/${id}`, {
       credentials: "include"
@@ -169,7 +169,8 @@ export const fetchUserHistory = action(async (id: string) => {
     if (response.ok) {
       const history = await response.json();
       assertChartHistory(history);
-      return history;
+      setUserHistory(history);
+      pushSnackbar("History loaded", "success");
     } else {
       displayServerError(
         response.statusText,
@@ -183,6 +184,7 @@ export const fetchUserHistory = action(async (id: string) => {
 });
 
 export const setUserHistory = action(async (history: ChartHistory) => {
+  setChartTabState(state.chartTab.state, { madeChart: false });
   for (const datapack of history.datapacks) {
     addDatapack(datapack);
   }
