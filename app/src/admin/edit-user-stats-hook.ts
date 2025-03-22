@@ -46,13 +46,21 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
   };
 
   const handleSelectChange = (e: SelectChangeEvent) => {
-    setUnsavedChanges(true);
-
     const { name, value } = e.target;
-    setUserInfo((prevUserInfo) => ({
-      ...prevUserInfo,
-      [name]: name === "isAdmin" ? value === "Yes" : value === "Yes" ? "pro" : "default"
-    }));
+
+    const updatedValue = name === "isAdmin" ? value === "Yes" : value === "Yes" ? "pro" : "default";
+
+    setUserInfo((prevUserInfo) => {
+      const updatedUserInfo = {
+        ...prevUserInfo,
+        [name]: updatedValue
+      };
+
+      const hasUnsavedChanges = JSON.stringify(updatedUserInfo) !== JSON.stringify(originalUserInfo);
+      setUnsavedChanges(hasUnsavedChanges);
+
+      return updatedUserInfo;
+    });
   };
 
   const handleSaveChanges = async () => {
@@ -63,11 +71,13 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
       isAdmin: userInfo.isAdmin ? 1 : 0
     };
 
-    const resp = await actions.adminModifyUsers(modifiedUser);
-    if (resp && resp === "Unable to modify user. Please try again later.") {
-      discardUserInfoChanges();
+    if (unsavedChanges) {
+      const resp = await actions.adminModifyUsers(modifiedUser);
+      if (resp && resp === "Unable to modify user. Please try again later.") {
+        discardUserInfoChanges();
+      }
+      setUnsavedChanges(false);
     }
-    setUnsavedChanges(false);
     setEditMode(false);
   };
 
@@ -112,7 +122,12 @@ const useEditUser = ({ data }: UseUserStatsProps) => {
     }
   };
   const handleIsConfirmDiscardUserInfoChangeOpen = () => {
-    setIsConfirmDiscardUserInfoChangeOpen(true);
+    if (unsavedChanges) {
+      setIsConfirmDiscardUserInfoChangeOpen(true);
+    }
+    else {
+      handleDiscardUserInfoChanges();
+    }
   };
 
   useEffect(() => {
