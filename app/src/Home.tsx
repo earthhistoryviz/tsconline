@@ -606,7 +606,6 @@ const UpcomingWorkshops = observer(
           alignSelf: "flex-start",
           backgroundColor: "secondaryBackground.main"
         }}>
-        {" "}
         <Box
           sx={{
             position: "sticky",
