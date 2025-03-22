@@ -5,9 +5,10 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as child_process from "child_process";
 import * as fsPromises from "fs/promises";
 import md5 from "md5";
-import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../src/crossplot-handler";
+import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../src/crossplot/crossplot-handler";
 import { assertAssetConfig } from "../src/types";
 import { ConvertCrossPlotRequest } from "@tsconline/shared";
+import { read } from "fs";
 
 async function checkFileExists(filePath: string): Promise<boolean> {
   try {
@@ -209,5 +210,14 @@ describe("setupConversionDirectory", async () => {
     });
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("setupAutoPlotDirectory", async () => {
+  const mkdir = vi.spyOn(fsPromises, "mkdir");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  const readFile = vi.spyOn(fsPromises, "readFile");
+  beforeEach(() => {
+    vi.clearAllMocks();
   });
 });

@@ -2,7 +2,7 @@ import fastify, { FastifyInstance } from "fastify";
 import { convertCrossPlot } from "../src/routes/crossplot-routes";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
-import * as crossplotHandler from "../src/crossplot-handler";
+import * as crossplotHandler from "../src/crossplot/crossplot-handler";
 import * as fsPromises from "fs/promises";
 import * as util from "../src/util";
 
@@ -22,7 +22,7 @@ vi.mock("@tsconline/shared", async () => {
     assertConvertCrossPlotRequest: vi.fn().mockReturnValue(true)
   };
 });
-vi.mock("../src/crossplot-handler", async () => {
+vi.mock("../src/crossplot/crossplot-handler", async () => {
   return {
     setupConversionDirectory: vi.fn(() => ({
       outputTextFilepath: "output.txt",
@@ -68,7 +68,7 @@ describe("convertCrossplot", async () => {
       payload: { invalid: "request" }
     });
     expect(response.statusCode).toEqual(400);
-    expect(response.json()).toEqual({ message: "Incorrect request body for converting to crossplot" });
+    expect(response.json()).toEqual({ error: "Incorrect request body for converting to crossplot" });
   });
   it("should return 200 if conversion exists", async () => {
     setupConversionDirectory.mockResolvedValueOnce("success");
@@ -86,7 +86,7 @@ describe("convertCrossplot", async () => {
       url
     });
     expect(response.statusCode).toEqual(500);
-    expect(response.json()).toEqual({ code: 500, message: "Conversion failed" });
+    expect(response.json()).toEqual({ error: "Conversion failed" });
   });
   it("should return 500 if conversion in jar fails", async () => {
     convertCrossplotWithModelsInJar.mockResolvedValueOnce(false);
@@ -96,7 +96,7 @@ describe("convertCrossplot", async () => {
       payload: request
     });
     expect(response.statusCode).toEqual(500);
-    expect(response.json()).toEqual({ message: "Error converting to crossplot" });
+    expect(response.json()).toEqual({ error: "Error converting to crossplot" });
     expect(convertCrossplotWithModelsInJar).toHaveBeenCalledOnce();
   });
   it("should return 200 if conversion in jar succeeds", async () => {
