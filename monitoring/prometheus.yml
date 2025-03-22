@@ -17,7 +17,7 @@ scrape_configs:
     static_configs:
       - targets: ["node-exporter:9100"]
 
-  - job_name: "tsclocal"
+  - job_name: "tsconline"
     scrape_interval: 20s
     static_configs:
       - targets: ["dev.timescalecreator.org:3000"]

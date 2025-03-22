@@ -290,6 +290,11 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
       return;
     }
 
+    if (user[0] && user[0].email === (process.env.ADMIN_EMAIL || "test@gmail.com")) {
+      reply.status(403).send({ error: "Cannot modify root user" });
+      return;
+    }
+
     const updateData: { accountType?: AccountType; isAdmin?: number } = {};
     if (accountType) updateData.accountType = accountType;
     if (isAdmin !== undefined) updateData.isAdmin = isAdmin;

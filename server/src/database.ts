@@ -133,7 +133,7 @@ export async function initializeDatabase() {
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 1,
-      accountType: "default"
+      accountType: "pro"
     });
   }
 }
