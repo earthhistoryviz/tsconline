@@ -642,6 +642,8 @@ export type Marker = {
   line: SVGLineElement;
 };
 
+export type AutoPlotMarker = Omit<Marker, "element" | "line">;
+
 export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
@@ -649,11 +651,29 @@ export type Model = Omit<Marker, "type" | "line"> & {
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
 
+export function getMarkerTypeFromNum(num: number): Marker["type"] {
+  if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {
+    throw new Error(`Invalid marker type number: ${num}`);
+  }
+  return markerTypes[num - 1] as Marker["type"];
+}
 export function isMarkerType(value: string): value is Marker["type"] {
   return markerTypes.includes(value);
 }
 export function isModelType(value: string): value is Model["type"] {
   return modelTypes.includes(value);
+}
+
+export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotMarker must be a non-null object");
+  if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
+  if (typeof o.age !== "number") throwError("AutoPlotMarker", "age", "number", o.age);
+  if (typeof o.depth !== "number") throwError("AutoPlotMarker", "depth", "number", o.depth);
+  if (typeof o.x !== "number") throwError("AutoPlotMarker", "x", "number", o.x);
+  if (typeof o.y !== "number") throwError("AutoPlotMarker", "y", "number", o.y);
+  if (typeof o.color !== "string") throwError("AutoPlotMarker", "color", "string", o.color);
+  if (typeof o.comment !== "string") throwError("AutoPlotMarker", "comment", "string", o.comment);
+  if (typeof o.type !== "string") throwError("AutoPlotMarker", "type", "string", o.type);
 }
 
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
