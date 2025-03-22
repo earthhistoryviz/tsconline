@@ -684,6 +684,13 @@ export function isAutoPlotMarker(o: any): o is AutoPlotMarker {
     typeof o.type === "string"
   );
 }
+export function assertAutoPlotResponse(o: any): asserts o is AutoPlotResponse {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotResponse must be a non-null object");
+  if (!Array.isArray(o.markers)) throwError("AutoPlotResponse", "markers", "array", o.markers);
+  for (const marker of o.markers) {
+    assertAutoPlotMarker(marker);
+  }
+}
 export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
   if (!o || typeof o !== "object") throw new Error("AutoPlotMarker must be a non-null object");
   if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
