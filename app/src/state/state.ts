@@ -13,9 +13,7 @@ import {
   EditableDatapackMetadata,
   CrossPlotTimeSettings,
   ChartTabState,
-  Marker,
-  CrossPlotBounds,
-  Model
+  CrossPlotBounds
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -31,7 +29,9 @@ import type {
   SharedWorkshop,
   Datapack,
   DatapackPriorityChangeRequest,
-  DatapackMetadata
+  DatapackMetadata,
+  Marker,
+  Model
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";

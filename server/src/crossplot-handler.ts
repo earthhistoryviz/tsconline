@@ -259,7 +259,7 @@ export const getMarkersFromTextFile = async function getMarkersFromTextFile(
       selected: false,
       type: getMarkerTypeFromNum(type),
       color: "#FF0000",
-      id: `${x}-${y}-${age}-${depth}-${comment}-${type}`
+      id: `${CSS.escape(`${x}-${y}-${age}-${depth}-${comment}-${type}`)}`
     });
   }
   return markers;

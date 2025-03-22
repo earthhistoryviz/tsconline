@@ -24,7 +24,7 @@ const CROSSPLOT_MODELS_GROUP = "CrossPlotModelsGroup";
 const CROSSPLOT_MARKERS_GROUP = "CrossPlotMarkersGroup";
 const lineStroke = "2";
 const tooltipId = "crossplot-tooltip";
-const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
+export const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
   const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   const newWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, scale);
   const newHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, scale);
@@ -39,6 +39,14 @@ const getDotRect = (id: string, point: { x: number; y: number }, scale: number, 
   rect.setAttribute("stroke", "black");
   rect.setAttribute("stroke-width", "1");
   return rect;
+};
+export const getLine = (id: string) => {
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("opacity", "0");
+  line.setAttribute("stroke", "black");
+  line.setAttribute("stroke-width", "1.5");
+  line.setAttribute("id", `${id}-line`);
+  return line;
 };
 const getCrossPlotMarkersGroup = (svg: SVGSVGElement) => {
   let markersGroup = svg.getElementById(CROSSPLOT_MARKERS_GROUP);
@@ -488,11 +496,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         const markerId = `marker-${Date.now()}`;
         const rect = getDotRect(markerId, point, chartZoomSettings.scale, theme.palette.button.main);
         markersGroup.appendChild(rect);
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("opacity", "0");
-        line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "1.5");
-        line.setAttribute("id", `${markerId}-line`);
+        const line = getLine(`${markerId}-line`);
         markersGroup.appendChild(line);
         const marker = {
           id: markerId,

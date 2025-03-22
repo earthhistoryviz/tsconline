@@ -12,7 +12,9 @@ import {
   assertDatapackArray,
   Marker,
   Model,
-  AutoPlotRequest
+  AutoPlotRequest,
+  assertAutoPlotMarker,
+  assertAutoPlotResponse
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
@@ -22,7 +24,9 @@ import {
   CROSSPLOT_DOT_HEIGHT,
   MARKER_PADDING,
   CROSSPLOT_DOT_WIDTH,
-  ageToCoord
+  ageToCoord,
+  getDotRect,
+  getLine
 } from "../../components/TSCCrossPlotSVGComponent";
 import { downloadFile, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
 import { fetcher } from "../../util";
@@ -287,41 +291,45 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.type !== undefined) {
     marker.type = partial.type;
-    switch (partial.type) {
-      case "Rect": {
-        marker.element.setAttribute("rx", "0");
-        marker.element.setAttribute("ry", "0");
-        marker.line.setAttribute("opacity", "0");
-        break;
-      }
-      case "Circle": {
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("opacity", "0");
-        break;
-      }
-      case "BASE(FAD)": {
-        const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", x1.toString());
-        marker.line.setAttribute("x2", x2.toString());
-        marker.line.setAttribute("y1", y1.toString());
-        marker.line.setAttribute("y2", y2.toString());
-        marker.line.setAttribute("opacity", "1");
-        break;
-      }
-      case "TOP(LAD)": {
-        const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", x1.toString());
-        marker.line.setAttribute("x2", x2.toString());
-        marker.line.setAttribute("y1", y1.toString());
-        marker.line.setAttribute("y2", y2.toString());
-        marker.line.setAttribute("opacity", "1");
-        break;
-      }
+    setCrossPlotMarkerType(marker, partial.type);
+  }
+});
+
+export const setCrossPlotMarkerType = action((marker: Marker, type: string) => {
+  switch (type) {
+    case "Rect": {
+      marker.element.setAttribute("rx", "0");
+      marker.element.setAttribute("ry", "0");
+      marker.line.setAttribute("opacity", "0");
+      break;
+    }
+    case "Circle": {
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("opacity", "0");
+      break;
+    }
+    case "BASE(FAD)": {
+      const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("opacity", "1");
+      break;
+    }
+    case "TOP(LAD)": {
+      const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("opacity", "1");
+      break;
     }
   }
 });
@@ -630,8 +638,24 @@ export const autoPlotCrossPlot = action(async () => {
     if (!response.ok) {
       throw new Error("Failed to autoplot");
     }
+    const responseJson = await response.json();
+    assertAutoPlotResponse(responseJson);
+    const { markers } = responseJson;
+    markers.forEach((marker) => {
+      addCrossPlotMarker({
+        ...marker,
+        element: getDotRect(
+          marker.id,
+          { x: marker.x, y: marker.y },
+          state.crossPlot.state.chartZoomSettings.scale,
+          marker.color
+        ),
+        line: getLine(marker.id)
+      });
+    });
     pushSnackbar("Successfully autoplotted", "success");
   } catch (e) {
+    console.log(e);
   } finally {
   }
 });
