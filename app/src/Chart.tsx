@@ -262,7 +262,7 @@ export const ChartTab: React.FC = observer(() => {
 
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);
-  const [isDrawerOpen, setDrawerOpen] = useState(true);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   return (
     <>
