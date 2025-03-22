@@ -986,7 +986,8 @@ export const setDefaultUserState = action(() => {
     settings: {
       darkMode: false,
       language: "English"
-    }
+    },
+    historyEntries: []
   };
   removeUnauthorizedDatapacks();
 });
