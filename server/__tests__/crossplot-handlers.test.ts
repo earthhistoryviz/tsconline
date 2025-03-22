@@ -57,7 +57,7 @@ vi.mock("fs/promises", async (importOriginal) => {
     readFile: vi.fn(actual.readFile),
     mkdir: vi.fn(actual.mkdir),
     writeFile: vi.fn(() => {}),
-    rm: vi.fn(async () => {})
+    rm: vi.fn(actual.rm)
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -240,6 +240,14 @@ describe("setupAutoPlotDirectory", async () => {
   const rm = vi.spyOn(fsPromises, "rm");
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  beforeAll(() => {
+    mkdir.mockImplementation(async () => "string");
+    rm.mockImplementation(async () => {});
+  })
+  afterAll(() => {
+    mkdir.mockReset();
+    rm.mockReset();
   });
   it("should return 500 if error creating directory", async () => {
     mkdir.mockRejectedValueOnce(new Error("Failed to create directory"));
