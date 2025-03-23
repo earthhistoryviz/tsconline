@@ -1,7 +1,7 @@
 import { AutoPlotMarker, getMarkerTypeFromNum } from "@tsconline/shared";
 import { createReadStream } from "fs";
 import { createInterface } from "readline";
-import { verifyFilepath } from "../util";
+import { verifyFilepath } from "../util.js";
 
 export const getMarkersFromTextFile = async function getMarkersFromTextFile(
   filepath: string
