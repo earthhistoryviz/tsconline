@@ -10,7 +10,8 @@ import md5 from "md5";
 import {
   convertCrossPlotWithModelsInJar,
   setupAutoPlotDirectory,
-  setupConversionDirectory
+  setupConversionDirectory,
+  autoPlotPointsWithJar
 } from "../src/crossplot/crossplot-handler";
 import { assertAssetConfig } from "../src/types";
 import { ConvertCrossPlotRequest } from "@tsconline/shared";
@@ -23,6 +24,11 @@ async function checkFileExists(filePath: string): Promise<boolean> {
     return false;
   }
 }
+vi.mock("@tsconline/shared", async () => {
+  return {
+    getUUIDOfDatapackType: vi.fn().mockReturnValue("test-uuid")
+  };
+});
 vi.mock("../src/crossplot/extract-markers", async () => {
   return {
     getMarkersFromTextFile: vi.fn().mockResolvedValueOnce([
@@ -91,8 +97,8 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     vi.clearAllMocks();
   });
   beforeAll(async () => {
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
-    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    // vi.spyOn(console, "error").mockImplementation(() => undefined);
+    // vi.spyOn(console, "log").mockImplementation(() => undefined);
     if (await checkFileExists(generatedOutputFileDirectory)) {
       await fsPromises.rm(generatedOutputFileDirectory, { recursive: true, force: true });
     }
@@ -244,7 +250,7 @@ describe("setupAutoPlotDirectory", async () => {
   beforeAll(() => {
     mkdir.mockImplementation(async () => "string");
     rm.mockImplementation(async () => {});
-  })
+  });
   afterAll(() => {
     mkdir.mockReset();
     rm.mockReset();
@@ -335,4 +341,36 @@ describe("setupAutoPlotDirectory", async () => {
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledTimes(1);
   });
+});
+
+describe("autoPlotPointsWithJar", async () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
+  const getUUIDOfDatapackType = vi.spyOn(shared, "getUUIDOfDatapackType");
+  const getActiveJar = vi.spyOn(util, "getActiveJar");
+  const spawn = vi.spyOn(child_process, "spawn");
+  const verifyFilepath = vi.spyOn(util, "verifyFilepath");
+  it("should throw an error if spawn fails", async () => {
+    spawn.mockImplementationOnce(() => {
+      throw new Error("Failed to spawn");
+    });
+    await expect(
+      autoPlotPointsWithJar(
+        [
+          {
+            title: "datapackTitle",
+            type: "official"
+          }
+        ],
+        "output",
+        "settings"
+      )
+    ).rejects.toThrow("Failed to spawn");
+    expect(spawn).toHaveBeenCalledOnce();
+    expect(getDecryptedDatapackFilePath).toHaveBeenCalledOnce();
+    expect(getUUIDOfDatapackType).toHaveBeenCalledOnce();
+  });
+  it("should return ");
 });

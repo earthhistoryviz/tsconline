@@ -617,7 +617,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         while (markersGroup.firstChild) {
           markersGroup.removeChild(markersGroup.firstChild);
         }
-        markersGroup.remove();
       };
     }, [state.crossPlot.markers.length]);
 

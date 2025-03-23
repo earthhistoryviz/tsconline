@@ -645,11 +645,15 @@ export const autoPlotCrossPlot = action(async () => {
       if (state.crossPlot.markers.some((m) => m.id === marker.id)) {
         return;
       }
+      const { minX, minY, maxX, maxY, scaleX, scaleY, topAgeX, topAgeY } = state.crossPlot.crossPlotBounds!;
       const crossPlotMarker = {
         ...marker,
         element: getDotRect(
           marker.id,
-          { x: marker.x, y: marker.y },
+          {
+            x: ageToCoord(marker.age, minX, maxX, topAgeX, scaleX),
+            y: ageToCoord(marker.depth, minY, maxY, topAgeY, scaleY)
+          },
           state.crossPlot.state.chartZoomSettings.scale,
           marker.color
         ),
