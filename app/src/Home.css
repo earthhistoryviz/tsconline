@@ -552,7 +552,7 @@
   height: inherit;
   max-height: inherit;
   flex: 1;
-  overflow:auto;
+  overflow: auto;
   scrollbar-width: none;
 }
 
@@ -562,11 +562,6 @@
   width: 100%;
   height: 100%;
   margin-top: 10px;
-}
-
-.scroll_bar {
-  height: 100%;
-  overflow-y: auto;
 }
 
 .upcoming-workshop-title {
