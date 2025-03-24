@@ -508,7 +508,7 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
     }
 
     if (!file) {
-      file = createZipFile(zipfile, filesDir);
+      file = await createZipFile(zipfile, filesDir);
     }
     reply.send(file);
   } catch (e) {
