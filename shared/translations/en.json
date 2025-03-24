@@ -376,11 +376,12 @@
                 },
                 "overlay-menu": {
                     "title": "Overlay Settings",
-                    "current-overlay": "Current Overlay",
-                    "choose-column-empty": "Choose Column >>>",
                     "display-overlay": "Display Overlay",
-                    "choose-second-column": "Choose Second Column",
-                    "column-not-valid": "column not allowed for overlay"
+                    "overlay-column-header": "Overlaying",
+                    "overlay-column-preposition": "On",
+                    "overlay-accordion-caption": "*Grayed out columns are disabled for Overlay (not Event or Point column)",
+                    "invalid-column-mouseover": "Not an Event or Point Column",
+                    "column-not-selected": "Select Column from Menu"
                 }
             },
             "search": {

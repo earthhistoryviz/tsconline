@@ -87,7 +87,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
           <Box className="overlay-settings-container">
             <Box className="overlay-name-and-checkbox">
               <Box>
-                <Typography>Overlaying</Typography>
+                <Typography>{t("settings.column.overlay-menu.overlay-column-header")}</Typography>
                 {column.columnSpecificSettings.drawDualColCompColumn ? (
                   <Typography
                     sx={{
@@ -99,15 +99,15 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                   </Typography>
                 ) : (
                   <Typography
-                    color={"gray"}
+                    color="gray"
                     sx={{
                       border: `1px solid ${theme.palette.divider}`,
                       padding: "2px 5px"
                     }}>
-                    Select Column from Menu
+                    {t("settings.column.overlay-menu.column-not-selected")}
                   </Typography>
                 )}
-                <Typography>On</Typography>
+                <Typography>{t("settings.column.overlay-menu.overlay-column-preposition")}</Typography>
                 <Typography
                   style={{
                     border: `1px solid ${theme.palette.divider}`,
@@ -144,7 +144,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
             </Box>
             <Box className="dcc-accordion-and-caption">
               <Typography variant="caption" className="dcc-accordion-caption">
-                Grayed out columns are disabled for Overlay (not Event or Point column)
+                {t("settings.column.overlay-menu.overlay-accordion-caption")}
               </Typography>
               <Box
                 id="DccColumnAccordionWrapper"
@@ -184,6 +184,7 @@ type ColumnAccordionProps = {
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
   const [expanded, setExpanded] = useState(false);
+  const { t } = useTranslation();
 
   const selectedClass = column.name === getSelectedOverlayColumn() ? "selected-column" : "";
 
@@ -202,7 +203,10 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       </ColumnContainer>
     );
     const NotValidOverlay = () => (
-      <CustomTooltip title="Not an Event or Point Column" placement="left" offset={[0, 10]}>
+      <CustomTooltip
+        title={t("settings.column.overlay-menu.invalid-column-mouseover")}
+        placement="left"
+        offset={[0, 10]}>
         <ColumnContainer
           sx={{
             opacity: 1,
@@ -217,7 +221,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
       <div
         className={`column-leaf-row-container ${selectedClass}`}
         onClick={() => {
-          if (!validForOverlay || column.name === state.columnMenu.columnSelected || !state.columnMenu.columnSelected) {
+          if (!validForOverlay || !state.columnMenu.columnSelected) {
             return;
           }
           const refColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
