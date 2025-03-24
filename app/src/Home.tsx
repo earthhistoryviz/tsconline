@@ -639,7 +639,7 @@ const UpcomingWorkshops = observer(
               ))}
           </StyledScrollbar>
         </Box>
-     </Box>
+      </Box>
     );
   })
 );
