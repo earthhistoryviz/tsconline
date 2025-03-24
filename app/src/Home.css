@@ -530,6 +530,8 @@
   z-index: 0;
 }
 
+/* upcoming workshop */
+
 .upcoming-workshops-section {
   display: flex;
   flex-direction: column;
@@ -539,13 +541,21 @@
   max-height: inherit;
   max-height: -webkit-fill-available;
   min-height: 0;
+  height: 100%;
   align-self: center;
   overflow: hidden;
   grid-column: 3;
   grid-row: 1 / span 2;
 }
 
-/* upcoming workshop */
+.scrollable_item {
+  height: inherit;
+  max-height: inherit;
+  flex: 1;
+  overflow:auto;
+  scrollbar-width: none;
+}
+
 .upcoming-workshop-image {
   grid-area: "img";
   border-radius: 20px;

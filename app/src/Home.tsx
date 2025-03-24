@@ -579,24 +579,6 @@ const UpcomingWorkshops = observer(
         ),
         dataPacks: t("5"),
         image: devSafeUrl("/datapack-images//")
-      },
-      {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
-        image: devSafeUrl("/datapack-images//")
-      },
-      {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
-        image: devSafeUrl("/datapack-images//")
       }
     ];
     return (
@@ -609,14 +591,15 @@ const UpcomingWorkshops = observer(
         <Box
           sx={{
             position: "sticky",
-            zIndex: 10
+            zIndex: 10,
+            height: "60px"
           }}>
           <Typography className="upcoming-workshop-title" variant="h3">
             {t("UPCOMING WORKSHOPS")}
           </Typography>
           <CustomDivider />
         </Box>
-        <Box sx={{ height: "100%", overflowY: "auto" }}>
+        <Box className="scrollable_item">
           <StyledScrollbar>
             {!isMobile &&
               workshops.map((step, index) => (
@@ -638,7 +621,7 @@ const UpcomingWorkshops = observer(
               ))}
           </StyledScrollbar>
         </Box>
-      </Box>
+     </Box>
     );
   })
 );
