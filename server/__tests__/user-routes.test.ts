@@ -22,7 +22,8 @@ import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 vi.mock("../src/user/chart-history", async () => {
   return {
     getChartHistory: vi.fn(() => Promise.resolve(testHistory)),
-    getChartHistoryMetadata: vi.fn(() => Promise.resolve([{ timestamp: "test"}]))
+    getChartHistoryMetadata: vi.fn(() => Promise.resolve([{ timestamp: "test"}])),
+    deleteChartHistory: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
@@ -208,6 +209,7 @@ beforeAll(async () => {
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   app.get("/user/history", fetchUserHistoryMetadata);
   app.get("/user/history/:timestamp", fetchUserHistory);
+  app.delete("/user/history/:timestamp", deleteUserHistory);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
@@ -1137,5 +1139,44 @@ describe("fetchUserHistoryMetadata tests", () => {
     expect(getChartHistoryMetadata).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual([{ timestamp: "test" }]);
+  });
+});
+
+describe("deleteUserHistory tests", () => {
+  const deleteChartHistory = vi.spyOn(chartHistory, "deleteChartHistory");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is not found", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test"
+    });
+    expect(deleteChartHistory).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "User not logged in" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 500 if an error occurred in deleteChartHistory", async () => {
+    deleteChartHistory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test",
+      headers
+    });
+    expect(deleteChartHistory).toHaveBeenCalledOnce();
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to delete history" });
+  });
+  it("should reply 200 when the history is successfully deleted", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test",
+      headers
+    });
+    expect(deleteChartHistory).toHaveBeenCalledOnce();
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ message: "History deleted" });
   });
 });

@@ -437,7 +437,6 @@ export const fetchUserHistoryMetadata = async function fetchUserHistoryMetadata(
     const metadata = await getChartHistoryMetadata(uuid);
     reply.send(metadata);
   } catch (e) {
-    console.log(e);
     reply.status(500).send({ error: "Failed to fetch history metadata" });
   }
 };
