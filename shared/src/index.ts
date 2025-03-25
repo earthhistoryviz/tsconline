@@ -35,7 +35,6 @@ export type ChartHistory = {
 };
 
 export type HistoryEntry = {
-  id: string;
   timestamp: string;
 };
 
@@ -790,7 +789,6 @@ export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser
 
 export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
   if (!o || typeof o !== "object") throw new Error("HistoryEntry must be a non-null object");
-  if (typeof o.id !== "string") throwError("HistoryEntry", "id", "string", o.id);
   if (typeof o.timestamp !== "string") throwError("HistoryEntry", "timestamp", "string", o.timestamp);
 }
 

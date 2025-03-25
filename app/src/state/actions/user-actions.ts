@@ -183,22 +183,27 @@ export const fetchUserHistoryMetadata = action(async () => {
   }
 });
 
-export const loadUserHistory = action(async (id: string) => {
+export const loadUserHistory = action(async (timestamp: string) => {
   try {
-    const response = await fetcher(`/user/history/${id}`, {
+    const response = await fetcher(`/user/history/${timestamp}`, {
       credentials: "include"
     });
     if (response.ok) {
       const history = await response.json();
       assertChartHistory(history);
       setUserHistory(history);
-      pushSnackbar("History loaded", "success");
     } else {
-      displayServerError(
-        response.statusText,
-        ErrorCodes.USER_FETCH_HISTORY_FAILED,
-        ErrorMessages[ErrorCodes.USER_FETCH_HISTORY_FAILED]
-      );
+      const message = await response.text();
+      let errorCode = ErrorCodes.USER_FETCH_HISTORY_FAILED;
+      switch (response.status) {
+        case 404:
+          errorCode = ErrorCodes.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING;
+          removeUserHistoryEntry(timestamp);
+          break;
+        default:
+          break;
+      }
+      displayServerError(message, errorCode, ErrorMessages[errorCode]);
     }
   } catch (e) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
@@ -236,21 +241,21 @@ export const setUserHistory = action(async (history: ChartHistory) => {
 
 /**
  * Deletes a user's history entry or all entries. If id is -1, all entries are deleted.
- * @param id ID of the history entry to delete, or -1 to delete all entries
+ * @param timestamp Timestamp of the history entry to delete, or -1 to delete all entries
  */
-export const deleteUserHistory = action(async (id: string) => {
+export const deleteUserHistory = action(async (timestamp: string) => {
   try {
-    const response = await fetcher(`/user/history/${id}`, {
+    const response = await fetcher(`/user/history/${timestamp}`, {
       method: "DELETE",
       credentials: "include"
     });
     if (response.ok) {
-      if (id === "-1") {
+      if (timestamp === "-1") {
         pushSnackbar("All history entries deleted", "success");
         clearUserHistory();
       } else {
         pushSnackbar("History entry deleted", "success");
-        removeUserHistoryEntry(id);
+        removeUserHistoryEntry(timestamp);
       }
     } else {
       displayServerError(
@@ -264,8 +269,8 @@ export const deleteUserHistory = action(async (id: string) => {
   }
 });
 
-export const removeUserHistoryEntry = action((id: string) => {
-  state.user.historyEntries = state.user.historyEntries.filter((entry) => entry.id !== id);
+export const removeUserHistoryEntry = action((timestamp: string) => {
+  state.user.historyEntries = state.user.historyEntries.filter((entry) => entry.timestamp !== timestamp);
 });
 
 export const clearUserHistory = action(() => {

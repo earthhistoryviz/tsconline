@@ -1,8 +1,9 @@
-import { mkdir, readdir } from "fs/promises";
+import { mkdir, readFile, readdir } from "fs/promises";
 import path from "path";
 import { assetconfigs, verifyNonExistentFilepath, verifyFilepath } from "../util.js";
 import { CACHED_USER_DATAPACK_FILENAME, DECRYPTED_DIRECTORY_NAME } from "../constants.js";
 import { fetchUserDatapack } from "./user-handler.js";
+import { assertDatapack } from "@tsconline/shared";
 
 export function getDecryptedDirectory(directory: string) {
   return path.join(directory, DECRYPTED_DIRECTORY_NAME);
@@ -107,6 +108,13 @@ export async function getCachedDatapackFilePath(directory: string) {
     throw new Error("Invalid filepath");
   }
   return cachedDatapackFilePath;
+}
+
+export async function getCachedDatapackFromDirectory(directory: string) {
+  const cachedDatapackFilePath = await getCachedDatapackFilePath(directory);
+  const datapack = JSON.parse((await readFile(cachedDatapackFilePath)).toString());
+  assertDatapack(datapack);
+  return datapack;
 }
 
 export async function fetchUserDatapackDirectory(uuid: string, datapack: string): Promise<string> {

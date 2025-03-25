@@ -1,9 +1,24 @@
 import { assetconfigs } from "../util.js";
 import { join, basename, dirname } from "path";
-import { cp, mkdir, readFile, readdir, realpath, rm, symlink, access } from "fs/promises";
+import { cp, mkdir, readFile, readdir, realpath, rm, symlink, access, lstat } from "fs/promises";
 import logger from "../error-logger.js";
-import { HistoryEntry, assertDatapack } from "@tsconline/shared";
-import { CACHED_USER_DATAPACK_FILENAME } from "../constants.js";
+import { Datapack, HistoryEntry } from "@tsconline/shared";
+import { getCachedDatapackFromDirectory } from "./fetch-user-files.js";
+
+/**
+ * Verify that a path is a symlink and that it points to a valid target
+ * @param symlink
+ */
+export async function verifySymlink(symlink: string): Promise<boolean> {
+  try {
+    const stats = await lstat(symlink);
+    if (!stats.isSymbolicLink()) return false;
+    await realpath(symlink);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Save chart history to the user's history file
@@ -62,10 +77,24 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
     return [];
   }
   const entries = await readdir(historyDir);
-  return entries.sort().map((entry, index) => ({
-    id: index.toString(),
-    timestamp: new Date(parseInt(entry)).toISOString()
-  }));
+  const validEntries: HistoryEntry[] = [];
+  for (const entry of entries) {
+    const datapacksPath = join(historyDir, entry, "datapacks");
+    const datapacks = await readdir(datapacksPath);
+    let validSymlinks = true;
+    for (const datapack of datapacks) {
+      validSymlinks = await verifySymlink(join(datapacksPath, datapack));
+    }
+    if (!validSymlinks) {
+      logger.error(`Invalid symlinks in history entry ${entry}`);
+      await rm(join(historyDir, entry), { recursive: true });
+      continue;
+    }
+    validEntries.push({
+      timestamp: entry
+    });
+  }
+  return validEntries.sort();
 }
 
 /**
@@ -73,32 +102,24 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
  * @param uuid User's UUID
  * @param id ID of the history entry when sorted by timestamp, must be between 0 and 9
  */
-export async function getChartHistory(uuid: string, id: string) {
-  if (isNaN(parseInt(id)) || parseInt(id) < 0 || parseInt(id) > 9) throw new Error("Invalid history ID");
-  const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
-  const entries = await readdir(historyDir);
-  const entry = entries.sort()[parseInt(id)];
-  if (!entry) throw new Error("History entry not found");
-
-  const historyEntryDir = join(historyDir, entry);
-  const settings = await readFile(join(historyEntryDir, "settings.tsc"), "utf-8");
-  const chartPath = await readdir(historyEntryDir).then((files) => files.find((file) => file.endsWith(".svg")));
+export async function getChartHistory(uuid: string, timestamp: string) {
+  const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history", timestamp);
+  const settings = await readFile(join(historyDir, "settings.tsc"), "utf-8");
+  const chartPath = await readdir(historyDir).then((files) => files.find((file) => file.endsWith(".svg")));
   if (!chartPath) throw new Error("Chart not found");
-  const chartContent = await readFile(join(historyEntryDir, chartPath), "utf-8");
+  const chartContent = await readFile(join(historyDir, chartPath), "utf-8");
   const chartHash = chartPath.replace(".svg", "");
 
-  const datapackDirsPath = join(historyEntryDir, "datapacks");
+  const datapackDirsPath = join(historyDir, "datapacks");
   const datapackDirs = await readdir(datapackDirsPath);
-  const datapacks = await Promise.all(
-    datapackDirs.map(async (datapackDir) => {
-      const datapackDirPath = join(datapackDirsPath, datapackDir);
-      const resolvedPath = await realpath(datapackDirPath);
-      const datapackJsonPath = join(resolvedPath, CACHED_USER_DATAPACK_FILENAME);
-      const datapackJson = JSON.parse(await readFile(datapackJsonPath, "utf-8"));
-      assertDatapack(datapackJson);
-      return datapackJson;
-    })
-  );
+  const datapacks: Datapack[] = [];
+  for (const datapackDir of datapackDirs) {
+    const symlinkPath = join(datapackDirsPath, datapackDir);
+    if (!(await verifySymlink(symlinkPath))) throw new Error("Invalid datapack symlink");
+    const resolvedPath = await realpath(symlinkPath);
+    const datapack = await getCachedDatapackFromDirectory(resolvedPath);
+    datapacks.push(datapack);
+  }
 
   return {
     settings,
@@ -111,18 +132,15 @@ export async function getChartHistory(uuid: string, id: string) {
 /**
  * Delete a chart history entry or all entries, -1 deletes all entries
  * @param uuid
- * @param id The ID of the history entry to delete (0-9), -1 to delete all entries
+ * @param timestamp Timestamp of the history entry to delete, or -1 to delete all entries
  */
-export async function deleteChartHistory(uuid: string, id: string) {
-  if (isNaN(parseInt(id)) || parseInt(id) < -1 || parseInt(id) > 9) throw new Error("Invalid history ID");
+export async function deleteChartHistory(uuid: string, timestamp: string) {
   const historyDir = join(assetconfigs.uploadDirectory, "private", uuid, "history");
-  const entries = await readdir(historyDir);
-  if (parseInt(id) === -1) {
+  if (parseInt(timestamp) === -1) {
+    const entries = await readdir(historyDir);
     await Promise.all(entries.map((entry) => rm(join(historyDir, entry), { recursive: true })));
-    return;
   } else {
-    const entry = entries.sort()[parseInt(id)];
-    if (!entry) throw new Error("History entry not found");
-    await rm(join(historyDir, entry), { recursive: true });
+    const historyFolder = join(historyDir, timestamp);
+    await rm(historyFolder, { recursive: true });
   }
 }

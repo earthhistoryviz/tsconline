@@ -317,11 +317,11 @@ const HistorySideBar: React.FC = observer(() => {
           <List>
             {state.user.historyEntries.map((entry) => (
               <ListItemButton
-                key={entry.id}
+                key={entry.timestamp}
                 onClick={async () => {
                   setLoading(true);
                   try {
-                    await actions.loadUserHistory(entry.id);
+                    await actions.loadUserHistory(entry.timestamp);
                     setDrawerOpen(false);
                   } finally {
                     setLoading(false);
@@ -333,7 +333,7 @@ const HistorySideBar: React.FC = observer(() => {
                     e.stopPropagation();
                     setLoading(true);
                     try {
-                      await actions.deleteUserHistory(entry.id);
+                      await actions.deleteUserHistory(entry.timestamp);
                     } finally {
                       setLoading(false);
                     }

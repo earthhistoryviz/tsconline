@@ -309,8 +309,8 @@ server.register(userRoutes, { prefix: "/user" });
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
 server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
-server.get("/user/history/:id", looseRateLimit, fetchUserHistory);
-server.delete("/user/history/:id", looseRateLimit, deleteUserHistory);
+server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

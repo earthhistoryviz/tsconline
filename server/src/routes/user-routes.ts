@@ -403,7 +403,7 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
 };
 
 export const fetchUserHistory = async function fetchUserHistory(
-  request: FastifyRequest<{ Params: { id: string } }>,
+  request: FastifyRequest<{ Params: { timestamp: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -411,12 +411,15 @@ export const fetchUserHistory = async function fetchUserHistory(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const { id } = request.params;
+  const { timestamp } = request.params;
   try {
-    const history = await getChartHistory(uuid, id);
+    const history = await getChartHistory(uuid, timestamp);
     reply.send(history);
   } catch (e) {
-    console.error(e);
+    if ((e as Error).message === "Invalid datapack symlink") {
+      reply.status(404).send({ error: "Datapacks not found" });
+      return;
+    }
     reply.status(500).send({ error: "Failed to fetch history" });
   }
 };
@@ -440,7 +443,7 @@ export const fetchUserHistoryMetadata = async function fetchUserHistoryMetadata(
 };
 
 export const deleteUserHistory = async function deleteUserHistory(
-  request: FastifyRequest<{ Params: { id: string } }>,
+  request: FastifyRequest<{ Params: { timestamp: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -448,9 +451,9 @@ export const deleteUserHistory = async function deleteUserHistory(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const { id } = request.params;
+  const { timestamp } = request.params;
   try {
-    await deleteChartHistory(uuid, id);
+    await deleteChartHistory(uuid, timestamp);
     reply.send({ message: "History deleted" });
   } catch (e) {
     console.error(e);

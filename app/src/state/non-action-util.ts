@@ -100,9 +100,15 @@ export function getNavigationRouteForWorkshopDetails(id: number) {
   return `/workshops/${id}`;
 }
 
-export function formatDate(input: string | dayjs.Dayjs): string {
+export function formatDate(input: string | number | dayjs.Dayjs): string {
   let date: Date;
   if (typeof input === "string") {
+    if (/^\d+$/.test(input)) {
+      date = new Date(Number(input));
+    } else {
+      date = new Date(input);
+    }
+  } else if (typeof input === "number") {
     date = new Date(input);
   } else if (dayjs.isDayjs(input)) {
     date = input.toDate();
