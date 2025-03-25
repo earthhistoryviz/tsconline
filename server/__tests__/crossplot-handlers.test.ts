@@ -86,19 +86,19 @@ const returnFilepaths = async (testCaseDir: string) => {
   return { modelTextFilepath, settingsTextFilepath, outputTextFilepath, datapackFilepath };
 };
 const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
-const keys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
+const conversionTestKeys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
 describe("convertCrossPlotWithModelsInJar", async () => {
   const getActiveJar = vi.spyOn(util, "getActiveJar");
   const spawn = vi.spyOn(child_process, "spawn");
   const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
-  const generatedOutputFileDirectory = path.join(keys, "generated-file");
+  const generatedOutputFileDirectory = path.join(conversionTestKeys, "generated-file");
   beforeEach(() => {
     vi.clearAllMocks();
   });
   beforeAll(async () => {
-    // vi.spyOn(console, "error").mockImplementation(() => undefined);
-    // vi.spyOn(console, "log").mockImplementation(() => undefined);
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
     if (await checkFileExists(generatedOutputFileDirectory)) {
       await fsPromises.rm(generatedOutputFileDirectory, { recursive: true, force: true });
     }
@@ -132,7 +132,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
   });
   it("should return 500 if bad datapack file", { timeout: 20000 }, async () => {
     const testCase = "test-case-2";
-    const testCaseFilepath = path.join(keys, testCase);
+    const testCaseFilepath = path.join(conversionTestKeys, testCase);
     const { modelTextFilepath, settingsTextFilepath, datapackFilepath } = await returnFilepaths(testCaseFilepath);
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackFilepath);
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
@@ -153,7 +153,7 @@ describe("convertCrossPlotWithModelsInJar", async () => {
   });
   it("should return 200 and file if successful", { timeout: 20000 }, async () => {
     const testCase = "test-case-1";
-    const testCaseFilepath = path.join(keys, testCase);
+    const testCaseFilepath = path.join(conversionTestKeys, testCase);
     const { datapackFilepath, modelTextFilepath, settingsTextFilepath, outputTextFilepath } =
       await returnFilepaths(testCaseFilepath);
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackFilepath);
@@ -347,6 +347,23 @@ describe("autoPlotPointsWithJar", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  const conversionTestKeys = path.join("server", "__tests__", "__data__", "auto-plot-test-keys");
+  const generatedOutputFileDirectory = path.join(conversionTestKeys, "generated-file");
+  beforeAll( async () => {
+    vi.spyOn(console, "error").mockImplementation(() => undefined);
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    if (await checkFileExists(generatedOutputFileDirectory)) {
+      await fsPromises.rm(generatedOutputFileDirectory, { recursive: true, force: true });
+    }
+    await fsPromises.mkdir(generatedOutputFileDirectory, { recursive: true });
+    const assetconfigs = JSON.parse(await fsPromises.readFile(path.join("server", "assets", "config.json"), "utf-8"));
+    assertAssetConfig(assetconfigs);
+    getActiveJar.mockImplementation(() => {
+      return isCI
+        ? "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar"
+        : path.join("server", assetconfigs.activeJar);
+    });
+  })
   const getDecryptedDatapackFilePath = vi.spyOn(fetchUserFiles, "getDecryptedDatapackFilePath");
   const getUUIDOfDatapackType = vi.spyOn(shared, "getUUIDOfDatapackType");
   const getActiveJar = vi.spyOn(util, "getActiveJar");
