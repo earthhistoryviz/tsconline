@@ -130,16 +130,16 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       }
     });
     setPDFFiles(Array.from(fileMap.values()));
-    setHasFiles(true)
+    setHasFiles(true);
   };
   const handlePDFFileDelete = (fileName: string) => {
-      setPDFFiles((prevFiles) => {
-          const updatedFiles = prevFiles.filter((file) => file.name !== fileName);
-          if (updatedFiles.length === 0) {
-              setHasFiles(false);
-          }
-          return updatedFiles;
-      });
+    setPDFFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.name !== fileName);
+      if (updatedFiles.length === 0) {
+        setHasFiles(false);
+      }
+      return updatedFiles;
+    });
     actions.removeAllErrors();
   };
 

@@ -357,9 +357,9 @@ export const uploadUserDatapack = action(
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
-      formData.append("hasFiles", "true")
+      formData.append("hasFiles", "true");
     } else {
-      formData.append("hasFiles", "false")
+      formData.append("hasFiles", "false");
     }
 
     formData.append("priority", String(metadata.priority));
