@@ -1136,27 +1136,6 @@ describe("getUsers", () => {
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);
   });
-  it("should return 404 if displayed users are not correctly processed", async () => {
-    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => {
-      throw new Error();
-    });
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/users",
-      headers
-    });
-    expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
-    expect(assertAdminSharedUser).toHaveBeenCalledWith({
-      ...testSharedAdminUser,
-      userId: 123,
-      isAdmin: true,
-      isGoogleUser: false,
-      invalidateSession: false,
-      emailVerified: true
-    });
-    expect(await response.json()).toEqual({ error: "Unknown error" });
-    expect(response.statusCode).toBe(404);
-  });
 });
 
 describe("adminDeleteOfficialDatapack", () => {

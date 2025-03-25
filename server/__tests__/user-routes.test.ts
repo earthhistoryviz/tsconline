@@ -8,7 +8,12 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
-import { fetchPublicUserDatapack, fetchUserHistory, fetchUserHistoryMetadata, deleteUserHistory } from "../src/routes/user-routes";
+import {
+  fetchPublicUserDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata,
+  deleteUserHistory
+} from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
@@ -22,7 +27,7 @@ import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 vi.mock("../src/user/chart-history", async () => {
   return {
     getChartHistory: vi.fn(() => Promise.resolve(testHistory)),
-    getChartHistoryMetadata: vi.fn(() => Promise.resolve([{ timestamp: "test"}])),
+    getChartHistoryMetadata: vi.fn(() => Promise.resolve([{ timestamp: "test" }])),
     deleteChartHistory: vi.fn().mockResolvedValue({})
   };
 });
