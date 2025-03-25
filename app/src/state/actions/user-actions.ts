@@ -8,7 +8,6 @@ import {
   removeDatapack,
   fetchDatapack,
   setChartTabState,
-  applySettings,
   processDatapackConfig
 } from "./general-actions";
 import { displayServerError } from "./util-actions";
@@ -215,21 +214,19 @@ export const setUserHistory = action(async (history: ChartHistory) => {
   for (const datapack of history.datapacks) {
     addDatapack(datapack);
   }
-  await Promise.all([
-    processDatapackConfig(
-      toJS(
-        history.datapacks.map((d) => {
-          return {
-            title: d.title,
-            isPublic: d.isPublic,
-            storedFileName: d.storedFileName,
-            ...extractDatapackType(d)
-          };
-        })
-      )
+  await processDatapackConfig(
+    toJS(
+      history.datapacks.map((d) => {
+        return {
+          title: d.title,
+          isPublic: d.isPublic,
+          storedFileName: d.storedFileName,
+          ...extractDatapackType(d)
+        };
+      })
     ),
-    applySettings(xmlToJson(history.settings))
-  ]);
+    { settings: xmlToJson(history.settings) }
+  );
   setChartTabState(state.chartTab.state, {
     chartContent: purifyChartContent(history.chartContent),
     chartHash: history.chartHash,

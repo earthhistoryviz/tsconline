@@ -374,6 +374,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
+  console.log(settings);
   const {
     topAge,
     baseAge,
@@ -481,18 +482,26 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
 
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+  ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
-    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
+    if (
+      !options?.force &&
+      (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks))
+    )
       return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
-      if (settingsPath && settingsPath.length !== 0) {
+      if (options && options.settings) {
+        if (typeof options.settings !== "string") return options.settings;
+        if (options.settings.length === 0) return null;
         try {
-          const settings = await fetchSettingsXML(settingsPath);
+          const settings = await fetchSettingsXML(options.settings);
           if (settings) {
             removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
             return JSON.parse(JSON.stringify(settings));
