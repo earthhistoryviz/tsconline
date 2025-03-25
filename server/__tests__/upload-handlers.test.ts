@@ -141,7 +141,8 @@ describe("uploadUserDatapackHandler", () => {
     uuid: "user",
     isPublic: "true",
     type: "type",
-    priority: "1"
+    priority: "1",
+    hasFiles: "true"
   };
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -165,7 +166,8 @@ describe("uploadUserDatapackHandler", () => {
     { originalFileName: "" },
     { storedFileName: "" },
     { isPublic: "" },
-    { type: "" }
+    { type: "" },
+    { hasFiles: "" }
   ])(`should return a 400 error if %p is missing`, async (field) => {
     const val = await uploadUserDatapackHandler({ ...fields, ...field }, 1);
     expect(isOperationResult(val)).toBe(true);
@@ -279,7 +281,8 @@ describe("uploadUserDatapackHandler", () => {
       type: fields.type,
       uuid: fields.uuid,
       isPublic: Boolean(fields.isPublic),
-      priority: parseInt(fields.priority)
+      priority: parseInt(fields.priority),
+      hasFiles: Boolean(fields.hasFiles)
     });
   });
   it("should return a 400 error if title is too long", async () => {
