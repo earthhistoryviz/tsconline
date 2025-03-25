@@ -359,7 +359,8 @@ const testSharedAdminUser = {
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default",
+  historyEntries: []
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
