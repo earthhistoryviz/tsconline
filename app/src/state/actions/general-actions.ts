@@ -479,6 +479,9 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   setUnsavedDatapackConfig([]);
 });
 
+/**
+ * @param settings - If settings is a string assumed to be a path to a settings file
+ */
 export const processDatapackConfig = action(
   "processDatapackConfig",
   async (

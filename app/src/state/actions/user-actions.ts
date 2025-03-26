@@ -1,4 +1,4 @@
-import { action, toJS } from "mobx";
+import { action, runInAction, toJS } from "mobx";
 import { fetcher } from "../../util";
 import {
   addDatapack,
@@ -223,8 +223,11 @@ export const setUserHistory = action(async (history: ChartHistory) => {
         };
       })
     ),
-    { settings: xmlToJson(history.settings) }
+    { settings: xmlToJson(history.settings), force: true }
   );
+  runInAction(() => {
+    state.prevSettings = state.settings;
+  });
   setChartTabState(state.chartTab.state, {
     chartContent: purifyChartContent(history.chartContent),
     chartHash: history.chartHash,
