@@ -34,7 +34,7 @@ import {
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
-  SharedUser
+  AdminSharedUser
 } from "@tsconline/shared";
 import {
   getWorkshopDatapacksNames,
@@ -133,7 +133,7 @@ export const adminFetchSingleOfficialDatapack = async function fetchSinglePrivat
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
-    const displayedUsers: SharedUser[] = await Promise.all(
+    const displayedUsers: AdminSharedUser[] = await Promise.all(
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUsersWorkshops({ userId });

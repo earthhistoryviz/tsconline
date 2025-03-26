@@ -268,20 +268,9 @@ const HistorySideBar: React.FC = observer(() => {
       <TSCDialogLoader open={loading} transparentBackground />
       <Paper
         onClick={() => setDrawerOpen(true)}
+        className="floating-history-button"
         sx={{
-          position: "fixed",
-          left: 0,
-          top: "50%",
-          width: "40px",
-          height: "80px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          backgroundColor: "backgroundColor.main",
-          borderRadius: "0 8px 8px 0",
-          cursor: "pointer",
-          boxShadow: 3,
-          zIndex: 1000
+          backgroundColor: "backgroundColor.main"
         }}>
         <HistoryIcon fontSize="medium" />
       </Paper>

@@ -199,8 +199,6 @@ export const loadUserHistory = action(async (timestamp: string) => {
           errorCode = ErrorCodes.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING;
           removeUserHistoryEntry(timestamp);
           break;
-        default:
-          break;
       }
       displayServerError(message, errorCode, ErrorMessages[errorCode]);
     }
