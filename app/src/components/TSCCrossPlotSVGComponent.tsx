@@ -593,6 +593,9 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     // this is currentl implemented, i believe this is the best way to do it)
     // let me know if you have any better ideas, but they would probably require a different marker/model setup to implement
     // if i had to guess
+    // this is because the markers are not being added in this component but through an external event from a fetch, which means that if that changes we must
+    // add the event listeners here since they do not exist outside of this component
+    // however, this function will get called when a user deletes markers meaning we have some duplicate running code but i think it's okay.
     useEffect(() => {
       if (typeof ref === "function" || !ref) return;
       const container = ref.current;
