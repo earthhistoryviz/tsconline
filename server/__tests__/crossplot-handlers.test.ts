@@ -28,7 +28,7 @@ vi.mock("md5", async () => {
     default: vi.fn().mockReturnValue("test-hash")
   };
 });
-vi.mock("../src/util", async (importOriginal) => {
+vi.mock("../src/util", async () => {
   return {
     getActiveJar: vi.fn(() => "test.jar"),
     verifyFilepath: vi.fn(),
@@ -38,12 +38,7 @@ vi.mock("../src/util", async (importOriginal) => {
     }
   };
 });
-vi.mock("../src/user/fetch-user-files", async () => {
-  return {
-    getDecryptedDatapackFilePath: vi.fn().mockResolvedValue("datapack/filepath")
-  };
-});
-vi.mock("fs/promises", async (importOriginal) => {
+vi.mock("fs/promises", async () => {
   return {
     readFile: vi.fn(),
     mkdir: vi.fn(),
