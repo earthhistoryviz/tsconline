@@ -234,7 +234,7 @@ describe("autoPlotPoints", async () => {
     expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
     expect(response.statusCode).toEqual(500);
     expect(response.json()).toEqual({ error: "Error auto plotting" });
-    expect(errorLogger).toHaveBeenCalledOnce();
+    expect(loggerError).toHaveBeenCalledOnce();
   });
   it("should return 500 if file doesn't exist after calling autoPlotPointsWithJar", async () => {
     autoPlotPointsWithJar.mockResolvedValueOnce(true);
@@ -246,7 +246,7 @@ describe("autoPlotPoints", async () => {
     });
     expect(response.statusCode).toEqual(500);
     expect(response.json()).toEqual({ error: "Error auto plotting" });
-    expect(errorLogger).toHaveBeenCalledOnce();
+    expect(loggerError).toHaveBeenCalledOnce();
     expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
