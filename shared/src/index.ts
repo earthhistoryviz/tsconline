@@ -677,8 +677,6 @@ export function isAutoPlotMarker(o: any): o is AutoPlotMarker {
     typeof o.id === "string" &&
     typeof o.age === "number" &&
     typeof o.depth === "number" &&
-    typeof o.x === "number" &&
-    typeof o.y === "number" &&
     typeof o.color === "string" &&
     typeof o.comment === "string" &&
     typeof o.type === "string"
