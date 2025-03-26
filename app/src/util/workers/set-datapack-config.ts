@@ -104,7 +104,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
   }
   // makes sure things are named correctly for users and for the hash map to not have collisions
   for (const [unit, column] of unitMap) {
-    if (unit !== "Ma" && column.name === "Chart Title") {
+    if (unit.toLowerCase() !== "ma" && column.name === "Chart Title") {
       column.name = column.name + " in " + unit;
       column.editName = unit;
       for (const child of column.children) {
