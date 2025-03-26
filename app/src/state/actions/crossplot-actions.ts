@@ -668,7 +668,7 @@ export const autoPlotCrossPlot = action(async () => {
     });
     pushSnackbar("Successfully autoplotted", "success");
   } catch (e) {
-    console.log(e);
+    displayServerError(e, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   } finally {
     state.crossPlot.autoPlotting = false;
   }
