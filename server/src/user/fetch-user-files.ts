@@ -112,7 +112,7 @@ export async function getCachedDatapackFilePath(directory: string) {
 
 export async function getCachedDatapackFromDirectory(directory: string) {
   const cachedDatapackFilePath = await getCachedDatapackFilePath(directory);
-  const datapack = JSON.parse((await readFile(cachedDatapackFilePath, "utf-8")));
+  const datapack = JSON.parse(await readFile(cachedDatapackFilePath, "utf-8"));
   assertDatapack(datapack);
   return datapack;
 }

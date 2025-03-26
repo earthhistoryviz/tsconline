@@ -5,6 +5,10 @@ import logger from "../error-logger.js";
 import { Datapack, HistoryEntry } from "@tsconline/shared";
 import { getCachedDatapackFromDirectory } from "./fetch-user-files.js";
 
+export function isValidEpoch(timestamp: string) {
+  return /^\d{13}$/.test(timestamp);
+}
+
 /**
  * Verify that a path is a symlink and that it points to a valid target
  * @param symlink
@@ -80,6 +84,11 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
   const entries = await readdir(historyRoot);
   const validEntries: HistoryEntry[] = [];
   for (const entry of entries) {
+    if (!isValidEpoch(entry)) {
+      logger.error(`Invalid epoch in history entry ${entry}`);
+      await rm(join(historyRoot, entry), { recursive: true });
+      continue;
+    }
     const datapacksPath = join(historyRoot, entry, "datapacks");
     const datapacks = await readdir(datapacksPath);
     let validSymlinks = true;
@@ -104,6 +113,7 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
  * @param id ID of the history entry when sorted by timestamp, must be between 0 and 9
  */
 export async function getChartHistory(uuid: string, timestamp: string) {
+  if (!isValidEpoch(timestamp)) throw new Error("Invalid timestamp");
   const historyEntryPath = join(assetconfigs.uploadDirectory, "private", uuid, "history", timestamp);
   const settings = await readFile(join(historyEntryPath, "settings.tsc"), "utf-8");
   const chartPath = await readdir(historyEntryPath).then((files) => files.find((file) => file.endsWith(".svg")));
@@ -136,6 +146,7 @@ export async function getChartHistory(uuid: string, timestamp: string) {
  * @param timestamp Timestamp of the history entry to delete, or -1 to delete all entries
  */
 export async function deleteChartHistory(uuid: string, timestamp: string) {
+  if (!isValidEpoch(timestamp) && timestamp !== "-1") throw new Error("Invalid timestamp");
   const historyRoot = join(assetconfigs.uploadDirectory, "private", uuid, "history");
   if (parseInt(timestamp) === -1) {
     const entries = await readdir(historyRoot);
