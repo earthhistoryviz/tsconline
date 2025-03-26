@@ -272,8 +272,10 @@ describe("autoPlotPointsWithJar", async () => {
       settingsTextFilepath
     );
     expect(response).toEqual(true);
-    const correctOutput = await fsPromises.readFile(outputTextFilepath);
-    const generatedOutput = await fsPromises.readFile(outputFileLocation);
+    const correctOutput = await fsPromises.readFile(outputTextFilepath, "utf-8");
+    const generatedOutput = await fsPromises.readFile(outputFileLocation, "utf-8");
+    console.log("generatedOutput", generatedOutput);
+    console.log("correctOutput", correctOutput);
     expect(generatedOutput).toEqual(correctOutput);
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(spawn).toHaveBeenCalledOnce();
