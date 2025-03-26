@@ -70,7 +70,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
     )
       foundDefaultAge = true;
     if (unitMap.has(datapack.ageUnits.toLowerCase())) {
-      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits)!;
+      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits.toLowerCase())!;
       const newUnitChart = datapack.columnInfo;
       // slice off the existing unit column
       const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
