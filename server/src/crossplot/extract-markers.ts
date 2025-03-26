@@ -29,25 +29,21 @@ export const getMarkersFromTextFile = async function getMarkersFromTextFile(
     if (split.length < 7 || split.some((item) => item === "")) {
       throw new Error("Invalid file format");
     }
-    const x = parseFloat(split[0]!);
-    const y = parseFloat(split[1]!);
-    const age = parseFloat(split[2]!);
-    const depth = parseFloat(split[3]!);
-    const comment = split[4]!;
+    const age = parseFloat(split[0]!);
+    const depth = parseFloat(split[1]!);
+    const comment = split[3]!;
     // this tells us what type of column the marker is in, but not really needed atm
     // const colType = parseInt(split[5]!);
-    const type = parseInt(split[6]!);
+    const type = parseInt(split[4]!);
 
     markers.push({
-      x,
-      y,
       age,
       depth,
       comment,
       selected: false,
       type: getMarkerTypeFromNum(type),
       color: "#FF0000",
-      id: `${x}-${y}-${age}-${depth}-${comment}-${type}`
+      id: `${age}-${depth}-${comment}-${type}`
     });
   }
   return markers;

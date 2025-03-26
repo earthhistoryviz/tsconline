@@ -645,7 +645,7 @@ export type Marker = {
   line: SVGLineElement;
 };
 
-export type AutoPlotMarker = Omit<Marker, "element" | "line">;
+export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
 
 export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
@@ -696,8 +696,6 @@ export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
   if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
   if (typeof o.age !== "number") throwError("AutoPlotMarker", "age", "number", o.age);
   if (typeof o.depth !== "number") throwError("AutoPlotMarker", "depth", "number", o.depth);
-  if (typeof o.x !== "number") throwError("AutoPlotMarker", "x", "number", o.x);
-  if (typeof o.y !== "number") throwError("AutoPlotMarker", "y", "number", o.y);
   if (typeof o.color !== "string") throwError("AutoPlotMarker", "color", "string", o.color);
   if (typeof o.comment !== "string") throwError("AutoPlotMarker", "comment", "string", o.comment);
   if (typeof o.type !== "string") throwError("AutoPlotMarker", "type", "string", o.type);

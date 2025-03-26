@@ -50,7 +50,7 @@ vi.mock("../src/util", async (importOriginal) => {
 const getActiveJar = vi.spyOn(util, "getActiveJar");
 beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   const assetconfigs = JSON.parse(await fsPromises.readFile(path.join("server", "assets", "config.json"), "utf-8"));
   assertAssetConfig(assetconfigs);
   getActiveJar.mockImplementation(() => {
@@ -274,8 +274,6 @@ describe("autoPlotPointsWithJar", async () => {
     expect(response).toEqual(true);
     const correctOutput = await fsPromises.readFile(outputTextFilepath, "utf-8");
     const generatedOutput = await fsPromises.readFile(outputFileLocation, "utf-8");
-    console.log("generatedOutput", generatedOutput);
-    console.log("correctOutput", correctOutput);
     expect(generatedOutput).toEqual(correctOutput);
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(spawn).toHaveBeenCalledOnce();
