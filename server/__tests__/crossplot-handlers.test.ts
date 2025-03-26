@@ -142,8 +142,8 @@ describe("setupAutoPlotDirectory", async () => {
   });
   it("should return markers if file exists in cache and successfully reads the file", async () => {
     const autoPlotMarker = {
-      x: 1,
-      y: 2
+      age: 1,
+      depth: 2
     } as shared.AutoPlotMarker;
     verifyFilepath.mockResolvedValueOnce(true);
     getMarkersFromTextFile.mockResolvedValueOnce([autoPlotMarker]);
