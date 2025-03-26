@@ -47,6 +47,9 @@ vi.mock("fs/promises", async () => {
   };
 });
 
+vi.spyOn(console, "error").mockImplementation(() => undefined);
+vi.spyOn(console, "log").mockImplementation(() => undefined);
+
 describe("setupConversionDirectory", async () => {
   const request: ConvertCrossPlotRequest = {
     datapackUniqueIdentifiers: [
