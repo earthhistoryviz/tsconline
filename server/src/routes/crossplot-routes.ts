@@ -28,8 +28,7 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
 
     if (
       (await convertCrossPlotWithModelsInJar(
-        body.uuid,
-        body.datapackTitle,
+        body.datapackUniqueIdentifiers,
         outputTextFilepath,
         modelsTextFilepath,
         settingsTextFilepath

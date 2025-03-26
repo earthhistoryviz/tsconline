@@ -13,11 +13,16 @@ export type SharedWorkshop = {
   end: string;
   workshopId: number;
   active: boolean;
+  regRestrict: boolean;
+  creatorUUID: string;
+  regLink?: string;
+  description?: string;
+  files?: string[];
+  datapacks?: string[];
 };
 
 export type ConvertCrossPlotRequest = {
-  datapackTitle: string;
-  uuid: string;
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
   models: string;
   settings: string;
 };
@@ -28,6 +33,7 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
+  accountType: string;
   workshopIds?: number[];
   uuid: string;
 };
@@ -625,9 +631,9 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
 
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
-  if (typeof o.datapackTitle !== "string")
-    throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
-  if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
   if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
 }
@@ -698,6 +704,21 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
   if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
+  if (o.description !== undefined && typeof o.description !== "string")
+    throwError("Workshop", "description", "string", o.description);
+  if (typeof o.regRestrict !== "boolean") throwError("Workshop", "regRestrict", "boolean", o.regRestrict);
+  if (typeof o.creatorUUID !== "string") throwError("Workshop", "creatorUUID", "string", o.creatorUUID);
+  if (o.regLink !== undefined && typeof o.regLink !== "string") throwError("Workshop", "regLink", "string", o.regLink);
+  if (o.files !== undefined && o.files !== null) {
+    for (const file of o.files) {
+      if (typeof file !== "string") throwError("Workshop", "files", "string", file);
+    }
+  }
+  if (o.datapacks !== undefined && o.datapacks !== null) {
+    for (const datapack of o.datapacks) {
+      if (typeof datapack !== "string") throwError("Workshop", "datapack", "string", datapack);
+    }
+  }
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
@@ -762,6 +783,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (typeof o.accountType !== "string") throwError("User", "accountType", "string", o.accountType);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
   if (o.workshopIds != undefined) {
     for (const workshopId of o.workshopIds) {

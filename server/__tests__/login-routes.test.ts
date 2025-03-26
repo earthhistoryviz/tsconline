@@ -1851,6 +1851,7 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
@@ -1875,6 +1876,7 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
@@ -1901,6 +1903,7 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,

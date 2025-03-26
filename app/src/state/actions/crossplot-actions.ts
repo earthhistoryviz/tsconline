@@ -11,7 +11,7 @@ import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, pushSnackbar, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, getUUIDOfDatapackType } from "@tsconline/shared";
+import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, assertDatapackArray } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -339,23 +339,27 @@ export const sendCrossPlotConversionRequest = action(async () => {
       return;
     }
     assertColumnInfoRoot(state.crossPlot.chartY);
-    const datapack = getDatapackFromArray(state.crossPlot.chartY.datapackUniqueIdentifier, state.datapacks);
-    if (!datapack) {
+    const datapacks = state.crossPlot.chartY.datapackUniqueIdentifiers.map((id) =>
+      getDatapackFromArray(id, state.datapacks)
+    );
+    if (datapacks.length === 0 || datapacks.some((datapack) => !datapack)) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
     }
-    if (datapack.ageUnits.toLowerCase() === "ma") {
-      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
-      return;
-    }
+    assertDatapackArray(datapacks);
     const columnRoot = cloneDeep(defaultColumnRoot);
-    columnRoot.children.push(datapack.columnInfo);
+    for (const datapack of datapacks) {
+      if (datapack.ageUnits.toLowerCase() === "ma") {
+        pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
+        return;
+      }
+      columnRoot.children.push(datapack.columnInfo);
+    }
     const columnCopy = cloneDeep(columnRoot);
     const chartSettingsCopy = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
     const body = {
-      datapackTitle: datapack.title,
-      uuid: getUUIDOfDatapackType(datapack),
+      datapackUniqueIdentifiers: state.crossPlot.chartY.datapackUniqueIdentifiers,
       models: state.crossPlot.models
         .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
         .join("\n"),
@@ -371,7 +375,7 @@ export const sendCrossPlotConversionRequest = action(async () => {
     if (!response.ok) {
       throw new Error("Failed to convert datapack");
     }
-    await downloadFile(await response.blob(), `${datapack.title}.txt`);
+    await downloadFile(await response.blob(), `${datapacks[0].ageUnits}.txt`);
     pushSnackbar("Successfully converted datapack", "success");
   } catch (e) {
     console.error(e);

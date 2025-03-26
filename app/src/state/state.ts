@@ -37,7 +37,6 @@ import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
-import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -130,7 +129,6 @@ export type State = {
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
-  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -186,6 +184,7 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    accountType: "",
     uuid: "",
     workshopIds: [],
     settings: {
@@ -270,7 +269,6 @@ export const state = observable<State>({
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },
-  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
