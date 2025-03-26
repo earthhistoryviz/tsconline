@@ -70,13 +70,11 @@ describe("extractMarkers", async () => {
     await expect(getMarkersFromTextFile("test")).rejects.toThrow("Error reading file");
   });
   it("should throw an error if any line is invalid", async () => {
-    createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4\t5\t6"]) as unknown as readline.Interface);
+    createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4"]) as unknown as readline.Interface);
     await expect(getMarkersFromTextFile("test")).rejects.toThrow("Invalid file format");
   });
   it("should throw an error if an entry is empty/missing", async () => {
-    createInterface.mockReturnValueOnce(
-      mockReadline(["header", "1\t2\t3\t4\t5\t\t7"]) as unknown as readline.Interface
-    );
+    createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4\t\t"]) as unknown as readline.Interface);
     await expect(getMarkersFromTextFile("test")).rejects.toThrow("Invalid file format");
   });
   it("should return no markers if there are no entries", async () => {
@@ -85,22 +83,18 @@ describe("extractMarkers", async () => {
     expect(markers).toEqual([]);
   });
   it("should return markers if entries are valid", async () => {
-    createInterface.mockReturnValueOnce(
-      mockReadline(["header", "1\t2\t3\t4\t5\t6\t7"]) as unknown as readline.Interface
-    );
+    createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4\t5"]) as unknown as readline.Interface);
     const markers = await getMarkersFromTextFile("test");
     expect(getMarkerTypeFromNum).toHaveBeenCalledOnce();
     expect(markers).toEqual([
       {
-        x: 1,
-        y: 2,
-        age: 3,
-        depth: 4,
-        comment: "5",
+        age: 1,
+        depth: 2,
+        comment: "3",
         selected: false,
         type: "test",
         color: "#FF0000",
-        id: "1-2-3-4-5-7"
+        id: "1-2-3-5"
       }
     ]);
   });
