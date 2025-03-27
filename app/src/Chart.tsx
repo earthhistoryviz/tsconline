@@ -1,5 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -10,7 +11,8 @@ import {
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton, FormControlLabel } from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
@@ -235,22 +237,40 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
 export const ChartTab: React.FC = observer(() => {
   const { state, actions } = useContext(context);
+  const query = new URLSearchParams(useLocation().search);
+  const from = query.get("from");
+  // see if the previous route/location was crossplot
+  const isLastLocationCrossPlot = from === "crossplot";
   return (
-    <ChartContext.Provider
-      value={{
-        chartTabState: state.chartTab.state,
-        otherChartOptions: [
-          {
-            label: "Timeline On/Off",
-            onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
-            value: state.chartTab.state.chartTimelineEnabled,
-            icon: <img src={TimeLine} width="24" height="24" />
+    <>
+      {isLastLocationCrossPlot && (
+        <FormControlLabel
+          className="chart-back-form-control-label"
+          control={
+            <IconButton className="chart-back-arrow-button">
+              <ArrowBack className="chart-back-arrow-button" />
+            </IconButton>
           }
-        ]
-      }}>
-      <Box className="chart-tab">
-        <Chart Component={TSCSvgComponent} />
-      </Box>
-    </ChartContext.Provider>
+          label={"Back"}
+        />
+      )}
+      <ChartContext.Provider
+        value={{
+          chartTabState: state.chartTab.state,
+          otherChartOptions: [
+            {
+              label: "Timeline On/Off",
+              onChange: (bool: boolean) =>
+                actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+              value: state.chartTab.state.chartTimelineEnabled,
+              icon: <img src={TimeLine} width="24" height="24" />
+            }
+          ]
+        }}>
+        <Box className="chart-tab">
+          <Chart Component={TSCSvgComponent} />
+        </Box>
+      </ChartContext.Provider>
+    </>
   );
 });
