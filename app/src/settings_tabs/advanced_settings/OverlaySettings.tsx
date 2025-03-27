@@ -58,6 +58,16 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
       setShowScroll(false);
     }
   };
+  const handleDisplayOverlayClick = () => {
+    if (!state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name))) {
+      const dccName = actions.addDualColCompColumn(column);
+      if (dccName && state.settingsTabs.columnHashMap.get(dccName)) {
+        actions.toggleSettingsTabColumn(state.settingsTabs.columnHashMap.get(dccName)!);
+      }
+    } else {
+      actions.removeDualColCompColumn(column);
+    }
+  };
 
   const scrollToTop = () => {
     if (scrollRef.current) {
@@ -117,28 +127,23 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                   {state.columnMenu.columnSelected}
                 </Typography>
               </Box>
-              <Box className="overlay-checkbox-container">
+              <Box className="overlay-checkbox-container" sx={{ padding: 0 }}>
                 <TSCCheckbox
                   checked={
                     state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name)) !== undefined
                   }
+                  onClick={handleDisplayOverlayClick}
                   className="overlay-checkbox"
                   disabled={getSelectedOverlayColumn() !== "" ? false : true}
-                  onClick={() => {
-                    if (!state.settingsTabs.columnHashMap.get(prependDualColCompColumnName(column.name))) {
-                      const dccName = actions.addDualColCompColumn(column);
-                      if (dccName && state.settingsTabs.columnHashMap.get(dccName)) {
-                        actions.toggleSettingsTabColumn(state.settingsTabs.columnHashMap.get(dccName)!);
-                      }
-                    } else {
-                      actions.removeDualColCompColumn(column);
-                    }
-                  }}
                 />
                 {getSelectedOverlayColumn() !== "" ? (
-                  <Typography>{t("settings.column.overlay-menu.display-overlay")}</Typography>
+                  <Typography onClick={handleDisplayOverlayClick} sx={{ cursor: "pointer" }}>
+                    {t("settings.column.overlay-menu.display-overlay")}
+                  </Typography>
                 ) : (
-                  <Typography color={"gray"}>{t("settings.column.overlay-menu.display-overlay")}</Typography>
+                  <Typography color={"gray"} sx={{ cursor: "default" }}>
+                    {t("settings.column.overlay-menu.display-overlay")}
+                  </Typography>
                 )}
               </Box>
             </Box>

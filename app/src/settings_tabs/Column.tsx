@@ -22,7 +22,6 @@ import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
-import { toJS } from "mobx";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -56,16 +55,8 @@ export const ColumnDisplay = observer(() => {
       scrollRef.current.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
-  const temp = async () => {
-    const value = state.datapackMetadata[8];
-    const datapack = await actions.fetchDatapack(value);
-    actions.addDatapack(datapack!);
-    actions.setUnsavedDatapackConfig([...state.unsavedDatapackConfig, value]);
-    await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-  };
 
   useEffect(() => {
-    temp();
     const ref = scrollRef.current;
     if (ref) {
       ref.addEventListener("scroll", handleScroll);
