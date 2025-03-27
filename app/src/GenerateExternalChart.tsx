@@ -75,13 +75,14 @@ export const GenerateExternalChart: React.FC = () => {
         const parts = datapackHash.split("-");
         const oldestTime = parseInt(parts[1], 10);
         const newestTime = parseInt(parts[2], 10);
+        const treatisePhylum = parts[3];
         actions.setBaseStageAge(oldestTime, "Ma");
         actions.setTopStageAge(newestTime, "Ma");
         actions.setUnitsPerMY(0.1, "Ma");
 
         const columnNames = ["Total-Genera", "New-Genera", "Extinct-Genera"];
         for (const columnName of columnNames) {
-          const columnInfo = state.settingsTabs.columnHashMap.get(columnName);
+          const columnInfo = state.settingsTabs.columnHashMap.get(columnName + " " + treatisePhylum);
           const stepValue = Math.floor((oldestTime - newestTime) / 20);
           if (columnInfo && columnInfo.columnSpecificSettings) {
             const pointSettings = columnInfo.columnSpecificSettings;
