@@ -477,7 +477,7 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
 ) {
   const { datapackTitle, uuid, isPublic } = request.params;
 
-  if (!datapackTitle) {
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
     reply.status(400).send({ error: "Missing datapack title" });
     return;
   }
@@ -485,6 +485,12 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
   const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   const datapackFolder = path.join(datapacksFolder, datapackTitle);
+
+  if (!datapackFolder.startsWith(datapacksFolder)) {
+    reply.status(400).send({ error: "Invalid datapack title" });
+    return;
+  }
+
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
   if (!(await verifyFilepath(filesDir))) {
     reply.status(500).send({ error: "Invalid directory path" });
