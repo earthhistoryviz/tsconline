@@ -126,6 +126,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return 400 if processMultipartPartsForDatapackUpload does not return file or fields", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: {} as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "", originalFileName: "", storedFileName: "" }
     });
     const val = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack("uuid", formData);
@@ -135,6 +136,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return 500 if uploadUserDatapackHandler throws an error", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockRejectedValueOnce(new Error("error"));
@@ -146,6 +148,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return operation code if uploadUserDatapackHandler returns operation result", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockResolvedValueOnce({ code: 999, message: "error" });
@@ -156,6 +159,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return file, filepath, tempProfilePictureFilepath, and datapackMetadata if successful", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockResolvedValueOnce({} as DatapackMetadata);
@@ -243,6 +247,7 @@ describe("processAndUploadDatapack", () => {
     vi.clearAllMocks();
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: {
         filepath: "test",
         originalFileName: "test",
@@ -315,6 +320,7 @@ describe("processAndUploadDatapack", () => {
     doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     const val = await processAndUploadDatapack("uuid", formData);
