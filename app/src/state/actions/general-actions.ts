@@ -212,6 +212,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
   } finally {
     setPublicOfficialDatapacksLoading(false);
     setPublicUserDatapacksLoading(false);
+    setTreatiseDatapackLoading(false);
   }
 });
 
@@ -1294,6 +1295,9 @@ export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
+});
+export const setTreatiseDatapackLoading = action((fetching: boolean) => {
+  state.skeletonStates.treatiseDatapackLoading = fetching;
 });
 
 export const setTourOpen = action((openTour: boolean, tourName: string) => {

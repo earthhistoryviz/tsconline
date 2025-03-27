@@ -1,7 +1,7 @@
 import { useEffect, useContext, useState } from "react";
 import { context } from "./state";
 import { ErrorCodes } from "./util/error-codes";
-import { DatapackConfigForChartRequest } from "@tsconline/shared";
+import { DatapackConfigForChartRequest, assertPointSettings } from "@tsconline/shared";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Typography } from "@mui/material";
 import LoadingChart from "./LoadingChart";
@@ -16,6 +16,7 @@ export const GenerateExternalChart: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [errorPushed, setErrorPushed] = useState(false);
+  const { state } = useContext(context);
 
   const fetchData = async (controller: AbortController) => {
     if (datapackHash) {
@@ -23,12 +24,16 @@ export const GenerateExternalChart: React.FC = () => {
       try {
         const fetchedDatapack = await actions.fetchDatapack(
           {
-            isPublic: false,
+            isPublic: true,
             title: datapackHash,
             type: "treatise"
           },
           { signal: controller.signal }
         );
+        if (!fetchedDatapack) {
+          console.error("Error: Treatise Datapack not found. DatapackHash:", datapackHash);
+          return;
+        }
 
         const internalDatapack = await actions.fetchDatapack(
           {
@@ -38,15 +43,8 @@ export const GenerateExternalChart: React.FC = () => {
           },
           { signal: controller.signal }
         );
-
-        if (!fetchedDatapack || !internalDatapack) {
-          if (!fetchedDatapack) {
-            console.error("Error: Treatise Datapack not found. DatapackHash:", datapackHash);
-          }
-          if (!internalDatapack) {
-            console.error("Error: Internal Datapack not found.");
-          }
-          actions.pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
+        if (!internalDatapack) {
+          console.error("Error: Internal Datapack not found.");
           return;
         }
 
@@ -72,12 +70,25 @@ export const GenerateExternalChart: React.FC = () => {
         actions.toggleSettingsTabColumn("Geomagnetic Polarity");
         actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
         actions.toggleSettingsTabColumn("Microfossils");
+        actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
+
         const parts = datapackHash.split("-");
         const oldestTime = parseInt(parts[1], 10);
         const newestTime = parseInt(parts[2], 10);
         actions.setBaseStageAge(oldestTime, "Ma");
         actions.setTopStageAge(newestTime, "Ma");
         actions.setUnitsPerMY(0.1, "Ma");
+
+        const columnNames = ["Total-Genera", "New-Genera", "Extinct-Genera"];
+        for (const columnName of columnNames) {
+          const columnInfo = state.settingsTabs.columnHashMap.get(columnName);
+          const stepValue = Math.floor((oldestTime - newestTime) / 20);
+          if (columnInfo && columnInfo.columnSpecificSettings) {
+            const pointSettings = columnInfo.columnSpecificSettings;
+            assertPointSettings(pointSettings);
+            actions.setPointColumnSettings(pointSettings, { scaleStep: stepValue });
+          }
+        }
 
         actions.initiateChartGeneration(navigate, location.pathname);
       } catch (error) {

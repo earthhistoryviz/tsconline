@@ -1228,6 +1228,9 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";
 }
+export function isTreatiseDatapack(o: any): o is TreatiseDatapack {
+  return o.type === "treatise";
+}
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
   switch (o.type) {
