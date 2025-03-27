@@ -496,7 +496,7 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
     reply.status(500).send({ error: "Invalid directory path" });
     return;
   }
-  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
+  let zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
   if (!(await verifyNonExistentFilepath(zipfile))) {
     reply.status(500).send({ error: "Invalid directory path" });
     return;
@@ -504,6 +504,7 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
   try {
     let file;
     try {
+      zipfile = fs.realpathSync(zipfile);
       file = await readFile(zipfile);
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
