@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
 import { TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -238,6 +238,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 export const ChartTab: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const query = new URLSearchParams(useLocation().search);
+  const navigate = useNavigate();
   const from = query.get("from");
   // see if the previous route/location was crossplot
   const isLastLocationCrossPlot = from === "crossplot";
@@ -247,7 +248,7 @@ export const ChartTab: React.FC = observer(() => {
         <FormControlLabel
           className="chart-back-form-control-label"
           control={
-            <IconButton className="chart-back-arrow-button">
+            <IconButton className="chart-back-arrow-button" onClick={() => navigate(-1)}>
               <ArrowBack className="chart-back-arrow-button" />
             </IconButton>
           }
