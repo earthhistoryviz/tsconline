@@ -563,39 +563,35 @@ const UpcomingWorkshops = observer(
     const { t } = useTranslation();
     const workshops = [
       {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
+        title: "Switzerland Workshop",
+        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+        dataPacks: "5",
         image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
+        title: "Switzerland Workshop",
+        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+        dataPacks: "5",
         image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
+        title: "Switzerland Workshop",
+        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+        dataPacks: "5",
         image: devSafeUrl("/datapack-images//")
       },
       {
-        title: t("Switzerland Workshop"),
-        date: t("Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM"),
-        description: t(
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox"
-        ),
-        dataPacks: t("5"),
+        title: "Switzerland Workshop",
+        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
+        description:
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
+        dataPacks: "5",
         image: devSafeUrl("/datapack-images//")
       }
     ];
