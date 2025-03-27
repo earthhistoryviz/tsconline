@@ -69,8 +69,8 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
       datapack.verticalScale
     )
       foundDefaultAge = true;
-    if (unitMap.has(datapack.ageUnits)) {
-      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits)!;
+    if (unitMap.has(datapack.ageUnits.toLowerCase())) {
+      const existingUnitColumnInfo = unitMap.get(datapack.ageUnits.toLowerCase())!;
       const newUnitChart = datapack.columnInfo;
       // slice off the existing unit column
       const columnsToAdd = cloneDeep(newUnitChart.children.slice(1));
@@ -78,13 +78,17 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
         child.parent = existingUnitColumnInfo.name;
       }
       existingUnitColumnInfo.children = existingUnitColumnInfo.children.concat(columnsToAdd);
+      existingUnitColumnInfo.datapackUniqueIdentifiers.push(
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest)
+      );
     } else {
       const columnInfo = cloneDeep(datapack.columnInfo);
       columnInfo.parent = columnRoot.name;
-      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifier =
-        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest);
+      (columnInfo as ColumnInfoRoot).datapackUniqueIdentifiers = [
+        convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(datapackConfigForChartRequest)
+      ];
       assertColumnInfoRoot(columnInfo);
-      unitMap.set(datapack.ageUnits, columnInfo);
+      unitMap.set(datapack.ageUnits.toLowerCase(), columnInfo);
     }
     const mapPack = datapack.mapPack;
     Object.assign(mapInfo, mapPack.mapInfo);
@@ -100,7 +104,7 @@ const setDatapackConfig = (datapacks: DatapackConfigForChartRequest[], datapacks
   }
   // makes sure things are named correctly for users and for the hash map to not have collisions
   for (const [unit, column] of unitMap) {
-    if (unit !== "Ma" && column.name === "Chart Title") {
+    if (unit.toLowerCase() !== "ma" && column.name === "Chart Title") {
       column.name = column.name + " in " + unit;
       column.editName = unit;
       for (const child of column.children) {

@@ -48,6 +48,9 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
+  regLink?: string;
+  regRestrict: number;
+  creatorUUID: string;
 }
 
 export interface UsersWorkshopsTable {

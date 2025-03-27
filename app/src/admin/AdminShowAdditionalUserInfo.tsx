@@ -1,11 +1,10 @@
-import { School, PersonRemove, Close, Edit, FileUpload } from "@mui/icons-material";
+import { School, PersonRemove, Close, Edit } from "@mui/icons-material";
 import {
   Typography,
   IconButton,
   Dialog,
   Box,
   Avatar,
-  TextField,
   Select,
   MenuItem,
   TableRow,
@@ -29,7 +28,6 @@ type ShowAdditionalUserInfoProps = {
   data: AdminSharedUser;
 };
 
-//TODO: Need to implement backend
 export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (props) => {
   const { state } = useContext(context);
   const { editState, setters, handlers } = useEditUser({ data: props.data });
@@ -114,7 +112,7 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
         {/* Overall Header */}
         <Box textAlign={"center"} width="100%" pt={3} pr={3} pb={0} pl={3}>
           <Typography variant="h5" mb={2} sx={{ fontWeight: "bold" }}>
-            Additional Information about {editState.userInfo.username}
+            {props.data.username}
           </Typography>
         </Box>
         {/* Basic Information Title */}
@@ -134,69 +132,60 @@ export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (pr
             <Box display="flex" alignItems="center" mb={2}>
               <Box display="flex" alignItems="center" mb={2} position="relative">
                 <Avatar sx={{ width: 56, height: 56, mr: 2 }}>
-                  {editState.selectedFile ? (
-                    <img src={URL.createObjectURL(editState.selectedFile)} alt={editState.userInfo.username} />
-                  ) : editState.userInfo.pictureUrl ? (
-                    <img src={editState.userInfo.pictureUrl} alt={editState.userInfo.username} />
+                  {props.data.pictureUrl ? (
+                    <img src={props.data.pictureUrl} alt={props.data.username} />
                   ) : (
-                    editState.userInfo.username[0].toUpperCase()
+                    props.data.username[0].toUpperCase()
                   )}
                 </Avatar>
-                {editState.editMode && (
-                  <Box position="absolute" bottom={-3} right={12} zIndex={1}>
-                    <CustomTooltip title="Upload avatar">
-                      <IconButton
-                        component="label"
-                        sx={{ padding: 0, backgroundColor: "transparent", borderRadius: "50%" }}>
-                        <FileUpload fontSize="small" />
-                        <input type="file" hidden onChange={handlers.handleFileChange} accept="image/*" />
-                      </IconButton>
-                    </CustomTooltip>
-                  </Box>
-                )}
               </Box>
 
-              {editState.editMode ? (
-                <TextField
-                  label="Username"
-                  name="username"
-                  value={editState.userInfo.username}
-                  onChange={handlers.handleInputChange}
-                />
-              ) : (
-                <Typography variant="h6">{editState.userInfo.username}</Typography>
-              )}
+              {/* User Name */}
+              <Typography variant="h6">{props.data.username}</Typography>
             </Box>
 
             {/* User Email */}
             <Box mb={1}>
-              {editState.editMode ? (
-                <TextField
-                  label="Email"
-                  name="email"
-                  value={editState.userInfo.email}
-                  onChange={handlers.handleInputChange}
-                  fullWidth
-                />
-              ) : (
-                <Typography variant="body1">
-                  <strong>Email:</strong> {editState.userInfo.email}
-                </Typography>
-              )}
+              <Typography variant="body1">
+                <strong>Email:</strong> {props.data.email}
+              </Typography>
             </Box>
 
             {/* Admin Status */}
-            <Box display="flex" alignItems="center">
+            <Box display="flex" alignItems="center" mb={2}>
               <Typography variant="body1" mr={1} fontWeight={"bold"}>
                 Admin:
               </Typography>
               {editState.editMode ? (
-                <Select value={editState.userInfo.isAdmin ? "Yes" : "No"} onChange={handlers.handleSelectChange}>
+                <Select
+                  name="isAdmin"
+                  value={editState.userInfo.isAdmin ? "Yes" : "No"}
+                  onChange={handlers.handleSelectChange}
+                  sx={{ width: 70, maxHeight: 30, fontSize: "0.875rem" }}>
                   <MenuItem value="Yes">Yes</MenuItem>
                   <MenuItem value="No">No</MenuItem>
                 </Select>
               ) : (
                 <Typography variant="body1">{editState.userInfo.isAdmin ? "Yes" : "No"}</Typography>
+              )}
+            </Box>
+
+            {/* Account Type */}
+            <Box display="flex" alignItems="center" mb={2}>
+              <Typography variant="body1" mr={1} fontWeight={"bold"}>
+                Pro:
+              </Typography>
+              {editState.editMode ? (
+                <Select
+                  name="accountType"
+                  value={editState.userInfo.accountType === "pro" ? "Yes" : "No"}
+                  onChange={handlers.handleSelectChange}
+                  sx={{ width: 70, maxHeight: 30, fontSize: "0.875rem" }}>
+                  <MenuItem value="Yes">Yes</MenuItem>
+                  <MenuItem value="No">No</MenuItem>
+                </Select>
+              ) : (
+                <Typography variant="body1">{editState.userInfo.accountType === "pro" ? "Yes" : "No"}</Typography>
               )}
             </Box>
           </Box>

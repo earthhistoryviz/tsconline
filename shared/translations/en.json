@@ -547,6 +547,7 @@
             "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
             "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
             "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "ADMIN_MODIFY_USER_FAILED": "Unable to modify user. Please try again later.",
             "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "Unable to delete server datapack. Please try again later.",
             "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "Cannot delete root datapack. Ask server admin for assistance.",
             "INVALID_SERVER_DATAPACK_REQUEST": "Invalid server datapack request. Please try again later.",
@@ -582,8 +583,12 @@
             "INVALID_CROSSPLOT_CONVERSION": "Invalid crossplot conversion. Please select a valid chart for the Y Axis.",
             "INVALID_CROSSPLOT_UNITS": "Please select a different unit for the Y Axis. This unit cannot be converted.",
             "CROSSPLOT_CONVERSION_FAILED": "Crossplot conversion failed. Please try again later.",
-            "NO_MODELS": "No models available. Please add a model by clicking the chart in the main view.",
-            "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes."
+            "NO_MODELS": "At least 2 models are required for conversion. Please add a model by clicking the chart in the main view.",
+            "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes.",
+            "ADMIN_ADD_FILES_TO_WORKSHOP_FAILED": "Failed to add files to workshop",
+            "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
+            "INVALID_FILE_FORMAT": "Invalid file format.",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
         },
         "button": {
             "generate": "Generate",

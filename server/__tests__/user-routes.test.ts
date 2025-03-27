@@ -202,7 +202,7 @@ beforeAll(async () => {
   app.post("/external-chart", uploadTreatiseDatapack);
 
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 

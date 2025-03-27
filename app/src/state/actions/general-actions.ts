@@ -18,7 +18,8 @@ import {
   isWorkshopDatapack,
   Datapack,
   assertDatapackMetadataArray,
-  assertTreatiseDatapack
+  assertTreatiseDatapack,
+  SharedWorkshop
 } from "@tsconline/shared";
 
 import {
@@ -67,7 +68,6 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { Workshop } from "../../Workshops";
 import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
@@ -621,7 +621,9 @@ export const setDatapackConfig = action(
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
-      delete state.settings.timeSettings["Ma"];
+      runInAction(() => {
+        delete state.settings.timeSettings["Ma"];
+      });
     }
 
     if (chartSettings !== null) {
@@ -631,7 +633,9 @@ export const setDatapackConfig = action(
       // set any new units in the time
       for (const chart of columnRoot.children) {
         if (!state.settings.timeSettings[chart.units]) {
-          state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          runInAction(() => {
+            state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          });
         }
       }
     }
@@ -1005,6 +1009,7 @@ export const setDefaultUserState = action(() => {
     email: "",
     pictureUrl: "",
     isAdmin: false,
+    accountType: "",
     isGoogleUser: false,
     uuid: "",
     settings: {
@@ -1273,11 +1278,42 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-// TODO: Change this when the actual backend for rendering all workshops is implemented.
-// Maybe similar to how we handled datapacks.
-// For now, this just loads the selected dummy workshop into the state.
-export const setWorkshopsArray = action((workshop: Workshop[]) => {
-  state.workshops = workshop;
+export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
+  const route = `/user/workshop/download/${workshop.workshopId}`;
+  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
+  if (!recaptchaToken) return null;
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return null;
+  }
+  const response = await fetcher(route, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+  if (!response.ok) {
+    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+    switch (response.status) {
+      case 404:
+        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        break;
+      case 401:
+        errorCode = ErrorCodes.NOT_LOGGED_IN;
+        break;
+    }
+    displayServerError(response, errorCode, ErrorMessages[errorCode]);
+    return;
+  }
+  const file = await response.blob();
+  if (file) {
+    try {
+      await downloadFile(file, `FilesFor${workshop.title}.zip`);
+    } catch (error) {
+      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+    }
+  }
 });
 
 export const setPresetsLoading = action((loading: boolean) => {

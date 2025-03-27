@@ -37,7 +37,6 @@ import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
-import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -60,6 +59,7 @@ export type State = {
     chartY: ColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
+    converting: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -130,7 +130,6 @@ export type State = {
     privateUserDatapacksLoading: boolean;
     treatiseDatapackLoading: boolean;
   };
-  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -174,7 +173,8 @@ export const state = observable<State>({
     chartX: undefined,
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined
+    crossPlotBounds: undefined,
+    converting: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -185,6 +185,7 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    accountType: "",
     uuid: "",
     workshopIds: [],
     settings: {
@@ -270,7 +271,6 @@ export const state = observable<State>({
     privateUserDatapacksLoading: true,
     treatiseDatapackLoading: true
   },
-  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []

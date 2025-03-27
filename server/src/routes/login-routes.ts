@@ -207,7 +207,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       reply.send({ authenticated: false });
       return;
     }
-    const { email, username, pictureUrl, hashedPassword, isAdmin, userId } = user;
+    const { email, username, pictureUrl, hashedPassword, isAdmin, userId, accountType } = user;
     const workshopIds: number[] = [];
     workshopIds.push(...(await getActiveWorkshopsUserIsIn(userId)).map((workshop) => workshop.workshopId));
     const sharedUser: SharedUser = {
@@ -217,6 +217,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       isGoogleUser: !hashedPassword,
       isAdmin: Boolean(isAdmin),
       ...(workshopIds.length > 0 && { workshopIds }),
+      accountType,
       uuid
     };
     assertSharedUser(sharedUser);

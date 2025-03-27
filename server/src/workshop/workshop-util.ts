@@ -1,6 +1,9 @@
 import { isWorkshopUUID } from "@tsconline/shared";
 import { OperationResult } from "../types.js";
 import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
+import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
+import path from "path";
+import { mkdir } from "fs/promises";
 
 /**
  * Extracts the workshop ID from a workshop UUID
@@ -57,4 +60,30 @@ export async function verifyWorkshopValidity(workshopUUID: string, userId: numbe
     return { code: 403, message: "User does not have access to this workshop" };
   }
   return { code: 200, message: "Success" };
+}
+
+export async function getWorkshopFilesPath(directory: string): Promise<string> {
+  const filesDir = path.join(directory, "files");
+
+  if (!(await verifyFilepath(filesDir))) {
+    if (await verifyNonExistentFilepath(filesDir)) {
+      await mkdir(filesDir, { recursive: true });
+    } else {
+      throw new Error("Invalid Workshop Files Directory.");
+    }
+  }
+  return filesDir;
+}
+
+export async function getWorkshopCoverPath(directory: string): Promise<string> {
+  const coverDir = path.join(directory, "cover");
+
+  if (!(await verifyFilepath(coverDir))) {
+    if (await verifyNonExistentFilepath(coverDir)) {
+      await mkdir(coverDir, { recursive: true });
+    } else {
+      throw new Error("Invalid Workshop Cover Picture Directory.");
+    }
+  }
+  return coverDir;
 }

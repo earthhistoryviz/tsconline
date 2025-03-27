@@ -17,6 +17,8 @@ import {
   adminAddOfficialDatapackToWorkshop,
   adminEditDatapackMetadata,
   adminUploadDatapack,
+  adminUploadFilesToWorkshop,
+  adminUploadCoverPictureToWorkshop,
   adminFetchSingleOfficialDatapack
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -119,9 +121,12 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     properties: {
       title: { type: "string" },
       start: { type: "string" },
-      end: { type: "string" }
+      end: { type: "string" },
+      regRestrict: { type: "number" },
+      creatorUUID: { type: "string" },
+      regLink: { type: "string" }
     },
-    required: ["title", "start", "end"]
+    required: ["title", "start", "end", "regRestrict", "creatorUUID"]
   };
   const adminEditWorkshopBody = {
     type: "object",
@@ -166,6 +171,21 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["datapack"]
   };
+  const addWorkshopCoverParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
+  const addWorkshopFileParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
+
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
@@ -270,5 +290,15 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapack/:datapack",
     { config: { rateLimit: moderateRateLimit }, schema: { params: adminEditDatapackMetadataBody } },
     adminEditDatapackMetadata
+  );
+  fastify.post(
+    "/workshop/files/:workshopId",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopFileParams } },
+    adminUploadFilesToWorkshop
+  );
+  fastify.post(
+    "/workshop/cover/:workshopId",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopCoverParams } },
+    adminUploadCoverPictureToWorkshop
   );
 };

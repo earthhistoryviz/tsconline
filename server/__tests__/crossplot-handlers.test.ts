@@ -90,7 +90,17 @@ describe("convertCrossPlotWithModelsInJar", async () => {
       throw new Error("Failed to spawn");
     });
     await expect(
-      convertCrossPlotWithModelsInJar("uuid", "datapackTitle", "output", "models", "settings")
+      convertCrossPlotWithModelsInJar(
+        [
+          {
+            title: "datapackTitle",
+            type: "official"
+          }
+        ],
+        "output",
+        "models",
+        "settings"
+      )
     ).rejects.toThrow("Failed to spawn");
     expect(spawn).toHaveBeenCalledOnce();
   });
@@ -101,8 +111,12 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     getDecryptedDatapackFilePath.mockResolvedValueOnce(datapackFilepath);
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
     await convertCrossPlotWithModelsInJar(
-      "uuid",
-      "datapackTitle",
+      [
+        {
+          title: "datapackTitle",
+          type: "official"
+        }
+      ],
       outputFileLocation,
       modelTextFilepath,
       settingsTextFilepath
@@ -120,8 +134,12 @@ describe("convertCrossPlotWithModelsInJar", async () => {
     const correctOutput = await fsPromises.readFile(outputTextFilepath);
     const outputFileLocation = path.join(generatedOutputFileDirectory, `${testCase}-output.txt`);
     await convertCrossPlotWithModelsInJar(
-      "uuid",
-      "datapackTitle",
+      [
+        {
+          title: "datapackTitle",
+          type: "official"
+        }
+      ],
       outputFileLocation,
       modelTextFilepath,
       settingsTextFilepath
@@ -139,8 +157,12 @@ describe("convertCrossPlotWithModelsInJar", async () => {
 
 describe("setupConversionDirectory", async () => {
   const request: ConvertCrossPlotRequest = {
-    uuid: "uuid",
-    datapackTitle: "datapackTitle",
+    datapackUniqueIdentifiers: [
+      {
+        type: "official",
+        title: "datapackTitle"
+      }
+    ],
     models: "models",
     settings: "settings"
   };
