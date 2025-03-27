@@ -167,6 +167,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
     expect(val).toEqual({
       file: { file: { bytesRead: 1 } } as MultipartFile,
       filepath: "test",
+      pdfFields: {},
       tempProfilePictureFilepath: undefined,
       datapackMetadata: {}
     });

@@ -535,7 +535,8 @@
     "totalColumns": 8,
     "datapackImage": "image",
     "isPublic": true,
-    "type": "official"
+    "type": "official",
+    "hasFiles": false
   },
   "general-parse-datapacks-test-2-key": {
     "columnInfo": {
@@ -1464,7 +1465,8 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "official"
+    "type": "official",
+    "hasFiles": false
   },
   "column-types-facies-key": {
     "FaciesOne": {
@@ -2803,6 +2805,7 @@
     "authoredBy": "authoredBy",
     "datapackImage": "image",
     "isPublic": true,
-    "type": "official"
+    "type": "official",
+    "hasFiles": false
   }
 }
