@@ -14,10 +14,19 @@ import { getDatapackFromArray } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 
-export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
-  if (response) setDatapackTimeDefaults();
-  compileChartRequest(navigate);
-});
+export const handlePopupResponse = action(
+  "handlePopupResponse",
+  (
+    response: boolean,
+    navigate: NavigateFunction,
+    options: {
+      from?: string;
+    }
+  ) => {
+    if (response) setDatapackTimeDefaults();
+    compileChartRequest(navigate, options);
+  }
+);
 
 type UnitValues = {
   topStageAge: number;
@@ -72,7 +81,9 @@ export const initiateChartGeneration = action(
     ) {
       state.showSuggestedAgePopup = true;
     } else {
-      compileChartRequest(navigate);
+      compileChartRequest(navigate, {
+        from: location
+      });
     }
   }
 );
@@ -117,53 +128,65 @@ export const resetChartTabStateForGeneration = action("resetChartTabStateForGene
   });
 });
 
-export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
-  // asserts column is not null
-  if (!areSettingsValidForGeneration()) return;
-  state.showSuggestedAgePopup = false;
-  navigate("/chart");
-  //set the loading screen and make sure the chart isn't up
-  savePreviousSettings();
-  resetChartTabStateForGeneration(state.chartTab.state);
-  generalActions.setTab(3);
-  try {
-    let chartRequest: ChartRequest | null = null;
+export const compileChartRequest = action(
+  "compileChartRequest",
+  async (
+    navigate: NavigateFunction,
+    options?: {
+      from?: string;
+    }
+  ) => {
+    // asserts column is not null
+    if (!areSettingsValidForGeneration()) return;
+    state.showSuggestedAgePopup = false;
+    console.log("options", options);
+    if (options && options.from === "/crossplot") {
+      navigate("/chart?from=crossplot");
+    } else {
+      navigate("/chart");
+    }
+    //set the loading screen and make sure the chart isn't up
+    savePreviousSettings();
+    resetChartTabStateForGeneration(state.chartTab.state);
+    generalActions.setTab(3);
     try {
-      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-      chartRequest = {
-        settings: xmlSettings,
-        datapacks: state.config.datapacks,
-        useCache: state.useCache,
-        isCrossPlot: false
-      };
-    } catch (e) {
-      console.error(e);
-      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      return;
+      let chartRequest: ChartRequest | null = null;
+      try {
+        const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+        const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+        const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+        chartRequest = {
+          settings: xmlSettings,
+          datapacks: state.config.datapacks,
+          useCache: state.useCache,
+          isCrossPlot: false
+        };
+      } catch (e) {
+        console.error(e);
+        generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+        return;
+      }
+      if (!chartRequest) {
+        generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+        return;
+      }
+      const response = await sendChartRequestToServer(chartRequest);
+      if (!response) {
+        // error SHOULD already displayed
+        return;
+      }
+      generalActions.setChartTabState(state.chartTab.state, {
+        chartContent: response.chartContent,
+        chartHash: response.hash,
+        madeChart: true,
+        unsafeChartContent: response.unsafeChartContent,
+        chartTimelineEnabled: false
+      });
+    } finally {
+      generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
     }
-    if (!chartRequest) {
-      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      return;
-    }
-    const response = await sendChartRequestToServer(chartRequest);
-    if (!response) {
-      // error SHOULD already displayed
-      return;
-    }
-    generalActions.setChartTabState(state.chartTab.state, {
-      chartContent: response.chartContent,
-      chartHash: response.hash,
-      madeChart: true,
-      unsafeChartContent: response.unsafeChartContent,
-      chartTimelineEnabled: false
-    });
-    if (state.isLoggedIn) fetchUserHistoryMetadata();
-  } finally {
-    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
-});
+);
 
 const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevSettings = JSON.parse(JSON.stringify(state.settings));

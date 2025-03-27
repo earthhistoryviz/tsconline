@@ -180,9 +180,9 @@ export default observer(function App() {
           <TSCYesNoPopup
             open={state.showSuggestedAgePopup}
             title={t("dialogs.default-age.title")}
-            onYes={() => actions.handlePopupResponse(true, navigate)}
-            onNo={() => actions.handlePopupResponse(false, navigate)}
-            onClose={() => actions.compileChartRequest(navigate)}
+            onYes={() => actions.handlePopupResponse(true, navigate, { from: location.pathname })}
+            onNo={() => actions.handlePopupResponse(false, navigate, { from: location.pathname })}
+            onClose={() => actions.compileChartRequest(navigate, { from: location.pathname })}
           />
           <TSCDialogLoader
             open={state.isProcessingDatapacks}
