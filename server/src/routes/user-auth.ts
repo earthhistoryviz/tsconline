@@ -142,7 +142,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   fastify.get(
     "/datapack/download/files/:datapackTitle/:uuid/:isPublic",
     {
-      config: { rateLimit: moderateRateLimit },
+      config: { rateLimit: looseRateLimit },
       schema: { params: downloadDatapackFilesZipParams }
     },
     downloadDatapackFilesZip
