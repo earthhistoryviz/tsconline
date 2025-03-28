@@ -24,7 +24,7 @@ import {
   getUserUUIDDirectory
 } from "../user/fetch-user-files.js";
 import path from "path";
-import fs from 'fs';
+import fs from "fs";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -445,6 +445,9 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
     let file;
     try {
       zipfile = fs.realpathSync(zipfile);
+      if (!zipfile.startsWith(process.cwd())) {
+        reply.status(500).send({ error: "Invalid directory path" });
+      }
       file = await readFile(zipfile);
     } catch (e) {
       const error = e as NodeJS.ErrnoException;
