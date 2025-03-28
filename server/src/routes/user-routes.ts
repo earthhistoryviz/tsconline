@@ -501,6 +501,10 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
     reply.status(500).send({ error: "Invalid directory path" });
     return;
   }
+  if (!zipfile.startsWith(path.join(process.cwd(), directory))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
   try {
     let file;
     try {
