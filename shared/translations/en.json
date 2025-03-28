@@ -220,20 +220,20 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
-            "create-datapack": "Create Datapack",
             "time": {
-                "no-unit-selected": "No unit selected",
                 "select-unit": "Please select a unit.",
                 "no-chart-units-available": "No units available",
                 "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
                 "select-datapack": "Please select a datapack.",
+                "no-unit-selected": "No unit selected",
                 "xAxis": "X Axis (Age-only)",
                 "yAxis": "Y Axis (Age/Depth)"
             },
             "sidebar": {
                 "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
-            }
+            },
+            "create-datapack": "Create Datapack"
         },
         "settingsTabs": {
             "Time": "Time",
@@ -410,7 +410,6 @@
                 "no": "No",
                 "avaliable": "Avaliable",
                 "upload": "Upload Datapack",
-                "pdf-upload": "PDF Upload",
                 "seeMore": "See More...",
                 "seeLess": "See Less...",
                 "upload-form": {
@@ -437,7 +436,8 @@
                     "notes": "Notes",
                     "notes-placeholder": "Enter notes for the datapack here",
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
-                }
+                },
+                "pdf-upload": "PDF Upload"
             }
         },
         "chart": {
