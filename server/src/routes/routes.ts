@@ -267,7 +267,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
       reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
       // after sending, save to history if user is logged in
-      if (uuid)
+      if (!isCrossPlot && uuid)
         await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
           logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
         });
@@ -432,7 +432,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     reply.send({ chartpath: chartUrlPath, hash: hash });
   }
   // after sending, save to history if user is logged in
-  if (uuid)
+  if (!isCrossPlot && uuid)
     await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
       logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
     });

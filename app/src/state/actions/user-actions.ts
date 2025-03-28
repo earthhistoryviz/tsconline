@@ -242,6 +242,10 @@ export const setUserHistory = action(async (history: ChartHistory) => {
  * @param timestamp Timestamp of the history entry to delete, or -1 to delete all entries
  */
 export const deleteUserHistory = action(async (timestamp: string) => {
+  if (state.user.historyEntries.length === 0) {
+    pushSnackbar("No history entries to delete", "warning");
+    return;
+  }
   try {
     const response = await fetcher(`/user/history/${timestamp}`, {
       method: "DELETE",

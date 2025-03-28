@@ -16,7 +16,7 @@ import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
-import { context, state } from "./state";
+import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
@@ -37,7 +37,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
@@ -288,10 +288,6 @@ const HistorySideBar: React.FC = observer(() => {
             <CustomTooltip title="Delete all history entries">
               <IconButton
                 onClick={async () => {
-                  if (state.user.historyEntries.length === 0) {
-                    actions.pushSnackbar("No history entries to delete", "warning");
-                    return;
-                  }
                   setLoading(true);
                   try {
                     await actions.deleteUserHistory("-1");
