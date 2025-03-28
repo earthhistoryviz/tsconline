@@ -1019,8 +1019,7 @@ describe("uploadTreatiseDatapack", () => {
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
     processAndUploadDatapack.mockResolvedValueOnce({
       code: 200,
-      message: "Datapack uploaded successfully",
-      phylum: "test"
+      message: "Datapack uploaded successfully"
     });
     const response = await app.inject({
       method: "POST",

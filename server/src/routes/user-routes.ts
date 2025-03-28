@@ -402,7 +402,7 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
     // does not exist, upload normally
     const result = await processAndUploadDatapack(treatiseUUID, parts);
     if (result.code === 200) {
-      reply.status(200).send({ phylum: result.phylum });
+      reply.status(200).send({ phylum: phylum.toString() });
     } else {
       reply.status(result.code).send({ error: result.message });
     }

@@ -106,7 +106,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       await deleteUserDatapack(uuidDirectoryToDownloadTo, datapackMetadata.title);
       return { code: 500, message: "Failed to setup new datapack directory" };
     }
-    return { code: 200, message: "Datapack uploaded successfully", phylum: datapackMetadata.title };
+    return { code: 200, message: "Datapack uploaded successfully" };
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));

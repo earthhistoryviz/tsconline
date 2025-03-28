@@ -130,12 +130,14 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
-        <DatapackGroupDisplay
-          datapacks={getTreatuseDatapackMetadata(state.datapackMetadata)}
-          header={t("settings.datapacks.title.treatise")}
-          HeaderIcon={Terrain}
-          loading={state.skeletonStates.treatiseDatapackLoading}
-        />
+        {getTreatuseDatapackMetadata(state.datapackMetadata).length !== 0 && (
+          <DatapackGroupDisplay
+            datapacks={getTreatuseDatapackMetadata(state.datapackMetadata)}
+            header={t("settings.datapacks.title.treatise")}
+            HeaderIcon={Terrain}
+            loading={state.skeletonStates.treatiseDatapackLoading}
+          />
+        )}
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
