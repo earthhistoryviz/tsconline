@@ -5,7 +5,7 @@ import {
   getDirectories
 } from "./user/fetch-user-files.js";
 import { assetconfigs, loadAssetConfigs } from "./util.js";
-import { mkdir, readdir, readFile, writeFile, rm } from "fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { DatapackIndex, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
 import { loadDatapackIntoIndex } from "./load-packs.js";
 import chalk from "chalk";
@@ -26,9 +26,7 @@ try {
           `\n======================================================\nLoading datapacks for ${user}\n======================================================\n`
         )
       );
-      const datapacksDir = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-      // TEMPORARY, THIS IS FOR CLEANUP WILL REMOVE IN 2 WEEKS OR SO. IN THAT TIME, NO OTHER FILES ARE OF USE IN USER DIRECTORIES
-      await removeOldDatapackFolders(path.join(directory, user));
+      const datapacksDir = await getUsersDatapacksDirectoryFromUUIDDirectory(path.join(directory, user));
       const datapacks = await getDirectories(datapacksDir);
       for (const datapack of datapacks) {
         const datapackDir = path.join(datapacksDir, datapack);
@@ -100,14 +98,4 @@ function migrateImageToDatapackImage(datapack: any) {
     delete datapack.image;
   }
   return datapack;
-}
-
-async function removeOldDatapackFolders(directory: string) {
-  await readdir(directory, { withFileTypes: true }).then(async (entries) => {
-    for (const entry of entries) {
-      if (entry.isDirectory() && entry.name !== "datapacks") {
-        await rm(path.join(directory, entry.name), { recursive: true });
-      }
-    }
-  });
 }

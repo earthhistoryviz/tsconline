@@ -1,4 +1,6 @@
 .crossPlotSideBar {
+  --generate-button-size: 175px;
+  --options-bar-height: 50px;
   display: grid;
   grid-template-columns: var(--side-bar-width) 1fr;
   grid-template-rows: 1fr;
@@ -38,7 +40,7 @@
   position: relative;
 }
 
-.tabContent > *:not(.generate, .mobileGenerate) {
+.tabContent > *:not(.generate, .mobileGenerate, .convert, .mobileConvert) {
   resize: none;
   width: 100%;
   height: 100%;
@@ -77,34 +79,47 @@
   left: 5%;
   z-index: 10;
 }
+.convert {
+  position: fixed;
+  bottom: 10px;
+  left: calc(5% + var(--generate-button-size) + 10px);
+  z-index: 10;
+}
 
-.markerContainer {
+.markerContainer,
+.modelContainer {
   display: flex;
   flex-direction: row;
   gap: 15px;
   padding: 5px 0px;
 }
-.markerOptions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-bottom: 10px;
-}
-.markersComponent {
+.markersComponent,
+.modelsComponent {
   padding: 23px;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+}
+.modelsContainer,
+.markersContainer {
+  display: grid;
+  grid-template-rows: var(--options-bar-height) calc(100% - var(--options-bar-height));
+  height: 100%;
+  grid-template-columns: 100%;
+  overflow: hidden;
 }
 .checkBoxContainer {
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.markerOptions {
+.markerOptions,
+.modelOptions {
   display: flex;
   flex-direction: column;
   gap: 10px;
   width: 100%;
+  padding: 10px;
 }
 .colorPicker {
   min-width: 20px;
@@ -113,12 +128,29 @@
   padding: 0px;
   align-self: center;
 }
-.topMarkerRow {
+.topMarkerRow,
+.topModelRow {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   grid-template-rows: 1fr;
   gap: 12px;
 }
+.optionsBar {
+  padding: 0px 33px;
+  overflow: hidden;
+  width: 100%;
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+.delete {
+  cursor: pointer;
+}
+.deleteIcon {
+  width: 20px;
+  height: 20px;
+}
+/* Mobile */
 .mobileCrossPlotSideBar {
   display: grid;
   grid-template-columns: 1fr;
@@ -140,6 +172,12 @@
   right: 5%;
   z-index: 10;
 }
+.mobileConvert {
+  position: fixed;
+  bottom: calc(var(--side-bar-width) + 10px);
+  right: calc(5% + var(--generate-button-size) + 10px);
+  z-index: 10;
+}
 
 .mobileTabs {
   display: flex;
@@ -152,7 +190,7 @@
   border-bottom: 1px solid var(--border-color);
   grid-area: tabs;
 }
-.mobileTabContent > *:not(.generate, .mobileGenerate) {
+.mobileTabContent > *:not(.generate, .mobileGenerate, .convert, .mobileConvert) {
   resize: none;
   width: 100%;
   height: 100%;
@@ -167,4 +205,11 @@
   padding: 10px;
   overflow: auto;
   grid-area: content;
+}
+
+.noMarkersText,
+.noModelsText {
+  align-self: center;
+  text-align: center;
+  justify-self: center;
 }

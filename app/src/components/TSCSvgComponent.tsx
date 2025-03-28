@@ -58,10 +58,7 @@ export const TSCSvgComponent: React.FC = observer(
             case "click": {
               const textElement = document.getElementById(textID);
               const text = textElement ? textElement.getAttribute("popuptext") : "";
-              let url: string = "http://localhost:5173";
-              if (import.meta.env.VITE_APP_URL) {
-                url = import.meta.env.VITE_APP_URL;
-              }
+              const url = window.location.origin;
               if (typeof svgEventWindow.top === "undefined") {
                 alert(textID);
               } else if (svgEventWindow.top !== null) {

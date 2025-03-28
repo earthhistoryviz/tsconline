@@ -27,6 +27,7 @@ import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
+import * as crossPlotRoutes from "./routes/crossplot-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -89,7 +90,9 @@ server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [num
 
 // Expose the metrics endpoint
 server.get("/metrics", async (request, reply) => {
-  if (request.ip != "172.27.0.1") {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token !== process.env.METRICS_AUTH) {
     reply.code(403).send({ error: "Forbidden" });
     return;
   }
@@ -325,6 +328,8 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
+
+server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

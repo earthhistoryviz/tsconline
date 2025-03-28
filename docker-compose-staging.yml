@@ -1,0 +1,18 @@
+services:
+  tsconline:
+    build: .
+    restart: on-failure
+    #image: tscreator/tscreator_online:v2
+    env_file:
+      - secrets.env
+    volumes:
+      - .:/code
+    environment:
+      - NODE_ENV=production
+    networks:
+      - shared_network
+    command: bash -c "yarn workspaces focus -A --production && yarn dev:config --overwrite && /code/entrypoint-no-build.sh"
+
+networks:
+  shared_network:
+    external: true

@@ -214,6 +214,12 @@ export async function loadAssetConfigs() {
     process.exit(1);
   }
 }
+export function getActiveJar() {
+  if (!assetconfigs) {
+    throw new Error("Asset configs not loaded");
+  }
+  return assetconfigs.activeJar;
+}
 
 /**
  * Finds the closest match to the input string from a list of options

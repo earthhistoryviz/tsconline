@@ -269,6 +269,7 @@ jobs:
         run: exit 1
 
       - name: Parse JAR Names
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: parse_jar_names
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -288,6 +289,7 @@ jobs:
           echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
 
       - name: Determine if Jar Upload is Necessary
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: upload_artifacts
         run: |
           upload_needed=false
@@ -304,6 +306,7 @@ jobs:
           echo "upload_needed=$upload_needed" >> $GITHUB_OUTPUT
 
       - name: Delete old jar artifacts
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -314,7 +317,7 @@ jobs:
           done
 
       - name: Upload Jar Artifact if needed
-        if: steps.upload_artifacts.outputs.upload_needed == 'true'
+        if: github.event.pull_request.user.login != 'dependabot[bot]' && steps.upload_artifacts.outputs.upload_needed == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.parse_jar_names.outputs.jar_artifact_name }}
@@ -323,6 +326,7 @@ jobs:
           retention-days: 90
 
       - name: Delete old build artifacts
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -333,6 +337,7 @@ jobs:
           done
 
       - name: Upload Build Artifacts
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: actions/upload-artifact@v4
         with:
           name: build-artifacts-${{ github.event.number }}
@@ -469,7 +474,7 @@ jobs:
             fi
 
             cd "$PR_PREVIEW_DIR"
-            docker-compose -f docker-compose-preview.yml up --remove-orphans pr-preview-install
+            docker-compose -f docker-compose-preview.yml up --build --remove-orphans pr-preview-install
 
             if docker ps --filter "name=${CONTAINER_NAME}" | grep -q ${CONTAINER_NAME}; then
               echo "Container for PR ${PR_NUMBER} is already running. Restarting..."

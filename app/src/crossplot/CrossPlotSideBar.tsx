@@ -1,18 +1,20 @@
 import { observer } from "mobx-react-lite";
 import React, { forwardRef, useContext, useState } from "react";
+import TrashCanIcon from "../assets/icons/trash-icon.json";
 import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
-import { Box, FormControl, MenuItem, Select, TextField, Typography, useTheme } from "@mui/material";
+import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, useTheme } from "@mui/material";
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
-import { AccessTimeRounded, BookmarkRounded, TableChartRounded } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker, isMarkerType, markerTypes } from "../types";
+import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
+import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, TSCButton, TSCCheckbox } from "../components";
+import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
+import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -59,6 +61,9 @@ export const CrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.tabContent}>
+          <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Generate Cross Plot
           </TSCButton>
@@ -114,6 +119,9 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
+          <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+            Convert Datapack
+          </TSCButton>
           <TSCButton
             className={styles.mobileGenerate}
             onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
@@ -255,17 +263,247 @@ const CrossPlotTimeSettingsForm: React.FC<CrossPlotTimeProps> = observer(
     );
   }
 );
+const Models: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  const { t } = useTranslation();
+  return (
+    <Box className={styles.modelsContainer}>
+      <GeneralOptionsBar<Model>
+        selected={state.crossPlot.models}
+        editSelected={actions.editCrossPlotModel}
+        clear={actions.removeCrossPlotModel}
+      />
+      {state.crossPlot.models.length > 0 && (
+        <StyledScrollbar>
+          <Box className={styles.modelsComponent} display={state.crossPlot.models.length === 0 ? "flex" : ""}>
+            {state.crossPlot.models.map((model, index) => (
+              <Box key={index} className={styles.modelOptions}>
+                <ModelOptions model={model} />
+                {index !== state.crossPlot.models.length - 1 && <CustomDivider />}
+              </Box>
+            ))}
+          </Box>
+        </StyledScrollbar>
+      )}
+      {state.crossPlot.models.length === 0 && (
+        <Box display="flex" justifyContent="center" alignItems="center" padding="23px">
+          <Typography className={styles.noModelsText}>{t("crossPlot.sidebar.no-models")}</Typography>
+        </Box>
+      )}
+    </Box>
+  );
+});
+type GeneralOptionsBarProps<T extends Marker | Model> = {
+  selected: T[];
+  editSelected: (obj: T, partial: Partial<T>) => void;
+  clear: (id: string) => void;
+};
+const GeneralOptionsBar = observer(
+  <T extends Marker | Model>({ selected, editSelected, clear }: GeneralOptionsBarProps<T>) => {
+    const selectAll = () => {
+      for (const obj of selected) {
+        if (!obj.selected) {
+          editSelected(obj, { selected: true } as Partial<T>);
+        }
+      }
+    };
+    const removeAll = () => {
+      for (const obj of selected) {
+        if (obj.selected) editSelected(obj, { selected: false } as Partial<T>);
+      }
+    };
+    const selectedAll = selected.length > 0 && selected.every((obj) => obj.selected);
+    const indeterminate =
+      selected.length > 0 && selected.some((obj) => !obj.selected) && selected.some((obj) => obj.selected);
+    return (
+      <Box
+        className={styles.optionsBar}
+        sx={{
+          borderBottom: "1px solid",
+          borderColor: "divider"
+        }}>
+        <TSCCheckbox
+          checked={selectedAll && !indeterminate}
+          indeterminate={indeterminate}
+          onClick={() => {
+            const newValue = !selectedAll;
+            if (newValue) {
+              selectAll();
+            } else {
+              removeAll();
+            }
+          }}
+        />
+        <Tooltip title={"Delete Selected"}>
+          <Box
+            className={styles.delete}
+            onClick={() => {
+              for (const obj of selected) {
+                if (obj.selected) {
+                  clear(obj.id);
+                }
+              }
+            }}>
+            <Lottie
+              className={styles.lottie}
+              animationData={TrashCanIcon}
+              width={20}
+              height={20}
+              playOnHover
+              speed={1.7}
+            />
+          </Box>
+        </Tooltip>
+      </Box>
+    );
+  }
+);
+const ModelOptions: React.FC<{ model: Model }> = observer(({ model }) => {
+  const { state, actions } = useContext(context);
+  const [age, setAge] = useState(model.age.toString());
+  const [ageError, setAgeError] = useState(false);
+  const [depth, setDepth] = useState(model.depth.toString());
+  const [depthError, setDepthError] = useState(false);
+  return (
+    <Box className={styles.modelContainer}>
+      <Box className={styles.checkBoxContainer}>
+        <TSCCheckbox
+          checked={model.selected}
+          onChange={(evt) => {
+            actions.editCrossPlotModel(model, { selected: evt.target.checked });
+          }}
+        />
+      </Box>
+      <TSCColorPicker
+        color={model.color}
+        onColorChange={(evt) => {
+          actions.editCrossPlotModel(model, { color: evt });
+        }}
+        className={styles.colorPicker}
+      />
+      <Box className={styles.modelOptions}>
+        <Box className={styles.topMarkerRow}>
+          <TextField
+            select
+            size="small"
+            label="Type"
+            value={model.type}
+            onChange={(e) => {
+              if (!isModelType(e.target.value)) return;
+              actions.editCrossPlotModel(model, { type: e.target.value });
+            }}>
+            {modelTypes.map((modelType) => (
+              <MenuItem key={modelType} value={modelType}>
+                {modelType}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            size="small"
+            label="Age"
+            value={age}
+            type="number"
+            error={ageError}
+            onBlur={(e) => {
+              const num = parseFloat(e.target.value);
+              if (
+                isNaN(num) ||
+                num < 0 ||
+                !actions.checkValidityOfNewModel({
+                  x: ageToCoord(
+                    num,
+                    state.crossPlot.crossPlotBounds!.minX,
+                    state.crossPlot.crossPlotBounds!.maxX,
+                    state.crossPlot.crossPlotBounds!.topAgeX,
+                    state.crossPlot.crossPlotBounds!.scaleX
+                  ),
+                  y: model.y
+                })
+              ) {
+                setAgeError(true);
+                return;
+              }
+              setAgeError(false);
+              actions.editCrossPlotModel(model, { age: num });
+            }}
+            onChange={(evt) => {
+              setAge(evt.target.value);
+            }}
+          />
+          <TextField
+            size="small"
+            label="Depth"
+            type="number"
+            value={depth}
+            error={depthError}
+            onBlur={(e) => {
+              const num = parseFloat(e.target.value);
+              if (
+                isNaN(num) ||
+                num < 0 ||
+                !actions.checkValidityOfNewModel({
+                  x: model.x,
+                  y: ageToCoord(
+                    num,
+                    state.crossPlot.crossPlotBounds!.minY,
+                    state.crossPlot.crossPlotBounds!.maxY,
+                    state.crossPlot.crossPlotBounds!.topAgeY,
+                    state.crossPlot.crossPlotBounds!.scaleY
+                  )
+                })
+              ) {
+                setDepthError(true);
+                return;
+              }
+              setDepthError(false);
+              actions.editCrossPlotModel(model, { depth: num });
+            }}
+            onChange={(evt) => {
+              setDepth(evt.target.value);
+            }}
+          />
+        </Box>
+        <TextField
+          size="small"
+          label="Comment"
+          fullWidth
+          value={model.comment}
+          onChange={(evt) => {
+            actions.editCrossPlotModel(model, { comment: evt.target.value });
+          }}
+        />
+      </Box>
+    </Box>
+  );
+});
 
 const Markers: React.FC = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   return (
-    <Box className={styles.markersComponent}>
-      {state.crossPlot.markers.map((marker, index) => (
-        <Box key={index} className={styles.markerOptions}>
-          <MarkerOptions marker={marker} />
-          {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
+    <Box className={styles.markersContainer}>
+      <GeneralOptionsBar<Marker>
+        selected={state.crossPlot.markers}
+        editSelected={actions.editCrossPlotMarker}
+        clear={actions.removeCrossPlotMarkers}
+      />
+      {state.crossPlot.markers.length > 0 && (
+        <StyledScrollbar>
+          <Box className={styles.markersComponent}>
+            {state.crossPlot.markers.map((marker, index) => (
+              <Box key={index} className={styles.markerOptions}>
+                <MarkerOptions marker={marker} />
+                {index !== state.crossPlot.markers.length - 1 && <CustomDivider />}
+              </Box>
+            ))}
+          </Box>
+        </StyledScrollbar>
+      )}
+      {state.crossPlot.markers.length === 0 && (
+        <Box display="flex" justifyContent="center" alignItems="center" padding="23px">
+          <Typography className={styles.noMarkersText}>{t("crossPlot.sidebar.no-markers")}</Typography>
         </Box>
-      ))}
+      )}
     </Box>
   );
 });
@@ -277,7 +515,12 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
   return (
     <Box className={styles.markerContainer}>
       <Box className={styles.checkBoxContainer}>
-        <TSCCheckbox />
+        <TSCCheckbox
+          checked={marker.selected}
+          onChange={(evt) => {
+            actions.editCrossPlotMarker(marker, { selected: evt.target.checked });
+          }}
+        />
       </Box>
       <TSCColorPicker
         color={marker.color}
@@ -361,5 +604,10 @@ const tabs = [
     tabName: "Markers",
     Icon: BookmarkRounded,
     component: <Markers />
+  },
+  {
+    tabName: "Models",
+    Icon: Timeline,
+    component: <Models />
   }
 ];

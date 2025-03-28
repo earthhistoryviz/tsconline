@@ -235,8 +235,6 @@ jobs:
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
 
-            echo 'VITE_APP_URL=${{ vars.WEBSITE_URL }}' > ./app/.env
-            echo 'VITE_SERVER_URL=${{ vars.WEBSITE_URL }}' >> ./app/.env
 
             if [ ! -f "docker-compose-server.yml" ]; then
               echo "Error: docker-compose-server.yml not found"
@@ -259,17 +257,11 @@ jobs:
             START_TIME=$(date +"%Y-%m-%dT%H:%M:%SZ")
             sleep 5
 
-            CONTAINER_ID=$(docker ps --filter "name=tsconline" --format "{{.ID}}")
-            if [ -z "$CONTAINER_ID" ]; then
-              echo "Error: Failed to get container ID for tsconline."
-              exit 1
-            fi
-
             MAX_WAIT=480
             INTERVAL=5
             ELAPSED=0
 
-            while ! docker logs --since "$START_TIME" "$CONTAINER_ID" 2>&1 | grep -q "Server listening on  { address: '0.0.0.0', family: 'IPv4', port: 3000 }"; do
+            while ! docker-compose -f docker-compose-server.yml exec -T tsconline curl -s http://localhost:3000; do
               if [ $ELAPSED -ge $MAX_WAIT ]; then
                 echo "Max wait time exceeded. Exiting..."
                 echo "Last 200 lines in container:"
@@ -305,15 +297,19 @@ jobs:
 
               GRAFANA_USERID=$(grep 'GRAFANA_USERID' $MONITORING_DIR/.env | cut -d '=' -f2)
               GRAFANA_PSWD=$(grep 'GRAFANA_PSWD' $MONITORING_DIR/.env | cut -d '=' -f2)
+              METRICS_AUTH=$(grep 'METRICS_AUTH' $MONITORING_DIR/.env | cut -d '=' -f2)
 
-              if [ -z "$GRAFANA_USERID" ] || [ -z "$GRAFANA_PSWD" ]; then
-                echo "Error: Grafana credentials are missing in .env file."
+              if [ -z "$GRAFANA_USERID" ] || [ -z "$GRAFANA_PSWD" ] || [ -z "$METRICS_AUTH" ]; then
+                echo "Error: Credentials are missing in .env file."
                 exit 1
               fi
 
               echo "Updating prometheus.yml with Grafana credentials..."
               sed -i s/__GRAFANA_USERID__/$GRAFANA_USERID/g $MONITORING_DIR/prometheus.yml
               sed -i s/__GRAFANA_PSWD__/$GRAFANA_PSWD/g $MONITORING_DIR/prometheus.yml
+
+              echo "Updating prometheus.yml with metric authentication..."
+              sed -i s/__METRICS_AUTH__/$METRICS_AUTH/g $MONITORING_DIR/prometheus.yml
 
               PROMETHEUS_CONTAINER_ID=$(docker ps --filter "name=prometheus" --format "{{.ID}}")
 

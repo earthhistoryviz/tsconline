@@ -1,4 +1,4 @@
-import { configure, observable } from "mobx";
+import { configure, observable, reaction, toJS } from "mobx";
 
 import {
   SnackbarInfo,
@@ -14,7 +14,8 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   Marker,
-  CrossPlotBounds
+  CrossPlotBounds,
+  Model
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -35,8 +36,7 @@ import type {
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
-import { getInitialDarkMode } from "./actions";
-import { Workshop } from "../Workshops";
+import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -50,6 +50,8 @@ export type State = {
     lockY: boolean;
     markers: Marker[];
     markerMode: boolean;
+    modelMode: boolean;
+    models: Model[];
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
@@ -57,6 +59,7 @@ export type State = {
     chartY: ColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
+    converting: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -126,7 +129,6 @@ export type State = {
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
   };
-  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -161,14 +163,17 @@ export const state = observable<State>({
     lockX: false,
     lockY: false,
     markers: [],
-    markerMode: true,
+    markerMode: false,
+    modelMode: true,
+    models: [],
     showTooltips: true,
     chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
     chartX: undefined,
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined
+    crossPlotBounds: undefined,
+    converting: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -179,6 +184,7 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    accountType: "",
     uuid: "",
     workshopIds: [],
     settings: {
@@ -263,7 +269,6 @@ export const state = observable<State>({
     publicUserDatapacksLoading: true,
     privateUserDatapacksLoading: true
   },
-  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []
@@ -288,3 +293,30 @@ export const state = observable<State>({
     isWorkshopsTourOpen: false
   }
 });
+
+reaction(
+  () => state.crossPlot.state.chartZoomSettings.scale,
+  (scale: number) => {
+    adjustScaleOfMarkers(scale);
+    adjustScaleOfModels(scale);
+  }
+);
+reaction(
+  () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
+  () => {
+    if (state.chartTab.state.madeChart === false) return;
+    state.chartTab.state.matchesSettings = false;
+  }
+);
+reaction(
+  () => [
+    state.crossPlot.chartX,
+    state.crossPlot.chartY,
+    state.crossPlot.chartXTimeSettings,
+    state.crossPlot.chartYTimeSettings
+  ],
+  () => {
+    if (state.crossPlot.state.madeChart === false) return;
+    state.crossPlot.state.matchesSettings = false;
+  }
+);
