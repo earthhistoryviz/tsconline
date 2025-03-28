@@ -130,7 +130,8 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    deleteUserDatapack: vi.fn().mockResolvedValue({})
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -1014,11 +1015,17 @@ describe("uploadTreatiseDatapack", () => {
   it("should return 200 if upload is successful", async () => {
     process.env.BEARER_TOKEN = "correct_token";
     const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockResolvedValueOnce({
+      code: 200,
+      message: "Datapack uploaded successfully",
+      phylum: "test"
+    });
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token" },
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
       payload: {
         datapack: {
           value: Buffer.from("test"),
@@ -1029,20 +1036,18 @@ describe("uploadTreatiseDatapack", () => {
         }
       }
     });
-
-    processAndUploadDatapack.mockResolvedValueOnce({ code: 200, message: "Datapack uploaded successfully" });
     expect(response.statusCode).toBe(200);
     expect(processAndUploadDatapack).toHaveBeenCalled();
   });
 
-  it("should return 409 if uploaded file is already uploaded", async () => {
+  it("should return 200 if upload is duplicated", async () => {
     process.env.BEARER_TOKEN = "correct_token";
-    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
-
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" } as shared.Datapack]);
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token" },
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
       payload: {
         datapack: {
           value: Buffer.from("test"),
@@ -1053,13 +1058,7 @@ describe("uploadTreatiseDatapack", () => {
         }
       }
     });
-
-    processAndUploadDatapack.mockResolvedValueOnce({
-      code: 409,
-      message: "Datapack with the same title already exists"
-    });
     expect(response.statusCode).toBe(200);
-    expect(processAndUploadDatapack).toHaveBeenCalled();
   });
 });
 

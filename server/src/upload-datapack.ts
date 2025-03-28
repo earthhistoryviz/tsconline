@@ -91,7 +91,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       }
     }
     if (await doesDatapackFolderExistInAllUUIDDirectories(uuidDirectoryToDownloadTo, datapackMetadata.title)) {
-      return { code: 409, message: "Datapack with the same title already exists", hashname: datapackMetadata.title };
+      return { code: 409, message: "Datapack with the same title already exists" };
     }
     try {
       await setupNewDatapackDirectoryInUUIDDirectory(
@@ -106,7 +106,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
       await deleteUserDatapack(uuidDirectoryToDownloadTo, datapackMetadata.title);
       return { code: 500, message: "Failed to setup new datapack directory" };
     }
-    return { code: 200, message: "Datapack uploaded successfully", hashname: datapackMetadata.title };
+    return { code: 200, message: "Datapack uploaded successfully", phylum: datapackMetadata.title };
   } catch (e) {
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));

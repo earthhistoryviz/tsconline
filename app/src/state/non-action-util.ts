@@ -23,13 +23,15 @@ export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
     publicOfficialDatapacksLoading,
     privateOfficialDatapacksLoading,
     publicUserDatapacksLoading,
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading,
+    treatiseDatapackLoading
   } = skeletonStates;
   return (
     publicOfficialDatapacksLoading ||
     privateOfficialDatapacksLoading ||
     publicUserDatapacksLoading ||
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading ||
+    treatiseDatapackLoading
   );
 }
 export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {

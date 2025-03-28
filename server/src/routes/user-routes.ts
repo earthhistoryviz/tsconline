@@ -371,16 +371,40 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
       reply.status(403).send({ error: "Token mismatch" });
       return;
     }
-
+    const phylum = request.headers["phylum"];
+    if (!phylum) {
+      console.error("Phylum missing");
+      reply.status(401).send({ error: "Phylum missing" });
+      return;
+    }
+    const datapackHash = request.headers["datapackhash"];
+    if (!datapackHash) {
+      reply.status(401).send({ error: "DatapackHash missing" });
+      return;
+    }
     const treatiseUUID = "treatise";
     const parts = request.parts();
+
+    // If phylum exist and the exact file exists, send it
+    const treatiseDatapacks = await fetchAllUsersDatapacks(treatiseUUID);
+    for (const datapack of treatiseDatapacks) {
+      if (datapack.title === phylum.toString()) {
+        if (datapack.originalFileName === datapackHash + ".txt") {
+          reply.status(200).send({ phylum: datapack.title });
+          return;
+        } else {
+          await deleteUserDatapack(treatiseUUID, phylum.toString());
+          break;
+        }
+      }
+    }
+
+    // does not exist, upload normally
     const result = await processAndUploadDatapack(treatiseUUID, parts);
-    // 409 means already uploaded
-    if (result.code === 200 || result.code === 409) {
-      reply.status(200).send({ hash: result.hashname });
+    if (result.code === 200) {
+      reply.status(200).send({ phylum: result.phylum });
     } else {
       reply.status(result.code).send({ error: result.message });
-      return;
     }
   } catch (error) {
     console.error("Error during /external-chart route:", error);

@@ -34,7 +34,7 @@ export interface VerificationTable {
 export type OperationResult = {
   code: number;
   message: string;
-  hashname?: string;
+  phylum?: string;
 };
 
 export interface IpTable {

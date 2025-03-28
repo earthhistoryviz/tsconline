@@ -11,7 +11,7 @@ import "./Chart.css";
 export const GenerateExternalChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const datapackHash = queryParams.get("hash");
+  const phylum = queryParams.get("phylum");
   const { actions } = useContext(context);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -19,19 +19,19 @@ export const GenerateExternalChart: React.FC = () => {
   const { state } = useContext(context);
 
   const fetchData = async (controller: AbortController) => {
-    if (datapackHash) {
+    if (phylum) {
       setLoading(true);
       try {
         const fetchedDatapack = await actions.fetchDatapack(
           {
             isPublic: true,
-            title: datapackHash,
+            title: phylum,
             type: "treatise"
           },
           { signal: controller.signal }
         );
         if (!fetchedDatapack) {
-          console.error("Error: Treatise Datapack not found. DatapackHash:", datapackHash);
+          console.error("Error: Treatise Datapack not found. Phylum:", phylum);
           return;
         }
 
@@ -72,23 +72,27 @@ export const GenerateExternalChart: React.FC = () => {
         actions.toggleSettingsTabColumn("Microfossils");
         actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
 
-        const parts = datapackHash.split("-");
-        const oldestTime = parseInt(parts[1], 10);
-        const newestTime = parseInt(parts[2], 10);
-        actions.setBaseStageAge(oldestTime, "Ma");
-        actions.setTopStageAge(newestTime, "Ma");
-        actions.setUnitsPerMY(0.1, "Ma");
+        const chartInfo = queryParams.get("chartInfo");
+        if (chartInfo) {
+          console.log("Chart info:", chartInfo);
+          const parts = chartInfo.split("-");
+          console.log("Parts:", parts);
+          const oldestTime = parseInt(parts[0], 10);
+          const newestTime = parseInt(parts[1], 10);
+          actions.setBaseStageAge(oldestTime, "Ma");
+          actions.setTopStageAge(newestTime, "Ma");
+          actions.setUnitsPerMY(0.1, "Ma");
 
-        const treatisePhylum = parts[3];
-        const values = parts.slice(4).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
-        const columnNames = ["Total", "New", "Extinct"];
-        for (let i = 0; i < columnNames.length; i++) {
-          const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${treatisePhylum}`);
-          if (columnInfo && columnInfo.columnSpecificSettings) {
-            const [min, max] = [values[i * 2], values[i * 2 + 1]];
-            const stepValue = Math.floor((max - min) / 20);
-            assertPointSettings(columnInfo.columnSpecificSettings);
-            actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
+          const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
+          const columnNames = ["Total", "New", "Extinct"];
+          for (let i = 0; i < columnNames.length; i++) {
+            const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${phylum}`);
+            if (columnInfo && columnInfo.columnSpecificSettings) {
+              const [min, max] = [values[i * 2], values[i * 2 + 1]];
+              const stepValue = Math.floor((max - min) / 20);
+              assertPointSettings(columnInfo.columnSpecificSettings);
+              actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
+            }
           }
         }
 
@@ -103,8 +107,8 @@ export const GenerateExternalChart: React.FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (!datapackHash && !errorPushed) {
-      actions.pushError(ErrorCodes.INVALID_DATAPACK_HASH);
+    if (!phylum && !errorPushed) {
+      actions.pushError(ErrorCodes.INVALID_DATAPACK_PHYLUM);
       setErrorPushed(true);
       setLoading(false);
       return;
@@ -119,7 +123,7 @@ export const GenerateExternalChart: React.FC = () => {
       // This is not an issue in production
       controller.abort();
     };
-  }, [datapackHash, errorPushed]);
+  }, [phylum, errorPushed]);
   const { t } = useTranslation();
   return (
     <Box
