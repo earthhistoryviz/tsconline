@@ -25,53 +25,21 @@ export const convertCrossPlotWithModelsInJar = async function convertCrossPlotWi
       getDecryptedDatapackFilePath(getUUIDOfDatapackType(identifier), identifier.title)
     )
   );
-  const execJavaCommand = async (timeout: number) => {
-    const args = [
-      "-jar",
-      getActiveJar(),
-      "-node",
-      "-s",
-      settingsTextFilepath,
-      "-o",
-      outputTextFilepath,
-      "-convert",
-      "-d",
-      ...datapackFilepaths,
-      "-models",
-      modelsTextFilepath
-    ];
-    return new Promise<void>((resolve, reject) => {
-      const cmd = "java";
-      const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
-      let stdout = "";
-      let stderr = "";
-      let error = "";
-      javaProcess.stdout.on("data", (data) => {
-        stdout += data;
-      });
-
-      javaProcess.stderr.on("data", (data) => {
-        stderr += data;
-      });
-
-      javaProcess.on("error", (err) => {
-        error = err.message;
-      });
-
-      javaProcess.on("close", (code, signal) => {
-        if (signal == "SIGKILL") {
-          reject(new Error("Java process timed out"));
-          return;
-        }
-        console.log("Java finished, sending reply to browser");
-        console.log("Java error param: " + error);
-        console.log("Java stdout: " + stdout);
-        console.log("Java stderr: " + stderr);
-        resolve();
-      });
-    });
-  };
-  await execJavaCommand(20000);
+  const args = [
+    "-jar",
+    getActiveJar(),
+    "-node",
+    "-s",
+    settingsTextFilepath,
+    "-o",
+    outputTextFilepath,
+    "-convert",
+    "-d",
+    ...datapackFilepaths,
+    "-models",
+    modelsTextFilepath
+  ];
+  await execJavaCommand(20000, args);
   if (!(await verifyFilepath(outputTextFilepath))) {
     return false;
   }
@@ -92,7 +60,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
   let modelsTextFilepath: string;
   let settingsTextFilepath: string;
   try {
-    const hashedDir = md5(JSON.stringify(request));
+    const hashedDir = md5(request.models + request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
     dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
@@ -165,53 +133,53 @@ export const autoPlotPointsWithJar = async function autoPlotPointsWithJar(
   if (datapacks.length < 2) {
     return false;
   }
-  const execJavaCommand = async (timeout: number) => {
-    const args = [
-      "-jar",
-      getActiveJar(),
-      "-node",
-      "-s",
-      settingsTextFilepath,
-      "-o",
-      outputTextFilepath,
-      "-autoplot",
-      "-d",
-      ...datapacks
-    ];
-    return new Promise<void>((resolve, reject) => {
-      const cmd = "java";
-      const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
-      let stdout = "";
-      let stderr = "";
-      let error = "";
-      javaProcess.stdout.on("data", (data) => {
-        stdout += data;
-      });
-
-      javaProcess.stderr.on("data", (data) => {
-        stderr += data;
-      });
-
-      javaProcess.on("error", (err) => {
-        error = err.message;
-      });
-
-      javaProcess.on("close", (code, signal) => {
-        if (signal == "SIGKILL") {
-          reject(new Error("Java process timed out"));
-          return;
-        }
-        console.log("Java finished, sending reply to browser");
-        console.log("Java error param: " + error);
-        console.log("Java stdout: " + stdout);
-        console.log("Java stderr: " + stderr);
-        resolve();
-      });
-    });
-  };
-  await execJavaCommand(20000);
+  const args = [
+    "-jar",
+    getActiveJar(),
+    "-node",
+    "-s",
+    settingsTextFilepath,
+    "-o",
+    outputTextFilepath,
+    "-autoplot",
+    "-d",
+    ...datapacks
+  ];
+  await execJavaCommand(20000, args);
   if (!(await verifyFilepath(outputTextFilepath))) {
     return false;
   }
   return true;
+};
+const execJavaCommand = async (timeout: number, args: string[]) => {
+  return new Promise<void>((resolve, reject) => {
+    const cmd = "java";
+    const javaProcess = spawn(cmd, args, { timeout, killSignal: "SIGKILL" });
+    let stdout = "";
+    let stderr = "";
+    let error = "";
+    javaProcess.stdout.on("data", (data) => {
+      stdout += data;
+    });
+
+    javaProcess.stderr.on("data", (data) => {
+      stderr += data;
+    });
+
+    javaProcess.on("error", (err) => {
+      error = err.message;
+    });
+
+    javaProcess.on("close", (code, signal) => {
+      if (signal == "SIGKILL") {
+        reject(new Error("Java process timed out"));
+        return;
+      }
+      console.log("Java finished, sending reply to browser");
+      console.log("Java error param: " + error);
+      console.log("Java stdout: " + stdout);
+      console.log("Java stderr: " + stderr);
+      resolve();
+    });
+  });
 };
