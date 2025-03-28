@@ -22,6 +22,7 @@ import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
+import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate } from "./state/non-action-util";
 
 export const ChartContext = createContext<ChartContextType>({
@@ -243,9 +244,11 @@ export const ChartTab: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const query = new URLSearchParams(useLocation().search);
   const navigate = useNavigate();
+  const previousLocation = usePreviousLocation();
   const from = query.get("from");
   // see if the previous route/location was crossplot
-  const isLastLocationCrossPlot = from === "crossplot";
+  // we use two different ways, to make sure that we can try to be hyper accurate about the last location
+  const isLastLocationCrossPlot = from === "crossplot" || previousLocation === "/crossplot";
   return (
     <>
       {isLastLocationCrossPlot && (
