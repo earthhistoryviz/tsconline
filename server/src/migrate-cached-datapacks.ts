@@ -41,7 +41,8 @@ try {
               storedFileName: file,
               isPublic: directory.includes("public"),
               ...(/workshop/.test(user) ? { uuid: user, type: "workshop" } : {}),
-              ...(!/workshop|official/.test(user) ? { uuid: user, type: "user" } : {})
+              ...(/treatise/.test(user) ? { uuid: "treatise", type: "treatise" } : {}),
+              ...(!/workshop|official|treatise/.test(user) ? { uuid: user, type: "user" } : {})
             });
             const datapackIndex: DatapackIndex = {};
             const successful = await loadDatapackIntoIndex(

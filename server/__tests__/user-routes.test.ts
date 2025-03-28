@@ -8,7 +8,7 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
-import { fetchPublicUserDatapack } from "../src/routes/user-routes";
+import { fetchPublicUserDatapack, uploadTreatiseDatapack } from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
@@ -130,7 +130,8 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    deleteUserDatapack: vi.fn().mockResolvedValue({})
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -199,6 +200,8 @@ beforeAll(async () => {
   });
   await app.register(userRoutes, { prefix: "/user" });
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
+  app.post("/external-chart", uploadTreatiseDatapack);
+
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
@@ -922,6 +925,139 @@ describe("uploadDatapack tests", () => {
     expect(await response.json()).toEqual({ message: "Datapack uploaded" });
     expect(response.statusCode).toBe(200);
     expect(processAndUploadDatapack).toHaveBeenCalledOnce();
+  });
+});
+
+describe("uploadTreatiseDatapack", () => {
+  it("should return 401 if authorization header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ error: "Token missing" });
+  });
+
+  it("should return 401 if token is missing in auth header", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ error: "Token missing" });
+  });
+
+  it("should return 500 if BEARER_TOKEN is missing in enviroment variables", async () => {
+    delete process.env.BEARER_TOKEN;
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toEqual({
+      error: "Server misconfiguration: Missing BEARER_TOKEN on TSC Online. Contact admin"
+    });
+  });
+
+  it("should return 403 if token is incorrect", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer incorrect_token" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({ error: "Token mismatch" });
+  });
+
+  it("should return 200 if upload is successful", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockResolvedValueOnce({
+      code: 200,
+      message: "Datapack uploaded successfully"
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+    expect(response.statusCode).toBe(200);
+    expect(processAndUploadDatapack).toHaveBeenCalled();
+  });
+
+  it("should return 200 if upload is duplicated", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" } as shared.Datapack]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+    expect(response.statusCode).toBe(200);
   });
 });
 

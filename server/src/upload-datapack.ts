@@ -60,10 +60,11 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
-  if (!uuid || !user || !user[0]) {
+  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
     return { code: 404, message: "Error finding user" };
   }
-  const isAdmin = !!user[0].isAdmin;
+
+  const isAdmin = user[0] ? !!user[0].isAdmin : false;
   const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(uuid, parts);
   if (isOperationResult(result)) {
     return result;
