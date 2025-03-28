@@ -96,7 +96,9 @@ server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [num
 
 // Expose the metrics endpoint
 server.get("/metrics", async (request, reply) => {
-  if (request.ip != "172.27.0.1") {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token !== process.env.METRICS_AUTH) {
     reply.code(403).send({ error: "Forbidden" });
     return;
   }
