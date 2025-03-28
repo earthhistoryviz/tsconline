@@ -95,7 +95,7 @@ export const setupAutoPlotDirectory = async function (request: AutoPlotRequest):
   let outputTextFilepath: string;
   let settingsTextFilepath: string;
   try {
-    const hashedDir = md5(JSON.stringify(request));
+    const hashedDir = md5(request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
     dir = path.join(assetconfigs.autoPlotCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
