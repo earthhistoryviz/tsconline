@@ -115,7 +115,11 @@ export const GenerateExternalChart: React.FC = () => {
                 }
               }
             }
+          } else {
+            console.warn("Warning: chartInfo format is incorrect. Expected 6 parts, got:", parts.length);
           }
+        } else {
+          console.warn("Warning: chartInfo not found in URL. No changes to step and time settings");
         }
 
         actions.initiateChartGeneration(navigate, location.pathname);
