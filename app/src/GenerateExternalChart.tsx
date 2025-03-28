@@ -75,7 +75,7 @@ export const GenerateExternalChart: React.FC = () => {
         const chartInfo = queryParams.get("chartInfo");
         if (chartInfo) {
           const parts = chartInfo.split("-");
-          if (parts.length == 6) {
+          if (parts.length == 8) {
             const oldestTime = parseInt(parts[0], 10);
             const newestTime = parseInt(parts[1], 10);
             if (isNaN(oldestTime) || isNaN(newestTime)) {
@@ -116,7 +116,10 @@ export const GenerateExternalChart: React.FC = () => {
               }
             }
           } else {
-            console.warn("Warning: chartInfo format is incorrect. Expected 6 parts, got:", parts.length);
+            console.warn(
+              "Warning: chartInfo format is incorrect. No changes to settings. Expected 8 parts, got:",
+              parts.length
+            );
           }
         } else {
           console.warn("Warning: chartInfo not found in URL. No changes to step and time settings");
