@@ -66,7 +66,7 @@ export const TSCPopupManager = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [state.prevSettings.mouseOverPopupsEnabled]);
 
   if (!isValidPath) {
     return <Typography>Invalid SVG Path. Please check the path and try again.</Typography>;

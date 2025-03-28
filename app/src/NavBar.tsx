@@ -203,7 +203,7 @@ export const NavBar = observer(function Navbar() {
           buttonType="gradient"
           disabled={state.loadingDatapacks}
           onClick={async () => {
-            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>
           {t("button.generate-chart")}

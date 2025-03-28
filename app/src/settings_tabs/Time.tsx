@@ -154,7 +154,7 @@ export const Time = observer(function Time() {
           buttonType="gradient"
           className="generate-button"
           onClick={async () => {
-            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>
           {t("button.generate")}

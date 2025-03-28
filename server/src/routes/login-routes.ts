@@ -27,6 +27,7 @@ import { checkRecaptchaToken, generateToken } from "../verify.js";
 import validator from "validator";
 import logger from "../error-logger.js";
 import { getPrivateUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { getChartHistoryMetadata } from "../user/chart-history.js";
 
 export const googleRecaptchaBotThreshold = 0.5;
 
@@ -210,6 +211,7 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
     const { email, username, pictureUrl, hashedPassword, isAdmin, userId, accountType } = user;
     const workshopIds: number[] = [];
     workshopIds.push(...(await getActiveWorkshopsUserIsIn(userId)).map((workshop) => workshop.workshopId));
+    const historyEntries = await getChartHistoryMetadata(uuid);
     const sharedUser: SharedUser = {
       email,
       username,
@@ -218,7 +220,8 @@ export const sessionCheck = async function sessionCheck(request: FastifyRequest,
       isAdmin: Boolean(isAdmin),
       ...(workshopIds.length > 0 && { workshopIds }),
       accountType,
-      uuid
+      uuid,
+      historyEntries
     };
     assertSharedUser(sharedUser);
     reply.send({ authenticated: true, user: sharedUser });
