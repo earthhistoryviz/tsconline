@@ -24,12 +24,12 @@ export const WorkshopDetails = observer(() => {
 
   const isRegistered = false;
   const isPublicWorkshop = true;
-  const [showTooltip, setShowTooltip] = useState(false); 
-  const [isDisabled, setIsDisabled] = useState((!isRegistered && !isPublicWorkshop) ? true : false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(!isRegistered && !isPublicWorkshop ? true : false);
   const [loading, setLoading] = useState(false);
-  const [switchButtonVar, setSwitchButtonVar] = useState(isRegistered ? t("workshops.details-page.registered-button") : t("workshops.details-page.register-button"));
-
-
+  const [switchButtonVar, setSwitchButtonVar] = useState(
+    isRegistered ? t("workshops.details-page.registered-button") : t("workshops.details-page.register-button")
+  );
 
   const handleRegisterClick = () => {
     if (!isRegistered && isPublicWorkshop) {
@@ -109,26 +109,28 @@ export const WorkshopDetails = observer(() => {
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
                   <Box sx={{ display: "flex", marginTop: 2 }}>
-                    <CustomTooltip title={t("workshops.details-page.messages.not-registered")} open={showTooltip} placement="bottom">
+                    <CustomTooltip
+                      title={t("workshops.details-page.messages.not-registered")}
+                      open={showTooltip}
+                      placement="bottom">
                       <div
-                      onMouseEnter={() => { 
-                        if (!isRegistered && !isPublicWorkshop) {
-                          setShowTooltip(true);
-                        }
-                      }} 
-                      onMouseLeave={() => setShowTooltip(false)}
-                      >
-                      <TSCLoadingButton
-                        variant="contained"
-                        sx={{
-                          marginRight: 2,
-                          backgroundColor: "primary"
+                        onMouseEnter={() => {
+                          if (!isRegistered && !isPublicWorkshop) {
+                            setShowTooltip(true);
+                          }
                         }}
-                        onClick={handleRegisterClick}
-                        disabled={isRegistered ? true : isDisabled}
-                        loading={loading}>
-                        {switchButtonVar}
-                      </TSCLoadingButton>
+                        onMouseLeave={() => setShowTooltip(false)}>
+                        <TSCLoadingButton
+                          variant="contained"
+                          sx={{
+                            marginRight: 2,
+                            backgroundColor: "primary"
+                          }}
+                          onClick={handleRegisterClick}
+                          disabled={isRegistered ? true : isDisabled}
+                          loading={loading}>
+                          {switchButtonVar}
+                        </TSCLoadingButton>
                       </div>
                     </CustomTooltip>
 
