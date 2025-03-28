@@ -21,6 +21,7 @@ import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -185,12 +186,26 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
-  const dataInrange = checkIfDataIsInRange(
-    column.minAge,
-    column.maxAge,
-    state.settings.timeSettings[column.units]?.topStageAge || 0,
-    state.settings.timeSettings[column.units]?.baseStageAge || 0
-  );
+  const location = useLocation();
+  // TODO: temp fix for crossplot time settings, going to want a task for making columns have their own context
+  // so we can store the time settings for each column
+  let topStageAge, baseStageAge;
+  if (location.pathname === "/crossplot") {
+    if (column.units === state.crossPlot.chartX?.units) {
+      topStageAge = state.crossPlot.chartXTimeSettings?.topStageAge;
+      baseStageAge = state.crossPlot.chartXTimeSettings?.baseStageAge;
+    } else if (column.units === state.crossPlot.chartY?.units) {
+      topStageAge = state.crossPlot.chartYTimeSettings?.topStageAge;
+      baseStageAge = state.crossPlot.chartYTimeSettings?.baseStageAge;
+    } else {
+      topStageAge = state.settings.timeSettings[column.units]?.topStageAge;
+      baseStageAge = state.settings.timeSettings[column.units]?.baseStageAge;
+    }
+  } else {
+    topStageAge = state.settings.timeSettings[column.units]?.topStageAge;
+    baseStageAge = state.settings.timeSettings[column.units]?.baseStageAge;
+  }
+  const dataInrange = checkIfDataIsInRange(column.minAge, column.maxAge, topStageAge || 0, baseStageAge || 0);
   const tooltipOrCheckBox =
     !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip

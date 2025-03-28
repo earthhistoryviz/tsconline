@@ -1,10 +1,9 @@
-import { roundToDecimalPlace } from "@tsconline/shared";
+import { Marker, Model, roundToDecimalPlace } from "@tsconline/shared";
 import React, { forwardRef, useContext, useEffect } from "react";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { ChartContext } from "../Chart";
 import { useMediaQuery, useTheme } from "@mui/material";
-import { Marker, Model } from "../types";
 import { CROSSPLOT_MOBILE_WIDTH } from "../crossplot/CrossPlotChart";
 import { getDotSizeFromScale } from "../state/non-action-util";
 import { reaction } from "mobx";
@@ -25,7 +24,7 @@ const CROSSPLOT_MODELS_GROUP = "CrossPlotModelsGroup";
 const CROSSPLOT_MARKERS_GROUP = "CrossPlotMarkersGroup";
 const lineStroke = "2";
 const tooltipId = "crossplot-tooltip";
-const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
+export const getDotRect = (id: string, point: { x: number; y: number }, scale: number, fill: string) => {
   const rect = document.createElementNS("http://www.w3.org/2000/svg", "rect");
   const newWidth = getDotSizeFromScale(CROSSPLOT_DOT_WIDTH, scale);
   const newHeight = getDotSizeFromScale(CROSSPLOT_DOT_HEIGHT, scale);
@@ -40,6 +39,14 @@ const getDotRect = (id: string, point: { x: number; y: number }, scale: number, 
   rect.setAttribute("stroke", "black");
   rect.setAttribute("stroke-width", "1");
   return rect;
+};
+export const getLine = (id: string) => {
+  const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+  line.setAttribute("opacity", "0");
+  line.setAttribute("stroke", "black");
+  line.setAttribute("stroke-width", "1.5");
+  line.setAttribute("id", `${id}-line`);
+  return line;
 };
 const getCrossPlotMarkersGroup = (svg: SVGSVGElement) => {
   let markersGroup = svg.getElementById(CROSSPLOT_MARKERS_GROUP);
@@ -222,6 +229,30 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
     const { chartTimelineEnabled, chartContent, chartZoomSettings } = chartTabState;
     const [timeLineElements, setTimeLineElements] = React.useState<TimeLineElements | null>(null);
     const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+    const hideTooltip = () => {
+      const tooltip = document.getElementById(tooltipId);
+      if (tooltip) tooltip.style.display = "none";
+    };
+    const removeMarkerRect = (e: MouseEvent, markerId: string) => {
+      if (!state.crossPlot.markerMode) return;
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      const markersGroup = getCrossPlotMarkersGroup(svg);
+      e.preventDefault();
+      hideTooltip();
+      const rect = svg.querySelector(CSS.escape(`#${markerId}`));
+      if (rect) {
+        markersGroup.removeChild(rect);
+      }
+      const line = svg.querySelector(CSS.escape(`#${markerId}-line`));
+      if (line) {
+        markersGroup.removeChild(line);
+      }
+      actions.removeCrossPlotMarkers(markerId);
+    };
     // declare here so that comment is updated when marker changes
     const showTooltip = (event: MouseEvent, age: number, depth: number, comment: string) => {
       let tooltip = document.getElementById(tooltipId);
@@ -331,10 +362,6 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           selected: false
         };
         actions.addCrossPlotModel(model);
-        const hideTooltip = () => {
-          const tooltip = document.getElementById(tooltipId);
-          if (tooltip) tooltip.style.display = "none";
-        };
         const removeRect = (e: MouseEvent) => {
           if (!state.crossPlot.modelMode) return;
           e.preventDefault();
@@ -397,10 +424,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         markersGroup.removeChild(markersGroup.firstChild);
       }
       state.crossPlot.markers.forEach((marker) => {
-        if (!markersGroup.querySelector(`#${marker.id}`)) {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}`))) {
           markersGroup.appendChild(marker.element);
         }
-        if (!markersGroup.querySelector(`#${marker.id}-line`)) {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}-line`))) {
           markersGroup.appendChild(marker.line);
         }
       });
@@ -489,11 +516,7 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         const markerId = `marker-${Date.now()}`;
         const rect = getDotRect(markerId, point, chartZoomSettings.scale, theme.palette.button.main);
         markersGroup.appendChild(rect);
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("opacity", "0");
-        line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "1.5");
-        line.setAttribute("id", `${markerId}-line`);
+        const line = getLine(`${markerId}-line`);
         markersGroup.appendChild(line);
         const marker = {
           id: markerId,
@@ -509,28 +532,10 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
           selected: false
         };
         actions.addCrossPlotMarker(marker);
-        const hideTooltip = () => {
-          const tooltip = document.getElementById(tooltipId);
-          if (tooltip) tooltip.style.display = "none";
-        };
-        const removeRect = (e: MouseEvent) => {
-          if (!state.crossPlot.markerMode) return;
-          e.preventDefault();
-          hideTooltip();
-          const rect = svg.querySelector(`#${markerId}`);
-          if (rect) {
-            markersGroup.removeChild(rect);
-          }
-          const line = svg.querySelector(`#${markerId}-line`);
-          if (line) {
-            markersGroup.removeChild(line);
-          }
-          actions.removeCrossPlotMarkers(marker.id);
-        };
         rect.addEventListener("mousemove", (event) => showTooltip(event, marker.age, marker.depth, marker.comment));
         rect.addEventListener("mouseleave", hideTooltip);
-        rect.addEventListener("contextmenu", removeRect);
-        rect.addEventListener("click", removeRect);
+        rect.addEventListener("contextmenu", (e) => removeMarkerRect(e, markerId));
+        rect.addEventListener("click", (e) => removeMarkerRect(e, markerId));
       };
       let lastTap = 0;
       const handleTouchStart = (evt: TouchEvent) => {
@@ -583,6 +588,40 @@ export const TSCCrossPlotSVGComponent: React.FC = observer(
         if (tooltip) document.body.removeChild(tooltip);
       };
     }, []);
+
+    // add auto plot markers (not sure if there are better solutions to this but with the way that
+    // this is currentl implemented, i believe this is the best way to do it)
+    // let me know if you have any better ideas, but they would probably require a different marker/model setup to implement
+    // if i had to guess
+    // this is because the markers are not being added in this component but through an external event from a fetch, which means that if that changes we must
+    // add the event listeners here since they do not exist outside of this component
+    // however, this function will get called when a user deletes markers meaning we have some duplicate running code but i think it's okay.
+    useEffect(() => {
+      if (typeof ref === "function" || !ref) return;
+      const container = ref.current;
+      if (!container || !chartContent || !state.crossPlot.crossPlotBounds) return;
+      const svg = container.querySelector("svg");
+      if (!svg) return;
+      const markersGroup = getCrossPlotMarkersGroup(svg);
+      state.crossPlot.markers.forEach((marker) => {
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}`))) {
+          const rect = marker.element;
+          rect.addEventListener("mousemove", (event) => showTooltip(event, marker.age, marker.depth, marker.comment));
+          rect.addEventListener("mouseleave", hideTooltip);
+          rect.addEventListener("click", (e) => removeMarkerRect(e, marker.id));
+          rect.addEventListener("contextmenu", (e) => removeMarkerRect(e, marker.id));
+          markersGroup.appendChild(marker.element);
+        }
+        if (!markersGroup.querySelector(CSS.escape(`#${marker.id}-line`))) {
+          markersGroup.appendChild(marker.line);
+        }
+      });
+      return () => {
+        while (markersGroup.firstChild) {
+          markersGroup.removeChild(markersGroup.firstChild);
+        }
+      };
+    }, [state.crossPlot.markers.length]);
 
     const getLabelWidthX = () => {
       if (!timeLineElements) return 0;

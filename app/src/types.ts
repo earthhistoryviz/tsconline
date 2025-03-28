@@ -229,27 +229,6 @@ export type EditableUserProperties = {
   accountType: string;
 };
 
-export type Marker = {
-  selected: boolean;
-  id: string;
-  element: SVGRectElement;
-  age: number; // this allows for users to empty the age field
-  depth: number; // this allows for users to empty the depth field
-  x: number; // the actual pos with no rounding
-  y: number; // the actual pos with no rounding
-  color: string;
-  comment: string;
-  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
-  line: SVGLineElement;
-};
-
-export type Model = Omit<Marker, "type" | "line"> & {
-  type: "Rect" | "Circle";
-};
-
-export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
-export const modelTypes = ["Rect", "Circle"];
-
 export type CrossPlotBounds = {
   minX: number;
   minY: number;
@@ -271,13 +250,6 @@ export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
     assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
   }
   assertColumnInfo(o);
-}
-
-export function isMarkerType(value: string): value is Marker["type"] {
-  return markerTypes.includes(value);
-}
-export function isModelType(value: string): value is Model["type"] {
-  return modelTypes.includes(value);
 }
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {

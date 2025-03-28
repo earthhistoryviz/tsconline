@@ -1,17 +1,20 @@
 import { action, isObservable, observable } from "mobx";
-import {
-  ChartSettings,
-  CrossPlotBounds,
-  CrossPlotTimeSettings,
-  Marker,
-  Model,
-  assertColumnInfoRoot
-} from "../../types";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, assertColumnInfoRoot } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { pushError, pushSnackbar, removeError, setChartTabState, setTab } from "./general-actions";
 import { NavigateFunction } from "react-router";
-import { ColumnInfo, FontsInfo, defaultColumnRoot, ChartRequest, assertDatapackArray } from "@tsconline/shared";
+import {
+  ColumnInfo,
+  FontsInfo,
+  defaultColumnRoot,
+  ChartRequest,
+  assertDatapackArray,
+  Marker,
+  Model,
+  AutoPlotRequest,
+  assertAutoPlotResponse
+} from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -20,7 +23,9 @@ import {
   CROSSPLOT_DOT_HEIGHT,
   MARKER_PADDING,
   CROSSPLOT_DOT_WIDTH,
-  ageToCoord
+  ageToCoord,
+  getDotRect,
+  getLine
 } from "../../components/TSCCrossPlotSVGComponent";
 import { downloadFile, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
 import { fetcher } from "../../util";
@@ -285,41 +290,45 @@ export const editCrossPlotMarker = action((marker: Marker, partial: Partial<Mark
   }
   if (partial.type !== undefined) {
     marker.type = partial.type;
-    switch (partial.type) {
-      case "Rect": {
-        marker.element.setAttribute("rx", "0");
-        marker.element.setAttribute("ry", "0");
-        marker.line.setAttribute("opacity", "0");
-        break;
-      }
-      case "Circle": {
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("opacity", "0");
-        break;
-      }
-      case "BASE(FAD)": {
-        const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", x1.toString());
-        marker.line.setAttribute("x2", x2.toString());
-        marker.line.setAttribute("y1", y1.toString());
-        marker.line.setAttribute("y2", y2.toString());
-        marker.line.setAttribute("opacity", "1");
-        break;
-      }
-      case "TOP(LAD)": {
-        const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
-        marker.element.setAttribute("rx", "50%");
-        marker.element.setAttribute("ry", "50%");
-        marker.line.setAttribute("x1", x1.toString());
-        marker.line.setAttribute("x2", x2.toString());
-        marker.line.setAttribute("y1", y1.toString());
-        marker.line.setAttribute("y2", y2.toString());
-        marker.line.setAttribute("opacity", "1");
-        break;
-      }
+    setCrossPlotMarkerType(marker, partial.type);
+  }
+});
+
+export const setCrossPlotMarkerType = action((marker: Marker, type: string) => {
+  switch (type) {
+    case "Rect": {
+      marker.element.setAttribute("rx", "0");
+      marker.element.setAttribute("ry", "0");
+      marker.line.setAttribute("opacity", "0");
+      break;
+    }
+    case "Circle": {
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("opacity", "0");
+      break;
+    }
+    case "BASE(FAD)": {
+      const { x1, x2, y1, y2 } = getBaseFadLineValues(marker);
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("opacity", "1");
+      break;
+    }
+    case "TOP(LAD)": {
+      const { x1, x2, y1, y2 } = getTopLadLineValues(marker);
+      marker.element.setAttribute("rx", "50%");
+      marker.element.setAttribute("ry", "50%");
+      marker.line.setAttribute("x1", x1.toString());
+      marker.line.setAttribute("x2", x2.toString());
+      marker.line.setAttribute("y1", y1.toString());
+      marker.line.setAttribute("y2", y2.toString());
+      marker.line.setAttribute("opacity", "1");
+      break;
     }
   }
 });
@@ -577,4 +586,90 @@ const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: Column
 
 export const setCrossPlotConverting = action((converting: boolean) => {
   state.crossPlot.converting = converting;
+});
+
+export const autoPlotCrossPlot = action(async () => {
+  try {
+    state.crossPlot.autoPlotting = true;
+    if (!state.crossPlot.chartY) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    if (!state.crossPlot.state.matchesSettings) {
+      pushError(ErrorCodes.CROSSPLOT_SETTINGS_MISMATCH);
+      return;
+    }
+    if (state.crossPlot.chartY.units.toLowerCase() === "ma") {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
+      return;
+    }
+    assertColumnInfoRoot(state.crossPlot.chartY);
+    assertColumnInfoRoot(state.crossPlot.chartX);
+    const datapacks = [
+      ...state.crossPlot.chartY.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks)),
+      ...state.crossPlot.chartX.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks))
+    ];
+    if (datapacks.length === 0 || datapacks.some((datapack) => !datapack)) {
+      pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
+      return;
+    }
+    assertDatapackArray(datapacks);
+    const columnRoot = cloneDeep(defaultColumnRoot);
+    columnRoot.children = [state.crossPlot.chartX, state.crossPlot.chartY];
+    const columnCopy = cloneDeep(columnRoot);
+    const chartSettingsCopy = cloneDeep(
+      createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
+    );
+    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+    const body: AutoPlotRequest = {
+      datapackUniqueIdentifiers: [
+        ...state.crossPlot.chartY.datapackUniqueIdentifiers,
+        ...state.crossPlot.chartX.datapackUniqueIdentifiers
+      ],
+      settings: xmlSettings
+    };
+    const response = await fetcher("/crossplot/autoplot", {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json"
+      }
+    });
+    if (!response.ok) {
+      throw new Error("Failed to autoplot");
+    }
+    const responseJson = await response.json();
+    assertAutoPlotResponse(responseJson);
+    const { markers } = responseJson;
+    markers.forEach((marker) => {
+      if (state.crossPlot.markers.some((m) => m.id === marker.id)) {
+        return;
+      }
+      const { minX, minY, maxX, maxY, scaleX, scaleY, topAgeX, topAgeY } = state.crossPlot.crossPlotBounds!;
+      const x = ageToCoord(marker.age, minX, maxX, topAgeX, scaleX);
+      const y = ageToCoord(marker.depth, minY, maxY, topAgeY, scaleY);
+      const crossPlotMarker = {
+        ...marker,
+        x,
+        y,
+        element: getDotRect(
+          marker.id,
+          {
+            x,
+            y
+          },
+          state.crossPlot.state.chartZoomSettings.scale,
+          marker.color
+        ),
+        line: getLine(marker.id)
+      };
+      addCrossPlotMarker(crossPlotMarker);
+      setCrossPlotMarkerType(crossPlotMarker, marker.type);
+    });
+    pushSnackbar("Successfully autoplotted", "success");
+  } catch (e) {
+    displayServerError(e, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+  } finally {
+    state.crossPlot.autoPlotting = false;
+  }
 });

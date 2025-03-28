@@ -7,8 +7,8 @@ import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, use
 import Color from "color";
 import { ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
-import { CrossPlotTimeSettings, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "../types";
-import { ColumnInfo } from "@tsconline/shared";
+import { CrossPlotTimeSettings } from "../types";
+import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
@@ -61,12 +61,19 @@ export const CrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.tabContent}>
-          <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
-            Convert Datapack
-          </TSCButton>
-          <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-            Generate Cross Plot
-          </TSCButton>
+          <Box className={styles.buttons}>
+            <TSCButton
+              className={styles.generate}
+              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+              Generate Cross Plot
+            </TSCButton>
+            <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+              Convert Datapack
+            </TSCButton>
+            <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
+              Auto Plot
+            </TSCButton>
+          </Box>
           {tabs[tabIndex].component}
         </Box>
       </Box>
@@ -119,14 +126,19 @@ export const MobileCrossPlotSideBar = observer(
           })}
         </Box>
         <Box className={styles.mobileTabContent}>
-          <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
-            Convert Datapack
-          </TSCButton>
-          <TSCButton
-            className={styles.mobileGenerate}
-            onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-            Generate Cross Plot
-          </TSCButton>
+          <Box className={styles.mobileButtons}>
+            <TSCButton
+              className={styles.mobileGenerate}
+              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+              Generate Cross Plot
+            </TSCButton>
+            <TSCButton className={styles.mobileAutoPlot} onClick={() => actions.autoPlotCrossPlot()}>
+              Auto Plot
+            </TSCButton>
+            <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+              Convert Datapack
+            </TSCButton>
+          </Box>
           {tabs[tabIndex].component}
         </Box>
       </Box>
