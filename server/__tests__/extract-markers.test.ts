@@ -82,6 +82,10 @@ describe("extractMarkers", async () => {
     const markers = await getMarkersFromTextFile("test");
     expect(markers).toEqual([]);
   });
+  it("should return throw an error if one entry that is a number is invalid", async () => {
+    createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4\ta"]) as unknown as readline.Interface);
+    await expect(getMarkersFromTextFile("test")).rejects.toThrow("Invalid file format");
+  });
   it("should return markers if entries are valid", async () => {
     createInterface.mockReturnValueOnce(mockReadline(["header", "1\t2\t3\t4\t5"]) as unknown as readline.Interface);
     const markers = await getMarkersFromTextFile("test");
