@@ -35,7 +35,8 @@ import {
   DatapackUniqueIdentifier,
   isDatapackTypeString,
   isUserDatapack,
-  isOfficialDatapack
+  isOfficialDatapack,
+  checkUserAllowedDownloadDatapack
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -59,6 +60,7 @@ import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { loadRecaptcha, removeRecaptcha } from "./util";
+import { getDatapackOfficialOrUUID } from "./util/util";
 
 const SetDatapackContext = createContext<(datapack: Datapack) => void>(() => {});
 
@@ -382,6 +384,13 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
+
+  function downloadDatapackFiles() {
+    if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
+      actions.fetchDatapackFilesForDownload(datapack.title, getDatapackOfficialOrUUID(datapack), datapack.isPublic);
+    }
+  }
+
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
@@ -415,6 +424,17 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Tags tags={datapack.tags} />
+        </div>
+        <div className={styles.ai}>
+          {datapack.hasFiles && (
+            <TSCButton
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: 2 }}
+              onClick={() => downloadDatapackFiles()}>
+              {t("workshops.details-page.download-button")}
+            </TSCButton>
+          )}
         </div>
       </div>
       <div className={styles.additional}>

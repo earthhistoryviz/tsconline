@@ -85,6 +85,7 @@ export type DatapackMetadata = {
   notes?: string;
   datapackImage?: string;
   priority: number;
+  hasFiles: boolean;
 } & DatapackType;
 
 export type BaseDatapackProps = {
@@ -1179,6 +1180,8 @@ export function assertDatapackMetadata(o: any): asserts o is DatapackMetadata {
   if ("datapackImage" in o && typeof o.datapackImage !== "string")
     throwError("DatapackMetadata", "datapackImage", "string", o.datapackImage);
   if (typeof o.priority !== "number") throwError("DatapackMetadata", "priority", "number", o.priority);
+  if ("hasFiles" in o && typeof o.hasFiles !== "boolean")
+    throwError("DatapackMetadata", "hasFiles", "boolean", o.hasFiles);
   assertDatapackType(o);
 }
 export function assertDatapackMetadataArray(o: any): asserts o is DatapackMetadata[] {
