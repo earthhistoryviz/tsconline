@@ -74,24 +74,24 @@ export const GenerateExternalChart: React.FC = () => {
 
         const chartInfo = queryParams.get("chartInfo");
         if (chartInfo) {
-          console.log("Chart info:", chartInfo);
           const parts = chartInfo.split("-");
-          console.log("Parts:", parts);
-          const oldestTime = parseInt(parts[0], 10);
-          const newestTime = parseInt(parts[1], 10);
-          actions.setBaseStageAge(oldestTime, "Ma");
-          actions.setTopStageAge(newestTime, "Ma");
-          actions.setUnitsPerMY(0.1, "Ma");
+          if (parts.length == 6) {
+            const oldestTime = parseInt(parts[0], 10);
+            const newestTime = parseInt(parts[1], 10);
+            actions.setBaseStageAge(oldestTime, "Ma");
+            actions.setTopStageAge(newestTime, "Ma");
+            actions.setUnitsPerMY(0.1, "Ma");
 
-          const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
-          const columnNames = ["Total", "New", "Extinct"];
-          for (let i = 0; i < columnNames.length; i++) {
-            const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${phylum}`);
-            if (columnInfo && columnInfo.columnSpecificSettings) {
-              const [min, max] = [values[i * 2], values[i * 2 + 1]];
-              const stepValue = Math.floor((max - min) / 20);
-              assertPointSettings(columnInfo.columnSpecificSettings);
-              actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
+            const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
+            const columnNames = ["Total", "New", "Extinct"];
+            for (let i = 0; i < columnNames.length; i++) {
+              const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${phylum}`);
+              if (columnInfo && columnInfo.columnSpecificSettings) {
+                const [min, max] = [values[i * 2], values[i * 2 + 1]];
+                const stepValue = Math.floor((max - min) / 20);
+                assertPointSettings(columnInfo.columnSpecificSettings);
+                actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
+              }
             }
           }
         }
