@@ -7,12 +7,19 @@ import { useContext } from "react";
 import { context } from "./state";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
+import Grid from "@mui/material/Grid";
+import { StyledScrollbar } from "./components";
+
+//The Pages for the help
+import NewBreadcrumbs from "./HelpBreadcrumbsUpdated";
+import NewHelpDrawer from "./HelpDrawerUpdated";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const navigate = useNavigate();
   const background = { bgcolor: "secondaryBackground.main" };
+
   function runTour(tourName: string) {
     actions.setTourOpen(true, tourName);
     switch (tourName) {
@@ -148,6 +155,20 @@ export const Help = observer(function Help() {
          *    - Add the developers of the Java application.
          *    - Include past contributors who have made significant contributions. */}
       </div>
+
+      {/* The Actual breadcrumb */}
+      <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
+        <Grid item sx={background}>
+          <StyledScrollbar>
+            <NewHelpDrawer />
+          </StyledScrollbar>
+        </Grid>
+        <Grid item sx={background}>
+          <NewBreadcrumbs />
+        </Grid>
+      </Grid>
     </div>
   );
 });
+
+export default Help;
