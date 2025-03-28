@@ -22,7 +22,7 @@ export const WorkshopDetails = observer(() => {
   const { id } = useParams();
   const { t } = useTranslation();
 
-  const isRegistered = true;
+  const isRegistered = false;
   const isPublicWorkshop = true;
   const [showTooltip, setShowTooltip] = useState(false); 
   const [isDisabled, setIsDisabled] = useState((!isRegistered && !isPublicWorkshop) ? true : false);
@@ -131,7 +131,7 @@ export const WorkshopDetails = observer(() => {
                       </TSCLoadingButton>
                       </div>
                     </CustomTooltip>
-                    
+
                     <TSCButton variant="contained" color="primary" href={fetchWorkshopFiles()}>
                       {t("workshops.details-page.download-button")}
                     </TSCButton>
