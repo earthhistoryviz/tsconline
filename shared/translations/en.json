@@ -179,10 +179,14 @@
                 "files": "Files",
                 "download-button": "Download Files",
                 "description": "Description",
+                "register-button": "Register",
+                "registered-button": "Registered",
                 "messages": {
                     "no-datapacks": "No datapacks available",
-                    "no-files": "No files available"
-                }
+                    "no-files": "No files available",
+                    "not-registered": "Contact profogg@gmail.com to register!"
+                },
+                "alrRegistered-button": "Already Registered"
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",

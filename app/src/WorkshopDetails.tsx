@@ -9,6 +9,9 @@ import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { NotLoggedIn } from "./NotLoggedIn";
+import { useState } from "react";
+import { TSCLoadingButton } from "./components/TSCLoadingButton";
+import { CustomTooltip } from "./components";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
 
@@ -17,6 +20,29 @@ export const WorkshopDetails = observer(() => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
+
+  const isRegistered = false;
+  const isPublicWorkshop = true;
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(!isRegistered && !isPublicWorkshop ? true : false);
+  const [loading, setLoading] = useState(false);
+  const [switchButtonVar, setSwitchButtonVar] = useState(
+    isRegistered ? t("workshops.details-page.registered-button") : t("workshops.details-page.register-button")
+  );
+
+  const handleRegisterClick = () => {
+    if (!isRegistered && isPublicWorkshop) {
+      setLoading(true);
+      setIsDisabled(true);
+    }
+    setTimeout(() => {
+      if (!isRegistered && isPublicWorkshop) {
+        setSwitchButtonVar(t("workshops.details-page.registered-button"));
+      }
+      setLoading(false);
+    }, 2000);
+  };
+
   const fetchWorkshop = () => {
     if (!id) return;
     const workshop = state.admin.workshops.find((d) => d.workshopId === Number(id));
@@ -45,7 +71,6 @@ export const WorkshopDetails = observer(() => {
           <IconButton className={styles.back} onClick={() => navigate("/workshops")}>
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
-
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
           <img className={styles.di} src={getWorkshopCoverImage()} />
@@ -101,6 +126,36 @@ export const WorkshopDetails = observer(() => {
                   ) : (
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
                   )}
+                  <Box sx={{ display: "flex", marginTop: 2 }}>
+                    <CustomTooltip
+                      title={t("workshops.details-page.messages.not-registered")}
+                      open={showTooltip}
+                      placement="bottom">
+                      <div
+                        onMouseEnter={() => {
+                          if (!isRegistered && !isPublicWorkshop) {
+                            setShowTooltip(true);
+                          }
+                        }}
+                        onMouseLeave={() => setShowTooltip(false)}>
+                        <TSCLoadingButton
+                          variant="contained"
+                          sx={{
+                            marginRight: 2,
+                            backgroundColor: "primary"
+                          }}
+                          onClick={handleRegisterClick}
+                          disabled={isRegistered ? true : isDisabled}
+                          loading={loading}>
+                          {switchButtonVar}
+                        </TSCLoadingButton>
+                      </div>
+                    </CustomTooltip>
+
+                    <TSCButton variant="contained" color="primary" href={fetchWorkshopFiles()}>
+                      {t("workshops.details-page.download-button")}
+                    </TSCButton>
+                  </Box>
                 </>
               </Box>
             </div>
