@@ -35,6 +35,9 @@ export const getMarkersFromTextFile = async function getMarkersFromTextFile(
     // this tells us what type of column the marker is in, but not really needed atm
     // const colType = parseInt(split[3]!);
     const type = parseInt(split[4]!);
+    if (isNaN(age) || isNaN(depth) || isNaN(type)) {
+      throw new Error("Invalid file format");
+    }
 
     markers.push({
       age,
