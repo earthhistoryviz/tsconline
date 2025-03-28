@@ -1,0 +1,70 @@
+.dcc-accordion-wrapper {
+  min-width: 10vw;
+  width: 45vw;
+  max-width: 42vw;
+  overflow: auto;
+  border-radius: 4px;
+  z-index: 0;
+  padding-left: 10px;
+  height: 40vh;
+  resize: horizontal;
+  margin: 0px 19px;
+}
+.dcc-accordion-and-caption {
+  display: flex;
+  flex-direction: column;
+}
+.dcc-accordion-caption {
+  align-self: flex-end;
+  padding-right: 30px;
+}
+
+.MuiTypography-root.dcc-not-allowed {
+  color: gray;
+  font-size: 0.97rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.dcc-column-leaf {
+  margin-left: 23.2px;
+}
+
+.overlay-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+  margin: 1;
+  /* background-color: #767bb3; */
+}
+
+.empty-overlay-name {
+  opacity: 0.5;
+  border-radius: 5px;
+  background: gray;
+  margin: 1;
+}
+
+.overlay-checkbox-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.overlay-settings-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.overlay-name-and-checkbox {
+  width: 300px;
+}
+
+.overlay-settings-content {
+  align-self: flex-start;
+}

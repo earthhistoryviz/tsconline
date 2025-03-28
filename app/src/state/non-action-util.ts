@@ -3,6 +3,7 @@ import {
   DatapackMetadata,
   DatapackUniqueIdentifier,
   MapInfo,
+  DisplayedColumnTypes,
   SharedUser,
   SharedWorkshop,
   isOfficialDatapack,
@@ -173,4 +174,15 @@ export async function downloadFile(blob: Blob, filename: string) {
 // TODO: remove this when route for fetching cover image is finished
 export function getWorkshopCoverImage() {
   return TSCreatorLogo;
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }
