@@ -79,10 +79,14 @@ export const GenerateExternalChart: React.FC = () => {
             const oldestTime = parseInt(parts[0], 10);
             const newestTime = parseInt(parts[1], 10);
             if (isNaN(oldestTime) || isNaN(newestTime)) {
-              console.warn("Warning: Invalid time values in chartInfo:", chartInfo);
+              console.warn(
+                `Warning: Oldest time or newest time is NaN. Oldest time: ${oldestTime}, Newest time: ${newestTime}`
+              );
             } else {
               if (oldestTime <= newestTime) {
-                console.warn("Warning: Oldest time should be greater than newest time in chartInfo:", chartInfo);
+                console.warn(
+                  `Warning: Oldest time should be greater than newst time. Oldest time: ${oldestTime}, Newest time: ${newestTime}`
+                );
               } else {
                 actions.setBaseStageAge(oldestTime, "Ma");
                 actions.setTopStageAge(newestTime, "Ma");
@@ -90,12 +94,7 @@ export const GenerateExternalChart: React.FC = () => {
               }
             }
 
-            // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
-            const values = parts.slice(2).map((value) => {
-              const num = Number(value);
-              return isNaN(num) ? 0 : num;
-            });
-
+            const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
             const columnNames = ["Total", "New", "Extinct"];
             for (let i = 0; i < columnNames.length; i++) {
               const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${phylum}`);
@@ -103,7 +102,9 @@ export const GenerateExternalChart: React.FC = () => {
                 const [min, max] = [values[i * 2], values[i * 2 + 1]];
 
                 if (isNaN(min) || isNaN(max) || min > max) {
-                  console.error(`Error: Invalid number detected for ${columnNames[i]}-Genera ${phylum}`);
+                  console.warn(
+                    `Warning: Invalid min-max numbers detected for ${columnNames[i]}-Genera ${phylum}. Skipping...`
+                  );
                   continue;
                 }
 
@@ -111,7 +112,9 @@ export const GenerateExternalChart: React.FC = () => {
                 assertPointSettings(columnInfo.columnSpecificSettings);
                 actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
                 if (columnInfo.columnSpecificSettings.scaleStep !== stepValue) {
-                  console.warn(`Warning: scale step was not changed for ${columnNames[i]}-Genera ${phylum}`);
+                  console.warn(
+                    `Warning: scale step was not changed to ${stepValue} for ${columnNames[i]}-Genera ${phylum}`
+                  );
                 }
               }
             }
