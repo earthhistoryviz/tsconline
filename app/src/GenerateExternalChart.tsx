@@ -97,7 +97,7 @@ export const GenerateExternalChart: React.FC = () => {
             const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
             const columnNames = ["Total", "New", "Extinct"];
             for (let i = 0; i < columnNames.length; i++) {
-              const columnInfo = state.settingsTabs.columnHashMap.get(`${columnNames[i]}-Genera ${phylum}`);
+              const columnInfo = state.settingsTabs.columnHashMap.get(`${phylum} ${columnNames[i]}-Genera`);
               if (columnInfo && columnInfo.columnSpecificSettings) {
                 const [min, max] = [values[i * 2], values[i * 2 + 1]];
 
