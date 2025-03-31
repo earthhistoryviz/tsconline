@@ -52,6 +52,10 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+  - creatorUUID (text): Non-nullable, the UUID of the user who created the workshop, default is "default".
+  - regLink (text): Non-nullable, the registration link for the workshop.
+  - regRestrict (integer): Non-nullable, default is 0. 0 means no restrictions, 1 means restricted.
+  - description (text): Non-nullable, the description of the workshop.
 
 - usersWorkshops Table:
   - workshopId (integer): Non-nullable, links to the workshop table.

@@ -1250,44 +1250,6 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
-  const route = `/user/workshop/download/${workshop.workshopId}`;
-  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
-  if (!recaptchaToken) return null;
-  if (!state.isLoggedIn) {
-    pushError(ErrorCodes.NOT_LOGGED_IN);
-    return null;
-  }
-  const response = await fetcher(route, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "recaptcha-token": recaptchaToken
-    }
-  });
-  if (!response.ok) {
-    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-    switch (response.status) {
-      case 404:
-        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
-        break;
-      case 401:
-        errorCode = ErrorCodes.NOT_LOGGED_IN;
-        break;
-    }
-    displayServerError(response, errorCode, ErrorMessages[errorCode]);
-    return;
-  }
-  const file = await response.blob();
-  if (file) {
-    try {
-      await downloadFile(file, `FilesFor${workshop.title}.zip`);
-    } catch (error) {
-      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-    }
-  }
-});
-
 export const setPresetsLoading = action((loading: boolean) => {
   state.skeletonStates.presetsLoading = loading;
 });

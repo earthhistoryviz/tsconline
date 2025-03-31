@@ -8,7 +8,6 @@ import { observer } from "mobx-react-lite";
 import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
-import { NotLoggedIn } from "./NotLoggedIn";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
 
@@ -19,12 +18,10 @@ export const WorkshopDetails = observer(() => {
   const { t } = useTranslation();
   const fetchWorkshop = () => {
     if (!id) return;
-    const workshop = state.admin.workshops.find((d) => d.workshopId === Number(id));
+    const workshop = state.workshops.find((d) => d.workshopId === Number(id));
     return workshop;
   };
   const workshop = fetchWorkshop();
-  if (!state.isLoggedIn) return <NotLoggedIn />;
-  if (!workshop || !id) return <PageNotFound />;
   const shouldLoadRecaptcha = state.user.isAdmin || state.isLoggedIn;
   useEffect(() => {
     if (shouldLoadRecaptcha) loadRecaptcha();
@@ -37,7 +34,7 @@ export const WorkshopDetails = observer(() => {
       await actions.fetchWorkshopFilesForDownload(workshop);
     }
   }
-
+  if (!workshop || !id) return <PageNotFound />;
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>

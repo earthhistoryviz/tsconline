@@ -1,7 +1,9 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findUser } from "../database.js";
+import { findUser, findWorkshop } from "../database.js";
 import { verifyWorkshopValidity } from "./workshop-util.js";
+import { SharedWorkshop } from "@tsconline/shared";
+import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -24,5 +26,44 @@ export const editWorkshopDatapackMetadata = async function editWorkshopDatapackM
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
+  }
+};
+
+/**
+ * Fetch all workshops
+ * @param _request
+ * @param reply
+ * @returns
+ */
+export const fetchAllWorkshops = async function fetchAllWorkshops(_request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const workshops: SharedWorkshop[] = await Promise.all(
+      (await findWorkshop({})).map(async (workshop) => {
+        const now = new Date();
+        const start = new Date(workshop.start);
+        const end = new Date(workshop.end);
+
+        const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
+        const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
+
+        return {
+          title: workshop.title,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          workshopId: workshop.workshopId,
+          active: start <= now && now <= end,
+          regRestrict: Number(workshop.regRestrict) === 1,
+          creatorUUID: workshop.creatorUUID,
+          regLink: workshop.regLink ? workshop.regLink : "",
+          datapacks: datapacks,
+          files: files
+        };
+      })
+    );
+
+    reply.send(workshops);
+  } catch (error) {
+    console.error(error);
+    reply.status(500).send({ error: "Unknown error" });
   }
 };

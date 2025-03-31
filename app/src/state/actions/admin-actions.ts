@@ -34,6 +34,7 @@ import {
 import { State } from "../state";
 import { getMetadataFromArray } from "../non-action-util";
 import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
+import { fetchAllWorkshops } from "./workshop-actions";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -519,7 +520,7 @@ export const adminAddUsersToWorkshop = action(
             break;
           case 404:
             errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-            adminFetchWorkshops();
+            fetchAllWorkshops();
             break;
           case 409:
             errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
@@ -539,40 +540,6 @@ export const adminAddUsersToWorkshop = action(
     return { success: false, invalidEmails: "" };
   }
 );
-
-/**
- * Fetches all workshops
- */
-export const adminFetchWorkshops = action(async (options?: { signal?: AbortSignal }) => {
-  try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
-    if (!recaptchaToken) return;
-    const response = await fetcher("/admin/workshops", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      },
-      ...options
-    });
-    if (response.ok) {
-      const workshops = (await response.json()).workshops;
-      assertSharedWorkshopArray(workshops);
-      adminSetWorkshop(workshops);
-    } else {
-      displayServerError(
-        await response.json(),
-        ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED,
-        ErrorMessages[ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]
-      );
-    }
-  } catch (error) {
-    if ((error as Error).name === "AbortError") return;
-    console.error(error);
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
-    return;
-  }
-});
 
 /**
  * Creates a new workshop
@@ -614,7 +581,7 @@ export const adminCreateWorkshop = action(
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertSharedWorkshop(workshop);
-        runInAction(() => state.admin.workshops.push(workshop));
+        runInAction(() => state.workshops.push(workshop));
         return workshop.workshopId;
       } else {
         let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
@@ -649,7 +616,7 @@ export const adminEditWorkshop = action(
       pushError(ErrorCodes.INVALID_FORM);
       return null;
     }
-    const index = state.admin.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
+    const index = state.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
     if (index === -1) {
       pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
       return null;
@@ -669,7 +636,7 @@ export const adminEditWorkshop = action(
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertSharedWorkshop(workshop);
-        runInAction(() => (state.admin.workshops[index] = workshop));
+        runInAction(() => (state.workshops[index] = workshop));
         return workshop;
       } else {
         let errorCode = ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED;
@@ -691,7 +658,7 @@ export const adminEditWorkshop = action(
  * @param workshopId The ID of the workshop to delete
  */
 export const adminDeleteWorkshop = action(async (workshopId: number) => {
-  const index = state.admin.workshops.findIndex((w) => w.workshopId === workshopId);
+  const index = state.workshops.findIndex((w) => w.workshopId === workshopId);
   if (index === -1) {
     pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
     return;
@@ -709,7 +676,7 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
       credentials: "include"
     });
     if (response.ok) {
-      runInAction(() => state.admin.workshops.splice(index, 1));
+      runInAction(() => state.workshops.splice(index, 1));
       pushSnackbar("Workshop deleted successfully", "success");
     } else {
       displayServerError(
@@ -813,7 +780,7 @@ export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: numb
 });
 
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
-  state.admin.workshops = workshop;
+  state.workshops = workshop;
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
@@ -943,7 +910,7 @@ export const adminAddFilesToWorkshop = action(async (workshopId: number, files: 
           break;
         case 404:
           errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-          adminFetchWorkshops();
+          fetchAllWorkshops();
           break;
       }
       displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
@@ -988,7 +955,7 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
           break;
         case 404:
           errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-          adminFetchWorkshops();
+          fetchAllWorkshops();
           break;
         case 415:
           errorCode = ErrorCodes.INVALID_FILE_FORMAT;
