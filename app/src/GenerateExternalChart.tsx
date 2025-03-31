@@ -111,11 +111,6 @@ export const GenerateExternalChart: React.FC = () => {
                 const stepValue = Math.floor((max - min) / 20);
                 assertPointSettings(columnInfo.columnSpecificSettings);
                 actions.setPointColumnSettings(columnInfo.columnSpecificSettings, { scaleStep: stepValue });
-                if (columnInfo.columnSpecificSettings.scaleStep !== stepValue) {
-                  console.warn(
-                    `Warning: scale step was not changed to ${stepValue} for ${columnNames[i]}-Genera ${phylum}`
-                  );
-                }
               }
             }
           } else {
