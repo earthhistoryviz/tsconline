@@ -32,7 +32,6 @@ import {
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
-import { isDevServer } from "../constants";
 import { useNavigate } from "react-router";
 
 export const Datapacks = observer(function Datapacks() {
