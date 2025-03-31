@@ -1,5 +1,4 @@
 import fastify, { FastifyInstance } from "fastify";
-import { autoPlotPoints, convertCrossPlot } from "../src/crossplot/crossplot-routes";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
@@ -8,6 +7,7 @@ import * as util from "../src/util";
 import * as extractMarkers from "../src/crossplot/extract-markers";
 import * as types from "../src/types";
 import * as errorLogger from "../src/error-logger";
+import { crossPlotRoutes } from "../src/crossplot/crossplot-auth";
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -19,6 +19,16 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("../src/types", async () => {
   return {
     isOperationResult: vi.fn().mockReturnValue(false)
+  };
+});
+vi.mock("../src/database", async () => {
+  return {
+    findUser: vi.fn().mockResolvedValue([
+      {
+        uuid: "test",
+        isAdmin: false
+      }
+    ])
   };
 });
 
@@ -71,11 +81,22 @@ const request = {
   datapackTitle: "test",
   uuid: "test"
 };
+const headers = { "mock-uuid": "test" };
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
-  app.post("/crossplot/convert", convertCrossPlot);
-  app.post("/crossplot/autoplot", autoPlotPoints);
+  await app.register(crossPlotRoutes);
+  app.addHook("onRequest", async (request, _reply) => {
+    request.session = {
+      ...request.session,
+      get: (key: string) => {
+        if (key === "uuid") {
+          return request.headers["mock-uuid"];
+        }
+        return null;
+      }
+    };
+  });
   await app.listen({ host: "localhost", port: 1210 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -102,6 +123,7 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: { invalid: "request" }
     });
     expect(response.statusCode).toEqual(400);
@@ -111,7 +133,8 @@ describe("convertCrossplot", async () => {
     setupConversionDirectory.mockResolvedValueOnce("success");
     const response = await app.inject({
       method: "POST",
-      url
+      url,
+      headers
     });
     expect(response.statusCode).toEqual(200);
     expect(response.rawPayload).toEqual(Buffer.from("success"));
@@ -121,7 +144,8 @@ describe("convertCrossplot", async () => {
     isOperationResult.mockReturnValueOnce(true);
     const response = await app.inject({
       method: "POST",
-      url
+      url,
+      headers
     });
     expect(response.statusCode).toEqual(500);
     expect(response.json()).toEqual({ error: "Conversion failed" });
@@ -131,6 +155,7 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -141,6 +166,7 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(convertCrossplotWithModelsInJar).toHaveBeenCalledOnce();
@@ -174,6 +200,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: { invalid: "request" }
     });
     expect(response.statusCode).toEqual(400);
@@ -187,6 +214,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -200,6 +228,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
@@ -218,6 +247,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(autoPlotPointsWithJar).not.toHaveBeenCalled();
@@ -229,6 +259,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
@@ -242,6 +273,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -257,6 +289,7 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
+      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(200);
