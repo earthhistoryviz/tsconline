@@ -253,8 +253,7 @@
             "Warnings": "Warnings",
             "Load/Save": "Load/Save",
             "xAxis": "X Axis (Age-only)",
-            "yAxis": "Y Axis (Age/Depth)",
-            "Overlay": "Overlay"
+            "yAxis": "Y Axis (Age/Depth)"
         },
         "settings": {
             "time": {
