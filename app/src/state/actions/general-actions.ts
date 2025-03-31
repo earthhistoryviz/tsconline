@@ -43,7 +43,7 @@ import {
   searchEvents
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
-import { displayServerError, downloadFiles } from "./util-actions";
+import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -137,8 +137,8 @@ export const fetchPublicOfficialDatapack = action(
   }
 );
 
-export const fetchDatapackFilesForDownload = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
-  const recaptchaToken = await getRecaptchaToken("fetchDatapackFilesForDownload");
+export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+  const recaptchaToken = await getRecaptchaToken("fetchDatapackFiles");
   if (!recaptchaToken) return null;
   try {
     const response = await fetcher(
@@ -152,21 +152,10 @@ export const fetchDatapackFilesForDownload = action(async (datapackTitle: string
       }
     );
     const file = await response.blob();
-    let fileURL = "";
     if (response.ok) {
       if (file) {
         try {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          await new Promise((resolve, reject) => {
-            reader.onloadend = resolve;
-            reader.onerror = reject;
-          });
-          if (typeof reader.result !== "string") {
-            throw new Error("Invalid File");
-          }
-          fileURL = reader.result;
-          await downloadFiles(fileURL, `FilesFor${datapackTitle}.zip`);
+          await downloadFile(file, `FilesFor${datapackTitle}.zip`);
         } catch (e) {
           pushError(ErrorCodes.INVALID_PATH);
         }
@@ -353,13 +342,11 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("hasFiles", String(metadata.hasFiles));
     if (pdfFiles?.length) {
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
-      formData.append("hasFiles", "true");
-    } else {
-      formData.append("hasFiles", "false");
     }
 
     formData.append("priority", String(metadata.priority));

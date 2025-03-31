@@ -94,15 +94,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };
-  const downloadDatapackFilesZipParams = {
-    type: "object",
-    properties: {
-      datapackTitle: { type: "string" },
-      uuid: { type: "string" },
-      isPublic: { type: "boolean" }
-    },
-    required: ["datapackTitle", "uuid", "isPublic"]
-  };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
