@@ -13,7 +13,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
-import { checkIfDataIsInRange } from "../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
 import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
@@ -21,6 +21,7 @@ import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
+import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -138,6 +139,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       </div>
     );
   }
+
   // for keeping the selected column hierarchy line highlighted
   const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
     ? { opacity: 1 }
@@ -185,14 +187,20 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
-  const dataInrange = checkIfDataIsInRange(
-    column.minAge,
-    column.maxAge,
-    state.settings.timeSettings[column.units]?.topStageAge || 0,
-    state.settings.timeSettings[column.units]?.baseStageAge || 0
-  );
+  const dataInRange = checkIfDccColumn(column)
+    ? checkIfDccDataIsInRange(
+        column,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
+    : checkIfDataIsInRange(
+        column.minAge,
+        column.maxAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      );
   const tooltipOrCheckBox =
-    !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
+    !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip
         title={t("settings.column.tooltip.not-in-range")}
         placement="top"

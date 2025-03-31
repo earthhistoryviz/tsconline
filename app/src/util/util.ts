@@ -1,5 +1,28 @@
-import { ColumnInfo, RGB } from "@tsconline/shared";
+import { ColumnInfo, RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import Color from "color";
+import { dualColCompPrefix } from "./constant";
+
+/**
+ * removes the prefix of a column id in the tsc format
+ * ex. "class datastore.EventColumn:Miocene-Paleocene Oxy-18 events" -> "Miocene-Paleocene Oxy-18 events"
+ * @param name
+ * @returns
+ */
+
+export function discardTscPrefix(name: string | null) {
+  if (!name) {
+    return "";
+  }
+  //doesn't have colon delimiter
+  if (name.split(":").length < 2) {
+    return name;
+  }
+  return name.split(":")[1];
+}
+
+export function prependDualColCompColumnName(text: string): string {
+  return dualColCompPrefix + text;
+}
 
 /**
  * Returns if the datapoint range (minDataAge, maxDataAge) is inside the user selected range of (userTopAge, userBaseAge)
@@ -23,6 +46,19 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
     return true;
   }
   return (minDataAge > userTopAge && minDataAge < userBaseAge) || (maxDataAge < userBaseAge && maxDataAge > userTopAge);
+}
+
+export function checkIfDccColumn(column: ColumnInfo) {
+  if (column.columnDisplayType === "Event") {
+    assertEventSettings(column.columnSpecificSettings);
+  } else if (column.columnDisplayType === "Point") {
+    assertPointSettings(column.columnSpecificSettings);
+  } else {
+    return false;
+  }
+  if (column.columnSpecificSettings.dualColCompColumnRef) {
+    return true;
+  }
 }
 
 export const willColumnBeVisibleOnChart = (column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>): boolean => {

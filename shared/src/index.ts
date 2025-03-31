@@ -27,6 +27,14 @@ export type ConvertCrossPlotRequest = {
   settings: string;
 };
 
+export type AutoPlotRequest = {
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[]; // require at least 2
+  settings: string;
+};
+export type AutoPlotResponse = {
+  markers: AutoPlotMarker[];
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -626,12 +634,90 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export type Marker = {
+  selected: boolean;
+  id: string;
+  element: SVGRectElement;
+  age: number; // this allows for users to empty the age field
+  depth: number; // this allows for users to empty the depth field
+  x: number; // the actual pos with no rounding
+  y: number; // the actual pos with no rounding
+  color: string;
+  comment: string;
+  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
+  line: SVGLineElement;
+};
+
+export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
+
+export type Model = Omit<Marker, "type" | "line"> & {
+  type: "Rect" | "Circle";
+};
+
+export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
+export const modelTypes = ["Rect", "Circle"];
+
+export function getMarkerTypeFromNum(num: number): Marker["type"] {
+  if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {
+    throw new Error(`Invalid marker type number: ${num}`);
+  }
+  return markerTypes[num - 1] as Marker["type"];
+}
+export function isMarkerType(value: string): value is Marker["type"] {
+  return markerTypes.includes(value);
+}
+export function isModelType(value: string): value is Model["type"] {
+  return modelTypes.includes(value);
+}
+
+export function isAutoPlotMarkerArray(o: any): o is AutoPlotMarker[] {
+  return Array.isArray(o) && o.every(isAutoPlotMarker);
+}
+export function isAutoPlotMarker(o: any): o is AutoPlotMarker {
+  return (
+    o &&
+    typeof o === "object" &&
+    typeof o.id === "string" &&
+    typeof o.age === "number" &&
+    typeof o.depth === "number" &&
+    typeof o.color === "string" &&
+    typeof o.comment === "string" &&
+    typeof o.type === "string"
+  );
+}
+export function assertAutoPlotResponse(o: any): asserts o is AutoPlotResponse {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotResponse must be a non-null object");
+  if (!Array.isArray(o.markers)) throwError("AutoPlotResponse", "markers", "array", o.markers);
+  for (const marker of o.markers) {
+    assertAutoPlotMarker(marker);
+  }
+}
+export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotMarker must be a non-null object");
+  if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
+  if (typeof o.age !== "number") throwError("AutoPlotMarker", "age", "number", o.age);
+  if (typeof o.depth !== "number") throwError("AutoPlotMarker", "depth", "number", o.depth);
+  if (typeof o.color !== "string") throwError("AutoPlotMarker", "color", "string", o.color);
+  if (typeof o.comment !== "string") throwError("AutoPlotMarker", "comment", "string", o.comment);
+  if (typeof o.type !== "string") throwError("AutoPlotMarker", "type", "string", o.type);
+}
+
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   o: DatapackConfigForChartRequest
 ): DatapackUniqueIdentifier {
   return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
 }
 
+export function assertAutoPlotRequest(o: any): asserts o is AutoPlotRequest {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotRequest must be a non-null object");
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
+  if (o.datapackUniqueIdentifiers.length < 2) {
+    throw new Error("AutoPlotRequest must have at least 2 datapackUniqueIdentifiers");
+  }
+  if (typeof o.settings !== "string") throwError("AutoPlotRequest", "settings", "string", o.settings);
+}
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
   for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
@@ -843,11 +929,11 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
       "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
       o.dataMiningPointDataType
     );
-  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
-    throwError("PointSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  if (o.dualColCompColumnRef != null && typeof o.dualColCompColumnRef !== "string") {
+    throwError("PointSettings", "dualColCompColumnRef", "string or null", o.dualColCompColumnRef);
   }
-  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
-    throwError("PointSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string") {
+    throwError("PointSettings", "drawDualColCompColumn", "string or null", o.drawDualColCompColumn);
   }
   assertDataMiningSettings(o);
 }
@@ -903,11 +989,11 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
     );
   if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
     throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
-  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
-    throwError("EventSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  if (o.dualColCompColumnRef != null && typeof o.dualColCompColumnRef !== "string") {
+    throwError("PointSettings", "dualColCompColumnRef", "string or null", o.dualColCompColumnRef);
   }
-  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
-    throwError("EventSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string") {
+    throwError("PointSettings", "drawDualColCompColumn", "string or null", o.drawDualColCompColumn);
   }
   assertDataMiningSettings(o);
 }

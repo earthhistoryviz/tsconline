@@ -31,7 +31,6 @@ import {
   assertZoneSettings,
   calculateAutoScale,
   convertPointTypeToPointShape,
-  defaultEventSettings,
   defaultPointSettings,
   isDataMiningChronDataType,
   isDataMiningPointDataType,
@@ -52,17 +51,13 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import { findSerialNum } from "../../util/util";
+import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
 }
 function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
-}
-
-function prependDualColCompColumnName(text: string): string {
-  return "Overlay for " + text;
 }
 
 function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
@@ -579,12 +574,21 @@ export const setColumnSelected = action((name: string) => {
   const column = state.settingsTabs.columnHashMap.get(name);
   setColumnMenuTabValue(0);
   setColumnMenuTabs(["General", "Font"]);
-  if (column && (column.columnDisplayType === "Event" || column.columnDisplayType === "Chron")) {
-    setColumnMenuTabs(["General", "Font", "Data Mining"]);
-  } else if (column && column.columnDisplayType === "Point") {
-    setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining"]);
-  } else setColumnMenuTabs(["General", "Font"]);
-  if (!column) {
+  if (column) {
+    switch (column.columnDisplayType) {
+      case "Chron":
+        setColumnMenuTabs(["General", "Font", "Data Mining"]);
+        break;
+      case "Event":
+        setColumnMenuTabs(["General", "Font", "Data Mining", "Overlay"]);
+        break;
+      case "Point":
+        setColumnMenuTabs(["General", "Font", "Curve Drawing", "Data Mining", "Overlay"]);
+        break;
+      default:
+        setColumnMenuTabs(["General", "Font"]);
+    }
+  } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
 });
@@ -642,6 +646,11 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   searchColumnsAbortController = null;
 });
 
+/**
+ * adds a dual col comp / overlay column. The properties of the given column are copied over.
+ * the minAge and maxAge are set to the minAge and maxAge of the overlay for time checking purposes.
+ */
+
 export const addDualColCompColumn = action((column: ColumnInfo) => {
   if (column.columnDisplayType === "Event") {
     assertEventSettings(column.columnSpecificSettings);
@@ -677,11 +686,24 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     );
     return;
   }
-  const dualColCompColumnName = prependDualColCompColumnName(column.editName);
+  const overlayColumn = state.settingsTabs.columnHashMap.get(
+    discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn)
+  );
+  if (!overlayColumn) {
+    console.warn(
+      "WARNING: tried to get",
+      discardTscPrefix(column.columnSpecificSettings.drawDualColCompColumn),
+      "in state.settingsTabs.columnHashMap, but is undefined"
+    );
+    return;
+  }
+  const dualColCompColumnName = prependDualColCompColumnName(column.name);
   const dualColCompColumn: ColumnInfo = observable({
     ...cloneDeep(column),
     name: dualColCompColumnName,
     editName: dualColCompColumnName,
+    minAge: overlayColumn.minAge,
+    maxAge: overlayColumn.maxAge,
     enableTitle: true,
     rgb: {
       r: 255,
@@ -691,14 +713,18 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
   });
   if (column.columnDisplayType === "Event") {
     dualColCompColumn.columnDisplayType = "Event";
+    assertEventSettings(column.columnSpecificSettings);
     dualColCompColumn.columnSpecificSettings = {
-      ...cloneDeep(defaultEventSettings),
+      ...cloneDeep(column.columnSpecificSettings),
+      drawDualColCompColumn: null,
       dualColCompColumnRef: column.name
     };
   } else if (column.columnDisplayType === "Point") {
     dualColCompColumn.columnDisplayType = "Point";
+    assertPointSettings(column.columnSpecificSettings);
     dualColCompColumn.columnSpecificSettings = {
-      ...cloneDeep(defaultPointSettings),
+      ...cloneDeep(column.columnSpecificSettings),
+      drawDualColCompColumn: null,
       dualColCompColumnRef: column.name
     };
   }
