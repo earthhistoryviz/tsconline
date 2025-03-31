@@ -26,6 +26,6 @@ export const crossPlotRoutes = async (fastify: FastifyInstance, _options: Regist
     timeWindow: "1 minute"
   };
   fastify.addHook("preHandler", verifySession);
-  fastify.post("/crossplot/convert", { config: { rateLimit: looseRateLimit } }, convertCrossPlot);
-  fastify.post("/crossplot/autoplot", { config: { rateLimit: looseRateLimit } }, autoPlotPoints);
+  fastify.post("/convert", { config: { rateLimit: looseRateLimit } }, convertCrossPlot);
+  fastify.post("/autoplot", { config: { rateLimit: looseRateLimit } }, autoPlotPoints);
 };
