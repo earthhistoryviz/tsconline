@@ -104,7 +104,7 @@ beforeAll(async () => {
 });
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/crossplot/convert" },
-  { method: "POST", url: "/crossplot/autoplot" },
+  { method: "POST", url: "/crossplot/autoplot" }
 ];
 
 afterAll(async () => {
