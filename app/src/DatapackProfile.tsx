@@ -36,7 +36,8 @@ import {
   isDatapackTypeString,
   isUserDatapack,
   isOfficialDatapack,
-  checkUserAllowedDownloadDatapack
+  checkUserAllowedDownloadDatapack,
+  getUUIDOfDatapackType
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -60,7 +61,6 @@ import { Public, FileUpload, Lock } from "@mui/icons-material";
 import { checkDatapackValidity, displayServerError } from "./state/actions/util-actions";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { loadRecaptcha, removeRecaptcha } from "./util";
-import { getDatapackOfficialOrUUID } from "./util/util";
 
 const SetDatapackContext = createContext<(datapack: Datapack) => void>(() => {});
 
@@ -387,7 +387,9 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
 
   function downloadDatapackFiles() {
     if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
-      actions.fetchDatapackFilesForDownload(datapack.title, getDatapackOfficialOrUUID(datapack), datapack.isPublic);
+      actions.fetchDatapackFiles(datapack.title, getUUIDOfDatapackType(datapack), datapack.isPublic);
+    } else {
+      actions.pushSnackbar("You are not allowed to download this datapack's pdfs.", "warning");
     }
   }
 

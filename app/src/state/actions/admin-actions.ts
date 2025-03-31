@@ -358,6 +358,9 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
+      formData.append("hasFiles", "true");
+    } else {
+      formData.append("hasFiles", "false");
     }
     try {
       const response = await fetcher(`/admin/official/datapack`, {
