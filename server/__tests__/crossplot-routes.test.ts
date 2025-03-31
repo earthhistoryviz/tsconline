@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance } from "fastify";
+import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
@@ -8,6 +8,7 @@ import * as extractMarkers from "../src/crossplot/extract-markers";
 import * as types from "../src/types";
 import * as errorLogger from "../src/error-logger";
 import { crossPlotRoutes } from "../src/crossplot/crossplot-auth";
+import * as database from "../src/database";
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -85,7 +86,7 @@ const headers = { "mock-uuid": "test" };
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
-  await app.register(crossPlotRoutes);
+  await app.register(crossPlotRoutes, { prefix: "/crossplot" });
   app.addHook("onRequest", async (request, _reply) => {
     request.session = {
       ...request.session,
@@ -101,9 +102,56 @@ beforeAll(async () => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
+const routes: { method: HTTPMethods; url: string; body?: object }[] = [
+  { method: "POST", url: "/crossplot/convert" },
+  { method: "POST", url: "/crossplot/autoplot" },
+];
 
 afterAll(async () => {
   await app.close();
+});
+describe("verifySession tests", () => {
+  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+    const findUser = vi.spyOn(database, "findUser");
+    beforeEach(() => {
+      findUser.mockClear();
+    });
+    it("should reply 401 when uuid is not found in session", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers: { "recaptcha-token": "mock-token", "mock-uuid": "" },
+        payload: body
+      });
+      expect(findUser).not.toHaveBeenCalled();
+      expect(response.statusCode).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    });
+    it("should reply 401 when user is not found in database", async () => {
+      findUser.mockResolvedValueOnce([]);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(findUser).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(401);
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    });
+    it("should reply 500 when an error occurred in database", async () => {
+      findUser.mockRejectedValueOnce(new Error("Database error"));
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url,
+        headers,
+        payload: body
+      });
+      expect(findUser).toHaveBeenCalledOnce();
+      expect(response.statusCode).toBe(500);
+      expect(await response.json()).toEqual({ error: "Database error" });
+    });
+  });
 });
 describe("convertCrossplot", async () => {
   beforeEach(() => {
