@@ -21,9 +21,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const theme = useTheme();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   if (state.isLoggedIn) {
-    return (
-      <NotLoggedIn/>
-    )
+    return <NotLoggedIn />;
   }
   return (
     <>
