@@ -34,7 +34,7 @@ import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
-import * as crossPlotRoutes from "./routes/crossplot-routes.js";
+import * as crossPlotRoutes from "./crossplot/crossplot-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
