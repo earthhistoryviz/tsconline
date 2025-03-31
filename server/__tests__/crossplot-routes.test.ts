@@ -1,5 +1,5 @@
 import fastify, { FastifyInstance } from "fastify";
-import { autoPlotPoints, convertCrossPlot } from "../src/routes/crossplot-routes";
+import { autoPlotPoints, convertCrossPlot } from "../src/crossplot/crossplot-routes";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
