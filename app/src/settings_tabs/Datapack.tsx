@@ -159,7 +159,7 @@ export const Datapacks = observer(function Datapacks() {
           {t("button.confirm-selection")}
         </TSCButton>
       </Box>
-      {isDevServer && (
+      {state.isLoggedIn && (
         <TSCButton
           onClick={() => {
             navigate("/crossplot");

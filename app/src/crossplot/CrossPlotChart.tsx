@@ -11,6 +11,7 @@ import ModelsIcon from "../assets/icons/model=model.svg";
 import { ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
 import { TSCDialogLoader } from "../components";
+import { NotLoggedIn } from "../NotLoggedIn";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 
@@ -19,6 +20,11 @@ export const CrossPlotChart: React.FC = observer(() => {
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+  if (state.isLoggedIn) {
+    return (
+      <NotLoggedIn/>
+    )
+  }
   return (
     <>
       <ChartContext.Provider
