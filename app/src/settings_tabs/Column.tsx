@@ -21,7 +21,6 @@ import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 
 // column with generate button, and accordion columns
