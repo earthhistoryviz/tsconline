@@ -44,6 +44,14 @@ vi.mock("../src/user/fetch-user-files", async () => {
   };
 });
 
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
+
 const mockUUID = "1234";
 const mockUploadDir = "/testdir/uploadDirectory";
 const baseHistoryPath = join(mockUploadDir, "private", mockUUID, "history");
@@ -54,8 +62,6 @@ describe("chartHistory tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(parseInt(mockTimestamp));
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
   describe("isValidEpoch", () => {
