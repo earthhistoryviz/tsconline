@@ -17,7 +17,6 @@ import {
   assertDatapackPriorityUpdateSuccess,
   assertOfficialDatapack,
   assertSharedWorkshop,
-  assertSharedWorkshopArray,
   assertWorkshopDatapack,
   isServerResponseError
 } from "@tsconline/shared";

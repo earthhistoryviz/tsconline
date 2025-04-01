@@ -33,12 +33,9 @@ import {
   SharedWorkshop,
   assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
-  assertSharedWorkshop,
-  assertSharedWorkshopArray
+  assertSharedWorkshop
 } from "@tsconline/shared";
 import {
-  getWorkshopDatapacksNames,
-  getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
   uploadFilesToWorkshop

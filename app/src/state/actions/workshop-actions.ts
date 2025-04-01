@@ -26,7 +26,7 @@ export const fetchAllWorkshops = action(async () => {
 });
 
 export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
-  const route = `/user/workshop/download/${workshop.workshopId}`;
+  const route = `/workshop/download/${workshop.workshopId}`;
   const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
   if (!recaptchaToken) return null;
   if (!state.isLoggedIn) {
@@ -44,10 +44,13 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
     switch (response.status) {
       case 404:
-        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
         break;
       case 401:
         errorCode = ErrorCodes.NOT_LOGGED_IN;
+        break;
+      case 403:
+        errorCode = ErrorCodes.WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED;
         break;
     }
     displayServerError(response, errorCode, ErrorMessages[errorCode]);

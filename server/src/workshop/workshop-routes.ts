@@ -1,9 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findUser, findWorkshop } from "../database.js";
-import { verifyWorkshopValidity } from "./workshop-util.js";
+import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { findUser, findWorkshop, isUserInWorkshop } from "../database.js";
+import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
 import { SharedWorkshop } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
+import path from "node:path";
+import { readFile } from "fs/promises";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { verifyNonExistentFilepath } from "../util.js";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -65,5 +69,68 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
+  }
+};
+
+export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { workshopId } = request.params;
+  if (!workshopId) {
+    reply.status(400).send({ error: "Missing workshopId" });
+    return;
+  }
+  // user exists, already verified in verifyAuthority
+  const user = (await findUser({ uuid }))[0]!;
+  if (!user.isAdmin && !isUserInWorkshop(user.userId, workshopId)) {
+    reply.status(403).send({ error: "Unauthorized access" });
+    return;
+  }
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
+  let filesFolder;
+  try {
+    filesFolder = await getWorkshopFilesPath(directory);
+  } catch (error) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
+  if (!(await verifyNonExistentFilepath(zipfile))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  try {
+    let file;
+
+    // Check if ZIP file already exists
+    try {
+      file = await readFile(zipfile);
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
+    }
+
+    // If ZIP file doesn't exist, create one
+    if (!file) {
+      file = await createZipFile(zipfile, filesFolder);
+    }
+    reply.send(file);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "Failed to process the file" });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
   }
 };

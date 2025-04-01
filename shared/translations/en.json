@@ -182,7 +182,8 @@
                 "messages": {
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available"
-                }
+                },
+                "download-tooltip-not-registered": "Please register for the workshop to download the files."
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",
@@ -596,8 +597,10 @@
             "ADMIN_ADD_FILES_TO_WORKSHOP_FAILED": "Failed to add files to workshop",
             "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
             "INVALID_FILE_FORMAT": "Invalid file format.",
-            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
-            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later."
+            "WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
+            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
+            "WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED": "Please register for the workshop to download the file.",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
         },
         "button": {
             "generate": "Generate",

@@ -17,8 +17,7 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray,
-  SharedWorkshop
+  assertDatapackMetadataArray
 } from "@tsconline/shared";
 
 import {
