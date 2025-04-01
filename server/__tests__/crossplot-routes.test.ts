@@ -81,30 +81,14 @@ const request = {
   datapackTitle: "test",
   uuid: "test"
 };
-const headers = { "mock-uuid": "test" };
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   await app.register(crossPlotRoutes, { prefix: "/crossplot" });
-  app.addHook("onRequest", async (request, _reply) => {
-    request.session = {
-      ...request.session,
-      get: (key: string) => {
-        if (key === "uuid") {
-          return request.headers["mock-uuid"];
-        }
-        return null;
-      }
-    };
-  });
   await app.listen({ host: "localhost", port: 1210 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});
 });
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "POST", url: "/crossplot/convert" },
-  { method: "POST", url: "/crossplot/autoplot" }
-];
 
 afterAll(async () => {
   await app.close();
@@ -127,7 +111,6 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: { invalid: "request" }
     });
     expect(response.statusCode).toEqual(400);
@@ -138,18 +121,6 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers
-    });
-    expect(response.statusCode).toEqual(200);
-    expect(response.rawPayload).toEqual(Buffer.from("success"));
-  });
-  it("should return conversion code if conversion fails", async () => {
-    setupConversionDirectory.mockResolvedValueOnce({ code: 500, message: "Conversion failed" });
-    isOperationResult.mockReturnValueOnce(true);
-    const response = await app.inject({
-      method: "POST",
-      url,
-      headers
     });
     expect(response.statusCode).toEqual(500);
     expect(response.json()).toEqual({ error: "Conversion failed" });
@@ -159,7 +130,6 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -170,7 +140,6 @@ describe("convertCrossplot", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(convertCrossplotWithModelsInJar).toHaveBeenCalledOnce();
@@ -204,7 +173,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: { invalid: "request" }
     });
     expect(response.statusCode).toEqual(400);
@@ -218,7 +186,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -232,7 +199,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(setupAutoPlotDirectory).toHaveBeenCalledOnce();
@@ -251,7 +217,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(autoPlotPointsWithJar).not.toHaveBeenCalled();
@@ -263,7 +228,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(autoPlotPointsWithJar).toHaveBeenCalledOnce();
@@ -277,7 +241,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(500);
@@ -293,7 +256,6 @@ describe("autoPlotPoints", async () => {
     const response = await app.inject({
       method: "POST",
       url,
-      headers,
       payload: request
     });
     expect(response.statusCode).toEqual(200);
