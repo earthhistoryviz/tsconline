@@ -246,6 +246,7 @@
             "General": "General",
             "Data Mining": "Data Mining",
             "Curve Drawing": "Curve Drawing",
+            "Overlay": "Overlay",
             "About": "About",
             "View Data": "View Data",
             "Discussion": "Discussion",
@@ -372,6 +373,15 @@
                     "curve-gradient": "Curve Gradient",
                     "start": "Start",
                     "end": "End"
+                },
+                "overlay-menu": {
+                    "title": "Overlay Settings",
+                    "display-overlay": "Display Overlay",
+                    "overlay-column-header": "Overlaying",
+                    "overlay-column-preposition": "On",
+                    "overlay-accordion-caption": "*Grayed out columns are disabled for Overlay (not Event or Point column)",
+                    "invalid-column-mouseover": "Not an Event or Point Column",
+                    "column-not-selected": "Select Column from Menu"
                 }
             },
             "search": {

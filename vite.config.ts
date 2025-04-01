@@ -37,7 +37,9 @@ export default defineConfig({
         "server/src/error-logger.ts": thresholdConfig,
         "server/src/crossplot-handler.ts": thresholdConfig,
         "server/src/routes/crossplot-routes.ts": thresholdConfig,
-        "server/src/user/chart-history.ts": thresholdConfig
+        "server/src/user/chart-history.ts": thresholdConfig,
+        "server/src/crossplot/extract-markers.ts": thresholdConfig,
+        "server/src/crossplot/crossplot-handler.ts": thresholdConfig
         // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig,
       },

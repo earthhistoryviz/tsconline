@@ -104,6 +104,7 @@ export type AssetConfig = {
   publicDatapacksDirectory: string;
   translationFilepath: string;
   modelConversionCacheDirectory: string;
+  autoPlotCacheDirectory: string;
 };
 
 export type Colors = {
@@ -175,6 +176,7 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.translationFilepath !== "string") throw 'AssetConfig must have a "translationFilepath" string';
   if (typeof o.modelConversionCacheDirectory !== "string")
     throw 'AssetConfig must have a "modelConversionCacheDirectory" string';
+  if (typeof o.autoPlotCacheDirectory !== "string") throw 'AssetConfig must have a "autoPlotCacheDirectory" string';
 }
 
 export function isAccountType(o: any): o is AccountType {
