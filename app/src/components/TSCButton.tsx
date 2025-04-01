@@ -1,4 +1,7 @@
+import "@szhsin/react-menu/dist/index.css";
+import "@szhsin/react-menu/dist/transitions/slide.css";
 import {
+  Box,
   Button,
   ButtonGroup,
   ButtonGroupProps,
@@ -8,13 +11,16 @@ import {
   MenuItem,
   MenuList,
   Paper,
-  Popper
+  Popper,
+  Typography
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { createGradient } from "../util/util";
 import { forwardRef, useRef, useState } from "react";
 import { ArrowDropDown } from "@mui/icons-material";
 import React from "react";
+import { ControlledMenu, useClick, useHover, useMenuState } from "@szhsin/react-menu";
+import { TSCMenuItem } from "./TSCComponents";
 
 type TSCButtonProps = {
   buttonType?: "primary" | "secondary" | "gradient";
@@ -62,9 +68,9 @@ type TSCSplitButtonProps = {
 } & ButtonGroupProps;
 
 export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonType, ...props }) => {
-  const [open, setOpen] = useState(false);
+  const [menuState, toggleMenu] = useMenuState({ transition: true });
+  const anchorProps = useClick(menuState.state, toggleMenu);
   const anchorRef = useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const color =
@@ -73,26 +79,6 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
         : gradient;
-  const handleClick = () => {
-    options[selectedIndex].onClick();
-  };
-  const handleMenuItemClick = (event: React.MouseEvent<HTMLLIElement, MouseEvent>, index: number) => {
-    setSelectedIndex(index);
-    setOpen(false);
-  };
-
-  const handleToggle = () => {
-    setOpen((prevOpen) => !prevOpen);
-  };
-
-  const handleClose = (event: Event) => {
-    if (anchorRef.current && anchorRef.current.contains(event.target as HTMLElement)) {
-      return;
-    }
-
-    setOpen(false);
-  };
-
   return (
     <>
       <ButtonGroup
@@ -106,54 +92,46 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
             background: color["dark"]
           }
         }}
-        variant="contained"
         ref={anchorRef}
+        variant="contained"
         aria-label="Button group with a nested menu"
-        {...props}>
+        {...props}
+        {...anchorProps}>
         <Button
           disableRipple
           color="inherit"
           sx={{
             background: "transparent"
-          }}
-          onClick={handleClick}>
-          {options[selectedIndex].label}
+          }}>
+          {options[0].label}
         </Button>
         <Button
           size="small"
           disableRipple
           sx={{
             background: "transparent"
-          }}
-          onClick={handleToggle}>
+          }}>
           <ArrowDropDown />
         </Button>
       </ButtonGroup>
-      <Popper sx={{ zIndex: 1 }} open={open} anchorEl={anchorRef.current} role={undefined} transition disablePortal>
-        {({ TransitionProps, placement }) => (
-          <Grow
-            {...TransitionProps}
-            style={{
-              transformOrigin: placement === "bottom" ? "center top" : "center bottom"
-            }}>
-            <Paper>
-              <ClickAwayListener onClickAway={handleClose}>
-                <MenuList id="split-button-menu" autoFocusItem>
-                  {options.map(({ label }, index) => (
-                    <MenuItem
-                      key={label}
-                      disabled={index === 2}
-                      selected={index === selectedIndex}
-                      onClick={(event) => handleMenuItemClick(event, index)}>
-                      {label}
-                    </MenuItem>
-                  ))}
-                </MenuList>
-              </ClickAwayListener>
-            </Paper>
-          </Grow>
-        )}
-      </Popper>
+      <ControlledMenu
+        {...menuState}
+        anchorRef={anchorRef}
+        className="settings-sub-menu"
+        direction={"top"}
+        align="center"
+        menuStyle={{
+          color: theme.palette.dark.contrastText,
+          backgroundColor: theme.palette.dark.light,
+          border: `1px solid ${theme.palette.divider}`
+        }}
+        onClose={() => toggleMenu(false)}>
+        {options.map(({ label, onClick }) => (
+          <TSCMenuItem key={label} className="settings-sub-menu-item" onClick={onClick}>
+            <Typography>{label}</Typography>
+          </TSCMenuItem>
+        ))}
+      </ControlledMenu>
     </>
   );
 };
