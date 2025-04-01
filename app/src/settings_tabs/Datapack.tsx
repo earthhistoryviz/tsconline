@@ -158,7 +158,7 @@ export const Datapacks = observer(function Datapacks() {
           {t("button.confirm-selection")}
         </TSCButton>
       </Box>
-      {state.isLoggedIn && (
+      
         <TSCButton
           onClick={() => {
             navigate("/crossplot");
@@ -166,7 +166,6 @@ export const Datapacks = observer(function Datapacks() {
           }}>
           {t("crossPlot.create-datapack")}
         </TSCButton>
-      )}
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm
           close={() => setFormOpen(false)}
