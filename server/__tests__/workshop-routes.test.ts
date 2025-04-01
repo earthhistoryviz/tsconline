@@ -25,7 +25,7 @@ vi.mock("../src/workshop/workshop-util", async (importOriginal) => {
   return {
     ...original,
     verifyWorkshopValidity: vi.fn().mockResolvedValue({ code: 200, message: "success" }),
-    getWorkshopFilesPath: vi.fn().mockResolvedValue("/tmp/fake-files-folder"),
+    getWorkshopFilesPath: vi.fn().mockResolvedValue("/tmp/fake-files-folder")
   };
 });
 vi.mock("../src/verify", async () => {
@@ -61,7 +61,7 @@ vi.mock("../src/upload-handlers", async () => {
     getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
     uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
     uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
-    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
+    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -332,7 +332,7 @@ describe("getWorkshops", () => {
         files: []
       }
     ]);
-    
+
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and workshop active as true", async () => {
@@ -462,7 +462,7 @@ describe("downloadWorkshopFilesZip tests", () => {
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
-    readFile.mockRejectedValueOnce(enoentError)
+    readFile.mockRejectedValueOnce(enoentError);
     createZipFile.mockRejectedValueOnce(new Error("failed"));
 
     const response = await app.inject({
