@@ -27,6 +27,8 @@
 .buttons {
   position: fixed;
   bottom: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
   left: 30%;
   z-index: 10;
   display: flex;

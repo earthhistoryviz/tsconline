@@ -67,3 +67,27 @@
   align-self: flex-end;
   scale: 0.5;
 }
+
+.splitButtonMain {
+  border-radius: 10%;
+  color: white;
+}
+.splitButtonMain:hover {
+  background-color: #9c9c9c30;
+}
+.splitButtonArrow {
+  min-width: 0 !important;
+  width: 20px;
+  padding: 0px;
+}
+.splitButtonArrowIcon {
+  color: white;
+  width: 15px;
+  height: 15px;
+  padding: 0px;
+  margin: 0px;
+}
+.splitButtonArrow:hover {
+  /* make it lighter */
+  background-color: #9c9c9c30;
+}

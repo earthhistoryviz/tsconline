@@ -15,10 +15,11 @@ import { forwardRef, useRef } from "react";
 import { ArrowDropDown } from "@mui/icons-material";
 import React from "react";
 import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
-import { TSCMenuItem } from "./TSCComponents";
+import { CustomTooltip, TSCMenuItem } from "./TSCComponents";
+import styles from "./TSCComponents.module.css";
 
 type TSCIconButtonProps = {
-  buttonType?: "primary" | "secondary" | "gradient" | "transparent";
+  buttonType?: "primary" | "secondary" | "gradient";
 } & IconButtonProps;
 export const TSCIconButton = forwardRef<HTMLButtonElement, TSCIconButtonProps>(function TSCIconButton(
   { buttonType = "primary", ...props },
@@ -91,8 +92,9 @@ export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(function 
 
 type TSCSplitButtonProps = {
   main: {
-    label?: string;
+    label: string;
     onClick: () => void;
+    showText?: boolean;
     icon?: React.ReactNode;
   };
   options: {
@@ -116,6 +118,9 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
         : gradient;
+  const transparentSx = {
+    background: "transparent",
+  }
   const sx = transparent
     ? {
         background: color["main"],
@@ -127,34 +132,38 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
           background: color["dark"]
         }
       }
-    : {
-        background: "transparent"
-      };
+    : transparentSx;
   return (
     <>
       <ButtonGroup sx={sx} variant="contained" aria-label="Button group with a nested menu" {...props}>
-        {main.label ? (
+        {main.showText ? (
           <Button
             startIcon={main.icon}
             disableRipple
             color="inherit"
-            sx={{
-              background: "transparent"
-            }}>
+            className={styles.splitButtonMain}
+            sx={
+            transparentSx}
+            >
             {main.label}
           </Button>
         ) : (
-          <IconButton>{main.icon}</IconButton>
+          <CustomTooltip title={main.label}>
+          <IconButton
+            className={styles.splitButtonMain}
+          >{main.icon}</IconButton>
+          </CustomTooltip>
         )}
         <Button
-          size="small"
           disableRipple
           {...anchorProps}
+          className={styles.splitButtonArrow}
           ref={anchorRef}
-          sx={{
-            background: "transparent"
-          }}>
-          <ArrowDropDown sx={{ color: "white" }} />
+          sx={transparentSx}
+          >
+          <ArrowDropDown className={
+            styles.splitButtonArrowIcon
+          }/>
         </Button>
       </ButtonGroup>
       <ControlledMenu
