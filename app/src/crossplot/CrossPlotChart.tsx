@@ -10,8 +10,9 @@ import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
 import { ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
-import { TSCDialogLoader } from "../components";
-import { NotLoggedIn } from "../NotLoggedIn";
+import { TSCButton, TSCDialogLoader } from "../components";
+import { TSCSplitButton } from "../components/TSCButton";
+import { useNavigate } from "react-router";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 
@@ -19,6 +20,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
+  const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   return (
     <>
@@ -71,7 +73,54 @@ export const CrossPlotChart: React.FC = observer(() => {
           />
         </Box>
       </ChartContext.Provider>
+      {mobile ? <MobileBottomBar /> : <BottomBar />}
       <TSCDialogLoader open={state.crossPlot.converting || state.crossPlot.autoPlotting} transparentBackground />
     </>
   );
 });
+
+const BottomBar = () => {
+  const { actions } = useContext(context);
+  const navigate = useNavigate();
+  return (
+    <Box className={styles.buttons}>
+      <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+        Generate Cross Plot
+      </TSCButton>
+      <TSCSplitButton
+        options={[
+          {
+            label: "Generate Converted Crossplot",
+            onClick: () => {}
+          }
+        ]}
+      />
+      <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+        Convert Datapack
+      </TSCButton>
+      <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
+        Auto Plot
+      </TSCButton>
+    </Box>
+  );
+};
+
+const MobileBottomBar = () => {
+  const { actions } = useContext(context);
+  const navigate = useNavigate();
+  return (
+    <Box className={styles.mobileButtons}>
+      <TSCButton
+        className={styles.mobileGenerate}
+        onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+        Generate Cross Plot
+      </TSCButton>
+      <TSCButton className={styles.mobileAutoPlot} onClick={() => actions.autoPlotCrossPlot()}>
+        Auto Plot
+      </TSCButton>
+      <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+        Convert Datapack
+      </TSCButton>
+    </Box>
+  );
+};

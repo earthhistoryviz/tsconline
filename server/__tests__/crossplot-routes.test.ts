@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, HTTPMethods } from "fastify";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
@@ -8,7 +8,6 @@ import * as extractMarkers from "../src/crossplot/extract-markers";
 import * as types from "../src/types";
 import * as errorLogger from "../src/error-logger";
 import { crossPlotRoutes } from "../src/crossplot/crossplot-auth";
-import * as database from "../src/database";
 
 vi.mock("../src/error-logger", async () => {
   return {
