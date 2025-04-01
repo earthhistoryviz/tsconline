@@ -8,7 +8,7 @@ import { Box, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
-import { AutoAwesome, AutoFixHigh, ChangeCircleRounded, ChatRounded } from "@mui/icons-material";
+import { AutoAwesome, AutoFixHigh, CachedOutlined, ChangeCircleRounded, ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
 import { CustomTooltip, TSCButton, TSCDialogLoader } from "../components";
 import { TSCIconButton, TSCSplitButton } from "../components/TSCButton";
@@ -93,9 +93,21 @@ const BottomBar = () => {
         </IconButton>
       </CustomTooltip>
       <TSCSplitButton
+        main={{
+          icon: <CachedOutlined />,
+          onClick: () => {}
+        }}
         options={[
           {
-            label: "Convert",
+            label: "Convert and Generate",
+            onClick: () => {}
+          },
+          {
+            label: "Convert and Save To Computer",
+            onClick: () => {}
+          },
+          {
+            label: "Convert and Save To Profile",
             onClick: () => {}
           }
         ]}

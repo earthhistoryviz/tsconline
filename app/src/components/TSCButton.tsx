@@ -90,15 +90,21 @@ export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(function 
 });
 
 type TSCSplitButtonProps = {
+  main: {
+    label?: string;
+    onClick: () => void;
+    icon?: React.ReactNode;
+  };
   options: {
     label: string;
     onClick: () => void;
     icon?: React.ReactNode;
   }[];
   buttonType?: "primary" | "secondary" | "gradient";
+  transparent?: boolean;
 } & ButtonGroupProps;
 
-export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonType, ...props }) => {
+export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, buttonType, transparent, ...props }) => {
   const [menuState, toggleMenu] = useMenuState({ transition: true });
   const anchorProps = useClick(menuState.state, toggleMenu);
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -110,31 +116,36 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
         : gradient;
+  const sx = transparent
+    ? {
+        background: color["main"],
+        color: color["contrastText"],
+        "& .MuiButton-root:hover": {
+          background: color["light"]
+        },
+        "& .MuiButton-root:active": {
+          background: color["dark"]
+        }
+      }
+    : {
+        background: "transparent"
+      };
   return (
     <>
-      <ButtonGroup
-        sx={{
-          background: color["main"],
-          color: color["contrastText"],
-          "& .MuiButton-root:hover": {
-            background: color["light"]
-          },
-          "& .MuiButton-root:active": {
-            background: color["dark"]
-          }
-        }}
-        variant="contained"
-        aria-label="Button group with a nested menu"
-        {...props}>
-        <Button
-          startIcon={options[0].icon}
-          disableRipple
-          color="inherit"
-          sx={{
-            background: "transparent"
-          }}>
-          {options[0].label}
-        </Button>
+      <ButtonGroup sx={sx} variant="contained" aria-label="Button group with a nested menu" {...props}>
+        {main.label ? (
+          <Button
+            startIcon={main.icon}
+            disableRipple
+            color="inherit"
+            sx={{
+              background: "transparent"
+            }}>
+            {main.label}
+          </Button>
+        ) : (
+          <IconButton>{main.icon}</IconButton>
+        )}
         <Button
           size="small"
           disableRipple
