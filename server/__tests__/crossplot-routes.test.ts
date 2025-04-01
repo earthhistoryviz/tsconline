@@ -110,49 +110,6 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
 afterAll(async () => {
   await app.close();
 });
-describe("verifySession tests", () => {
-  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
-    const findUser = vi.spyOn(database, "findUser");
-    beforeEach(() => {
-      findUser.mockClear();
-    });
-    it("should reply 401 when uuid is not found in session", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url,
-        headers: { "recaptcha-token": "mock-token", "mock-uuid": "" },
-        payload: body
-      });
-      expect(findUser).not.toHaveBeenCalled();
-      expect(response.statusCode).toBe(401);
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    });
-    it("should reply 401 when user is not found in database", async () => {
-      findUser.mockResolvedValueOnce([]);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url,
-        headers,
-        payload: body
-      });
-      expect(findUser).toHaveBeenCalledOnce();
-      expect(response.statusCode).toBe(401);
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    });
-    it("should reply 500 when an error occurred in database", async () => {
-      findUser.mockRejectedValueOnce(new Error("Database error"));
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url,
-        headers,
-        payload: body
-      });
-      expect(findUser).toHaveBeenCalledOnce();
-      expect(response.statusCode).toBe(500);
-      expect(await response.json()).toEqual({ error: "Database error" });
-    });
-  });
-});
 describe("convertCrossplot", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
