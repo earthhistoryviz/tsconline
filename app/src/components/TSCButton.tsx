@@ -70,7 +70,7 @@ type TSCSplitButtonProps = {
 export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonType, ...props }) => {
   const [menuState, toggleMenu] = useMenuState({ transition: true });
   const anchorProps = useClick(menuState.state, toggleMenu);
-  const anchorRef = useRef<HTMLDivElement>(null);
+  const anchorRef = useRef<HTMLButtonElement>(null);
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const color =
@@ -92,11 +92,9 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
             background: color["dark"]
           }
         }}
-        ref={anchorRef}
         variant="contained"
         aria-label="Button group with a nested menu"
-        {...props}
-        {...anchorProps}>
+        {...props}>
         <Button
           disableRipple
           color="inherit"
@@ -108,6 +106,8 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
         <Button
           size="small"
           disableRipple
+          {...anchorProps}
+          ref={anchorRef}
           sx={{
             background: "transparent"
           }}>
