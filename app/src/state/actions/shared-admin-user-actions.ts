@@ -147,8 +147,7 @@ export const replaceDatapackFile = action(async (datapackUniqueIdentifier: Datap
       if (doesDatapackExistInCurrentConfig(datapackUniqueIdentifier, state.config.datapacks)) {
         await processDatapackConfig(
           toJS(state.config.datapacks.filter((dp) => !compareExistingDatapacks(datapackUniqueIdentifier, dp))),
-          undefined,
-          true
+          { force: true }
         );
         pushSnackbar("Datapack must be reselected to generate a chart", "info");
       }

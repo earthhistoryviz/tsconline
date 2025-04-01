@@ -22,7 +22,14 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
+import {
+  deleteUserHistory,
+  fetchPublicUserDatapack,
+  fetchUserDatapacksMetadata,
+  uploadTreatiseDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata
+} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
@@ -236,6 +243,7 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
+server.get("/treatise/datapack/:datapack", routes.fetchTreatiseDatapack);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -307,6 +315,9 @@ server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
+server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
+server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
@@ -323,6 +334,7 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
+server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
@@ -333,6 +345,7 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
 );
 
 server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
+server.post("/crossplot/autoplot", looseRateLimit, crossPlotRoutes.autoPlotPoints);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

@@ -8,7 +8,8 @@ import {
   SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
-  isWorkshopDatapack
+  isWorkshopDatapack,
+  isTreatiseDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
@@ -23,13 +24,15 @@ export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
     publicOfficialDatapacksLoading,
     privateOfficialDatapacksLoading,
     publicUserDatapacksLoading,
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading,
+    treatiseDatapackLoading
   } = skeletonStates;
   return (
     publicOfficialDatapacksLoading ||
     privateOfficialDatapacksLoading ||
     publicUserDatapacksLoading ||
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading ||
+    treatiseDatapackLoading
   );
 }
 export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {
@@ -77,6 +80,9 @@ export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]
 export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
+export function getTreatuseDatapackMetadata(datapacks: DatapackMetadata[]) {
+  return datapacks.filter((d) => isTreatiseDatapack(d));
+}
 export function getWorkshopDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
@@ -101,9 +107,15 @@ export function getNavigationRouteForWorkshopDetails(id: number) {
   return `/workshops/${id}`;
 }
 
-export function formatDate(input: string | dayjs.Dayjs): string {
+export function formatDate(input: string | number | dayjs.Dayjs): string {
   let date: Date;
   if (typeof input === "string") {
+    if (/^\d+$/.test(input)) {
+      date = new Date(Number(input));
+    } else {
+      date = new Date(input);
+    }
+  } else if (typeof input === "number") {
     date = new Date(input);
   } else if (dayjs.isDayjs(input)) {
     date = input.toDate();

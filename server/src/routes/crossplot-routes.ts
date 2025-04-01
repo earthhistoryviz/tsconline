@@ -1,16 +1,28 @@
-import { assertConvertCrossPlotRequest } from "@tsconline/shared";
+import {
+  AutoPlotResponse,
+  isAutoPlotMarkerArray,
+  assertAutoPlotRequest,
+  assertConvertCrossPlotRequest
+} from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { verifyFilepath } from "../util.js";
 import { readFile } from "fs/promises";
-import { convertCrossPlotWithModelsInJar, setupConversionDirectory } from "../crossplot-handler.js";
+import {
+  autoPlotPointsWithJar,
+  convertCrossPlotWithModelsInJar,
+  setupAutoPlotDirectory,
+  setupConversionDirectory
+} from "../crossplot/crossplot-handler.js";
+import { getMarkersFromTextFile } from "../crossplot/extract-markers.js";
 import { isOperationResult } from "../types.js";
+import logger from "../error-logger.js";
 
 export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
   try {
     assertConvertCrossPlotRequest(body);
   } catch (error) {
-    reply.code(400).send({ message: "Incorrect request body for converting to crossplot" });
+    reply.code(400).send({ error: "Incorrect request body for converting to crossplot" });
     return;
   }
   try {
@@ -21,7 +33,7 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       return;
     }
     if (isOperationResult(result)) {
-      reply.code(result.code).send(result);
+      reply.code(result.code).send({ error: result.message });
       return;
     }
     const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
@@ -42,6 +54,42 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
     }
   } catch (error) {
     console.error(error);
-    reply.code(500).send({ message: "Error converting to crossplot" });
+    reply.code(500).send({ error: "Error converting to crossplot" });
+  }
+};
+
+export const autoPlotPoints = async function autoPlotPoints(request: FastifyRequest, reply: FastifyReply) {
+  const body = request.body;
+  try {
+    assertAutoPlotRequest(body);
+  } catch (error) {
+    reply.code(400).send({ error: "Incorrect request body for auto plotting points" });
+    return;
+  }
+  try {
+    const result = await setupAutoPlotDirectory(body);
+    if (isAutoPlotMarkerArray(result)) {
+      const response: AutoPlotResponse = { markers: result };
+      reply.code(200).send(response);
+      return;
+    }
+    if (isOperationResult(result)) {
+      reply.code(result.code).send({ error: result.message });
+      return;
+    }
+    const { outputTextFilepath, settingsTextFilepath } = result;
+    if (
+      (await autoPlotPointsWithJar(body.datapackUniqueIdentifiers, outputTextFilepath, settingsTextFilepath)) &&
+      (await verifyFilepath(outputTextFilepath))
+    ) {
+      const result = await getMarkersFromTextFile(outputTextFilepath);
+      const response: AutoPlotResponse = { markers: result };
+      reply.code(200).send(response);
+    } else {
+      throw new Error("Error auto plotting");
+    }
+  } catch (e) {
+    logger.error(e);
+    reply.code(500).send({ error: "Error auto plotting" });
   }
 };

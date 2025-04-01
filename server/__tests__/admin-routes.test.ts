@@ -359,7 +359,8 @@ const testSharedAdminUser = {
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default",
+  historyEntries: []
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -1130,27 +1131,6 @@ describe("getUsers", () => {
       method: "POST",
       url: "/admin/users",
       headers
-    });
-    expect(await response.json()).toEqual({ error: "Unknown error" });
-    expect(response.statusCode).toBe(404);
-  });
-  it("should return 404 if displayed users are not correctly processed", async () => {
-    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => {
-      throw new Error();
-    });
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/users",
-      headers
-    });
-    expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
-    expect(assertAdminSharedUser).toHaveBeenCalledWith({
-      ...testSharedAdminUser,
-      userId: 123,
-      isAdmin: true,
-      isGoogleUser: false,
-      invalidateSession: false,
-      emailVerified: true
     });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);

@@ -40,7 +40,7 @@
   position: relative;
 }
 
-.tabContent > *:not(.generate, .mobileGenerate, .convert, .mobileConvert) {
+.tabContent > *:not(.buttons) {
   resize: none;
   width: 100%;
   height: 100%;
@@ -72,18 +72,14 @@
 .timeIntervalLabel {
   font-size: 0.9rem;
 }
-
-.generate {
+.buttons {
   position: fixed;
   bottom: 10px;
   left: 5%;
   z-index: 10;
-}
-.convert {
-  position: fixed;
-  bottom: 10px;
-  left: calc(5% + var(--generate-button-size) + 10px);
-  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }
 
 .markerContainer,
@@ -166,17 +162,16 @@
   height: 350px;
   min-height: 350px;
 }
-.mobileGenerate {
+.mobileButtons {
   position: fixed;
   bottom: calc(var(--side-bar-width) + 10px);
-  right: 5%;
+  width: 100%;
+  padding-right: 10px;
   z-index: 10;
-}
-.mobileConvert {
-  position: fixed;
-  bottom: calc(var(--side-bar-width) + 10px);
-  right: calc(5% + var(--generate-button-size) + 10px);
-  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .mobileTabs {
@@ -190,7 +185,7 @@
   border-bottom: 1px solid var(--border-color);
   grid-area: tabs;
 }
-.mobileTabContent > *:not(.generate, .mobileGenerate, .convert, .mobileConvert) {
+.mobileTabContent > *:not(.mobileButtons) {
   resize: none;
   width: 100%;
   height: 100%;

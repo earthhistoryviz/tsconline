@@ -78,3 +78,19 @@
   height: 100%;
   overflow: hidden;
 }
+
+.floating-history-button {
+  position: fixed;
+  left: 0;
+  top: 50%;
+  width: 40px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 8px 8px 0;
+  cursor: pointer;
+  z-index: 1000;
+  transform: translateY(-50%);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
+}

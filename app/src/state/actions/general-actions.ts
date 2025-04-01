@@ -17,7 +17,9 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray
+  assertDatapackMetadataArray,
+  assertTreatiseDatapack,
+  SharedWorkshop
 } from "@tsconline/shared";
 
 import {
@@ -98,6 +100,10 @@ export const fetchDatapack = action(
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
         break;
       }
+      case "treatise": {
+        datapack = await actions.fetchTreatiseDatapack(metadata.title, options);
+        break;
+      }
     }
     return datapack;
   }
@@ -123,6 +129,7 @@ export const fetchPublicOfficialDatapack = action(
           ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
         );
       }
+      return data;
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -205,6 +212,7 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
   } finally {
     setPublicOfficialDatapacksLoading(false);
     setPublicUserDatapacksLoading(false);
+    setTreatiseDatapackLoading(false);
   }
 });
 
@@ -251,6 +259,27 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     setPrivateUserDatapacksLoading(false);
   }
 });
+export const fetchTreatiseDatapack = action(
+  "fetchTreatiseDatapack",
+  async (datapackHash: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const response = await fetcher(`/treatise/datapack/${datapackHash}`, options);
+      const data = await response.json();
+      try {
+        assertDatapack(data);
+        assertTreatiseDatapack(data);
+        return data;
+      } catch (e) {
+        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+        console.error(e);
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
@@ -478,23 +507,32 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   setUnsavedDatapackConfig([]);
 });
 
+/**
+ * @param settings - If settings is a string assumed to be a path to a settings file
+ */
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+  ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
+    const { settings, force } = options ?? {};
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
-      if (settingsPath && settingsPath.length !== 0) {
+      if (settings) {
+        if (typeof settings !== "string") return settings;
+        if (settings.length === 0) return null;
         try {
-          const settings = await fetchSettingsXML(settingsPath);
-          if (settings) {
+          const fetchedSettings = await fetchSettingsXML(settings);
+          if (fetchedSettings) {
             removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return JSON.parse(JSON.stringify(settings));
+            return JSON.parse(JSON.stringify(fetchedSettings));
           }
         } catch (e) {
           console.error(e);
@@ -986,7 +1024,8 @@ export const setDefaultUserState = action(() => {
     settings: {
       darkMode: false,
       language: "English"
-    }
+    },
+    historyEntries: []
   };
   removeUnauthorizedDatapacks();
 });
@@ -1264,6 +1303,9 @@ export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
+});
+export const setTreatiseDatapackLoading = action((fetching: boolean) => {
+  state.skeletonStates.treatiseDatapackLoading = fetching;
 });
 
 export const setTourOpen = action((openTour: boolean, tourName: string) => {

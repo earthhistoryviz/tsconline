@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import "./Chart.css";
-import { TSCPopupManager, TSCSvgComponent } from "./components";
+import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -10,7 +10,9 @@ import {
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, IconButton, Drawer, List, ListItemButton, ListItemText, Paper } from "@mui/material";
+import HistoryIcon from "@mui/icons-material/History";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
 import { ChartContextType } from "./types";
@@ -18,6 +20,7 @@ import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
+import { formatDate } from "./state/non-action-util";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -34,7 +37,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const theme = useTheme();
   const { chartTabState } = useContext(ChartContext);
   const { matchesSettings, chartContent, chartZoomSettings, madeChart, chartLoading } = chartTabState;
-  const { actions } = useContext(context);
+  const { state, actions } = useContext(context);
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
@@ -182,6 +185,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
   return (
     <Box className="chart-container">
+      {state.isLoggedIn && <HistorySideBar />}
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
@@ -252,5 +256,80 @@ export const ChartTab: React.FC = observer(() => {
         <Chart Component={TSCSvgComponent} />
       </Box>
     </ChartContext.Provider>
+  );
+});
+
+const HistorySideBar: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  const [isDrawerOpen, setDrawerOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  return (
+    <>
+      <TSCDialogLoader open={loading} transparentBackground />
+      <Paper
+        onClick={() => setDrawerOpen(true)}
+        className="floating-history-button"
+        sx={{
+          backgroundColor: "backgroundColor.main"
+        }}>
+        <HistoryIcon fontSize="medium" />
+      </Paper>
+      <Drawer
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main" } }}>
+        <Box padding={2}>
+          <Box display="flex" alignItems="center">
+            <IconButton>
+              <HistoryIcon fontSize="medium" />
+            </IconButton>
+            <Typography variant="h5">History</Typography>
+            <CustomTooltip title="Delete all history entries">
+              <IconButton
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await actions.deleteUserHistory("-1");
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                <DeleteForeverIcon fontSize="medium" />
+              </IconButton>
+            </CustomTooltip>
+          </Box>
+          <List>
+            {state.user.historyEntries.map((entry) => (
+              <ListItemButton
+                key={entry.timestamp}
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await actions.loadUserHistory(entry.timestamp);
+                    setDrawerOpen(false);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}>
+                <ListItemText primary={formatDate(entry.timestamp)} />
+                <IconButton
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    setLoading(true);
+                    try {
+                      await actions.deleteUserHistory(entry.timestamp);
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}>
+                  <DeleteForeverIcon fontSize="small" />
+                </IconButton>
+              </ListItemButton>
+            ))}
+          </List>
+        </Box>
+      </Drawer>
+    </>
   );
 });

@@ -29,6 +29,8 @@ import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActi
 import { fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
+import { saveChartHistory } from "../user/chart-history.js";
+import logger from "../error-logger.js";
 
 /**
  * Fetches the official datapack with the given name if it is public
@@ -66,6 +68,26 @@ export const fetchPublicDatapacksMetadata = async function fetchPublicDatapacksM
     return extractMetadataFromDatapack(datapack);
   });
   reply.send(datapackMetadata);
+};
+
+export const fetchTreatiseDatapack = async function fetchTreatiseDatapack(
+  request: FastifyRequest<{ Params: { datapack: string } }>,
+  reply: FastifyReply
+) {
+  const { datapack } = request.params;
+  const uuid = "treatise";
+  try {
+    const treatiseDatapack = await fetchUserDatapack(uuid, datapack).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
+    if (!treatiseDatapack) {
+      reply.status(500).send({ error: "Datapack does not exist or cannot be found" });
+      return;
+    }
+    reply.send(treatiseDatapack);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to fetch datapacks" });
+  }
 };
 
 export const fetchImage = async function (request: FastifyRequest, reply: FastifyReply) {
@@ -233,8 +255,12 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         if (uuid !== datapack.uuid && !datapack.isPublic) {
           reply.send({ error: "ERROR: user does not have access to requested datapack" });
           return;
+        } else {
+          uuidFolder = datapack.uuid;
+          break;
         }
-        uuidFolder = datapack.uuid;
+      case "treatise":
+        uuidFolder = "treatise";
         break;
     }
     if (!uuidFolder) {
@@ -264,6 +290,11 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     } else {
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
       reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
+      // after sending, save to history if user is logged in
+      if (!isCrossPlot && uuid)
+        await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
+          logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
+        });
       return;
     }
   } catch (e) {
@@ -424,6 +455,11 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     });
     reply.send({ chartpath: chartUrlPath, hash: hash });
   }
+  // after sending, save to history if user is logged in
+  if (!isCrossPlot && uuid)
+    await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
+      logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
+    });
 };
 
 // Serve timescale data endpoint

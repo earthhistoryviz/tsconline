@@ -123,6 +123,8 @@ vi.mock("fs", async () => {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
+vi.spyOn(console, "error").mockImplementation(() => undefined);
+vi.spyOn(console, "log").mockImplementation(() => undefined);
 
 describe("uploadUserDatapackHandler", () => {
   const rm = vi.spyOn(fsPromises, "rm");

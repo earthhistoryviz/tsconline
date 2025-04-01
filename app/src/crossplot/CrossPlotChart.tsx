@@ -70,7 +70,7 @@ export const CrossPlotChart: React.FC = observer(() => {
           />
         </Box>
       </ChartContext.Provider>
-      <TSCDialogLoader open={state.crossPlot.converting} transparentBackground />
+      <TSCDialogLoader open={state.crossPlot.converting || state.crossPlot.autoPlotting} transparentBackground />
     </>
   );
 });

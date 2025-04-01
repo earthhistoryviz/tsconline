@@ -31,9 +31,9 @@ import {
   DatapackPriorityUpdateSuccess,
   DatapackMetadata,
   SharedWorkshop,
-  assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
-  assertSharedWorkshop
+  assertSharedWorkshop,
+  AdminSharedUser
 } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -130,7 +130,7 @@ export const adminFetchSingleOfficialDatapack = async function fetchSinglePrivat
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
-    const displayedUsers = await Promise.all(
+    const displayedUsers: AdminSharedUser[] = await Promise.all(
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUsersWorkshops({ userId });
@@ -151,13 +151,11 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopIds.length > 0 && { workshopIds })
+          ...(workshopIds.length > 0 && { workshopIds }),
+          historyEntries: []
         };
       })
     );
-    displayedUsers.forEach((user) => {
-      assertAdminSharedUser(user);
-    });
     reply.status(200).send({ users: displayedUsers });
   } catch (e) {
     console.error(e);
