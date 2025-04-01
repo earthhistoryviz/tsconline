@@ -1,27 +1,57 @@
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 import {
-  Box,
   Button,
   ButtonGroup,
   ButtonGroupProps,
   ButtonProps,
-  ClickAwayListener,
-  Grow,
-  MenuItem,
-  MenuList,
-  Paper,
-  Popper,
+  IconButton,
+  IconButtonProps,
   Typography
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { createGradient } from "../util/util";
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useRef } from "react";
 import { ArrowDropDown } from "@mui/icons-material";
 import React from "react";
-import { ControlledMenu, useClick, useHover, useMenuState } from "@szhsin/react-menu";
+import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
 import { TSCMenuItem } from "./TSCComponents";
 
+type TSCIconButtonProps = {
+  buttonType?: "primary" | "secondary" | "gradient" | "transparent";
+} & IconButtonProps;
+export const TSCIconButton = forwardRef<HTMLButtonElement, TSCIconButtonProps>(function TSCIconButton(
+  { buttonType = "primary", ...props },
+  ref
+) {
+  const theme = useTheme();
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
+  const color =
+    buttonType === "primary"
+      ? theme.palette.button
+      : buttonType === "secondary"
+        ? theme.palette.secondaryButton
+        : gradient;
+  return (
+    <IconButton
+      {...props}
+      ref={ref}
+      disableRipple
+      sx={{
+        background: color["main"],
+        color: color["contrastText"],
+        ":hover": {
+          background: color["light"]
+        },
+        ":active": {
+          background: color["dark"]
+        },
+        ...props.sx
+      }}>
+      {props.children}
+    </IconButton>
+  );
+});
 type TSCButtonProps = {
   buttonType?: "primary" | "secondary" | "gradient";
 } & ButtonProps;
@@ -63,6 +93,7 @@ type TSCSplitButtonProps = {
   options: {
     label: string;
     onClick: () => void;
+    icon?: React.ReactNode;
   }[];
   buttonType?: "primary" | "secondary" | "gradient";
 } & ButtonGroupProps;
@@ -96,6 +127,7 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
         aria-label="Button group with a nested menu"
         {...props}>
         <Button
+          startIcon={options[0].icon}
           disableRipple
           color="inherit"
           sx={{
@@ -111,7 +143,7 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
           sx={{
             background: "transparent"
           }}>
-          <ArrowDropDown />
+          <ArrowDropDown sx={{ color: "white" }} />
         </Button>
       </ButtonGroup>
       <ControlledMenu

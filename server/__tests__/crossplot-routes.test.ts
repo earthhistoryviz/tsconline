@@ -120,7 +120,7 @@ describe("convertCrossplot", async () => {
     setupConversionDirectory.mockResolvedValueOnce("success");
     const response = await app.inject({
       method: "POST",
-      url,
+      url
     });
     expect(response.statusCode).toEqual(500);
     expect(response.json()).toEqual({ error: "Conversion failed" });
