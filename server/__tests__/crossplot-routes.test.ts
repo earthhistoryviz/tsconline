@@ -210,8 +210,8 @@ describe("autoPlotPoints", async () => {
     isAutoPlotMarkerArray.mockReturnValueOnce(true);
     const autoPlotMarkerArray = [
       {
-        x: 1,
-        y: 2
+        age: 1,
+        depth: 2
       }
     ] as shared.AutoPlotMarker[];
     setupAutoPlotDirectory.mockResolvedValueOnce(autoPlotMarkerArray);
