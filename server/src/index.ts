@@ -25,7 +25,8 @@ import { userRoutes } from "./routes/user-auth.js";
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
-  fetchUserDatapacksMetadata,
+  fetchUserDatapacksMetadata, 
+  uploadTreatiseDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata
 } from "./routes/user-routes.js";
@@ -241,6 +242,7 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
+server.get("/treatise/datapack/:datapack", routes.fetchTreatiseDatapack);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -329,6 +331,7 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
+server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
