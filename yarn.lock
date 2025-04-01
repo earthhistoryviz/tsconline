@@ -2328,7 +2328,7 @@ __metadata:
     simplebar-react: "npm:^3.2.4"
     typescript: "npm:5.2.2"
     valid-filename: "npm:^4.0.0"
-    vite: "npm:^5.4.15"
+    vite: "npm:^5.4.16"
     vite-plugin-checker: "npm:^0.8.0"
     vitest: "npm:^1.6.1"
     web-worker: "npm:^1.3.0"
@@ -12131,9 +12131,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"vite@npm:^5.4.15":
-  version: 5.4.15
-  resolution: "vite@npm:5.4.15"
+"vite@npm:^5.4.16":
+  version: 5.4.16
+  resolution: "vite@npm:5.4.16"
   dependencies:
     esbuild: "npm:^0.21.3"
     fsevents: "npm:~2.3.3"
@@ -12170,7 +12170,7 @@ __metadata:
       optional: true
   bin:
     vite: bin/vite.js
-  checksum: ddc4e7b874ebc0dc5bff53568e7d90f6c622747912fdda7f4ce533e15293009aaabb677ca29b5f108b18c5d60c0c32a7c0156f802bc94df355ca36915a4ae293
+  checksum: c5010e3962b0a33d50b25296ae9c2f5a45b4b46977b67b9a4016918d932817bb8e46fa14b88d75f752641d4a89f1545966139b58b07dc2d6e3196250a0b239cd
   languageName: node
   linkType: hard
 
