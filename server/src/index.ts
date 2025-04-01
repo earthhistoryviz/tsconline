@@ -22,7 +22,14 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata, uploadTreatiseDatapack } from "./routes/user-routes.js";
+import {
+  deleteUserHistory,
+  fetchPublicUserDatapack,
+  fetchUserDatapacksMetadata,
+  uploadTreatiseDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata
+} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { syncTranslations } from "./sync-translations.js";
@@ -305,6 +312,9 @@ server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
+server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
+server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

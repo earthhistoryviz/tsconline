@@ -599,7 +599,11 @@
             "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
             "INVALID_FILE_FORMAT": "Invalid file format.",
             "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
-            "INVALID_DATAPACK_HASH": "Invalid treatise datapack hash provided."
+            "INVALID_DATAPACK_HASH": "Invalid treatise datapack hash provided.",
+            "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
+            "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
+            "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn't be loaded due to missing files and has been removed from your history."
         },
         "button": {
             "generate": "Generate",

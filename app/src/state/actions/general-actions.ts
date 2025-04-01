@@ -507,23 +507,32 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   setUnsavedDatapackConfig([]);
 });
 
+/**
+ * @param settings - If settings is a string assumed to be a path to a settings file
+ */
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+  ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
+    const { settings, force } = options ?? {};
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
-      if (settingsPath && settingsPath.length !== 0) {
+      if (settings) {
+        if (typeof settings !== "string") return settings;
+        if (settings.length === 0) return null;
         try {
-          const settings = await fetchSettingsXML(settingsPath);
-          if (settings) {
+          const fetchedSettings = await fetchSettingsXML(settings);
+          if (fetchedSettings) {
             removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return JSON.parse(JSON.stringify(settings));
+            return JSON.parse(JSON.stringify(fetchedSettings));
           }
         } catch (e) {
           console.error(e);
@@ -1015,7 +1024,8 @@ export const setDefaultUserState = action(() => {
     settings: {
       darkMode: false,
       language: "English"
-    }
+    },
+    historyEntries: []
   };
   removeUnauthorizedDatapacks();
 });

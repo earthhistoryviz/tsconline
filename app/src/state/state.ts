@@ -193,7 +193,8 @@ export const state = observable<State>({
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"
-    }
+    },
+    historyEntries: []
   },
   admin: {
     displayedUsers: [],
