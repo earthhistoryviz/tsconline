@@ -1,5 +1,5 @@
 import { FastifyInstance, RegisterOptions } from "fastify";
-import { autoPlotPoints, convertCrossPlot } from "./crossplot-routes";
+import { autoPlotPoints, convertCrossPlot } from "./crossplot-routes.js";
 
 export const crossPlotRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {

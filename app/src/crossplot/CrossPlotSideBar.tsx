@@ -15,6 +15,7 @@ import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "
 import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
+import { TSCSplitButton } from "../components/TSCButton";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -67,6 +68,14 @@ export const CrossPlotSideBar = observer(
               onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
               Generate Cross Plot
             </TSCButton>
+            <TSCSplitButton
+              options={[
+                {
+                  label: "Generate Converted Crossplot",
+                  onClick: () => {}
+                }
+              ]}
+            />
             <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
               Convert Datapack
             </TSCButton>

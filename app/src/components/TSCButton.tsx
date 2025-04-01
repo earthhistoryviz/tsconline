@@ -64,7 +64,7 @@ type TSCSplitButtonProps = {
 export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonType, ...props }) => {
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState(1);
+  const [selectedIndex, setSelectedIndex] = useState(0);
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const color =
@@ -95,18 +95,26 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
 
   return (
     <>
-      <ButtonGroup variant="contained" ref={anchorRef} aria-label="Button group with a nested menu" {...props}>
+      <ButtonGroup
+        sx={{
+          background: color["main"],
+          color: color["contrastText"],
+          "& .MuiButton-root:hover": {
+            background: color["light"]
+          },
+          "& .MuiButton-root:active": {
+            background: color["dark"]
+          }
+        }}
+        variant="contained"
+        ref={anchorRef}
+        aria-label="Button group with a nested menu"
+        {...props}>
         <Button
           disableRipple
+          color="inherit"
           sx={{
-            background: color["main"],
-            color: color["contrastText"],
-            ":hover": {
-              background: color["light"]
-            },
-            ":active": {
-              background: color["dark"]
-            }
+            background: "transparent"
           }}
           onClick={handleClick}>
           {options[selectedIndex].label}
@@ -115,14 +123,7 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ options, buttonT
           size="small"
           disableRipple
           sx={{
-            background: color["main"],
-            color: color["contrastText"],
-            ":hover": {
-              background: color["light"]
-            },
-            ":active": {
-              background: color["dark"]
-            }
+            background: "transparent"
           }}
           onClick={handleToggle}>
           <ArrowDropDown />
