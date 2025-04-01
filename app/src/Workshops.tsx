@@ -128,7 +128,6 @@ export const Workshops: React.FC = observer(() => {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  // console.log(state.workshops);
   const activeWorkshops = getActiveWorkshops(state.workshops);
   const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
   const pastWorkshops = getPastWorkshops(state.workshops);
