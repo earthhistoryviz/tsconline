@@ -25,7 +25,7 @@ import { userRoutes } from "./routes/user-auth.js";
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
-  fetchUserDatapacksMetadata, 
+  fetchUserDatapacksMetadata,
   uploadTreatiseDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata

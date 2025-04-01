@@ -9,7 +9,7 @@ import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
 import {
-  fetchPublicUserDatapack, 
+  fetchPublicUserDatapack,
   uploadTreatiseDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata,
