@@ -162,6 +162,10 @@ export const setDatapackImageOnDatapack = action((datapack: Datapack, image: str
 });
 
 export const fetchUserHistoryMetadata = action(async () => {
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return;
+  }
   try {
     const response = await fetcher("/user/history", {
       credentials: "include"
@@ -183,6 +187,10 @@ export const fetchUserHistoryMetadata = action(async () => {
 });
 
 export const loadUserHistory = action(async (timestamp: string) => {
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return;
+  }
   try {
     const response = await fetcher(`/user/history/${timestamp}`, {
       credentials: "include"

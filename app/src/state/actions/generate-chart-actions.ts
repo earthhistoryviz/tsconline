@@ -159,7 +159,7 @@ export const compileChartRequest = action("compileChartRequest", async (navigate
       unsafeChartContent: response.unsafeChartContent,
       chartTimelineEnabled: false
     });
-    fetchUserHistoryMetadata();
+    if (state.isLoggedIn) fetchUserHistoryMetadata();
   } finally {
     generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
