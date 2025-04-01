@@ -4,14 +4,14 @@ import React, { useContext, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar, MobileCrossPlotSideBar } from "./CrossPlotSideBar";
-import { Box, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
-import { ChatRounded } from "@mui/icons-material";
+import { AutoAwesome, AutoFixHigh, ChangeCircleRounded, ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
-import { TSCButton, TSCDialogLoader } from "../components";
-import { TSCSplitButton } from "../components/TSCButton";
+import { CustomTooltip, TSCButton, TSCDialogLoader } from "../components";
+import { TSCIconButton, TSCSplitButton } from "../components/TSCButton";
 import { useNavigate } from "react-router";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
@@ -82,15 +82,20 @@ export const CrossPlotChart: React.FC = observer(() => {
 const BottomBar = () => {
   const { actions } = useContext(context);
   const navigate = useNavigate();
+  const sx = {
+    backgroundColor: "transparent"
+  };
   return (
-    <Box className={styles.buttons}>
-      <TSCButton className={styles.generate} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-        Generate Cross Plot
-      </TSCButton>
+    <Box className={styles.buttons} sx={{ backgroundColor: "dark.main" }}>
+      <CustomTooltip title={"Generate Cross Plot"}>
+        <IconButton sx={sx} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+          <AutoAwesome />
+        </IconButton>
+      </CustomTooltip>
       <TSCSplitButton
         options={[
           {
-            label: "Generate Converted Crossplot",
+            label: "Convert",
             onClick: () => {}
           }
         ]}
@@ -98,9 +103,11 @@ const BottomBar = () => {
       <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
         Convert Datapack
       </TSCButton>
-      <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
-        Auto Plot
-      </TSCButton>
+      <CustomTooltip title={"Auto Plot"}>
+        <IconButton sx={sx} onClick={() => actions.autoPlotCrossPlot()}>
+          <AutoFixHigh />
+        </IconButton>
+      </CustomTooltip>
     </Box>
   );
 };

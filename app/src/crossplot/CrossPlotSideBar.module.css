@@ -1,5 +1,4 @@
 .crossPlotSideBar {
-  --generate-button-size: 175px;
   --options-bar-height: 50px;
   display: grid;
   grid-template-columns: var(--side-bar-width) 1fr;
