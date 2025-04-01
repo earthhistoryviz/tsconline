@@ -83,7 +83,8 @@ const BottomBar = () => {
   const { actions } = useContext(context);
   const navigate = useNavigate();
   const sx = {
-    backgroundColor: "transparent"
+    backgroundColor: "transparent",
+    color: "white"
   };
   return (
     <Box className={styles.buttons} sx={{ backgroundColor: "dark.main" }}>
@@ -94,27 +95,28 @@ const BottomBar = () => {
       </CustomTooltip>
       <TSCSplitButton
         main={{
+          label: "Generate Converted Datapack",
           icon: <CachedOutlined />,
           onClick: () => {}
         }}
         options={[
           {
-            label: "Convert and Generate",
+            label: "Generate Converted Chart",
             onClick: () => {}
           },
           {
-            label: "Convert and Save To Computer",
+            label: "Save To Computer",
             onClick: () => {}
           },
           {
-            label: "Convert and Save To Profile",
+            label: "Upload To Profile",
             onClick: () => {}
           }
         ]}
       />
-      <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
+      {/* <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
         Convert Datapack
-      </TSCButton>
+      </TSCButton> */}
       <CustomTooltip title={"Auto Plot"}>
         <IconButton sx={sx} onClick={() => actions.autoPlotCrossPlot()}>
           <AutoFixHigh />
