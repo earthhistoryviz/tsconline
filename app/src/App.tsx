@@ -22,6 +22,7 @@ import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
 import { Profile } from "./account_settings/Profile";
 import { Admin } from "./admin/Admin";
+import { GenerateExternalChart } from "./GenerateExternalChart";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { toJS } from "mobx";
@@ -157,6 +158,7 @@ export default observer(function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/datapack/:id" element={<DatapackProfile />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
             <Route path="/datapacks" element={<Datapacks />} />
             <Route path="/presets" element={<Presets />} />
             <Route path="/workshops" element={<Workshops />} />
