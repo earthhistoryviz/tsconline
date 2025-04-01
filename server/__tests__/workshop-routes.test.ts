@@ -1,4 +1,4 @@
-import fastifyMultipart from "@fastify/multipart";
+import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import fastifySecureSession from "@fastify/secure-session";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import { beforeAll, vi, afterAll, expect, describe, it, beforeEach } from "vitest";
@@ -7,9 +7,12 @@ import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as workshopUtil from "../src/workshop/workshop-util";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
-import { User } from "../src/types";
+import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
-import * as fsp from "fs/promises"
+import * as fsp from "fs/promises";
+import * as uploadHandlers from "../src/upload-handlers";
+import { SharedWorkshop } from "@tsconline/shared";
+import { fetchAllWorkshops } from "../src/workshop/workshop-routes";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -33,7 +36,8 @@ vi.mock("../src/verify", async () => {
 vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
-    isUserInWorkshop: vi.fn().mockResolvedValue(true)
+    isUserInWorkshop: vi.fn().mockResolvedValue(true),
+    findWorkshop: vi.fn().mockResolvedValue([])
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -51,6 +55,50 @@ vi.mock("fs/promises", async () => {
     readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content"))
   };
 });
+vi.mock("../src/upload-handlers", async () => {
+  return {
+    fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
+    getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
+    uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
+  };
+});
+
+const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
+  const file = multipartFile.file;
+  await new Promise<void>((resolve) => {
+    file.on("data", () => {});
+    file.on("end", () => {
+      resolve();
+    });
+  });
+  return { code, message };
+};
+const mockDate = new Date("2024-08-20T00:00:00Z");
+const start = new Date(mockDate);
+start.setHours(mockDate.getHours() + 1);
+const end = new Date(mockDate);
+end.setHours(mockDate.getHours() + 2);
+const testWorkshopDatabase: Workshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
+};
+const testWorkshop: SharedWorkshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: false,
+  creatorUUID: "123",
+  regLink: "",
+  active: false
+};
 
 let app: FastifyInstance;
 beforeAll(async () => {
@@ -85,8 +133,10 @@ beforeAll(async () => {
     };
   });
   await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
+  app.get("/workshop", fetchAllWorkshops);
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
   await app.close();
@@ -246,6 +296,67 @@ describe("editWorkshopDatapackMetadata", async () => {
   });
 });
 
+describe("getWorkshops", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
+  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
+  it("should return 500 if findWorkshop throws an error", async () => {
+    findWorkshop.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful and workshop active as false", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual([
+      {
+        ...testWorkshop,
+        active: false,
+        datapacks: [],
+        files: []
+      }
+    ]);
+    
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and workshop active as true", async () => {
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, start: mockDate.toISOString() }]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual([
+      {
+        ...testWorkshop,
+        start: mockDate.toISOString(),
+        active: true,
+        datapacks: [],
+        files: []
+      }
+    ]);
+    expect(response.statusCode).toBe(200);
+  });
+});
+
 describe("downloadWorkshopFilesZip tests", () => {
   const workshopId = 42;
   const route = `/workshop/download/${workshopId}`;
@@ -292,7 +403,6 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Invalid directory path" });
   });
-
   it("should return 500 if readFile throws an error != ENOENT", async () => {
     readFile.mockRejectedValueOnce(new Error("Something else"));
 
@@ -306,7 +416,6 @@ describe("downloadWorkshopFilesZip tests", () => {
       error: expect.stringContaining("An error occurred:")
     });
   });
-
   it("should create the zip if readFile returns ENOENT, then return file", async () => {
     const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
@@ -321,9 +430,7 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(createZipFile).toHaveBeenCalledTimes(1);
     expect(response.body).toEqual("fake-zip-content");
   });
-
   it("should return existing zip file if readFile succeeds", async () => {
-    // readFile returns a preexisting buffer
     const existingFileBuffer = Buffer.from("existing-zip-content");
     readFile.mockResolvedValueOnce(existingFileBuffer);
 
@@ -336,12 +443,10 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.body).toEqual("existing-zip-content");
     expect(createZipFile).not.toHaveBeenCalled();
   });
-
   it("should return 404 if an ENOENT error happens later in the try block", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
     readFile.mockRejectedValueOnce(enoentError);
-
     const creationError = new Error("failed") as NodeJS.ErrnoException;
     creationError.code = "ENOENT";
     createZipFile.mockRejectedValueOnce(creationError);
@@ -354,7 +459,6 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(404);
     expect(await response.json()).toEqual({ error: "Failed to process the file" });
   });
-
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
