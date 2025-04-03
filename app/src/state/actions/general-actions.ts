@@ -18,8 +18,7 @@ import {
   isWorkshopDatapack,
   Datapack,
   assertDatapackMetadataArray,
-  assertTreatiseDatapack,
-  SharedWorkshop
+  assertTreatiseDatapack
 } from "@tsconline/shared";
 
 import {
