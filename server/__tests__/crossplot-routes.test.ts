@@ -1,5 +1,4 @@
 import fastify, { FastifyInstance } from "fastify";
-import { autoPlotPoints, convertCrossPlot } from "../src/routes/crossplot-routes";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
@@ -8,6 +7,7 @@ import * as util from "../src/util";
 import * as extractMarkers from "../src/crossplot/extract-markers";
 import * as types from "../src/types";
 import * as errorLogger from "../src/error-logger";
+import { crossPlotRoutes } from "../src/crossplot/crossplot-auth";
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -19,6 +19,16 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("../src/types", async () => {
   return {
     isOperationResult: vi.fn().mockReturnValue(false)
+  };
+});
+vi.mock("../src/database", async () => {
+  return {
+    findUser: vi.fn().mockResolvedValue([
+      {
+        uuid: "test",
+        isAdmin: false
+      }
+    ])
   };
 });
 
@@ -74,8 +84,7 @@ const request = {
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
-  app.post("/crossplot/convert", convertCrossPlot);
-  app.post("/crossplot/autoplot", autoPlotPoints);
+  await app.register(crossPlotRoutes, { prefix: "/crossplot" });
   await app.listen({ host: "localhost", port: 1210 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.spyOn(console, "log").mockImplementation(() => {});

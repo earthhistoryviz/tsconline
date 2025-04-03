@@ -4,13 +4,15 @@ import React, { useContext, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar, MobileCrossPlotSideBar } from "./CrossPlotSideBar";
-import { Box, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
-import { ChatRounded } from "@mui/icons-material";
+import { AutoAwesome, AutoFixHigh, CachedOutlined, ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
-import { TSCDialogLoader } from "../components";
+import { CustomTooltip, TSCDialogLoader } from "../components";
+import { TSCSplitButton } from "../components/TSCButton";
+import { useNavigate } from "react-router";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 
@@ -54,23 +56,81 @@ export const CrossPlotChart: React.FC = observer(() => {
         }}>
         <Box className={mobile ? styles.containerMobile : styles.container}>
           {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}
-          <Chart
-            Component={TSCCrossPlotSVGComponent}
-            disableDoubleClick
-            refList={[
-              {
-                ref: ref,
-                id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
-              }
-            ]}
-            style={{
-              border: "none",
-              borderTop: `2px solid ${theme.palette.divider}`
-            }}
-          />
+          <Box gridArea="chart" position="relative">
+            <Chart
+              Component={TSCCrossPlotSVGComponent}
+              disableDoubleClick
+              refList={[
+                {
+                  ref: ref,
+                  id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
+                }
+              ]}
+              style={{
+                border: "none",
+                borderTop: `2px solid ${theme.palette.divider}`
+              }}
+            />
+            <BottomBar />
+          </Box>
         </Box>
       </ChartContext.Provider>
       <TSCDialogLoader open={state.crossPlot.converting || state.crossPlot.autoPlotting} transparentBackground />
     </>
   );
 });
+
+const sx = {
+  backgroundColor: "transparent",
+  color: "white",
+  borderRadius: "0px",
+  "&:hover": {
+    backgroundColor: "hover.main"
+  }
+};
+const BottomBar = () => {
+  const { actions } = useContext(context);
+  const navigate = useNavigate();
+  const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+  return (
+    <Box className={mobile ? styles.mobileButtons : styles.buttons} sx={{ backgroundColor: "dark.main" }}>
+      <CustomTooltip title={"Generate Cross Plot"}>
+        <IconButton sx={sx} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+          <AutoAwesome />
+        </IconButton>
+      </CustomTooltip>
+      <TSCSplitButton
+        main={{
+          label: "Generate Converted Chart",
+          icon: <CachedOutlined />,
+          onClick: () => {
+            actions.pushSnackbar("This feature is not yet implemented", "warning");
+          }
+        }}
+        options={[
+          {
+            label: "Generate Converted Chart",
+            onClick: () => {
+              actions.pushSnackbar("This feature is not yet implemented", "warning");
+            }
+          },
+          {
+            label: "Download Converted Datapack",
+            onClick: async () => actions.sendCrossPlotConversionRequest()
+          },
+          {
+            label: "Upload Converted Datapack To Profile",
+            onClick: () => {
+              actions.pushSnackbar("This feature is not yet implemented", "warning");
+            }
+          }
+        ]}
+      />
+      <CustomTooltip title={"Auto Plot"}>
+        <IconButton sx={sx} onClick={() => actions.autoPlotCrossPlot()}>
+          <AutoFixHigh />
+        </IconButton>
+      </CustomTooltip>
+    </Box>
+  );
+};

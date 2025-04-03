@@ -12,8 +12,8 @@ import {
   convertCrossPlotWithModelsInJar,
   setupAutoPlotDirectory,
   setupConversionDirectory
-} from "../crossplot/crossplot-handler.js";
-import { getMarkersFromTextFile } from "../crossplot/extract-markers.js";
+} from "./crossplot-handler.js";
+import { getMarkersFromTextFile } from "./extract-markers.js";
 import { isOperationResult } from "../types.js";
 import logger from "../error-logger.js";
 

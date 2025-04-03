@@ -3,6 +3,7 @@
   grid-template-columns: auto 1fr;
   grid-template-areas: "sidebar chart";
   grid-template-rows: calc(100vh - var(--nav-bar-height));
+  --generate-button-size: 175px;
 }
 .containerMobile {
   display: grid;
@@ -10,4 +11,27 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas: "chart" "sidebar";
   height: calc(100vh - var(--nav-bar-height));
+}
+
+.mobileButtons {
+  position: absolute;
+  bottom: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
+  right: 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+.buttons {
+  position: absolute;
+  bottom: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
+  left: 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
 }

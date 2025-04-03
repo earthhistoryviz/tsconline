@@ -36,9 +36,11 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 100vw;
   height: calc(100vh - var(--nav-bar-height));
   overflow: hidden;
+}
+.chart-back-form-control-label + .chart-tab {
+  height: calc(100vh - var(--nav-bar-height) - 66.4px); /* 66.4px is the height of the form control label */
 }
 
 .chart-and-options-bar {
@@ -77,6 +79,19 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+}
+.chart-back-arrow-button {
+  width: 20px;
+  height: 20px;
+  padding: 0px;
+}
+.chart-back-form-control-label {
+  margin: 0;
+  padding: 10px 20px;
+  gap: 10px;
+}
+.chart-back-form-control-label > .MuiTypography-root {
+  font-size: 1.1em;
 }
 
 .floating-history-button {

@@ -1,5 +1,4 @@
 .crossPlotSideBar {
-  --generate-button-size: 175px;
   --options-bar-height: 50px;
   display: grid;
   grid-template-columns: var(--side-bar-width) 1fr;
@@ -71,15 +70,6 @@
 
 .timeIntervalLabel {
   font-size: 0.9rem;
-}
-.buttons {
-  position: fixed;
-  bottom: 10px;
-  left: 5%;
-  z-index: 10;
-  display: flex;
-  flex-direction: row;
-  gap: 10px;
 }
 
 .markerContainer,
@@ -162,17 +152,6 @@
   height: 350px;
   min-height: 350px;
 }
-.mobileButtons {
-  position: fixed;
-  bottom: calc(var(--side-bar-width) + 10px);
-  width: 100%;
-  padding-right: 10px;
-  z-index: 10;
-  display: flex;
-  flex-direction: row;
-  justify-content: space-between;
-  gap: 10px;
-}
 
 .mobileTabs {
   display: flex;
@@ -185,7 +164,7 @@
   border-bottom: 1px solid var(--border-color);
   grid-area: tabs;
 }
-.mobileTabContent > *:not(.mobileButtons) {
+.mobileTabContent > *:not(.buttons) {
   resize: none;
   width: 100%;
   height: 100%;

@@ -11,16 +11,13 @@ import { CrossPlotTimeSettings } from "../types";
 import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
-import { CustomDivider, Lottie, StyledScrollbar, TSCButton, TSCCheckbox } from "../components";
-import { useNavigate } from "react-router";
+import { CustomDivider, Lottie, StyledScrollbar, TSCCheckbox } from "../components";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { actions } = useContext(context);
-    const navigate = useNavigate();
     const theme = useTheme();
     return (
       <Box
@@ -60,22 +57,7 @@ export const CrossPlotSideBar = observer(
             );
           })}
         </Box>
-        <Box className={styles.tabContent}>
-          <Box className={styles.buttons}>
-            <TSCButton
-              className={styles.generate}
-              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-              Generate Cross Plot
-            </TSCButton>
-            <TSCButton className={styles.convert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
-              Convert Datapack
-            </TSCButton>
-            <TSCButton className={styles.autoPlot} onClick={() => actions.autoPlotCrossPlot()}>
-              Auto Plot
-            </TSCButton>
-          </Box>
-          {tabs[tabIndex].component}
-        </Box>
+        <Box className={styles.tabContent}>{tabs[tabIndex].component}</Box>
       </Box>
     );
   })
@@ -84,8 +66,6 @@ export const CrossPlotSideBar = observer(
 export const MobileCrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function MobileCrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { actions } = useContext(context);
-    const navigate = useNavigate();
     const theme = useTheme();
     return (
       <Box
@@ -125,22 +105,7 @@ export const MobileCrossPlotSideBar = observer(
             );
           })}
         </Box>
-        <Box className={styles.mobileTabContent}>
-          <Box className={styles.mobileButtons}>
-            <TSCButton
-              className={styles.mobileGenerate}
-              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-              Generate Cross Plot
-            </TSCButton>
-            <TSCButton className={styles.mobileAutoPlot} onClick={() => actions.autoPlotCrossPlot()}>
-              Auto Plot
-            </TSCButton>
-            <TSCButton className={styles.mobileConvert} onClick={async () => actions.sendCrossPlotConversionRequest()}>
-              Convert Datapack
-            </TSCButton>
-          </Box>
-          {tabs[tabIndex].component}
-        </Box>
+        <Box className={styles.mobileTabContent}>{tabs[tabIndex].component}</Box>
       </Box>
     );
   })
