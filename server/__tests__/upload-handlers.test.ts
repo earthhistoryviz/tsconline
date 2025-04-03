@@ -21,7 +21,6 @@ import * as streamPromises from "stream/promises";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
-import * as uploadHandlers from "../src/upload-handlers";
 import * as loadPacks from "../src/load-packs";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
@@ -123,8 +122,8 @@ vi.mock("fs", async () => {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
-vi.spyOn(console, "error").mockImplementation(() => undefined);
-vi.spyOn(console, "log").mockImplementation(() => undefined);
+// vi.spyOn(console, "error").mockImplementation(() => undefined);
+// vi.spyOn(console, "log").mockImplementation(() => undefined);
 
 describe("uploadUserDatapackHandler", () => {
   const rm = vi.spyOn(fsPromises, "rm");
@@ -830,10 +829,17 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
   });
   it("should return pdfFields with correct file paths and names", async () => {
     createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "datapack.zip",
+        fieldname: "datapack",
+        bytesRead: 1000
+      },
       "pdfFiles[]": {
         mimetype: "application/pdf",
         filename: "file1.pdf",
-        fieldname: "pdfFiles[]"
+        fieldname: "pdfFiles[]",
+        bytesRead: 1000
       }
     });
 
@@ -842,11 +848,12 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     pipeline.mockResolvedValueOnce(undefined);
 
     const data = await processMultipartPartsForDatapackUpload("user", formData);
-
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(pipeline).toHaveBeenCalledTimes(2);
+    expect("pdfFields" in data).toBe(true);
     if ("pdfFields" in data) {
       expect(data.pdfFields).toEqual({
-        tempPDFFilePaths: expect.arrayContaining([expect.any(String)]),
-        pdfFileNames: ["file1.pdf"]
+        ["file1.pdf"]: expect.any(String)
       });
     }
   });
@@ -864,7 +871,6 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     pipeline.mockRejectedValueOnce(new Error("upload failed"));
 
     const data = await processMultipartPartsForDatapackUpload("user", formData);
-
     expect(findUser).toHaveBeenCalledOnce();
     expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
     expect(pipeline).toHaveBeenCalledOnce();
@@ -907,9 +913,6 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
       }
     });
 
-    const uploadFileMock = vi.fn().mockResolvedValueOnce({ code: 200, message: "Success" });
-    vi.spyOn(uploadHandlers, "uploadFileToFileSystem").mockImplementation(uploadFileMock);
-
     const data = await processMultipartPartsForDatapackUpload("user", formData);
 
     expect(findUser).toHaveBeenCalledOnce();
@@ -920,6 +923,58 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
       expect(data.fields).toHaveProperty("datapackImage");
       expect(data.fields).toHaveProperty("tempProfilePictureFilepath");
       expect(data.fields.datapackImage).toBe(DATAPACK_PROFILE_PICTURE_FILENAME + ".jpg");
+    }
+  });
+  it("should return correct fields and pdfFields if all files are valid", async () => {
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsDatapack.mockReturnValueOnce(true);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(true);
+    pipeline.mockResolvedValueOnce(undefined);
+
+    createFormData({
+      datapack: {
+        mimetype: "application/zip",
+        filename: "datapack.zip",
+        fieldname: "datapack",
+        bytesRead: 1000
+      },
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]",
+        bytesRead: 1000
+      },
+      [DATAPACK_PROFILE_PICTURE_FILENAME]: {
+        mimetype: "image/jpeg",
+        filename: "profile_picture.jpg",
+        fieldname: DATAPACK_PROFILE_PICTURE_FILENAME,
+        bytesRead: 1000
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    console.log(data);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapack).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapackImage).toHaveBeenCalledOnce();
+    expect("pdfFields" in data).toBe(true);
+    expect("fields" in data).toBe(true);
+    expect(pipeline).toHaveBeenCalledTimes(3);
+    if ("fields" in data) {
+      expect(data.fields).toEqual({
+        datapackImage: DATAPACK_PROFILE_PICTURE_FILENAME + ".jpg",
+        tempProfilePictureFilepath: expect.any(String),
+        filepath: expect.any(String),
+        originalFileName: "datapack.zip",
+        priority: "0",
+        storedFileName: "filename"
+      });
+      expect(data.pdfFields).toEqual({
+        ["file1.pdf"]: expect.any(String)
+      });
     }
   });
 });
