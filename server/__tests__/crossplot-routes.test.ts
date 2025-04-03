@@ -100,6 +100,7 @@ describe("convertCrossplot", async () => {
   const url = "/crossplot/convert";
   const convertCrossPlotRequest = vi.spyOn(shared, "assertConvertCrossPlotRequest");
   const setupConversionDirectory = vi.spyOn(crossplotHandler, "setupConversionDirectory");
+  const isOperationResult = vi.spyOn(types, "isOperationResult");
   const convertCrossplotWithModelsInJar = vi.spyOn(crossplotHandler, "convertCrossPlotWithModelsInJar");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");
@@ -117,6 +118,16 @@ describe("convertCrossplot", async () => {
   });
   it("should return 200 if conversion exists", async () => {
     setupConversionDirectory.mockResolvedValueOnce("success");
+    const response = await app.inject({
+      method: "POST",
+      url
+    });
+    expect(response.statusCode).toEqual(200);
+    expect(response.rawPayload).toEqual(Buffer.from("success"));
+  });
+  it("should return conversion code if conversion fails", async () => {
+    setupConversionDirectory.mockResolvedValueOnce({ code: 500, message: "Conversion failed" });
+    isOperationResult.mockReturnValueOnce(true);
     const response = await app.inject({
       method: "POST",
       url
