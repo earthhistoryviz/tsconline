@@ -393,7 +393,7 @@ export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
   parts: AsyncIterableIterator<Multipart>
 ): Promise<
-  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields: { [fileName: string]: string } }
+  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields?: { [fileName: string]: string } }
   | OperationResult
 > {
   let file: MultipartFile | undefined;
@@ -487,7 +487,7 @@ export async function processMultipartPartsForDatapackUpload(
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     },
-    pdfFields
+    ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 }
 
