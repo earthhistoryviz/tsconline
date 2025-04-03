@@ -57,23 +57,25 @@ export const CrossPlotChart: React.FC = observer(() => {
         }}>
         <Box className={mobile ? styles.containerMobile : styles.container}>
           {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}
-          <Chart
-            Component={TSCCrossPlotSVGComponent}
-            disableDoubleClick
-            refList={[
-              {
-                ref: ref,
-                id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
-              }
-            ]}
-            style={{
-              border: "none",
-              borderTop: `2px solid ${theme.palette.divider}`
-            }}
-          />
+          <Box gridArea="chart" position="relative">
+            <Chart
+              Component={TSCCrossPlotSVGComponent}
+              disableDoubleClick
+              refList={[
+                {
+                  ref: ref,
+                  id: mobile ? "crossplot-mobile-sidebar" : "crossplot-sidebar"
+                }
+              ]}
+              style={{
+                border: "none",
+                borderTop: `2px solid ${theme.palette.divider}`
+              }}
+            />
+            {mobile ? <MobileBottomBar /> : <BottomBar />}
+          </Box>
         </Box>
       </ChartContext.Provider>
-      {mobile ? <MobileBottomBar /> : <BottomBar />}
       <TSCDialogLoader open={state.crossPlot.converting || state.crossPlot.autoPlotting} transparentBackground />
     </>
   );
