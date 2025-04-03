@@ -39,7 +39,7 @@
   position: relative;
 }
 
-.tabContent {
+.tabContent > *:not(.buttons) {
   resize: none;
   width: 100%;
   height: 100%;
@@ -164,7 +164,7 @@
   border-bottom: 1px solid var(--border-color);
   grid-area: tabs;
 }
-.mobileTabContent > *:not(.mobileButtons) {
+.mobileTabContent > *:not(.buttons) {
   resize: none;
   width: 100%;
   height: 100%;
