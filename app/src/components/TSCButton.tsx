@@ -119,10 +119,12 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
         ? theme.palette.secondaryButton
         : gradient;
   const transparentSx = {
-    background: "transparent"
+    background: "transparent",
+    boxShadow: "none"
   };
   const sx = transparent
     ? {
+        boxShadow: "none",
         background: color["main"],
         color: color["contrastText"],
         "& .MuiButton-root:hover": {
@@ -142,12 +144,15 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
             disableRipple
             color="inherit"
             className={styles.splitButtonMain}
+            onClick={() => main.onClick()}
             sx={transparentSx}>
             {main.label}
           </Button>
         ) : (
           <CustomTooltip title={main.label}>
-            <IconButton className={styles.splitButtonMain}>{main.icon}</IconButton>
+            <IconButton className={styles.splitButtonMain} onClick={main.onClick}>
+              {main.icon}
+            </IconButton>
           </CustomTooltip>
         )}
         <Button disableRipple {...anchorProps} className={styles.splitButtonArrow} ref={anchorRef} sx={transparentSx}>
@@ -167,7 +172,7 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
         }}
         onClose={() => toggleMenu(false)}>
         {options.map(({ label, onClick }) => (
-          <TSCMenuItem key={label} className="settings-sub-menu-item" onClick={onClick}>
+          <TSCMenuItem key={label} className="" onClick={onClick}>
             <Typography>{label}</Typography>
           </TSCMenuItem>
         ))}

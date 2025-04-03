@@ -12,15 +12,12 @@ import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, mode
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, Lottie, StyledScrollbar, TSCCheckbox } from "../components";
-import { useNavigate } from "react-router";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { actions } = useContext(context);
-    const navigate = useNavigate();
     const theme = useTheme();
     return (
       <Box
@@ -69,8 +66,6 @@ export const CrossPlotSideBar = observer(
 export const MobileCrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function MobileCrossPlotSidebar(_, ref) {
     const [tabIndex, setTabIndex] = useState(0);
-    const { actions } = useContext(context);
-    const navigate = useNavigate();
     const theme = useTheme();
     return (
       <Box
