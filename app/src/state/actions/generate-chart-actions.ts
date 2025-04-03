@@ -139,7 +139,6 @@ export const compileChartRequest = action(
     // asserts column is not null
     if (!areSettingsValidForGeneration()) return;
     state.showSuggestedAgePopup = false;
-    console.log("options", options);
     if (options && options.from === "/crossplot") {
       navigate("/chart?from=crossplot");
     } else {
@@ -182,6 +181,7 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+      if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
     }

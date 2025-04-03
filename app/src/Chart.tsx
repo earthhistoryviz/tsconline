@@ -11,7 +11,17 @@ import {
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Box, Typography, IconButton, FormControlLabel, Drawer, List, ListItemButton, ListItemText, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  FormControlLabel,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper
+} from "@mui/material";
 import { ArrowBack } from "@mui/icons-material";
 import HistoryIcon from "@mui/icons-material/History";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
@@ -268,7 +278,8 @@ export const ChartTab: React.FC = observer(() => {
           otherChartOptions: [
             {
               label: "Timeline On/Off",
-              onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+              onChange: (bool: boolean) =>
+                actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
               value: state.chartTab.state.chartTimelineEnabled,
               icon: <img src={TimeLine} width="24" height="24" />
             }
@@ -281,7 +292,6 @@ export const ChartTab: React.FC = observer(() => {
     </>
   );
 });
-
 
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);

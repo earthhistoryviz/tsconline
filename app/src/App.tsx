@@ -163,6 +163,7 @@ export default observer(function App() {
               <Route path="/datapacks" element={<Datapacks />} />
               <Route path="/presets" element={<Presets />} />
               <Route path="/workshops" element={<Workshops />} />
+              <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
               <Route path="/file-format-info" element={<FileFormatInfo />} />
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
               <Route path="/crossplot" element={<CrossPlotChart />} />
