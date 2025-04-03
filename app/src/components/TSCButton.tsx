@@ -119,8 +119,8 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
         ? theme.palette.secondaryButton
         : gradient;
   const transparentSx = {
-    background: "transparent",
-  }
+    background: "transparent"
+  };
   const sx = transparent
     ? {
         background: color["main"],
@@ -142,28 +142,16 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
             disableRipple
             color="inherit"
             className={styles.splitButtonMain}
-            sx={
-            transparentSx}
-            >
+            sx={transparentSx}>
             {main.label}
           </Button>
         ) : (
           <CustomTooltip title={main.label}>
-          <IconButton
-            className={styles.splitButtonMain}
-          >{main.icon}</IconButton>
+            <IconButton className={styles.splitButtonMain}>{main.icon}</IconButton>
           </CustomTooltip>
         )}
-        <Button
-          disableRipple
-          {...anchorProps}
-          className={styles.splitButtonArrow}
-          ref={anchorRef}
-          sx={transparentSx}
-          >
-          <ArrowDropDown className={
-            styles.splitButtonArrowIcon
-          }/>
+        <Button disableRipple {...anchorProps} className={styles.splitButtonArrow} ref={anchorRef} sx={transparentSx}>
+          <ArrowDropDown className={styles.splitButtonArrowIcon} />
         </Button>
       </ButtonGroup>
       <ControlledMenu
