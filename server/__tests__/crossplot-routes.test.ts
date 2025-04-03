@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance, HTTPMethods } from "fastify";
+import fastify, { FastifyInstance } from "fastify";
 import { expect, beforeAll, vi, afterAll, describe, it, beforeEach } from "vitest";
 import * as shared from "@tsconline/shared";
 import * as crossplotHandler from "../src/crossplot/crossplot-handler";
@@ -100,7 +100,6 @@ describe("convertCrossplot", async () => {
   const url = "/crossplot/convert";
   const convertCrossPlotRequest = vi.spyOn(shared, "assertConvertCrossPlotRequest");
   const setupConversionDirectory = vi.spyOn(crossplotHandler, "setupConversionDirectory");
-  const isOperationResult = vi.spyOn(types, "isOperationResult");
   const convertCrossplotWithModelsInJar = vi.spyOn(crossplotHandler, "convertCrossPlotWithModelsInJar");
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");

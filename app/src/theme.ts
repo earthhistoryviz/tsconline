@@ -25,6 +25,7 @@ declare module "@mui/material/styles" {
     accordionLine: Palette["primary"];
     cardBackground: Palette["primary"];
     calendarCurrentDay: Palette["primary"];
+    hover: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -49,6 +50,7 @@ declare module "@mui/material/styles" {
     iconContrastBackground?: PaletteOptions["primary"];
     accordionLine?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
+    hover?: PaletteOptions["primary"];
   }
   interface PaletteColor {
     divider?: string;
@@ -273,6 +275,9 @@ let baseTheme = createTheme({
     },
     scrollbar: {
       main: "#78716c"
+    },
+    hover: {
+      main: "#9c9c9c30"
     }
   },
   typography: {
