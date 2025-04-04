@@ -81,6 +81,7 @@ import { createInterface } from "readline";
 import _ from "lodash";
 import { join, parse } from "path";
 import { parseMapPacks } from "./parse-map-packs.js";
+import { DatapackParsingOptions } from "./load-packs.js";
 const patternForColor = /^(\d+\/\d+\/\d+)$/;
 const patternForLineStyle = /^(solid|dashed|dotted)$/;
 const patternForAbundance = /^(TOP|missing|rare|common|frequent|abundant|sample|flood)$/;
@@ -168,9 +169,10 @@ export function spliceArrayAtFirstSpecialMatch(array: string[]): ParsedColumnEnt
  */
 export async function parseDatapacks(
   datapackMetadata: DatapackMetadata,
-  decryptFilePath: string
+  decryptFilePath: string,
+  options?: DatapackParsingOptions
 ): Promise<Datapack | null> {
-  const decryptPaths = await grabFilepaths([datapackMetadata.storedFileName], decryptFilePath, "datapacks");
+  const decryptPaths = options?.nonStandardFilepath ? join(decryptFilePath, datapackMetadata.storedFileName) : await grabFilepaths([datapackMetadata.storedFileName], decryptFilePath, "datapacks")
   if (decryptPaths.length == 0)
     throw new Error(
       `Did not find any datapacks for ${datapackMetadata.originalFileName} in decryptFilePath ${decryptFilePath}`
