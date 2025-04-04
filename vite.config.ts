@@ -15,7 +15,7 @@ export default defineConfig({
     environment: "node",
     include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
     coverage: {
-      reporter: ["text", "lcov"],
+      reporter: ["text", "lcov", "html"],
       include: ["server/src/**", "app/src/**", "shared/src/**"],
       // TODO: add the commented out files
       thresholds: {
