@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeEach, vi, test } from "vitest";
 import {
   changeProfilePicture,
+  fetchMapPackImageFilepath,
   getFileNameFromCachedDatapack,
   getTemporaryFilepath,
   processMultipartPartsForDatapackUpload,
   replaceDatapackFile,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
-  uploadUserDatapackHandler
+  uploadUserDatapackHandler,
+  uploadFilesToWorkshop,
+  uploadCoverPicToWorkshop,
+  getWorkshopDatapacksNames,
+  getWorkshopFilesNames,
+  fetchWorkshopCoverPictureFilepath
 } from "../src/upload-handlers";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
@@ -15,11 +21,18 @@ import * as streamPromises from "stream/promises";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as util from "../src/util";
 import * as userHandlers from "../src/user/user-handler";
+import * as uploadHandlers from "../src/upload-handlers";
 import * as loadPacks from "../src/load-packs";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import * as fileMetadataHandler from "../src/file-metadata-handler";
 import * as database from "../src/database";
 import { User, assertOperationResult, isOperationResult } from "../src/types";
+import * as workshopUtil from "../src/workshop/workshop-util";
+import { Dirent } from "fs";
+
+import path from "path";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
 }));
@@ -28,7 +41,12 @@ vi.mock("../src/database", () => ({
 }));
 vi.mock("../src/user/fetch-user-files", () => ({
   fetchUserDatapackDirectory: vi.fn().mockResolvedValue("directory"),
-  getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory")
+  getUserUUIDDirectory: vi.fn().mockResolvedValue("uuid-directory"),
+  getUsersDatapacksDirectoryFromUUIDDirectory: vi.fn().mockReturnValue("datapacks-directory"),
+  getUnsafeCachedDatapackFilePath: vi.fn().mockReturnValue("cached-datapack-filepath"),
+  getPDFFilesDirectoryFromDatapackDirectory: vi.fn().mockReturnValue("files-directory"),
+  getDecryptedDirectory: vi.fn().mockReturnValue("decrypted-directory"),
+  getDirectories: vi.fn().mockResolvedValue(["directory1", "directory2"])
 }));
 vi.mock("stream/promises", () => ({
   pipeline: vi.fn().mockResolvedValue(undefined)
@@ -36,7 +54,9 @@ vi.mock("stream/promises", () => ({
 vi.mock("../src/constants", () => ({
   DATAPACK_PROFILE_PICTURE_FILENAME: "datapack-image",
   CACHED_USER_DATAPACK_FILENAME: "Datapack.json",
-  DECRYPTED_DIRECTORY_NAME: "decrypted"
+  DECRYPTED_DIRECTORY_NAME: "decrypted",
+  MAPPACK_DIRECTORY_NAME: "MapImages",
+  WORKSHOP_COVER_PICTURE: "coverPicture"
 }));
 vi.mock("@tsconline/shared", () => ({
   isDateValid: vi.fn().mockReturnValue(true),
@@ -63,6 +83,8 @@ vi.mock("../src/load-packs", () => ({
 }));
 vi.mock("../src/user/user-handler", () => ({
   checkFileTypeIsDatapack: vi.fn().mockReturnValue(true),
+  checkFileTypeIsPDF: vi.fn().mockReturnValue(true),
+  checkFileTypeIsDatapackImage: vi.fn().mockReturnValue(true),
   decryptDatapack: vi.fn().mockResolvedValue(undefined),
   deleteDatapackFileAndDecryptedCounterpart: vi.fn().mockResolvedValue(undefined),
   doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false)
@@ -73,21 +95,37 @@ vi.mock("fs/promises", () => ({
   copyFile: vi.fn().mockResolvedValue(undefined),
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
-  readFile: vi.fn().mockResolvedValue(JSON.stringify({ storedFileName: "storedFileName" }))
+  readFile: vi.fn().mockResolvedValue(JSON.stringify({ storedFileName: "storedFileName" })),
+  readdir: vi.fn().mockResolvedValue(undefined)
 }));
 vi.mock("../src/util", () => ({
   getBytes: vi.fn().mockReturnValue("1 B"),
   checkFileExists: vi.fn().mockResolvedValue(true),
   makeTempFilename: vi.fn().mockReturnValue("filename"),
+  verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
   assetconfigs: {
-    fileMetadata: "fileMetadata"
-  }
+    fileMetadata: "fileMetadata",
+    privateDatapacksDirectory: "/absolute/path/to/private/datapacks"
+  },
+  verifyFilepath: vi.fn().mockResolvedValue(true)
+}));
+vi.mock("../src/workshop/workshop-util", () => ({
+  getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid"),
+  getWorkshopCoverPath: vi.fn().mockImplementation(() => {
+    throw new Error("Invalid Workshop Cover Directory.");
+  }),
+  getWorkshopFilesPath: vi.fn().mockImplementation(() => {
+    throw new Error("Invalid Workshop Files Directory.");
+  })
 }));
 vi.mock("fs", async () => {
   return {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
+vi.spyOn(console, "error").mockImplementation(() => undefined);
+vi.spyOn(console, "log").mockImplementation(() => undefined);
+
 describe("uploadUserDatapackHandler", () => {
   const rm = vi.spyOn(fsPromises, "rm");
   const isDateValid = vi.spyOn(shared, "isDateValid");
@@ -440,14 +478,17 @@ describe("changeProfilePicture tests", () => {
     checkFileExists.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
     await changeProfilePicture("user", "datapack", "sourceFile");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(2);
-    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+    const expectedRenamePath = path.join("directory", "datapack-image");
+    expect(rename).toHaveBeenCalledWith("sourceFile", expectedRenamePath);
   });
   it("should move the file to the correct location if previous profile picture exists", async () => {
     checkFileExists.mockResolvedValueOnce(true);
     await changeProfilePicture("user", "datapack", "sourceFile");
     expect(fetchUserDatapackDirectory).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith("directory/datapack-image.png", { force: true });
-    expect(rename).toHaveBeenCalledWith("sourceFile", `directory/datapack-image`);
+    const expectedPath = path.join("directory", "datapack-image.png");
+    expect(rm).toHaveBeenCalledWith(expectedPath, { force: true });
+    const expectedRenamePath = path.join("directory", "datapack-image");
+    expect(rename).toHaveBeenCalledWith("sourceFile", expectedRenamePath);
   });
 });
 
@@ -575,6 +616,33 @@ describe("setupNewDatapackDirectoryInUUIDDirectory", () => {
     await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, true);
     expect(writeFileMetadata).not.toHaveBeenCalled();
   });
+  it("should handle pdfFields and remove original PDF files when not manual", async () => {
+    const pdfFields = { "file1.pdf": "tempPath1", "file2.pdf": "tempPath2" };
+    loadDatapackIntoIndex.mockImplementationOnce(async (index, decryptionFilepath, metadata) => {
+      index[metadata.title] = metadata as shared.Datapack;
+      return true;
+    });
+    const datapackFolder = path.normalize("datapacks-directory/title");
+    const expectedPdfFilesDir = path.resolve(datapackFolder, "files");
+    const verifyNonExistentFilepathMock = vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValue(true);
+    const fetchPDFFileDirectory = vi
+      .spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory")
+      .mockResolvedValue(expectedPdfFilesDir);
+    const pathJoinSpy = vi.spyOn(path, "join").mockImplementation((...args) => args.join(path.sep));
+    await setupNewDatapackDirectoryInUUIDDirectory("uuid", "sourceFilePath", metadata, false, undefined, pdfFields);
+    expect(fetchPDFFileDirectory).toHaveBeenCalledTimes(1);
+    expect(fetchPDFFileDirectory).toHaveBeenCalledWith(datapackFolder);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledTimes(2);
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file1.pdf"));
+    expect(verifyNonExistentFilepathMock).toHaveBeenCalledWith(path.resolve(expectedPdfFilesDir, "file2.pdf"));
+    expect(rm).toHaveBeenCalledTimes(3);
+    expect(rm).toHaveBeenCalledWith("tempPath1", { force: true });
+    expect(rm).toHaveBeenCalledWith("tempPath2", { force: true });
+    expect(pathJoinSpy).toHaveBeenCalledWith(datapackFolder, "storedFileName");
+    fetchPDFFileDirectory.mockRestore();
+    verifyNonExistentFilepathMock.mockRestore();
+    pathJoinSpy.mockRestore();
+  });
 });
 
 describe("getFileNameFromCachedDatapack tests", () => {
@@ -608,12 +676,15 @@ describe("getFileNameFromCachedDatapack tests", () => {
 it("should return the directory and filename", async () => {
   const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   getUserUUIDDirectory.mockResolvedValueOnce("uuid-directory");
-  expect(await getTemporaryFilepath("uuid", "filename")).toEqual("uuid-directory/filename");
+  const result = await getTemporaryFilepath("uuid", "filename");
+  expect(path.normalize(result)).toEqual(path.normalize("uuid-directory/filename"));
   expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
 });
 describe("processMultipartPartsForDatapackUpload tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const checkFileTypeIsDatapack = vi.spyOn(userHandlers, "checkFileTypeIsDatapack");
+  const checkFileTypeIsPDF = vi.spyOn(userHandlers, "checkFileTypeIsPDF");
+  const checkFileTypeIsDatapackImage = vi.spyOn(userHandlers, "checkFileTypeIsDatapackImage");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
   const rm = vi.spyOn(fsPromises, "rm");
   let formData: AsyncIterableIterator<Multipart>;
@@ -738,5 +809,358 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     expect(rm).toHaveBeenCalledOnce();
     expect(data.code).toBe(500);
     expect(data.message).toBe("Failed to save file");
+  });
+  it("should return a 415 error if invalid file type for datapack pdf file", async () => {
+    checkFileTypeIsPDF.mockReturnValueOnce(false);
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "text/plain",
+        filename: "file1.txt",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack pdf file");
+  });
+  it("should return pdfFields with correct file paths and names", async () => {
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    pipeline.mockResolvedValueOnce(undefined);
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    if ("pdfFields" in data) {
+      expect(data.pdfFields).toEqual({
+        tempPDFFilePaths: expect.arrayContaining([expect.any(String)]),
+        pdfFileNames: ["file1.pdf"]
+      });
+    }
+  });
+  it("should clean up temporary files if upload fails for pdf file", async () => {
+    createFormData({
+      "pdfFiles[]": {
+        mimetype: "application/pdf",
+        filename: "file1.pdf",
+        fieldname: "pdfFiles[]"
+      }
+    });
+
+    findUser.mockResolvedValueOnce([{ isAdmin: 1 } as User]);
+    checkFileTypeIsPDF.mockReturnValueOnce(true);
+    pipeline.mockRejectedValueOnce(new Error("upload failed"));
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsPDF).toHaveBeenCalledOnce();
+    expect(pipeline).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(500);
+    expect(data.message).toBe("Failed to save file");
+  });
+  it("should return a 415 error if invalid file type for datapack image", async () => {
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(false);
+
+    createFormData({
+      [DATAPACK_PROFILE_PICTURE_FILENAME]: {
+        mimetype: "text/plain",
+        filename: "invalid.txt",
+        fieldname: DATAPACK_PROFILE_PICTURE_FILENAME
+      }
+    });
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapackImage).toHaveBeenCalledOnce();
+    expect(isOperationResult(data)).toBe(true);
+    assertOperationResult(data);
+    expect(data.code).toBe(415);
+    expect(data.message).toBe("Invalid file type for datapack image");
+  });
+  it("should process datapack image upload correctly", async () => {
+    checkFileTypeIsDatapackImage.mockReturnValueOnce(true);
+    findUser.mockResolvedValueOnce([{ isAdmin: 0 } as User]);
+
+    createFormData({
+      [DATAPACK_PROFILE_PICTURE_FILENAME]: {
+        mimetype: "image/jpeg",
+        filename: "profile_picture.jpg",
+        fieldname: DATAPACK_PROFILE_PICTURE_FILENAME
+      }
+    });
+
+    const uploadFileMock = vi.fn().mockResolvedValueOnce({ code: 200, message: "Success" });
+    vi.spyOn(uploadHandlers, "uploadFileToFileSystem").mockImplementation(uploadFileMock);
+
+    const data = await processMultipartPartsForDatapackUpload("user", formData);
+
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(checkFileTypeIsDatapackImage).toHaveBeenCalledOnce();
+
+    expect(isOperationResult(data)).toBe(true);
+    if ("fields" in data) {
+      expect(data.fields).toHaveProperty("datapackImage");
+      expect(data.fields).toHaveProperty("tempProfilePictureFilepath");
+      expect(data.fields.datapackImage).toBe(DATAPACK_PROFILE_PICTURE_FILENAME + ".jpg");
+    }
+  });
+});
+describe("fetchMapPackImageFilepath", () => {
+  const fetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
+  const getDecryptedDirectory = vi.spyOn(fetchUserFiles, "getDecryptedDirectory");
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const getDirectories = vi.spyOn(fetchUserFiles, "getDirectories");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should throw error if datapack directory doesn't exist", async () => {
+    getDirectories.mockRejectedValueOnce(new Error("error"));
+    await expect(() => fetchMapPackImageFilepath("user", "datapack", "img")).rejects.toThrow();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+  });
+  it("should return null if no image found", async () => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("datapacks-directory");
+    getDirectories.mockResolvedValueOnce(["decrypted-directory"]);
+    checkFileExists.mockResolvedValueOnce(false);
+    const result = await fetchMapPackImageFilepath("user", "datapack", "img");
+    expect(result).toBeNull();
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+  });
+  it("should return the image filepath if found", async () => {
+    fetchUserDatapackDirectory.mockResolvedValueOnce("datapacks-directory");
+    checkFileExists.mockResolvedValueOnce(true);
+    getDirectories.mockResolvedValueOnce(["decrypted-directory"]);
+    getDecryptedDirectory.mockReturnValue("decrypted-directory");
+    const result = await fetchMapPackImageFilepath("user", "datapack", "img");
+    expect(result).toEqual("decrypted-directory/decrypted-directory/MapImages/img");
+    expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalledOnce();
+    expect(getDecryptedDirectory).toHaveBeenCalledOnce();
+  });
+});
+
+describe("uploadFilesToWorkshop tests", () => {
+  const multipartFile = {
+    name: "file",
+    type: "file",
+    mimetype: "mimetype",
+    filename: "filename",
+    fieldname: "fieldname",
+    bytesRead: 1,
+    file: {
+      truncated: false,
+      bytesRead: 1
+    }
+  } as unknown as MultipartFile;
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 500 if path is invalid", async () => {
+    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({
+      code: 500,
+      message: "Invalid Workshop Files Directory."
+    });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
+  });
+  it("should return 200 if uploaded successfully", async () => {
+    pipeline.mockResolvedValueOnce();
+    getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
+    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
+    expect(rm).not.toHaveBeenCalled();
+  });
+  it("should return clean the file path and return the error code if failed to upload", async () => {
+    pipeline.mockRejectedValueOnce(new Error("error"));
+    getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
+    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+});
+
+describe("uploadCoverToWorkshop tests", () => {
+  const multipartFile = {
+    name: "file",
+    type: "file",
+    mimetype: "mimetype",
+    filename: "filename",
+    fieldname: "fieldname",
+    bytesRead: 1,
+    file: {
+      truncated: false,
+      bytesRead: 1
+    }
+  } as unknown as MultipartFile;
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
+  const rm = vi.spyOn(fsPromises, "rm");
+  const pipeline = vi.spyOn(streamPromises, "pipeline");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 500 if path is invalid", async () => {
+    expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({
+      code: 500,
+      message: "Invalid Workshop Cover Directory."
+    });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
+  });
+  it("should return 200 if uploaded successfully", async () => {
+    pipeline.mockResolvedValueOnce();
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+    expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
+    expect(rm).not.toHaveBeenCalled();
+  });
+  it("should clean the file path and return the error code if failed to upload", async () => {
+    pipeline.mockRejectedValueOnce(new Error("error"));
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+    expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
+    expect(rm).toHaveBeenCalledOnce();
+  });
+});
+
+describe("fetchWorkshopCoverPictureFilepath tests", () => {
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return null if path is invalid", async () => {
+    expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual(null);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
+  });
+  it("should return null if there's no cover picture", async () => {
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+    checkFileExists.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
+    expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual(null);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalledTimes(3);
+  });
+  it("should return the file path if successfully found", async () => {
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+    expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual("workshop-uuid/cover/coverPicture.png");
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(checkFileExists).toHaveBeenCalled();
+  });
+});
+
+describe("getWorkshopDatapacksNames tests", () => {
+  const mockDirentArray: Dirent[] = [
+    { name: "datapack1", isFile: () => false, isDirectory: () => true } as Dirent,
+    { name: "datapack2", isFile: () => false, isDirectory: () => true } as Dirent,
+    { name: "datapack3", isFile: () => false, isDirectory: () => true } as Dirent
+  ];
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const readdir = vi.spyOn(fsPromises, "readdir");
+  const getUsersDatapacksDirectoryFromUUIDDirectory = vi.spyOn(
+    fetchUserFiles,
+    "getUsersDatapacksDirectoryFromUUIDDirectory"
+  );
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return empty array if path is invalid", async () => {
+    getUsersDatapacksDirectoryFromUUIDDirectory.mockImplementationOnce(() => {
+      throw new Error("error");
+    });
+    expect(await getWorkshopDatapacksNames(1)).toEqual([]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(readdir).not.toHaveBeenCalled();
+  });
+  it("should return empty array if fail to read dir", async () => {
+    readdir.mockRejectedValueOnce(new Error("error"));
+    expect(await getWorkshopDatapacksNames(1)).toEqual([]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+  });
+  it("should return the string array of datapacks names if successfully found", async () => {
+    readdir.mockResolvedValueOnce(mockDirentArray);
+    expect(await getWorkshopDatapacksNames(1)).toEqual(["datapack1", "datapack2", "datapack3"]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+  });
+});
+describe("getWorkshopFilesNames tests", () => {
+  const mockDirentArray: Dirent[] = [
+    { name: "file1", isFile: () => true, isDirectory: () => false } as Dirent,
+    { name: "file2", isFile: () => true, isDirectory: () => false } as Dirent,
+    { name: "file3", isFile: () => true, isDirectory: () => false } as Dirent
+  ];
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const readdir = vi.spyOn(fsPromises, "readdir");
+  const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return empty array if path is invalid", async () => {
+    expect(await getWorkshopFilesNames(1)).toEqual([]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
+    expect(readdir).not.toHaveBeenCalled();
+  });
+
+  it("should return empty array if fail to read dir", async () => {
+    readdir.mockRejectedValueOnce(new Error("error"));
+    getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
+    expect(await getWorkshopFilesNames(1)).toEqual([]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+  });
+  it("should return the string array of datapacks names if successfully found", async () => {
+    readdir.mockResolvedValueOnce(mockDirentArray);
+    getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
+    expect(await getWorkshopFilesNames(1)).toEqual(["file1", "file2", "file3"]);
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
+    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
   });
 });

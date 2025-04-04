@@ -6,8 +6,10 @@ import { forwardRef } from "react";
 type TSCButtonProps = {
   buttonType?: "primary" | "secondary" | "gradient";
 } & ButtonProps;
-export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(({ buttonType = "primary", ...props }, ref) => {
-  TSCButton.displayName = "TSCButton";
+export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(function TSCButton(
+  { buttonType = "primary", ...props },
+  ref
+) {
   const theme = useTheme();
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const color =

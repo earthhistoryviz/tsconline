@@ -1,14 +1,11 @@
 import { DatapackIndex, Patterns, assertPatterns, DatapackMetadata } from "@tsconline/shared";
-import pmap from "p-map";
-import fs from "fs/promises";
-import fsSync from "fs";
 import { parseDatapacks } from "./parse-datapacks.js";
 import { glob } from "glob";
 import { readFile } from "fs/promises";
 import nearestColor from "nearest-color";
 import path from "path";
 import { assertColors } from "./types.js";
-import { grabFilepaths, rgbToHex, assetconfigs } from "./util.js";
+import { rgbToHex, assetconfigs } from "./util.js";
 import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
@@ -44,7 +41,6 @@ export async function loadDatapackIntoIndex(
       successful = false;
       console.log(chalk.red(`Cannot create a datapack with datapack ${datapack.originalFileName} and error: ${e}`));
     });
-  successful = (await grabMapImages([datapack.storedFileName], decryptionDirectory)).successful && successful;
   return successful;
 }
 /**
@@ -113,43 +109,4 @@ async function getDominantRGB(filepath: string) {
     throw new Error("Cannot get palette from image");
   }
   return palette;
-}
-
-/**
- * Finds all map images and puts them in the public directory
- * For access from fastify server servicing
- */
-export async function grabMapImages(
-  datapacks: string[],
-  decryptionDirectory: string = assetconfigs.decryptionDirectory
-): Promise<{ images: string[]; successful: boolean }> {
-  if (datapacks.length === 0) return { images: [], successful: true };
-  const imagePaths = await grabFilepaths(datapacks, decryptionDirectory, "MapImages");
-  const compiledImages: string[] = [];
-  let successful = true;
-  try {
-    // recursive: true ensures if it already exists, we continue with no error
-    await fs.mkdir(assetconfigs.imagesDirectory, { recursive: true });
-    await pmap(
-      imagePaths,
-      async (image_path) => {
-        const fileName = path.basename(image_path);
-        const destPath = path.join(assetconfigs.imagesDirectory, fileName);
-        if (fsSync.existsSync(destPath)) {
-          return;
-        }
-        try {
-          await fs.copyFile(image_path, destPath);
-          compiledImages.push(`/${destPath}`);
-        } catch (e) {
-          console.log("Error copying image file, file could already exist. Resulting Error: ", e);
-        }
-      },
-      { concurrency: 5 }
-    ); // Adjust concurrency as needed
-  } catch (e) {
-    console.log("Error processing image paths for datapacks: ", datapacks, " \n", "With error: ", e);
-    successful = false;
-  }
-  return { images: compiledImages, successful };
 }

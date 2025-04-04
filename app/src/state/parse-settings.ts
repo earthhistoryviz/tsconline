@@ -43,7 +43,7 @@ import { cloneDeep, range } from "lodash";
 //https://stackoverflow.com/questions/51269431/jest-mock-inner-function
 import * as parseSettings from "./parse-settings";
 import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
-
+import { attachTscPrefixToName } from "./non-action-util";
 /**
  * casts a string to a specified type
  * @param value a string that we want to cast to a type
@@ -90,7 +90,6 @@ function processSettings(settingsNode: Element): ChartSettingsInfoTSC {
     if (!settingName) continue;
 
     const nestedSettingsNode = settingNode.getElementsByTagName("setting")[0];
-    if (!nestedSettingsNode) continue;
     let settingValue: string = "";
     if (nestedSettingsNode && nestedSettingsNode.textContent) {
       settingValue = nestedSettingsNode.textContent.trim();
@@ -499,15 +498,7 @@ export function translateColumnInfoToColumnInfoTSC(state: ColumnInfo): ColumnInf
       };
       break;
   }
-  switch (state.columnDisplayType) {
-    case "RootColumn":
-    case "MetaColumn":
-    case "BlockSeriesMetaColumn":
-      column._id = `class datastore.${state.columnDisplayType}:` + state.name;
-      break;
-    default:
-      column._id = `class datastore.${state.columnDisplayType}Column:` + state.name;
-  }
+  column._id = attachTscPrefixToName(state.name, state.columnDisplayType);
   column.title = escapeHtmlChars(state.editName, "text");
   column.isSelected = state.on;
   column.drawTitle = state.enableTitle;

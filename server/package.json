@@ -6,21 +6,22 @@
   "dependencies": {
     "@fastify/compress": "^7.0.0",
     "@fastify/cors": "^9.0.1",
-    "@fastify/multipart": "^8.2.0",
+    "@fastify/multipart": "^8.3.1",
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/secure-session": "^7.4.0",
     "@fastify/static": "^6.10.1",
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "0.8.10",
+    "adm-zip": "^0.5.16",
+    "archiver": "^7.0.1",
     "async-mutex": "^0.5.0",
     "bcrypt-ts": "^5.0.2",
     "better-sqlite3": "^9.4.4",
     "chalk": "^5.3.0",
     "cors": "^2.8.5",
-    "dompurify": "^3.1.3",
+    "dompurify": "^3.2.4",
     "dotenv": "^16.4.5",
     "fastify": "^4.27.0",
-    "fastify-metrics": "^12.1.0",
     "glob": "^10.3.10",
     "google-auth-library": "^9.8.0",
     "js-levenshtein": "^1.1.6",
@@ -37,15 +38,18 @@
     "p-queue": "^8.0.1",
     "path-scurry": "^1.10.1",
     "pino-pretty": "^10.0.0",
+    "prom-client": "^15.1.3",
     "pump": "^3.0.0",
     "sharp": "^0.33.4",
     "sqlite3": "^5.1.7",
     "svgson": "^5.3.1",
     "validator": "^13.12.0",
     "winston": "^3.14.0",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.17.1"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0",
+    "@types/archiver": "^6.0.3",
     "@types/better-sqlite3": "^7.6.9",
     "@types/dompurify": "^3",
     "@types/js-levenshtein": "^1",
@@ -59,9 +63,8 @@
     "@types/pump": "^1.1.3",
     "@types/validator": "^13",
     "form-auto-content": "^3.2.1",
-    "tsx": "^4.9.3",
     "typescript": "5.2.2",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.1"
   },
   "keywords": [],
   "license": "ISC",
@@ -73,9 +76,12 @@
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
     "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",
+    "sync-translations": "node dist/sync-translations.js",
     "migrate-datapacks": "node dist/migrate-cached-datapacks.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "clean": "rm -rf ./dist"
+    "clean": "rm -rf ./dist",
+    "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js",
+    "pull-supporting-files": "node dist/pull-supporting-files.js"
   },
   "type": "module"
 }

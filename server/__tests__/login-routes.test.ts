@@ -19,6 +19,11 @@ import * as fsModule from "fs";
 import * as metadataModule from "../src/file-metadata-handler";
 import logger from "../src/error-logger";
 import { normalize } from "path";
+vi.mock("../src/user/chart-history", async () => {
+  return {
+    getChartHistoryMetadata: vi.fn().mockResolvedValue([])
+  };
+});
 vi.mock("../src/user/fetch-user-files", async () => {
   return {
     getPrivateUserUUIDDirectory: vi.fn().mockResolvedValue("private")
@@ -1851,12 +1856,14 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        uuid: testUser.uuid
+        uuid: testUser.uuid,
+        historyEntries: []
       });
     });
 
@@ -1875,13 +1882,15 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
         workshopIds: [workshop.workshopId],
-        uuid: testUser.uuid
+        uuid: testUser.uuid,
+        historyEntries: []
       });
     });
 
@@ -1901,12 +1910,14 @@ describe("login-routes tests", () => {
       expect(response.statusCode).toBe(200);
       expect(response.json().authenticated).toBe(true);
       expect(response.json().user).toEqual({
+        accountType: testUser.accountType,
         email: testUser.email,
         username: testUser.username,
         pictureUrl: testUser.pictureUrl,
         isGoogleUser: false,
         isAdmin: false,
-        uuid: testUser.uuid
+        uuid: testUser.uuid,
+        historyEntries: []
       });
     });
   });

@@ -9,10 +9,13 @@ import {
   DatapackPriorityChangeRequest,
   SharedWorkshop,
   assertAdminSharedUserArray,
+  assertDatapack,
   assertDatapackArray,
   assertDatapackIndex,
+  assertDatapackMetadataArray,
   assertDatapackPriorityPartialUpdateSuccess,
   assertDatapackPriorityUpdateSuccess,
+  assertOfficialDatapack,
   assertSharedWorkshop,
   assertSharedWorkshopArray,
   assertWorkshopDatapack,
@@ -21,7 +24,6 @@ import {
 import { displayServerError } from "./util-actions";
 import {
   addDatapack,
-  fetchOfficialDatapack,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -191,6 +193,46 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
   }
 });
 
+export const adminModifyUsers = action(
+  async (user: { username: string; email: string; accountType?: string; isAdmin?: number }) => {
+    const { username, email, accountType, isAdmin } = user;
+    if (!username || !email || (!accountType && isAdmin === undefined)) {
+      pushSnackbar("Missing required fields", "warning");
+      return;
+    }
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminModifyUsers");
+      if (!recaptchaToken) return;
+
+      const response = await fetcher("/admin/user", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ username, email, accountType, isAdmin }),
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        pushSnackbar("User modified successfully", "success");
+        adminFetchUsers(); // Refresh the user list if applicable
+      } else {
+        const serverResponse = await response.json();
+        displayServerError(
+          serverResponse,
+          ErrorCodes.ADMIN_MODIFY_USER_FAILED,
+          ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]
+        );
+        return `${ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]}`;
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+);
+
 /**
  * Deletes a user's datapack (datapack's "id" is the filename)
  */
@@ -290,7 +332,7 @@ export const adminDeleteOfficialDatapacks = action(
 );
 
 export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
     const recaptchaToken = await getRecaptchaToken("adminUploadOfficialDatapack");
     if (!recaptchaToken) return;
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
@@ -312,6 +354,11 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    if (pdfFiles?.length) {
+      pdfFiles.forEach((pdfFile) => {
+        formData.append("pdfFiles[]", pdfFile);
+      });
+    }
     try {
       const response = await fetcher(`/admin/official/datapack`, {
         method: "POST",
@@ -324,7 +371,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
       const data = await response.json();
 
       if (response.ok) {
-        const pack = await fetchOfficialDatapack(metadata.title);
+        const pack = await adminFetchOfficialDatapack(metadata.title);
         if (!pack) {
           return;
         }
@@ -340,8 +387,10 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
   }
 );
 
+/**
+ * Fetches all private official datapacks, used only on Admin page
+ */
 export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
-  setPrivateOfficialDatapacksLoading(true);
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
     if (!recaptchaToken) return;
@@ -375,8 +424,68 @@ export const adminFetchPrivateOfficialDatapacks = action(async (options?: { sign
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     return;
+  }
+});
+
+export const adminFetchPrivateOfficialDatapacksMetadata = action(async () => {
+  try {
+    const response = await fetcher("/admin/official/private/metadata", {
+      method: "GET",
+      credentials: "include"
+    });
+    if (response.ok) {
+      const data = await response.json();
+      assertDatapackMetadataArray(data);
+      for (const dp in data) {
+        addDatapack(data[dp]);
+      }
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED,
+        ErrorMessages[ErrorCodes.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED]
+      );
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   } finally {
     setPrivateOfficialDatapacksLoading(false);
+  }
+});
+
+/**
+ * Fetch an official datapack, private or public
+ */
+export const adminFetchOfficialDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
+  try {
+    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    if (!recaptchaToken) return;
+    const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(datapack)}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      },
+      ...options
+    });
+    if (response.ok) {
+      const datapack = await response.json();
+      assertOfficialDatapack(datapack);
+      assertDatapack(datapack);
+      return datapack;
+    } else {
+      displayServerError(
+        await response.json(),
+        ErrorCodes.SERVER_RESPONSE_ERROR,
+        ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]
+      );
+    }
+  } catch (error) {
+    if ((error as Error).name === "AbortError") return;
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
   }
 });
 
@@ -434,7 +543,7 @@ export const adminAddUsersToWorkshop = action(
 /**
  * Fetches all workshops
  */
-export const adminFetchWorkshops = action(async () => {
+export const adminFetchWorkshops = action(async (options?: { signal?: AbortSignal }) => {
   try {
     const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
     if (!recaptchaToken) return;
@@ -443,7 +552,8 @@ export const adminFetchWorkshops = action(async () => {
       credentials: "include",
       headers: {
         "recaptcha-token": recaptchaToken
-      }
+      },
+      ...options
     });
     if (response.ok) {
       const workshops = (await response.json()).workshops;
@@ -457,8 +567,10 @@ export const adminFetchWorkshops = action(async () => {
       );
     }
   } catch (error) {
+    if ((error as Error).name === "AbortError") return;
     console.error(error);
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    return;
   }
 });
 
@@ -471,11 +583,25 @@ export const adminFetchWorkshops = action(async () => {
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
-  async (title: string, start: string, end: string): Promise<number | undefined> => {
+  async (
+    title: string,
+    start: string,
+    end: string,
+    regRestrict: boolean,
+    creatorUUID: string,
+    regLink?: string
+  ): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      const body: Record<string, string> = { title, start, end };
+      const body: Record<string, string | boolean | undefined> = {
+        title,
+        start,
+        end,
+        regRestrict,
+        creatorUUID,
+        regLink
+      };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
         headers: {
@@ -779,4 +905,99 @@ export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChange
 export const resetAdminConfigTempState = action(() => {
   state.admin.datapackConfig.rowPriorityUpdates = [];
   state.admin.datapackConfig.tempRowData = null;
+});
+
+/**
+ * Upload files to a workshop
+ * @param Files The uploaded files
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddFilesToWorkshop = action(async (workshopId: number, files: File[]) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append(`file`, file);
+  });
+  try {
+    const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          adminFetchWorkshops();
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+/**
+ * Upload cover picture to a workshop
+ * @param coverPicture The uploaded cover picture
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddCoverPicToWorkshop = action(async (workshopId: number, coverPicture: File) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+  formData.append("file", coverPicture);
+  try {
+    const response = await fetcher(`/admin/workshop/cover/${workshopId}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          adminFetchWorkshops();
+          break;
+        case 415:
+          errorCode = ErrorCodes.INVALID_FILE_FORMAT;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
 });

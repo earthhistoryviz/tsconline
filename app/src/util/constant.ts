@@ -14,3 +14,7 @@ export const defaultColors: string[] = [
 export const snackbarTextLengthLimit: number = 70;
 
 export const altUnitNamePrefix: string = "Chart Title in ";
+
+export const navBarHeight = "72px";
+
+export const dualColCompPrefix: string = "Overlay for ";

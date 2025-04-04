@@ -50,10 +50,7 @@ export const TSCPopupManager = () => {
     };
 
     const handleMessage = async (event: MessageEvent) => {
-      let url = "http://localhost:5173";
-      if (import.meta.env.VITE_APP_URL) {
-        url = import.meta.env.VITE_APP_URL;
-      }
+      const url = window.location.origin;
       if (event.origin !== url) {
         actions.pushError(ErrorCodes.INVALID_PATH);
         setIsValidPath(false);
@@ -69,7 +66,7 @@ export const TSCPopupManager = () => {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
-  }, []);
+  }, [state.prevSettings.mouseOverPopupsEnabled]);
 
   if (!isValidPath) {
     return <Typography>Invalid SVG Path. Please check the path and try again.</Typography>;

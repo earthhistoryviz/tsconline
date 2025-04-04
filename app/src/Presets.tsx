@@ -84,7 +84,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                             continue;
                           }
                           actions.setLoadingDatapacks(true);
-                          const fetchedDatapack = await actions.fetchOfficialDatapack(dp.name);
+                          const fetchedDatapack = await actions.fetchPublicOfficialDatapack(dp.name);
                           if (!fetchedDatapack) {
                             return;
                           }
@@ -102,7 +102,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
                       } finally {
                         actions.setLoadingDatapacks(false);
                       }
-                      const success = await actions.processDatapackConfig(datapacks, preset.settings);
+                      const success = await actions.processDatapackConfig(datapacks, { settings: preset.settings });
                       if (!success) return;
                       actions.initiateChartGeneration(navigate, "/home");
                     }}

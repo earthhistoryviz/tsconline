@@ -386,7 +386,13 @@ export let ddeLightTheme = createTheme(baseTheme, {
     },
     accordionLine: {
       main: "#888888"
-    }
+    },
+    cardBackground: baseTheme.palette.augmentColor({
+      color: {
+        main: "#1A2029"
+      },
+      name: "secondaryBackground"
+    })
   }
 });
 

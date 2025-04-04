@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { formatColumnName, grabFilepaths, trimQuotes, assetconfigs } from "./util.js";
+import { formatColumnName, grabFilepaths, trimQuotes } from "./util.js";
 import pmap from "p-map";
 import {
   InfoPoints,
@@ -27,14 +27,19 @@ import {
   assertParentMap
 } from "@tsconline/shared";
 
-export async function parseMapPacks(datapacks: string[], decryptionDirectory: string): Promise<MapPack> {
+export async function parseMapPacks(datapacks: string[], decryptionDirectory: string, uuid: string): Promise<MapPack> {
   const mapInfoPaths = await grabFilepaths(datapacks, decryptionDirectory, "map-packs");
   const mapInfo: MapInfo = {};
   const mapHierarchy: MapHierarchy = {};
   await pmap(mapInfoPaths, async (map_info) => {
     const contents = (await fs.readFile(map_info)).toString();
     const lines = contents.split(/\n|\r/);
+    // this is a hack, it's super inconvenient to naturally get the datapack title and not really worth my time, but we can get the uuid normally
+    const datapackFilepath = path.dirname(path.dirname(path.dirname(path.dirname(map_info))));
+    const datapackTitle = path.basename(datapackFilepath);
     const map: MapInfo[string] = {
+      datapackTitle: datapackTitle,
+      uuid,
       name: "",
       img: "",
       coordtype: "",
@@ -113,7 +118,7 @@ export function processLine(
         );
       }
       map.name = formatColumnName(String(info[1]));
-      map.img = `/${assetconfigs.imagesDirectory}/${String(info[2])}`;
+      map.img = String(info[2]);
       map.note = String(info[3]);
       break;
     case "HEADER-COORD":

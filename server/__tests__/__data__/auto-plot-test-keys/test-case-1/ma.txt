@@ -1,0 +1,11 @@
+Central Africa Cenozoic	:	Nigeria Coast	South Atlantic
+
+Nigeria Coast	facies	210
+	TOP		0
+	Sandstone	Delta	5
+	Claystone	ProDelta	10
+
+South Atlantic	facies	210
+	TOP		0
+	Shallow-marine marl	Deep marine	5
+	Lava	Ocean crust	10

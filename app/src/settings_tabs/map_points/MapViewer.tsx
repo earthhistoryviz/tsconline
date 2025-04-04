@@ -1,7 +1,6 @@
 import { Drawer, Divider, IconButton, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import type { MapHierarchy, MapInfo } from "@tsconline/shared";
-import { devSafeUrl } from "../../util";
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { context } from "../../state";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
@@ -18,6 +17,7 @@ import { HeaderBar } from "./MapControls";
 import { FaciesHeaderHeight, LegendHeaderHeight, NormHeaderHeight } from "./MapPointConstants";
 import { compareVhAndPx } from "../../util/util";
 import { Legend } from "./Legend";
+import { getMapImageUrl } from "../../state/non-action-util";
 
 type MapProps = {
   name: string;
@@ -79,7 +79,6 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
   const mapStyle = {
     height: mapHeight
   };
-
   return (
     <div ref={mapViewerRef}>
       <HeaderBar isFacies={isFacies} name={name} />
@@ -99,7 +98,7 @@ export const MapViewer: React.FC<MapProps> = observer(({ name, isFacies }) => {
                     id="map"
                     ref={imageRef}
                     style={mapStyle}
-                    src={devSafeUrl(mapData.img)}
+                    src={getMapImageUrl(mapData)}
                     alt="Map"
                     className="map"
                     onLoad={() => {

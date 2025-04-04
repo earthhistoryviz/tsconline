@@ -1,0 +1,15 @@
+format version:	1.2							
+date:	15/12/05							
+default chronostrat:	UNESCO							
+age units:	feet							
+
+
+GB840 slope well Lithology	facies	100	234/201/201	GB840 slope well well	on
+ 	Primary				
+	TOP		4970	"LITHOLOGY=90% shale, 10% sands"	
+	Claystone		5600	"LITHOLOGY=90% shale, 10% sands"	
+	Clayey sandstone		5780	"LITHOLOGY=70% shale, 30% sands"	
+	Claystone		5960	"LITHOLOGY=90% shale, 10% sands"	
+	Clayey sandstone		6500	"LITHOLOGY=70% shale, 30% sands"	
+	Claystone		6860	"LITHOLOGY=90% shale, 10% sands"	
+	Clayey sandstone		7040	"LITHOLOGY=70% shale, 30% sands"	

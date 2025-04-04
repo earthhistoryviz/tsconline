@@ -1,0 +1,67 @@
+default chronostrat:	UNESCO								
+age units:	ma
+
+
+AgeConverterA	ageconvert-interpolate
+	2.858	3.9	
+	4.598	5.347	
+
+GB840 slope well Lithology accumulation rate	point	150	255/245/230			Points for Age-Depth Models<br><br>Depth&nbsp;&nbsp;&nbsp;Age&nbsp;&nbsp;&nbsp;&nbsp;Fossil<br>2.858 3.9 <br>4.598 5.347 <br>
+nopoints	255/0/0		0	2	smoothed
+	3.7279999999999998	1.2
+
+GB840 slope well Lithology original depth scale in feet	event	55	220/220/220		on
+LAD
+	4950	4950
+	5000	5000
+	5050	5050
+	5100	5100
+	5150	5150
+	5200	5200
+	5250	5250
+	5300	5300
+	5350	5350
+	5400	5400
+	5450	5450
+	5500	5500
+	5550	5550
+	5600	5600
+	5650	5650
+	5700	5700
+	5750	5750
+	5800	5800
+	5850	5850
+	5900	5900
+	5950	5950
+	6000	6000
+	6050	6050
+	6100	6100
+	6150	6150
+	6200	6200
+	6250	6250
+	6300	6300
+	6350	6350
+	6400	6400
+	6450	6450
+	6500	6500
+	6550	6550
+	6600	6600
+	6650	6650
+	6700	6700
+	6750	6750
+	6800	6800
+	6850	6850
+	6900	6900
+	6950	6950
+	7000	7000
+	
+	
+GB840 slope well Lithology	facies	100	234/201/201	GB840 slope well well	on	
+ 	Primary					
+	TOP		4970	LITHOLOGY=90% shale, 10% sands		
+	Claystone		5600	LITHOLOGY=90% shale, 10% sands		
+	Clayey sandstone		5780	LITHOLOGY=70% shale, 30% sands		
+	Claystone		5960	LITHOLOGY=90% shale, 10% sands		
+	Clayey sandstone		6500	LITHOLOGY=70% shale, 30% sands		
+	Claystone		6860	LITHOLOGY=90% shale, 10% sands		
+	Clayey sandstone		7040	LITHOLOGY=70% shale, 30% sands		

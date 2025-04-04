@@ -13,7 +13,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
-import { checkIfDataIsInRange } from "../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
 import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
@@ -21,14 +21,26 @@ import CompressIcon from "@mui/icons-material/Compress";
 import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
+import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
+  return (
+    <div className="column-top-level-container">
+      <ColumnSearchBar />
+      <div className="column-accordion-and-menu-container">
+        <ColumnDisplay />
+        <ColumnMenu />
+      </div>
+    </div>
+  );
+});
+
+export const ColumnDisplay = observer(() => {
   const { state, actions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -55,61 +67,54 @@ export const Column = observer(function Column() {
       }
     };
   }, []);
-
   return (
-    <div className="column-top-level-container">
-      <ColumnSearchBar />
-      <div className="column-accordion-and-menu-container">
-        <Box
-          id="ResizableColumnAccordionWrapper"
-          ref={scrollRef}
-          border={1}
-          borderColor="divider"
-          bgcolor="secondaryBackground.main"
-          className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
-          position="relative">
-          <div className="column-filter-buttons">
-            <CustomTooltip title="Expand All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
-                }}>
-                <ExpandIcon />
-              </IconButton>
-            </CustomTooltip>
-            <CustomTooltip title="Collapse All" placement="top">
-              <IconButton
-                disableRipple
-                className="expand-collapse-column-buttons"
-                onClick={() => {
-                  if (!state.settingsTabs.columns) return;
-                  actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
-                }}>
-                <CompressIcon />
-              </IconButton>
-            </CustomTooltip>
-          </div>
-          {state.settingsTabs.columns &&
-            Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
-          {/* Button to take users to top of column menu when scrolling */}
-
-          <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-            <Lottie
-              key="settings-arrow-up"
-              style={{ width: "28px", height: "28px" }}
-              animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-              playOnClick
-            />
+    <Box
+      id="ResizableColumnAccordionWrapper"
+      ref={scrollRef}
+      border={1}
+      borderColor="divider"
+      bgcolor="secondaryBackground.main"
+      className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+      position="relative">
+      <div className="column-filter-buttons">
+        <CustomTooltip title="Expand All" placement="top">
+          <IconButton
+            disableRipple
+            className="expand-collapse-column-buttons"
+            onClick={() => {
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+            }}>
+            <ExpandIcon />
           </IconButton>
-        </Box>
-        <ColumnMenu />
+        </CustomTooltip>
+        <CustomTooltip title="Collapse All" placement="top">
+          <IconButton
+            disableRipple
+            className="expand-collapse-column-buttons"
+            onClick={() => {
+              if (!state.settingsTabs.columns) return;
+              actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+            }}>
+            <CompressIcon />
+          </IconButton>
+        </CustomTooltip>
       </div>
-    </div>
+      {state.settingsTabs.columns &&
+        Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
+          <ColumnAccordion key={childName} details={childDetails} />
+        ))}
+      {/* Button to take users to top of column menu when scrolling */}
+
+      <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+        <Lottie
+          key="settings-arrow-up"
+          style={{ width: "28px", height: "28px" }}
+          animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+          playOnClick
+        />
+      </IconButton>
+    </Box>
   );
 });
 
@@ -134,6 +139,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
       </div>
     );
   }
+
   // for keeping the selected column hierarchy line highlighted
   const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
     ? { opacity: 1 }
@@ -181,14 +187,20 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
-  const dataInrange = checkIfDataIsInRange(
-    column.minAge,
-    column.maxAge,
-    state.settings.timeSettings[column.units]?.topStageAge || 0,
-    state.settings.timeSettings[column.units]?.baseStageAge || 0
-  );
+  const dataInRange = checkIfDccColumn(column)
+    ? checkIfDccDataIsInRange(
+        column,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      )
+    : checkIfDataIsInRange(
+        column.minAge,
+        column.maxAge,
+        state.settings.timeSettings[column.units].topStageAge,
+        state.settings.timeSettings[column.units].baseStageAge
+      );
   const tooltipOrCheckBox =
-    !dataInrange && !(column.name === "Ma" || column.name === "Root") ? (
+    !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
       <Tooltip
         title={t("settings.column.tooltip.not-in-range")}
         placement="top"

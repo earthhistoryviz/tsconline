@@ -17,7 +17,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
-import { assetconfigs } from "../util.js";
+import { assetconfigs, extractMetadataFromDatapack } from "../util.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -31,17 +31,24 @@ import {
   DatapackPriorityUpdateSuccess,
   DatapackMetadata,
   SharedWorkshop,
-  assertAdminSharedUser,
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
-  assertSharedWorkshopArray
+  assertSharedWorkshopArray,
+  AdminSharedUser
 } from "@tsconline/shared";
-import { setupNewDatapackDirectoryInUUIDDirectory } from "../upload-handlers.js";
+import {
+  getWorkshopDatapacksNames,
+  getWorkshopFilesNames,
+  setupNewDatapackDirectoryInUUIDDirectory,
+  uploadCoverPicToWorkshop,
+  uploadFilesToWorkshop
+} from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
 import {
+  checkFileTypeIsDatapackImage,
   deleteAllUserDatapacks,
   deleteOfficialDatapack,
   deleteUserDatapack,
@@ -70,6 +77,54 @@ export const getPrivateOfficialDatapacks = async function getPrivateOfficialData
   }
 };
 
+export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPrivateOfficialDatapacksMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "No session" });
+    return;
+  }
+  try {
+    const user = await findUser({ uuid });
+    if (!user || user.length !== 1 || !user[0] || !user[0].isAdmin) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+    const datapacks = await fetchAllPrivateOfficialDatapacks();
+    const metadata = datapacks.map((datapack) => {
+      return extractMetadataFromDatapack(datapack);
+    });
+    reply.send(metadata);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Unknown error fetching private official datapacks" });
+    return;
+  }
+};
+
+/**
+ * Fetch a single official datapack, private or public
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminFetchSingleOfficialDatapack = async function fetchSinglePrivateOfficialDatapack(
+  request: FastifyRequest<{ Params: { datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle } = request.params;
+  const datapack = await fetchUserDatapack("official", datapackTitle).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!datapack) {
+    reply.status(404).send({ error: "Datapack not found" });
+    return;
+  }
+  reply.send(datapack);
+};
+
 /**
  * Get all users for admin to configure on frontend
  * @param _request
@@ -78,7 +133,7 @@ export const getPrivateOfficialDatapacks = async function getPrivateOfficialData
 export const getUsers = async function getUsers(_request: FastifyRequest, reply: FastifyReply) {
   try {
     const users = await findUser({});
-    const displayedUsers = await Promise.all(
+    const displayedUsers: AdminSharedUser[] = await Promise.all(
       users.map(async (user) => {
         const { hashedPassword, userId, ...displayedUser } = user;
         const userWorkshops = await findUsersWorkshops({ userId });
@@ -99,13 +154,11 @@ export const getUsers = async function getUsers(_request: FastifyRequest, reply:
           isAdmin: user.isAdmin === 1,
           emailVerified: user.emailVerified === 1,
           invalidateSession: user.invalidateSession === 1,
-          ...(workshopIds.length > 0 && { workshopIds })
+          ...(workshopIds.length > 0 && { workshopIds }),
+          historyEntries: []
         };
       })
     );
-    displayedUsers.forEach((user) => {
-      assertAdminSharedUser(user);
-    });
     reply.status(200).send({ users: displayedUsers });
   } catch (e) {
     console.error(e);
@@ -232,6 +285,11 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
     const user = await checkForUsersWithUsernameOrEmail(username, email);
     if (user.length === 0) {
       reply.status(409).send({ error: "User does not exist." });
+      return;
+    }
+
+    if (user[0] && user[0].email === (process.env.ADMIN_EMAIL || "test@gmail.com")) {
+      reply.status(403).send({ error: "Cannot modify root user" });
       return;
     }
 
@@ -458,18 +516,30 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminGetWorkshops = async function adminGetWorkshops(_request: FastifyRequest, reply: FastifyReply) {
   try {
-    const workshops: SharedWorkshop[] = (await findWorkshop({})).map((workshop) => {
-      const now = new Date();
-      const start = new Date(workshop.start);
-      const end = new Date(workshop.end);
-      return {
-        title: workshop.title,
-        start: start.toISOString(),
-        end: end.toISOString(),
-        workshopId: workshop.workshopId,
-        active: start <= now && now <= end
-      };
-    });
+    const workshops: SharedWorkshop[] = await Promise.all(
+      (await findWorkshop({})).map(async (workshop) => {
+        const now = new Date();
+        const start = new Date(workshop.start);
+        const end = new Date(workshop.end);
+
+        const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
+        const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
+
+        return {
+          title: workshop.title,
+          start: start.toISOString(),
+          end: end.toISOString(),
+          workshopId: workshop.workshopId,
+          active: start <= now && now <= end,
+          regRestrict: Number(workshop.regRestrict) === 1,
+          creatorUUID: workshop.creatorUUID,
+          regLink: workshop.regLink ? workshop.regLink : "",
+          datapacks: datapacks,
+          files: files
+        };
+      })
+    );
+
     assertSharedWorkshopArray(workshops);
     reply.send({ workshops });
   } catch (error) {
@@ -485,11 +555,13 @@ export const adminGetWorkshops = async function adminGetWorkshops(_request: Fast
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string } }>,
+  request: FastifyRequest<{
+    Body: { title: string; start: string; end: string; regRestrict: boolean; creatorUUID: string; regLink?: string };
+  }>,
   reply: FastifyReply
 ) {
-  const { title, start, end } = request.body;
-  if (!title || !start || !end) {
+  const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
+  if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -510,10 +582,14 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
+    const regRestrictNum = regRestrict ? 1 : 0;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
-      end: endDate.toISOString()
+      end: endDate.toISOString(),
+      creatorUUID: creatorUUID,
+      regRestrict: regRestrictNum,
+      regLink: regLink
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
@@ -523,7 +599,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       workshopId,
-      active: false
+      active: false,
+      creatorUUID: creatorUUID,
+      regRestrict: Number(regRestrict) === 1,
+      regLink: regLink
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
@@ -585,16 +664,27 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
-    await updateWorkshop({ workshopId }, fieldsToUpdate);
+    const fieldsToUpdateForDatabase = {
+      ...fieldsToUpdate,
+      regRestrict: 0 // TODO: change this to the real updated regRestrict value when editing workshop functionality is completed
+    };
+    await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
+    const updatedWorkshop = await getWorkshopIfNotEnded(workshopId);
+    if (!updatedWorkshop) {
+      reply.status(404).send({ error: "Failed to update workshop: not found or already ended." });
+      return;
+    }
     const now = new Date();
-    const newStart = new Date(newWorkshop.start);
-    const newEnd = new Date(newWorkshop.end);
+    const newStart = new Date(updatedWorkshop.start);
+    const newEnd = new Date(updatedWorkshop.end);
     const workshop = {
-      title: newWorkshop.title,
-      start: newWorkshop.start,
-      end: newWorkshop.end,
+      title: updatedWorkshop.title,
+      start: updatedWorkshop.start,
+      end: updatedWorkshop.end,
       workshopId: workshopId,
-      active: newStart <= now && now <= newEnd
+      active: newStart <= now && now <= newEnd,
+      regRestrict: Number(updatedWorkshop.regRestrict) === 1,
+      creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
@@ -764,5 +854,83 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
+  }
+};
+
+export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorkshop(
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const parts = request.parts();
+  const { workshopId } = request.params;
+  const workshop = await getWorkshopIfNotEnded(workshopId);
+  if (!workshop) {
+    reply.status(404).send({ error: "Workshop not found or has ended" });
+    return;
+  }
+  let file: MultipartFile | undefined;
+  try {
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "file") {
+        file = part;
+        const { code, message } = await uploadFilesToWorkshop(workshopId, part);
+        if (code !== 200) {
+          reply.status(code).send({ error: message });
+          return;
+        }
+      }
+    }
+    if (!file) {
+      reply.status(400).send({ error: "No files were uploaded" });
+      return;
+    }
+    reply.send({ message: "Files added to workshop" });
+  } catch (error) {
+    logger.error(error);
+    reply.status(500).send({ error: "Error uploading files to workshop" });
+  }
+};
+
+export const adminUploadCoverPictureToWorkshop = async function adminUploadCoverPictureToWorkshop(
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const parts = request.parts();
+  const { workshopId } = request.params;
+  let coverPicture: MultipartFile | undefined;
+
+  try {
+    for await (const part of parts) {
+      if (part.type === "file" && part.fieldname === "file") {
+        coverPicture = part;
+        if (!checkFileTypeIsDatapackImage(coverPicture)) {
+          reply.status(415).send({ error: "Invalid file type" });
+          return;
+        }
+        if (!workshopId) {
+          reply.status(400).send({ error: "Missing workshopId" });
+          return;
+        }
+        const workshop = await getWorkshopIfNotEnded(workshopId);
+        if (!workshop) {
+          reply.status(404).send({ error: "Workshop not found or has ended" });
+          return;
+        }
+        const { code, message } = await uploadCoverPicToWorkshop(workshopId, coverPicture);
+        if (code !== 200) {
+          reply.status(code).send({ error: message });
+          return;
+        }
+        reply.send({ message: "Cover picture added to workshop" });
+        return;
+      }
+    }
+    if (!coverPicture) {
+      reply.status(400).send({ error: "No cover picture were uploaded" });
+      return;
+    }
+  } catch (error) {
+    logger.error(error);
+    reply.status(500).send({ error: "Error uploading cover picture to workshop" });
   }
 };

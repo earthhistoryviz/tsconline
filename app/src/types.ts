@@ -1,6 +1,7 @@
 import {
   ColumnInfo,
   DataMiningPointDataType,
+  Datapack,
   DatapackConfigForChartRequest,
   DatapackMetadata,
   DatapackUniqueIdentifier,
@@ -14,7 +15,7 @@ import {
   assertMapInfo,
   throwError
 } from "@tsconline/shared";
-import { State } from "./state";
+import React from "react";
 
 export type DatapackFetchParams = {
   isPublic: boolean;
@@ -28,7 +29,8 @@ export type EditableDatapackMetadata = Omit<
 export type UploadDatapackMethodType = (
   file: File,
   metadata: DatapackMetadata,
-  datapackProfilePicture?: File
+  datapackProfilePicture?: File,
+  pdfFiles?: File[]
 ) => Promise<void>;
 
 export type User = SharedUser & {
@@ -48,6 +50,9 @@ export type WindowStats = {
   windowEnd: number;
   value: number;
 };
+export type ColumnInfoRoot = ColumnInfo & {
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
+};
 
 export type DownloadPdfMessage = {
   imgURI: string;
@@ -60,9 +65,32 @@ export type DownloadPdfCompleteMessage = {
   value: Blob | undefined;
 };
 
+export type ChartTabState = {
+  chartTimelineEnabled: boolean;
+  downloadFilename: string;
+  downloadFiletype: "svg" | "pdf" | "png";
+  isSavingChart: boolean;
+  unsafeChartContent: string;
+  madeChart: boolean;
+  chartLoading: boolean;
+  chartContent: string;
+  chartZoomSettings: ChartZoomSettings;
+  chartHash: string;
+  matchesSettings: boolean;
+};
+export type ChartContextType = {
+  chartTabState: ChartTabState;
+  otherChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onChange: (boolean: boolean) => void;
+    value: boolean;
+  }[];
+};
+
 export type SetDatapackConfigMessage = {
   datapacks: DatapackConfigForChartRequest[];
-  stateCopy: State;
+  datapacksArray: Datapack[];
 };
 
 export type SetDatapackConfigCompleteMessage = {
@@ -197,11 +225,32 @@ export type ChartSettings = {
 };
 
 export type EditableUserProperties = {
-  username: string;
-  email: string;
   isAdmin: boolean;
-  pictureUrl: string | undefined;
+  accountType: string;
 };
+
+export type CrossPlotBounds = {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+  topLimitX: number;
+  topLimitY: number;
+  baseLimitX: number;
+  baseLimitY: number;
+  scaleX: number;
+  scaleY: number;
+  topAgeX: number;
+  topAgeY: number;
+};
+
+export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
+  if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
+  assertColumnInfo(o);
+}
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {
   if (!o || typeof o !== "object") throw new Error("DatapackFetchParams must be a non-null object");

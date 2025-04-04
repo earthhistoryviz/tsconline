@@ -1,4 +1,4 @@
-import { action, observable, runInAction, toJS } from "mobx";
+import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -17,7 +17,9 @@ import {
   DatapackUniqueIdentifier,
   isWorkshopDatapack,
   Datapack,
-  assertDatapackMetadataArray
+  assertDatapackMetadataArray,
+  assertTreatiseDatapack,
+  SharedWorkshop
 } from "@tsconline/shared";
 
 import {
@@ -46,15 +48,13 @@ import { displayServerError } from "./util-actions";
 import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  ChartTabState,
   ChartZoomSettings,
-  CrossPlotSettingsTabs,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
-  SettingsTabs,
-  equalChartSettings,
-  equalConfig
+  SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
 import { actions } from "..";
@@ -63,14 +63,16 @@ import {
   compareExistingDatapacks,
   doesDatapackAlreadyExist,
   doesMetadataAlreadyExist,
+  downloadFile,
   getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { Workshop } from "../../Workshops";
+import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
+import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
- * Fetches datapacks of any type from the server. If used to fetch private user datapacks or workshop datapacks, it requires recaptcha to be loaded.
+ * Fetches datapacks of any type from the server. If used to fetch private user/official datapacks or workshop datapacks, it requires recaptcha to be loaded.
  * @param metadata
  * @param options - Optional signal for aborting the fetch request
  */
@@ -88,10 +90,18 @@ export const fetchDatapack = action(
         break;
       }
       case "official":
-        datapack = await actions.fetchOfficialDatapack(metadata.title, options);
+        if (metadata.isPublic) {
+          datapack = await actions.fetchPublicOfficialDatapack(metadata.title, options);
+        } else {
+          datapack = await actions.adminFetchOfficialDatapack(metadata.title, options);
+        }
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
+        break;
+      }
+      case "treatise": {
+        datapack = await actions.fetchTreatiseDatapack(metadata.title, options);
         break;
       }
     }
@@ -99,11 +109,14 @@ export const fetchDatapack = action(
   }
 );
 
-export const fetchOfficialDatapack = action(
+/**
+ * Fetch a public official datapack (see adminFetchOfficialDatapack for private)
+ */
+export const fetchPublicOfficialDatapack = action(
   "fetchOfficialDatapack",
   async (datapack: string, options?: { signal?: AbortSignal }) => {
     try {
-      const response = await fetcher(`/server/datapack/${encodeURIComponent(datapack)}`, options);
+      const response = await fetcher(`/official/datapack/${encodeURIComponent(datapack)}`, options);
       const data = await response.json();
       if (response.ok) {
         assertOfficialDatapack(data);
@@ -116,6 +129,7 @@ export const fetchOfficialDatapack = action(
           ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
         );
       }
+      return data;
     } catch (e) {
       if ((e as Error).name === "AbortError") return;
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -197,7 +211,8 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
     console.error(e);
   } finally {
     setPublicOfficialDatapacksLoading(false);
-    setPublicDatapacksLoading(false);
+    setPublicUserDatapacksLoading(false);
+    setTreatiseDatapackLoading(false);
   }
 });
 
@@ -244,10 +259,31 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     setPrivateUserDatapacksLoading(false);
   }
 });
+export const fetchTreatiseDatapack = action(
+  "fetchTreatiseDatapack",
+  async (datapackHash: string, options?: { signal?: AbortSignal }) => {
+    try {
+      const response = await fetcher(`/treatise/datapack/${datapackHash}`, options);
+      const data = await response.json();
+      try {
+        assertDatapack(data);
+        assertTreatiseDatapack(data);
+        return data;
+      } catch (e) {
+        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
+        console.error(e);
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
 
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
-  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
+  async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
     if (getMetadataFromArray(metadata, state.datapackMetadata)) {
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
@@ -270,6 +306,11 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    if (pdfFiles?.length) {
+      pdfFiles.forEach((pdfFile) => {
+        formData.append("pdfFiles[]", pdfFile);
+      });
+    }
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
@@ -466,23 +507,32 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   setUnsavedDatapackConfig([]);
 });
 
+/**
+ * @param settings - If settings is a string assumed to be a path to a settings file
+ */
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+  ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
+    const { settings, force } = options ?? {};
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
-      if (settingsPath && settingsPath.length !== 0) {
+      if (settings) {
+        if (typeof settings !== "string") return settings;
+        if (settings.length === 0) return null;
         try {
-          const settings = await fetchSettingsXML(settingsPath);
-          if (settings) {
+          const fetchedSettings = await fetchSettingsXML(settings);
+          if (fetchedSettings) {
             removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return JSON.parse(JSON.stringify(settings));
+            return JSON.parse(JSON.stringify(fetchedSettings));
           }
         } catch (e) {
           console.error(e);
@@ -503,7 +553,7 @@ export const processDatapackConfig = action(
 
         const message: SetDatapackConfigMessage = {
           datapacks,
-          stateCopy: toJS(state)
+          datapacksArray: toJS(state.datapacks)
         };
         setDatapackConfigWorker.postMessage(message);
 
@@ -570,12 +620,19 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
-      setCrossPlotChartX(state.settingsTabs.columns.children[0]);
+      for (const child of state.settingsTabs.columns.children) {
+        if (child.units === "Ma") {
+          setCrossPlotChartX(child);
+        }
+      }
+      if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
       setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0) {
-      delete state.settings.timeSettings["Ma"];
+      runInAction(() => {
+        delete state.settings.timeSettings["Ma"];
+      });
     }
 
     if (chartSettings !== null) {
@@ -585,7 +642,9 @@ export const setDatapackConfig = action(
       // set any new units in the time
       for (const chart of columnRoot.children) {
         if (!state.settings.timeSettings[chart.units]) {
-          state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          runInAction(() => {
+            state.settings.timeSettings[chart.units] = JSON.parse(JSON.stringify(defaultTimeSettings));
+          });
         }
       }
     }
@@ -636,29 +695,6 @@ export const removeCache = action("removeCache", async () => {
   }
 });
 
-/**
- * Resets state
- * Only implementation is used when we remove cache
- * If error from server, this is really bad. Will loop forever
- */
-export const resetState = action("resetState", () => {
-  setChartMade(true);
-  setChartLoading(true);
-  processDatapackConfig([]);
-  setChartHash("");
-  setChartContent("");
-  setUseCache(true);
-  setUsePreset(true);
-  setTab(0);
-  setSettingsTabsSelected("time");
-  setSettingsColumns(undefined);
-  setMapInfo({});
-  state.columnMenu.columnSelected = null;
-  state.columnMenu.tabValue = 0;
-  state.columnMenu.tabs = ["General", "Font"];
-  state.settingsXML = "";
-});
-
 export const loadPresets = action("loadPresets", (presets: Presets) => {
   state.presets = presets;
 });
@@ -688,26 +724,6 @@ export const settingOptions = [
   }
 ];
 
-export const setCrossPlotSettingsTabsSelected = action((newtab: number | CrossPlotSettingsTabs) => {
-  if (typeof newtab === "string") {
-    state.crossplotSettingsTabs.selected = newtab;
-    return;
-  }
-  switch (newtab) {
-    case 0:
-      state.crossplotSettingsTabs.selected = "xAxis";
-      break;
-    case 1:
-      state.crossplotSettingsTabs.selected = "yAxis";
-      break;
-    case 2:
-      state.crossplotSettingsTabs.selected = "column";
-      break;
-    default:
-      console.log("WARNING: setCrossPlotSettingsTabsSelected: received index number that is unknown: ", newtab);
-      state.crossplotSettingsTabs.selected = "xAxis";
-  }
-});
 /**
  * set the settings tab based on a string or number
  */
@@ -780,11 +796,11 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
  * Constantly ping the server for the pdf status
  * TODO DEPRECATE FOR SVGS
  */
-export const checkSVGStatus = action(async () => {
+export const checkSVGStatus = action(async (hash: string) => {
   let SVGReady = false;
   try {
     while (!SVGReady) {
-      SVGReady = await fetchSVGStatus();
+      SVGReady = await fetchSVGStatus(hash);
       if (!SVGReady) {
         // Wait for some time before checking again
         await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -794,18 +810,17 @@ export const checkSVGStatus = action(async () => {
     console.log(`Error fetching svg status: ${e}`);
     return;
   }
-  setChartLoading(false);
 });
 
 /**
  * The request for pdf status
  * @returns
  */
-async function fetchSVGStatus(): Promise<boolean> {
-  if (state.chartHash === "") {
+async function fetchSVGStatus(hash: string): Promise<boolean> {
+  if (hash === "") {
     return false;
   }
-  const response = await fetcher(`/svgstatus/${state.chartHash}`, {
+  const response = await fetcher(`/svgstatus/${hash}`, {
     method: "GET"
   });
   const data = await response.json();
@@ -937,34 +952,10 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
     return;
   }
   const file = await response.blob();
-  let fileURL = "";
-  if (file) {
-    try {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      await new Promise((resolve, reject) => {
-        reader.onloadend = resolve;
-        reader.onerror = reject;
-      });
-      if (typeof reader.result !== "string") {
-        throw new Error("Invalid file");
-      }
-      fileURL = reader.result;
-      if (fileURL) {
-        const aTag = document.createElement("a");
-        aTag.href = fileURL;
-
-        aTag.setAttribute("download", datapack.originalFileName);
-
-        document.body.appendChild(aTag);
-        aTag.click();
-        aTag.remove();
-      } else {
-        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-      }
-    } catch (error) {
-      pushError(ErrorCodes.INVALID_PATH);
-    }
+  try {
+    await downloadFile(file, datapack.title);
+  } catch (error) {
+    pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
   }
 });
 
@@ -990,6 +981,7 @@ export const logout = action("logout", async () => {
 export const sessionCheck = action("sessionCheck", async () => {
   const cookieConsentValue = localStorage.getItem("cookieConsent");
   state.cookieConsent = cookieConsentValue !== null ? cookieConsentValue === "true" : null;
+  let fetchStarted = false;
   try {
     const response = await fetcher("/auth/session-check", {
       method: "POST",
@@ -1000,12 +992,23 @@ export const sessionCheck = action("sessionCheck", async () => {
       setIsLoggedIn(true);
       assertSharedUser(data.user);
       setUser(data.user);
+      fetchStarted = true;
+      if (data.user.isAdmin) {
+        adminFetchPrivateOfficialDatapacksMetadata();
+      } else {
+        setPrivateOfficialDatapacksLoading(false);
+      }
       fetchUserDatapacksMetadata();
     } else {
       setIsLoggedIn(false);
     }
   } catch (error) {
     console.error("Failed to check session:", error);
+  } finally {
+    if (!fetchStarted) {
+      setPrivateOfficialDatapacksLoading(false);
+      setPrivateUserDatapacksLoading(false);
+    }
   }
 });
 
@@ -1015,12 +1018,14 @@ export const setDefaultUserState = action(() => {
     email: "",
     pictureUrl: "",
     isAdmin: false,
+    accountType: "",
     isGoogleUser: false,
     uuid: "",
     settings: {
       darkMode: false,
       language: "English"
-    }
+    },
+    historyEntries: []
   };
   removeUnauthorizedDatapacks();
 });
@@ -1060,10 +1065,6 @@ export const listenForSystemDarkMode = () => {
   };
 };
 
-export const setChartTimelineEnabled = action("setChartTimelineEnabled", (enabled: boolean) => {
-  state.chartTab.chartTimelineEnabled = enabled;
-});
-
 export const setChartTimelineLocked = action("setChartTimelineLocked", (locked: boolean) => {
   state.chartTab.chartTimelineLocked = locked;
 });
@@ -1090,13 +1091,6 @@ export const setIsLoggedIn = action("setIsLoggedIn", (newval: boolean) => {
   state.isLoggedIn = newval;
 });
 export const setTab = action("setTab", (newval: number) => {
-  if (
-    newval == 2 &&
-    state.chartContent &&
-    (!equalChartSettings(state.settings, state.prevSettings) || !equalConfig(state.config, state.prevConfig))
-  ) {
-    pushSnackbar("Chart settings are different from the displayed chart.", "warning");
-  }
   state.tab = newval;
 });
 export const setSettingsColumns = action((temp?: ColumnInfo) => {
@@ -1107,9 +1101,6 @@ export const setUseCache = action((temp: boolean) => {
 });
 export const setUsePreset = action((temp: boolean) => {
   state.useCache = temp;
-});
-export const setChartContent = action("setChartContent", (chartContent: string) => {
-  state.chartContent = chartContent;
 });
 export const setMapInfo = action("setMapInfo", (mapInfo: MapInfo) => {
   state.mapState.mapInfo = mapInfo;
@@ -1149,19 +1140,8 @@ export const setMouseOverPopupsEnabled = action((checked: boolean) => {
   state.settings.mouseOverPopupsEnabled = checked;
 });
 
-export const setChartLoading = action((value: boolean) => {
-  state.chartLoading = value;
-});
-
-export const setChartMade = action((value: boolean) => {
-  state.madeChart = value;
-});
-
 export const setMapHierarchy = action("setMapHierarchy", (mapHierarchy: MapHierarchy) => {
   state.mapState.mapHierarchy = mapHierarchy;
-});
-export const setChartHash = action("setChartHash", (charthash: string) => {
-  state.chartHash = charthash;
 });
 export const setDatapackProfilePageEditMode = action("setDatapackProfilePageEditMode", (editMode: boolean) => {
   state.datapackProfilePage.editMode = editMode;
@@ -1244,31 +1224,37 @@ export const setCookies = action("setCookies", (newval: boolean) => {
   localStorage.setItem("cookieConsent", newval.toString());
 });
 
-export const setChartTabDownloadFiletype = action("setChartTabDownloadFiletype", (newval: "svg" | "pdf" | "png") => {
-  state.chartTab.downloadFiletype = newval;
+export const setChartTabState = action("setChartTabState", (oldval: ChartTabState, newval: Partial<ChartTabState>) => {
+  if (!isObservable(oldval)) {
+    throw new Error("oldval is not observable");
+  }
+  if (newval.chartZoomSettings !== undefined)
+    setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
+  if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
+  if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
+  if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
+  if (newval.downloadFilename !== undefined) oldval.downloadFilename = newval.downloadFilename;
+  if (newval.isSavingChart !== undefined) oldval.isSavingChart = newval.isSavingChart;
+  if (newval.unsafeChartContent !== undefined) oldval.unsafeChartContent = newval.unsafeChartContent;
+  if (newval.chartContent !== undefined) oldval.chartContent = newval.chartContent;
+  if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });
 
-export const setChartTabDownloadFilename = action("setChartTabDownloadFilename", (newval: string) => {
-  state.chartTab.downloadFilename = newval;
-});
+export const setChartTabZoomSettings = action(
+  "setChartTabZoomSettings",
+  (oldval: ChartZoomSettings, newval: Partial<ChartZoomSettings>) => {
+    if (!isObservable(oldval)) {
+      throw new Error("oldval is not observable");
+    }
+    if (newval.enableScrollZoom !== undefined) oldval.enableScrollZoom = newval.enableScrollZoom;
+    if (newval.resetMidX !== undefined) oldval.resetMidX = newval.resetMidX;
+    if (newval.zoomFitMidCoord !== undefined) oldval.zoomFitMidCoord = newval.zoomFitMidCoord;
+    if (newval.zoomFitMidCoordIsX !== undefined) oldval.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
+    if (newval.zoomFitScale !== undefined) oldval.zoomFitScale = newval.zoomFitScale;
+    if (newval.scale !== undefined) oldval.scale = newval.scale;
+  }
+);
 
-export const setChartTabZoomSettings = action("setChartTabZoomSettings", (newval: Partial<ChartZoomSettings>) => {
-  if (newval.enableScrollZoom !== undefined)
-    state.chartTab.chartZoomSettings.enableScrollZoom = newval.enableScrollZoom;
-  if (newval.resetMidX !== undefined) state.chartTab.chartZoomSettings.resetMidX = newval.resetMidX;
-  if (newval.scale !== undefined) state.chartTab.chartZoomSettings.scale = newval.scale;
-  if (newval.zoomFitMidCoord !== undefined) state.chartTab.chartZoomSettings.zoomFitMidCoord = newval.zoomFitMidCoord;
-  if (newval.zoomFitScale !== undefined) state.chartTab.chartZoomSettings.zoomFitScale = newval.zoomFitScale;
-  if (newval.zoomFitMidCoordIsX !== undefined)
-    state.chartTab.chartZoomSettings.zoomFitMidCoordIsX = newval.zoomFitMidCoordIsX;
-});
-
-export const setChartTabIsSavingChart = action((term: boolean) => {
-  state.chartTab.isSavingChart = term;
-});
-export const setUnsafeChartContent = action((content: string) => {
-  state.chartTab.unsafeChartContent = content;
-});
 export const resetEditableDatapackMetadata = action((metadata: EditableDatapackMetadata | null) => {
   setUnsavedChanges(false);
   if (!metadata) {
@@ -1302,11 +1288,42 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
   };
 });
 
-// TODO: Change this when the actual backend for rendering all workshops is implemented.
-// Maybe similar to how we handled datapacks.
-// For now, this just loads the selected dummy workshop into the state.
-export const setWorkshopsArray = action((workshop: Workshop[]) => {
-  state.workshops = workshop;
+export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
+  const route = `/user/workshop/download/${workshop.workshopId}`;
+  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
+  if (!recaptchaToken) return null;
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return null;
+  }
+  const response = await fetcher(route, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+  if (!response.ok) {
+    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+    switch (response.status) {
+      case 404:
+        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+        break;
+      case 401:
+        errorCode = ErrorCodes.NOT_LOGGED_IN;
+        break;
+    }
+    displayServerError(response, errorCode, ErrorMessages[errorCode]);
+    return;
+  }
+  const file = await response.blob();
+  if (file) {
+    try {
+      await downloadFile(file, `FilesFor${workshop.title}.zip`);
+    } catch (error) {
+      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+    }
+  }
 });
 
 export const setPresetsLoading = action((loading: boolean) => {
@@ -1319,11 +1336,14 @@ export const setPublicOfficialDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateOfficialDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateOfficialDatapacksLoading = fetching;
 });
-export const setPublicDatapacksLoading = action((fetching: boolean) => {
+export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.publicUserDatapacksLoading = fetching;
 });
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
+});
+export const setTreatiseDatapackLoading = action((fetching: boolean) => {
+  state.skeletonStates.treatiseDatapackLoading = fetching;
 });
 
 export const setTourOpen = action((openTour: boolean, tourName: string) => {
@@ -1360,21 +1380,4 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
-});
-
-export const setIsCrossPlot = action((isCrossPlot: boolean) => {
-  state.chartTab.crossPlot.isCrossPlot = isCrossPlot;
-});
-export const setCrossPlotLockX = action((lockX: boolean) => {
-  state.chartTab.crossPlot.lockX = lockX;
-});
-export const setCrossPlotLockY = action((lockY: boolean) => {
-  state.chartTab.crossPlot.lockY = lockY;
-});
-
-export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartX = chart;
-});
-export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
-  state.crossplotSettingsTabs.chartY = chart;
 });

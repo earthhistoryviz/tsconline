@@ -28,6 +28,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [date, setDate] = useState<Dayjs | null>(null);
   const [dateError, setDateError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [pdfFiles, setPDFFiles] = useState<File[]>([]);
   const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
@@ -75,7 +76,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     // server datapacks are always public
     // @Paolo: I'm not sure how to generically handle this because I don't want `isPublic` to be in the FileMetadata
     // and I also don't know how to generically pass it into the upload function besides this.
-    upload(file, metadata, profileImage || undefined);
+    upload(file, metadata, profileImage || undefined, pdfFiles || undefined);
   };
   const addReference = () => {
     if (references[0] && references[references.length - 1].reference === "") {
@@ -113,6 +114,26 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     actions.removeAllErrors();
     setProfileImage(file);
   };
+  const handlePDFFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = event.target.files;
+    if (!newFiles) {
+      return;
+    }
+    actions.removeAllErrors();
+    const fileMap = new Map<string, File>();
+    Array.from(newFiles).forEach((file) => fileMap.set(file.name, file));
+    pdfFiles.forEach((file) => {
+      if (!fileMap.has(file.name)) {
+        fileMap.set(file.name, file);
+      }
+    });
+    setPDFFiles(Array.from(fileMap.values()));
+  };
+  const handlePDFFileDelete = (fileName: string) => {
+    setPDFFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    actions.removeAllErrors();
+  };
+
   const resetForm = () => {
     setTitle("");
     setDescription("");
@@ -124,6 +145,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setReferences([]);
     setDate(null);
     setFile(null);
+    setPDFFiles([]);
   };
   return {
     state: {
@@ -139,6 +161,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       date,
       dateError,
       file,
+      pdfFiles,
       profileImageRef,
       priority
     },
@@ -162,7 +185,9 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       addReference,
       changeReference,
       handleDateChange,
-      handleProfileImageChange
+      handleProfileImageChange,
+      handlePDFFileUpload,
+      handlePDFFileDelete
     }
   };
 };
