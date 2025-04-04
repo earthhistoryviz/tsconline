@@ -9,7 +9,6 @@ import {
   getAllUserDatapacks,
   adminAddUsersToWorkshop,
   adminCreateWorkshop,
-  adminGetWorkshops,
   adminEditWorkshop,
   adminDeleteWorkshop,
   adminModifyUser,
@@ -254,7 +253,6 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     getAllUserDatapacks
   );
   fastify.post("/workshop/users", { config: { rateLimit: looseRateLimit } }, adminAddUsersToWorkshop);
-  fastify.get("/workshops", { config: { rateLimit: looseRateLimit } }, adminGetWorkshops);
   fastify.post(
     "/workshop",
     { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit } },

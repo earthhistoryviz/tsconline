@@ -1,4 +1,4 @@
-import fastifyMultipart from "@fastify/multipart";
+import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import fastifySecureSession from "@fastify/secure-session";
 import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
 import { beforeAll, vi, afterAll, expect, describe, it, beforeEach } from "vitest";
@@ -7,16 +7,25 @@ import * as database from "../src/database";
 import * as verify from "../src/verify";
 import * as workshopUtil from "../src/workshop/workshop-util";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
-import { User } from "../src/types";
+import { User, Workshop } from "../src/types";
+import * as util from "../src/util";
+import * as fsp from "fs/promises";
+import * as uploadHandlers from "../src/upload-handlers";
+import { SharedWorkshop } from "@tsconline/shared";
+import { fetchAllWorkshops } from "../src/workshop/workshop-routes";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
-    editDatapackMetadataRequestHandler: vi.fn().mockResolvedValue({ code: 200, message: "success" })
+    editDatapackMetadataRequestHandler: vi.fn().mockResolvedValue({ code: 200, message: "success" }),
+    createZipFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content"))
   };
 });
-vi.mock("../src/workshop/workshop-util", async () => {
+vi.mock("../src/workshop/workshop-util", async (importOriginal) => {
+  const original = await importOriginal<typeof workshopUtil>();
   return {
-    verifyWorkshopValidity: vi.fn().mockResolvedValue({ code: 200, message: "success" })
+    ...original,
+    verifyWorkshopValidity: vi.fn().mockResolvedValue({ code: 200, message: "success" }),
+    getWorkshopFilesPath: vi.fn().mockResolvedValue("/tmp/fake-files-folder")
   };
 });
 vi.mock("../src/verify", async () => {
@@ -24,12 +33,72 @@ vi.mock("../src/verify", async () => {
     checkRecaptchaToken: vi.fn().mockResolvedValue(1)
   };
 });
-
 vi.mock("../src/database", async () => {
   return {
-    findUser: vi.fn(() => Promise.resolve([testAdminUser])) // just so we can verify the user is an admin for prehandlers
+    findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
+    isUserInWorkshop: vi.fn().mockResolvedValue(true),
+    findWorkshop: vi.fn().mockResolvedValue([])
   };
 });
+vi.mock("../src/user/fetch-user-files", async () => {
+  return {
+    getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory")
+  };
+});
+vi.mock("../src/util", async () => {
+  return {
+    verifyNonExistentFilepath: vi.fn().mockResolvedValue(true)
+  };
+});
+vi.mock("fs/promises", async () => {
+  return {
+    readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content"))
+  };
+});
+vi.mock("../src/upload-handlers", async () => {
+  return {
+    fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
+    getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
+    uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    getWorkshopDatapacksNames: vi.fn().mockResolvedValue([])
+  };
+});
+
+const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
+  const file = multipartFile.file;
+  await new Promise<void>((resolve) => {
+    file.on("data", () => {});
+    file.on("end", () => {
+      resolve();
+    });
+  });
+  return { code, message };
+};
+const mockDate = new Date("2024-08-20T00:00:00Z");
+const start = new Date(mockDate);
+start.setHours(mockDate.getHours() + 1);
+const end = new Date(mockDate);
+end.setHours(mockDate.getHours() + 2);
+const testWorkshopDatabase: Workshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: 0,
+  creatorUUID: "123",
+  regLink: ""
+};
+const testWorkshop: SharedWorkshop = {
+  title: "test",
+  start: start.toISOString(),
+  end: end.toISOString(),
+  workshopId: 1,
+  regRestrict: false,
+  creatorUUID: "123",
+  regLink: "",
+  active: false
+};
 
 let app: FastifyInstance;
 beforeAll(async () => {
@@ -64,8 +133,10 @@ beforeAll(async () => {
     };
   });
   await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
+  app.get("/workshop", fetchAllWorkshops);
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
   await app.close();
@@ -74,7 +145,8 @@ const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 const testNonAdminUser = { userId: 1, isAdmin: 0 } as User;
 const testAdminUser = { userId: 1, isAdmin: 1 } as User;
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack" }
+  { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack" },
+  { method: "GET", url: "/workshop/download/42" }
 ];
 describe("verifyAuthority", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
@@ -94,19 +166,6 @@ describe("verifyAuthority", () => {
     });
     it("should return 401 if not found in database", async () => {
       findUser.mockResolvedValueOnce([]);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers
-      });
-      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-      expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
-      expect(response.statusCode).toBe(401);
-    });
-    it("should return 401 if not admin", async () => {
-      findUser.mockResolvedValueOnce([testNonAdminUser]);
       const response = await app.inject({
         method: method as InjectOptions["method"],
         url: url,
@@ -234,5 +293,184 @@ describe("editWorkshopDatapackMetadata", async () => {
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "success" });
     expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("getWorkshops", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
+  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
+  it("should return 500 if findWorkshop throws an error", async () => {
+    findWorkshop.mockRejectedValueOnce(new Error());
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown error" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 200 if successful and workshop active as false", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual([
+      {
+        ...testWorkshop,
+        active: false,
+        datapacks: [],
+        files: []
+      }
+    ]);
+
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and workshop active as true", async () => {
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, start: mockDate.toISOString() }]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop",
+      headers
+    });
+    expect(getDatapacksNames).toHaveBeenCalledOnce();
+    expect(getFilesNames).toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual([
+      {
+        ...testWorkshop,
+        start: mockDate.toISOString(),
+        active: true,
+        datapacks: [],
+        files: []
+      }
+    ]);
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("downloadWorkshopFilesZip tests", () => {
+  const workshopId = 42;
+  const route = `/workshop/download/${workshopId}`;
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const readFile = vi.spyOn(fsp, "readFile");
+  const createZipFile = vi.spyOn(generalFileHandlerRequests, "createZipFile");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 403 if user is not admin AND not in workshop", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
+  });
+  it("should return 500 if getWorkshopFilesPath fails", async () => {
+    vi.spyOn(workshopUtil, "getWorkshopFilesPath").mockRejectedValueOnce(new Error("getWorkshopFilesPath error"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+  });
+  it("should return 500 if verifyNonExistentFilepath returns false", async () => {
+    vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+  });
+  it("should return 500 if readFile throws an error != ENOENT", async () => {
+    readFile.mockRejectedValueOnce(new Error("Something else"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("An error occurred:")
+    });
+  });
+  it("should create the zip if readFile returns ENOENT, then return file", async () => {
+    const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
+    enoentError.code = "ENOENT";
+    readFile.mockRejectedValueOnce(enoentError);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(createZipFile).toHaveBeenCalledTimes(1);
+    expect(response.body).toEqual("fake-zip-content");
+  });
+  it("should return existing zip file if readFile succeeds", async () => {
+    const existingFileBuffer = Buffer.from("existing-zip-content");
+    readFile.mockResolvedValueOnce(existingFileBuffer);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual("existing-zip-content");
+    expect(createZipFile).not.toHaveBeenCalled();
+  });
+  it("should return 404 if an ENOENT error happens later in the try block", async () => {
+    const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
+    enoentError.code = "ENOENT";
+    readFile.mockRejectedValueOnce(enoentError);
+    const creationError = new Error("failed") as NodeJS.ErrnoException;
+    creationError.code = "ENOENT";
+    createZipFile.mockRejectedValueOnce(creationError);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(404);
+    expect(await response.json()).toEqual({ error: "Failed to process the file" });
+  });
+  it("should return 500 if createZipFile throws an error", async () => {
+    const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
+    enoentError.code = "ENOENT";
+    readFile.mockRejectedValueOnce(enoentError);
+    createZipFile.mockRejectedValueOnce(new Error("failed"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "An error occurred" });
   });
 });

@@ -9,4 +9,5 @@ export async function initialize() {
   await actions.processDatapackConfig([]);
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
+  actions.fetchAllWorkshops();
 }

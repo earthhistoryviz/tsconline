@@ -1,6 +1,5 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
 import {
-  downloadWorkshopFilesZip,
   editDatapackMetadata,
   fetchSingleUserDatapack,
   requestDownload,
@@ -78,13 +77,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       needEncryption: { type: "boolean" }
     }
   };
-  const workshopTitleParams = {
-    type: "object",
-    properties: {
-      workshopId: { type: "number" }
-    },
-    required: ["workshopId"]
-  };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
@@ -124,10 +116,5 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: fetchWorkshopDatapackParams }
     },
     fetchWorkshopDatapack
-  );
-  fastify.get(
-    "/workshop/download/:workshopId",
-    { config: { rateLimit: looseRateLimit }, schema: { params: workshopTitleParams } },
-    downloadWorkshopFilesZip
   );
 };

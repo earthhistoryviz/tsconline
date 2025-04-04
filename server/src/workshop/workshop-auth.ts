@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from "
 import { findUser } from "../database.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
-import { editWorkshopDatapackMetadata } from "./workshop-routes.js";
+import { downloadWorkshopFilesZip, editWorkshopDatapackMetadata } from "./workshop-routes.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -27,11 +27,6 @@ async function verifyAuthority(request: FastifyRequest, reply: FastifyReply) {
     }
   } catch (e) {
     reply.status(500).send({ error: "Database error" });
-    return;
-  }
-  const { isAdmin } = user[0];
-  if (!isAdmin) {
-    reply.status(401).send({ error: "Unauthorized access" });
     return;
   }
 }
@@ -66,11 +61,23 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     required: ["workshopUUID", "datapackTitle"]
   };
+  const workshopTitleParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" }
+    },
+    required: ["workshopId"]
+  };
   fastify.addHook("preHandler", verifyAuthority);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.patch(
     "/:workshopUUID/datapack/:datapackTitle",
     { config: { rateLimit: moderateRateLimit }, schema: { params: editWorkshopDatapackMetadataParams } },
     editWorkshopDatapackMetadata
+  );
+  fastify.get(
+    "/download/:workshopId",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopTitleParams } },
+    downloadWorkshopFilesZip
   );
 };
