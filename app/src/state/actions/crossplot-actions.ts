@@ -13,7 +13,8 @@ import {
   Marker,
   Model,
   AutoPlotRequest,
-  assertAutoPlotResponse
+  assertAutoPlotResponse,
+  ConvertCrossPlotRequest
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
@@ -367,12 +368,13 @@ export const sendCrossPlotConversionRequest = action(async () => {
     const columnCopy = cloneDeep(columnRoot);
     const chartSettingsCopy = cloneDeep(state.settings);
     const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-    const body = {
+    const body: ConvertCrossPlotRequest = {
       datapackUniqueIdentifiers: state.crossPlot.chartY.datapackUniqueIdentifiers,
       models: state.crossPlot.models
         .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
         .join("\n"),
-      settings: xmlSettings
+      settings: xmlSettings,
+      returnType: "file"
     };
     const response = await fetcher("/crossplot/convert", {
       method: "POST",

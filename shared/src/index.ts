@@ -25,6 +25,7 @@ export type ConvertCrossPlotRequest = {
   datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
   models: string;
   settings: string;
+  returnType: "string" | "file"
 };
 
 export type AutoPlotRequest = {
@@ -746,6 +747,8 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
   }
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
   if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
+  if (o.returnType !== "string" && o.returnType !== "file")
+    throwError("ConvertCrossPlotRequest", "returnType", "string", o.returnType);
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
