@@ -1,3 +1,5 @@
+import { DatapackMetadata, SharedUser } from "./index";
+
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
   return Math.round(value * factor) / factor;
@@ -11,4 +13,11 @@ export function calculateAutoScale(min: number, max: number) {
   const scaleStep = roundToDecimalPlace((upperRange - lowerRange) * 0.2, 3);
   const scaleStart = 0;
   return { lowerRange, upperRange, scaleStep, scaleStart };
+}
+
+export function checkUserAllowedDownloadDatapack(user: SharedUser, datapack: DatapackMetadata) {
+  if (user.isAdmin || datapack.isPublic || (datapack.type === "user" && datapack.uuid === user.uuid)) {
+    return true;
+  }
+  return false;
 }

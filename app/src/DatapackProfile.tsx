@@ -35,7 +35,9 @@ import {
   DatapackUniqueIdentifier,
   isDatapackTypeString,
   isUserDatapack,
-  isOfficialDatapack
+  isOfficialDatapack,
+  checkUserAllowedDownloadDatapack,
+  getUUIDOfDatapackType
 } from "@tsconline/shared";
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
@@ -382,6 +384,15 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
+
+  function downloadDatapackFiles() {
+    if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
+      actions.fetchDatapackFiles(datapack.title, getUUIDOfDatapackType(datapack), datapack.isPublic);
+    } else {
+      actions.pushSnackbar("You are not allowed to download this datapack's pdfs.", "warning");
+    }
+  }
+
   return (
     <Box className={styles.about} bgcolor="secondaryBackground.main">
       <div className={styles.ah}>
@@ -415,6 +426,17 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Tags tags={datapack.tags} />
+        </div>
+        <div className={styles.ai}>
+          {datapack.hasFiles && (
+            <TSCButton
+              variant="contained"
+              color="primary"
+              sx={{ marginTop: 2 }}
+              onClick={() => downloadDatapackFiles()}>
+              {t("workshops.details-page.download-button")}
+            </TSCButton>
+          )}
         </div>
       </div>
       <div className={styles.additional}>
