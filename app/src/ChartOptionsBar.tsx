@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { styled, useTheme } from "@mui/material/styles";
 import "./Chart.css";
-import { CustomTooltip, TSCButton, TSCMenuItem } from "./components";
+import { CustomTooltip, TSCMenuItem } from "./components";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -329,7 +329,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             showText: true
           }}
           options={altSaveOptions || []}
-          splitBorder={false}
         />
         <Dialog
           disableRestoreFocus

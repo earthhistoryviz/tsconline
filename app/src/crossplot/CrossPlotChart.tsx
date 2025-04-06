@@ -4,14 +4,14 @@ import React, { useContext, useRef } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar, MobileCrossPlotSideBar } from "./CrossPlotSideBar";
-import { Box, Button, IconButton, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Button, Typography, useMediaQuery, useTheme } from "@mui/material";
 import styles from "./CrossPlotChart.module.css";
 import MarkerIcon from "../assets/icons/model=Default.svg";
 import ModelsIcon from "../assets/icons/model=model.svg";
-import { AutoAwesome, AutoFixHigh, CachedOutlined, ChatRounded } from "@mui/icons-material";
+import { AutoAwesome, AutoFixHigh, ChatRounded } from "@mui/icons-material";
 import TimeLine from "../assets/icons/axes=two.svg";
-import { CustomTooltip, TSCDialogLoader } from "../components";
-import { TSCButton, TSCSplitButton } from "../components/TSCButton";
+import { TSCDialogLoader } from "../components";
+import { TSCButton } from "../components/TSCButton";
 import { useNavigate } from "react-router";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
