@@ -71,23 +71,69 @@
 .splitButtonMain {
   border-radius: 10%;
   color: white;
+  background: transparent;
 }
 .splitButtonMain:hover {
   background-color: #9c9c9c30;
 }
-.splitButtonArrow {
+.splitButtonGroup {
+  box-shadow: none;
+  display: inline-flex;
+}
+.splitButtonMain::after {
+  content: "";
+  display: block;
+  position: absolute;
+  top: 10%;
+  right: 0;
+  width: 1px;
+  height: 80%;
+  align-self: center;
+  border-radius: inherit;
+  background-color: #ebebeb;
+}
+.splitButtonArrowContainerSmall {
   min-width: 0 !important;
   width: 20px;
   padding: 0px;
+  background: transparent;
 }
-.splitButtonArrowIcon {
+.splitButtonArrowContainerMedium {
+  min-width: 0 !important;
+  width: 25px;
+  padding: 0px;
+  background: transparent;
+}
+.splitButtonArrowContainerLarge {
+  min-width: 0 !important;
+  width: 30px;
+  padding: 0px;
+  background: transparent;
+}
+.splitButtonArrowSmall {
   color: white;
   width: 15px;
   height: 15px;
   padding: 0px;
   margin: 0px;
 }
-.splitButtonArrow:hover {
+.splitButtonArrowLarge {
+  color: white;
+  width: 20px;
+  height: 20px;
+  padding: 0px;
+  margin: 0px;
+}
+.splitButtonArrowMedium {
+  color: white;
+  width: 18px;
+  height: 18px;
+  padding: 0px;
+  margin: 0px;
+}
+.splitButtonArrowSmall:hover,
+.splitButtonArrowLarge:hover,
+.splitButtonArrowMedium:hover {
   /* make it lighter */
   background-color: #9c9c9c30;
 }

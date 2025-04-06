@@ -26,11 +26,25 @@ export const CrossPlotChart: React.FC = observer(() => {
       <ChartContext.Provider
         value={{
           chartTabState: state.crossPlot.state,
+          altSaveOptions: [
+            {
+              label: "Save Converted Datapack",
+              onClick: () => {
+                actions.pushSnackbar("This feature is not yet implemented", "warning");
+              }
+            },
+            {
+              label: "Upload Converted Datapack To Profile",
+              onClick: () => {
+                actions.pushSnackbar("This feature is not yet implemented", "warning");
+              }
+            }
+          ],
           actionChartOptions: [
             {
               label: "Auto Plot",
               icon: <AutoFixHigh />,
-              onChange: actions.autoPlotCrossPlot
+              onClick: actions.autoPlotCrossPlot
             }
           ],
           stateChartOptions: [

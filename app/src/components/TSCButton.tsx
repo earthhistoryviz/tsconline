@@ -104,9 +104,19 @@ type TSCSplitButtonProps = {
   }[];
   buttonType?: "primary" | "secondary" | "gradient";
   transparent?: boolean;
+  splitBorder?: boolean;
+  arrowSize?: "small" | "medium" | "large";
 } & ButtonGroupProps;
 
-export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, buttonType, transparent, ...props }) => {
+export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({
+  main,
+  options,
+  buttonType,
+  transparent,
+  splitBorder = true,
+  arrowSize = "large",
+  ...props
+}) => {
   const [menuState, toggleMenu] = useMenuState({ transition: true });
   const anchorProps = useClick(menuState.state, toggleMenu);
   const anchorRef = useRef<HTMLButtonElement>(null);
@@ -118,13 +128,8 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
       : buttonType === "secondary"
         ? theme.palette.secondaryButton
         : gradient;
-  const transparentSx = {
-    background: "transparent",
-    boxShadow: "none"
-  };
-  const sx = transparent
+  const sx = !transparent
     ? {
-        boxShadow: "none",
         background: color["main"],
         color: color["contrastText"],
         "& .MuiButton-root:hover": {
@@ -132,20 +137,47 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
         },
         "& .MuiButton-root:active": {
           background: color["dark"]
+        },
+        "& .MuiButtonGroup-firstButton": {
+          borderRight: "none"
         }
       }
-    : transparentSx;
+    : {
+        background: "transparent"
+      };
+  const arrowContainerClass =
+    arrowSize === "small"
+      ? styles.splitButtonArrowContainerSmall
+      : arrowSize === "large"
+        ? styles.splitButtonArrowContainerLarge
+        : styles.splitButtonArrowContainerMedium;
+  const arrowClass =
+    arrowSize === "small"
+      ? styles.splitButtonArrowSmall
+      : arrowSize === "large"
+        ? styles.splitButtonArrowLarge
+        : styles.splitButtonArrowMedium;
   return (
     <>
-      <ButtonGroup sx={sx} variant="contained" aria-label="Button group with a nested menu" {...props}>
+      <ButtonGroup
+        disableElevation
+        className={styles.splitButtonGroup}
+        sx={sx}
+        variant="contained"
+        aria-label="Button group with a nested menu"
+        {...props}>
         {main.showText ? (
           <Button
             startIcon={main.icon}
             disableRipple
             color="inherit"
             className={styles.splitButtonMain}
-            onClick={() => main.onClick()}
-            sx={transparentSx}>
+            sx={{
+              "&::after": {
+                display: splitBorder ? "block" : "none !important"
+              }
+            }}
+            onClick={() => main.onClick()}>
             {main.label}
           </Button>
         ) : (
@@ -155,8 +187,8 @@ export const TSCSplitButton: React.FC<TSCSplitButtonProps> = ({ main, options, b
             </IconButton>
           </CustomTooltip>
         )}
-        <Button disableRipple {...anchorProps} className={styles.splitButtonArrow} ref={anchorRef} sx={transparentSx}>
-          <ArrowDropDown className={styles.splitButtonArrowIcon} />
+        <Button disableRipple {...anchorProps} className={arrowContainerClass} ref={anchorRef}>
+          <ArrowDropDown className={arrowClass} />
         </Button>
       </ButtonGroup>
       <ControlledMenu

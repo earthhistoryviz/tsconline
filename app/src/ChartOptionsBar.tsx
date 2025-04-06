@@ -36,6 +36,7 @@ import { ChartContext } from "./Chart";
 import styles from "./ChartOptionsBar.module.css";
 import Color from "color";
 import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
+import { TSCSplitButton } from "./components/TSCButton";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -57,7 +58,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
-  const { chartTabState, stateChartOptions, actionChartOptions } = useContext(ChartContext);
+  const { chartTabState, stateChartOptions, actionChartOptions, altSaveOptions } = useContext(ChartContext);
   const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
   let width = 0;
   const optionsBarRef = useRef<HTMLDivElement>(null);
@@ -321,6 +322,18 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <TSCButton className={styles.saveButton} buttonType="gradient" onClick={() => handleDownloadOpen()}>
           {t("chart.save")}
         </TSCButton>
+        <TSCSplitButton
+          className={styles.saveButton}
+          buttonType="gradient"
+          arrowSize="large"
+          main={{
+            label: "Save Chart",
+            onClick: () => handleDownloadOpen(),
+            showText: true
+          }}
+          options={altSaveOptions || []}
+          splitBorder={false}
+        />
         <Dialog
           disableRestoreFocus
           open={downloadOpen}
@@ -413,11 +426,11 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
-        {(actionChartOptions || []).map(({ icon, label, onChange }) => {
+        {(actionChartOptions || []).map(({ icon, label, onClick }) => {
           return (
             <Box key={label}>
               <CustomTooltip title={label} key="label">
-                <StyledIconButton onClick={onChange}>{icon}</StyledIconButton>
+                <StyledIconButton onClick={onClick}>{icon}</StyledIconButton>
               </CustomTooltip>
             </Box>
           );
