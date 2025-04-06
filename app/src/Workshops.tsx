@@ -92,7 +92,7 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={getWorkshopCoverImage()}
+                    image={getWorkshopCoverImage(workshop.workshopId)}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
                     onError={() => actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE)}
@@ -267,9 +267,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-            })
+            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+          })
         }}
         onClick={() => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}>
         {/* timing details on card */}
@@ -300,19 +300,25 @@ export const Workshops: React.FC = observer(() => {
     if (date.toDateString() === new Date().toDateString()) {
       newStyle.backgroundColor = theme.palette.calendarCurrentDay.main;
     }
-    if (
-      calendarView === "month" &&
-      events.some(
-        (event) =>
-          new Date(event.start).toDateString() === date.toDateString() ||
-          (new Date(event.start) < date && new Date(event.end) >= date)
-      )
-    ) {
-      newStyle.backgroundImage = getWorkshopCoverImage(); // This need to be fix later so leave it as TSCreatorLogo for now.
-      newStyle.backgroundSize = "cover";
-      newStyle.backgroundPosition = "center";
-      newStyle.opacity = 0.3;
+
+    if (calendarView === "month") {
+      const matchedEvent = events.find((event) => {
+        const start = new Date(event.start);
+        const end = new Date(event.end);
+        return (
+          start.toDateString() === date.toDateString() ||
+          (start <= date && end >= date)
+        );
+      });
+
+      if (matchedEvent) {
+        newStyle.backgroundImage = getWorkshopCoverImage(matchedEvent.workshopId);
+        newStyle.backgroundSize = "cover";
+        newStyle.backgroundPosition = "center";
+        newStyle.opacity = 0.3;
+      }
     }
+
     if (date.getMonth() !== new Date().getMonth()) {
       newStyle.backgroundColor = theme.palette.backgroundColor.main;
     }

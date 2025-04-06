@@ -29,7 +29,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
+import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath, fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 
@@ -563,3 +563,36 @@ export async function fetchMapImages(
     reply.status(500).send({ error: "Internal Server Error" });
   }
 }
+
+
+export const fetchWorkshopCoverImage = async function (
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { workshopId } = request.params;
+  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "TSCreatorLogo.png");
+  try {
+
+    const imageFilepath = await fetchWorkshopCoverPictureFilepath(workshopId);
+    if (!imageFilepath) {
+      if (!(await checkFileExists(defaultFilepath))) {
+        reply.status(404).send({ error: "Default image not found" });
+        return;
+      }
+      reply.send(await readFile(defaultFilepath));
+      return;
+    }
+    reply.send(await readFile(imageFilepath));
+  } catch (e) {
+    try {
+      if (await checkFileExists(defaultFilepath)) {
+        reply.send(await readFile(defaultFilepath));
+        return;
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+    }
+    console.error("Error fetching image: ", e);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
