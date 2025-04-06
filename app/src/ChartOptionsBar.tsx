@@ -319,15 +319,12 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     }
     return (
       <div>
-        <TSCButton className={styles.saveButton} buttonType="gradient" onClick={() => handleDownloadOpen()}>
-          {t("chart.save")}
-        </TSCButton>
         <TSCSplitButton
           className={styles.saveButton}
           buttonType="gradient"
           arrowSize="large"
           main={{
-            label: "Save Chart",
+            label: t("chart.save"),
             onClick: () => handleDownloadOpen(),
             showText: true
           }}

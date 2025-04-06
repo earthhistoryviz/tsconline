@@ -93,7 +93,6 @@ export const CrossPlotChart: React.FC = observer(() => {
               }}
             />
             <MismatchModal />
-            <BottomBar />
           </Box>
         </Box>
       </ChartContext.Provider>
@@ -148,58 +147,3 @@ const MismatchModal: React.FC = observer(() => {
     </Box>
   );
 });
-
-const sx = {
-  backgroundColor: "transparent",
-  color: "white",
-  borderRadius: "0px",
-  "&:hover": {
-    backgroundColor: "hover.main"
-  }
-};
-const BottomBar = () => {
-  const { actions } = useContext(context);
-  const navigate = useNavigate();
-  const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
-  return (
-    <Box className={mobile ? styles.mobileButtons : styles.buttons} sx={{ backgroundColor: "dark.main" }}>
-      <CustomTooltip title={"Generate Cross Plot"}>
-        <IconButton sx={sx} onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-          <AutoAwesome />
-        </IconButton>
-      </CustomTooltip>
-      <TSCSplitButton
-        main={{
-          label: "Generate Converted Chart",
-          icon: <CachedOutlined />,
-          onClick: () => {
-            actions.pushSnackbar("This feature is not yet implemented", "warning");
-          }
-        }}
-        options={[
-          {
-            label: "Generate Converted Chart",
-            onClick: () => {
-              actions.pushSnackbar("This feature is not yet implemented", "warning");
-            }
-          },
-          {
-            label: "Download Converted Datapack",
-            onClick: async () => actions.sendCrossPlotConversionRequest()
-          },
-          {
-            label: "Upload Converted Datapack To Profile",
-            onClick: () => {
-              actions.pushSnackbar("This feature is not yet implemented", "warning");
-            }
-          }
-        ]}
-      />
-      <CustomTooltip title={"Auto Plot"}>
-        <IconButton sx={sx} onClick={() => actions.autoPlotCrossPlot()}>
-          <AutoFixHigh />
-        </IconButton>
-      </CustomTooltip>
-    </Box>
-  );
-};
