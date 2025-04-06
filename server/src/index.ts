@@ -302,6 +302,19 @@ server.get<{ Params: { title: string; uuid: string } }>(
   routes.fetchDatapackCoverImage
 );
 
+server.get<{ Params: { workshopId: number } }>(
+  "/workshop-images/:workshopId",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  routes.fetchWorkshopCoverImage
+);
+
 server.register(adminRoutes, { prefix: "/admin" });
 // these are seperate from the admin routes because they don't require recaptcha
 server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
