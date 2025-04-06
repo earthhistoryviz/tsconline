@@ -57,7 +57,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
-  const { chartTabState, otherChartOptions } = useContext(ChartContext);
+  const { chartTabState, stateChartOptions, actionChartOptions } = useContext(ChartContext);
   const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
   let width = 0;
   const optionsBarRef = useRef<HTMLDivElement>(null);
@@ -132,7 +132,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Typography>Zoom on Scroll</Typography>
           </TSCMenuItem>
           {isOverflowing &&
-            (otherChartOptions || []).map(({ label, onChange, value }) => (
+            (stateChartOptions || []).map(({ label, onChange, value }) => (
               <TSCMenuItem
                 key={label}
                 type="checkbox"
@@ -413,8 +413,17 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
+        {(actionChartOptions || []).map(({ icon, label, onChange }) => {
+          return (
+            <Box key={label}>
+              <CustomTooltip title={label} key="label">
+                <StyledIconButton onClick={onChange}>{icon}</StyledIconButton>
+              </CustomTooltip>
+            </Box>
+          );
+        })}
         {!isOverflowing &&
-          (otherChartOptions || []).map(({ icon, label, onChange, value }) => (
+          (stateChartOptions || []).map(({ icon, label, onChange, value }) => (
             <Box key={label}>
               <CustomTooltip title={label} key="label">
                 <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>

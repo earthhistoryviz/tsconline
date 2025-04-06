@@ -26,7 +26,14 @@ export const CrossPlotChart: React.FC = observer(() => {
       <ChartContext.Provider
         value={{
           chartTabState: state.crossPlot.state,
-          otherChartOptions: [
+          actionChartOptions: [
+            {
+              label: "Auto Plot",
+              icon: <AutoFixHigh />,
+              onChange: actions.autoPlotCrossPlot
+            }
+          ],
+          stateChartOptions: [
             {
               label: "Timeline On/Off",
               icon: <img src={TimeLine} width="24" height="24" />,
@@ -96,7 +103,10 @@ const MismatchModal: React.FC = observer(() => {
             to generate a crossplot chart.
           </Typography>
           <Box className={styles.changeButtons}>
-            <TSCButton buttonType="gradient" onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
+            <TSCButton
+              startIcon={<AutoAwesome />}
+              buttonType="gradient"
+              onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
               Generate Crossplot
             </TSCButton>
           </Box>

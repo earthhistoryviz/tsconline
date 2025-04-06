@@ -275,7 +275,7 @@ export const ChartTab: React.FC = observer(() => {
       <ChartContext.Provider
         value={{
           chartTabState: state.chartTab.state,
-          otherChartOptions: [
+          stateChartOptions: [
             {
               label: "Timeline On/Off",
               onChange: (bool: boolean) =>

@@ -280,7 +280,6 @@ const NonUserSettings: React.FC = () => {
           key={key}
           type="checkbox"
           checked={i18next.language === value}
-          className="non-user-settings-sub-menu-item"
           onClick={() => {
             i18next.changeLanguage(value);
           }}>

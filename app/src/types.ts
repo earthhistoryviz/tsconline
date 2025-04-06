@@ -80,11 +80,16 @@ export type ChartTabState = {
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;
-  otherChartOptions?: {
+  stateChartOptions?: {
     icon: React.ReactNode;
     label: string;
     onChange: (boolean: boolean) => void;
     value: boolean;
+  }[];
+  actionChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onChange: () => void;
   }[];
 };
 
