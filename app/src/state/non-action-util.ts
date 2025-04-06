@@ -198,7 +198,5 @@ export function attachTscPrefixToName(name: string, displayType: DisplayedColumn
 }
 
 export function getWorkshopCoverImage(workshopId: number) {
-
   return devSafeUrl(`/workshop-images/${workshopId}`);
-
 }

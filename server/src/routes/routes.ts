@@ -29,7 +29,11 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath, fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
+import {
+  fetchDatapackProfilePictureFilepath,
+  fetchMapPackImageFilepath,
+  fetchWorkshopCoverPictureFilepath
+} from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 
@@ -564,7 +568,6 @@ export async function fetchMapImages(
   }
 }
 
-
 export const fetchWorkshopCoverImage = async function (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
@@ -572,7 +575,6 @@ export const fetchWorkshopCoverImage = async function (
   const { workshopId } = request.params;
   const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "TSCreatorLogo.png");
   try {
-
     const imageFilepath = await fetchWorkshopCoverPictureFilepath(workshopId);
     if (!imageFilepath) {
       if (!(await checkFileExists(defaultFilepath))) {

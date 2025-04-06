@@ -267,9 +267,9 @@ export const Workshops: React.FC = observer(() => {
           //Fits events when in week and day view
           ...(calendarView !== "month" &&
             !longEvent && {
-            marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
-            height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
-          })
+              marginTop: `${(new Date(event.start!).getHours() - 9) * 40 + new Date(event.start!).getMinutes()}px`,
+              height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
+            })
         }}
         onClick={() => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}>
         {/* timing details on card */}
@@ -305,10 +305,7 @@ export const Workshops: React.FC = observer(() => {
       const matchedEvent = events.find((event) => {
         const start = new Date(event.start);
         const end = new Date(event.end);
-        return (
-          start.toDateString() === date.toDateString() ||
-          (start <= date && end >= date)
-        );
+        return start.toDateString() === date.toDateString() || (start <= date && end >= date);
       });
 
       if (matchedEvent) {
