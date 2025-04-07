@@ -172,7 +172,9 @@ export async function parseDatapacks(
   decryptFilePath: string,
   options?: DatapackParsingOptions
 ): Promise<Datapack | null> {
-  const decryptPaths = options?.nonStandardFilepath ? join(decryptFilePath, datapackMetadata.storedFileName) : await grabFilepaths([datapackMetadata.storedFileName], decryptFilePath, "datapacks")
+  const decryptPaths = options?.nonStandardFilepath
+    ? join(decryptFilePath, datapackMetadata.storedFileName)
+    : await grabFilepaths([datapackMetadata.storedFileName], decryptFilePath, "datapacks");
   if (decryptPaths.length == 0)
     throw new Error(
       `Did not find any datapacks for ${datapackMetadata.originalFileName} in decryptFilePath ${decryptFilePath}`

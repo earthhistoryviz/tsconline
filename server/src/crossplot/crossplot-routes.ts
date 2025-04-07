@@ -2,7 +2,8 @@ import {
   AutoPlotResponse,
   isAutoPlotMarkerArray,
   assertAutoPlotRequest,
-  assertConvertCrossPlotRequest
+  assertConvertCrossPlotRequest,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { verifyFilepath } from "../util.js";
@@ -16,6 +17,8 @@ import {
 import { getMarkersFromTextFile } from "./extract-markers.js";
 import { isOperationResult } from "../types.js";
 import logger from "../error-logger.js";
+import { setupNewDatapackDirectoryInUUIDDirectory } from "../upload-handlers.js";
+import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
 
 export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -36,21 +39,56 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       reply.code(result.code).send({ error: result.message });
       return;
     }
-    const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
-
-    if (
-      (await convertCrossPlotWithModelsInJar(
-        body.datapackUniqueIdentifiers,
-        outputTextFilepath,
-        modelsTextFilepath,
-        settingsTextFilepath
-      )) &&
-      (await verifyFilepath(outputTextFilepath))
-    ) {
+    const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath, hash } = result;
+    const convertedCrossPlot = await convertCrossPlotWithModelsInJar(
+      body.datapackUniqueIdentifiers,
+      outputTextFilepath,
+      modelsTextFilepath,
+      settingsTextFilepath
+    );
+    if (!convertedCrossPlot && !(await verifyFilepath(outputTextFilepath))) {
+      throw new Error("Conversion failed");
+    }
+    if (body.action === "file") {
       const file = await readFile(outputTextFilepath, "utf-8");
       reply.code(200).send(file);
-    } else {
-      throw new Error("Conversion failed");
+      return;
+    }
+    const tempDatapackMetadata: DatapackMetadata = {
+      title: hash,
+      description: "temporary crossplot",
+      originalFileName: outputTextFilepath,
+      storedFileName: outputTextFilepath,
+      date: new Date().toISOString(),
+      size: "0",
+      authoredBy: "auto-generated",
+      references: [],
+      tags: [],
+      notes: "",
+      type: "temp",
+      isPublic: true,
+      priority: 1
+    };
+    // upload the temp datapack
+    try {
+      await setupNewDatapackDirectoryInUUIDDirectory("temp", outputTextFilepath, tempDatapackMetadata, false);
+    } catch (e) {
+      logger.error(e);
+      await deleteUserDatapack("temp", tempDatapackMetadata.title);
+      reply.code(500).send({ error: "Error creating temporary datapack directory" });
+      return;
+    }
+    try {
+      const datapack = await fetchUserDatapack("temp", tempDatapackMetadata.title);
+      if (!datapack) {
+        reply.code(404).send({ error: "Datapack not found" });
+        return;
+      }
+      reply.code(200).send(datapack);
+    } catch (e) {
+      logger.error(e);
+      reply.code(500).send({ error: "Error parsing temporary datapack" });
+      return;
     }
   } catch (error) {
     console.error(error);

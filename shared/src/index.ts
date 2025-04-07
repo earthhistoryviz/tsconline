@@ -25,7 +25,7 @@ export type ConvertCrossPlotRequest = {
   datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
   models: string;
   settings: string;
-  returnType: "string" | "file"
+  action: "file" | "chart";
 };
 
 export type AutoPlotRequest = {
@@ -91,7 +91,10 @@ export type UserDatapack = {
 export type TreatiseDatapack = {
   type: "treatise";
 };
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TreatiseDatapack;
+export type TempDatapack = {
+  type: "temp";
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TreatiseDatapack | TempDatapack;
 export type DatapackTypeString = DatapackType["type"];
 
 export type DatapackMetadata = {
@@ -752,7 +755,9 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
-  return datapackType.type === "official" || datapackType.type === "treatise" ? datapackType.type : datapackType.uuid;
+  return datapackType.type === "temp" || datapackType.type === "official" || datapackType.type === "treatise"
+    ? datapackType.type
+    : datapackType.uuid;
 }
 
 export function isOfficialUUID(uuid: string): boolean {
@@ -1344,7 +1349,7 @@ export function isDatapackTypeString(o: any): o is DatapackTypeString {
   return /^(user|official|workshop|treatise)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
-  if (typeof o !== "string" || !/^(user|official|workshop|treatise)$/.test(o))
+  if (typeof o !== "string" || !/^(user|official|workshop|treatise|temp)$/.test(o))
     throwError("DatapackType", "type", "string and user | server | workshop", o);
 }
 export function assertTransects(o: any): asserts o is Transects {
@@ -1392,6 +1397,9 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "treatise":
       assertTreatiseDatapack(o);
       break;
+    case "temp":
+      assertTempDatapack(o);
+      break;
     default:
       throwError("Datapack", "type", "user | official | workshop | treatise", o.type);
   }
@@ -1417,6 +1425,11 @@ export function assertTreatiseDatapack(o: any): asserts o is TreatiseDatapack {
   if (!o || typeof o !== "object") throw new Error("TreatiseDatapack must be a non-null object");
   if (typeof o.type !== "string") throwError("TreatiseDatapack", "type", "string", o.type);
   if (o.type !== "treatise") throwError("TreatiseDatapack", "type", "treatise", o.type);
+}
+export function assertTempDatapack(o: any): asserts o is TempDatapack {
+  if (!o || typeof o !== "object") throw new Error("TempDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("TempDatapack", "type", "string", o.type);
+  if (o.type !== "temp") throwError("TempDatapack", "type", "temp", o.type);
 }
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");

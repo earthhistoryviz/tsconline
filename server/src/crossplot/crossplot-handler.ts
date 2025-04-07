@@ -52,6 +52,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
       outputTextFilepath: string;
       modelsTextFilepath: string;
       settingsTextFilepath: string;
+      hash: string;
     }
 > {
   // create a new directory for this request
@@ -59,8 +60,9 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
   let outputTextFilepath: string;
   let modelsTextFilepath: string;
   let settingsTextFilepath: string;
+  let hashedDir: string;
   try {
-    const hashedDir = md5(request.models + request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
+    hashedDir = md5(request.models + request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
     dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
@@ -80,7 +82,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
   } catch (e) {
     return { message: "Error writing files for conversion", code: 500 };
   }
-  return { outputTextFilepath, modelsTextFilepath, settingsTextFilepath };
+  return { outputTextFilepath, modelsTextFilepath, settingsTextFilepath, hash: hashedDir };
 };
 export const setupAutoPlotDirectory = async function (request: AutoPlotRequest): Promise<
   | OperationResult

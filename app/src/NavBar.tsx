@@ -1,7 +1,7 @@
 import { useContext, useRef } from "react";
 import { observer } from "mobx-react-lite";
 import AppBar from "@mui/material/AppBar";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Toolbar from "@mui/material/Toolbar";
 import { styled, useTheme } from "@mui/material/styles";
 import HomeIcon from "@mui/icons-material/Home";
@@ -58,6 +58,7 @@ export const NavBar = observer(function Navbar() {
   const theme = useTheme();
   const { state, actions } = useContext(context);
   const navigate = useNavigate();
+  const location = useLocation();
   const settingsRef = useRef(null);
   const [settingsMenuState, settingsMenuToggle] = useMenuState({ transition: true });
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -213,8 +214,12 @@ export const NavBar = observer(function Navbar() {
           disabled={state.loadingDatapacks}
           startIcon={<AutoAwesome />}
           onClick={async () => {
-            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-            actions.initiateChartGeneration(navigate, location.pathname);
+            if (location.pathname !== "/crossplot") {
+              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+              actions.initiateChartGeneration(navigate, location.pathname);
+            } else {
+              await actions.generateConvertedCrossPlotChart(navigate);
+            }
           }}>
           {t("button.generate-chart")}
         </TSCButton>

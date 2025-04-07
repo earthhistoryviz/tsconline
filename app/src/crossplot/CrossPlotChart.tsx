@@ -30,7 +30,7 @@ export const CrossPlotChart: React.FC = observer(() => {
             {
               label: "Save Converted Datapack",
               onClick: () => {
-                actions.pushSnackbar("This feature is not yet implemented", "warning");
+                actions.sendCrossPlotConversionRequest("file");
               }
             },
             {
