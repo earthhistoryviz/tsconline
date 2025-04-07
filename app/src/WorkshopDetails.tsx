@@ -86,36 +86,41 @@ export const WorkshopDetails = observer(() => {
                           • {file}
                         </Typography>
                       ))}
-                      {!shouldLoadRecaptcha ? (
-                        <CustomTooltip
-                          title={t("workshops.details-page.download-tooltip-not-registered")}
-                          slotProps={{
-                            popper: {
-                              modifiers: [
-                                {
-                                  name: "offset",
-                                  options: {
-                                    offset: [0, 12]
+                      <Box mt={2}>
+                        {!shouldLoadRecaptcha ? (
+                          <CustomTooltip
+                            title={t("workshops.details-page.download-tooltip-not-registered")}
+                            slotProps={{
+                              popper: {
+                                modifiers: [
+                                  {
+                                    name: "offset",
+                                    options: {
+                                      offset: [0, 0]
+                                    }
                                   }
-                                }
-                              ]
-                            }
-                          }}>
-                          <span>
-                            <TSCButton variant="contained" color="primary" sx={{ marginTop: 2 }} disabled>
-                              {t("workshops.details-page.download-button")}
-                            </TSCButton>
-                          </span>
-                        </CustomTooltip>
-                      ) : (
-                        <TSCButton
-                          variant="contained"
-                          color="primary"
-                          sx={{ marginTop: 2 }}
-                          onClick={downloadWorkshopFiles}>
-                          {t("workshops.details-page.download-button")}
-                        </TSCButton>
-                      )}
+                                ]
+                              }
+                            }}>
+                            <span>
+                              <TSCButton
+                                variant="contained"
+                                disabled
+                                sx={{
+                                  "&.Mui-disabled": {
+                                    color: "black"
+                                  }
+                                }}>
+                                {t("workshops.details-page.download-button")}
+                              </TSCButton>
+                            </span>
+                          </CustomTooltip>
+                        ) : (
+                          <TSCButton variant="contained" onClick={downloadWorkshopFiles}>
+                            {t("workshops.details-page.download-button")}
+                          </TSCButton>
+                        )}
+                      </Box>
                     </>
                   ) : (
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
