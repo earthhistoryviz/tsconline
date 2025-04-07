@@ -6,10 +6,15 @@ import {
   uploadUserDatapackHandler,
   setupNewDatapackDirectoryInUUIDDirectory
 } from "./upload-handlers.js";
-import { deleteUserDatapack, doesDatapackFolderExistInAllUUIDDirectories } from "./user/user-handler.js";
-import { DatapackMetadata, isOfficialDatapack, isWorkshopDatapack } from "@tsconline/shared";
+import {
+  deleteUserDatapack,
+  doesDatapackFolderExistInAllUUIDDirectories,
+  fetchUserDatapack
+} from "./user/user-handler.js";
+import { Datapack, DatapackMetadata, isOfficialDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { grabAndVerifyWorkshopUUID } from "./workshop/workshop-handler.js";
 import { findUser } from "./database.js";
+import logger from "./error-logger.js";
 
 export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
   uuid: string,
@@ -113,5 +118,32 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
     filepath && (await rm(filepath, { force: true }));
     tempProfilePictureFilepath && (await rm(tempProfilePictureFilepath, { force: true }));
     return { code: 500, message: "Unknown error" };
+  }
+};
+
+export const uploadTemporaryDatapack = async (
+  metadata: DatapackMetadata,
+  sourceFile: string
+): Promise<OperationResult | Datapack> => {
+  if (metadata.type !== "temp") {
+    return { code: 400, message: "Datapack is not a temporary datapack" };
+  }
+  // upload the temp datapack
+  try {
+    await setupNewDatapackDirectoryInUUIDDirectory("temp", sourceFile, metadata, false);
+  } catch (e) {
+    logger.error(e);
+    await deleteUserDatapack("temp", metadata.title);
+    return { code: 500, message: "Error creating temporary datapack directory" };
+  }
+  try {
+    const datapack = await fetchUserDatapack("temp", metadata.title);
+    if (!datapack) {
+      return { code: 404, message: "Datapack not found" };
+    }
+    return datapack;
+  } catch (e) {
+    logger.error(e);
+    return { code: 500, message: "Error parsing temporary datapack" };
   }
 };
