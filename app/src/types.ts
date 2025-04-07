@@ -80,11 +80,20 @@ export type ChartTabState = {
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;
-  otherChartOptions?: {
+  altSaveOptions?: {
+    label: string;
+    onClick: () => void;
+  }[];
+  stateChartOptions?: {
     icon: React.ReactNode;
     label: string;
     onChange: (boolean: boolean) => void;
     value: boolean;
+  }[];
+  actionChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
   }[];
 };
 

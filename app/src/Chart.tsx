@@ -1,5 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
 import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
@@ -10,7 +11,18 @@ import {
   ReactZoomPanPinchRef
 } from "react-zoom-pan-pinch";
 import { OptionsBar } from "./ChartOptionsBar";
-import { Box, Typography, IconButton, Drawer, List, ListItemButton, ListItemText, Paper } from "@mui/material";
+import {
+  Box,
+  Typography,
+  IconButton,
+  FormControlLabel,
+  Drawer,
+  List,
+  ListItemButton,
+  ListItemText,
+  Paper
+} from "@mui/material";
+import { ArrowBack } from "@mui/icons-material";
 import HistoryIcon from "@mui/icons-material/History";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
@@ -20,6 +32,7 @@ import { context } from "./state";
 import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
+import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate } from "./state/non-action-util";
 
 export const ChartContext = createContext<ChartContextType>({
@@ -239,23 +252,44 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
 export const ChartTab: React.FC = observer(() => {
   const { state, actions } = useContext(context);
+  const query = new URLSearchParams(useLocation().search);
+  const navigate = useNavigate();
+  const previousLocation = usePreviousLocation();
+  const from = query.get("from");
+  // see if the previous route/location was crossplot
+  // we use two different ways, to make sure that we can try to be hyper accurate about the last location
+  const isLastLocationCrossPlot = from === "crossplot" || previousLocation === "/crossplot";
   return (
-    <ChartContext.Provider
-      value={{
-        chartTabState: state.chartTab.state,
-        otherChartOptions: [
-          {
-            label: "Timeline On/Off",
-            onChange: (bool: boolean) => actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
-            value: state.chartTab.state.chartTimelineEnabled,
-            icon: <img src={TimeLine} width="24" height="24" />
+    <>
+      {isLastLocationCrossPlot && (
+        <FormControlLabel
+          className="chart-back-form-control-label"
+          control={
+            <IconButton className="chart-back-arrow-button" onClick={() => navigate(-1)}>
+              <ArrowBack className="chart-back-arrow-button" />
+            </IconButton>
           }
-        ]
-      }}>
-      <Box className="chart-tab">
-        <Chart Component={TSCSvgComponent} />
-      </Box>
-    </ChartContext.Provider>
+          label={"Back"}
+        />
+      )}
+      <ChartContext.Provider
+        value={{
+          chartTabState: state.chartTab.state,
+          stateChartOptions: [
+            {
+              label: "Timeline On/Off",
+              onChange: (bool: boolean) =>
+                actions.setChartTabState(state.chartTab.state, { chartTimelineEnabled: bool }),
+              value: state.chartTab.state.chartTimelineEnabled,
+              icon: <img src={TimeLine} width="24" height="24" />
+            }
+          ]
+        }}>
+        <Box className="chart-tab">
+          <Chart Component={TSCSvgComponent} />
+        </Box>
+      </ChartContext.Provider>
+    </>
   );
 });
 

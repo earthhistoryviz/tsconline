@@ -35,7 +35,7 @@ import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
-import * as crossPlotRoutes from "./routes/crossplot-routes.js";
+import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -304,6 +304,7 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha
 server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
 
@@ -343,9 +344,6 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
-
-server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
-server.post("/crossplot/autoplot", looseRateLimit, crossPlotRoutes.autoPlotPoints);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
