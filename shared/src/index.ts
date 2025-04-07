@@ -750,8 +750,8 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
   }
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
   if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
-  if (o.returnType !== "string" && o.returnType !== "file")
-    throwError("ConvertCrossPlotRequest", "returnType", "string", o.returnType);
+  if (o.action !== "string" && !/file|chart/.test(o.action))
+    throwError("ConvertCrossPlotRequest", "action", "string", o.returnType);
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
@@ -1381,6 +1381,9 @@ export function isUserDatapack(o: any): o is UserDatapack {
 }
 export function isTreatiseDatapack(o: any): o is TreatiseDatapack {
   return o.type === "treatise";
+}
+export function isTempDatapack(o: any): o is TempDatapack {
+  return o.type === "temp";
 }
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
@@ -2028,6 +2031,9 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
       break;
     case "treatise":
       assertTreatiseDatapack(o);
+      break;
+    case "temp":
+      assertTempDatapack(o);
       break;
     default:
       throwError("DatapackUniqueIdentifier", "type", "official | workshop | user | treatise", o.type);

@@ -20,6 +20,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const theme = useTheme();
+  const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
   return (
     <>
@@ -30,7 +31,7 @@ export const CrossPlotChart: React.FC = observer(() => {
             {
               label: "Save Converted Datapack",
               onClick: () => {
-                actions.sendCrossPlotConversionRequest("file");
+                actions.sendCrossPlotConversionRequest("file", navigate);
               }
             },
             {
