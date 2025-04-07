@@ -6,7 +6,8 @@ import {
   assertChartRequest,
   assertTimescale,
   DatapackMetadata,
-  isUserDatapack
+  isUserDatapack,
+  isTempDatapack
 } from "@tsconline/shared";
 import {
   deleteDirectory,
@@ -26,7 +27,7 @@ import { queue, maxQueueSize } from "../index.js";
 import { containsKnownError } from "../chart-error-handler.js";
 import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
-import { fetchUserDatapack } from "../user/user-handler.js";
+import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
@@ -235,6 +236,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
 
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
+  const usedTempDatapacks: string[] = [];
 
   for (const datapack of chartrequest.datapacks) {
     let uuidFolder = uuid;
@@ -262,6 +264,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "treatise":
         uuidFolder = "treatise";
         break;
+      case "temp":
+        uuidFolder = "temp";
+        break;
     }
     if (!uuidFolder) {
       reply.send({ error: "ERROR: unknown user associated with datapack" });
@@ -270,6 +275,9 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     const datapackDir = await fetchUserDatapackDirectory(uuidFolder, datapack.title);
     if (isUserDatapack(datapack)) {
       usedUserDatapackFilepaths.push(datapackDir);
+    }
+    if (isTempDatapack(datapack)) {
+      usedTempDatapacks.push(datapackDir);
     }
     datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
   }
@@ -434,6 +442,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       reply.status(500).send({ errorCode: 400, error: "Internal Server Error" });
     }
     return;
+  } finally {
+    // delete all temporary datapacks after used in chart generation
+    usedTempDatapacks.forEach((datapack) => {
+      deleteUserDatapack("temp", datapack).catch((e) => {
+        logger.error(`Failed to delete temporary datapack ${datapack}: ${e}`);
+      });
+    });
   }
   if (knownErrorCode) {
     console.log("Error found in Java output. Sending error as response");
