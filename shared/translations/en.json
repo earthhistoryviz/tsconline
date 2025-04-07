@@ -62,7 +62,7 @@
                     },
                     "collaborate": {
                         "title": "Collaborate with Others",
-                        "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
+                        "description": "View other users&apos; datapacks and collaborate to expand your knowledge and expertise."
                     }
                 }
             },
@@ -106,7 +106,7 @@
         "login": {
             "signin": "Sign In",
             "forgot-password": "Forgot password?",
-            "signup": "Don't have an account? Sign Up",
+            "signup": "Don&apos;t have an account? Sign Up",
             "username": "Username",
             "password": "Password",
             "tooltip": "Account Settings",
@@ -183,7 +183,7 @@
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available"
                 },
-                "download-tooltip-not-registered": "Please register for the workshop to download the files."
+                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!"
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",
@@ -279,13 +279,13 @@
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
                     "hide-block-labels": "Hide block labels based on priority",
-                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
+                    "use-suggested-age-spans": "Do not use the Data-Pack&apos;s suggested age span"
                 },
                 "settings-file": {
                     "load": "Load Settings",
                     "save": "Save Settings",
                     "load-dialog": {
-                        "message": "This will overwrite any changes you've made!",
+                        "message": "This will overwrite any changes you&apos;ve made!",
                         "cancel": "Cancel",
                         "load": "Load"
                     },
@@ -472,7 +472,7 @@
         "help": {
             "qsg": {
                 "title": "Quick Start Quide",
-                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.",
+                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the &apos;Start QSG&apos; button to begin.",
                 "button": "Start QSG"
             },
             "tour": {
@@ -605,7 +605,7 @@
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
-            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn't be loaded due to missing files and has been removed from your history."
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history."
         },
         "button": {
             "generate": "Generate",

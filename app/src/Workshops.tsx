@@ -371,9 +371,7 @@ export const Workshops: React.FC = observer(() => {
           />
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-          <Typography className="description-header" sx={{}}>
-            {t("workshops.description-header")}
-          </Typography>
+          <Typography className="description-header">{t("workshops.description-header")}</Typography>
         </Box>
         {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
 
