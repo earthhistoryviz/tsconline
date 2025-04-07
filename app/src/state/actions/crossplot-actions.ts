@@ -333,7 +333,7 @@ export const setCrossPlotMarkerType = action((marker: Marker, type: string) => {
     }
   }
 });
-export const sendCrossPlotConversionRequest = action(async () => {
+export const sendCrossPlotConversionRequest = action(async (action: ConvertCrossPlotRequest["action"]) => {
   try {
     setCrossPlotConverting(true);
     if (!state.crossPlot.chartY) {
@@ -374,7 +374,7 @@ export const sendCrossPlotConversionRequest = action(async () => {
         .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
         .join("\n"),
       settings: xmlSettings,
-      returnType: "file"
+      action
     };
     const response = await fetcher("/crossplot/convert", {
       method: "POST",
@@ -418,6 +418,13 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
     ...timeSettings
   };
 });
+
+export const generateConvertedCrossPlotChart = action(
+  "generateConvertedCrossPlotChart",
+  async (navigate: NavigateFunction) => {
+    await sendCrossPlotConversionRequest("chart");
+  }
+);
 
 function areSettingsValidForGeneration() {
   // check if columns EXIST

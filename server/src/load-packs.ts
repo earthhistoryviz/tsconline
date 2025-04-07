@@ -10,10 +10,9 @@ import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
 
-
 export type DatapackParsingOptions = {
   nonStandardFilepath?: string;
-}
+};
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
  * will stop parsing if an error is thrown
@@ -26,7 +25,7 @@ export type DatapackParsingOptions = {
 export async function loadDatapackIntoIndex(
   datapackIndex: DatapackIndex,
   decryptionDirectory: string,
-  datapack: DatapackMetadata,
+  datapack: DatapackMetadata
 ) {
   let successful = true;
   console.log(`\nParsing datapack ${datapack.title} \n`);
