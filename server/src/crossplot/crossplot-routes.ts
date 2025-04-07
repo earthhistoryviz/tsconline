@@ -17,8 +17,8 @@ import {
 import { getMarkersFromTextFile } from "./extract-markers.js";
 import { isOperationResult } from "../types.js";
 import logger from "../error-logger.js";
-import { setupNewDatapackDirectoryInUUIDDirectory } from "../upload-handlers.js";
-import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
+import { uploadTemporaryDatapack } from "../upload-datapack.js";
+import { basename } from "path";
 
 export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -57,8 +57,8 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
     const tempDatapackMetadata: DatapackMetadata = {
       title: hash,
       description: "temporary crossplot",
-      originalFileName: outputTextFilepath,
-      storedFileName: outputTextFilepath,
+      originalFileName: basename(outputTextFilepath),
+      storedFileName: basename(outputTextFilepath),
       date: new Date().toISOString(),
       size: "0",
       authoredBy: "auto-generated",
@@ -69,25 +69,16 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       isPublic: true,
       priority: 1
     };
-    // upload the temp datapack
     try {
-      await setupNewDatapackDirectoryInUUIDDirectory("temp", outputTextFilepath, tempDatapackMetadata, false);
-    } catch (e) {
-      logger.error(e);
-      await deleteUserDatapack("temp", tempDatapackMetadata.title);
-      reply.code(500).send({ error: "Error creating temporary datapack directory" });
-      return;
-    }
-    try {
-      const datapack = await fetchUserDatapack("temp", tempDatapackMetadata.title);
-      if (!datapack) {
-        reply.code(404).send({ error: "Datapack not found" });
+      const dp = await uploadTemporaryDatapack(tempDatapackMetadata, outputTextFilepath);
+      if (isOperationResult(dp)) {
+        reply.code(dp.code).send({ error: dp.message });
         return;
       }
-      reply.code(200).send(datapack);
+      reply.code(200).send(dp);
     } catch (e) {
       logger.error(e);
-      reply.code(500).send({ error: "Error parsing temporary datapack" });
+      reply.code(500).send({ error: "Error uploading temporary datapack" });
       return;
     }
   } catch (error) {
