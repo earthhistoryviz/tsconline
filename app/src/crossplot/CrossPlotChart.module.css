@@ -3,6 +3,7 @@
   grid-template-columns: auto 1fr;
   grid-template-areas: "sidebar chart";
   grid-template-rows: calc(100vh - var(--nav-bar-height));
+  --generate-button-size: 175px;
 }
 .containerMobile {
   display: grid;
@@ -10,4 +11,60 @@
   grid-template-rows: minmax(0, 1fr) auto;
   grid-template-areas: "chart" "sidebar";
   height: calc(100vh - var(--nav-bar-height));
+}
+
+.mobileButtons {
+  position: absolute;
+  bottom: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
+  right: 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+.buttons {
+  position: absolute;
+  bottom: 10px;
+  border-radius: 10px;
+  padding: 0px 5px;
+  left: 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+}
+
+.modal {
+  width: 100%;
+  height: 100%;
+  z-index: 10;
+  background-color: rgba(0, 0, 0, 0.5);
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modalContent {
+  border-radius: 4px;
+  width: auto;
+  height: auto;
+  flex-direction: column;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 24px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+}
+.changeButtons {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-top: 10px;
+  justify-content: space-between;
 }
