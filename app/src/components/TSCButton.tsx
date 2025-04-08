@@ -82,6 +82,9 @@ export const TSCButton = forwardRef<HTMLButtonElement, TSCButtonProps>(function 
         ":active": {
           background: color["dark"]
         },
+        "&.Mui-disabled": {
+          color: theme.palette.mode === "dark" ? "darkgray" : "gray"
+        },
         ...props.sx
       }}
       variant="contained">

@@ -103,14 +103,7 @@ export const WorkshopDetails = observer(() => {
                               }
                             }}>
                             <span>
-                              <TSCButton
-                                variant="contained"
-                                disabled
-                                sx={{
-                                  "&.Mui-disabled": {
-                                    color: "black"
-                                  }
-                                }}>
+                              <TSCButton variant="contained" disabled>
                                 {t("workshops.details-page.download-button")}
                               </TSCButton>
                             </span>
