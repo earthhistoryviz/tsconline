@@ -14,6 +14,8 @@ import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { CustomTooltip } from "./components";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
+import { adminFetchWorkshops, fetchWorkshopFilesForDownload } from "./state/actions";
+import { WorkshopForm } from "./admin/AdminWorkshopComponents";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -48,6 +50,9 @@ export const WorkshopDetails = observer(() => {
     const workshop = state.admin.workshops.find((d) => d.workshopId === Number(id));
     return workshop;
   };
+
+  fetchWorkshop();
+
   const workshop = fetchWorkshop();
   if (!state.isLoggedIn) return <NotLoggedIn />;
   if (!workshop || !id) return <PageNotFound />;
@@ -151,8 +156,7 @@ export const WorkshopDetails = observer(() => {
                         </TSCLoadingButton>
                       </div>
                     </CustomTooltip>
-
-                    <TSCButton variant="contained" color="primary" href={fetchWorkshopFiles()}>
+                    <TSCButton variant="contained" color="primary" onClick={() => downloadWorkshopFiles()}>
                       {t("workshops.details-page.download-button")}
                     </TSCButton>
                   </Box>
