@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
+import AddIcon from '@mui/icons-material/Add';
 
 type ColumnContextType = {
   state: {
@@ -59,7 +60,17 @@ export const Column = observer(function Column() {
     <div className="column-top-level-container">
       <ColumnSearchBar />
       <div className="column-accordion-and-menu-container">
-        <ColumnDisplay />
+        <div>
+          <div className="add-icon-container">
+            <IconButton className="add-icon">
+              <AddIcon />
+            </IconButton>
+            <Typography className="add-icon-text">
+              Add New Column
+            </Typography>
+          </div>
+            <ColumnDisplay />
+        </div>
         <ColumnMenu />
       </div>
     </div>
