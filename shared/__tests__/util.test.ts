@@ -1,5 +1,7 @@
-import { describe, test, expect } from "vitest";
-import { roundToDecimalPlace, calculateAutoScale } from "../src/util";
+import { describe, test, expect, it } from "vitest";
+import { roundToDecimalPlace, calculateAutoScale, checkUserAllowedDownloadDatapack } from "../src/util";
+import { DatapackMetadata } from "../src";
+
 describe("roundToDecimalPlace tests", () => {
   test.each([
     [1.234567, 2, 1.23],
@@ -22,5 +24,67 @@ describe("calculateAutoScale tests", () => {
   ])("calculateAutoScale(%p, %p) should return %p", (min, max, expected) => {
     const result = calculateAutoScale(min, max);
     expect(result).toEqual(expected);
+  });
+});
+
+describe("checkUserAllowedDownloadDatapack tests", () => {
+  const uuid = "123e4567-e89b-12d3-a456-426614174000";
+  const testUser = {
+    uuid,
+    userId: 123,
+    email: "test@example.com",
+    emailVerified: 1,
+    invalidateSession: 0,
+    username: "testuser",
+    hashedPassword: "password123",
+    pictureUrl: "https://example.com/picture.jpg",
+    isAdmin: false,
+    isGoogleUser: false,
+    accountType: ""
+  };
+  const testOfficialDatapack: DatapackMetadata = {
+    description: "description",
+    title: "Title",
+    originalFileName: "file.dpk",
+    storedFileName: "tempFileName",
+    size: "size",
+    tags: [],
+    authoredBy: "authoredBy",
+    references: [],
+    datapackImage: "image",
+    isPublic: true,
+    type: "official",
+    priority: 0,
+    hasFiles: false
+  };
+
+  const testPrivateDatapack: DatapackMetadata = {
+    ...testOfficialDatapack,
+    isPublic: false,
+    type: "user",
+    uuid
+  };
+
+  it("should allow admin users to download any datapack", () => {
+    const adminUser = { ...testUser, isAdmin: true };
+    expect(checkUserAllowedDownloadDatapack(adminUser, testOfficialDatapack)).toBe(true);
+  });
+
+  it("should allow download if the datapack is public", () => {
+    expect(checkUserAllowedDownloadDatapack(testUser, testOfficialDatapack)).toBe(true);
+  });
+
+  it("should allow user to download their own datapack", () => {
+    expect(checkUserAllowedDownloadDatapack(testUser, testPrivateDatapack)).toBe(true);
+  });
+
+  it("should not allow user to download another user's private datapack", () => {
+    const privateDatapack: DatapackMetadata = { ...testPrivateDatapack, type: "user", uuid: "another-uuid" };
+    expect(checkUserAllowedDownloadDatapack(testUser, privateDatapack)).toBe(false);
+  });
+
+  it("should not allow user to download a private official datapack", () => {
+    const privateOfficialDatapack: DatapackMetadata = { ...testOfficialDatapack, isPublic: false, type: "official" };
+    expect(checkUserAllowedDownloadDatapack(testUser, privateOfficialDatapack)).toBe(false);
   });
 });

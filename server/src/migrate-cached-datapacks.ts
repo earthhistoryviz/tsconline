@@ -72,7 +72,7 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
   migrateImageToDatapackImage(datapack);
   const metadata: DatapackMetadata = {
     title: "title" in datapack ? datapack.title : "",
-    authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "Unknwon",
+    authoredBy: "authoredBy" in datapack ? datapack.authoredBy : "Unknown",
     contact: "contact" in datapack ? datapack.contact : "",
     notes: "notes" in datapack ? datapack.notes : "",
     date: "date" in datapack ? datapack.date : "",
@@ -86,6 +86,7 @@ function extraMetadataFromUnknown(datapack: any, partial: Partial<DatapackMetada
     storedFileName: "storedFileName" in datapack ? datapack.storedFileName : "",
     datapackImage: "datapackImage" in datapack ? datapack.datapackImage : "",
     priority: "priority" in datapack ? datapack.priority : 0,
+    hasFiles: "hasFiles" in datapack ? datapack.hasFiles : false,
     ...partial
   };
   assertDatapackMetadata(metadata);
