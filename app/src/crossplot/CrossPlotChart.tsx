@@ -14,8 +14,10 @@ import { TSCDialogLoader } from "../components";
 import { TSCButton } from "../components/TSCButton";
 import { useNavigate } from "react-router";
 import { loadRecaptcha, removeRecaptcha } from "../util";
+import { CrossPlotFileNameModal } from "./CrossPlotFileNameModal";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
+export type SaveAction = "download" | "upload";
 
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
@@ -24,6 +26,9 @@ export const CrossPlotChart: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+  const [title, setTitle] = useState("Converted Datapack Name");
+  const [saveFileNameModalOpen, setSaveFileNameModalOpen] = useState(false);
+  const [saveAction, setSaveAction] = useState<SaveAction>("download");
   const shouldLoadRecaptcha = state.isLoggedIn;
   useEffect(() => {
     if (shouldLoadRecaptcha) loadRecaptcha();
@@ -40,23 +45,15 @@ export const CrossPlotChart: React.FC = observer(() => {
             {
               label: "Save Converted Datapack",
               onClick: () => {
-                try {
-                  setLoading(true);
-                  actions.saveConvertedDatapack(navigate);
-                } finally {
-                  setLoading(false);
-                }
+                setSaveAction("download");
+                setSaveFileNameModalOpen(true);
               }
             },
             {
               label: "Upload Converted Datapack To Profile",
               onClick: () => {
-                try {
-                  setLoading(true);
-                  actions.uploadConvertedDatapackToProfile(navigate);
-                } finally {
-                  setLoading(false);
-                }
+                setSaveAction("upload");
+                setSaveFileNameModalOpen(true);
               }
             }
           ],
@@ -123,6 +120,30 @@ export const CrossPlotChart: React.FC = observer(() => {
           </Box>
         </Box>
       </ChartContext.Provider>
+      <CrossPlotFileNameModal
+        title={title}
+        saveAction={saveAction}
+        setTitle={setTitle}
+        open={saveFileNameModalOpen}
+        onClose={() => setSaveFileNameModalOpen(false)}
+        PaperProps={{
+          component: "form",
+          onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+            try {
+              setLoading(true);
+              e.preventDefault(); // to stop website from reloading
+              // get the value of the input
+              if (saveAction === "download") {
+                actions.saveConvertedDatapack(navigate, title);
+              } else {
+                actions.uploadConvertedDatapackToProfile(navigate, title);
+              }
+            } finally {
+              setLoading(false);
+            }
+          }
+        }}
+      />
       <TSCDialogLoader open={loading} transparentBackground />
     </>
   );
