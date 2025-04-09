@@ -125,11 +125,14 @@ export const CrossPlotChart: React.FC = observer(() => {
         saveAction={saveAction}
         setTitle={setTitle}
         open={saveFileNameModalOpen}
+        setOpen={setSaveFileNameModalOpen}
         onClose={() => setSaveFileNameModalOpen(false)}
+        disableRestoreFocus
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
             try {
+              setSaveFileNameModalOpen(false);
               setLoading(true);
               e.preventDefault(); // to stop website from reloading
               // get the value of the input

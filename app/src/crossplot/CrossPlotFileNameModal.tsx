@@ -1,5 +1,7 @@
 import {
+    Button,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogProps,
   DialogTitle,
@@ -10,16 +12,19 @@ import {
   TextField
 } from "@mui/material";
 import { SaveAction } from "./CrossPlotChart";
+import { TSCButton } from "../components";
 
 type CrossPlotFileNameModalProps = {
   title: string;
   setTitle: (title: string) => void;
   saveAction: SaveAction;
+  setOpen: (open: boolean) => void;
 } & DialogProps;
 export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
   title,
   setTitle,
   saveAction,
+  setOpen,
   ...props
 }) => {
   return (
@@ -35,9 +40,16 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
               "aria-label": "weight"
             }}
           />
-          <FormHelperText id="outlined-weight-helper-text">Weight</FormHelperText>
         </FormControl>
       </DialogContent>
+      <DialogActions>
+        <Button variant="outlined" onClick={(e) => setOpen(false)}>
+            Exit
+        </Button>
+        <TSCButton type="submit">
+            Save
+        </TSCButton>
+      </DialogActions>
     </Dialog>
   );
 };
