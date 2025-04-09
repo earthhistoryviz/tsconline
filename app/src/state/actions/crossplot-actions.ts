@@ -452,7 +452,7 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
 export const saveConvertedDatapack = action(
   "saveConvertedDatapack",
   async (navigate: NavigateFunction, filename: string) => {
-    const blob = await sendCrossPlotConversionRequest("chart", navigate);
+    const blob = await sendCrossPlotConversionRequest("file", navigate);
     if (!blob) {
       pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
       return;
