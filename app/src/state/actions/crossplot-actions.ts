@@ -449,15 +449,18 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
   };
 });
 
-export const saveConvertedDatapack = action("saveConvertedDatapack", async (navigate: NavigateFunction) => {
-  const blob = await sendCrossPlotConversionRequest("chart", navigate);
-  if (!blob) {
-    pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
-    return;
+export const saveConvertedDatapack = action(
+  "saveConvertedDatapack",
+  async (navigate: NavigateFunction, filename: string) => {
+    const blob = await sendCrossPlotConversionRequest("chart", navigate);
+    if (!blob) {
+      pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+      return;
+    }
+    //TODO change this to a user generated name from the form
+    await downloadFile(blob, `${filename}.txt`);
   }
-  //TODO change this to a user generated name from the form
-  await downloadFile(blob, `CrossplotConversion.txt`);
-});
+);
 export const generateConvertedCrossPlotChart = action(
   "generateConvertedCrossPlotChart",
   async (navigate: NavigateFunction) => {
@@ -466,13 +469,13 @@ export const generateConvertedCrossPlotChart = action(
 );
 export const uploadConvertedDatapackToProfile = action(
   "uploadConvertedDatapackToProfile",
-  async (navigate: NavigateFunction) => {
+  async (navigate: NavigateFunction, title: string) => {
     if (!state.isLoggedIn) {
       pushError(ErrorCodes.NOT_LOGGED_IN);
       return;
     }
     const tempMetadata: DatapackMetadata = {
-      title: "temp datapack",
+      title,
       description: "temporary crossplot conversion",
       originalFileName: "CrossplotConversion.txt",
       storedFileName: "CrossplotConversion.txt",
