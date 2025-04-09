@@ -23,6 +23,7 @@ export type SaveAction = "download" | "upload";
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
   const { t } = useTranslation();
   const theme = useTheme();
   const navigate = useNavigate();
