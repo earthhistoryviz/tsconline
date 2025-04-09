@@ -12,7 +12,7 @@ import {
   isTreatiseDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
@@ -135,6 +135,9 @@ export function formatDate(input: string | number | dayjs.Dayjs): string {
   });
 
   return `${datePart} at ${timePart}`;
+}
+export function formatDateForDatapack(day: Dayjs) {
+  return day.format("YYYY-MM-DD");
 }
 
 export function hasLeadingTrailingWhiteSpace(input: string) {

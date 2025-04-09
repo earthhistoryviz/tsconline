@@ -492,7 +492,7 @@
             }
         },
         "errors": {
-            "title": "Error",
+            "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
             "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
             "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
             "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",

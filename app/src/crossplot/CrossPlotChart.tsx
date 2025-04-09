@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { Chart, ChartContext } from "../Chart";
-import React, { useContext, useRef } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { context } from "../state";
 import { TSCCrossPlotSVGComponent } from "../components/TSCCrossPlotSVGComponent";
 import { CrossPlotSideBar, MobileCrossPlotSideBar } from "./CrossPlotSideBar";
@@ -13,15 +13,23 @@ import TimeLine from "../assets/icons/axes=two.svg";
 import { TSCDialogLoader } from "../components";
 import { TSCButton } from "../components/TSCButton";
 import { useNavigate } from "react-router";
+import { loadRecaptcha, removeRecaptcha } from "../util";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
+  const [loading, setLoading] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+  useEffect(() => {
+    loadRecaptcha();
+    return () => {
+      removeRecaptcha();
+    };
+  }, []);
   return (
     <>
       <ChartContext.Provider
@@ -31,13 +39,23 @@ export const CrossPlotChart: React.FC = observer(() => {
             {
               label: "Save Converted Datapack",
               onClick: () => {
-                actions.sendCrossPlotConversionRequest("file", navigate);
+                try {
+                  setLoading(true);
+                  actions.saveConvertedDatapack(navigate);
+                } finally {
+                  setLoading(false);
+                }
               }
             },
             {
               label: "Upload Converted Datapack To Profile",
               onClick: () => {
-                actions.pushSnackbar("This feature is not yet implemented", "warning");
+                try {
+                  setLoading(true);
+                  actions.uploadConvertedDatapackToProfile(navigate);
+                } finally {
+                  setLoading(false);
+                }
               }
             }
           ],
@@ -45,7 +63,14 @@ export const CrossPlotChart: React.FC = observer(() => {
             {
               label: "Auto Plot",
               icon: <AutoFixHigh />,
-              onClick: actions.autoPlotCrossPlot
+              onClick: async () => {
+                try {
+                  setLoading(true);
+                  actions.autoPlotCrossPlot;
+                } finally {
+                  setLoading(false);
+                }
+              }
             }
           ],
           stateChartOptions: [
@@ -97,7 +122,7 @@ export const CrossPlotChart: React.FC = observer(() => {
           </Box>
         </Box>
       </ChartContext.Provider>
-      <TSCDialogLoader open={state.crossPlot.converting || state.crossPlot.autoPlotting} transparentBackground />
+      <TSCDialogLoader open={loading} transparentBackground />
     </>
   );
 });
