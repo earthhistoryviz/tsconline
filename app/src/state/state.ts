@@ -89,13 +89,13 @@ export type State = {
   admin: {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
-    workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
       tempRowData: DatapackMetadata[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
     };
   };
+  workshops: SharedWorkshop[];
   datapackProfilePage: {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
@@ -199,13 +199,13 @@ export const state = observable<State>({
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: [],
     datapackPriorityLoading: false,
     datapackConfig: {
       tempRowData: null,
       rowPriorityUpdates: []
     }
   },
+  workshops: [],
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,

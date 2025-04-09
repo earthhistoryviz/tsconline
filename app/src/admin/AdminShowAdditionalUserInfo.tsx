@@ -31,7 +31,7 @@ type ShowAdditionalUserInfoProps = {
 export const ShowAdditionalUserInfo: React.FC<ShowAdditionalUserInfoProps> = (props) => {
   const { state } = useContext(context);
   const { editState, setters, handlers } = useEditUser({ data: props.data });
-  const allWorkshops = state.admin.workshops;
+  const allWorkshops = state.workshops;
 
   const WorkshopsList: React.FC = () => {
     // Create a lookup map for allWorkshops

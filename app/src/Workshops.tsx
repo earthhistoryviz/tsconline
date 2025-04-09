@@ -36,7 +36,6 @@ import {
 } from "./state/non-action-util";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { NotLoggedIn } from "./NotLoggedIn";
 import {
   Calendar as BigCalendar,
   CalendarProps,
@@ -50,7 +49,6 @@ import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import { SharedWorkshop } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
-import { loadRecaptcha, removeRecaptcha } from "./util";
 
 type WorkshopsCategoryProps = {
   workshops: SharedWorkshop[];
@@ -125,14 +123,14 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
 };
 
 export const Workshops: React.FC = observer(() => {
-  const { state, actions } = useContext(context);
+  const { state } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const activeWorkshops = getActiveWorkshops(state.admin.workshops);
-  const upcomingWorkshops = getUpcomingWorkshops(state.admin.workshops);
-  const pastWorkshops = getPastWorkshops(state.admin.workshops);
+  const activeWorkshops = getActiveWorkshops(state.workshops);
+  const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
+  const pastWorkshops = getPastWorkshops(state.workshops);
 
   const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
   const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 500 ? "day" : "month"));
@@ -140,7 +138,7 @@ export const Workshops: React.FC = observer(() => {
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
     const now = dayjs();
-    return state.admin.workshops.some((workshop) => {
+    return state.workshops.some((workshop) => {
       const startDate = dayjs(workshop.start);
       const endDate = dayjs(workshop.end);
       return (
@@ -339,7 +337,7 @@ export const Workshops: React.FC = observer(() => {
 
   const events: Event[] = [
     ...(calendarWorkshopFilter === "All"
-      ? state.admin.workshops
+      ? state.workshops
       : calendarWorkshopFilter === "Active"
         ? activeWorkshops
         : calendarWorkshopFilter === "Upcoming"
@@ -352,122 +350,94 @@ export const Workshops: React.FC = observer(() => {
     workshopId: workshop.workshopId
   }));
 
-  useEffect(() => {
-    const shouldLoadRecaptcha = state.user.isAdmin || state.isLoggedIn;
-    if (!shouldLoadRecaptcha) {
-      return;
-    }
-
-    const controller = new AbortController();
-
-    const fetchWorkshops = async () => {
-      await loadRecaptcha();
-      await actions.adminFetchWorkshops({ signal: controller.signal });
-    };
-
-    fetchWorkshops();
-
-    return () => {
-      if (shouldLoadRecaptcha) {
-        removeRecaptcha();
-      }
-      controller.abort();
-    };
-  }, [state.isLoggedIn, state.user?.isAdmin]);
   return (
     <>
-      {state.isLoggedIn ? (
-        <Box padding={4}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-            <Box sx={{ width: "200px" }}></Box>
-            <Typography className="header" sx={{ textAlign: "center" }}>
-              {t("workshops.header")}
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={calendarState}
-                  onClick={() => setCalendarState((prevState) => !prevState)}
-                />
-              }
-              label={t("workshops.calendar.switchLabel")}
-              sx={{ marginLeft: 2 }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-            <Typography className="description-header" sx={{}}>
-              {t("workshops.description-header")}
-            </Typography>
-          </Box>
-          {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
-
-          {/* Active Workshops */}
-          <Accordion
-            defaultExpanded
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="active-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.active")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={activeWorkshops}
-                noDataMessage="active"
-                imageSize={140}
-                includeTime={true}
-                onClickHandler={setWorkshopAndNavigate}
+      <Box padding={4}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+          <Box sx={{ width: "200px" }}></Box>
+          <Typography className="header" sx={{ textAlign: "center" }}>
+            {t("workshops.header")}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                color="default"
+                checked={calendarState}
+                onClick={() => setCalendarState((prevState) => !prevState)}
               />
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Upcoming Workshops */}
-          <Accordion
-            defaultExpanded
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="upcoming-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.upcoming")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={upcomingWorkshops}
-                noDataMessage="upcoming"
-                imageSize={140}
-                includeTime={true}
-                onClickHandler={setWorkshopAndNavigate}
-              />
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Expired Workshops */}
-          <Accordion
-            defaultExpanded={false}
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="expired-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.past")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={pastWorkshops}
-                noDataMessage="past"
-                imageSize={80}
-                includeTime={false}
-                onClickHandler={setWorkshopAndNavigate}
-              />
-            </AccordionDetails>
-          </Accordion>
+            }
+            label={t("workshops.calendar.switchLabel")}
+            sx={{ marginLeft: 2 }}
+          />
         </Box>
-      ) : (
-        <NotLoggedIn />
-      )}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+          <Typography className="description-header">{t("workshops.description-header")}</Typography>
+        </Box>
+        {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
+
+        {/* Active Workshops */}
+        <Accordion
+          defaultExpanded
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="active-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.active")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={activeWorkshops}
+              noDataMessage="active"
+              imageSize={140}
+              includeTime={true}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Upcoming Workshops */}
+        <Accordion
+          defaultExpanded
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="upcoming-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.upcoming")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={upcomingWorkshops}
+              noDataMessage="upcoming"
+              imageSize={140}
+              includeTime={true}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Expired Workshops */}
+        <Accordion
+          defaultExpanded={false}
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="expired-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.past")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={pastWorkshops}
+              noDataMessage="past"
+              imageSize={80}
+              includeTime={false}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+      </Box>
     </>
   );
 });
