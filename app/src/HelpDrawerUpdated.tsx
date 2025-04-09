@@ -1,15 +1,100 @@
 import { useNavigate } from "react-router-dom";
 import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
 import { useState } from "react";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
-import { links } from "./components/help-menu-json";
+import { ExpandLess } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 
 interface LinkPath {
-  Title: string;
-  Content: string;
-  Children?: LinkPath[];
+  title: string;
+  content: string;
+  children?: LinkPath[];
 }
+
+const links = [
+  {
+    title: "Presets",
+    content: "Insert md file",
+    children: []
+  },
+  {
+    title: "Datapacks",
+    content: "Insert md file",
+    children: []
+  },
+  {
+    title: "Chart",
+    content: "Insert md file",
+    children: [
+      {
+        title: "What is a Chart?",
+        content: "Insert md file",
+        children: []
+      },
+      {
+        title: "Column Variants",
+        content: "Insert md file",
+        children: [
+          {
+            title: "Block Columns",
+            content: "Insert md file",
+            children: []
+          },
+          {
+            title: "Point Columns",
+            content: "Insert md file",
+            children: []
+          },
+          {
+            title: "Event columns",
+            content: "Insert md file",
+            children: [
+              {
+                title: "Dual column comparison",
+                content: "Insert md file",
+                children: []
+              },
+              {
+                title: "Data Mining",
+                content: "Insert md file",
+                children: []
+              }
+            ]
+          },
+          {
+            title: "Freehand Columns",
+            content: "Insert md file",
+            children: []
+          }
+        ]
+      },
+      {
+        title: "Saving a Chart",
+        content: "Insert md file",
+        children: []
+      }
+    ]
+  },
+  {
+    title: "Settings",
+    content: "Insert md file",
+    children: []
+  },
+  {
+    title: "Help",
+    content: "Insert md file",
+    children: []
+  },
+  {
+    title: "Workshops",
+    content: "Insert md file",
+    children: []
+  },
+  {
+    title: "Options",
+    content: "Insert md file",
+    children: []
+  }
+];
 
 function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: string }) {
   const [open, setOpen] = useState(false);
@@ -17,10 +102,10 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
-  const formattedPath = `${parentPath}/${link.Title.toLowerCase().replace(/\s+/g, "-")}`;
+  const formattedPath = `${parentPath}/${link.title.toLowerCase().replace(/\s+/g, "-")}`;
 
   const hasChildren = (link: LinkPath): boolean => {
-    return (link.Children?.length || 0) > 0;
+    return (link.children?.length || 0) > 0;
   };
 
   const handleClick = () => {
@@ -43,11 +128,17 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
             height: "24px",
             width: "300px"
           }}>
-          <ListItemText primary={link.Title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
+          <ListItemText primary={link.title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
           {hasChildren(link) && (
-            <div style={{ transform: !open ? "rotate(-90deg)" : "rotate(180deg)", color: theme.palette.button.main }}>
-              {open ? <ExpandLess /> : <ExpandMore />}
-            </div>
+            <ExpandLess
+              sx={{
+                transform: !open ? "rotate(90deg)" : "rotate(180deg)",
+                color: theme.palette.button.main,
+                transition: "transform 0.1s ease-in-out",
+                height: "24px",
+                width: "24px"
+              }}
+            />
           )}
         </ListItemButton>
       </ListItem>
@@ -64,8 +155,8 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
               marginLeft: "27.5px",
               "& .MuiListItem-root": { margin: 0 }
             }}>
-            {link.Children &&
-              link.Children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
+            {link.children &&
+              link.children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
           </List>
         </Collapse>
       )}
