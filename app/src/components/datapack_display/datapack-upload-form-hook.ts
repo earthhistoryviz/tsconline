@@ -47,7 +47,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     ...type,
     ...(contact && { contact }),
     ...(notes && { notes }),
-    ...(date && { date: formatDateForDatapack(date)})
+    ...(date && { date: formatDateForDatapack(date) })
   };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
