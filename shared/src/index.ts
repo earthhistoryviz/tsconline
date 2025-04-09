@@ -1346,7 +1346,7 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function isDatapackTypeString(o: any): o is DatapackTypeString {
-  return /^(user|official|workshop|treatise)$/.test(o);
+  return /^(user|official|workshop|treatise|temp)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
   if (typeof o !== "string" || !/^(user|official|workshop|treatise|temp)$/.test(o))

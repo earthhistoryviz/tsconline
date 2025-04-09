@@ -9,7 +9,8 @@ import {
   pushSnackbar,
   removeError,
   setChartTabState,
-  setTab
+  setTab,
+  uploadUserDatapack
 } from "./general-actions";
 import { NavigateFunction } from "react-router";
 import {
@@ -24,7 +25,8 @@ import {
   assertAutoPlotResponse,
   ConvertCrossPlotRequest,
   assertDatapack,
-  assertTempDatapack
+  assertTempDatapack,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { cloneDeep } from "lodash";
 import { jsonToXml } from "../parse-settings";
@@ -42,9 +44,10 @@ import {
   getDotRect,
   getLine
 } from "../../components/TSCCrossPlotSVGComponent";
-import { downloadFile, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
+import { downloadFile, formatDateForDatapack, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
 import { fetcher } from "../../util";
 import { actions } from "..";
+import dayjs, { Dayjs } from "dayjs";
 export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
   const models = state.crossPlot.models;
   if (models.length === 0) {
@@ -351,7 +354,6 @@ export const setCrossPlotMarkerType = action((marker: Marker, type: string) => {
 export const sendCrossPlotConversionRequest = action(
   async (action: ConvertCrossPlotRequest["action"], navigate: NavigateFunction) => {
     try {
-      setCrossPlotConverting(true);
       if (!state.crossPlot.chartY) {
         pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
         return;
@@ -408,8 +410,8 @@ export const sendCrossPlotConversionRequest = action(
         return;
       }
       if (action === "file") {
-        await downloadFile(await response.blob(), `${datapacks[0].ageUnits}.txt`);
         pushSnackbar("Successfully converted datapack", "success");
+        return await response.blob();
       } else {
         const datapack = await response.json();
         assertDatapack(datapack);
@@ -421,8 +423,6 @@ export const sendCrossPlotConversionRequest = action(
     } catch (e) {
       console.error(e);
       pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
-    } finally {
-      setCrossPlotConverting(false);
     }
   }
 );
@@ -450,10 +450,66 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
   };
 });
 
+export const saveConvertedDatapack = action("saveConvertedDatapack", async (navigate: NavigateFunction) => {
+  const blob = await sendCrossPlotConversionRequest("chart", navigate);
+  if (!blob) {
+    pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+    return;
+  }
+  //TODO change this to a user generated name from the form
+  await downloadFile(blob, `CrossplotConversion.txt`);
+});
 export const generateConvertedCrossPlotChart = action(
   "generateConvertedCrossPlotChart",
   async (navigate: NavigateFunction) => {
     await sendCrossPlotConversionRequest("chart", navigate);
+  }
+);
+export const uploadConvertedDatapackToProfile = action(
+  "uploadConvertedDatapackToProfile",
+  async (navigate: NavigateFunction) => {
+    if (!state.isLoggedIn) {
+      pushError(ErrorCodes.NOT_LOGGED_IN);
+      return;
+    }
+    const tempMetadata: DatapackMetadata = {
+      title: "temp datapack",
+      description: "temporary crossplot conversion",
+      originalFileName: "CrossplotConversion.txt",
+      storedFileName: "CrossplotConversion.txt",
+      date: formatDateForDatapack(dayjs()),
+      size: "0",
+      authoredBy: state.user.username,
+      references: [],
+      tags: [],
+      notes: "",
+      type: "user",
+      isPublic: false,
+      priority: 1,
+      uuid: state.user.uuid
+    };
+    let file: File;
+    try {
+      const blob = await sendCrossPlotConversionRequest("file", navigate);
+      if (!blob) {
+        pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+        return;
+      }
+      file = new File([blob], "CrossplotConversion.txt", {
+        type: "text/plain"
+      });
+    } catch (e) {
+      console.error(e);
+      pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
+      return;
+    }
+    try {
+      await uploadUserDatapack(file, tempMetadata);
+      pushSnackbar("Successfully uploaded converted datapack to profile", "success");
+    } catch (e) {
+      console.error(e);
+      pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+    }
   }
 );
 
@@ -624,13 +680,8 @@ const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: Column
   return columnRoot;
 });
 
-export const setCrossPlotConverting = action((converting: boolean) => {
-  state.crossPlot.converting = converting;
-});
-
 export const autoPlotCrossPlot = action(async () => {
   try {
-    state.crossPlot.autoPlotting = true;
     if (!state.crossPlot.chartY) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
       return;
@@ -709,7 +760,5 @@ export const autoPlotCrossPlot = action(async () => {
     pushSnackbar("Successfully autoplotted", "success");
   } catch (e) {
     displayServerError(e, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  } finally {
-    state.crossPlot.autoPlotting = false;
   }
 });

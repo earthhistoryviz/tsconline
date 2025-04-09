@@ -493,7 +493,7 @@
             }
         },
         "errors": {
-            "title": "Error",
+            "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
             "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
             "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
             "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",
@@ -605,7 +605,8 @@
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
-            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history."
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
+            "title": "Error"
         },
         "button": {
             "generate": "Generate",
