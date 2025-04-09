@@ -46,8 +46,7 @@ import {
 } from "../../components/TSCCrossPlotSVGComponent";
 import { downloadFile, formatDateForDatapack, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
 import { fetcher } from "../../util";
-import { actions } from "..";
-import dayjs, { Dayjs } from "dayjs";
+import dayjs from "dayjs";
 export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
   const models = state.crossPlot.models;
   if (models.length === 0) {

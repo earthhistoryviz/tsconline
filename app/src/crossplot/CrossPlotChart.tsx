@@ -24,10 +24,11 @@ export const CrossPlotChart: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
+  const shouldLoadRecaptcha = state.isLoggedIn;
   useEffect(() => {
-    loadRecaptcha();
+    if (shouldLoadRecaptcha) loadRecaptcha();
     return () => {
-      removeRecaptcha();
+      if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, []);
   return (
