@@ -133,6 +133,7 @@ jobs:
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="${{ vars.DOMAIN }}"' >> ./server/.env
             echo 'METRICS_AUTH="${{ secrets.METRICS_AUTH }}"' >> ./server/.env
+            echo 'BEARER_TOKEN="${{ secrets.BEARER_TOKEN }}"' >> ./server/.env
 
             if [ ! -f "$COMPOSE_FILE" ]; then
               echo "Error: $COMPOSE_FILE not found"
