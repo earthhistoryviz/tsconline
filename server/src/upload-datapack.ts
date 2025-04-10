@@ -21,7 +21,7 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
       filepath: string;
       datapackMetadata: DatapackMetadata;
       tempProfilePictureFilepath?: string;
-      pdfFields: { [fileName: string]: string };
+      pdfFields?: { [fileName: string]: string };
     }
 > => {
   let fields: Record<string, string> = {};
@@ -34,7 +34,9 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     }
     file = result.file;
     fields = result.fields;
-    pdfFields = result.pdfFields;
+    if (result.pdfFields) {
+      pdfFields = result.pdfFields;
+    }
   } catch (error) {
     return { code: 500, message: "Failed to process multipart parts" };
   }
@@ -53,17 +55,18 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     filepath: fields.filepath,
     tempProfilePictureFilepath: fields.tempProfilePictureFilepath,
     datapackMetadata,
-    pdfFields
+    ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 };
 export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>) => {
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
-  if (!uuid || !user || !user[0]) {
+  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
     return { code: 404, message: "Error finding user" };
   }
-  const isAdmin = !!user[0].isAdmin;
+
+  const isAdmin = user[0] ? !!user[0].isAdmin : false;
   const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(uuid, parts);
   if (isOperationResult(result)) {
     return result;

@@ -393,7 +393,7 @@ export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
   parts: AsyncIterableIterator<Multipart>
 ): Promise<
-  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields: { [fileName: string]: string } }
+  | { fields: { [key: string]: string }; file: MultipartFile; pdfFields?: { [fileName: string]: string } }
   | OperationResult
 > {
   let file: MultipartFile | undefined;
@@ -416,10 +416,10 @@ export async function processMultipartPartsForDatapackUpload(
     }
   }
   const user = await findUser({ uuid }).catch(() => []);
-  if (!uuid || !user || !user[0]) {
+  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
     return { code: 404, message: "User not found" };
   }
-  const isProOrAdmin = user[0].isAdmin || user[0].accountType === "pro";
+  const isProOrAdmin = user[0] && (user[0].isAdmin || user[0].accountType === "pro");
   for await (const part of parts) {
     if (part.type === "file") {
       if (part.fieldname === "datapack") {
@@ -487,7 +487,7 @@ export async function processMultipartPartsForDatapackUpload(
       ...(datapackImage && { datapackImage }),
       ...(tempProfilePictureFilepath && { tempProfilePictureFilepath })
     },
-    pdfFields
+    ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 }
 

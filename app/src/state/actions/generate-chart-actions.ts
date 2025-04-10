@@ -12,11 +12,21 @@ import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
 import { getDatapackFromArray } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
+import { fetchUserHistoryMetadata } from "./user-actions";
 
-export const handlePopupResponse = action("handlePopupResponse", (response: boolean, navigate: NavigateFunction) => {
-  if (response) setDatapackTimeDefaults();
-  compileChartRequest(navigate);
-});
+export const handlePopupResponse = action(
+  "handlePopupResponse",
+  (
+    response: boolean,
+    navigate: NavigateFunction,
+    options: {
+      from?: string;
+    }
+  ) => {
+    if (response) setDatapackTimeDefaults();
+    compileChartRequest(navigate, options);
+  }
+);
 
 type UnitValues = {
   topStageAge: number;
@@ -71,7 +81,9 @@ export const initiateChartGeneration = action(
     ) {
       state.showSuggestedAgePopup = true;
     } else {
-      compileChartRequest(navigate);
+      compileChartRequest(navigate, {
+        from: location
+      });
     }
   }
 );
@@ -116,52 +128,65 @@ export const resetChartTabStateForGeneration = action("resetChartTabStateForGene
   });
 });
 
-export const compileChartRequest = action("compileChartRequest", async (navigate: NavigateFunction) => {
-  // asserts column is not null
-  if (!areSettingsValidForGeneration()) return;
-  state.showSuggestedAgePopup = false;
-  navigate("/chart");
-  //set the loading screen and make sure the chart isn't up
-  savePreviousSettings();
-  resetChartTabStateForGeneration(state.chartTab.state);
-  generalActions.setTab(3);
-  try {
-    let chartRequest: ChartRequest | null = null;
+export const compileChartRequest = action(
+  "compileChartRequest",
+  async (
+    navigate: NavigateFunction,
+    options?: {
+      from?: string;
+    }
+  ) => {
+    // asserts column is not null
+    if (!areSettingsValidForGeneration()) return;
+    state.showSuggestedAgePopup = false;
+    if (options && options.from === "/crossplot") {
+      navigate("/chart?from=crossplot");
+    } else {
+      navigate("/chart");
+    }
+    //set the loading screen and make sure the chart isn't up
+    savePreviousSettings();
+    resetChartTabStateForGeneration(state.chartTab.state);
+    generalActions.setTab(3);
     try {
-      const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
-      const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
-      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
-      chartRequest = {
-        settings: xmlSettings,
-        datapacks: state.config.datapacks,
-        useCache: state.useCache,
-        isCrossPlot: false
-      };
-    } catch (e) {
-      console.error(e);
-      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      return;
+      let chartRequest: ChartRequest | null = null;
+      try {
+        const chartSettingsCopy: ChartSettings = cloneDeep(state.settings);
+        const columnCopy: ColumnInfo = cloneDeep(state.settingsTabs.columns!);
+        const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+        chartRequest = {
+          settings: xmlSettings,
+          datapacks: state.config.datapacks,
+          useCache: state.useCache,
+          isCrossPlot: false
+        };
+      } catch (e) {
+        console.error(e);
+        generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+        return;
+      }
+      if (!chartRequest) {
+        generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
+        return;
+      }
+      const response = await sendChartRequestToServer(chartRequest);
+      if (!response) {
+        // error SHOULD already displayed
+        return;
+      }
+      generalActions.setChartTabState(state.chartTab.state, {
+        chartContent: response.chartContent,
+        chartHash: response.hash,
+        madeChart: true,
+        unsafeChartContent: response.unsafeChartContent,
+        chartTimelineEnabled: false
+      });
+      if (state.isLoggedIn) fetchUserHistoryMetadata();
+    } finally {
+      generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
     }
-    if (!chartRequest) {
-      generalActions.pushError(ErrorCodes.INVALID_DATAPACK_CONFIG);
-      return;
-    }
-    const response = await sendChartRequestToServer(chartRequest);
-    if (!response) {
-      // error SHOULD already displayed
-      return;
-    }
-    generalActions.setChartTabState(state.chartTab.state, {
-      chartContent: response.chartContent,
-      chartHash: response.hash,
-      madeChart: true,
-      unsafeChartContent: response.unsafeChartContent,
-      chartTimelineEnabled: false
-    });
-  } finally {
-    generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
   }
-});
+);
 
 const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevSettings = JSON.parse(JSON.stringify(state.settings));
@@ -208,25 +233,7 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
       assertChartInfo(answer);
       await generalActions.checkSVGStatus(answer.hash);
       const content = await (await fetcher(answer.chartpath)).text();
-      const domPurifyConfig = {
-        ADD_ATTR: [
-          "docbase",
-          "popuptext",
-          "minY",
-          "maxY",
-          "vertScale",
-          "topAge",
-          "baseAge",
-          "minX",
-          "maxX",
-          "baseLimit",
-          "topLimit",
-          "x1",
-          "y1"
-        ],
-        ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
-      };
-      const sanitizedSVG = DOMPurify.sanitize(content, domPurifyConfig);
+      const sanitizedSVG = purifyChartContent(content);
       generalActions.pushSnackbar("Successfully generated chart", "success");
       return {
         chartContent: sanitizedSVG,
@@ -251,3 +258,25 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
+
+export function purifyChartContent(content: string) {
+  const domPurifyConfig = {
+    ADD_ATTR: [
+      "docbase",
+      "popuptext",
+      "minY",
+      "maxY",
+      "vertScale",
+      "topAge",
+      "baseAge",
+      "minX",
+      "maxX",
+      "baseLimit",
+      "topLimit",
+      "x1",
+      "y1"
+    ],
+    ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
+  };
+  return DOMPurify.sanitize(content, domPurifyConfig);
+}
