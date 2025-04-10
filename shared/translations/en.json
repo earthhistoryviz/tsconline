@@ -237,7 +237,7 @@
                 "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             },
-            "create-datapack": "Create Crossplot"
+            "create-datapack": "Create Datapack"
         },
         "settingsTabs": {
             "Time": "Time",
