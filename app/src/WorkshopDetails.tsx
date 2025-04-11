@@ -12,7 +12,6 @@ import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
-import { WorkshopForm } from "./admin/AdminWorkshopComponents";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
