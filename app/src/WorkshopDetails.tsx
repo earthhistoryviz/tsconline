@@ -20,8 +20,7 @@ export const WorkshopDetails = observer(() => {
   const { t } = useTranslation();
 
   const isRegistered = false;
-  const isPublicWorkshop = true;
-  const [showTooltip, setShowTooltip] = useState(false);
+  const isPublicWorkshop = false;
   const [isDisabled, setIsDisabled] = useState(!isRegistered && !isPublicWorkshop ? true : false);
   const [loading, setLoading] = useState(false);
   const [switchButtonVar, setSwitchButtonVar] = useState(
@@ -147,30 +146,22 @@ export const WorkshopDetails = observer(() => {
                   )}
                   <Box sx={{ display: "flex", marginTop: 2 }}>
                     <CustomTooltip
-                      title={t("workshops.details-page.messages.not-registered")}
-                      open={showTooltip}
+                      title={
+                        !isRegistered && !isPublicWorkshop ? t("workshops.details-page.messages.not-registered") : ""
+                      }
                       placement="bottom">
-                      <div
-                        onMouseEnter={() => {
-                          if (!isRegistered && !isPublicWorkshop) {
-                            setShowTooltip(true);
-                          }
-                        }}
-                        onMouseLeave={() => setShowTooltip(false)}>
+                      <div>
                         <TSCLoadingButton
                           variant="contained"
-                          sx={{
-                            marginRight: 2,
-                            backgroundColor: "primary"
-                          }}
+                          sx={{ marginRight: 2, backgroundColor: "primary" }}
                           onClick={handleRegisterClick}
-                          disabled={isRegistered ? true : isDisabled}
+                          disabled={isRegistered || isDisabled}
                           loading={loading}>
                           {switchButtonVar}
                         </TSCLoadingButton>
                       </div>
                     </CustomTooltip>
-                    <TSCButton variant="contained" color="primary" onClick={() => downloadWorkshopFiles()}>
+                    <TSCButton variant="contained" color="primary" onClick={downloadWorkshopFiles}>
                       {t("workshops.details-page.download-button")}
                     </TSCButton>
                   </Box>
