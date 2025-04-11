@@ -183,13 +183,10 @@
                 "registered-button": "Registered",
                 "messages": {
                     "no-datapacks": "No datapacks available",
-                    "no-files": "No files available"
-                },
-                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
+                    "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
                     "no-files": "No files available",
                     "not-registered": "Contact profogg@gmail.com to register!"
-                },
-                "alrRegistered-button": "Already Registered"
+                }
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",

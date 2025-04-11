@@ -10,10 +10,8 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
-import { CustomTooltip } from "./components";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
-import { adminFetchWorkshops, fetchWorkshopFilesForDownload } from "./state/actions";
 import { WorkshopForm } from "./admin/AdminWorkshopComponents";
 
 export const WorkshopDetails = observer(() => {
