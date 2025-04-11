@@ -8,7 +8,7 @@ import DownloadIcon from "@mui/icons-material/Download";
 import { Menu, MenuItem } from "@szhsin/react-menu";
 import styles from "./Datapack.module.css";
 import { Dialog, ToggleButtonGroup, ToggleButton, IconButton, SvgIcon } from "@mui/material";
-import { People, School, Security, Verified } from "@mui/icons-material";
+import { People, School, Security, Verified, Terrain } from "@mui/icons-material";
 import { TSCDatapackCard } from "../components/datapack_display/TSCDatapackCard";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -28,10 +28,10 @@ import {
   getPrivateOfficialDatapackMetadatas,
   getPublicDatapacksMetadataWithoutCurrentUser,
   getPublicOfficialDatapacksMetadata,
+  getTreatuseDatapackMetadata,
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
-import { isDevServer } from "../constants";
 import { useNavigate } from "react-router";
 
 export const Datapacks = observer(function Datapacks() {
@@ -129,6 +129,14 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
+        {getTreatuseDatapackMetadata(state.datapackMetadata).length !== 0 && (
+          <DatapackGroupDisplay
+            datapacks={getTreatuseDatapackMetadata(state.datapackMetadata)}
+            header={t("settings.datapacks.title.treatise")}
+            HeaderIcon={Terrain}
+            loading={state.skeletonStates.treatiseDatapackLoading}
+          />
+        )}
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
@@ -150,15 +158,14 @@ export const Datapacks = observer(function Datapacks() {
           {t("button.confirm-selection")}
         </TSCButton>
       </Box>
-      {isDevServer && (
-        <TSCButton
-          onClick={() => {
-            navigate("/crossplot");
-            actions.setTab(0);
-          }}>
-          {t("crossPlot.create-datapack")}
-        </TSCButton>
-      )}
+
+      <TSCButton
+        onClick={() => {
+          navigate("/crossplot");
+          actions.setTab(0);
+        }}>
+        {t("crossPlot.create-datapack")}
+      </TSCButton>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm
           close={() => setFormOpen(false)}

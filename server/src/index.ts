@@ -22,12 +22,20 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata } from "./routes/user-routes.js";
+import {
+  deleteUserHistory,
+  fetchPublicUserDatapack,
+  fetchUserDatapacksMetadata,
+  uploadTreatiseDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata
+} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
+import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
-import * as crossPlotRoutes from "./routes/crossplot-routes.js";
+import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -90,7 +98,9 @@ server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [num
 
 // Expose the metrics endpoint
 server.get("/metrics", async (request, reply) => {
-  if (request.ip != "172.27.0.1") {
+  const authHeader = request.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token !== process.env.METRICS_AUTH) {
     reply.code(403).send({ error: "Forbidden" });
     return;
   }
@@ -233,6 +243,7 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
+server.get("/treatise/datapack/:datapack", routes.fetchTreatiseDatapack);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -293,15 +304,21 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha
 server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
 
 server.register(workshopRoutes, { prefix: "/workshop" });
+// these are seperate from the workshop routes because they don't require recaptcha
+server.get("/workshop", looseRateLimit, fetchAllWorkshops);
 
 server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
+server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
+server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
@@ -318,6 +335,7 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
+server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
@@ -326,8 +344,6 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
-
-server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

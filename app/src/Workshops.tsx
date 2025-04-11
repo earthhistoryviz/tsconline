@@ -17,14 +17,13 @@ import {
   FormControlLabel,
   Switch
 } from "@mui/material";
-import TSCreatorLogo from "./assets/TSCreatorLogo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import IconButton from "@mui/material/IconButton";
 import KeyboardArrowLeftIcon from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import CalendarViewMonthIcon from "@mui/icons-material/CalendarViewMonth";
 import CalendarViewWeekIcon from "@mui/icons-material/CalendarViewWeek";
-import { context } from "./state";
+import { actions, context } from "./state";
 import { StyledScrollbar } from "./components";
 import "./Workshops.css";
 import { useTheme } from "@mui/material/styles";
@@ -32,11 +31,11 @@ import {
   getActiveWorkshops,
   getNavigationRouteForWorkshopDetails,
   getPastWorkshops,
-  getUpcomingWorkshops
+  getUpcomingWorkshops,
+  getWorkshopCoverImage
 } from "./state/non-action-util";
 import { useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
-import { NotLoggedIn } from "./NotLoggedIn";
 import {
   Calendar as BigCalendar,
   CalendarProps,
@@ -48,107 +47,15 @@ import {
 import { SelectChangeEvent } from "@mui/material/Select";
 import dayjs from "dayjs";
 import "react-big-calendar/lib/css/react-big-calendar.css";
-
-// TODO: change this when implement the backend
-
-export type Workshop = {
-  title: string;
-  start: string;
-  end: string;
-  workshopId: number;
-  active: boolean;
-  datapacks: string[];
-  description: string;
-  files: string[];
-  imageLink: string;
-};
-
-// TODO: change this when implement the backend
-
-const dummyWorkshops: Workshop[] = [
-  // Active Workshops
-  {
-    title: "React Basics",
-    start: "2025-01-29T09:00:00",
-    end: "2025-01-30T18:00:00",
-    workshopId: 1,
-    active: false,
-    datapacks: ["React Overview", "JSX Basics"],
-    description:
-      "This workshop introduces React concepts such as components, props, and state. Perfect for beginners looking to learn the basics of React.",
-    files: ["ReactBasics.pdf", "example_code.mdpk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Advanced TypeScript",
-    start: "2025-01-07T09:00:00",
-    end: "2025-01-07T16:00:00",
-    workshopId: 2,
-    active: true,
-    datapacks: ["Generics", "Decorators", "Type Inference"],
-    description:
-      "Dive deep into advanced TypeScript concepts like generics, decorators, and type inference. Ideal for developers with basic TypeScript knowledge.",
-    files: ["AdvancedTypeScriptGuide.pdf", "examples.txt"],
-    imageLink: TSCreatorLogo
-  },
-  // Upcoming Workshops
-  {
-    title: "Node.js for Beginners",
-    start: "2025-01-28T10:00:00",
-    end: "2025-01-29T15:00:00",
-    workshopId: 3,
-    active: true,
-    datapacks: ["Node Basics", "Express.js Overview"],
-    description:
-      "Learn the fundamentals of Node.js, including setting up a server and building simple RESTful APIs using Express.js.",
-    files: ["NodeIntro.pdf", "starter_code.mdpk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Fullstack Development",
-    start: "2025-01-07T13:00:00",
-    end: "2025-01-08T16:00:00",
-    workshopId: 4,
-    active: false,
-    datapacks: ["Frontend-Backend Integration", "API Design"],
-    description:
-      "A comprehensive workshop on integrating frontend and backend technologies to build fullstack applications, including best practices for API design.",
-    files: ["FullstackDevelopment.pdf", "sample_project.txt"],
-    imageLink: TSCreatorLogo
-  },
-  // Expired Workshops
-  {
-    title: "CSS in Depth",
-    start: "2024-12-03T09:00:00",
-    end: "2024-12-03T18:00:00",
-    workshopId: 5,
-    active: false,
-    datapacks: ["Flexbox", "Grid Layout", "Animations"],
-    description:
-      "Master advanced CSS techniques, including Flexbox, Grid, and creating smooth animations for modern web designs.",
-    files: ["CSSInDepth.pdf", "examples.mpdk"],
-    imageLink: TSCreatorLogo
-  },
-  {
-    title: "Python for Data Science",
-    start: "2025-01-12T10:00:00",
-    end: "2025-01-13T13:00:00",
-    workshopId: 6,
-    active: false,
-    datapacks: ["Pandas", "NumPy", "Matplotlib"],
-    description:
-      "An introductory workshop on data analysis and visualization using Python libraries like Pandas, NumPy, and Matplotlib.",
-    files: ["PythonDataScience.pdf", "datasets.txt"],
-    imageLink: TSCreatorLogo
-  }
-];
+import { SharedWorkshop } from "@tsconline/shared";
+import { ErrorCodes } from "./util/error-codes";
 
 type WorkshopsCategoryProps = {
-  workshops: Workshop[];
+  workshops: SharedWorkshop[];
   noDataMessage: string;
   imageSize: number;
   includeTime: boolean;
-  onClickHandler: (workshop: Workshop) => void;
+  onClickHandler: (workshop: SharedWorkshop) => void;
 };
 
 type Event = {
@@ -185,9 +92,10 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
                   <CardMedia
                     component="img"
                     height={imageSize}
-                    image={workshop.imageLink}
+                    image={getWorkshopCoverImage()}
                     alt={workshop.title}
                     sx={{ objectFit: "cover" }}
+                    onError={() => actions.pushError(ErrorCodes.UNRECOGNIZED_IMAGE_FILE)}
                   />
                   <Typography variant="h5" component="div" gutterBottom>
                     {workshop.title}
@@ -215,14 +123,14 @@ const WorkshopsCategory: React.FC<WorkshopsCategoryProps> = ({
 };
 
 export const Workshops: React.FC = observer(() => {
-  const { state, actions } = useContext(context);
+  const { state } = useContext(context);
   const theme = useTheme();
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const activeWorkshops = getActiveWorkshops(dummyWorkshops);
-  const upcomingWorkshops = getUpcomingWorkshops(dummyWorkshops);
-  const pastWorkshops = getPastWorkshops(dummyWorkshops);
+  const activeWorkshops = getActiveWorkshops(state.workshops);
+  const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
+  const pastWorkshops = getPastWorkshops(state.workshops);
 
   const [calendarWorkshopFilter, setCalendarWorkshopFilter] = useState("All");
   const [calendarView, setCalendarView] = useState(() => (window.innerWidth < 500 ? "day" : "month"));
@@ -230,7 +138,7 @@ export const Workshops: React.FC = observer(() => {
   const [calendarState, setCalendarState] = useState(() => {
     const oneWeekFromNow = dayjs().add(1, "week");
     const now = dayjs();
-    return dummyWorkshops.some((workshop) => {
+    return state.workshops.some((workshop) => {
       const startDate = dayjs(workshop.start);
       const endDate = dayjs(workshop.end);
       return (
@@ -250,12 +158,13 @@ export const Workshops: React.FC = observer(() => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const setWorkshopAndNavigate = (event: { workshopId: number }) => {
-    const workshop = dummyWorkshops.find((w) => w.workshopId === event.workshopId);
-    if (workshop) {
-      navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
-    }
-  };
+  function setWorkshopAndNavigateForCalendar(event: { workshopId: number }) {
+    navigate(getNavigationRouteForWorkshopDetails(event.workshopId));
+  }
+
+  function setWorkshopAndNavigate(workshop: SharedWorkshop) {
+    navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+  }
 
   const localizer = dayjsLocalizer(dayjs);
 
@@ -329,10 +238,9 @@ export const Workshops: React.FC = observer(() => {
   const EventWrapper: React.FC<EventWrapperProps> = ({ event }) => {
     const overlappingEvent = !events.every(
       (e) =>
-        e === event ||
         !(
-          e.start &&
-          e.end &&
+          dayjs(e.start).toDate() &&
+          dayjs(e.end).toDate() &&
           event.start &&
           event.end &&
           new Date(e.start) <= new Date(event.end) &&
@@ -363,7 +271,7 @@ export const Workshops: React.FC = observer(() => {
               height: `${((new Date(event.end!).getTime() - new Date(event.start!).getTime()) / (1000 * 30 * 60)) * 20}px`
             })
         }}
-        onClick={() => setWorkshopAndNavigate(event as { workshopId: number })}>
+        onClick={() => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}>
         {/* timing details on card */}
         <Typography className="custom-event-label">{event.title}</Typography>
         {(!overlappingEvent || longOverlappingEvent || calendarView === "week" || calendarView === "day") && (
@@ -400,7 +308,7 @@ export const Workshops: React.FC = observer(() => {
           (new Date(event.start) < date && new Date(event.end) >= date)
       )
     ) {
-      newStyle.backgroundImage = `url(${dummyWorkshops.find((workshop) => new Date(workshop.start).toDateString() === date.toDateString() || (new Date(workshop.start) < date && new Date(workshop.end) >= date))?.imageLink})`;
+      newStyle.backgroundImage = getWorkshopCoverImage(); // This need to be fix later so leave it as TSCreatorLogo for now.
       newStyle.backgroundSize = "cover";
       newStyle.backgroundPosition = "center";
       newStyle.opacity = 0.3;
@@ -422,14 +330,14 @@ export const Workshops: React.FC = observer(() => {
       onView={(view) => setCalendarView(view)}
       view={calendarView as (typeof Views)[keyof typeof Views]}
       components={{ toolbar: CustomToolbar, eventWrapper: EventWrapper }}
-      onSelectEvent={(event) => setWorkshopAndNavigate(event as { workshopId: number })}
+      onSelectEvent={(event) => setWorkshopAndNavigateForCalendar(event as { workshopId: number })}
       dayPropGetter={(date) => dayPropGetter(date, events)}
     />
   );
 
-  const events = [
+  const events: Event[] = [
     ...(calendarWorkshopFilter === "All"
-      ? dummyWorkshops
+      ? state.workshops
       : calendarWorkshopFilter === "Active"
         ? activeWorkshops
         : calendarWorkshopFilter === "Upcoming"
@@ -442,103 +350,94 @@ export const Workshops: React.FC = observer(() => {
     workshopId: workshop.workshopId
   }));
 
-  useEffect(() => {
-    actions.setWorkshopsArray(dummyWorkshops);
-  }, []);
   return (
     <>
-      {state.isLoggedIn ? (
-        <Box padding={4}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
-            <Box sx={{ width: "200px" }}></Box>
-            <Typography className="header" sx={{ textAlign: "center" }}>
-              {t("workshops.header")}
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="default"
-                  checked={calendarState}
-                  onClick={() => setCalendarState((prevState) => !prevState)}
-                />
-              }
-              label={t("workshops.calendar.switchLabel")}
-              sx={{ marginLeft: 2 }}
-            />
-          </Box>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-            <Typography className="description-header" sx={{}}>
-              {t("workshops.description-header")}
-            </Typography>
-          </Box>
-          {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
-
-          {/* Active Workshops */}
-          <Accordion
-            defaultExpanded
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="active-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.active")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={activeWorkshops}
-                noDataMessage="active"
-                imageSize={140}
-                includeTime={true}
-                onClickHandler={setWorkshopAndNavigate}
+      <Box padding={4}>
+        <Box sx={{ display: "flex", justifyContent: "space-between", gap: 2 }}>
+          <Box sx={{ width: "200px" }}></Box>
+          <Typography className="header" sx={{ textAlign: "center" }}>
+            {t("workshops.header")}
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                color="default"
+                checked={calendarState}
+                onClick={() => setCalendarState((prevState) => !prevState)}
               />
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Upcoming Workshops */}
-          <Accordion
-            defaultExpanded
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="upcoming-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.upcoming")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={upcomingWorkshops}
-                noDataMessage="upcoming"
-                imageSize={140}
-                includeTime={true}
-                onClickHandler={setWorkshopAndNavigate}
-              />
-            </AccordionDetails>
-          </Accordion>
-
-          {/* Expired Workshops */}
-          <Accordion
-            defaultExpanded={false}
-            sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="expired-workshops-content"
-              className="workshops-summary">
-              <Typography>{t("workshops.titles.past")}</Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <WorkshopsCategory
-                workshops={pastWorkshops}
-                noDataMessage="past"
-                imageSize={80}
-                includeTime={false}
-                onClickHandler={setWorkshopAndNavigate}
-              />
-            </AccordionDetails>
-          </Accordion>
+            }
+            label={t("workshops.calendar.switchLabel")}
+            sx={{ marginLeft: 2 }}
+          />
         </Box>
-      ) : (
-        <NotLoggedIn />
-      )}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+          <Typography className="description-header">{t("workshops.description-header")}</Typography>
+        </Box>
+        {calendarState && <Calendar events={events} views={["month", "week", "day"]} />}
+
+        {/* Active Workshops */}
+        <Accordion
+          defaultExpanded
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="active-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.active")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={activeWorkshops}
+              noDataMessage="active"
+              imageSize={140}
+              includeTime={true}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Upcoming Workshops */}
+        <Accordion
+          defaultExpanded
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="upcoming-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.upcoming")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={upcomingWorkshops}
+              noDataMessage="upcoming"
+              imageSize={140}
+              includeTime={true}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Expired Workshops */}
+        <Accordion
+          defaultExpanded={false}
+          sx={{ border: `1px solid ${theme.palette.divider}`, bgcolor: "secondaryBackground.main" }}>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            aria-controls="expired-workshops-content"
+            className="workshops-summary">
+            <Typography>{t("workshops.titles.past")}</Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            <WorkshopsCategory
+              workshops={pastWorkshops}
+              noDataMessage="past"
+              imageSize={80}
+              includeTime={false}
+              onClickHandler={setWorkshopAndNavigate}
+            />
+          </AccordionDetails>
+        </Accordion>
+      </Box>
     </>
   );
 });

@@ -17,7 +17,6 @@ import {
   assertDatapackPriorityUpdateSuccess,
   assertOfficialDatapack,
   assertSharedWorkshop,
-  assertSharedWorkshopArray,
   assertWorkshopDatapack,
   isServerResponseError
 } from "@tsconline/shared";
@@ -34,6 +33,7 @@ import {
 import { State } from "../state";
 import { getMetadataFromArray } from "../non-action-util";
 import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types";
+import { fetchAllWorkshops } from "./workshop-actions";
 
 export const adminFetchUsers = action(async () => {
   const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
@@ -192,6 +192,46 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
     pushSnackbar("Some users were not deleted", "warning");
   }
 });
+
+export const adminModifyUsers = action(
+  async (user: { username: string; email: string; accountType?: string; isAdmin?: number }) => {
+    const { username, email, accountType, isAdmin } = user;
+    if (!username || !email || (!accountType && isAdmin === undefined)) {
+      pushSnackbar("Missing required fields", "warning");
+      return;
+    }
+    try {
+      const recaptchaToken = await getRecaptchaToken("adminModifyUsers");
+      if (!recaptchaToken) return;
+
+      const response = await fetcher("/admin/user", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        body: JSON.stringify({ username, email, accountType, isAdmin }),
+        credentials: "include"
+      });
+
+      if (response.ok) {
+        pushSnackbar("User modified successfully", "success");
+        adminFetchUsers(); // Refresh the user list if applicable
+      } else {
+        const serverResponse = await response.json();
+        displayServerError(
+          serverResponse,
+          ErrorCodes.ADMIN_MODIFY_USER_FAILED,
+          ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]
+        );
+        return `${ErrorMessages[ErrorCodes.ADMIN_MODIFY_USER_FAILED]}`;
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+  }
+);
 
 /**
  * Deletes a user's datapack (datapack's "id" is the filename)
@@ -479,7 +519,7 @@ export const adminAddUsersToWorkshop = action(
             break;
           case 404:
             errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-            adminFetchWorkshops();
+            fetchAllWorkshops();
             break;
           case 409:
             errorCode = ErrorCodes.ADMIN_EMAIL_INVALID;
@@ -501,37 +541,6 @@ export const adminAddUsersToWorkshop = action(
 );
 
 /**
- * Fetches all workshops
- */
-export const adminFetchWorkshops = action(async () => {
-  try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchWorkshops");
-    if (!recaptchaToken) return;
-    const response = await fetcher("/admin/workshops", {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      }
-    });
-    if (response.ok) {
-      const workshops = (await response.json()).workshops;
-      assertSharedWorkshopArray(workshops);
-      adminSetWorkshop(workshops);
-    } else {
-      displayServerError(
-        await response.json(),
-        ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED,
-        ErrorMessages[ErrorCodes.ADMIN_FETCH_WORKSHOPS_FAILED]
-      );
-    }
-  } catch (error) {
-    console.error(error);
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
-  }
-});
-
-/**
  * Creates a new workshop
  * @param title The title of the workshop
  * @param start The start date of the workshop
@@ -540,11 +549,25 @@ export const adminFetchWorkshops = action(async () => {
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
-  async (title: string, start: string, end: string): Promise<number | undefined> => {
+  async (
+    title: string,
+    start: string,
+    end: string,
+    regRestrict: boolean,
+    creatorUUID: string,
+    regLink?: string
+  ): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
       if (!recaptchaToken) return;
-      const body: Record<string, string> = { title, start, end };
+      const body: Record<string, string | boolean | undefined> = {
+        title,
+        start,
+        end,
+        regRestrict,
+        creatorUUID,
+        regLink
+      };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
         headers: {
@@ -557,7 +580,7 @@ export const adminCreateWorkshop = action(
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertSharedWorkshop(workshop);
-        runInAction(() => state.admin.workshops.push(workshop));
+        runInAction(() => state.workshops.push(workshop));
         return workshop.workshopId;
       } else {
         let errorCode = ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED;
@@ -592,7 +615,7 @@ export const adminEditWorkshop = action(
       pushError(ErrorCodes.INVALID_FORM);
       return null;
     }
-    const index = state.admin.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
+    const index = state.workshops.findIndex((w) => w.workshopId === updatedFields.workshopId);
     if (index === -1) {
       pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
       return null;
@@ -612,7 +635,7 @@ export const adminEditWorkshop = action(
       if (response.ok) {
         const workshop = (await response.json()).workshop;
         assertSharedWorkshop(workshop);
-        runInAction(() => (state.admin.workshops[index] = workshop));
+        runInAction(() => (state.workshops[index] = workshop));
         return workshop;
       } else {
         let errorCode = ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED;
@@ -634,7 +657,7 @@ export const adminEditWorkshop = action(
  * @param workshopId The ID of the workshop to delete
  */
 export const adminDeleteWorkshop = action(async (workshopId: number) => {
-  const index = state.admin.workshops.findIndex((w) => w.workshopId === workshopId);
+  const index = state.workshops.findIndex((w) => w.workshopId === workshopId);
   if (index === -1) {
     pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
     return;
@@ -652,7 +675,7 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
       credentials: "include"
     });
     if (response.ok) {
-      runInAction(() => state.admin.workshops.splice(index, 1));
+      runInAction(() => state.workshops.splice(index, 1));
       pushSnackbar("Workshop deleted successfully", "success");
     } else {
       displayServerError(
@@ -756,7 +779,7 @@ export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: numb
 });
 
 export const adminSetWorkshop = action((workshop: SharedWorkshop[]) => {
-  state.admin.workshops = workshop;
+  state.workshops = workshop;
 });
 
 export const adminRemoveDisplayedUserDatapack = action((uuid: string) => {
@@ -848,4 +871,99 @@ export const setAdminRowPriorityUpdates = action((newVal: DatapackPriorityChange
 export const resetAdminConfigTempState = action(() => {
   state.admin.datapackConfig.rowPriorityUpdates = [];
   state.admin.datapackConfig.tempRowData = null;
+});
+
+/**
+ * Upload files to a workshop
+ * @param Files The uploaded files
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddFilesToWorkshop = action(async (workshopId: number, files: File[]) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+  files.forEach((file) => {
+    formData.append(`file`, file);
+  });
+  try {
+    const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          fetchAllWorkshops();
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+/**
+ * Upload cover picture to a workshop
+ * @param coverPicture The uploaded cover picture
+ * @returns Whether the operation was successful
+ */
+
+export const adminAddCoverPicToWorkshop = action(async (workshopId: number, coverPicture: File) => {
+  const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
+  if (!recaptchaToken) return;
+  const formData = new FormData();
+  formData.append("file", coverPicture);
+  try {
+    const response = await fetcher(`/admin/workshop/cover/${workshopId}`, {
+      method: "POST",
+      body: formData,
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED;
+      switch (response.status) {
+        case 400:
+          errorCode = ErrorCodes.INVALID_FORM;
+          break;
+        case 422:
+          errorCode = ErrorCodes.RECAPTCHA_FAILED;
+          break;
+        case 404:
+          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+          fetchAllWorkshops();
+          break;
+        case 415:
+          errorCode = ErrorCodes.INVALID_FILE_FORMAT;
+          break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
 });

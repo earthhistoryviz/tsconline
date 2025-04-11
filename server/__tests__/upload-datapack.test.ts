@@ -167,6 +167,22 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
       datapackMetadata: {}
     });
   });
+  it("should return file, filepath, tempProfilePictureFilepath, datapackMetadata, and PDFFILES if successful", async () => {
+    processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
+      file: { file: { bytesRead: 1 } } as MultipartFile,
+      fields: { filepath: "test", originalFileName: "test", storedFileName: "test" },
+      pdfFields: { "test.pdf": "test" }
+    });
+    uploadUserDatapackHandler.mockResolvedValueOnce({} as DatapackMetadata);
+    const val = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack("uuid", formData);
+    expect(val).toEqual({
+      file: { file: { bytesRead: 1 } } as MultipartFile,
+      filepath: "test",
+      tempProfilePictureFilepath: undefined,
+      datapackMetadata: {},
+      pdfFields: { "test.pdf": "test" }
+    });
+  });
 });
 describe("processAndUploadDatapack", () => {
   const isOfficialDatapack = vi.spyOn(shared, "isOfficialDatapack");

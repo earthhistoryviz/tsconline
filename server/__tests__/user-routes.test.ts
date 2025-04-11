@@ -8,7 +8,13 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
-import { fetchPublicUserDatapack } from "../src/routes/user-routes";
+import {
+  fetchPublicUserDatapack,
+  uploadTreatiseDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata,
+  deleteUserHistory
+} from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
@@ -16,13 +22,21 @@ import * as shared from "@tsconline/shared";
 import { User } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
+import * as chartHistory from "../src/user/chart-history";
+import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 
+vi.mock("../src/user/chart-history", async () => {
+  return {
+    getChartHistory: vi.fn(() => Promise.resolve(testHistory)),
+    getChartHistoryMetadata: vi.fn(() => Promise.resolve([{ timestamp: "test" }])),
+    deleteChartHistory: vi.fn().mockResolvedValue({})
+  };
+});
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
     editDatapackMetadataRequestHandler: vi.fn(async () => {})
   };
 });
-import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 
 vi.mock("../src/upload-datapack", async () => {
   return {
@@ -130,7 +144,8 @@ vi.mock("../src/user/user-handler", () => {
     getDirectories: vi.fn().mockResolvedValue([]),
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
-    deleteUserDatapack: vi.fn().mockResolvedValue({})
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -199,8 +214,12 @@ beforeAll(async () => {
   });
   await app.register(userRoutes, { prefix: "/user" });
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
+  app.post("/external-chart", uploadTreatiseDatapack);
+  app.get("/user/history", fetchUserHistoryMetadata);
+  app.get("/user/history/:timestamp", fetchUserHistory);
+  app.delete("/user/history/:timestamp", deleteUserHistory);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  // vi.spyOn(console, "log").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
@@ -224,6 +243,12 @@ const testUser = {
   hashedPassword: "password123",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 0
+};
+const testHistory = {
+  settings: "test",
+  datapacks: [{ title: "test" } as shared.Datapack],
+  chartContent: "test",
+  chartHash: "test"
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -925,6 +950,139 @@ describe("uploadDatapack tests", () => {
   });
 });
 
+describe("uploadTreatiseDatapack", () => {
+  it("should return 401 if authorization header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ error: "Token missing" });
+  });
+
+  it("should return 401 if token is missing in auth header", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(401);
+    expect(response.json()).toEqual({ error: "Token missing" });
+  });
+
+  it("should return 500 if BEARER_TOKEN is missing in enviroment variables", async () => {
+    delete process.env.BEARER_TOKEN;
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(response.json()).toEqual({
+      error: "Server misconfiguration: Missing BEARER_TOKEN on TSC Online. Contact admin"
+    });
+  });
+
+  it("should return 403 if token is incorrect", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer incorrect_token" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+
+    expect(response.statusCode).toBe(403);
+    expect(response.json()).toEqual({ error: "Token mismatch" });
+  });
+
+  it("should return 200 if upload is successful", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockResolvedValueOnce({
+      code: 200,
+      message: "Datapack uploaded successfully"
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+    expect(response.statusCode).toBe(200);
+    expect(processAndUploadDatapack).toHaveBeenCalled();
+  });
+
+  it("should return 200 if upload is duplicated", async () => {
+    process.env.BEARER_TOKEN = "correct_token";
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test" } as shared.Datapack]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      payload: {
+        datapack: {
+          value: Buffer.from("test"),
+          options: {
+            filename: "test.dpk",
+            contentType: "text/plain"
+          }
+        }
+      }
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
 describe("fetchWorkshopDatapack tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
@@ -1034,5 +1192,132 @@ describe("fetchPublicUserDatapack tests", () => {
     expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, filename);
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual({ title: "test", isPublic: true });
+  });
+});
+
+describe("fetchUserHistory tests", () => {
+  const getChartHistory = vi.spyOn(chartHistory, "getChartHistory");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is not found", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history/test"
+    });
+    expect(getChartHistory).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "User not logged in" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 404 if symlinks are invalid", async () => {
+    getChartHistory.mockRejectedValueOnce(new Error("Invalid datapack symlink"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history/test",
+      headers
+    });
+    expect(getChartHistory).toHaveBeenCalledOnce();
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(404);
+    expect(await response.json()).toEqual({ error: "Datapacks not found" });
+  });
+  it("should reply 500 if an error occurred in getChartHistory", async () => {
+    getChartHistory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history/test",
+      headers
+    });
+    expect(getChartHistory).toHaveBeenCalledOnce();
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to fetch history" });
+  });
+  it("should reply 200 when the history is successfully fetched", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history/test",
+      headers
+    });
+    expect(getChartHistory).toHaveBeenCalledOnce();
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual(testHistory);
+  });
+});
+
+describe("fetchUserHistoryMetadata tests", () => {
+  const getChartHistoryMetadata = vi.spyOn(chartHistory, "getChartHistoryMetadata");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is not found", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history"
+    });
+    expect(getChartHistoryMetadata).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "User not logged in" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 500 if an error occurred in getChartHistoryMetadata", async () => {
+    getChartHistoryMetadata.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history",
+      headers
+    });
+    expect(getChartHistoryMetadata).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to fetch history metadata" });
+  });
+  it("should reply 200 when the history metadata is successfully fetched", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/history",
+      headers
+    });
+    expect(getChartHistoryMetadata).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual([{ timestamp: "test" }]);
+  });
+});
+
+describe("deleteUserHistory tests", () => {
+  const deleteChartHistory = vi.spyOn(chartHistory, "deleteChartHistory");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is not found", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test"
+    });
+    expect(deleteChartHistory).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "User not logged in" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should reply 500 if an error occurred in deleteChartHistory", async () => {
+    deleteChartHistory.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test",
+      headers
+    });
+    expect(deleteChartHistory).toHaveBeenCalledOnce();
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to delete history" });
+  });
+  it("should reply 200 when the history is successfully deleted", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/history/test",
+      headers
+    });
+    expect(deleteChartHistory).toHaveBeenCalledOnce();
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual({ message: "History deleted" });
   });
 });

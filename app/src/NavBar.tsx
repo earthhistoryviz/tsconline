@@ -20,7 +20,16 @@ import {
 } from "@mui/material";
 import { context } from "./state";
 import { TSCMenuItem, TSCButton } from "./components";
-import { Menu as MenuIcon, TableChart, Dataset, Help, Campaign, School, AccountCircle } from "@mui/icons-material";
+import {
+  Menu as MenuIcon,
+  TableChart,
+  Dataset,
+  Help,
+  Campaign,
+  School,
+  AccountCircle,
+  AutoAwesome
+} from "@mui/icons-material";
 import { ControlledMenu, Menu, MenuDivider, MenuHeader, useHover, useMenuState } from "@szhsin/react-menu";
 import "./NavBar.css";
 import "@szhsin/react-menu/dist/index.css";
@@ -202,8 +211,9 @@ export const NavBar = observer(function Navbar() {
         <TSCButton
           buttonType="gradient"
           disabled={state.loadingDatapacks}
+          startIcon={<AutoAwesome />}
           onClick={async () => {
-            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), "");
+            await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
             actions.initiateChartGeneration(navigate, location.pathname);
           }}>
           {t("button.generate-chart")}
@@ -270,7 +280,6 @@ const NonUserSettings: React.FC = () => {
           key={key}
           type="checkbox"
           checked={i18next.language === value}
-          className="non-user-settings-sub-menu-item"
           onClick={() => {
             i18next.changeLanguage(value);
           }}>

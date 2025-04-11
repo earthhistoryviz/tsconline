@@ -21,6 +21,7 @@ import "./App.css";
 import { DatapackProfile } from "./DatapackProfile";
 import { Profile } from "./account_settings/Profile";
 import { Admin } from "./admin/Admin";
+import { GenerateExternalChart } from "./GenerateExternalChart";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { toJS } from "mobx";
@@ -36,6 +37,7 @@ import i18n from "../i18n";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { ChartTab } from "./Chart";
+import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -141,150 +143,153 @@ export default observer(function App() {
     <StyledEngineProvider injectFirst>
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {location.pathname != "/verify" && <NavBar />}
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/chart" element={<ChartTab />} />
-            <Route path="/help/*" element={<Help />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/verify" element={<AccountVerify />} />
-            <Route path="/account-recovery" element={<AccountRecovery />} />
-            <Route path="/profile" element={<Profile />} />
-            <Route path="/datapack/:id" element={<DatapackProfile />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/datapacks" element={<Datapacks />} />
-            <Route path="/presets" element={<Presets />} />
-            <Route path="/workshops" element={<Workshops />} />
-            <Route path="/file-format-info" element={<FileFormatInfo />} />
-            <Route path="/workshops/:id" element={<WorkshopDetails />} />
-            <Route path="/crossplot" element={<CrossPlotChart />} />
-          </Routes>
-          {Array.from(state.errors.errorAlerts.entries())
-            .reverse()
-            .map(([context, error], index) => (
-              <TSCError
-                key={context}
-                errorContext={context}
-                message={error.errorText}
+          <PreviousLocationProvider>
+            <CssBaseline />
+            {location.pathname != "/verify" && <NavBar />}
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/settings" element={<Settings />} />
+              <Route path="/chart" element={<ChartTab />} />
+              <Route path="/help/*" element={<Help />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/verify" element={<AccountVerify />} />
+              <Route path="/account-recovery" element={<AccountRecovery />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/datapack/:id" element={<DatapackProfile />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/datapacks" element={<Datapacks />} />
+              <Route path="/presets" element={<Presets />} />
+              <Route path="/workshops" element={<Workshops />} />
+              <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
+              <Route path="/file-format-info" element={<FileFormatInfo />} />
+              <Route path="/workshops/:id" element={<WorkshopDetails />} />
+              <Route path="/crossplot" element={<CrossPlotChart />} />
+            </Routes>
+            {Array.from(state.errors.errorAlerts.entries())
+              .reverse()
+              .map(([context, error], index) => (
+                <TSCError
+                  key={context}
+                  errorContext={context}
+                  message={error.errorText}
+                  index={index}
+                  count={error.errorCount}
+                />
+              ))}
+            <TSCYesNoPopup
+              open={state.showSuggestedAgePopup}
+              title={t("dialogs.default-age.title")}
+              onYes={() => actions.handlePopupResponse(true, navigate, { from: location.pathname })}
+              onNo={() => actions.handlePopupResponse(false, navigate, { from: location.pathname })}
+              onClose={() => actions.compileChartRequest(navigate, { from: location.pathname })}
+            />
+            <TSCDialogLoader
+              open={state.isProcessingDatapacks}
+              headerText={t("loading.loading-datapacks")}
+              subHeaderText={t("loading.time")}
+            />
+            <TSCDialogLoader open={checkLoadingDatapacks()} headerText={t("loading.fetching-datapacks")} />
+            <TSCYesNoPopup
+              open={checkUnsavedChanges() && !checkLoadingDatapacks()}
+              title={t("dialogs.confirm-datapack-change.title")}
+              message={t("dialogs.confirm-datapack-change.message")}
+              onNo={async () => {
+                actions.setUnsavedDatapackConfig(state.config.datapacks);
+              }}
+              onYes={async () => {
+                await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
+              }}
+              onClose={async () => {
+                actions.setUnsavedDatapackConfig(state.config.datapacks);
+              }}
+              customNo={t("dialogs.confirm-datapack-change.no")}
+              customYes={t("dialogs.confirm-datapack-change.yes")}
+            />
+            {state.snackbars.map((info, index) => (
+              <TSCSnackbar
+                key={info.snackbarText}
+                text={info.snackbarText}
+                count={info.snackbarCount}
                 index={index}
-                count={error.errorCount}
+                severity={info.severity}
               />
             ))}
-          <TSCYesNoPopup
-            open={state.showSuggestedAgePopup}
-            title={t("dialogs.default-age.title")}
-            onYes={() => actions.handlePopupResponse(true, navigate)}
-            onNo={() => actions.handlePopupResponse(false, navigate)}
-            onClose={() => actions.compileChartRequest(navigate)}
-          />
-          <TSCDialogLoader
-            open={state.isProcessingDatapacks}
-            headerText={t("loading.loading-datapacks")}
-            subHeaderText={t("loading.time")}
-          />
-          <TSCDialogLoader open={checkLoadingDatapacks()} headerText={t("loading.fetching-datapacks")} />
-          <TSCYesNoPopup
-            open={checkUnsavedChanges() && !checkLoadingDatapacks()}
-            title={t("dialogs.confirm-datapack-change.title")}
-            message={t("dialogs.confirm-datapack-change.message")}
-            onNo={async () => {
-              actions.setUnsavedDatapackConfig(state.config.datapacks);
-            }}
-            onYes={async () => {
-              await actions.processDatapackConfig(toJS(state.unsavedDatapackConfig));
-            }}
-            onClose={async () => {
-              actions.setUnsavedDatapackConfig(state.config.datapacks);
-            }}
-            customNo={t("dialogs.confirm-datapack-change.no")}
-            customYes={t("dialogs.confirm-datapack-change.yes")}
-          />
-          {state.snackbars.map((info, index) => (
-            <TSCSnackbar
-              key={info.snackbarText}
-              text={info.snackbarText}
-              count={info.snackbarCount}
-              index={index}
-              severity={info.severity}
+            <Joyride
+              continuous
+              run={state.guides.isQSGOpen}
+              steps={getQsg()}
+              callback={handleQSGCallback}
+              locale={{
+                skip: t("tours.quit"),
+                last: t("tours.finish"),
+                back: t("tours.back"),
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getQsg().length})`
+              }}
+              stepIndex={stepIndex}
+              showProgress
+              styles={{
+                options: {
+                  zIndex: 10000,
+                  primaryColor: theme.palette.button.main,
+                  backgroundColor: theme.palette.secondaryBackground.main,
+                  arrowColor: theme.palette.secondaryBackground.main,
+                  textColor: theme.palette.text.primary
+                }
+              }}
             />
-          ))}
-          <Joyride
-            continuous
-            run={state.guides.isQSGOpen}
-            steps={getQsg()}
-            callback={handleQSGCallback}
-            locale={{
-              skip: t("tours.quit"),
-              last: t("tours.finish"),
-              back: t("tours.back"),
-              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getQsg().length})`
-            }}
-            stepIndex={stepIndex}
-            showProgress
-            styles={{
-              options: {
-                zIndex: 10000,
-                primaryColor: theme.palette.button.main,
-                backgroundColor: theme.palette.secondaryBackground.main,
-                arrowColor: theme.palette.secondaryBackground.main,
-                textColor: theme.palette.text.primary
-              }
-            }}
-          />
-          <Joyride
-            continuous
-            run={state.guides.isDatapacksTourOpen}
-            steps={getDatapackTour()}
-            stepIndex={stepIndex}
-            disableScrolling
-            callback={handleDatapackTourCallback}
-            locale={{
-              skip: t("tours.quit"),
-              last: t("tours.finish"),
-              next: t("tours.next"),
-              back: t("tours.back"),
-              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getDatapackTour().length})`
-            }}
-            showProgress
-            styles={{
-              options: {
-                zIndex: 200,
-                primaryColor: theme.palette.button.main,
-                backgroundColor: theme.palette.secondaryBackground.main,
-                arrowColor: theme.palette.secondaryBackground.main,
-                textColor: theme.palette.text.primary
-              }
-            }}
-          />
-          <Joyride
-            continuous
-            run={state.guides.isSettingsTourOpen}
-            steps={getSettingsTour()}
-            stepIndex={stepIndex}
-            callback={handleSettingsTourCallback}
-            locale={{
-              skip: t("tours.quit"),
-              last: t("tours.finish"),
-              next: t("tours.next"),
-              back: t("tours.back"),
-              nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getSettingsTour().length})`
-            }}
-            showProgress
-            styles={{
-              options: {
-                zIndex: 200,
-                primaryColor: theme.palette.button.main,
-                backgroundColor: theme.palette.secondaryBackground.main,
-                arrowColor: theme.palette.secondaryBackground.main,
-                textColor: theme.palette.text.primary
-              }
-            }}
-          />
+            <Joyride
+              continuous
+              run={state.guides.isDatapacksTourOpen}
+              steps={getDatapackTour()}
+              stepIndex={stepIndex}
+              disableScrolling
+              callback={handleDatapackTourCallback}
+              locale={{
+                skip: t("tours.quit"),
+                last: t("tours.finish"),
+                next: t("tours.next"),
+                back: t("tours.back"),
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getDatapackTour().length})`
+              }}
+              showProgress
+              styles={{
+                options: {
+                  zIndex: 200,
+                  primaryColor: theme.palette.button.main,
+                  backgroundColor: theme.palette.secondaryBackground.main,
+                  arrowColor: theme.palette.secondaryBackground.main,
+                  textColor: theme.palette.text.primary
+                }
+              }}
+            />
+            <Joyride
+              continuous
+              run={state.guides.isSettingsTourOpen}
+              steps={getSettingsTour()}
+              stepIndex={stepIndex}
+              callback={handleSettingsTourCallback}
+              locale={{
+                skip: t("tours.quit"),
+                last: t("tours.finish"),
+                next: t("tours.next"),
+                back: t("tours.back"),
+                nextLabelWithProgress: `${i18n.t("tours.next")} (${stepIndex + 1} / ${getSettingsTour().length})`
+              }}
+              showProgress
+              styles={{
+                options: {
+                  zIndex: 200,
+                  primaryColor: theme.palette.button.main,
+                  backgroundColor: theme.palette.secondaryBackground.main,
+                  arrowColor: theme.palette.secondaryBackground.main,
+                  textColor: theme.palette.text.primary
+                }
+              }}
+            />
+          </PreviousLocationProvider>
         </ThemeProvider>
       </LocalizationProvider>
     </StyledEngineProvider>

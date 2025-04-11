@@ -234,6 +234,8 @@ jobs:
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
+            echo 'METRICS_AUTH="${{ secrets.METRICS_AUTH }}"' >> ./server/.env
+            echo 'BEARER_TOKEN="${{ secrets.BEARER_TOKEN }}"' >> ./server/.env
 
 
             if [ ! -f "docker-compose-server.yml" ]; then
@@ -297,15 +299,19 @@ jobs:
 
               GRAFANA_USERID=$(grep 'GRAFANA_USERID' $MONITORING_DIR/.env | cut -d '=' -f2)
               GRAFANA_PSWD=$(grep 'GRAFANA_PSWD' $MONITORING_DIR/.env | cut -d '=' -f2)
+              METRICS_AUTH=$(grep 'METRICS_AUTH' $MONITORING_DIR/.env | cut -d '=' -f2)
 
-              if [ -z "$GRAFANA_USERID" ] || [ -z "$GRAFANA_PSWD" ]; then
-                echo "Error: Grafana credentials are missing in .env file."
+              if [ -z "$GRAFANA_USERID" ] || [ -z "$GRAFANA_PSWD" ] || [ -z "$METRICS_AUTH" ]; then
+                echo "Error: Credentials are missing in .env file."
                 exit 1
               fi
 
               echo "Updating prometheus.yml with Grafana credentials..."
               sed -i s/__GRAFANA_USERID__/$GRAFANA_USERID/g $MONITORING_DIR/prometheus.yml
               sed -i s/__GRAFANA_PSWD__/$GRAFANA_PSWD/g $MONITORING_DIR/prometheus.yml
+
+              echo "Updating prometheus.yml with metric authentication..."
+              sed -i s/__METRICS_AUTH__/$METRICS_AUTH/g $MONITORING_DIR/prometheus.yml
 
               PROMETHEUS_CONTAINER_ID=$(docker ps --filter "name=prometheus" --format "{{.ID}}")
 

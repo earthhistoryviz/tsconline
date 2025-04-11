@@ -51,7 +51,7 @@ export type WindowStats = {
   value: number;
 };
 export type ColumnInfoRoot = ColumnInfo & {
-  datapackUniqueIdentifier: DatapackUniqueIdentifier;
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
 };
 
 export type DownloadPdfMessage = {
@@ -80,11 +80,20 @@ export type ChartTabState = {
 };
 export type ChartContextType = {
   chartTabState: ChartTabState;
-  otherChartOptions?: {
+  altSaveOptions?: {
+    label: string;
+    onClick: () => void;
+  }[];
+  stateChartOptions?: {
     icon: React.ReactNode;
     label: string;
     onChange: (boolean: boolean) => void;
     value: boolean;
+  }[];
+  actionChartOptions?: {
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
   }[];
 };
 
@@ -225,32 +234,9 @@ export type ChartSettings = {
 };
 
 export type EditableUserProperties = {
-  username: string;
-  email: string;
   isAdmin: boolean;
-  pictureUrl: string | undefined;
+  accountType: string;
 };
-
-export type Marker = {
-  selected: boolean;
-  id: string;
-  element: SVGRectElement;
-  age: number; // this allows for users to empty the age field
-  depth: number; // this allows for users to empty the depth field
-  x: number; // the actual pos with no rounding
-  y: number; // the actual pos with no rounding
-  color: string;
-  comment: string;
-  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
-  line: SVGLineElement;
-};
-
-export type Model = Omit<Marker, "type" | "line"> & {
-  type: "Rect" | "Circle";
-};
-
-export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
-export const modelTypes = ["Rect", "Circle"];
 
 export type CrossPlotBounds = {
   minX: number;
@@ -269,16 +255,10 @@ export type CrossPlotBounds = {
 
 export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");
-  if (!o.datapackUniqueIdentifier)
-    throwError("ColumnInfoRoot", "datapackUniqueIdentifier", "object", o.datapackUniqueIdentifier);
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
   assertColumnInfo(o);
-}
-
-export function isMarkerType(value: string): value is Marker["type"] {
-  return markerTypes.includes(value);
-}
-export function isModelType(value: string): value is Model["type"] {
-  return modelTypes.includes(value);
 }
 
 export function assertDatapackFetchParams(o: any): asserts o is DatapackFetchParams {

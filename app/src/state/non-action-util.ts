@@ -3,14 +3,17 @@ import {
   DatapackMetadata,
   DatapackUniqueIdentifier,
   MapInfo,
+  DisplayedColumnTypes,
   SharedUser,
+  SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
-  isWorkshopDatapack
+  isWorkshopDatapack,
+  isTreatiseDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs from "dayjs";
-import { Workshop } from "../Workshops";
+import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
@@ -21,13 +24,15 @@ export function isMetadataLoading(skeletonStates: State["skeletonStates"]) {
     publicOfficialDatapacksLoading,
     privateOfficialDatapacksLoading,
     publicUserDatapacksLoading,
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading,
+    treatiseDatapackLoading
   } = skeletonStates;
   return (
     publicOfficialDatapacksLoading ||
     privateOfficialDatapacksLoading ||
     publicUserDatapacksLoading ||
-    privateUserDatapacksLoading
+    privateUserDatapacksLoading ||
+    treatiseDatapackLoading
   );
 }
 export function canEditDatapack(datapack: DatapackUniqueIdentifier, user: SharedUser) {
@@ -75,6 +80,9 @@ export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]
 export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
 }
+export function getTreatuseDatapackMetadata(datapacks: DatapackMetadata[]) {
+  return datapacks.filter((d) => isTreatiseDatapack(d));
+}
 export function getWorkshopDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));
 }
@@ -99,9 +107,15 @@ export function getNavigationRouteForWorkshopDetails(id: number) {
   return `/workshops/${id}`;
 }
 
-export function formatDate(input: string | dayjs.Dayjs): string {
+export function formatDate(input: string | number | dayjs.Dayjs): string {
   let date: Date;
   if (typeof input === "string") {
+    if (/^\d+$/.test(input)) {
+      date = new Date(Number(input));
+    } else {
+      date = new Date(input);
+    }
+  } else if (typeof input === "number") {
     date = new Date(input);
   } else if (dayjs.isDayjs(input)) {
     date = input.toDate();
@@ -127,19 +141,19 @@ export function hasLeadingTrailingWhiteSpace(input: string) {
   return input.trim() !== input;
 }
 
-export function getActiveWorkshops(workshops: Workshop[]) {
+export function getActiveWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const activeWorkshops = workshops.filter(
     (workshop) => workshop.active && new Date(workshop.start) <= now && new Date(workshop.end) >= now
   );
   return activeWorkshops;
 }
-export function getUpcomingWorkshops(workshops: Workshop[]) {
+export function getUpcomingWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const upcomingWorkshops = workshops.filter((workshop) => !workshop.active && new Date(workshop.start) > now);
   return upcomingWorkshops;
 }
-export function getPastWorkshops(workshops: Workshop[]) {
+export function getPastWorkshops(workshops: SharedWorkshop[]) {
   const now = new Date();
   const pastWorkshops = workshops.filter((workshop) => new Date(workshop.end) < now);
   return pastWorkshops;
@@ -147,6 +161,7 @@ export function getPastWorkshops(workshops: Workshop[]) {
 export function getMapImageUrl(mapInfo: MapInfo[string]) {
   return devSafeUrl(`/map-image/${mapInfo.datapackTitle}/${mapInfo.uuid}/${mapInfo.img}`);
 }
+
 export async function downloadFile(blob: Blob, filename: string) {
   const reader = new FileReader();
   reader.readAsDataURL(blob);
@@ -167,4 +182,19 @@ export async function downloadFile(blob: Blob, filename: string) {
   document.body.appendChild(aTag);
   aTag.click();
   aTag.remove();
+}
+// TODO: remove this when route for fetching cover image is finished
+export function getWorkshopCoverImage() {
+  return TSCreatorLogo;
+}
+
+export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
+  switch (displayType) {
+    case "RootColumn":
+    case "MetaColumn":
+    case "BlockSeriesMetaColumn":
+      return `class datastore.${displayType}:` + name;
+    default:
+      return `class datastore.${displayType}Column:` + name;
+  }
 }

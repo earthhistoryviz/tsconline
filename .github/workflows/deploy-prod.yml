@@ -108,6 +108,7 @@ jobs:
               ! -name "release-artifacts.zip" \
               ! -path "${{ secrets.RELEASE_PATH }}/.yarn*" \
               ! -path "${{ secrets.RELEASE_PATH }}/server/db/TSC.db" \
+              ! -path "${{ secrets.RELEASE_PATH }}/server/assets/uploads/*" \
               -type f -exec sudo rm -f {} +
             find ${{ secrets.RELEASE_PATH }} -mindepth 1 -type d -empty -exec sudo rmdir {} +
 
@@ -131,6 +132,8 @@ jobs:
             echo 'ADMIN_PASS="${{ secrets.ADMIN_PASS }}"' >> ./server/.env
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="${{ vars.DOMAIN }}"' >> ./server/.env
+            echo 'METRICS_AUTH="${{ secrets.METRICS_AUTH }}"' >> ./server/.env
+            echo 'BEARER_TOKEN="${{ secrets.BEARER_TOKEN }}"' >> ./server/.env
 
             if [ ! -f "$COMPOSE_FILE" ]; then
               echo "Error: $COMPOSE_FILE not found"

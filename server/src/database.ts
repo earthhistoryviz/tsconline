@@ -52,6 +52,10 @@ Database Schema Details (Post-Migration):
   - title (text): Non-nullable, the title of the workshop.
   - start (datetime): Non-nullable, the start date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
   - end (datetime): Non-nullable, the end date/time of the workshop. Make sure to always use ISO 8601 format. Easy way to get this is by using new Date().toISOString().
+  - creatorUUID (text): Non-nullable, the UUID of the user who created the workshop, default is "default".
+  - regLink (text): Non-nullable, the registration link for the workshop.
+  - regRestrict (integer): Non-nullable, default is 0. 0 means no restrictions, 1 means restricted.
+  - description (text): Non-nullable, the description of the workshop.
 
 - usersWorkshops Table:
   - workshopId (integer): Non-nullable, links to the workshop table.
@@ -133,7 +137,7 @@ export async function initializeDatabase() {
       emailVerified: 1,
       invalidateSession: 0,
       isAdmin: 1,
-      accountType: "default"
+      accountType: "pro"
     });
   }
 }
@@ -292,6 +296,9 @@ export async function findWorkshop(criteria: Partial<Workshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
+  if (criteria.creatorUUID) query = query.where("creatorUUID", "=", criteria.creatorUUID);
+  if (criteria.regLink) query = query.where("regLink", "=", criteria.regLink);
+  if (criteria.regRestrict) query = query.where("regRestrict", "=", criteria.regRestrict);
   return await query.selectAll().execute();
 }
 
@@ -370,4 +377,14 @@ export async function isUserInAnActiveWorkshop(userId: number): Promise<boolean>
 export async function isUserInWorkshopAndWorkshopIsActive(userId: number, workshopId: number): Promise<boolean> {
   const workshop = await getActiveWorkshopsUserIsIn(userId);
   return workshop.some((workshop) => workshop.workshopId === workshopId);
+}
+
+/**
+ * Check if user is in specified workshop
+ * @param userId The user ID to check
+ * @param workshopId The workshop ID to check
+ */
+export async function isUserInWorkshop(userId: number, workshopId: number): Promise<boolean> {
+  const usersWorkshops = await findUsersWorkshops({ userId, workshopId });
+  return usersWorkshops.length > 0;
 }

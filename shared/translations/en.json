@@ -62,7 +62,7 @@
                     },
                     "collaborate": {
                         "title": "Collaborate with Others",
-                        "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
+                        "description": "View other users&apos; datapacks and collaborate to expand your knowledge and expertise."
                     }
                 }
             },
@@ -106,7 +106,7 @@
         "login": {
             "signin": "Sign In",
             "forgot-password": "Forgot password?",
-            "signup": "Don't have an account? Sign Up",
+            "signup": "Don&apos;t have an account? Sign Up",
             "username": "Username",
             "password": "Password",
             "tooltip": "Account Settings",
@@ -182,7 +182,8 @@
                 "messages": {
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available"
-                }
+                },
+                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!"
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",
@@ -220,20 +221,20 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
-            "create-datapack": "Create Datapack",
             "time": {
-                "no-unit-selected": "No unit selected",
                 "select-unit": "Please select a unit.",
                 "no-chart-units-available": "No units available",
                 "disabled-unit-reason": "You cannot change the age unit since it must be on the x-axis.",
                 "select-datapack": "Please select a datapack.",
+                "no-unit-selected": "No unit selected",
                 "xAxis": "X Axis (Age-only)",
                 "yAxis": "Y Axis (Age/Depth)"
             },
             "sidebar": {
                 "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
-            }
+            },
+            "create-datapack": "Create Datapack"
         },
         "settingsTabs": {
             "Time": "Time",
@@ -246,6 +247,7 @@
             "General": "General",
             "Data Mining": "Data Mining",
             "Curve Drawing": "Curve Drawing",
+            "Overlay": "Overlay",
             "About": "About",
             "View Data": "View Data",
             "Discussion": "Discussion",
@@ -277,13 +279,13 @@
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
                     "hide-block-labels": "Hide block labels based on priority",
-                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
+                    "use-suggested-age-spans": "Do not use the Data-Pack&apos;s suggested age span"
                 },
                 "settings-file": {
                     "load": "Load Settings",
                     "save": "Save Settings",
                     "load-dialog": {
-                        "message": "This will overwrite any changes you've made!",
+                        "message": "This will overwrite any changes you&apos;ve made!",
                         "cancel": "Cancel",
                         "load": "Load"
                     },
@@ -372,6 +374,15 @@
                     "curve-gradient": "Curve Gradient",
                     "start": "Start",
                     "end": "End"
+                },
+                "overlay-menu": {
+                    "title": "Overlay Settings",
+                    "display-overlay": "Display Overlay",
+                    "overlay-column-header": "Overlaying",
+                    "overlay-column-preposition": "On",
+                    "overlay-accordion-caption": "*Grayed out columns are disabled for Overlay (not Event or Point column)",
+                    "invalid-column-mouseover": "Not an Event or Point Column",
+                    "column-not-selected": "Select Column from Menu"
                 }
             },
             "search": {
@@ -404,12 +415,12 @@
                     "public-official": "Official Datapacks",
                     "contributed": "User Contributed Datapacks",
                     "workshop": "Workshop Datapacks",
-                    "your": "Your Datapacks"
+                    "your": "Your Datapacks",
+                    "treatise": "Treatise Datapacks"
                 },
                 "no": "No",
                 "avaliable": "Avaliable",
                 "upload": "Upload Datapack",
-                "pdf-upload": "PDF Upload",
                 "seeMore": "See More...",
                 "seeLess": "See Less...",
                 "upload-form": {
@@ -436,7 +447,8 @@
                     "notes": "Notes",
                     "notes-placeholder": "Enter notes for the datapack here",
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
-                }
+                },
+                "pdf-upload": "PDF Upload"
             }
         },
         "chart": {
@@ -460,7 +472,7 @@
         "help": {
             "qsg": {
                 "title": "Quick Start Quide",
-                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.",
+                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the &apos;Start QSG&apos; button to begin.",
                 "button": "Start QSG"
             },
             "tour": {
@@ -493,6 +505,7 @@
             "INVALID_CHART_RESPONSE": "Invalid chart response received from server. Please try again later.",
             "INVALID_PATH": "The requested path was invalid. Please ensure the path is correct.",
             "INVALID_DATAPACK_UPLOAD": "Invalid datapack upload.",
+            "INVALID_DATAPACK_PHYLUM": "Invalid treatise datapack phylum provided.",
             "REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE": "Uploaded datapack is over 3000 characters.",
             "INVALID_USER_DATAPACKS": "Invalid user datapacks received from server. Please try again later.",
             "INVALID_PUBLIC_DATAPACKS": "Invalid public datapacks received from server. Please try again later.",
@@ -545,6 +558,7 @@
             "UNABLE_TO_FETCH_USER_DATAPACKS": "Unable to fetch user datapacks. Please try again later.",
             "CANNOT_DELETE_ROOT_USER": "Cannot delete root user.",
             "ADMIN_DELETE_USER_DATAPACK_FAILED": "Unable to delete user datapack. Please try again later.",
+            "ADMIN_MODIFY_USER_FAILED": "Unable to modify user. Please try again later.",
             "ADMIN_DELETE_SERVER_DATAPACK_FAILED": "Unable to delete server datapack. Please try again later.",
             "ADMIN_CANNOT_DELETE_ROOT_DATAPACK": "Cannot delete root datapack. Ask server admin for assistance.",
             "INVALID_SERVER_DATAPACK_REQUEST": "Invalid server datapack request. Please try again later.",
@@ -561,7 +575,7 @@
             "ADMIN_WORKSHOP_START_AFTER_END": "The start date must be before the end date.",
             "ADMIN_CREATE_WORKSHOP_FAILED": "Unable to create workshop. Please try again later.",
             "ADMIN_WORKSHOP_ALREADY_EXISTS": "Workshop with that title and dates already exists. Please try again.",
-            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
+            "FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
             "ADMIN_DELETE_WORKSHOP_FAILED": "Unable to delete workshop. Please try again later.",
             "ADMIN_WORKSHOP_NOT_FOUND": "Workshop not found on server, it has likely ended or been deleted.",
             "ADMIN_WORKSHOP_EDIT_FAILED": "Unable to edit workshop. Please try again later.",
@@ -581,7 +595,17 @@
             "INVALID_CROSSPLOT_UNITS": "Please select a different unit for the Y Axis. This unit cannot be converted.",
             "CROSSPLOT_CONVERSION_FAILED": "Crossplot conversion failed. Please try again later.",
             "NO_MODELS": "At least 2 models are required for conversion. Please add a model by clicking the chart in the main view.",
-            "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes."
+            "CROSSPLOT_SETTINGS_MISMATCH": "Crossplot settings mismatch. Please generate the crossplot with your most recent changes.",
+            "ADMIN_ADD_FILES_TO_WORKSHOP_FAILED": "Failed to add files to workshop",
+            "ADMIN_ADD_COVER_TO_WORKSHOP_FAILED": "Failed to add cover to workshop",
+            "INVALID_FILE_FORMAT": "Invalid file format.",
+            "WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
+            "WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED": "Please register for the workshop to download the file.",
+            "INVALID_DATAPACK_HASH": "Invalid treatise datapack hash provided.",
+            "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
+            "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
+            "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history."
         },
         "button": {
             "generate": "Generate",

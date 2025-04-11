@@ -167,7 +167,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       )}
       <AgGridReact
         columnDefs={workshopColDefs}
-        rowData={Array.from(state.admin.workshops.values())}
+        rowData={Array.from(state.workshops.values())}
         components={{ ActionsCellRenderer }}
         context={{
           setEditWorkshopFormOpen,

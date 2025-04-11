@@ -13,9 +13,7 @@ import {
   EditableDatapackMetadata,
   CrossPlotTimeSettings,
   ChartTabState,
-  Marker,
-  CrossPlotBounds,
-  Model
+  CrossPlotBounds
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -31,13 +29,14 @@ import type {
   SharedWorkshop,
   Datapack,
   DatapackPriorityChangeRequest,
-  DatapackMetadata
+  DatapackMetadata,
+  Marker,
+  Model
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
 import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../constants";
 import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
-import { Workshop } from "../Workshops";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
@@ -61,6 +60,7 @@ export type State = {
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
     converting: boolean;
+    autoPlotting: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -89,13 +89,13 @@ export type State = {
   admin: {
     displayedUsers: AdminSharedUser[];
     displayedUserDatapacks: { [uuid: string]: DatapackIndex };
-    workshops: SharedWorkshop[];
     datapackPriorityLoading: boolean;
     datapackConfig: {
       tempRowData: DatapackMetadata[] | null;
       rowPriorityUpdates: DatapackPriorityChangeRequest[];
     };
   };
+  workshops: SharedWorkshop[];
   datapackProfilePage: {
     editMode: boolean;
     editableDatapackMetadata: EditableDatapackMetadata | null;
@@ -129,8 +129,8 @@ export type State = {
     privateOfficialDatapacksLoading: boolean;
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
+    treatiseDatapackLoading: boolean;
   };
-  workshops: Workshop[]; // TODO: This needs to be changed once the backend is implemented.We need to discuss what should be included in this type, as Prof.Ogg mentioned he wants it to reflect the actual workshop he conducted.
   mapPatterns: {
     patterns: Patterns;
     sortedPatterns: Patterns[string][];
@@ -175,7 +175,8 @@ export const state = observable<State>({
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
     crossPlotBounds: undefined,
-    converting: false
+    converting: false,
+    autoPlotting: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -186,23 +187,25 @@ export const state = observable<State>({
     pictureUrl: "",
     isGoogleUser: false,
     isAdmin: false,
+    accountType: "",
     uuid: "",
     workshopIds: [],
     settings: {
       darkMode: getInitialDarkMode(),
       language: "English"
-    }
+    },
+    historyEntries: []
   },
   admin: {
     displayedUsers: [],
     displayedUserDatapacks: {},
-    workshops: [],
     datapackPriorityLoading: false,
     datapackConfig: {
       tempRowData: null,
       rowPriorityUpdates: []
     }
   },
+  workshops: [],
   datapackProfilePage: {
     editMode: false,
     editableDatapackMetadata: null,
@@ -268,9 +271,9 @@ export const state = observable<State>({
     publicOfficialDatapacksLoading: true,
     privateOfficialDatapacksLoading: true,
     publicUserDatapacksLoading: true,
-    privateUserDatapacksLoading: true
+    privateUserDatapacksLoading: true,
+    treatiseDatapackLoading: true
   },
-  workshops: [],
   mapPatterns: {
     patterns: {},
     sortedPatterns: []

@@ -13,13 +13,37 @@ export type SharedWorkshop = {
   end: string;
   workshopId: number;
   active: boolean;
+  regRestrict: boolean;
+  creatorUUID: string;
+  regLink?: string;
+  description?: string;
+  files?: string[];
+  datapacks?: string[];
 };
 
 export type ConvertCrossPlotRequest = {
-  datapackTitle: string;
-  uuid: string;
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[];
   models: string;
   settings: string;
+};
+
+export type AutoPlotRequest = {
+  datapackUniqueIdentifiers: DatapackUniqueIdentifier[]; // require at least 2
+  settings: string;
+};
+export type AutoPlotResponse = {
+  markers: AutoPlotMarker[];
+};
+
+export type ChartHistory = {
+  settings: string;
+  datapacks: Datapack[];
+  chartContent: string;
+  chartHash: string;
+};
+
+export type HistoryEntry = {
+  timestamp: string;
 };
 
 export type SharedUser = {
@@ -28,8 +52,10 @@ export type SharedUser = {
   pictureUrl: string | null;
   isGoogleUser: boolean;
   isAdmin: boolean;
+  accountType: string;
   workshopIds?: number[];
   uuid: string;
+  historyEntries: HistoryEntry[];
 };
 
 export type AdminSharedUser = {
@@ -61,7 +87,10 @@ export type UserDatapack = {
   type: "user";
   uuid: string;
 };
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack;
+export type TreatiseDatapack = {
+  type: "treatise";
+};
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TreatiseDatapack;
 export type DatapackTypeString = DatapackType["type"];
 
 export type DatapackMetadata = {
@@ -617,24 +646,111 @@ export type DatapackPriorityUpdateSuccess = {
 
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
+export type Marker = {
+  selected: boolean;
+  id: string;
+  element: SVGRectElement;
+  age: number; // this allows for users to empty the age field
+  depth: number; // this allows for users to empty the depth field
+  x: number; // the actual pos with no rounding
+  y: number; // the actual pos with no rounding
+  color: string;
+  comment: string;
+  type: "Rect" | "Circle" | "BASE(FAD)" | "TOP(LAD)";
+  line: SVGLineElement;
+};
+
+export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
+
+export type Model = Omit<Marker, "type" | "line"> & {
+  type: "Rect" | "Circle";
+};
+
+export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
+export const modelTypes = ["Rect", "Circle"];
+
+export function getMarkerTypeFromNum(num: number): Marker["type"] {
+  if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {
+    throw new Error(`Invalid marker type number: ${num}`);
+  }
+  return markerTypes[num - 1] as Marker["type"];
+}
+export function isMarkerType(value: string): value is Marker["type"] {
+  return markerTypes.includes(value);
+}
+export function isModelType(value: string): value is Model["type"] {
+  return modelTypes.includes(value);
+}
+
+export function isAutoPlotMarkerArray(o: any): o is AutoPlotMarker[] {
+  return Array.isArray(o) && o.every(isAutoPlotMarker);
+}
+export function isAutoPlotMarker(o: any): o is AutoPlotMarker {
+  return (
+    o &&
+    typeof o === "object" &&
+    typeof o.id === "string" &&
+    typeof o.age === "number" &&
+    typeof o.depth === "number" &&
+    typeof o.color === "string" &&
+    typeof o.comment === "string" &&
+    typeof o.type === "string"
+  );
+}
+export function assertAutoPlotResponse(o: any): asserts o is AutoPlotResponse {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotResponse must be a non-null object");
+  if (!Array.isArray(o.markers)) throwError("AutoPlotResponse", "markers", "array", o.markers);
+  for (const marker of o.markers) {
+    assertAutoPlotMarker(marker);
+  }
+}
+export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotMarker must be a non-null object");
+  if (typeof o.id !== "string") throwError("AutoPlotMarker", "id", "string", o.id);
+  if (typeof o.age !== "number") throwError("AutoPlotMarker", "age", "number", o.age);
+  if (typeof o.depth !== "number") throwError("AutoPlotMarker", "depth", "number", o.depth);
+  if (typeof o.color !== "string") throwError("AutoPlotMarker", "color", "string", o.color);
+  if (typeof o.comment !== "string") throwError("AutoPlotMarker", "comment", "string", o.comment);
+  if (typeof o.type !== "string") throwError("AutoPlotMarker", "type", "string", o.type);
+}
+
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   o: DatapackConfigForChartRequest
 ): DatapackUniqueIdentifier {
   return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
 }
 
+export function assertChartHistory(o: any): asserts o is ChartHistory {
+  if (!o || typeof o !== "object") throw new Error("ChartHistory must be a non-null object");
+  if (typeof o.settings !== "string") throwError("ChartHistory", "settings", "string", o.settings);
+  if (typeof o.chartContent !== "string") throwError("ChartHistory", "chartContent", "string", o.chartContent);
+  if (typeof o.chartHash !== "string") throwError("ChartHistory", "chartHash", "string", o.chartHash);
+  assertDatapackArray(o.datapacks);
+}
+
+export function assertAutoPlotRequest(o: any): asserts o is AutoPlotRequest {
+  if (!o || typeof o !== "object") throw new Error("AutoPlotRequest must be a non-null object");
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
+  if (o.datapackUniqueIdentifiers.length < 2) {
+    throw new Error("AutoPlotRequest must have at least 2 datapackUniqueIdentifiers");
+  }
+  if (typeof o.settings !== "string") throwError("AutoPlotRequest", "settings", "string", o.settings);
+}
 export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCrossPlotRequest {
   if (!o || typeof o !== "object") throw new Error("ConvertCrossPlotRequest must be a non-null object");
-  if (typeof o.datapackTitle !== "string")
-    throwError("ConvertCrossPlotRequest", "datapackTitle", "string", o.datapackTitle);
-  if (typeof o.uuid !== "string") throwError("ConvertCrossPlotRequest", "uuid", "string", o.uuid);
+  for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
+    assertDatapackUniqueIdentifier(datapackUniqueIdentifier);
+  }
   if (typeof o.models !== "string") throwError("ConvertCrossPlotRequest", "models", "string", o.models);
   if (typeof o.settings !== "string") throwError("ConvertCrossPlotRequest", "settings", "string", o.settings);
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
-  return datapackType.type === "official" ? "official" : datapackType.uuid;
+  return datapackType.type === "official" || datapackType.type === "treatise" ? datapackType.type : datapackType.uuid;
 }
+
 export function isOfficialUUID(uuid: string): boolean {
   return uuid === "official";
 }
@@ -698,6 +814,21 @@ export function assertSharedWorkshop(o: any): asserts o is SharedWorkshop {
   if (typeof o.end !== "string") throwError("Workshop", "end", "string", o.end);
   if (typeof o.workshopId !== "number") throwError("Workshop", "workshopId", "number", o.workshopId);
   if (typeof o.active !== "boolean") throwError("Workshop", "active", "boolean", o.active);
+  if (o.description !== undefined && typeof o.description !== "string")
+    throwError("Workshop", "description", "string", o.description);
+  if (typeof o.regRestrict !== "boolean") throwError("Workshop", "regRestrict", "boolean", o.regRestrict);
+  if (typeof o.creatorUUID !== "string") throwError("Workshop", "creatorUUID", "string", o.creatorUUID);
+  if (o.regLink !== undefined && typeof o.regLink !== "string") throwError("Workshop", "regLink", "string", o.regLink);
+  if (o.files !== undefined && o.files !== null) {
+    for (const file of o.files) {
+      if (typeof file !== "string") throwError("Workshop", "files", "string", file);
+    }
+  }
+  if (o.datapacks !== undefined && o.datapacks !== null) {
+    for (const datapack of o.datapacks) {
+      if (typeof datapack !== "string") throwError("Workshop", "datapack", "string", datapack);
+    }
+  }
 }
 
 export function assertSharedWorkshopArray(o: any): asserts o is SharedWorkshop[] {
@@ -746,6 +877,18 @@ export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser
   }
 }
 
+export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
+  if (!o || typeof o !== "object") throw new Error("HistoryEntry must be a non-null object");
+  if (typeof o.timestamp !== "string") throwError("HistoryEntry", "timestamp", "string", o.timestamp);
+}
+
+export function assertHistoryEntryArray(o: any): asserts o is HistoryEntry[] {
+  if (!Array.isArray(o)) throw new Error("HistoryEntry must be an array");
+  for (const entry of o) {
+    assertHistoryEntry(entry);
+  }
+}
+
 export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
   if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
@@ -762,12 +905,14 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("User", "pictureUrl", "string", o.pictureUrl);
   if (typeof o.isGoogleUser !== "boolean") throwError("User", "isGoogleUser", "boolean", o.isGoogleUser);
   if (typeof o.isAdmin !== "boolean") throwError("User", "isAdmin", "boolean", o.isAdmin);
+  if (typeof o.accountType !== "string") throwError("User", "accountType", "string", o.accountType);
   if (typeof o.uuid !== "string") throwError("User", "uuid", "string", o.uuid);
   if (o.workshopIds != undefined) {
     for (const workshopId of o.workshopIds) {
       if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
     }
   }
+  assertHistoryEntryArray(o.historyEntries);
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {
@@ -817,11 +962,11 @@ export function assertPointSettings(o: any): asserts o is PointSettings {
       "string and Frequency | Maximum Value | Minimum Value | Average Value | Rate of Change | Overlay",
       o.dataMiningPointDataType
     );
-  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
-    throwError("PointSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  if (o.dualColCompColumnRef != null && typeof o.dualColCompColumnRef !== "string") {
+    throwError("PointSettings", "dualColCompColumnRef", "string or null", o.dualColCompColumnRef);
   }
-  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
-    throwError("PointSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string") {
+    throwError("PointSettings", "drawDualColCompColumn", "string or null", o.drawDualColCompColumn);
   }
   assertDataMiningSettings(o);
 }
@@ -877,11 +1022,11 @@ export function assertEventSettings(o: any): asserts o is EventSettings {
     );
   if (o.frequency != null && (typeof o.frequency !== "string" || !isEventFrequency(o.frequency)))
     throwError("EventSettings", "frequency", "string and FAD | LAD | Combined", o.frequency);
-  if (typeof o.dualColCompColumnRef !== "string" && o.dualColCompColumnRef != null) {
-    throwError("EventSettings", "dualColCompColumnRef", "string", o.dualColCompColumnRef);
+  if (o.dualColCompColumnRef != null && typeof o.dualColCompColumnRef !== "string") {
+    throwError("PointSettings", "dualColCompColumnRef", "string or null", o.dualColCompColumnRef);
   }
-  if (typeof o.drawDualColCompColumn !== "string" && o.drawDualColCompColumn != null) {
-    throwError("EventSettings", "drawDualColCompColumn", "string", o.drawDualColCompColumn);
+  if (o.drawDualColCompColumn != null && typeof o.drawDualColCompColumn !== "string") {
+    throwError("PointSettings", "drawDualColCompColumn", "string or null", o.drawDualColCompColumn);
   }
   assertDataMiningSettings(o);
 }
@@ -1191,10 +1336,10 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function isDatapackTypeString(o: any): o is DatapackTypeString {
-  return /^(user|official|workshop)$/.test(o);
+  return /^(user|official|workshop|treatise)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
-  if (typeof o !== "string" || !/^(user|official|workshop)$/.test(o))
+  if (typeof o !== "string" || !/^(user|official|workshop|treatise)$/.test(o))
     throwError("DatapackType", "type", "string and user | server | workshop", o);
 }
 export function assertTransects(o: any): asserts o is Transects {
@@ -1224,6 +1369,9 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";
 }
+export function isTreatiseDatapack(o: any): o is TreatiseDatapack {
+  return o.type === "treatise";
+}
 export function assertDatapackType(o: any): asserts o is DatapackType {
   if (!o || typeof o !== "object") throw new Error("DatapackType must be a non-null object");
   switch (o.type) {
@@ -1236,8 +1384,11 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "workshop":
       assertWorkshopDatapack(o);
       break;
+    case "treatise":
+      assertTreatiseDatapack(o);
+      break;
     default:
-      throwError("Datapack", "type", "user | official | workshop", o.type);
+      throwError("Datapack", "type", "user | official | workshop | treatise", o.type);
   }
 }
 export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
@@ -1257,7 +1408,11 @@ export function assertUserDatapack(o: any): asserts o is UserDatapack {
   if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
   if (typeof o.uuid !== "string" || o.uuid.length == 0) throwError("PublicUserDatapack", "uuid", "string", o.uuid);
 }
-
+export function assertTreatiseDatapack(o: any): asserts o is TreatiseDatapack {
+  if (!o || typeof o !== "object") throw new Error("TreatiseDatapack must be a non-null object");
+  if (typeof o.type !== "string") throwError("TreatiseDatapack", "type", "string", o.type);
+  if (o.type !== "treatise") throwError("TreatiseDatapack", "type", "treatise", o.type);
+}
 export function assertSubBlockInfo(o: any): asserts o is SubBlockInfo {
   if (!o || typeof o !== "object") throw new Error("SubBlockInfo must be a non-null object");
   if (typeof o.label !== "string") throwError("SubBlockInfo", "label", "string", o.label);
@@ -1853,7 +2008,10 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
     case "user":
       assertUserDatapack(o);
       break;
+    case "treatise":
+      assertTreatiseDatapack(o);
+      break;
     default:
-      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user | treatise", o.type);
   }
 }
