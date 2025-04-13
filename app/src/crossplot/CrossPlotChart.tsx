@@ -26,7 +26,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
-  const [title, setTitle] = useState("Converted Datapack Name");
+  const [userInput, setUserInput] = useState("");
   const [saveFileNameModalOpen, setSaveFileNameModalOpen] = useState(false);
   const [saveAction, setSaveAction] = useState<SaveAction>("download");
   const shouldLoadRecaptcha = state.isLoggedIn;
@@ -121,9 +121,10 @@ export const CrossPlotChart: React.FC = observer(() => {
         </Box>
       </ChartContext.Provider>
       <CrossPlotFileNameModal
-        title={title}
+      title={saveAction === "download" ? "Save file as...": "Upload datapack as..."}
+        fileName={userInput}
         saveAction={saveAction}
-        setTitle={setTitle}
+        setFileName={setUserInput}
         open={saveFileNameModalOpen}
         setOpen={setSaveFileNameModalOpen}
         onClose={() => setSaveFileNameModalOpen(false)}
@@ -131,15 +132,18 @@ export const CrossPlotChart: React.FC = observer(() => {
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+            if (!userInput) {
+              actions.pushSnackbar("Filename is not valid", "warning");
+            }
             try {
               setSaveFileNameModalOpen(false);
               setLoading(true);
               e.preventDefault(); // to stop website from reloading
               // get the value of the input
               if (saveAction === "download") {
-                actions.saveConvertedDatapack(navigate, title);
+                actions.saveConvertedDatapack(navigate, userInput);
               } else {
-                actions.uploadConvertedDatapackToProfile(navigate, title);
+                actions.uploadConvertedDatapackToProfile(navigate, userInput);
               }
             } finally {
               setLoading(false);
@@ -163,7 +167,7 @@ const MismatchModal: React.FC = observer(() => {
             Crossplot Chart Not Created
           </Typography>
           <Typography fontSize="1rem" fontWeight={400}>
-            No crossplot chart has been created yet. Please configure your crossplot settings and click the button below
+            Please configure your desired crossplot settings and click the button below
             to generate a crossplot chart.
           </Typography>
           <Box className={styles.changeButtons}>
@@ -183,13 +187,13 @@ const MismatchModal: React.FC = observer(() => {
     <Box className={styles.modal}>
       <Box className={styles.modalContent} bgcolor="secondaryBackground.main">
         <Typography fontSize="1.25rem" fontWeight={500}>
-          Settings Mismatch
+          Chart Out of Date
         </Typography>
         <Typography fontSize="1rem" fontWeight={400}>
-          The settings you are trying to use do not match the current crossplot.
+          When you're ready, click the button below to apply your changes.
         </Typography>
         <Box className={styles.changeButtons}>
-          <Button variant="outlined">Reset</Button>
+          <Button variant="outlined">Revert Changes</Button>
           <TSCButton buttonType="gradient" onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             Apply Changes
           </TSCButton>

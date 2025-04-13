@@ -15,27 +15,29 @@ import { SaveAction } from "./CrossPlotChart";
 import { TSCButton } from "../components";
 
 type CrossPlotFileNameModalProps = {
-  title: string;
-  setTitle: (title: string) => void;
+  fileName: string;
+  setFileName: (title: string) => void;
   saveAction: SaveAction;
   setOpen: (open: boolean) => void;
+  title: string;
 } & DialogProps;
 export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
-  title,
-  setTitle,
+  fileName,
+  setFileName,
   saveAction,
+  title,
   setOpen,
   ...props
 }) => {
   return (
     <Dialog {...props}>
-      <DialogTitle>Converted Datapack Name</DialogTitle>
+      <DialogTitle>{title}</DialogTitle>
       <DialogContent>
         <FormControl sx={{ m: 1, width: "25ch" }} variant="outlined">
           <OutlinedInput
             endAdornment={<InputAdornment position="end">{saveAction === "download" ? ".txt" : ""}</InputAdornment>}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            value={fileName}
+            onChange={(e) => setFileName(e.target.value)}
             inputProps={{
               "aria-label": "weight"
             }}
@@ -44,7 +46,7 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
       </DialogContent>
       <DialogActions>
         <Button variant="outlined" onClick={(e) => setOpen(false)}>
-            Exit
+            cancel
         </Button>
         <TSCButton type="submit">
             Save
