@@ -1,5 +1,5 @@
 import {
-    Button,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
@@ -20,6 +20,7 @@ type CrossPlotFileNameModalProps = {
   saveAction: SaveAction;
   setOpen: (open: boolean) => void;
   title: string;
+  placeholder?: string;
 } & DialogProps;
 export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
   fileName,
@@ -27,6 +28,7 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
   saveAction,
   title,
   setOpen,
+  placeholder,
   ...props
 }) => {
   return (
@@ -35,7 +37,9 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
       <DialogContent>
         <FormControl sx={{ m: 1, width: "25ch" }} variant="outlined">
           <OutlinedInput
+            autoFocus
             endAdornment={<InputAdornment position="end">{saveAction === "download" ? ".txt" : ""}</InputAdornment>}
+            placeholder={placeholder}
             value={fileName}
             onChange={(e) => setFileName(e.target.value)}
             inputProps={{
@@ -46,11 +50,9 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
       </DialogContent>
       <DialogActions>
         <Button variant="outlined" onClick={(e) => setOpen(false)}>
-            cancel
+          cancel
         </Button>
-        <TSCButton type="submit">
-            Save
-        </TSCButton>
+        <TSCButton type="submit">Save</TSCButton>
       </DialogActions>
     </Dialog>
   );

@@ -43,7 +43,7 @@ export const CrossPlotChart: React.FC = observer(() => {
           chartTabState: state.crossPlot.state,
           altSaveOptions: [
             {
-              label: "Save Converted Datapack",
+              label: "Download Converted Datapack",
               onClick: () => {
                 setSaveAction("download");
                 setSaveFileNameModalOpen(true);
@@ -121,7 +121,7 @@ export const CrossPlotChart: React.FC = observer(() => {
         </Box>
       </ChartContext.Provider>
       <CrossPlotFileNameModal
-      title={saveAction === "download" ? "Save file as...": "Upload datapack as..."}
+        title={saveAction === "download" ? "Save file as..." : "Upload datapack as..."}
         fileName={userInput}
         saveAction={saveAction}
         setFileName={setUserInput}
@@ -129,6 +129,7 @@ export const CrossPlotChart: React.FC = observer(() => {
         setOpen={setSaveFileNameModalOpen}
         onClose={() => setSaveFileNameModalOpen(false)}
         disableRestoreFocus
+        placeholder={saveAction === "download" ? "Enter filename" : "Enter datapack title"}
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
@@ -167,8 +168,7 @@ const MismatchModal: React.FC = observer(() => {
             Crossplot Chart Not Created
           </Typography>
           <Typography fontSize="1rem" fontWeight={400}>
-            Please configure your desired crossplot settings and click the button below
-            to generate a crossplot chart.
+            Please configure your desired crossplot settings and click the button below to generate a crossplot chart.
           </Typography>
           <Box className={styles.changeButtons}>
             <TSCButton
