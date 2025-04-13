@@ -895,6 +895,9 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
   };
   state.errors.errorAlerts.set(context, error);
 });
+export const clearSuccessSnackbars = action("clearSuccessSnackbars", () => {
+  state.snackbars = state.snackbars.filter((info) => info.severity !== "success");
+});
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
 });

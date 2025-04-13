@@ -4,6 +4,7 @@ import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   addDatapack,
+  clearSuccessSnackbars,
   processDatapackConfig,
   pushError,
   pushSnackbar,
@@ -454,7 +455,6 @@ export const saveConvertedDatapack = action(
   async (navigate: NavigateFunction, filename: string) => {
     const blob = await sendCrossPlotConversionRequest("file", navigate);
     if (!blob) {
-      pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
       return;
     }
     //TODO change this to a user generated name from the form
@@ -494,7 +494,6 @@ export const uploadConvertedDatapackToProfile = action(
     try {
       const blob = await sendCrossPlotConversionRequest("file", navigate);
       if (!blob) {
-        pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
         return;
       }
       file = new File([blob], "CrossplotConversion.txt", {
@@ -505,9 +504,10 @@ export const uploadConvertedDatapackToProfile = action(
       pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
       return;
     }
+    // remove the success snackbar if it exists
+    clearSuccessSnackbars();
     try {
       await uploadUserDatapack(file, tempMetadata);
-      pushSnackbar("Successfully uploaded converted datapack to profile", "success");
     } catch (e) {
       console.error(e);
       pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);

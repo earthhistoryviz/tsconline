@@ -28,7 +28,7 @@ export const CrossPlotChart: React.FC = observer(() => {
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
-  const [userInput, setUserInput] = useState("");
+  const [userInput, setUserInput] = useState("conversion");
   const [saveFileNameModalOpen, setSaveFileNameModalOpen] = useState(false);
   const [saveAction, setSaveAction] = useState<SaveAction>("download");
   const shouldLoadRecaptcha = state.isLoggedIn;
@@ -124,7 +124,7 @@ export const CrossPlotChart: React.FC = observer(() => {
         </Box>
       </ChartContext.Provider>
       <CrossPlotFileNameModal
-        title={saveAction === "download" ? t("crossPlot.save-modal"): t("crossPlot.upload-title")}
+        title={saveAction === "download" ? t("crossPlot.save-modal.save-filename"): t("crossPlot.upload-title")}
         fileName={userInput}
         saveAction={saveAction}
         setFileName={setUserInput}
@@ -136,13 +136,14 @@ export const CrossPlotChart: React.FC = observer(() => {
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault(); // to stop website from reloading
             if (!userInput) {
               actions.pushSnackbar("Filename is not valid", "warning");
+              return;
             }
             try {
               setSaveFileNameModalOpen(false);
               setLoading(true);
-              e.preventDefault(); // to stop website from reloading
               // get the value of the input
               if (saveAction === "download") {
                 actions.saveConvertedDatapack(navigate, userInput);
