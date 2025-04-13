@@ -235,6 +235,10 @@
                 "download-converted-datapack": "Download Converted Datapack",
                 "upload-converted-datapack": "Upload Converted Datapack to Profile"
             },
+            "save-modal": {
+                "save-filename": "Save file as...",
+                "upload-title": "Upload datapack as..."
+            },
             "time": {
                 "select-unit": "Please select a unit.",
                 "no-chart-units-available": "No units available",
