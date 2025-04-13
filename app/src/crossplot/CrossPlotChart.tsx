@@ -45,14 +45,14 @@ export const CrossPlotChart: React.FC = observer(() => {
           chartTabState: state.crossPlot.state,
           altSaveOptions: [
             {
-              label: "Download Converted Datapack",
+              label: t("crossPlot.options.download-converted-datapack"),
               onClick: () => {
                 setSaveAction("download");
                 setSaveFileNameModalOpen(true);
               }
             },
             {
-              label: "Upload Converted Datapack To Profile",
+              label: t("crossPlot.options.upload-converted-datapack"),
               onClick: () => {
                 setSaveAction("upload");
                 setSaveFileNameModalOpen(true);
@@ -61,7 +61,7 @@ export const CrossPlotChart: React.FC = observer(() => {
           ],
           actionChartOptions: [
             {
-              label: "Auto Plot",
+              label: t("crossPlot.options.auto-plot"),
               icon: <AutoFixHigh />,
               onClick: async () => {
                 try {
@@ -75,26 +75,26 @@ export const CrossPlotChart: React.FC = observer(() => {
           ],
           stateChartOptions: [
             {
-              label: "Timeline On/Off",
+              label: t("crossPlot.options.timeline"),
               icon: <img src={TimeLine} width="24" height="24" />,
               onChange: (bool: boolean) =>
                 actions.setChartTabState(state.crossPlot.state, { chartTimelineEnabled: bool }),
               value: state.crossPlot.state.chartTimelineEnabled
             },
             {
-              label: "Models",
+              label: t("crossPlot.options.models"),
               icon: <img src={ModelsIcon} width="24" height="24" />,
               onChange: actions.setCrossPlotModelMode,
               value: state.crossPlot.modelMode
             },
             {
-              label: "Markers",
+              label: t("crossPlot.options.markers"),
               icon: <img src={MarkerIcon} width="24" height="24" />,
               onChange: actions.setCrossPlotMarkerMode,
               value: state.crossPlot.markerMode
             },
             {
-              label: "Show Tooltips",
+              label: t("crossPlot.options.show-tooltips"),
               icon: <ChatRounded />,
               onChange: actions.setCrossPlotShowTooltips,
               value: state.crossPlot.showTooltips
@@ -163,22 +163,23 @@ export const CrossPlotChart: React.FC = observer(() => {
 const MismatchModal: React.FC = observer(() => {
   const navigate = useNavigate();
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
   if (!state.crossPlot.state.madeChart && !state.crossPlot.state.chartLoading) {
     return (
       <Box className={styles.modal}>
         <Box className={styles.modalContent} bgcolor="secondaryBackground.main">
           <Typography fontSize="1.25rem" fontWeight={500}>
-            Crossplot Chart Not Created
+            {t("crossPlot.not-created.title")}
           </Typography>
           <Typography fontSize="1rem" fontWeight={400}>
-            Please configure your desired crossplot settings and click the button below to generate a crossplot chart.
+            {t("crossPlot.not-created.description")}
           </Typography>
           <Box className={styles.changeButtons}>
             <TSCButton
               startIcon={<AutoAwesome />}
               buttonType="gradient"
               onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-              Generate Crossplot
+              {t("crossPlot.not-created.generate")}
             </TSCButton>
           </Box>
         </Box>
@@ -190,15 +191,15 @@ const MismatchModal: React.FC = observer(() => {
     <Box className={styles.modal}>
       <Box className={styles.modalContent} bgcolor="secondaryBackground.main">
         <Typography fontSize="1.25rem" fontWeight={500}>
-          Chart Out of Date
+          {t("crossPlot.out-of-date.title")}
         </Typography>
         <Typography fontSize="1rem" fontWeight={400}>
-          When you're ready, click the button below to apply your changes.
+          {t("crossPlot.out-of-date.description")}
         </Typography>
         <Box className={styles.changeButtons}>
-          <Button variant="outlined">Revert Changes</Button>
+          <Button variant="outlined">{t("crossPlot.out-of-date.revert")}</Button>
           <TSCButton buttonType="gradient" onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
-            Apply Changes
+            {t("crossPlot.out-of-date.apply")}
           </TSCButton>
         </Box>
       </Box>

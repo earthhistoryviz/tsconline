@@ -67,6 +67,9 @@ export type DownloadPdfCompleteMessage = {
 
 export type ChartTabState = {
   chartTimelineEnabled: boolean;
+  downloadFilename: string;
+  downloadFiletype: "svg" | "pdf" | "png";
+  isSavingChart: boolean;
   unsafeChartContent: string;
   madeChart: boolean;
   chartLoading: boolean;

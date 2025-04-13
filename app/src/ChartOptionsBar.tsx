@@ -58,7 +58,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
-  const { chartTabState, stateChartOptions, actionChartOptions, altSaveOptions, downloadOptionLabel } = useContext(ChartContext);
+  const { chartTabState, stateChartOptions, actionChartOptions, altSaveOptions } = useContext(ChartContext);
   const { chartZoomSettings } = chartTabState;
   let width = 0;
   const optionsBarRef = useRef<HTMLDivElement>(null);
@@ -209,7 +209,6 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     );
   };
 
-
   const HelpButton = () => {
     return (
       <div>
@@ -257,10 +256,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
               </CustomTooltip>
             </Box>
           ))}
-        <DownloadButton 
-          svgRef={svgRef}
-          altSaveOptions={altSaveOptions}
-        />
+        <DownloadButton svgRef={svgRef} altSaveOptions={altSaveOptions} />
       </div>
       <div className="flex-row" ref={helpRef}>
         <HelpButton />
@@ -280,12 +276,10 @@ type DownloadButtonProps = {
 const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSaveOptions }) => {
   const { actions } = useContext(context);
   const { chartTabState, downloadOptionLabel } = useContext(ChartContext);
-  const { unsafeChartContent } = chartTabState;
+  const { unsafeChartContent, downloadFilename, downloadFiletype } = chartTabState;
   // download button state
   const [saveMenuState, toggleSaveMenuState] = useMenuState({ transition: true });
   const [downloadOpen, setDownloadOpen] = useState(false);
-  const [downloadFiletype, setDownloadFileType] = useState<"svg" | "pdf" | "png">("svg");
-  const [fileName, setFileName] = useState("chart");
   const theme = useTheme();
   const [isSavingChart, setIsSavingChart] = useState(false);
   const saveAnchorProps = useClick(saveMenuState.state, toggleSaveMenuState);
@@ -299,7 +293,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
     setDownloadOpen(false);
   };
   const handleFilenameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFileName(e.target.value);
+    actions.setChartTabState(chartTabState, { downloadFilename: e.target.value });
   };
 
   const svgToImageURI = (url: string, width: number, height: number): Promise<string> => {
@@ -338,7 +332,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
     try {
       if (downloadFiletype === "svg") {
         const blob = new Blob([unsafeChartContent]);
-        FileSaver.saveAs(blob, fileName + ".svg");
+        FileSaver.saveAs(blob, downloadFilename + ".svg");
         actions.pushSnackbar("Saved Chart as SVG!", "success");
       } else {
         const svgNode = svgRef?.current?.children[0];
@@ -363,10 +357,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
           actions.pushSnackbar("Failed to download chart, please try again.", "warning");
         }
         if (downloadFiletype === "pdf") {
-          actions.pushSnackbar(
-            "Generating a pdf will take a few seconds, feel free to close out of the popup",
-            "info"
-          );
+          actions.pushSnackbar("Generating a pdf will take a few seconds, feel free to close out of the popup", "info");
           const downloadWorker: Worker = new Worker(new URL("./util/workers/download-pdf.ts", import.meta.url), {
             type: "module"
           });
@@ -375,7 +366,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
           downloadWorker.onmessage = function (e: MessageEvent<DownloadPdfCompleteMessage>) {
             const { status, value } = e.data;
             if (status === "success" && value) {
-              FileSaver.saveAs(value, fileName + ".pdf");
+              FileSaver.saveAs(value, downloadFilename + ".pdf");
               actions.pushSnackbar("Saved Chart as PDF!", "success");
             } else {
               actions.pushSnackbar("Saving Chart Timed Out", "info");
@@ -384,7 +375,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
           };
         } else if (downloadFiletype === "png") {
           const a = document.createElement("a");
-          a.download = fileName + ".png"; // filename
+          a.download = downloadFilename + ".png"; // filename
           a.target = "_blank";
           a.href = imgURI;
           a.click();
@@ -398,82 +389,76 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
       setDownloadOpen(false);
     }
   }
-  const options = [{
-    label: mainOptionLabel,
-    onClick: () => {
-      handleDownloadOpen();
-    }
-  }, ...altSaveOptions || []];
+  const options = [
+    {
+      label: mainOptionLabel,
+      onClick: () => {
+        handleDownloadOpen();
+      }
+    },
+    ...(altSaveOptions || [])
+  ];
   return (
     <div>
-      {options.length > 1 ? (<><TSCButton
-        className={styles.saveButton}
-        buttonType="gradient"
-        ref={saveAnchorRef}
-        {...saveAnchorProps}
-      >
-        {t("chart.save")}
-        </TSCButton>
-      <ControlledMenu
-        {...saveMenuState}
-        anchorRef={saveAnchorRef}
-        className="settings-sub-menu"
-        direction={"top"}
-        align="start"
-        menuStyle={{
-          color: theme.palette.dark.contrastText,
-          backgroundColor: theme.palette.dark.light,
-          border: `1px solid ${theme.palette.divider}`
-        }}
-        onClose={() => toggleSaveMenuState(false)}>
-        {options.map(({ label, onClick }) => (
-          <TSCMenuItem key={label} className="" onClick={onClick}>
-            <Typography>{label}</Typography>
-          </TSCMenuItem>
-        ))}
-      </ControlledMenu></>)
-      : 
-      (
+      {options.length > 1 ? (
         <>
-        <TSCButton
-        className={styles.saveButton}
-        buttonType="gradient"
-        onClick={() => {
-          handleDownloadOpen();
-        }}
-        >
-          {mainOptionLabel}
-        </TSCButton>
+          <TSCButton className={styles.saveButton} buttonType="gradient" ref={saveAnchorRef} {...saveAnchorProps}>
+            {t("chart.save")}
+          </TSCButton>
+          <ControlledMenu
+            {...saveMenuState}
+            anchorRef={saveAnchorRef}
+            className="settings-sub-menu"
+            direction={"top"}
+            align="start"
+            menuStyle={{
+              color: theme.palette.dark.contrastText,
+              backgroundColor: theme.palette.dark.light,
+              border: `1px solid ${theme.palette.divider}`
+            }}
+            onClose={() => toggleSaveMenuState(false)}>
+            {options.map(({ label, onClick }) => (
+              <TSCMenuItem key={label} className="" onClick={onClick}>
+                <Typography>{label}</Typography>
+              </TSCMenuItem>
+            ))}
+          </ControlledMenu>
         </>
-      )
-      }
+      ) : (
+        <>
+          <TSCButton
+            className={styles.saveButton}
+            buttonType="gradient"
+            onClick={() => {
+              handleDownloadOpen();
+            }}>
+            {mainOptionLabel}
+          </TSCButton>
+        </>
+      )}
       <Dialog
         disableRestoreFocus
         open={downloadOpen}
-        onClose={(_, reason) => {
-          console.log("reason for closing", reason);
-          if (reason === "backdropClick" || reason === "escapeKeyDown") {
-            return;
-          }
+        onClose={() => {
           handleDownloadClose();
         }}
         PaperProps={{
           component: "form",
           onSubmit: (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault(); // to stop website from reloading
-            if (!isValidFilename(fileName)) {
+            if (!isValidFilename(downloadFilename)) {
               actions.pushSnackbar("Filename is not valid", "warning");
               return;
             }
             downloadChart();
           }
         }}>
-        <DialogTitle>down</DialogTitle>
+        <DialogTitle>{mainOptionLabel}</DialogTitle>
         <DialogContent>
           <DialogContentText>Please enter the filename and select filetype.</DialogContentText>
           <div className="flex-row chart-download-button">
             <TextField
-              defaultValue={fileName}
+              defaultValue={downloadFilename}
               autoFocus
               required
               margin="normal"
@@ -492,7 +477,9 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
                   value={downloadFiletype}
                   label="Age"
                   onChange={(e) => {
-                    setDownloadFileType(e.target.value as "svg" | "pdf" | "png");
+                    actions.setChartTabState(chartTabState, {
+                      downloadFiletype: e.target.value as "svg" | "png" | "pdf"
+                    });
                   }}>
                   <MenuItem value={"svg"}>.svg</MenuItem>
                   <MenuItem value={"pdf"}>.pdf</MenuItem>

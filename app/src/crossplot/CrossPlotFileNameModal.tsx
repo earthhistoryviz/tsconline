@@ -6,13 +6,12 @@ import {
   DialogProps,
   DialogTitle,
   FormControl,
-  FormHelperText,
   InputAdornment,
-  OutlinedInput,
-  TextField
+  OutlinedInput
 } from "@mui/material";
 import { SaveAction } from "./CrossPlotChart";
 import { TSCButton } from "../components";
+import { useTranslation } from "react-i18next";
 
 type CrossPlotFileNameModalProps = {
   fileName: string;
@@ -31,6 +30,7 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
   placeholder,
   ...props
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog {...props}>
       <DialogTitle>{title}</DialogTitle>
@@ -49,10 +49,10 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
         </FormControl>
       </DialogContent>
       <DialogActions>
-        <Button variant="outlined" onClick={(e) => setOpen(false)}>
-          cancel
+        <Button variant="outlined" onClick={() => setOpen(false)}>
+          {t("general-actions.cancel")}
         </Button>
-        <TSCButton type="submit">Save</TSCButton>
+        <TSCButton type="submit">{t("general-actions.save")}</TSCButton>
       </DialogActions>
     </Dialog>
   );

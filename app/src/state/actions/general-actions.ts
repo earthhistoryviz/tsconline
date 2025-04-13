@@ -1272,6 +1272,8 @@ export const setChartTabState = action("setChartTabState", (oldval: ChartTabStat
   if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
   if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
   if (newval.unsafeChartContent !== undefined) oldval.unsafeChartContent = newval.unsafeChartContent;
+  if (newval.downloadFilename !== undefined) oldval.downloadFilename = newval.downloadFilename;
+  if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
   if (newval.chartContent !== undefined) oldval.chartContent = newval.chartContent;
   if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });

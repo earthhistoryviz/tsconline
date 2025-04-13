@@ -1,5 +1,9 @@
 {
     "translation": {
+        "general-actions": {
+            "save": "Save",
+            "cancel": "Cancel"
+        },
         "landing-page": {
             "get-started": "Get Started",
             "welcome": "Welcome to TimeScale Creator!",
@@ -222,7 +226,14 @@
         },
         "crossPlot": {
             "options": {
-                "save": "Save Crossplot"
+                "save": "Save Crossplot",
+                "models": "Models",
+                "markers": "Markers",
+                "show-tooltips": "Show Tooltips",
+                "timeline": "Timeline On/Off",
+                "auto-plot": "Auto Plot",
+                "download-converted-datapack": "Download Converted Datapack",
+                "upload-converted-datapack": "Upload Converted Datapack to Profile"
             },
             "time": {
                 "select-unit": "Please select a unit.",
@@ -237,7 +248,18 @@
                 "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             },
-            "create-datapack": "Create Datapack"
+            "out-of-date": {
+                "title": "Chart Out of Date",
+                "description": "When you're ready, click the button below to apply your changes.",
+                "revert": "Revert Changes",
+                "apply": "Apply Changes"
+            },
+            "not-created": {
+                "title": "Crossplot Chart Not Created",
+                "description": "Please configure your desired crossplot settings and click the button below to generate a crossplot chart.",
+                "generate": "Generate Crossplot"
+            },
+            "create-datapack": "Create Crossplot"
         },
         "settingsTabs": {
             "Time": "Time",
