@@ -478,8 +478,7 @@
         },
         "chart": {
             "no-chart-yet": "You have not made a chart yet",
-            "save": "Save",
-            "save-chart": "Save Chart"
+            "save": "Save"
         },
         "dialogs": {
             "confirm-datapack-change": {
@@ -632,7 +631,9 @@
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn't be loaded due to missing files and has been removed from your history.",
-            "title": "Error"
+            "title": "Error",
+            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
         },
         "button": {
             "generate": "Generate",
