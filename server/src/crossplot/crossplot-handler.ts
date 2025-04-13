@@ -67,9 +67,18 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
     if (await verifyFilepath(outputTextFilepath)) {
-      const file = await readFile(outputTextFilepath, "utf-8");
-      console.log(chalk.green("Conversion already exists for this request"));
-      return file;
+      if (request.action === "file") {
+        const file = await readFile(outputTextFilepath, "utf-8");
+        console.log(chalk.green("Conversion already exists for this request"));
+        return file;
+      } else {
+        return {
+          outputTextFilepath,
+          modelsTextFilepath: path.join(dir, "models.txt"),
+          settingsTextFilepath: path.join(dir, "settings.xml"),
+          hash: hashedDir
+        };
+      }
     }
   } catch (error) {
     return { message: "Error creating directory for this conversion", code: 500 };

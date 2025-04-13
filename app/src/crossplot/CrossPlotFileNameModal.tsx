@@ -37,7 +37,7 @@ export const CrossPlotFileNameModal: React.FC<CrossPlotFileNameModalProps> = ({
       <DialogContent>
         <FormControl sx={{ m: 1, width: "25ch" }} variant="outlined">
           <OutlinedInput
-          error={fileName.length === 0}
+            error={fileName.length === 0}
             autoFocus
             endAdornment={<InputAdornment position="end">{saveAction === "download" ? ".txt" : ""}</InputAdornment>}
             placeholder={placeholder}

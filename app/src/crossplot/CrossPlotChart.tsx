@@ -124,7 +124,9 @@ export const CrossPlotChart: React.FC = observer(() => {
         </Box>
       </ChartContext.Provider>
       <CrossPlotFileNameModal
-        title={saveAction === "download" ? t("crossPlot.save-modal.save-filename"): t("crossPlot.upload-title")}
+        title={
+          saveAction === "download" ? t("crossPlot.save-modal.save-filename") : t("crossPlot.save-modal.upload-title")
+        }
         fileName={userInput}
         saveAction={saveAction}
         setFileName={setUserInput}

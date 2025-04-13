@@ -284,7 +284,7 @@ const DownloadButton: React.FC<DownloadButtonProps> = observer(({ svgRef, altSav
   const [isSavingChart, setIsSavingChart] = useState(false);
   const saveAnchorProps = useClick(saveMenuState.state, toggleSaveMenuState);
   const saveAnchorRef = useRef<HTMLButtonElement>(null);
-  const mainOptionLabel = downloadOptionLabel ?? t("chart.save-chart");
+  const mainOptionLabel = downloadOptionLabel ?? t("chart.save");
   const handleDownloadOpen = () => {
     setDownloadOpen(true);
   };

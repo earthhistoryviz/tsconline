@@ -418,6 +418,7 @@ export const sendCrossPlotConversionRequest = action(
         assertTempDatapack(datapack);
         addDatapack(datapack);
         await processDatapackConfig([datapack]);
+        clearSuccessSnackbars();
         initiateChartGeneration(navigate, "/crossplot");
       }
     } catch (e) {
