@@ -15,6 +15,7 @@ import { TSCButton } from "../components/TSCButton";
 import { useNavigate } from "react-router";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { CrossPlotFileNameModal } from "./CrossPlotFileNameModal";
+import { useTranslation } from "react-i18next";
 
 export const CROSSPLOT_MOBILE_WIDTH = 750;
 export type SaveAction = "download" | "upload";
@@ -22,6 +23,7 @@ export type SaveAction = "download" | "upload";
 export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
@@ -97,7 +99,8 @@ export const CrossPlotChart: React.FC = observer(() => {
               onChange: actions.setCrossPlotShowTooltips,
               value: state.crossPlot.showTooltips
             }
-          ]
+          ],
+          downloadOptionLabel: t("crossPlot.options.save")
         }}>
         <Box className={mobile ? styles.containerMobile : styles.container}>
           {mobile ? <MobileCrossPlotSideBar ref={ref} /> : <CrossPlotSideBar ref={ref} />}

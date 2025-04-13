@@ -221,6 +221,9 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
+            "options": {
+                "save": "Save Crossplot"
+            },
             "time": {
                 "select-unit": "Please select a unit.",
                 "no-chart-units-available": "No units available",
@@ -453,7 +456,8 @@
         },
         "chart": {
             "no-chart-yet": "You have not made a chart yet",
-            "save": "Save Chart"
+            "save": "Save",
+            "save-chart": "Save Chart"
         },
         "dialogs": {
             "confirm-datapack-change": {

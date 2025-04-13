@@ -67,9 +67,6 @@ export type DownloadPdfCompleteMessage = {
 
 export type ChartTabState = {
   chartTimelineEnabled: boolean;
-  downloadFilename: string;
-  downloadFiletype: "svg" | "pdf" | "png";
-  isSavingChart: boolean;
   unsafeChartContent: string;
   madeChart: boolean;
   chartLoading: boolean;
@@ -95,6 +92,7 @@ export type ChartContextType = {
     label: string;
     onClick: () => void;
   }[];
+  downloadOptionLabel?: string;
 };
 
 export type SetDatapackConfigMessage = {
