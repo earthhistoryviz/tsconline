@@ -36,6 +36,7 @@ import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
+import { deleteAllUserDatapacks } from "./user/user-handler.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -380,6 +381,17 @@ setInterval(async () => {
     })
     .finally(() => console.log("Successfully checked file metadata"));
 }, sunsetInterval);
+// delete all temp datapacks after one day
+setInterval(
+  () => {
+    try {
+      deleteAllUserDatapacks("temp");
+    } catch (e) {
+      logger.error("Error deleting verification: ", e);
+    }
+  },
+  1000 * 60 * 60 * 24
+); // 1 day
 setInterval(
   () => {
     try {
