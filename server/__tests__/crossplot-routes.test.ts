@@ -182,57 +182,57 @@ describe("convertCrossplot", async () => {
     const conversionChartRequest = {
       ...request,
       action: "chart"
-    }
+    };
     beforeEach(() => {
       vi.clearAllMocks();
-    })
+    });
     const uploadTemporaryDatapack = vi.spyOn(uploadDatapack, "uploadTemporaryDatapack");
-      it("should return upload fail code if operation result from upload", async () => {
-        isOperationResult.mockReturnValueOnce(false).mockReturnValueOnce(true);
-        uploadTemporaryDatapack.mockResolvedValueOnce({
-          code: 500,
-          message: "Upload failed"
-        });
-        const response = await app.inject({
-          method: "POST",
-          url,
-          payload: conversionChartRequest
-        });
-        expect(response.statusCode).toEqual(500);
-        expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
-        expect(response.json()).toEqual({ error: "Upload failed" });
+    it("should return upload fail code if operation result from upload", async () => {
+      isOperationResult.mockReturnValueOnce(false).mockReturnValueOnce(true);
+      uploadTemporaryDatapack.mockResolvedValueOnce({
+        code: 500,
+        message: "Upload failed"
       });
-      it("should return datapack if upload succeds", async () => {
-        uploadTemporaryDatapack.mockResolvedValueOnce({
-          uuid: "test-uuid",
-          title: "test-title",
-          description: "test-description",
-          originalFileName: "test-file-name"
-        } as shared.Datapack);
-        const response = await app.inject({
-          method: "POST",
-          url,
-          payload: conversionChartRequest
-        });
-        expect(response.statusCode).toEqual(200);
-        expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
-        expect(response.json()).toEqual({
-          uuid: "test-uuid",
-          title: "test-title",
-          description: "test-description",
-          originalFileName: "test-file-name"
-        });
-      })
-      it("should return 500 if upload fails", async () => {
-        uploadTemporaryDatapack.mockRejectedValueOnce(new Error("Upload failed"));
-        const response = await app.inject({
-          method: "POST",
-          url,
-          payload: conversionChartRequest
-        });
-        expect(response.statusCode).toEqual(500);
-        expect(response.json()).toEqual({ error: "Error uploading temporary datapack" });
+      const response = await app.inject({
+        method: "POST",
+        url,
+        payload: conversionChartRequest
       });
+      expect(response.statusCode).toEqual(500);
+      expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
+      expect(response.json()).toEqual({ error: "Upload failed" });
+    });
+    it("should return datapack if upload succeds", async () => {
+      uploadTemporaryDatapack.mockResolvedValueOnce({
+        uuid: "test-uuid",
+        title: "test-title",
+        description: "test-description",
+        originalFileName: "test-file-name"
+      } as shared.Datapack);
+      const response = await app.inject({
+        method: "POST",
+        url,
+        payload: conversionChartRequest
+      });
+      expect(response.statusCode).toEqual(200);
+      expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
+      expect(response.json()).toEqual({
+        uuid: "test-uuid",
+        title: "test-title",
+        description: "test-description",
+        originalFileName: "test-file-name"
+      });
+    });
+    it("should return 500 if upload fails", async () => {
+      uploadTemporaryDatapack.mockRejectedValueOnce(new Error("Upload failed"));
+      const response = await app.inject({
+        method: "POST",
+        url,
+        payload: conversionChartRequest
+      });
+      expect(response.statusCode).toEqual(500);
+      expect(response.json()).toEqual({ error: "Error uploading temporary datapack" });
+    });
   });
 });
 

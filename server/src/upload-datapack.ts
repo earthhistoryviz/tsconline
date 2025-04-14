@@ -11,7 +11,7 @@ import {
   doesDatapackFolderExistInAllUUIDDirectories,
   fetchUserDatapack
 } from "./user/user-handler.js";
-import { Datapack, DatapackMetadata, isOfficialDatapack, isWorkshopDatapack } from "@tsconline/shared";
+import { Datapack, DatapackMetadata, isOfficialDatapack, isTempDatapack, isWorkshopDatapack } from "@tsconline/shared";
 import { grabAndVerifyWorkshopUUID } from "./workshop/workshop-handler.js";
 import { findUser } from "./database.js";
 import logger from "./error-logger.js";
@@ -125,22 +125,19 @@ export const uploadTemporaryDatapack = async (
   metadata: DatapackMetadata,
   sourceFile: string
 ): Promise<OperationResult | Datapack> => {
-  if (metadata.type !== "temp") {
+  if (!isTempDatapack(metadata)) {
     return { code: 400, message: "Datapack is not a temporary datapack" };
   }
   // upload the temp datapack
   try {
-    await setupNewDatapackDirectoryInUUIDDirectory("temp", sourceFile, metadata, false);
+    await setupNewDatapackDirectoryInUUIDDirectory(metadata.type, sourceFile, metadata, false);
   } catch (e) {
     logger.error(e);
     await deleteUserDatapack("temp", metadata.title);
     return { code: 500, message: "Error creating temporary datapack directory" };
   }
   try {
-    const datapack = await fetchUserDatapack("temp", metadata.title);
-    if (!datapack) {
-      return { code: 404, message: "Datapack not found" };
-    }
+    const datapack = await fetchUserDatapack(metadata.type, metadata.title);
     return datapack;
   } catch (e) {
     logger.error(e);
