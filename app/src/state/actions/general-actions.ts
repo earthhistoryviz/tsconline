@@ -367,9 +367,6 @@ export const uploadUserDatapack = action(
           pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);
           return;
         }
-        if (pdfFiles?.length) {
-          datapack.hasFiles = true;
-        }
         addDatapack(datapack);
         if (metadata.isPublic) {
           refreshPublicDatapacks();
