@@ -46,7 +46,7 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       modelsTextFilepath,
       settingsTextFilepath
     );
-    if (!convertedCrossPlot && !(await verifyFilepath(outputTextFilepath))) {
+    if (!convertedCrossPlot || !(await verifyFilepath(outputTextFilepath))) {
       throw new Error("Conversion failed");
     }
     if (body.action === "file") {

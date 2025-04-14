@@ -8,6 +8,18 @@ import * as extractMarkers from "../src/crossplot/extract-markers";
 import * as types from "../src/types";
 import * as errorLogger from "../src/error-logger";
 import { crossPlotRoutes } from "../src/crossplot/crossplot-auth";
+import * as uploadDatapack from "../src/upload-datapack";
+
+vi.mock("../src/upload-datapack", async () => {
+  return {
+    uploadTemporaryDatapack: vi.fn().mockResolvedValue({
+      uuid: "test-uuid",
+      title: "test-title",
+      description: "test-description",
+      originalFileName: "test-file-name"
+    })
+  };
+});
 
 vi.mock("../src/error-logger", async () => {
   return {
@@ -56,7 +68,8 @@ vi.mock("../src/crossplot/crossplot-handler", async () => {
     setupConversionDirectory: vi.fn(() => ({
       outputTextFilepath: "output.txt",
       modelsTextFilepath: "models.txt",
-      settingsTextFilepath: "settings.xml"
+      settingsTextFilepath: "settings.xml",
+      hash: "test-hash"
     })),
     convertCrossPlotWithModelsInJar: vi.fn().mockResolvedValue(true),
     setupAutoPlotDirectory: vi.fn().mockResolvedValue({
@@ -77,17 +90,13 @@ vi.mock("../src/crossplot/extract-markers", async () => {
     ])
   };
 });
-const request = {
-  datapackTitle: "test",
-  uuid: "test"
-};
 let app: FastifyInstance;
 beforeAll(async () => {
   app = fastify();
   await app.register(crossPlotRoutes, { prefix: "/crossplot" });
   await app.listen({ host: "localhost", port: 1210 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.spyOn(console, "log").mockImplementation(() => {});
+  // vi.spyOn(console, "error").mockImplementation(() => {});
+  // vi.spyOn(console, "log").mockImplementation(() => {});
 });
 
 afterAll(async () => {
@@ -97,6 +106,17 @@ describe("convertCrossplot", async () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  const request: shared.ConvertCrossPlotRequest = {
+    datapackUniqueIdentifiers: [
+      {
+        type: "official",
+        title: "datapackTitle"
+      }
+    ],
+    models: "models",
+    settings: "settings",
+    action: "file"
+  };
   const url = "/crossplot/convert";
   const convertCrossPlotRequest = vi.spyOn(shared, "assertConvertCrossPlotRequest");
   const setupConversionDirectory = vi.spyOn(crossplotHandler, "setupConversionDirectory");
@@ -146,7 +166,7 @@ describe("convertCrossplot", async () => {
     expect(response.json()).toEqual({ error: "Error converting to crossplot" });
     expect(convertCrossplotWithModelsInJar).toHaveBeenCalledOnce();
   });
-  it("should return 200 if conversion in jar succeeds", async () => {
+  it("should return 200 if conversion in jar succeeds and action is file", async () => {
     const response = await app.inject({
       method: "POST",
       url,
@@ -157,6 +177,62 @@ describe("convertCrossplot", async () => {
     expect(readFile).toHaveBeenCalledOnce();
     expect(response.statusCode).toEqual(200);
     expect(response.rawPayload).toEqual(Buffer.from("success"));
+  });
+  describe("action = chart", () => {
+    const conversionChartRequest = {
+      ...request,
+      action: "chart"
+    }
+    beforeEach(() => {
+      vi.clearAllMocks();
+    })
+    const uploadTemporaryDatapack = vi.spyOn(uploadDatapack, "uploadTemporaryDatapack");
+      it("should return upload fail code if operation result from upload", async () => {
+        isOperationResult.mockReturnValueOnce(false).mockReturnValueOnce(true);
+        uploadTemporaryDatapack.mockResolvedValueOnce({
+          code: 500,
+          message: "Upload failed"
+        });
+        const response = await app.inject({
+          method: "POST",
+          url,
+          payload: conversionChartRequest
+        });
+        expect(response.statusCode).toEqual(500);
+        expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
+        expect(response.json()).toEqual({ error: "Upload failed" });
+      });
+      it("should return datapack if upload succeds", async () => {
+        uploadTemporaryDatapack.mockResolvedValueOnce({
+          uuid: "test-uuid",
+          title: "test-title",
+          description: "test-description",
+          originalFileName: "test-file-name"
+        } as shared.Datapack);
+        const response = await app.inject({
+          method: "POST",
+          url,
+          payload: conversionChartRequest
+        });
+        expect(response.statusCode).toEqual(200);
+        expect(uploadTemporaryDatapack).toHaveBeenCalledOnce();
+        expect(response.json()).toEqual({
+          uuid: "test-uuid",
+          title: "test-title",
+          description: "test-description",
+          originalFileName: "test-file-name"
+        });
+      })
+      it("should return 500 if upload fails", async () => {
+        uploadTemporaryDatapack.mockRejectedValueOnce(new Error("Upload failed"));
+        const response = await app.inject({
+          method: "POST",
+          url,
+          payload: conversionChartRequest
+        });
+        expect(response.statusCode).toEqual(500);
+        expect(response.json()).toEqual({ error: "Error uploading temporary datapack" });
+      });
   });
 });
 
