@@ -78,13 +78,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       needEncryption: { type: "boolean" }
     }
   };
-  const workshopTitleParams = {
-    type: "object",
-    properties: {
-      workshopId: { type: "number" }
-    },
-    required: ["workshopId"]
-  };
   const downloadDatapackFilesZipParams = {
     type: "object",
     properties: {
@@ -133,11 +126,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: fetchWorkshopDatapackParams }
     },
     fetchWorkshopDatapack
-  );
-  fastify.get(
-    "/workshop/download/:workshopId",
-    { config: { rateLimit: looseRateLimit }, schema: { params: workshopTitleParams } },
-    downloadWorkshopFilesZip
   );
   fastify.get(
     "/datapack/download/files/:datapackTitle/:uuid/:isPublic",

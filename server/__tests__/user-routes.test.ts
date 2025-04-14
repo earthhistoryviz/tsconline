@@ -24,7 +24,6 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import path from "path";
 
 vi.mock("../src/user/chart-history", async () => {
   return {
