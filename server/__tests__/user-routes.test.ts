@@ -24,6 +24,7 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import path from "path";
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -1319,5 +1320,79 @@ describe("deleteUserHistory tests", () => {
     expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual({ message: "History deleted" });
+  });
+});
+
+describe("fetchDatapacksFiles tests", () => {
+  const findUser = vi.spyOn(database, "findUser");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 401 if user is not logged in", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/title/12345/true`,
+      headers: { "mock-uuid": "" }
+    });
+    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+  });
+
+  it("should reply 401 if user is not found in database", async () => {
+    findUser.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/title/12345/true`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+
+  it("should return 401 if datapackTitle is invalid", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/invalid:title/12345/true`,
+      headers
+    });
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({ error: "Missing datapack title" });
+  });
+
+  it("should return 500 if the files directory is invalid", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/testTitle/12345/true`,
+      headers
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+  });
+
+  it("should return 500 if zipfile path is not valid or already exists", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/testTitle/12345/true`,
+      headers
+    });
+
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+  });
+
+  it("should return 500 if an unknown error occurs while reading", async () => {
+    findUser.mockResolvedValueOnce([testUser as User]);
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/testTitle/12345/true`,
+      headers
+    });
+
+    expect(response.statusCode).toBe(500);
   });
 });
