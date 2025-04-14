@@ -59,6 +59,7 @@ export type State = {
     chartY: ColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
+    loading: boolean;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -172,7 +173,8 @@ export const state = observable<State>({
     chartX: undefined,
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined
+    crossPlotBounds: undefined,
+    loading: false
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,

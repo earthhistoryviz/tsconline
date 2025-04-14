@@ -450,22 +450,35 @@ export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<Cros
     ...timeSettings
   };
 });
+const setLoading = action((loading: boolean) => {
+  state.crossPlot.loading = loading;
+});
 
 export const saveConvertedDatapack = action(
   "saveConvertedDatapack",
   async (navigate: NavigateFunction, filename: string) => {
-    const blob = await sendCrossPlotConversionRequest("file", navigate);
-    if (!blob) {
-      return;
+    try {
+      setLoading(true);
+      const blob = await sendCrossPlotConversionRequest("file", navigate);
+      if (!blob) {
+        return;
+      }
+      //TODO change this to a user generated name from the form
+      await downloadFile(blob, `${filename}.txt`);
+    } finally {
+      setLoading(false);
     }
-    //TODO change this to a user generated name from the form
-    await downloadFile(blob, `${filename}.txt`);
   }
 );
 export const generateConvertedCrossPlotChart = action(
   "generateConvertedCrossPlotChart",
   async (navigate: NavigateFunction) => {
-    await sendCrossPlotConversionRequest("chart", navigate);
+    try {
+      setLoading(true);
+      await sendCrossPlotConversionRequest("chart", navigate);
+    } finally {
+      setLoading(false);
+    }
   }
 );
 export const uploadConvertedDatapackToProfile = action(
@@ -493,25 +506,29 @@ export const uploadConvertedDatapackToProfile = action(
     };
     let file: File;
     try {
-      const blob = await sendCrossPlotConversionRequest("file", navigate);
-      if (!blob) {
+      try {
+        const blob = await sendCrossPlotConversionRequest("file", navigate);
+        if (!blob) {
+          return;
+        }
+        file = new File([blob], "CrossplotConversion.txt", {
+          type: "text/plain"
+        });
+      } catch (e) {
+        console.error(e);
+        pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
         return;
       }
-      file = new File([blob], "CrossplotConversion.txt", {
-        type: "text/plain"
-      });
-    } catch (e) {
-      console.error(e);
-      pushError(ErrorCodes.CROSSPLOT_CONVERSION_FAILED);
-      return;
-    }
-    // remove the success snackbar if it exists
-    clearSuccessSnackbars();
-    try {
-      await uploadUserDatapack(file, tempMetadata);
-    } catch (e) {
-      console.error(e);
-      pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+      // remove the success snackbar if it exists
+      clearSuccessSnackbars();
+      try {
+        await uploadUserDatapack(file, tempMetadata);
+      } catch (e) {
+        console.error(e);
+        pushError(ErrorCodes.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE);
+      }
+    } finally {
+      setLoading(false);
     }
   }
 );

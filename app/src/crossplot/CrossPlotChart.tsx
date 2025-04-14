@@ -24,7 +24,6 @@ export const CrossPlotChart: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const ref = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
   const theme = useTheme();
   const navigate = useNavigate();
   const mobile = useMediaQuery(`(max-width:${CROSSPLOT_MOBILE_WIDTH}px`);
@@ -64,12 +63,7 @@ export const CrossPlotChart: React.FC = observer(() => {
               label: t("crossPlot.options.auto-plot"),
               icon: <AutoFixHigh />,
               onClick: async () => {
-                try {
-                  setLoading(true);
-                  actions.autoPlotCrossPlot;
-                } finally {
-                  setLoading(false);
-                }
+                actions.autoPlotCrossPlot;
               }
             }
           ],
@@ -143,22 +137,17 @@ export const CrossPlotChart: React.FC = observer(() => {
               actions.pushSnackbar("Filename is not valid", "warning");
               return;
             }
-            try {
-              setSaveFileNameModalOpen(false);
-              setLoading(true);
-              // get the value of the input
-              if (saveAction === "download") {
-                actions.saveConvertedDatapack(navigate, userInput);
-              } else {
-                actions.uploadConvertedDatapackToProfile(navigate, userInput);
-              }
-            } finally {
-              setLoading(false);
+            setSaveFileNameModalOpen(false);
+            // get the value of the input
+            if (saveAction === "download") {
+              actions.saveConvertedDatapack(navigate, userInput);
+            } else {
+              actions.uploadConvertedDatapackToProfile(navigate, userInput);
             }
           }
         }}
       />
-      <TSCDialogLoader open={loading} transparentBackground />
+      <TSCDialogLoader open={state.crossPlot.loading} transparentBackground />
     </>
   );
 });
