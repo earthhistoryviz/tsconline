@@ -554,15 +554,20 @@ export const processDatapackConfig = action(
   "processDatapackConfig",
   async (
     datapacks: DatapackConfigForChartRequest[],
-    options?: { settings?: string | ChartInfoTSC; force?: boolean, setter?: (message: SetDatapackConfigReturnValue) => Promise<void>}
+    options?: {
+      settings?: string | ChartInfoTSC;
+      force?: boolean;
+      setter?: (message: SetDatapackConfigReturnValue) => Promise<void>;
+      currentConfig: DatapackConfigForChartRequest[];
+    }
   ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
-    const { settings, force } = options ?? {};
-    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
-      return true;
+    const { settings, force, currentConfig } = options ?? {};
+    const config = currentConfig ?? state.config.datapacks;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(config))) return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settings) {
@@ -604,7 +609,7 @@ export const processDatapackConfig = action(
             try {
               if (options?.setter) {
                 // TODO: add the settings setter to this function at some point
-                options.setter(value)
+                options.setter(value);
                 setUnsavedDatapackConfig(state.config.datapacks);
               } else {
                 await actions.setDatapackConfig(
@@ -667,7 +672,7 @@ export const setDatapackConfig = action(
       await initializeColumnHashMap(state.settingsTabs.columns);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
-    if (datapacks.length !== 0) {
+    if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
         delete state.settings.timeSettings["Ma"];
       });

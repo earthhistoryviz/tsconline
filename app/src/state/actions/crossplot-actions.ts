@@ -1,5 +1,12 @@
 import { action, isObservable, observable, runInAction } from "mobx";
-import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, SetDatapackConfigReturnValue, assertColumnInfoRoot, assertSetDatapackConfigReturnValue } from "../../types";
+import {
+  ChartSettings,
+  CrossPlotBounds,
+  CrossPlotTimeSettings,
+  SetDatapackConfigReturnValue,
+  assertColumnInfoRoot,
+  assertSetDatapackConfigReturnValue
+} from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -601,7 +608,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       const crossPlotChartRequest: ChartRequest = {
         isCrossPlot: true,
         settings: json,
-        datapacks: state.config.datapacks,
+        datapacks: state.crossPlot.datapacks,
         useCache: state.useCache
       };
 
@@ -785,7 +792,8 @@ export const autoPlotCrossPlot = action(async () => {
 });
 
 export const setCrossPlotDatapackConfig = action(
-  "setCrossPlotDatapackConfig", async (message: SetDatapackConfigReturnValue) => {
+  "setCrossPlotDatapackConfig",
+  async (message: SetDatapackConfigReturnValue) => {
     await runInAction(async () => {
       state.crossPlot.columns = message.columnRoot;
       state.crossPlot.datapacks = message.datapacks;
@@ -795,12 +803,13 @@ export const setCrossPlotDatapackConfig = action(
     for (const child of state.crossPlot.columns!.children) {
       if (child.units === "Ma") {
         setCrossPlotChartX(child);
+        break;
       }
     }
     if (!state.crossPlot.chartX) setCrossPlotChartX(state.crossPlot.columns!.children[0]);
     setCrossPlotChartY(state.crossPlot.columns!.children[0]);
-    }
-)
+  }
+);
 const initializeColumnHashMap = async (columnInfo: ColumnInfo) => {
   state.crossPlot.columnHashMap.set(columnInfo.name, columnInfo);
   if (columnInfo.children) {
@@ -808,4 +817,4 @@ const initializeColumnHashMap = async (columnInfo: ColumnInfo) => {
       await initializeColumnHashMap(child);
     }
   }
-}
+};

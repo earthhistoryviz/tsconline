@@ -57,20 +57,25 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
     case "preferences":
       return <Preferences />;
     case "column":
-      return (<ColumnContext.Provider value={{
-        state: {
-          columns: state.settingsTabs.columns,
-          columnSearchTerm: "",
-          columnSelected: "",
-          timeSettings: state.settings.timeSettings,
-        },
-        actions: {
-          setColumnSelected: actions.setColumnSelected,
-          searchColumns: actions.searchColumns,
-          setExpansionOfAllChildren: actions.setExpansionOfAllChildren,
-          toggleSettingsTabColumn: actions.toggleSettingsTabColumn,
-        }
-      }}><Column /></ColumnContext.Provider>);
+      return (
+        <ColumnContext.Provider
+          value={{
+            state: {
+              columns: state.settingsTabs.columns,
+              columnSearchTerm: "",
+              columnSelected: "",
+              timeSettings: state.settings.timeSettings
+            },
+            actions: {
+              setColumnSelected: actions.setColumnSelected,
+              searchColumns: actions.searchColumns,
+              setExpansionOfAllChildren: actions.setExpansionOfAllChildren,
+              toggleSettingsTabColumn: actions.toggleSettingsTabColumn
+            }
+          }}>
+          <Column />
+        </ColumnContext.Provider>
+      );
     case "search":
       return <Search />;
     case "font":

@@ -117,7 +117,7 @@ const Time: React.FC = observer(() => {
   return (
     <Box className={styles.timeComponent}>
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.settingsTabs.columns?.children}
+        possibleCharts={state.crossPlot.columns?.children}
         formLabel={t("crossPlot.time.xAxis")}
         disabled
         settings={state.crossPlot.chartXTimeSettings}
@@ -127,7 +127,7 @@ const Time: React.FC = observer(() => {
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.settingsTabs.columns?.children}
+        possibleCharts={state.crossPlot.columns?.children}
         formLabel={t("crossPlot.time.yAxis")}
         settings={state.crossPlot.chartYTimeSettings}
         column={state.crossPlot.chartY}

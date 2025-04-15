@@ -164,7 +164,8 @@ export const Datapacks = observer(function Datapacks() {
           navigate("/crossplot");
           actions.setTab(0);
           actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
-            setter: actions.setCrossPlotDatapackConfig
+            setter: actions.setCrossPlotDatapackConfig,
+            currentConfig: state.crossPlot.datapacks
           });
         }}>
         {t("crossPlot.create-datapack")}
