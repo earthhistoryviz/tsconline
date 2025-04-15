@@ -32,7 +32,6 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import {
   fetchDatapackProfilePictureFilepath,
   fetchMapPackImageFilepath,
-  fetchWorkshopCoverPictureFilepath
 } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
@@ -567,4 +566,3 @@ export async function fetchMapImages(
     reply.status(500).send({ error: "Internal Server Error" });
   }
 }
-

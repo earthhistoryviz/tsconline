@@ -12,7 +12,7 @@ import * as util from "../src/util";
 import * as fsp from "fs/promises";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
-import { fetchAllWorkshops } from "../src/workshop/workshop-routes";
+import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -47,7 +47,9 @@ vi.mock("../src/user/fetch-user-files", async () => {
 });
 vi.mock("../src/util", async () => {
   return {
-    verifyNonExistentFilepath: vi.fn().mockResolvedValue(true)
+    verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
+    checkFileExists: vi.fn().mockRejectedValue(true),
+    assetconfigs: { datapackImagesDirectory: "assets/images" }
   };
 });
 vi.mock("fs/promises", async () => {
@@ -68,7 +70,7 @@ vi.mock("../src/upload-handlers", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => { });
+    file.on("data", () => {});
     file.on("end", () => {
       resolve();
     });
@@ -134,8 +136,9 @@ beforeAll(async () => {
   });
   await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
   app.get("/workshop", fetchAllWorkshops);
+  app.get("/workshop-images/1", fetchWorkshopCoverImage);
   await app.listen({ host: "localhost", port: 1250 });
-  vi.spyOn(console, "error").mockImplementation(() => { });
+  //vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
@@ -472,5 +475,56 @@ describe("downloadWorkshopFilesZip tests", () => {
     });
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "An error occurred" });
+  });
+});
+
+describe("fetchWorkshopCoverImage tests", () => {
+  const workshopId = 1;
+  const route = `/workshop-images/${workshopId}`;
+  const fetchWorkshopCoverPictureFilepathSpy = vi.spyOn(uploadHandlers, "fetchWorkshopCoverPictureFilepath");
+  const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
+  const readFileSpy = vi.spyOn(fsp, "readFile");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 500 if no cover pic found and failed to fetch default cover pic", async () => {
+    fetchWorkshopCoverPictureFilepathSpy.mockResolvedValueOnce(null);
+    checkFileExistsSpy.mockRejectedValueOnce(new Error());
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Internal Server Error" });
+  });
+
+  it("should return default cover pic if no cover pic found", async () => {
+    fetchWorkshopCoverPictureFilepathSpy.mockResolvedValueOnce(null);
+    checkFileExistsSpy.mockResolvedValueOnce(true);
+    readFileSpy.mockResolvedValueOnce(Buffer.from("default-cover-pic"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual("default-cover-pic");
+    expect(checkFileExistsSpy).toHaveBeenCalledOnce();
+  });
+  it("should return the cover pic found", async () => {
+    fetchWorkshopCoverPictureFilepathSpy.mockResolvedValueOnce("cover-pic-path");
+    readFileSpy.mockResolvedValueOnce(Buffer.from("cover-pic"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+    expect(response.body).toEqual("cover-pic");
+    expect(checkFileExistsSpy).not.toHaveBeenCalled();
   });
 });
