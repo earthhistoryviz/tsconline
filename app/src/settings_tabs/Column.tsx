@@ -2,14 +2,13 @@ import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, IconButton, TextField } from "@mui/material";
+import { Box, Button, Dialog, DialogContent, IconButton, Radio, RadioGroup, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-
 import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { useTheme } from "@mui/material/styles";
+import { Theme, styled, useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
@@ -24,6 +23,11 @@ import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from '@mui/icons-material/Add';
+import BarChartIcon from "@mui/icons-material/BarChart";
+import JoinInnerIcon from "@mui/icons-material/JoinInner";
+import Settings from "@mui/icons-material/Settings";
+import { OverlayColumnAccordion } from "./advanced_settings/OverlaySettings";
+import { FormLabel } from "react-bootstrap";
 
 type ColumnContextType = {
   state: {
@@ -56,24 +60,94 @@ export const ColumnContext = createContext<ColumnContextType>({
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
+  const [menuOpen, setMenuOpen] = useState(true);
+  const { state } = useContext(context);
+
   return (
-    <div className="column-top-level-container">
-      <ColumnSearchBar />
-      <div className="column-accordion-and-menu-container">
-        <div>
-          <div className="add-icon-container">
-            <IconButton className="add-icon">
-              <AddIcon />
-            </IconButton>
-            <Typography className="add-icon-text">
-              Add New Column
-            </Typography>
-          </div>
+    <>
+      <div className="column-top-level-container">
+        <ColumnSearchBar />
+        <div className="column-accordion-and-menu-container">
+          <div>
+            {state.settingsTabs.columns && (
+              <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => setMenuOpen(true)}>
+                Create Custom Column
+              </Button>
+            )}
             <ColumnDisplay />
+          </div>
+          <ColumnMenu />
         </div>
-        <ColumnMenu />
       </div>
-    </div>
+      <CustomColumnsMenu open={menuOpen} />
+    </>
+  );
+});
+
+type CustomColumnsMenuProps = {
+  open: boolean;
+};
+
+export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(function CustomColumnsMenu({ open }) {
+  const { state } = useContext(context);
+  const theme = useTheme();
+  const CustomColumnPanel = styled(Box)(({ theme }: { theme: Theme }) => ({
+    backgroundColor: theme.palette.secondaryBackground.main,
+    flex: 1,
+    border: "1px solid black",
+    minWidth: 0
+  }));
+  const icons = [BarChartIcon, JoinInnerIcon, Settings];
+
+  return (
+    <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }}>
+      <DialogContent>
+        <Box display="grid" height="100%">
+          <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
+            <Box className="custom-columns-menu-black-line" />
+          </Box>
+          <Box display="flex" justifyContent="space-between" gridRow="1" gridColumn="1">
+            {icons.map((Icon, index) => (
+              <Box
+                key={index}
+                className="custom-columns-menu-icon"
+                sx={{
+                  backgroundColor: theme.palette.button.main
+                }}>
+                <Icon />
+              </Box>
+            ))}
+          </Box>
+          <Box gridRow="2" gridColumn="1" display="flex" justifyContent="space-between" alignItems="center">
+            <Typography variant="h6" textAlign="center" flex={1}>
+              Select a Base Column
+            </Typography>
+            <Typography variant="h6" textAlign="center" flex={1}>
+              Select a Type of Column
+            </Typography>
+            <Typography variant="h6" textAlign="center" flex={1}>
+              Customize Your Column
+            </Typography>
+          </Box>
+        </Box>
+        <Box gridRow="3" gridColumn="1" display="flex" justifyContent="space-between" height="70vh" gap={3}>
+          <CustomColumnPanel>
+            <StyledScrollbar>
+              <OverlayColumnAccordion column={state.settingsTabs.columns} />
+            </StyledScrollbar>
+          </CustomColumnPanel>
+          <CustomColumnPanel height="40%">
+            <RadioGroup>
+              <Radio defaultChecked/>
+              <div>
+                <FormLabel
+              </div>
+            </RadioGroup>
+          </CustomColumnPanel>
+          <CustomColumnPanel></CustomColumnPanel>
+        </Box>
+      </DialogContent>
+    </Dialog>
   );
 });
 

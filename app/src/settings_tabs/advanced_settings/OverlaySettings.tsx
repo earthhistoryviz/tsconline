@@ -161,7 +161,7 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
                 position="relative">
                 {state.settingsTabs.columns &&
                   Object.entries(state.settingsTabs.columns.children).map(([childName, childColumn]) => (
-                    <ColumnAccordion key={childName} column={childColumn} />
+                    <OverlayColumnAccordion key={childName} column={childColumn} />
                   ))}
                 {/* Button to take users to top of column menu when scrolling */}
 
@@ -182,11 +182,11 @@ export const OverlaySettings: React.FC<OverlaySettingsProps> = observer(({ colum
   );
 });
 
-type ColumnAccordionProps = {
+type OverlayColumnAccordionProps = {
   column: ColumnInfo;
 };
 
-const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) => {
+export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
   const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
@@ -197,6 +197,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
   const validForOverlay = column.columnDisplayType == "Event" || column.columnDisplayType == "Point";
 
   // if there are no children, don't make an accordion
+  console.log("column.children", column.children.length);
   if (column.children.length == 0) {
     const ValidOverlay = () => (
       <ColumnContainer
@@ -275,7 +276,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ column }) =>
         <MuiAccordionDetails className="column-accordion-details">
           {column.children &&
             Object.entries(column.children).map(([childName, childColumn]) => (
-              <ColumnAccordion key={childName} column={childColumn} />
+              <OverlayColumnAccordion key={childName} column={childColumn} />
             ))}
         </MuiAccordionDetails>
       </Accordion>

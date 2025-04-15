@@ -246,7 +246,7 @@ export const state = observable<State>({
     tabValue: 0
   },
   settingsTabs: {
-    selected: "time",
+    selected: "column",
     columns: undefined,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
