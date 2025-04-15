@@ -1,4 +1,4 @@
-import { action, isObservable, observable } from "mobx";
+import { action, isObservable, observable, runInAction } from "mobx";
 import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, SetDatapackConfigReturnValue, assertColumnInfoRoot, assertSetDatapackConfigReturnValue } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -385,7 +385,7 @@ export const sendCrossPlotConversionRequest = action(
       }
       const columnCopy = cloneDeep(columnRoot);
       const chartSettingsCopy = cloneDeep(state.settings);
-      const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+      const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
       const body: ConvertCrossPlotRequest = {
         datapackUniqueIdentifiers: state.crossPlot.chartY.datapackUniqueIdentifiers,
         models: state.crossPlot.models
@@ -536,7 +536,7 @@ export const uploadConvertedDatapackToProfile = action(
 
 function areSettingsValidForGeneration() {
   // check if columns EXIST
-  if (!state.crossPlot.chartX || !state.settingsTabs.columns) {
+  if (!state.crossPlot.chartX || !state.crossPlot.columns) {
     pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
   }
@@ -732,7 +732,7 @@ export const autoPlotCrossPlot = action(async () => {
     const chartSettingsCopy = cloneDeep(
       createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
     );
-    const xmlSettings = jsonToXml(columnCopy, state.settingsTabs.columnHashMap, chartSettingsCopy);
+    const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
     const body: AutoPlotRequest = {
       datapackUniqueIdentifiers: [
         ...state.crossPlot.chartY.datapackUniqueIdentifiers,
@@ -786,7 +786,26 @@ export const autoPlotCrossPlot = action(async () => {
 
 export const setCrossPlotDatapackConfig = action(
   "setCrossPlotDatapackConfig", async (message: SetDatapackConfigReturnValue) => {
-    state.crossPlot.columns = message.columnRoot;
-    state.crossPlot.datapacks = message.datapacks;
-  }
+    await runInAction(async () => {
+      state.crossPlot.columns = message.columnRoot;
+      state.crossPlot.datapacks = message.datapacks;
+      state.crossPlot.columnHashMap = new Map();
+      await initializeColumnHashMap(state.crossPlot.columns);
+    });
+    for (const child of state.crossPlot.columns!.children) {
+      if (child.units === "Ma") {
+        setCrossPlotChartX(child);
+      }
+    }
+    if (!state.crossPlot.chartX) setCrossPlotChartX(state.crossPlot.columns!.children[0]);
+    setCrossPlotChartY(state.crossPlot.columns!.children[0]);
+    }
 )
+const initializeColumnHashMap = async (columnInfo: ColumnInfo) => {
+  state.crossPlot.columnHashMap.set(columnInfo.name, columnInfo);
+  if (columnInfo.children) {
+    for (const child of columnInfo.children) {
+      await initializeColumnHashMap(child);
+    }
+  }
+}
