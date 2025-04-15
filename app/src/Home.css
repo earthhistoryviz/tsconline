@@ -917,7 +917,7 @@
   }
 }
 
-@media screen and (max-width: 900px) and (max-height: 650px) {
+@media screen and (max-width: 900px) and (max-height: 700px) {
   .sub-header-section-landing-page {
     position: sticky;
     display: flex;
@@ -927,7 +927,7 @@
   }
 }
 
-@media screen and (min-width: 900px) and (max-height: 650px) {
+@media screen and (min-width: 900px) and (max-height: 700px) {
   .sub-header-section-landing-page {
     height: 100%;
     max-height: none;
