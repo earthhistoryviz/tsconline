@@ -1,7 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
-import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
 import { Box, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
@@ -26,7 +25,7 @@ import { CrossPlotTimeSettings, TimeSettings } from "../types";
 
 type ColumnContextType = {
   state: {
-    columns: ColumnInfo;
+    columns: ColumnInfo | undefined;
     columnSearchTerm: string;
     columnSelected: string;
     timeSettings:
@@ -44,7 +43,7 @@ type ColumnContextType = {
 };
 export const ColumnContext = createContext<ColumnContextType>({
   state: {
-    columns: {} as ColumnInfo,
+    columns: undefined,
     columnSearchTerm: "",
     columnSelected: "",
     timeSettings: {} as TimeSettings
@@ -279,7 +278,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
 });
 
 const ColumnSearchBar = observer(() => {
-  const { state, actions } = useContext(context);
+  const { state, actions } = useContext(ColumnContext);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
     actions.searchColumns(term);
@@ -294,9 +293,9 @@ const ColumnSearchBar = observer(() => {
         size="small"
         fullWidth
         onChange={handleSearch}
-        value={state.settingsTabs.columnSearchTerm}
+        value={state.columnSearchTerm}
       />
-      <FilterHelperText helperText={state.settingsTabs.columnSearchTerm} />
+      <FilterHelperText helperText={state.columnSearchTerm} />
     </div>
   );
 });
