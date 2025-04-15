@@ -54,12 +54,14 @@ export const Home = observer(function Home() {
               {t("landing-page.welcome-desc")}
             </Typography>
           </Box>
-          <img
-            loading="lazy"
-            rel="preload"
-            className="sub-header-section-landing-page-image"
-            src={devSafeUrl("/public/website-images/landing-page.png")}
-          />
+          <div className="sub-header-section-landing-page-image-container">
+            <img
+              loading="lazy"
+              rel="preload"
+              className="sub-header-section-landing-page-image"
+              src={devSafeUrl("/public/website-images/landing-page.png")}
+            />
+          </div>
           <Box className="get-started-landing-page">
             <Box
               className="get-started-button-container"
@@ -559,6 +561,7 @@ const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const isTall = useMediaQuery("(min-height:650px)");
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
     const workshops = [
@@ -616,7 +619,12 @@ const UpcomingWorkshops = observer(
               <CustomDivider />
             </Box>
             <StyledScrollbar
-              sx={!isMobile && window.innerHeight > 650 ? { maxHeight: "calc(93vh - 60px)" } : { maxHeight: "650px" }}>
+              sx={
+                !isMobile && isTall
+                  ? { height: "calc(100% - 60px)", maxHeight: "calc(100% - 60px)" }
+                  : { height: "590px", maxHeight: "590px" }
+              }>
+              {" "}
               {workshops.map((step, index) => (
                 <WorkshopItem key={index} step={step} />
               ))}
