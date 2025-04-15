@@ -1,5 +1,5 @@
 import { action, isObservable, observable } from "mobx";
-import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, assertColumnInfoRoot } from "../../types";
+import { ChartSettings, CrossPlotBounds, CrossPlotTimeSettings, SetDatapackConfigReturnValue, assertColumnInfoRoot, assertSetDatapackConfigReturnValue } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -783,3 +783,10 @@ export const autoPlotCrossPlot = action(async () => {
     displayServerError(e, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
+
+export const setCrossPlotDatapackConfig = action(
+  "setCrossPlotDatapackConfig", async (message: SetDatapackConfigReturnValue) => {
+    state.crossPlot.columns = message.columnRoot;
+    state.crossPlot.datapacks = message.datapacks;
+  }
+)

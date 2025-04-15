@@ -53,6 +53,7 @@ import {
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
+  SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
@@ -553,7 +554,7 @@ export const processDatapackConfig = action(
   "processDatapackConfig",
   async (
     datapacks: DatapackConfigForChartRequest[],
-    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+    options?: { settings?: string | ChartInfoTSC; force?: boolean, setter?: (message: SetDatapackConfigReturnValue) => Promise<void>}
   ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
@@ -601,17 +602,22 @@ export const processDatapackConfig = action(
 
           if (status === "success" && value) {
             try {
-              await actions.setDatapackConfig(
-                value.columnRoot,
-                value.foundDefaultAge,
-                value.mapHierarchy,
-                value.mapInfo,
-                value.datapacks,
-                chartSettings
-              );
-
+              if (options?.setter) {
+                // TODO: add the settings setter to this function at some point
+                options.setter(value)
+                setUnsavedDatapackConfig(state.config.datapacks);
+              } else {
+                await actions.setDatapackConfig(
+                  value.columnRoot,
+                  value.foundDefaultAge,
+                  value.mapHierarchy,
+                  value.mapInfo,
+                  value.datapacks,
+                  chartSettings
+                );
+                setUnsavedDatapackConfig(datapacks);
+              }
               pushSnackbar("Datapack Config Updated", "success");
-              setUnsavedDatapackConfig(datapacks);
               resolve("Datapack Config Updated successfully.");
             } catch (e) {
               reject(new Error("Failed to set datapack config with error " + e));

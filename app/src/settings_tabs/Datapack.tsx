@@ -163,6 +163,9 @@ export const Datapacks = observer(function Datapacks() {
         onClick={() => {
           navigate("/crossplot");
           actions.setTab(0);
+          actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
+            setter: actions.setCrossPlotDatapackConfig
+          });
         }}>
         {t("crossPlot.create-datapack")}
       </TSCButton>

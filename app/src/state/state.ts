@@ -31,7 +31,8 @@ import type {
   DatapackPriorityChangeRequest,
   DatapackMetadata,
   Marker,
-  Model
+  Model,
+  DatapackUniqueIdentifier
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -60,6 +61,8 @@ export type State = {
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
     loading: boolean;
+    columns?: ColumnInfo;
+    datapacks: DatapackConfigForChartRequest[]
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -174,7 +177,8 @@ export const state = observable<State>({
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
     crossPlotBounds: undefined,
-    loading: false
+    loading: false,
+    datapacks: [],
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
