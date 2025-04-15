@@ -81,3 +81,4 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     downloadWorkshopFilesZip
   );
 };
+

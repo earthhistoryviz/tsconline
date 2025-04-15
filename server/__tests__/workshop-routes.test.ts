@@ -68,7 +68,7 @@ vi.mock("../src/upload-handlers", async () => {
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
-    file.on("data", () => {});
+    file.on("data", () => { });
     file.on("end", () => {
       resolve();
     });
@@ -135,7 +135,7 @@ beforeAll(async () => {
   await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
   app.get("/workshop", fetchAllWorkshops);
   await app.listen({ host: "localhost", port: 1250 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => { });
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {

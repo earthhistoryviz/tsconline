@@ -568,33 +568,3 @@ export async function fetchMapImages(
   }
 }
 
-export const fetchWorkshopCoverImage = async function (
-  request: FastifyRequest<{ Params: { workshopId: number } }>,
-  reply: FastifyReply
-) {
-  const { workshopId } = request.params;
-  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "TSCreatorLogo.png");
-  try {
-    const imageFilepath = await fetchWorkshopCoverPictureFilepath(workshopId);
-    if (!imageFilepath) {
-      if (!(await checkFileExists(defaultFilepath))) {
-        reply.status(404).send({ error: "Default image not found" });
-        return;
-      }
-      reply.send(await readFile(defaultFilepath));
-      return;
-    }
-    reply.send(await readFile(imageFilepath));
-  } catch (e) {
-    try {
-      if (await checkFileExists(defaultFilepath)) {
-        reply.send(await readFile(defaultFilepath));
-        return;
-      }
-    } catch (e) {
-      // eslint-disable-next-line no-console
-    }
-    console.error("Error fetching image: ", e);
-    reply.status(500).send({ error: "Internal Server Error" });
-  }
-};

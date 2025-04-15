@@ -9,6 +9,9 @@ import { readFile } from "fs/promises";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
 
+import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
+import { assetconfigs, checkFileExists } from "../util.js";
+
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
   reply: FastifyReply
@@ -129,5 +132,30 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     }
   } catch (e) {
     reply.status(500).send({ error: "An error occurred" });
+  }
+};
+
+export const fetchWorkshopCoverImage = async function (
+  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  reply: FastifyReply
+) {
+  const { workshopId } = request.params;
+  const defaultFilepath = path.join(assetconfigs.datapackImagesDirectory, "TSCreatorLogo.png");
+  try {
+    const imageFilepath = await fetchWorkshopCoverPictureFilepath(workshopId);
+    if (!imageFilepath) throw new Error("No cover image found");
+
+    reply.send(await readFile(imageFilepath));
+  } catch (e) {
+    try {
+      if (await checkFileExists(defaultFilepath)) {
+        reply.send(await readFile(defaultFilepath));
+        return;
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+    }
+    console.error("Error fetching image: ", e);
+    reply.status(500).send({ error: "Internal Server Error" });
   }
 };
