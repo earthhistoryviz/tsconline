@@ -123,8 +123,8 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
   const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
 
   return (
-    <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }}>
-      <DialogContent>
+    <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }} >
+      <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main }}>
         <Box display="grid" height="100%">
           <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
             <Box className="custom-columns-menu-black-line" />
@@ -142,8 +142,9 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
                     "& path": {
                       fill: "none",
                       stroke: "black",
-                      strokeWidth: 1.5
-                    }
+                      strokeWidth: 1.0
+                    },
+                    fontSize: 30
                   }}
                 />
               </Box>
@@ -162,7 +163,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
           </Box>
         </Box>
         <Box gridRow="3" gridColumn="1" display="flex" justifyContent="space-between" height="70vh" gap={3}>
-          <CustomColumnPanel>
+          <CustomColumnPanel p={2}>
             <StyledScrollbar>
               {column.children &&
                 Object.entries(column.children).map(([childName, childColumn]) => (
@@ -190,7 +191,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
               </FormHelperText>
             </RadioGroup>
           </CustomColumnPanel>
-          <CustomColumnPanel>
+          <CustomColumnPanel p={2}>
             {columnType === "dataMining" ? (
               <DataMiningSettings column={column} />
             ) : (
