@@ -1,5 +1,5 @@
 import { observer } from "mobx-react-lite";
-import React, { useContext, useState, useEffect, useRef } from "react";
+import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
 import { context } from "../state";
 import { ColumnInfo } from "@tsconline/shared";
@@ -22,6 +22,40 @@ import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
+import { CrossPlotTimeSettings, TimeSettings } from "../types";
+
+type ColumnContextType = {
+  state: {
+    columns: ColumnInfo;
+    columnSearchTerm: string;
+    columnSelected: string;
+    timeSettings:
+      | {
+          [unit: string]: CrossPlotTimeSettings;
+        }
+      | TimeSettings;
+  };
+  actions: {
+    setColumnSelected: (name: string) => void;
+    setExpansionOfAllChildren: (columns: ColumnInfo, expanded: boolean) => void;
+    toggleSettingsTabColumn: (column: ColumnInfo) => void;
+    searchColumns: (term: string) => void;
+  };
+};
+export const ColumnContext = createContext<ColumnContextType>({
+  state: {
+    columns: {} as ColumnInfo,
+    columnSearchTerm: "",
+    columnSelected: "",
+    timeSettings: {} as TimeSettings
+  },
+  actions: {
+    setColumnSelected: () => {},
+    setExpansionOfAllChildren: () => {},
+    toggleSettingsTabColumn: () => {},
+    searchColumns: () => {}
+  }
+});
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
@@ -37,7 +71,7 @@ export const Column = observer(function Column() {
 });
 
 export const ColumnDisplay = observer(() => {
-  const { state, actions } = useContext(context);
+  const { state, actions } = useContext(ColumnContext);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -74,7 +108,7 @@ export const ColumnDisplay = observer(() => {
       border={1}
       borderColor="divider"
       bgcolor="secondaryBackground.main"
-      className={`hide-scrollbar column-accordion-wrapper ${state.settingsTabs.columnSearchTerm ? "filtered-border" : ""}`}
+      className={`hide-scrollbar column-accordion-wrapper ${state.columnSearchTerm ? "filtered-border" : ""}`}
       position="relative">
       <div className="column-filter-buttons">
         <CustomTooltip title="Expand All" placement="top">
@@ -82,8 +116,8 @@ export const ColumnDisplay = observer(() => {
             disableRipple
             className="expand-collapse-column-buttons"
             onClick={() => {
-              if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAllChildren(state.settingsTabs.columns, true);
+              if (!state.columns) return;
+              actions.setExpansionOfAllChildren(state.columns, true);
             }}>
             <ExpandIcon />
           </IconButton>
@@ -93,15 +127,15 @@ export const ColumnDisplay = observer(() => {
             disableRipple
             className="expand-collapse-column-buttons"
             onClick={() => {
-              if (!state.settingsTabs.columns) return;
-              actions.setExpansionOfAllChildren(state.settingsTabs.columns, false);
+              if (!state.columns) return;
+              actions.setExpansionOfAllChildren(state.columns, false);
             }}>
             <CompressIcon />
           </IconButton>
         </CustomTooltip>
       </div>
-      {state.settingsTabs.columns &&
-        Object.entries(state.settingsTabs.columns.children).map(([childName, childDetails]) => (
+      {state.columns &&
+        Object.entries(state.columns.children).map(([childName, childDetails]) => (
           <ColumnAccordion key={childName} details={childDetails} />
         ))}
       {/* Button to take users to top of column menu when scrolling */}
@@ -123,11 +157,11 @@ type ColumnAccordionProps = {
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
-  const { actions, state } = useContext(context);
+  const { actions, state } = useContext(ColumnContext);
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.columnMenu.columnSelected ? "selected-column" : "";
+  const selectedClass = details.name === state.columnSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -141,7 +175,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
 
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.columnMenu.columnSelected)
+  const containsSelectedChild = details.children.some((column) => column.name === state.columnSelected)
     ? { opacity: 1 }
     : {};
   return (
@@ -184,20 +218,21 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
 });
 
 const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
-  const { state, actions } = useContext(context);
+  const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
   const theme = useTheme();
+  // todo fix this for crossplot
   const dataInRange = checkIfDccColumn(column)
     ? checkIfDccDataIsInRange(
         column,
-        state.settings.timeSettings[column.units].topStageAge,
-        state.settings.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].topStageAge,
+        state.timeSettings[column.units].baseStageAge
       )
     : checkIfDataIsInRange(
         column.minAge,
         column.maxAge,
-        state.settings.timeSettings[column.units].topStageAge,
-        state.settings.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].topStageAge,
+        state.timeSettings[column.units].baseStageAge
       );
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
