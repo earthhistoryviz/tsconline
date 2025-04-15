@@ -2,7 +2,18 @@ import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, Button, Dialog, DialogContent, IconButton, Radio, RadioGroup, TextField } from "@mui/material";
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogContent,
+  FormControlLabel,
+  FormHelperText,
+  IconButton,
+  Radio,
+  RadioGroup,
+  TextField
+} from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
@@ -27,7 +38,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import JoinInnerIcon from "@mui/icons-material/JoinInner";
 import Settings from "@mui/icons-material/Settings";
 import { OverlayColumnAccordion } from "./advanced_settings/OverlaySettings";
-import { FormLabel } from "react-bootstrap";
+import { createGradient } from "../util/util";
 
 type ColumnContextType = {
   state: {
@@ -97,7 +108,14 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
     border: "1px solid black",
     minWidth: 0
   }));
+  const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
+    color: theme.palette.button.main,
+    "&.Mui-checked": {
+      color: theme.palette.button.main
+    }
+  }));
   const icons = [BarChartIcon, JoinInnerIcon, Settings];
+  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
 
   return (
     <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }}>
@@ -112,7 +130,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
                 key={index}
                 className="custom-columns-menu-icon"
                 sx={{
-                  backgroundColor: theme.palette.button.main
+                  background: gradient.main
                 }}>
                 <Icon />
               </Box>
@@ -136,12 +154,21 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
               <OverlayColumnAccordion column={state.settingsTabs.columns} />
             </StyledScrollbar>
           </CustomColumnPanel>
-          <CustomColumnPanel height="40%">
-            <RadioGroup>
-              <Radio defaultChecked/>
-              <div>
-                <FormLabel
-              </div>
+          <CustomColumnPanel height="fit-content">
+            <RadioGroup defaultValue="dataMining" sx={{ m: 2 }}>
+              <FormControlLabel value="dataMining" control={<CustomRadioButton />} label="Data mining" />
+              <FormHelperText sx={{ ml: 4, mt: -1 }}>
+                Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point
+                column over sliding windows of data.
+              </FormHelperText>
+              <FormControlLabel
+                value="dualColumnComparison"
+                control={<CustomRadioButton />}
+                label="Dual Column Comparison"
+              />
+              <FormHelperText sx={{ ml: 4, mt: -1 }}>
+                Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.
+              </FormHelperText>
             </RadioGroup>
           </CustomColumnPanel>
           <CustomColumnPanel></CustomColumnPanel>
