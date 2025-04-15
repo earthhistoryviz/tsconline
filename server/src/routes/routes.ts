@@ -29,10 +29,7 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { deleteUserDatapack, fetchUserDatapack } from "../user/user-handler.js";
 import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
-import {
-  fetchDatapackProfilePictureFilepath,
-  fetchMapPackImageFilepath,
-} from "../upload-handlers.js";
+import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 
