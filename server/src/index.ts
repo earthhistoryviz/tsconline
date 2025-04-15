@@ -22,12 +22,20 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
-import { fetchPublicUserDatapack, fetchUserDatapacksMetadata, uploadTreatiseDatapack } from "./routes/user-routes.js";
+import {
+  deleteUserHistory,
+  fetchPublicUserDatapack,
+  fetchUserDatapacksMetadata,
+  uploadTreatiseDatapack,
+  fetchUserHistory,
+  fetchUserHistoryMetadata
+} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
+import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
-import * as crossPlotRoutes from "./routes/crossplot-routes.js";
+import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -296,15 +304,21 @@ server.get<{ Params: { title: string; uuid: string } }>(
 );
 
 server.register(adminRoutes, { prefix: "/admin" });
+server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha
 server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
 
 server.register(workshopRoutes, { prefix: "/workshop" });
+// these are seperate from the workshop routes because they don't require recaptcha
+server.get("/workshop", looseRateLimit, fetchAllWorkshops);
 
 server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
 server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
 server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
+server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
+server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
+server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
@@ -330,9 +344,6 @@ server.post<{ Params: { usecache: string; useSuggestedAge: string; username: str
   looseRateLimit,
   routes.fetchChart
 );
-
-server.post("/crossplot/convert", looseRateLimit, crossPlotRoutes.convertCrossPlot);
-server.post("/crossplot/autoplot", looseRateLimit, crossPlotRoutes.autoPlotPoints);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

@@ -18,8 +18,7 @@ import {
   isWorkshopDatapack,
   Datapack,
   assertDatapackMetadataArray,
-  assertTreatiseDatapack,
-  SharedWorkshop
+  assertTreatiseDatapack
 } from "@tsconline/shared";
 
 import {
@@ -507,23 +506,32 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   setUnsavedDatapackConfig([]);
 });
 
+/**
+ * @param settings - If settings is a string assumed to be a path to a settings file
+ */
 export const processDatapackConfig = action(
   "processDatapackConfig",
-  async (datapacks: DatapackConfigForChartRequest[], settingsPath?: string, force?: boolean) => {
+  async (
+    datapacks: DatapackConfigForChartRequest[],
+    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+  ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
+    const { settings, force } = options ?? {};
     if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
       return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
-      if (settingsPath && settingsPath.length !== 0) {
+      if (settings) {
+        if (typeof settings !== "string") return settings;
+        if (settings.length === 0) return null;
         try {
-          const settings = await fetchSettingsXML(settingsPath);
-          if (settings) {
+          const fetchedSettings = await fetchSettingsXML(settings);
+          if (fetchedSettings) {
             removeError(ErrorCodes.INVALID_SETTINGS_RESPONSE);
-            return JSON.parse(JSON.stringify(settings));
+            return JSON.parse(JSON.stringify(fetchedSettings));
           }
         } catch (e) {
           console.error(e);
@@ -1015,7 +1023,8 @@ export const setDefaultUserState = action(() => {
     settings: {
       darkMode: false,
       language: "English"
-    }
+    },
+    historyEntries: []
   };
   removeUnauthorizedDatapacks();
 });
@@ -1276,44 +1285,6 @@ export const updateEditableDatapackMetadata = action((metadata: Partial<Editable
     ...state.datapackProfilePage.editableDatapackMetadata,
     ...metadata
   };
-});
-
-export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorkshop) => {
-  const route = `/user/workshop/download/${workshop.workshopId}`;
-  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFilesForDownload");
-  if (!recaptchaToken) return null;
-  if (!state.isLoggedIn) {
-    pushError(ErrorCodes.NOT_LOGGED_IN);
-    return null;
-  }
-  const response = await fetcher(route, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "recaptcha-token": recaptchaToken
-    }
-  });
-  if (!response.ok) {
-    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-    switch (response.status) {
-      case 404:
-        errorCode = ErrorCodes.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
-        break;
-      case 401:
-        errorCode = ErrorCodes.NOT_LOGGED_IN;
-        break;
-    }
-    displayServerError(response, errorCode, ErrorMessages[errorCode]);
-    return;
-  }
-  const file = await response.blob();
-  if (file) {
-    try {
-      await downloadFile(file, `FilesFor${workshop.title}.zip`);
-    } catch (error) {
-      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
-    }
-  }
 });
 
 export const setPresetsLoading = action((loading: boolean) => {

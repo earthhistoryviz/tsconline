@@ -191,6 +191,7 @@ jobs:
             echo 'ADMIN_EMAIL="${{ secrets.ADMIN_EMAIL }}"' >> ./server/.env
             echo 'DOMAIN="stage.timescalecreator.org"' >> ./server/.env
             echo 'METRICS_AUTH="${{ secrets.METRICS_AUTH }}"' >> ./server/.env
+            echo 'BEARER_TOKEN="${{ secrets.BEARER_TOKEN }}"' >> ./server/.env
 
             if [ ! -f "docker-compose-staging.yml" ]; then
               echo "Error: docker-compose-staging.yml not found"

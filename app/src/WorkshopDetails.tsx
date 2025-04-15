@@ -2,13 +2,12 @@ import { useContext, useEffect } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
-import { CustomDivider, TSCButton } from "./components";
+import { CustomDivider, CustomTooltip, TSCButton } from "./components";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
 import { useNavigate, useParams } from "react-router";
 import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
-import { NotLoggedIn } from "./NotLoggedIn";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
 
@@ -19,13 +18,11 @@ export const WorkshopDetails = observer(() => {
   const { t } = useTranslation();
   const fetchWorkshop = () => {
     if (!id) return;
-    const workshop = state.admin.workshops.find((d) => d.workshopId === Number(id));
+    const workshop = state.workshops.find((d) => d.workshopId === Number(id));
     return workshop;
   };
   const workshop = fetchWorkshop();
-  if (!state.isLoggedIn) return <NotLoggedIn />;
-  if (!workshop || !id) return <PageNotFound />;
-  const shouldLoadRecaptcha = state.user.isAdmin || state.isLoggedIn;
+  const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
     if (shouldLoadRecaptcha) loadRecaptcha();
     return () => {
@@ -37,7 +34,7 @@ export const WorkshopDetails = observer(() => {
       await actions.fetchWorkshopFilesForDownload(workshop);
     }
   }
-
+  if (!workshop || !id) return <PageNotFound />;
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -89,14 +86,34 @@ export const WorkshopDetails = observer(() => {
                           • {file}
                         </Typography>
                       ))}
-                      {/* TODO: change this to only be allowed if user is registered to the workshop. Probably need a route for checking this */}
-                      <TSCButton
-                        variant="contained"
-                        color="primary"
-                        sx={{ marginTop: 2 }}
-                        onClick={() => downloadWorkshopFiles()}>
-                        {t("workshops.details-page.download-button")}
-                      </TSCButton>
+                      <Box mt={2}>
+                        {!shouldLoadRecaptcha ? (
+                          <CustomTooltip
+                            title={t("workshops.details-page.download-tooltip-not-registered")}
+                            slotProps={{
+                              popper: {
+                                modifiers: [
+                                  {
+                                    name: "offset",
+                                    options: {
+                                      offset: [0, 0]
+                                    }
+                                  }
+                                ]
+                              }
+                            }}>
+                            <span>
+                              <TSCButton variant="contained" disabled>
+                                {t("workshops.details-page.download-button")}
+                              </TSCButton>
+                            </span>
+                          </CustomTooltip>
+                        ) : (
+                          <TSCButton variant="contained" onClick={downloadWorkshopFiles}>
+                            {t("workshops.details-page.download-button")}
+                          </TSCButton>
+                        )}
+                      </Box>
                     </>
                   ) : (
                     <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>

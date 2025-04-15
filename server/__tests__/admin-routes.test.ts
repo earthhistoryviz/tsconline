@@ -359,7 +359,8 @@ const testSharedAdminUser = {
   username: "testuser",
   pictureUrl: "https://example.com/picture.jpg",
   isAdmin: 1,
-  accountType: "default"
+  accountType: "default",
+  historyEntries: []
 };
 const testNonSharedAdminUser = {
   ...testSharedAdminUser,
@@ -412,7 +413,6 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/admin/official/datapack", body: { datapack: "test" } },
   { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
   { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
-  { method: "GET", url: "/admin/workshops" },
   {
     method: "POST",
     url: "/admin/workshop",
@@ -1135,27 +1135,6 @@ describe("getUsers", () => {
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(404);
   });
-  it("should return 404 if displayed users are not correctly processed", async () => {
-    const assertAdminSharedUser = vi.spyOn(shared, "assertAdminSharedUser").mockImplementationOnce(() => {
-      throw new Error();
-    });
-    const response = await app.inject({
-      method: "POST",
-      url: "/admin/users",
-      headers
-    });
-    expect(assertAdminSharedUser).toHaveBeenCalledTimes(1);
-    expect(assertAdminSharedUser).toHaveBeenCalledWith({
-      ...testSharedAdminUser,
-      userId: 123,
-      isAdmin: true,
-      isGoogleUser: false,
-      invalidateSession: false,
-      emailVerified: true
-    });
-    expect(await response.json()).toEqual({ error: "Unknown error" });
-    expect(response.statusCode).toBe(404);
-  });
 });
 
 describe("adminDeleteOfficialDatapack", () => {
@@ -1696,70 +1675,6 @@ describe("adminAddUsersToWorkshop", () => {
       invalidEmails: ["test@gmail.com"]
     });
     expect(response.statusCode).toBe(500);
-  });
-});
-
-describe("adminGetWorkshops", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-  const findWorkshop = vi.spyOn(database, "findWorkshop");
-  const getDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
-  const getFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
-  it("should return 500 if findWorkshop throws an error", async () => {
-    findWorkshop.mockRejectedValueOnce(new Error());
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/workshops",
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "Unknown error" });
-    expect(response.statusCode).toBe(500);
-  });
-  it("should return 200 if successful and workshop active as false", async () => {
-    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
-
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/workshops",
-      headers
-    });
-
-    expect(getDatapacksNames).toHaveBeenCalledOnce();
-    expect(getFilesNames).toHaveBeenCalledOnce();
-    expect(await response.json()).toEqual({
-      workshops: [
-        {
-          ...testWorkshop,
-          active: false,
-          datapacks: [],
-          files: []
-        }
-      ]
-    });
-    expect(response.statusCode).toBe(200);
-  });
-  it("should return 200 if successful and workshop active as true", async () => {
-    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, start: mockDate.toISOString() }]);
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/workshops",
-      headers
-    });
-    expect(getDatapacksNames).toHaveBeenCalledOnce();
-    expect(getFilesNames).toHaveBeenCalledOnce();
-    expect(await response.json()).toEqual({
-      workshops: [
-        {
-          ...testWorkshop,
-          start: mockDate.toISOString(),
-          active: true,
-          datapacks: [],
-          files: []
-        }
-      ]
-    });
-    expect(response.statusCode).toBe(200);
   });
 });
 

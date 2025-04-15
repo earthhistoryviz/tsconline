@@ -1,19 +1,14 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, extractMetadataFromDatapack, verifyNonExistentFilepath } from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import {
-  getWorkshopFilesPath,
-  getWorkshopUUIDFromWorkshopId,
-  verifyWorkshopValidity
-} from "../workshop/workshop-util.js";
+import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
-import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
-import path from "path";
+import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -412,8 +407,8 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
   }
 };
 
-export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
-  request: FastifyRequest<{ Params: { workshopId: number } }>,
+export const fetchUserHistory = async function fetchUserHistory(
+  request: FastifyRequest<{ Params: { timestamp: string } }>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -421,51 +416,51 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
-  const { workshopId } = request.params;
-  if (!workshopId) {
-    reply.status(400).send({ error: "Missing workshopId" });
-    return;
-  }
-
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
-  let filesFolder;
+  const { timestamp } = request.params;
   try {
-    filesFolder = await getWorkshopFilesPath(directory);
-  } catch (error) {
-    reply.status(500).send({ error: "Invalid directory path" });
-    return;
-  }
-  const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
-  if (!(await verifyNonExistentFilepath(zipfile))) {
-    reply.status(500).send({ error: "Invalid directory path" });
-    return;
-  }
-  try {
-    let file;
-
-    // Check if ZIP file already exists
-    try {
-      file = await readFile(zipfile);
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code !== "ENOENT") {
-        reply.status(500).send({ error: "An error occurred: " + e });
-        return;
-      }
-    }
-
-    // If ZIP file doesn't exist, create one
-    if (!file) {
-      file = await createZipFile(zipfile, filesFolder);
-    }
-    reply.send(file);
+    const history = await getChartHistory(uuid, timestamp);
+    reply.send(history);
   } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      reply.status(404).send({ error: "Failed to process the file" });
-    } else {
-      reply.status(500).send({ error: "An error occurred: " + e });
+    if ((e as Error).message === "Invalid datapack symlink") {
+      reply.status(404).send({ error: "Datapacks not found" });
+      return;
     }
+    reply.status(500).send({ error: "Failed to fetch history" });
+  }
+};
+
+export const fetchUserHistoryMetadata = async function fetchUserHistoryMetadata(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  try {
+    const metadata = await getChartHistoryMetadata(uuid);
+    reply.send(metadata);
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to fetch history metadata" });
+  }
+};
+
+export const deleteUserHistory = async function deleteUserHistory(
+  request: FastifyRequest<{ Params: { timestamp: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { timestamp } = request.params;
+  try {
+    await deleteChartHistory(uuid, timestamp);
+    reply.send({ message: "History deleted" });
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to delete history" });
   }
 };

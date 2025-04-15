@@ -35,6 +35,17 @@ export type AutoPlotResponse = {
   markers: AutoPlotMarker[];
 };
 
+export type ChartHistory = {
+  settings: string;
+  datapacks: Datapack[];
+  chartContent: string;
+  chartHash: string;
+};
+
+export type HistoryEntry = {
+  timestamp: string;
+};
+
 export type SharedUser = {
   username: string;
   email: string;
@@ -44,6 +55,7 @@ export type SharedUser = {
   accountType: string;
   workshopIds?: number[];
   uuid: string;
+  historyEntries: HistoryEntry[];
 };
 
 export type AdminSharedUser = {
@@ -708,6 +720,14 @@ export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
   return { title: o.title, type: o.type, uuid: getUUIDOfDatapackType(o) };
 }
 
+export function assertChartHistory(o: any): asserts o is ChartHistory {
+  if (!o || typeof o !== "object") throw new Error("ChartHistory must be a non-null object");
+  if (typeof o.settings !== "string") throwError("ChartHistory", "settings", "string", o.settings);
+  if (typeof o.chartContent !== "string") throwError("ChartHistory", "chartContent", "string", o.chartContent);
+  if (typeof o.chartHash !== "string") throwError("ChartHistory", "chartHash", "string", o.chartHash);
+  assertDatapackArray(o.datapacks);
+}
+
 export function assertAutoPlotRequest(o: any): asserts o is AutoPlotRequest {
   if (!o || typeof o !== "object") throw new Error("AutoPlotRequest must be a non-null object");
   for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
@@ -857,6 +877,18 @@ export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser
   }
 }
 
+export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
+  if (!o || typeof o !== "object") throw new Error("HistoryEntry must be a non-null object");
+  if (typeof o.timestamp !== "string") throwError("HistoryEntry", "timestamp", "string", o.timestamp);
+}
+
+export function assertHistoryEntryArray(o: any): asserts o is HistoryEntry[] {
+  if (!Array.isArray(o)) throw new Error("HistoryEntry must be an array");
+  for (const entry of o) {
+    assertHistoryEntry(entry);
+  }
+}
+
 export function assertAdminSharedUser(o: any): asserts o is AdminSharedUser {
   if (!o || typeof o !== "object") throw new Error("AdminSharedUser must be a non-null object");
   if (typeof o.userId !== "number") throwError("AdminSharedUser", "userId", "number", o.userId);
@@ -880,6 +912,7 @@ export function assertSharedUser(o: any): asserts o is SharedUser {
       if (typeof workshopId !== "number") throwError("User", "workshopIds", "number", workshopId);
     }
   }
+  assertHistoryEntryArray(o.historyEntries);
 }
 
 export function assertFreehand(o: any): asserts o is Freehand {

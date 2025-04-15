@@ -3,7 +3,7 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { context } from "./state";
 import { styled, useTheme } from "@mui/material/styles";
 import "./Chart.css";
-import { CustomTooltip, TSCButton, TSCMenuItem } from "./components";
+import { CustomTooltip, TSCMenuItem } from "./components";
 import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import ZoomInIcon from "@mui/icons-material/ZoomIn";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
@@ -36,6 +36,7 @@ import { ChartContext } from "./Chart";
 import styles from "./ChartOptionsBar.module.css";
 import Color from "color";
 import { ControlledMenu, useClick, useMenuState } from "@szhsin/react-menu";
+import { TSCSplitButton } from "./components/TSCButton";
 interface OptionsBarProps {
   transformRef: React.RefObject<ReactZoomPanPinchContentRef>;
   svgRef: React.RefObject<HTMLDivElement>;
@@ -57,7 +58,7 @@ const StyledIconButton = styled(IconButton)(({ theme }) => ({
 
 export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, svgRef, step, minScale, maxScale }) => {
   const { actions } = useContext(context);
-  const { chartTabState, otherChartOptions } = useContext(ChartContext);
+  const { chartTabState, stateChartOptions, actionChartOptions, altSaveOptions } = useContext(ChartContext);
   const { isSavingChart, unsafeChartContent, chartZoomSettings, downloadFilename, downloadFiletype } = chartTabState;
   let width = 0;
   const optionsBarRef = useRef<HTMLDivElement>(null);
@@ -132,7 +133,7 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
             <Typography>Zoom on Scroll</Typography>
           </TSCMenuItem>
           {isOverflowing &&
-            (otherChartOptions || []).map(({ label, onChange, value }) => (
+            (stateChartOptions || []).map(({ label, onChange, value }) => (
               <TSCMenuItem
                 key={label}
                 type="checkbox"
@@ -318,9 +319,17 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
     }
     return (
       <div>
-        <TSCButton className={styles.saveButton} buttonType="gradient" onClick={() => handleDownloadOpen()}>
-          {t("chart.save")}
-        </TSCButton>
+        <TSCSplitButton
+          className={styles.saveButton}
+          buttonType="gradient"
+          arrowSize="large"
+          main={{
+            label: t("chart.save"),
+            onClick: () => handleDownloadOpen(),
+            showText: true
+          }}
+          options={altSaveOptions || []}
+        />
         <Dialog
           disableRestoreFocus
           open={downloadOpen}
@@ -413,8 +422,17 @@ export const OptionsBar: React.FC<OptionsBarProps> = observer(({ transformRef, s
         <ZoomOutButton />
         <ResetButton />
         <ZoomFitButton />
+        {(actionChartOptions || []).map(({ icon, label, onClick }) => {
+          return (
+            <Box key={label}>
+              <CustomTooltip title={label} key="label">
+                <StyledIconButton onClick={onClick}>{icon}</StyledIconButton>
+              </CustomTooltip>
+            </Box>
+          );
+        })}
         {!isOverflowing &&
-          (otherChartOptions || []).map(({ icon, label, onChange, value }) => (
+          (stateChartOptions || []).map(({ icon, label, onChange, value }) => (
             <Box key={label}>
               <CustomTooltip title={label} key="label">
                 <StyledIconButton className={`${value ? "active" : ""}`} onClick={() => onChange(!value)}>
