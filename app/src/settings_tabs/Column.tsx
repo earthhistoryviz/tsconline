@@ -23,7 +23,6 @@ import { Theme, styled, useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
-import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
@@ -35,10 +34,11 @@ import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from '@mui/icons-material/Add';
 import BarChartIcon from "@mui/icons-material/BarChart";
-import JoinInnerIcon from "@mui/icons-material/JoinInner";
-import Settings from "@mui/icons-material/Settings";
+import SpokeRoundedIcon from "@mui/icons-material/SpokeRounded";
+import SettingsIcon from "@mui/icons-material/Settings";
 import { OverlayColumnAccordion } from "./advanced_settings/OverlaySettings";
 import { createGradient } from "../util/util";
+import { DataMiningSettings } from "./advanced_settings/DataMiningSettings";
 
 type ColumnContextType = {
   state: {
@@ -90,16 +90,20 @@ export const Column = observer(function Column() {
           <ColumnMenu />
         </div>
       </div>
-      <CustomColumnsMenu open={menuOpen} />
+      {state.settingsTabs.columns && <CustomColumnsMenu open={menuOpen} column={state.settingsTabs.columns} />}
     </>
   );
 });
 
 type CustomColumnsMenuProps = {
+  column: ColumnInfo;
   open: boolean;
 };
 
-export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(function CustomColumnsMenu({ open }) {
+export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(function CustomColumnsMenu({
+  open,
+  column
+}) {
   const { state } = useContext(context);
   const theme = useTheme();
   const CustomColumnPanel = styled(Box)(({ theme }: { theme: Theme }) => ({
@@ -114,8 +118,9 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
       color: theme.palette.button.main
     }
   }));
-  const icons = [BarChartIcon, JoinInnerIcon, Settings];
+  const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
+  const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
 
   return (
     <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }}>
@@ -132,7 +137,15 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
                 sx={{
                   background: gradient.main
                 }}>
-                <Icon />
+                <Icon
+                  sx={{
+                    "& path": {
+                      fill: "none",
+                      stroke: "black",
+                      strokeWidth: 1.5
+                    }
+                  }}
+                />
               </Box>
             ))}
           </Box>
@@ -151,27 +164,44 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
         <Box gridRow="3" gridColumn="1" display="flex" justifyContent="space-between" height="70vh" gap={3}>
           <CustomColumnPanel>
             <StyledScrollbar>
-              <OverlayColumnAccordion column={state.settingsTabs.columns} />
+              {column.children &&
+                Object.entries(column.children).map(([childName, childColumn]) => (
+                  <OverlayColumnAccordion key={childName} column={childColumn} />
+                ))}
             </StyledScrollbar>
           </CustomColumnPanel>
           <CustomColumnPanel height="fit-content">
-            <RadioGroup defaultValue="dataMining" sx={{ m: 2 }}>
-              <FormControlLabel value="dataMining" control={<CustomRadioButton />} label="Data mining" />
-              <FormHelperText sx={{ ml: 4, mt: -1 }}>
+            <RadioGroup
+              value={columnType}
+              sx={{ m: 2 }}
+              onChange={(e) => setColumnType(e.target.value as typeof columnType)}>
+              <FormControlLabel value="dataMining" control={<CustomRadioButton size="small" />} label="Data Mining" />
+              <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
                 Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point
                 column over sliding windows of data.
               </FormHelperText>
               <FormControlLabel
                 value="dualColumnComparison"
-                control={<CustomRadioButton />}
+                control={<CustomRadioButton size="small" />}
                 label="Dual Column Comparison"
               />
-              <FormHelperText sx={{ ml: 4, mt: -1 }}>
+              <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
                 Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.
               </FormHelperText>
             </RadioGroup>
           </CustomColumnPanel>
-          <CustomColumnPanel></CustomColumnPanel>
+          <CustomColumnPanel>
+            {columnType === "dataMining" ? (
+              <DataMiningSettings column={column} />
+            ) : (
+              <StyledScrollbar>
+                {column.children &&
+                  Object.entries(column.children).map(([childName, childColumn]) => (
+                    <OverlayColumnAccordion key={childName} column={childColumn} />
+                  ))}
+              </StyledScrollbar>
+            )}
+          </CustomColumnPanel>
         </Box>
       </DialogContent>
     </Dialog>
@@ -308,7 +338,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
-                setExpanded(!details.expanded, details);
+                actions.setExpanded(!details.expanded, details);
               }}
             />
           }

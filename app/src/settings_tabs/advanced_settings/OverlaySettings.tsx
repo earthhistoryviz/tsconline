@@ -188,8 +188,9 @@ type OverlayColumnAccordionProps = {
 
 export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column }) => {
   const { state } = useContext(context);
-  const [expanded, setExpanded] = useState(false);
   const { t } = useTranslation();
+  if (!column.show) return null;
+  const [expanded, setExpanded] = useState(column.expanded);
 
   const selectedClass = column.name === getSelectedOverlayColumn() ? "selected-column" : "";
 
@@ -197,7 +198,6 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
   const validForOverlay = column.columnDisplayType == "Event" || column.columnDisplayType == "Point";
 
   // if there are no children, don't make an accordion
-  console.log("column.children", column.children.length);
   if (column.children.length == 0) {
     const ValidOverlay = () => (
       <ColumnContainer
