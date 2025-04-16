@@ -14,7 +14,7 @@ import {
   TableChart,
   Tune
 } from "@mui/icons-material";
-import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer } from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
@@ -26,7 +26,6 @@ import { TSCStepper } from "./components/TSCStepper";
 export const Home = observer(function Home() {
   const { actions } = useContext(context);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
@@ -84,13 +83,12 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
-          {!isMobile && <UpcomingWorkshops />}
+          <UpcomingWorkshops />
         </Box>
       </Box>
       <CustomDivider />
       <ChartCreationSteps ref={scrollRef} />
       <LandingPageCards />
-      {isMobile && <UpcomingWorkshops />}
       <Carousel />
       {import.meta.env.DEV && (
         <div className="bottom-button">
@@ -559,8 +557,7 @@ const ChartCreationSteps = observer(
 
 const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const isMobile = useMediaQuery("(max-width:900px)");
     const isTall = useMediaQuery("(min-height:650px)");
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
@@ -633,36 +630,39 @@ const UpcomingWorkshops = observer(
         )}
         {isMobile && (
           <>
-            <TSCButton
-              buttonType="gradient"
-              onClick={() => setOpen(true)}
-              sx={{
-                position: "fixed",
-                bottom: "-3px",
-                right: "20px",
-                visibility: open ? "hidden" : "visible"
-              }}>
-              {t("Upcoming Workshops")}
-            </TSCButton>
-            <Drawer
-              open={open}
-              anchor="bottom"
-              onClose={() => setOpen(false)}
-              PaperProps={{
-                sx: {
-                  height: "90vh",
-                  background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%)"
-                }
-              }}>
-              <TSCButton onClick={() => setOpen(false)} buttonType="gradient" className="upcoming-workshop-button">
+            <Portal>
+              <TSCButton
+                buttonType="gradient"
+                onClick={() => setOpen(true)}
+                sx={{
+                  position: "fixed",
+                  bottom: "-3px",
+                  right: "20px",
+                  visibility: open ? "hidden" : "visible",
+                  zIndex: 3600
+                }}>
                 {t("Upcoming Workshops")}
               </TSCButton>
-              <StyledScrollbar>
-                {workshops.map((step, index) => (
-                  <WorkshopItem key={index} step={step} />
-                ))}
-              </StyledScrollbar>
-            </Drawer>
+              <Drawer
+                open={open}
+                anchor="bottom"
+                onClose={() => setOpen(false)}
+                PaperProps={{
+                  sx: {
+                    height: "90vh",
+                    background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%)"
+                  }
+                }}>
+                <TSCButton onClick={() => setOpen(false)} buttonType="gradient" className="upcoming-workshop-button">
+                  {t("Upcoming Workshops")}
+                </TSCButton>
+                <StyledScrollbar>
+                  {workshops.map((step, index) => (
+                    <WorkshopItem key={index} step={step} />
+                  ))}
+                </StyledScrollbar>
+              </Drawer>
+            </Portal>
           </>
         )}
       </>
