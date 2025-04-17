@@ -5,6 +5,7 @@
     "fastify": "^4.27.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "@types/eslint": "^8",
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
@@ -17,6 +18,8 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
+    "form-auto-content": "^3.2.1",
+    "playwright": "^1.51.1",
     "prettier": "^3.2.5",
     "syncpack": "^12.3.0",
     "typescript": "5.2.2",
@@ -43,10 +46,11 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:case": "vitest run -t",
-    "coverage:ci": "vitest run --coverage --no-color",
-    "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color",
-    "coverage": "vitest run --coverage",
-    "clean": "yarn workspaces foreach -A --parallel run clean"
+    "test:frontend": "yarn playwright test",
+    "test:frontend:ui": "yarn playwright test --ui",
+    "coverage:ci": "vitest run --coverage --no-color ; yarn playwright test",
+    "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
+    "coverage": "vitest run --coverage"
   },
   "workspaces": [
     "app",
