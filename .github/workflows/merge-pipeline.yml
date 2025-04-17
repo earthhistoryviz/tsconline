@@ -130,6 +130,9 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Install Playwright Dependencies
+        run: yarn playwright install --with-deps
+
       - name: Build the project
         id: build
         run: |
