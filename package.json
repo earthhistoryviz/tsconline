@@ -48,7 +48,7 @@
     "test:case": "vitest run -t",
     "test:charts": "yarn playwright test",
     "test:charts:ui": "yarn playwright test --ui",
-    "test:charts:ci": "CI=true yarn test:charts",
+    "test:charts:ci": "CI=true yarn test:charts ",
     "coverage:ci": "yarn test:charts:ci",
     "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
     "coverage": "vitest run --coverage"
