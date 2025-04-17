@@ -46,9 +46,9 @@
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:case": "vitest run -t",
-    "test:frontend": "yarn playwright test",
-    "test:frontend:ui": "yarn playwright test --ui",
-    "coverage:ci": "vitest run --coverage --no-color",
+    "test:charts": "yarn playwright test",
+    "test:charts:ui": "yarn playwright test --ui",
+    "coverage:ci": "vitest run --coverage --no-color CI=true yarn test:charts",
     "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
     "coverage": "vitest run --coverage"
   },
