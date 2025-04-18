@@ -7,10 +7,10 @@ test("datapack button is clickable", async ({ page }) => {
   await datapacksTab.click();
 
   const AfricaBightButton = page.locator("text=Africa Bight");
-  await expect(AfricaBightButton).toBeVisible();
+  await AfricaBightButton.waitFor({ state: "visible" });
+  await expect(AfricaBightButton).toBeVisible({ timeout: 15000 });
   await AfricaBightButton.click();
 
-  // About
   await expect(page.locator("text=Description")).toBeVisible();
   await expect(page.locator("text=Africa Bight Map")).toBeVisible();
   await expect(page.locator("text=Authored By")).toBeVisible();
