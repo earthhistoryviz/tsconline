@@ -383,9 +383,9 @@ setInterval(async () => {
 }, sunsetInterval);
 // delete all temp datapacks after one day
 setInterval(
-  () => {
+  async () => {
     try {
-      deleteAllUserDatapacks("temp");
+      await deleteAllUserDatapacks("temp");
     } catch (e) {
       logger.error("Error deleting verification: ", e);
     }
