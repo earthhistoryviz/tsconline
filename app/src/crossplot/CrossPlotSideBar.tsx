@@ -5,7 +5,7 @@ import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, useTheme } from "@mui/material";
 import Color from "color";
-import { ColumnDisplay } from "../settings_tabs/Column";
+import { ColumnContext, ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
 import { CrossPlotTimeSettings } from "../types";
 import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
@@ -569,13 +569,29 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
     </Box>
   );
 });
+const CrossPlotColumns: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  return (
+
+    <ColumnContext.Provider value={{
+      state: {
+        columns: state.crossPlot.columns,
+        columnSearchTerm: "",
+        columnSelected: state.crossPlot.columnSelected,
+        timeSettings: {
+          [state.crossPlot.chartX?]
+        }
+      }
+    }}><ColumnDisplay /></ColumnContext.Provider>
+  )
+});
 
 const tabs = [
   { tabName: "Time", Icon: AccessTimeRounded, component: <Time /> },
   {
     tabName: "Columns",
     Icon: TableChartRounded,
-    component: <ColumnDisplay />
+    component: <CrossPlotColumns />
   },
   {
     tabName: "Markers",

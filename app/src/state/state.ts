@@ -64,6 +64,7 @@ export type State = {
     columns?: ColumnInfo;
     datapacks: DatapackConfigForChartRequest[];
     columnHashMap: Map<string, ColumnInfo>;
+    columnSelected: string | null;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -180,7 +181,8 @@ export const state = observable<State>({
     crossPlotBounds: undefined,
     loading: false,
     datapacks: [],
-    columnHashMap: new Map<string, ColumnInfo>()
+    columnHashMap: new Map<string, ColumnInfo>(),
+    columnSelected: null,
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,

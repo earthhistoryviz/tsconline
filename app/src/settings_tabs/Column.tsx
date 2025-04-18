@@ -27,7 +27,7 @@ type ColumnContextType = {
   state: {
     columns: ColumnInfo | undefined;
     columnSearchTerm: string;
-    columnSelected: string;
+    columnSelected: string | null;
     timeSettings:
       | {
           [unit: string]: CrossPlotTimeSettings;

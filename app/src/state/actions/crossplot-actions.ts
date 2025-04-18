@@ -801,7 +801,7 @@ export const setCrossPlotDatapackConfig = action(
       await initializeColumnHashMap(state.crossPlot.columns);
     });
     for (const child of state.crossPlot.columns!.children) {
-      if (child.units === "Ma") {
+      if (child.units.toLowerCase() === "ma") {
         setCrossPlotChartX(child);
         break;
       }
