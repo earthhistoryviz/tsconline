@@ -502,7 +502,8 @@ export const uploadConvertedDatapackToProfile = action(
       type: "user",
       isPublic: false,
       priority: 1,
-      uuid: state.user.uuid
+      uuid: state.user.uuid,
+      hasFiles: false
     };
     let file: File;
     try {
