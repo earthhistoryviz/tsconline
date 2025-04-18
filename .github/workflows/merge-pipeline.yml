@@ -236,10 +236,8 @@ jobs:
             echo "Error: Failed to download decryption jar."
             exit 1
           fi
-          else
-            echo "Successfully downloaded decryption jar."
-            echo "jar_path=$DECRYPTION_JAR" >> $GITHUB_OUTPUT
-          fi
+          echo "Successfully downloaded decryption jar."
+          echo "jar_path=$DECRYPTION_JAR" >> $GITHUB_OUTPUT
 
       - name: Run Tests
         id: run_tests
