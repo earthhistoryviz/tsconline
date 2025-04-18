@@ -373,7 +373,6 @@ server.post(
   },
   routes.fetchImage
 );
-
 setInterval(async () => {
   await checkFileMetadata(assetconfigs.fileMetadata)
     .catch((e) => {
