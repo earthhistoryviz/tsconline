@@ -137,6 +137,43 @@ export const fetchPublicOfficialDatapack = action(
   }
 );
 
+export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+  const recaptchaToken = await getRecaptchaToken("fetchDatapackFiles");
+  if (!recaptchaToken) return null;
+  try {
+    const response = await fetcher(
+      `/user/datapack/download/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      }
+    );
+    const file = await response.blob();
+    if (response.ok) {
+      if (file) {
+        try {
+          await downloadFile(file, `FilesFor${datapackTitle}.zip`);
+        } catch (e) {
+          pushError(ErrorCodes.INVALID_PATH);
+        }
+      }
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      );
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") return;
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
@@ -305,11 +342,13 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("hasFiles", String(metadata.hasFiles));
     if (pdfFiles?.length) {
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
     }
+
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
@@ -332,6 +371,7 @@ export const uploadUserDatapack = action(
         if (metadata.isPublic) {
           refreshPublicDatapacks();
         }
+
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         if (response.status === 403) {
@@ -1269,7 +1309,8 @@ export const resetEditableDatapackMetadata = action((metadata: EditableDatapackM
     type: metadata.type,
     authoredBy: metadata.authoredBy,
     priority: metadata.priority,
-    references: metadata.references
+    references: metadata.references,
+    hasFiles: metadata.hasFiles
   };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {
