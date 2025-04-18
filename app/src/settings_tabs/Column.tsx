@@ -80,17 +80,15 @@ export const Column = observer(function Column() {
         <ColumnSearchBar />
         <div className="column-accordion-and-menu-container">
           <div>
-            {state.settingsTabs.columns && (
-              <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => setMenuOpen(true)}>
-                Create Custom Column
-              </Button>
-            )}
+            <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => setMenuOpen(true)}>
+              Create Custom Column
+            </Button>
             <ColumnDisplay />
           </div>
           <ColumnMenu />
         </div>
       </div>
-      {state.settingsTabs.columns && <CustomColumnsMenu open={menuOpen} column={state.settingsTabs.columns} />}
+      <CustomColumnsMenu open={menuOpen} onClose={() => setMenuOpen(false)} column={state.settingsTabs.columns} />
     </>
   );
 });
@@ -98,11 +96,13 @@ export const Column = observer(function Column() {
 type CustomColumnsMenuProps = {
   column: ColumnInfo;
   open: boolean;
+  onClose: () => void;
 };
 
 export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(function CustomColumnsMenu({
   open,
-  column
+  column,
+  onClose
 }) {
   const { state } = useContext(context);
   const theme = useTheme();
@@ -121,9 +121,11 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
+  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(null);
+  console.log("baseColumn", baseColumn);
 
   return (
-    <Dialog open={open} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }} >
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }} >
       <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main }}>
         <Box display="grid" height="100%">
           <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
@@ -167,7 +169,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
             <StyledScrollbar>
               {column.children &&
                 Object.entries(column.children).map(([childName, childColumn]) => (
-                  <OverlayColumnAccordion key={childName} column={childColumn} />
+                  <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setBaseColumn} />
                 ))}
             </StyledScrollbar>
           </CustomColumnPanel>
@@ -198,7 +200,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
               <StyledScrollbar>
                 {column.children &&
                   Object.entries(column.children).map(([childName, childColumn]) => (
-                    <OverlayColumnAccordion key={childName} column={childColumn} />
+                    <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={() => console.log("hi")}/>
                   ))}
               </StyledScrollbar>
             )}
