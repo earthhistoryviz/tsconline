@@ -121,9 +121,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
   return (
     <>
       <ListItem disablePadding>
-        <ListItemButton
-          onClick={handleClick}
-          className="help-list-item-button">
+        <ListItemButton onClick={handleClick} className="help-list-item-button">
           <ListItemText primary={link.title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
           {hasChildren(link) && (
             <ExpandLess
@@ -161,9 +159,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
 
 function NewHelpDrawer() {
   return (
-    <List
-      disablePadding
-      className="new-help-drawer-list">
+    <List disablePadding className="new-help-drawer-list">
       {links.map((link, index) => (
         <NavItem key={index} link={link} />
       ))}
