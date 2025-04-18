@@ -203,6 +203,7 @@ jobs:
           fi
 
       - name: Move TSCreator Jar for e2e
+        id: move_jar
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
@@ -222,6 +223,7 @@ jobs:
             exit 1
           fi
           echo "Successfully renamed jar to $pr_jar"
+          echo "pr_jar=$pr_jar" >> $GITHUB_OUTPUT
 
       - name: Set up Decryption Jar and Datapacks
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -286,6 +288,12 @@ jobs:
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+
+          pr_jar=${{ steps.move_jar.outputs.pr_jar }}
+          if [ -z "$pr_jar" ]; then
+            echo "Error: pr_jar is empty. Check config.json format."
+            exit 1
+          fi
 
           mv ${{ github.workspace }}/server/assets/jars/$pr_jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
 
