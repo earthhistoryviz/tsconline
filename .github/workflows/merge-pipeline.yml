@@ -228,7 +228,7 @@ jobs:
           curl -s -X POST "https://content.dropboxapi.com/2/files/download" \
           --header "Authorization: Bearer $ACCESS_TOKEN" \
           --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
-          --output "$DECRYPTION_JAR"
+          --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
 
           if [ ! -f "$DECRYPTION_JAR" ]; then
             echo "Error: Failed to download decryption jar."
