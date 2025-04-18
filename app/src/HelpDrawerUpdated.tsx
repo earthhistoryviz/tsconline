@@ -3,6 +3,8 @@ import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/mat
 import { useState } from "react";
 import { ExpandLess } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import "./HelpDrawer.css";
+import { generatePath } from "./state/non-action-util";
 
 interface LinkPath {
   title: string;
@@ -102,7 +104,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
-  const formattedPath = `${parentPath}/${link.title.toLowerCase().replace(/\s+/g, "-")}`;
+  const formattedPath = generatePath(link.title, parentPath);
 
   const hasChildren = (link: LinkPath): boolean => {
     return (link.children?.length || 0) > 0;
@@ -121,13 +123,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
       <ListItem disablePadding>
         <ListItemButton
           onClick={handleClick}
-          sx={{
-            flexDirection: "row-reverse",
-            py: 0,
-            my: 0,
-            height: "24px",
-            width: "300px"
-          }}>
+          className="help-list-item-button">
           <ListItemText primary={link.title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
           {hasChildren(link) && (
             <ExpandLess
@@ -149,11 +145,10 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
           <List
             component="div"
             disablePadding
+            className="menu-item"
             sx={{
-              pl: 1,
-              borderLeft: `1px solid ${theme.palette.divider}`,
-              marginLeft: "27.5px",
-              "& .MuiListItem-root": { margin: 0 }
+              // Can't directly feed theme.palette.divider into the css file
+              borderLeft: `1px solid ${theme.palette.divider}`
             }}>
             {link.children &&
               link.children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
@@ -168,11 +163,7 @@ function NewHelpDrawer() {
   return (
     <List
       disablePadding
-      sx={{
-        "& .MuiListItem-root": {
-          margin: 0
-        }
-      }}>
+      className="new-help-drawer-list">
       {links.map((link, index) => (
         <NavItem key={index} link={link} />
       ))}

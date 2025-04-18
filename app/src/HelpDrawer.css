@@ -1,0 +1,29 @@
+.help-list-item-button {
+    display: flex;
+    flex-direction: row-reverse;
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    height: 24px;
+    width: 300px;
+  }
+
+/* Theme palette divider: */
+.menu-item {
+  padding-left: 8px;
+  margin-left: 27.5px;
+}
+
+.menu-item.child {
+  border-left: 1px solid;
+}
+
+.menu-item .MuiListItem-root {
+  margin: 0;
+}
+
+/* New Help Drawer List*/
+.new-help-drawer-list .MuiListItem-root{
+  margin: 0;
+}

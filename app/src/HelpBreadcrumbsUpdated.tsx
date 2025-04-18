@@ -4,6 +4,7 @@ import { fetcher } from "./util";
 import { PageNotFound } from "./PageNotFound";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
+import { generatePath } from "./state/non-action-util";
 
 interface LinkPath {
   title: string;
@@ -110,12 +111,7 @@ const links: LinkPath[] = [
   }
 ];
 
-const generatePath = (title: string, parentPath = ""): string => {
-  const encoded = encodeURIComponent(title);
-  return `${parentPath}/${encoded}`;
-};
-
-const normalizeForComparison = (path: string): string => {
+export const normalizeForComparison = (path: string): string => {
   return decodeURIComponent(path)
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "-")

@@ -198,3 +198,12 @@ export function attachTscPrefixToName(name: string, displayType: DisplayedColumn
       return `class datastore.${displayType}Column:` + name;
   }
 }
+
+export const formatPathSegment = (title: string): string => {
+  return title.toLowerCase().replace(/\s+/g, "-");
+};
+
+export const generatePath = (title: string, parentPath = ""): string => {
+  const encoded = encodeURIComponent(title);
+  return `${parentPath}/${encoded}`;
+};
