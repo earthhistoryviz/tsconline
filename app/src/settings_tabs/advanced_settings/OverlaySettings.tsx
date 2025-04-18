@@ -1,3 +1,4 @@
+import "./wydr"
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import { ColumnContainer, Accordion } from "../../components";
@@ -53,17 +54,13 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
     </OverlayColumnContext.Provider>
   );
 });
+OverlayColumnAccordion.whyDidYouRender = true;
 
 const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
   const { state } = useContext(context);
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(column.expanded);
   const { selectedColumn, setSelectedColumn } = useContext(OverlayColumnContext);
-
-  useEffect(() => {
-    console.log("Mounted", column.name);
-    return () => console.log("Unmounted", column.name);
-  }, []);
 
   //column can be chosen for overlay column
   const validForOverlay = column.columnDisplayType == "Event" || column.columnDisplayType == "Point";
@@ -116,7 +113,7 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
           }
           // refColumn.columnSpecificSettings.drawDualColCompColumn =
           //   `class datastore.${column.columnDisplayType}Column:` + column.name;
-          // setSelectedColumn(column);
+          setSelectedColumn(column);
           onColumnClick(column);
         }}
         tabIndex={0}>
