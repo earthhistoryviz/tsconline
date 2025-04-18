@@ -181,13 +181,12 @@
                 "description": "Description",
                 "register-button": "Register",
                 "registered-button": "Registered",
+                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
                 "messages": {
                     "no-datapacks": "No datapacks available",
-                    "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
                     "no-files": "No files available",
                     "not-registered": "Contact profogg@gmail.com to register!"
-                },
-                "alrRegistered-button": "Already Registered"
+                }
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",
@@ -609,9 +608,7 @@
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
-            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn't be loaded due to missing files and has been removed from your history.",
-            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
-            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn't be loaded due to missing files and has been removed from your history."
         },
         "button": {
             "generate": "Generate",
