@@ -230,6 +230,7 @@ jobs:
           --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
           --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
 
+          DECRYPTION_JAR="${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
           if [ ! -f "$DECRYPTION_JAR" ]; then
             echo "Error: Failed to download decryption jar."
             exit 1
