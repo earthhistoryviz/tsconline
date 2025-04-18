@@ -308,7 +308,8 @@ const testDatapackDescription: DatapackMetadata = {
   type: "user",
   uuid: "test-uuid",
   isPublic: false,
-  priority: 0
+  priority: 0,
+  hasFiles: false
 };
 
 const testUserWorkshop = {
