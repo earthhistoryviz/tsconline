@@ -131,6 +131,15 @@ describe("splice column entry tests", () => {
       enableTitle: true
     });
   });
+  it("should remove if off is included", () => {
+    const array = ["child1", "child2", "child3", "off"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: true,
+      info: "",
+      enableTitle: true
+    });
+  });
 });
 
 describe("process facies line tests", () => {
