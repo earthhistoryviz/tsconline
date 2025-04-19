@@ -40,6 +40,7 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const dataMiningSettings = column.columnSpecificSettings;
+  console.log("DataMiningSettings", dataMiningSettings);
   if (!dataMiningSettings) return;
   assertDataMiningSettings(dataMiningSettings);
   return (

@@ -597,6 +597,7 @@ export const setColumnSelected = action((name: string) => {
   } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
+  console.log(column?.columnSpecificSettings);
 });
 export const setColumnMenuTabs = action((tabs: string[]) => {
   state.columnMenu.tabs = tabs;

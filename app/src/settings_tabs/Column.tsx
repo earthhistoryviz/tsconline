@@ -15,7 +15,15 @@ import {
   TextField
 } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
+import {
+  ColumnContainer,
+  TSCCheckbox,
+  Accordion,
+  CustomTooltip,
+  Lottie,
+  StyledScrollbar,
+  TSCButton
+} from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -99,33 +107,34 @@ type CustomColumnsMenuProps = {
   onClose: () => void;
 };
 
-export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(function CustomColumnsMenu({
-  open,
-  column,
-  onClose
-}) {
+const CustomColumnPanel = styled(Box)(({ theme }: { theme: Theme }) => ({
+  backgroundColor: theme.palette.secondaryBackground.main,
+  flex: 1,
+  border: "1px solid black",
+  minWidth: 0
+}));
+const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
+  color: theme.palette.button.main,
+  "&.Mui-checked": {
+    color: theme.palette.button.main
+  }
+}));
+
+export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ open, column, onClose }) => {
   const { state } = useContext(context);
   const theme = useTheme();
-  const CustomColumnPanel = styled(Box)(({ theme }: { theme: Theme }) => ({
-    backgroundColor: theme.palette.secondaryBackground.main,
-    flex: 1,
-    border: "1px solid black",
-    minWidth: 0
-  }));
-  const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
-    color: theme.palette.button.main,
-    "&.Mui-checked": {
-      color: theme.palette.button.main
-    }
-  }));
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
   const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(null);
-  console.log("baseColumn", baseColumn);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth PaperProps={{ className: "custom-columns-menu-paper" }} >
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xl"
+      fullWidth
+      PaperProps={{ className: "custom-columns-menu-paper" }}>
       <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main }}>
         <Box display="grid" height="100%">
           <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
@@ -194,17 +203,47 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(func
             </RadioGroup>
           </CustomColumnPanel>
           <CustomColumnPanel p={2}>
-            {columnType === "dataMining" ? (
-              <DataMiningSettings column={column} />
+            {!baseColumn ? (
+              <Box display="flex" alignItems="center" justifyContent="center" height="100%">
+                <Typography variant="h4" textAlign="center">
+                  Please select a Base Column
+                </Typography>
+              </Box>
+            ) : columnType === "dataMining" ? (
+              <DataMiningSettings column={baseColumn} />
             ) : (
               <StyledScrollbar>
                 {column.children &&
                   Object.entries(column.children).map(([childName, childColumn]) => (
-                    <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={() => console.log("hi")}/>
+                    <OverlayColumnAccordion
+                      key={childName}
+                      column={childColumn}
+                      onColumnClick={() => console.log("hi")}
+                    />
                   ))}
               </StyledScrollbar>
             )}
           </CustomColumnPanel>
+        </Box>
+        <Box display="flex" justifyContent="flex-end" gap={3} mt={2}>
+          <TSCButton
+            sx={{ backgroundColor: theme.palette.secondaryBackground.main, color: "black", border: "1px solid black" }}
+            onClick={onClose}>
+            Cancel
+          </TSCButton>
+          <TSCButton
+            buttonType="gradient"
+            onClick={() => {
+              if (!baseColumn) return;
+              if (columnType === "dataMining") {
+                state.settingsTabs.columns.addDataMiningColumn(baseColumn);
+              } else {
+                state.settingsTabs.columns.addDualColumnComparison(baseColumn);
+              }
+              onClose();
+            }}>
+            Create Column
+          </TSCButton>
         </Box>
       </DialogContent>
     </Dialog>

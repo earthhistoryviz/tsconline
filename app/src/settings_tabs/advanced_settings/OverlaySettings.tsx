@@ -1,9 +1,8 @@
-import "./wydr"
 import { context } from "../../state";
 import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import { ColumnContainer, Accordion } from "../../components";
 import { Box, Typography } from "@mui/material";
-import { useContext, useState, createContext, useEffect } from "react";
+import { useContext, useState, createContext } from "react";
 import { observer } from "mobx-react-lite";
 import { useTranslation } from "react-i18next";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
@@ -54,7 +53,6 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
     </OverlayColumnContext.Provider>
   );
 });
-OverlayColumnAccordion.whyDidYouRender = true;
 
 const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
   const { state } = useContext(context);
@@ -122,7 +120,7 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
     );
   }
   //for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = column.children.some((column) => column.name === "HIHI")
+  const containsSelectedChild = column.children.some((column) => column.name === selectedColumn?.name)
     ? { opacity: 1 }
     : {};
   return (
