@@ -138,7 +138,7 @@ beforeAll(async () => {
   app.get("/workshop", fetchAllWorkshops);
   app.get("/workshop-images/1", fetchWorkshopCoverImage);
   await app.listen({ host: "localhost", port: 1250 });
-  //vi.spyOn(console, "error").mockImplementation(() => { });
+  vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
