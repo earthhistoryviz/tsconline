@@ -1,5 +1,4 @@
-import { context } from "../../state";
-import { ColumnInfo, assertEventSettings, assertPointSettings } from "@tsconline/shared";
+import { ColumnInfo } from "@tsconline/shared";
 import { ColumnContainer, Accordion } from "../../components";
 import { Box, Typography } from "@mui/material";
 import { useContext, useState, createContext } from "react";
@@ -9,27 +8,7 @@ import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { CustomTooltip } from "../../components";
-import { discardTscPrefix, prependDualColCompColumnName } from "../../util/util";
 import "./OverlaySettings.css";
-
-function getSelectedOverlayColumn(columnSelected: ColumnInfo): string | null {
-  const { state } = useContext(context);
-  if (!state.columnMenu.columnSelected) {
-    return null;
-  }
-  const selectedColumn = state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected);
-  if (!selectedColumn) {
-    return null;
-  }
-  if (selectedColumn.columnDisplayType === "Point") {
-    assertPointSettings(selectedColumn.columnSpecificSettings);
-  } else if (selectedColumn.columnDisplayType === "Event") {
-    assertEventSettings(selectedColumn.columnSpecificSettings);
-  } else {
-    return null;
-  }
-  return discardTscPrefix(selectedColumn.columnSpecificSettings.drawDualColCompColumn);
-}
 
 const OverlayColumnContext = createContext<{
   selectedColumn: ColumnInfo | null;
@@ -55,7 +34,6 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
 });
 
 const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
-  const { state } = useContext(context);
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(column.expanded);
   const { selectedColumn, setSelectedColumn } = useContext(OverlayColumnContext);
@@ -98,19 +76,6 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
           if (!validForOverlay) {
             return;
           }
-          const refColumn = state.settingsTabs.columnHashMap.get(column.name);
-          if (!refColumn) {
-            return;
-          }
-          if (refColumn.columnDisplayType === "Point") {
-            assertPointSettings(refColumn.columnSpecificSettings);
-          } else if (refColumn.columnDisplayType === "Event") {
-            assertEventSettings(refColumn.columnSpecificSettings);
-          } else {
-            return;
-          }
-          // refColumn.columnSpecificSettings.drawDualColCompColumn =
-          //   `class datastore.${column.columnDisplayType}Column:` + column.name;
           setSelectedColumn(column);
           onColumnClick(column);
         }}

@@ -597,7 +597,6 @@ export const setColumnSelected = action((name: string) => {
   } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
-  console.log(column?.columnSpecificSettings);
 });
 export const setColumnMenuTabs = action((tabs: string[]) => {
   state.columnMenu.tabs = tabs;
@@ -651,6 +650,18 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     }
   }
   searchColumnsAbortController = null;
+});
+
+export const setDrawDualColCompColumn = action((column: ColumnInfo) => {
+  if (column.columnDisplayType === "Point") {
+    assertPointSettings(column.columnSpecificSettings);
+  } else if (column.columnDisplayType === "Event") {
+    assertEventSettings(column.columnSpecificSettings);
+  } else {
+    console.warn("WARNING: tried to set drawDualColCompColumn on a column that is not an event or point column");
+    return;
+  }
+  column.columnSpecificSettings.drawDualColCompColumn = `class datastore.${column.columnDisplayType}Column:${column.name}`;
 });
 
 /**

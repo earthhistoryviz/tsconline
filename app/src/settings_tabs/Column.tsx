@@ -1,7 +1,7 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
-import { ColumnInfo } from "@tsconline/shared";
+import { ColumnInfo, DataMiningPointDataType, EventFrequency } from "@tsconline/shared";
 import {
   Box,
   Button,
@@ -102,7 +102,7 @@ export const Column = observer(function Column() {
 });
 
 type CustomColumnsMenuProps = {
-  column: ColumnInfo;
+  column: ColumnInfo | undefined;
   open: boolean;
   onClose: () => void;
 };
@@ -121,12 +121,20 @@ const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
 }));
 
 export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ open, column, onClose }) => {
-  const { state } = useContext(context);
+  if (!column) return null;
+  const { state, actions } = useContext(context);
   const theme = useTheme();
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
   const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(null);
+  const [overlayColumn, setOverlayColumn] = useState<ColumnInfo | null>(null);
+  const [dataMiningEventType, setInternalDataMiningEventType] = useState<
+    EventFrequency | DataMiningPointDataType | null
+  >(null);
+  const setDataMiningEventType = (value: EventFrequency | DataMiningPointDataType) => {
+    setInternalDataMiningEventType(value);
+  };
 
   return (
     <Dialog
@@ -210,35 +218,39 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ o
                 </Typography>
               </Box>
             ) : columnType === "dataMining" ? (
-              <DataMiningSettings column={baseColumn} />
+              <DataMiningSettings column={baseColumn} onDataMiningEventChange={setDataMiningEventType} />
             ) : (
               <StyledScrollbar>
                 {column.children &&
                   Object.entries(column.children).map(([childName, childColumn]) => (
-                    <OverlayColumnAccordion
-                      key={childName}
-                      column={childColumn}
-                      onColumnClick={() => console.log("hi")}
-                    />
+                    <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setOverlayColumn} />
                   ))}
               </StyledScrollbar>
             )}
           </CustomColumnPanel>
         </Box>
         <Box display="flex" justifyContent="flex-end" gap={3} mt={2}>
-          <TSCButton
-            sx={{ backgroundColor: theme.palette.secondaryBackground.main, color: "black", border: "1px solid black" }}
-            onClick={onClose}>
-            Cancel
-          </TSCButton>
+          <TSCButton onClick={onClose}>Cancel</TSCButton>
           <TSCButton
             buttonType="gradient"
+            disabled={
+              !baseColumn ||
+              (columnType === "dataMining" && !dataMiningEventType) ||
+              (columnType === "dualColumnComparison" && !overlayColumn)
+            }
             onClick={() => {
               if (!baseColumn) return;
               if (columnType === "dataMining") {
-                state.settingsTabs.columns.addDataMiningColumn(baseColumn);
-              } else {
-                state.settingsTabs.columns.addDualColumnComparison(baseColumn);
+                if (!dataMiningEventType) return;
+                actions.addDataMiningColumn(baseColumn, dataMiningEventType);
+              } else if (columnType === "dualColumnComparison") {
+                if (!overlayColumn) return;
+                actions.setDrawDualColCompColumn(overlayColumn);
+                const dccName = actions.addDualColCompColumn(overlayColumn);
+                const targetColumn = dccName && state.settingsTabs.columnHashMap.get(dccName);
+                if (targetColumn) {
+                  actions.toggleSettingsTabColumn(targetColumn);
+                }
               }
               onClose();
             }}>
