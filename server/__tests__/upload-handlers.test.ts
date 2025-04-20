@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, test, afterAll } from "vitest";
+import { describe, it, expect, beforeEach, vi, test } from "vitest";
 import {
   changeProfilePicture,
   fetchMapPackImageFilepath,
@@ -15,7 +15,6 @@ import {
   getWorkshopFilesNames,
   fetchWorkshopCoverPictureFilepath
 } from "../src/upload-handlers";
-import * as uploadHandlers from "../src/upload-handlers";
 import * as fsPromises from "fs/promises";
 import * as shared from "@tsconline/shared";
 import * as streamPromises from "stream/promises";
@@ -32,7 +31,6 @@ import { Dirent } from "fs";
 
 import path from "path";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import { error } from "console";
 
 vi.mock("os", () => ({
   tmpdir: () => "tmpdir"
@@ -124,7 +122,7 @@ vi.mock("fs", async () => {
     createWriteStream: vi.fn().mockReturnValue({})
   };
 });
-//vi.spyOn(console, "error").mockImplementation(() => undefined);
+vi.spyOn(console, "error").mockImplementation(() => undefined);
 vi.spyOn(console, "log").mockImplementation(() => undefined);
 
 describe("uploadUserDatapackHandler", () => {
