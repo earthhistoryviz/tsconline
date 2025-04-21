@@ -33,7 +33,6 @@ import {
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
-import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
@@ -437,10 +436,6 @@ server.setNotFoundHandler((_request, reply) => {
 });
 
 export const queue = new PQueue({ concurrency: maxConcurrencySize });
-
-if (process.env.NODE_ENV !== "production") {
-  syncTranslations();
-}
 
 //Start the server...
 try {
