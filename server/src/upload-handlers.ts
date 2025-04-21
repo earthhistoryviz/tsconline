@@ -560,7 +560,6 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
 
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
   const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  console.error("yes im called");
   const directory = await getUserUUIDDirectory(workshopUUID, true);
 
   let filesFolder;
