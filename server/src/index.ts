@@ -22,6 +22,8 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
+import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
+
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
@@ -301,6 +303,19 @@ server.get<{ Params: { title: string; uuid: string } }>(
     }
   },
   routes.fetchDatapackCoverImage
+);
+
+server.get<{ Params: { workshopId: number } }>(
+  "/workshop-images/:workshopId",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  fetchWorkshopCoverImage
 );
 
 server.register(adminRoutes, { prefix: "/admin" });

@@ -13,7 +13,6 @@ import {
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs, { Dayjs } from "dayjs";
-import TSCreatorLogo from "../assets/TSCreatorLogo.png";
 import { State } from ".";
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
@@ -186,10 +185,6 @@ export async function downloadFile(blob: Blob, filename: string) {
   aTag.click();
   aTag.remove();
 }
-// TODO: remove this when route for fetching cover image is finished
-export function getWorkshopCoverImage() {
-  return TSCreatorLogo;
-}
 
 export function attachTscPrefixToName(name: string, displayType: DisplayedColumnTypes): string {
   switch (displayType) {
@@ -200,4 +195,8 @@ export function attachTscPrefixToName(name: string, displayType: DisplayedColumn
     default:
       return `class datastore.${displayType}Column:` + name;
   }
+}
+
+export function getWorkshopCoverImage(workshopId: number) {
+  return devSafeUrl(`/workshop-images/${workshopId}`);
 }

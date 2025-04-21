@@ -30,6 +30,7 @@ import { SharedWorkshop, isOfficialDatapack } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import "./AdminWorkshop.css";
+import { getWorkshopCoverImage } from "../state/non-action-util";
 
 type AddDatapacksToWorkshopFormProps = {
   currentWorkshop: SharedWorkshop;
@@ -143,9 +144,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emails, setEmails] = useState<string>("");
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
-  const [coverPicture, setCoverPicture] = useState<File | null>(null);
+  const [coverPicture, setCoverPicture] = useState<File | null>();
   const [regLink, setRegLink] = useState<string | undefined>(undefined);
   const [regRestrict, setRegRestrict] = useState(false);
+  const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop?.workshopId) : null;
 
   const handleDialogClose = () => {
     setWorkshopTitle("");
@@ -509,9 +511,15 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                     </Box>
                   </Box>
 
-                  <Typography variant="h5" mb="5px" mt="15px">
-                    Add Cover Picture
-                  </Typography>
+                  {prevCoverPic ? (
+                    <Typography variant="h5" mb="5px" mt="15px">
+                      Change Cover Picture
+                    </Typography>
+                  ) : (
+                    <Typography variant="h5" mb="5px" mt="15px">
+                      Add Cover Picture
+                    </Typography>
+                  )}
                   <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
                     {coverPicture ? (
                       <Avatar
@@ -520,18 +528,14 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                         alt="Cover Picture"
                         sx={{ width: 100, height: 100 }}
                       />
+                    ) : prevCoverPic ? (
+                      <Avatar
+                        variant="square"
+                        src={prevCoverPic}
+                        alt="Workshop Avatar"
+                        sx={{ width: 100, height: 100 }}
+                      />
                     ) : (
-                      // TODO: Update this to use the route serving the cover picture (once it's finished) to check if a cover picture exists.
-                      // currentWorkshop?.coverPictureUrl ?
-                      // (
-                      //   // workshop has a old cover picture
-                      //   <Avatar
-                      //     variant="square"
-                      //     src={currentWorkshop?.coverPictureUrl} //use safeurl
-                      //     alt="Workshop Avatar"
-                      //     sx={{ width: 100, height: 100 }}
-                      //   />
-                      // ) : (
                       <Typography>No cover picture for this workshop</Typography>
                     )}
                     <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
