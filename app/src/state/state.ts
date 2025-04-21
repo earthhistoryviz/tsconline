@@ -182,7 +182,7 @@ export const state = observable<State>({
     loading: false,
     datapacks: [],
     columnHashMap: new Map<string, ColumnInfo>(),
-    columnSelected: null,
+    columnSelected: null
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
