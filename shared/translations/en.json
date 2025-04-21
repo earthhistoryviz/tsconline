@@ -1,5 +1,9 @@
 {
     "translation": {
+        "general-actions": {
+            "save": "Save",
+            "cancel": "Cancel"
+        },
         "landing-page": {
             "get-started": "Get Started",
             "welcome": "Welcome to TimeScale Creator!",
@@ -62,7 +66,7 @@
                     },
                     "collaborate": {
                         "title": "Collaborate with Others",
-                        "description": "View other users&apos; datapacks and collaborate to expand your knowledge and expertise."
+                        "description": "View other users' datapacks and collaborate to expand your knowledge and expertise."
                     }
                 }
             },
@@ -106,7 +110,7 @@
         "login": {
             "signin": "Sign In",
             "forgot-password": "Forgot password?",
-            "signup": "Don&apos;t have an account? Sign Up",
+            "signup": "Don't have an account? Sign Up",
             "username": "Username",
             "password": "Password",
             "tooltip": "Account Settings",
@@ -221,6 +225,20 @@
             "fetching-datapacks": "Fetching Datapacks"
         },
         "crossPlot": {
+            "options": {
+                "save": "Save Crossplot",
+                "models": "Models",
+                "markers": "Markers",
+                "show-tooltips": "Show Tooltips",
+                "timeline": "Timeline On/Off",
+                "auto-plot": "Auto Plot",
+                "download-converted-datapack": "Download Converted Datapack",
+                "upload-converted-datapack": "Upload Converted Datapack to Profile"
+            },
+            "save-modal": {
+                "save-filename": "Save file as...",
+                "upload-title": "Upload datapack as..."
+            },
             "time": {
                 "select-unit": "Please select a unit.",
                 "no-chart-units-available": "No units available",
@@ -234,7 +252,18 @@
                 "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             },
-            "create-datapack": "Create Datapack"
+            "out-of-date": {
+                "title": "Chart Out of Date",
+                "description": "When you're ready, click the button below to apply your changes.",
+                "revert": "Revert Changes",
+                "apply": "Apply Changes"
+            },
+            "not-created": {
+                "title": "Crossplot Chart Not Created",
+                "description": "Please configure your desired crossplot settings and click the button below to generate a crossplot chart.",
+                "generate": "Generate Crossplot"
+            },
+            "create-datapack": "Create Crossplot"
         },
         "settingsTabs": {
             "Time": "Time",
@@ -279,13 +308,13 @@
                     "lithology-auto-indent": "Do not auto-indent lithology patterns",
                     "conserve-chart": "Conserve Chart Space in Family Tree Plotting (Not implemented)",
                     "hide-block-labels": "Hide block labels based on priority",
-                    "use-suggested-age-spans": "Do not use the Data-Pack&apos;s suggested age span"
+                    "use-suggested-age-spans": "Do not use the Data-Pack's suggested age span"
                 },
                 "settings-file": {
                     "load": "Load Settings",
                     "save": "Save Settings",
                     "load-dialog": {
-                        "message": "This will overwrite any changes you&apos;ve made!",
+                        "message": "This will overwrite any changes you've made!",
                         "cancel": "Cancel",
                         "load": "Load"
                     },
@@ -453,7 +482,7 @@
         },
         "chart": {
             "no-chart-yet": "You have not made a chart yet",
-            "save": "Save Chart"
+            "save": "Save"
         },
         "dialogs": {
             "confirm-datapack-change": {
@@ -472,7 +501,7 @@
         "help": {
             "qsg": {
                 "title": "Quick Start Quide",
-                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the &apos;Start QSG&apos; button to begin.",
+                "content": "Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.",
                 "button": "Start QSG"
             },
             "tour": {
@@ -493,7 +522,7 @@
             }
         },
         "errors": {
-            "title": "Error",
+            "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
             "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
             "INVALID_DATAPACK_INFO": "Invalid datapack info received from server. Please try again later.",
             "INVALID_PRESET_INFO": "Invalid preset info received from server. Please try again later.",
@@ -536,7 +565,7 @@
             "UNABLE_TO_RESET_EMAIL": "Unable to reset email. Please try again later.",
             "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "Your account has been locked. Please check your email for more information or contact support.",
             "UNABLE_TO_RECOVER_ACCOUNT": "Unable to recover account. Please contact support for more information.",
-            "NOT_LOGGED_IN": "You are not logged in. Please log in to access this page.",
+            "NOT_LOGGED_IN": "Please log in to access this feature.",
             "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "The datapack requested was not found on the server. Please try again later or contact our support team.",
             "INCORRECT_ENCRYPTION_HEADER": "Unable to encrypt the file, please try again later.",
             "TOO_MANY_REQUESTS": "You have made too many requests. Please try again later.",
@@ -605,7 +634,10 @@
             "USER_FETCH_HISTORY_FAILED": "Failed to fetch user history. Please try again later.",
             "USER_DELETE_HISTORY_FAILED": "Failed to delete user history. Please try again later",
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
-            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history."
+            "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
+            "title": "Error",
+            "ADMIN_FETCH_WORKSHOPS_FAILED": "Unable to fetch workshops. Please try again later.",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
         },
         "button": {
             "generate": "Generate",

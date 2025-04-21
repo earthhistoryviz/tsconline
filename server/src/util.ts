@@ -306,6 +306,7 @@ export function extractMetadataFromDatapack(datapack: Datapack) {
     references: datapack.references,
     isPublic: datapack.isPublic,
     priority: datapack.priority,
+    hasFiles: datapack.hasFiles,
     type: datapack.type,
     ...(datapack.date ? { date: datapack.date } : {}),
     ...(datapack.contact ? { contact: datapack.contact } : {}),

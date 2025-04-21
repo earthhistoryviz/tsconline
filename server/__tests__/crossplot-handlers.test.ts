@@ -59,7 +59,8 @@ describe("setupConversionDirectory", async () => {
       }
     ],
     models: "models",
-    settings: "settings"
+    settings: "settings",
+    action: "file"
   };
   const verifyFilepath = vi.spyOn(util, "verifyFilepath");
   const readFile = vi.spyOn(fsPromises, "readFile");
@@ -76,6 +77,19 @@ describe("setupConversionDirectory", async () => {
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(md5).toHaveBeenCalledOnce();
     expect(output).toEqual("file");
+  });
+  it("should return filepaths if cache exists and action is not file", async () => {
+    verifyFilepath.mockResolvedValueOnce(true);
+    const output = await setupConversionDirectory({ ...request, action: "chart" });
+    expect(readFile).not.toHaveBeenCalled();
+    expect(verifyFilepath).toHaveBeenCalledOnce();
+    expect(md5).toHaveBeenCalledOnce();
+    expect(output).toEqual({
+      outputTextFilepath: "test-cache-dir/test-hash/output.txt",
+      modelsTextFilepath: "test-cache-dir/test-hash/models.txt",
+      settingsTextFilepath: "test-cache-dir/test-hash/settings.xml",
+      hash: "test-hash"
+    });
   });
   it("should return 500 if error creating directory", async () => {
     mkdir.mockRejectedValueOnce(new Error("Failed to create directory"));
@@ -94,7 +108,8 @@ describe("setupConversionDirectory", async () => {
     expect(output).toEqual({
       outputTextFilepath: "test-cache-dir/test-hash/output.txt",
       modelsTextFilepath: "test-cache-dir/test-hash/models.txt",
-      settingsTextFilepath: "test-cache-dir/test-hash/settings.xml"
+      settingsTextFilepath: "test-cache-dir/test-hash/settings.xml",
+      hash: "test-hash"
     });
     expect(verifyFilepath).toHaveBeenCalledOnce();
     expect(writeFile).toHaveBeenCalledTimes(2);
