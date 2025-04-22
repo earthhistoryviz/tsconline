@@ -8,8 +8,8 @@ import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { CustomTooltip } from "../../components";
-import "./OverlaySettings.css";
 import { context } from "../../state";
+import "./OverlaySettings.css";
 
 const OverlayColumnContext = createContext<{
   selectedColumn: ColumnInfo | null;
@@ -28,9 +28,11 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
   const [selectedColumn, setSelectedColumn] = useState<ColumnInfo | null>(null);
 
   return (
-    <OverlayColumnContext.Provider value={{ selectedColumn, setSelectedColumn }}>
-      <ColumnAccordion column={column} onColumnClick={onColumnClick} />
-    </OverlayColumnContext.Provider>
+    <div className="column-accordion-wrapper">
+      <OverlayColumnContext.Provider value={{ selectedColumn, setSelectedColumn }}>
+        <ColumnAccordion column={column} onColumnClick={onColumnClick} />
+      </OverlayColumnContext.Provider>
+    </div>
   );
 });
 

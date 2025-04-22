@@ -68,3 +68,23 @@
 .overlay-settings-content {
   align-self: flex-start;
 }
+
+.column-accordion {
+  overflow: hidden;
+}
+
+.column-accordion-wrapper {
+  min-width: 10vw;
+  width: 30vw;
+  max-width: 70vw;
+  overflow: auto;
+  border-radius: 4px;
+  z-index: 0;
+  resize: horizontal;
+  position: relative;
+  padding: 0;
+}
+
+.custom-columns-menu-scrollbar {
+  max-height: 90vh;
+}

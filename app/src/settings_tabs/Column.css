@@ -63,11 +63,11 @@
   color: darkgray;
 }
 
-.custom-columns-menu-paper {
+.custom-column-menu-paper {
   border-radius: 0px;
   width: 80vw;
 }
-.custom-columns-menu-black-line {
+.custom-column-menu-black-line {
   height: 1px;
   width: 65%;
   background-color: gray;
