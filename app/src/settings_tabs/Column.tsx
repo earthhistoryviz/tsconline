@@ -87,7 +87,11 @@ export const Column = observer(function Column() {
         <ColumnSearchBar />
         <div className="column-accordion-and-menu-container">
           <div>
-            <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => actions.setCustomColumnMenuOpen(true)}>
+            <Button
+              startIcon={<AddIcon />}
+              className="add-icon"
+              variant="text"
+              onClick={() => actions.setCustomColumnMenuOpen(true)}>
               Create Custom Column
             </Button>
             <ColumnDisplay />
@@ -95,7 +99,13 @@ export const Column = observer(function Column() {
           <ColumnMenu />
         </div>
       </div>
-      {state.customColumnMenu.open && <CustomColumnMenu open={state.customColumnMenu.open} onClose={() => actions.setCustomColumnMenuOpen(false)} column={state.settingsTabs.columns} />}
+      {state.customColumnMenu.open && (
+        <CustomColumnMenu
+          open={state.customColumnMenu.open}
+          onClose={() => actions.setCustomColumnMenuOpen(false)}
+          column={state.settingsTabs.columns}
+        />
+      )}
     </>
   );
 });
@@ -132,8 +142,14 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
     }
     return "Data Mining";
   });
-  const columnSelected = state.columnMenu.columnSelected ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null : null;
-  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event" ? columnSelected : null);
+  const columnSelected = state.columnMenu.columnSelected
+    ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null
+    : null;
+  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(
+    columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event"
+      ? columnSelected
+      : null
+  );
   const [overlayColumn, setOverlayColumn] = useState<ColumnInfo | null>(null);
   const [dataMiningEventType, setInternalDataMiningEventType] = useState<
     EventFrequency | DataMiningPointDataType | null

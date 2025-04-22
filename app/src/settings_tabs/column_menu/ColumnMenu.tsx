@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect } from "react";
-import { actions, context } from "../../state";
+import { context } from "../../state";
 import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
@@ -18,7 +18,6 @@ import { InfoBox } from "./InfoBox";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
 import { PointSettingsDisplay } from "../advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
-import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
@@ -72,7 +71,7 @@ export const ColumnMenu = observer(() => {
           value={state.columnMenu.tabValue}
           verticalCenter
           onChange={(index) => {
-            setColumnMenuTabValue(index)
+            setColumnMenuTabValue(index);
             const tab = state.columnMenu.tabs[index];
             if (tab === "Data Mining" || tab === "Overlay") {
               actions.setCustomColumnMenuOpen(true, tab);
