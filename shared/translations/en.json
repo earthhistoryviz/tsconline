@@ -636,7 +636,8 @@
             "USER_FETCH_HISTORY_METADATA_FAILED": "Failed to fetch user history metadata. Please try again later",
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
             "title": "Error",
-            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team."
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
+            "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further."
         },
         "button": {
             "generate": "Generate",

@@ -3,7 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo } from "@tsconline/shared";
+import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo, isTempDatapack } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -94,6 +94,11 @@ function areSettingsValidForGeneration() {
     return false;
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
+  if (state.config.datapacks.some((dp) => isTempDatapack(dp))) {
+    generalActions.pushError(ErrorCodes.LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK);
+    return false;
+  }
+  generalActions.removeError(ErrorCodes.LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK);
   if (
     Object.keys(state.settings.timeSettings).some(
       (key) =>
