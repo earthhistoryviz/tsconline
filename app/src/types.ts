@@ -222,6 +222,7 @@ export type CrossPlotTimeSettings = {
   topStageAge: number;
   baseStageAge: number;
   unitsPerMY: number;
+  unit: string;
 };
 export type ChartSettings = {
   timeSettings: TimeSettings;

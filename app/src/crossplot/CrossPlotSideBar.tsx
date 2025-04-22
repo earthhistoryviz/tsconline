@@ -572,18 +572,31 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
 const CrossPlotColumns: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   return (
-
-    <ColumnContext.Provider value={{
-      state: {
-        columns: state.crossPlot.columns,
-        columnSearchTerm: "",
-        columnSelected: state.crossPlot.columnSelected,
-        timeSettings: {
-          [state.crossPlot.chartX?]
+    <ColumnContext.Provider
+      value={{
+        state: {
+          columns: state.crossPlot.columns,
+          columnSearchTerm: "",
+          columnSelected: state.crossPlot.columnSelected,
+          timeSettings: {
+            [state.crossPlot.chartXTimeSettings.unit]: state.crossPlot.chartXTimeSettings,
+            [state.crossPlot.chartYTimeSettings.unit]: state.crossPlot.chartYTimeSettings
+          }
+        },
+        actions: {
+          setColumnSelected: (col) => {
+            actions.setCrossPlotColumnSelected(col);
+          },
+          toggleSettingsTabColumn: (col) => {
+            actions.toggleSettingsTabColumn(col, {
+              hashMap: state.crossPlot.columnHashMap
+            });
+          }
         }
-      }
-    }}><ColumnDisplay /></ColumnContext.Provider>
-  )
+      }}>
+      <ColumnDisplay />
+    </ColumnContext.Provider>
+  );
 });
 
 const tabs = [

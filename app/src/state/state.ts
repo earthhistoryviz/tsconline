@@ -31,8 +31,7 @@ import type {
   DatapackPriorityChangeRequest,
   DatapackMetadata,
   Marker,
-  Model,
-  DatapackUniqueIdentifier
+  Model
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";

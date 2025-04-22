@@ -33,7 +33,8 @@ export const defaultTimeSettings = {
 export const defaultCrossPlotSettings: CrossPlotTimeSettings = {
   topStageAge: 0,
   baseStageAge: 10,
-  unitsPerMY: 2
+  unitsPerMY: 2,
+  unit: "Ma"
 };
 
 export const isDevServer =

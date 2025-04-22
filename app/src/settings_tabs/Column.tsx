@@ -22,6 +22,7 @@ import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
+import { context } from "../state";
 
 type ColumnContextType = {
   state: {
@@ -36,9 +37,7 @@ type ColumnContextType = {
   };
   actions: {
     setColumnSelected: (name: string) => void;
-    setExpansionOfAllChildren: (columns: ColumnInfo, expanded: boolean) => void;
     toggleSettingsTabColumn: (column: ColumnInfo) => void;
-    searchColumns: (term: string) => void;
   };
 };
 export const ColumnContext = createContext<ColumnContextType>({
@@ -50,9 +49,7 @@ export const ColumnContext = createContext<ColumnContextType>({
   },
   actions: {
     setColumnSelected: () => {},
-    setExpansionOfAllChildren: () => {},
-    toggleSettingsTabColumn: () => {},
-    searchColumns: () => {}
+    toggleSettingsTabColumn: () => {}
   }
 });
 
@@ -70,7 +67,8 @@ export const Column = observer(function Column() {
 });
 
 export const ColumnDisplay = observer(() => {
-  const { state, actions } = useContext(ColumnContext);
+  const { state } = useContext(ColumnContext);
+  const { actions: globalActions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -116,7 +114,7 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              actions.setExpansionOfAllChildren(state.columns, true);
+              globalActions.setExpansionOfAllChildren(state.columns, true);
             }}>
             <ExpandIcon />
           </IconButton>
@@ -127,7 +125,7 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              actions.setExpansionOfAllChildren(state.columns, false);
+              globalActions.setExpansionOfAllChildren(state.columns, false);
             }}>
             <CompressIcon />
           </IconButton>
@@ -278,10 +276,11 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
 });
 
 const ColumnSearchBar = observer(() => {
-  const { state, actions } = useContext(ColumnContext);
+  const { state } = useContext(ColumnContext);
+  const { actions: globalActions } = useContext(context);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    actions.searchColumns(term);
+    globalActions.searchColumns(term);
   };
   const { t } = useTranslation();
   return (

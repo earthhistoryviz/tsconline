@@ -4,8 +4,7 @@ import {
   CrossPlotBounds,
   CrossPlotTimeSettings,
   SetDatapackConfigReturnValue,
-  assertColumnInfoRoot,
-  assertSetDatapackConfigReturnValue
+  assertColumnInfoRoot
 } from "../../types";
 import { state } from "../state";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -818,3 +817,7 @@ const initializeColumnHashMap = async (columnInfo: ColumnInfo) => {
     }
   }
 };
+
+export const setCrossPlotColumnSelected = action((column: string | null) => {
+  state.crossPlot.columnSelected = column;
+});

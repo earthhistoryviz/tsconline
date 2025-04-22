@@ -68,8 +68,6 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
             },
             actions: {
               setColumnSelected: actions.setColumnSelected,
-              searchColumns: actions.searchColumns,
-              setExpansionOfAllChildren: actions.setExpansionOfAllChildren,
               toggleSettingsTabColumn: actions.toggleSettingsTabColumn
             }
           }}>

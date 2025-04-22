@@ -68,7 +68,6 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
@@ -558,7 +557,7 @@ export const processDatapackConfig = action(
       settings?: string | ChartInfoTSC;
       force?: boolean;
       setter?: (message: SetDatapackConfigReturnValue) => Promise<void>;
-      currentConfig: DatapackConfigForChartRequest[];
+      currentConfig?: DatapackConfigForChartRequest[];
     }
   ) => {
     if (datapacks.length === 0) {
