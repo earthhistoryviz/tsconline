@@ -1,6 +1,6 @@
 import { observer } from "mobx-react-lite";
 import { useContext, useEffect } from "react";
-import { context } from "../../state";
+import { actions, context } from "../../state";
 import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
@@ -28,7 +28,7 @@ import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
 
 export const ColumnMenu = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const selectedColumn = state.columnMenu.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
 
@@ -71,7 +71,14 @@ export const ColumnMenu = observer(() => {
           tabIndicatorLength={25}
           value={state.columnMenu.tabValue}
           verticalCenter
-          onChange={(index) => setColumnMenuTabValue(index)}
+          onChange={(index) => {
+            setColumnMenuTabValue(index)
+            const tab = state.columnMenu.tabs[index];
+            if (tab === "Data Mining" || tab === "Overlay") {
+              actions.setCustomColumnMenuOpen(true, tab);
+              return;
+            }
+          }}
           orientation="vertical-right"
           width={90}
           tabs={state.columnMenu.tabs.map((val) => ({ id: val, tab: val }))}
@@ -146,8 +153,6 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       );
     case "Font":
       return <FontMenu column={column} />;
-    case "Data Mining":
-      return <DataMiningSettings column={column} />;
     case "Curve Drawing":
       return <PointSettingsDisplay column={column} />;
     default:

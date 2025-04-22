@@ -483,19 +483,18 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
   }
 });
 
-/*
+/**
  * toggles the "on" state for a column that had its checkbox clicked
- * name: the name of the toggled column
- * parents: list of names that indicates the path from top to the toggled column
+ * @param columnOrName: the column or name of the toggled column
+ * @param expand: if true, expands the column and all its parents
  */
-
 export const toggleSettingsTabColumn = action(
   (
     columnOrName: ColumnInfo | string,
     options?: {
       hashMap?: Map<string, ColumnInfo>;
     }
-  ) => {
+  , expand?: boolean) => {
     let column: ColumnInfo | undefined;
     const columnHashMap = options?.hashMap || state.settingsTabs.columnHashMap;
     if (typeof columnOrName === "string") {
@@ -509,6 +508,7 @@ export const toggleSettingsTabColumn = action(
     }
 
     column.on = !column.on;
+    if (expand) column.expanded = true;
     if (!column.on || !column.parent) return;
     if (columnHashMap.get(column.parent) === undefined) {
       console.log("WARNING: tried to get", column.parent, "in hashMap, but is undefined");
@@ -1193,6 +1193,15 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
   setGroupedEvents(groupedEvents);
   searchEventsAbortController = null;
   return count;
+});
+
+/**
+ * sets the custom column menu to open or closed
+ * @param open true if the menu should be open, false if it should be closed
+ * @param columnType the type of column that is being edited. If not specified, defaults to "dataMining"
+ */
+export const setCustomColumnMenuOpen = action((open: boolean, columnType?: "Data Mining" | "Overlay") => {
+  state.customColumnMenu = { open, columnType: columnType ?? "Data Mining" };
 });
 
 export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[]) => {

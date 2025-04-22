@@ -79,8 +79,7 @@ export const ColumnContext = createContext<ColumnContextType>({
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
-  const [menuOpen, setMenuOpen] = useState(true);
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
 
   return (
     <>
@@ -88,7 +87,7 @@ export const Column = observer(function Column() {
         <ColumnSearchBar />
         <div className="column-accordion-and-menu-container">
           <div>
-            <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => setMenuOpen(true)}>
+            <Button startIcon={<AddIcon />} className="add-icon" variant="text" onClick={() => actions.setCustomColumnMenuOpen(true)}>
               Create Custom Column
             </Button>
             <ColumnDisplay />
@@ -96,12 +95,12 @@ export const Column = observer(function Column() {
           <ColumnMenu />
         </div>
       </div>
-      <CustomColumnsMenu open={menuOpen} onClose={() => setMenuOpen(false)} column={state.settingsTabs.columns} />
+      {state.customColumnMenu.open && <CustomColumnMenu open={state.customColumnMenu.open} onClose={() => actions.setCustomColumnMenuOpen(false)} column={state.settingsTabs.columns} />}
     </>
   );
 });
 
-type CustomColumnsMenuProps = {
+type CustomColumnMenuProps = {
   column: ColumnInfo | undefined;
   open: boolean;
   onClose: () => void;
@@ -120,14 +119,21 @@ const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
   }
 }));
 
-export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ open, column, onClose }) => {
+export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ column, onClose }) => {
   if (!column) return null;
   const { state, actions } = useContext(context);
   const theme = useTheme();
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
-  const [columnType, setColumnType] = useState<"dataMining" | "dualColumnComparison">("dataMining");
-  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(null);
+  const [columnType, setColumnType] = useState<"Data Mining" | "Overlay">(() => {
+    const tab = state.columnMenu.tabs[state.columnMenu.tabValue];
+    if (tab === "Data Mining" || tab === "Overlay") {
+      return tab;
+    }
+    return "Data Mining";
+  });
+  const columnSelected = state.columnMenu.columnSelected ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null : null;
+  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event" ? columnSelected : null);
   const [overlayColumn, setOverlayColumn] = useState<ColumnInfo | null>(null);
   const [dataMiningEventType, setInternalDataMiningEventType] = useState<
     EventFrequency | DataMiningPointDataType | null
@@ -138,7 +144,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ o
 
   return (
     <Dialog
-      open={open}
+      open={true}
       onClose={onClose}
       maxWidth="xl"
       fullWidth
@@ -195,13 +201,13 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ o
               value={columnType}
               sx={{ m: 2 }}
               onChange={(e) => setColumnType(e.target.value as typeof columnType)}>
-              <FormControlLabel value="dataMining" control={<CustomRadioButton size="small" />} label="Data Mining" />
+              <FormControlLabel value="Data Mining" control={<CustomRadioButton size="small" />} label="Data Mining" />
               <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
                 Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point
                 column over sliding windows of data.
               </FormHelperText>
               <FormControlLabel
-                value="dualColumnComparison"
+                value="Overlay"
                 control={<CustomRadioButton size="small" />}
                 label="Dual Column Comparison"
               />
@@ -217,7 +223,7 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ o
                   Please select a Base Column
                 </Typography>
               </Box>
-            ) : columnType === "dataMining" ? (
+            ) : columnType === "Data Mining" ? (
               <DataMiningSettings column={baseColumn} onDataMiningEventChange={setDataMiningEventType} />
             ) : (
               <StyledScrollbar>
@@ -235,22 +241,23 @@ export const CustomColumnsMenu: React.FC<CustomColumnsMenuProps> = observer(({ o
             buttonType="gradient"
             disabled={
               !baseColumn ||
-              (columnType === "dataMining" && !dataMiningEventType) ||
-              (columnType === "dualColumnComparison" && !overlayColumn)
+              (columnType === "Data Mining" && !dataMiningEventType) ||
+              (columnType === "Overlay" && !overlayColumn)
             }
             onClick={() => {
               if (!baseColumn) return;
-              if (columnType === "dataMining") {
+              let newColumnName: string | undefined;
+              if (columnType === "Data Mining") {
                 if (!dataMiningEventType) return;
-                actions.addDataMiningColumn(baseColumn, dataMiningEventType);
-              } else if (columnType === "dualColumnComparison") {
+                newColumnName = actions.addDataMiningColumn(baseColumn, dataMiningEventType);
+              } else if (columnType === "Overlay") {
                 if (!overlayColumn) return;
                 actions.setDrawDualColCompColumn(overlayColumn);
-                const dccName = actions.addDualColCompColumn(overlayColumn);
-                const targetColumn = dccName && state.settingsTabs.columnHashMap.get(dccName);
-                if (targetColumn) {
-                  actions.toggleSettingsTabColumn(targetColumn);
-                }
+                newColumnName = actions.addDualColCompColumn(overlayColumn);
+              }
+              if (newColumnName) {
+                actions.toggleSettingsTabColumn(newColumnName, true);
+                actions.setColumnSelected(newColumnName);
               }
               onClose();
             }}>

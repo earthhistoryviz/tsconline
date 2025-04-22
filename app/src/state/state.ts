@@ -88,6 +88,10 @@ export type State = {
     tabs: string[];
     tabValue: number;
   };
+  customColumnMenu: {
+    open: boolean;
+    columnType: "Data Mining" | "Overlay";
+  };
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
@@ -244,6 +248,10 @@ export const state = observable<State>({
     columnSelected: null,
     tabs: ["General", "Font"],
     tabValue: 0
+  },
+  customColumnMenu: {
+    open: false,
+    columnType: "Data Mining"
   },
   settingsTabs: {
     selected: "column",

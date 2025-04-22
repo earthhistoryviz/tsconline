@@ -9,6 +9,7 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { CustomTooltip } from "../../components";
 import "./OverlaySettings.css";
+import { context } from "../../state";
 
 const OverlayColumnContext = createContext<{
   selectedColumn: ColumnInfo | null;
@@ -34,14 +35,18 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
 });
 
 const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
+  const { state } = useContext(context);
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(column.expanded);
   const { selectedColumn, setSelectedColumn } = useContext(OverlayColumnContext);
 
+  const selectedClass =
+    selectedColumn?.name === column.name || (!selectedColumn && column.name === state.columnMenu.columnSelected)
+      ? "selected-column"
+      : "";
+
   //column can be chosen for overlay column
   const validForOverlay = column.columnDisplayType == "Event" || column.columnDisplayType == "Point";
-
-  const selectedClass = selectedColumn?.name === column.name ? "selected-column" : "";
 
   // if there are no children, don't make an accordion
   if (column.children.length == 0) {
