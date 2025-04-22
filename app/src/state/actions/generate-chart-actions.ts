@@ -88,13 +88,14 @@ export const initiateChartGeneration = action(
   }
 );
 
-function areSettingsValidForGeneration() {
+function areSettingsValidForGeneration(options?: { from?: string }) {
   if (!state.config.datapacks || state.config.datapacks.length === 0 || !state.settingsTabs.columns) {
     generalActions.pushError(ErrorCodes.NO_DATAPACKS_SELECTED);
     return false;
   }
   generalActions.removeError(ErrorCodes.NO_DATAPACKS_SELECTED);
-  if (state.config.datapacks.some((dp) => isTempDatapack(dp))) {
+  // we don't allow customization of converted datapacks if the user is not logged in
+  if (options?.from !== "/crossplot" && state.config.datapacks.some((dp) => isTempDatapack(dp))) {
     generalActions.pushError(ErrorCodes.LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK);
     return false;
   }
@@ -142,7 +143,7 @@ export const compileChartRequest = action(
     }
   ) => {
     // asserts column is not null
-    if (!areSettingsValidForGeneration()) return;
+    if (!areSettingsValidForGeneration(options)) return;
     state.showSuggestedAgePopup = false;
     if (options && options.from === "/crossplot") {
       navigate("/chart?from=crossplot");
