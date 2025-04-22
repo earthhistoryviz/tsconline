@@ -277,7 +277,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       usedUserDatapackFilepaths.push(datapackDir);
     }
     if (isTempDatapack(datapack)) {
-      usedTempDatapacks.push(datapackDir);
+      usedTempDatapacks.push(datapack.title);
     }
     datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
   }
