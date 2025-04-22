@@ -579,8 +579,12 @@ const CrossPlotColumns: React.FC = observer(() => {
           columnSearchTerm: "",
           columnSelected: state.crossPlot.columnSelected,
           timeSettings: {
-            [state.crossPlot.chartXTimeSettings.unit]: state.crossPlot.chartXTimeSettings,
-            [state.crossPlot.chartYTimeSettings.unit]: state.crossPlot.chartYTimeSettings
+            ...(state.crossPlot.chartX?.units && {
+              [state.crossPlot.chartX.units]: state.crossPlot.chartXTimeSettings
+            }),
+            ...(state.crossPlot.chartY?.units && {
+              [state.crossPlot.chartY.units]: state.crossPlot.chartYTimeSettings
+            })
           }
         },
         actions: {
