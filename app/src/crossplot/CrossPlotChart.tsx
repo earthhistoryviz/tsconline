@@ -189,7 +189,13 @@ const MismatchModal: React.FC = observer(() => {
           {t("crossPlot.out-of-date.description")}
         </Typography>
         <Box className={styles.changeButtons}>
-          <Button variant="outlined">{t("crossPlot.out-of-date.revert")}</Button>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              actions.revertCrossPlot();
+            }}>
+            {t("crossPlot.out-of-date.revert")}
+          </Button>
           <TSCButton buttonType="gradient" onClick={() => actions.compileAndSendCrossPlotChartRequest(navigate)}>
             {t("crossPlot.out-of-date.apply")}
           </TSCButton>
