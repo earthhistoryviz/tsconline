@@ -79,7 +79,9 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
       fullWidth
       PaperProps={{ className: "custom-column-menu-paper" }}>
       <StyledScrollbar className="custom-columns-menu-scrollbar">
-        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }} className="custom-column-menu-content">
+        <DialogContent
+          sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }}
+          className="custom-column-menu-content">
           <Box display="grid" height="100%">
             <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
               <Box className="custom-column-menu-black-line" />
@@ -198,7 +200,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   const newColumn = state.settingsTabs.columnHashMap.get(newColumnName);
                   if (!newColumn) return;
                   actions.setColumnOn(false, newColumn);
-                  actions.toggleSettingsTabColumn(newColumn, { expand: true});
+                  actions.toggleSettingsTabColumn(newColumn, { expand: true });
                   actions.setColumnSelected(newColumnName);
                 }
                 onClose();
