@@ -254,7 +254,7 @@ export const state = observable<State>({
     columnType: "Data Mining"
   },
   settingsTabs: {
-    selected: "column",
+    selected: "time",
     columns: undefined,
     columnHashMap: new Map<string, ColumnInfo>(),
     columnSearchTerm: "",
