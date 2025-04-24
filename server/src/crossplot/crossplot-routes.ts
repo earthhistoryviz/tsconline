@@ -68,7 +68,7 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       type: "temp",
       isPublic: true,
       priority: 1,
-      hasFiles: false
+      hasFiles: true
     };
     try {
       const dp = await uploadTemporaryDatapack(tempDatapackMetadata, outputTextFilepath);

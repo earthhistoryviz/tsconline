@@ -53,6 +53,7 @@ import {
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
+  SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
@@ -67,7 +68,6 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
@@ -553,15 +553,20 @@ export const processDatapackConfig = action(
   "processDatapackConfig",
   async (
     datapacks: DatapackConfigForChartRequest[],
-    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+    options?: {
+      settings?: string | ChartInfoTSC;
+      force?: boolean;
+      setter?: (message: SetDatapackConfigReturnValue) => Promise<void>;
+      currentConfig?: DatapackConfigForChartRequest[];
+    }
   ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
-    const { settings, force } = options ?? {};
-    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
-      return true;
+    const { settings, force, currentConfig } = options ?? {};
+    const config = currentConfig ?? state.config.datapacks;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(config))) return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settings) {
@@ -601,17 +606,22 @@ export const processDatapackConfig = action(
 
           if (status === "success" && value) {
             try {
-              await actions.setDatapackConfig(
-                value.columnRoot,
-                value.foundDefaultAge,
-                value.mapHierarchy,
-                value.mapInfo,
-                value.datapacks,
-                chartSettings
-              );
-
+              if (options?.setter) {
+                // TODO: add the settings setter to this function at some point
+                options.setter(value);
+                setUnsavedDatapackConfig(state.config.datapacks);
+              } else {
+                await actions.setDatapackConfig(
+                  value.columnRoot,
+                  value.foundDefaultAge,
+                  value.mapHierarchy,
+                  value.mapInfo,
+                  value.datapacks,
+                  chartSettings
+                );
+                setUnsavedDatapackConfig(datapacks);
+              }
               pushSnackbar("Datapack Config Updated", "success");
-              setUnsavedDatapackConfig(datapacks);
               resolve("Datapack Config Updated successfully.");
             } catch (e) {
               reject(new Error("Failed to set datapack config with error " + e));
@@ -659,16 +669,9 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
-      for (const child of state.settingsTabs.columns.children) {
-        if (child.units === "Ma") {
-          setCrossPlotChartX(child);
-        }
-      }
-      if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
-      setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
-    if (datapacks.length !== 0) {
+    if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
         delete state.settings.timeSettings["Ma"];
       });

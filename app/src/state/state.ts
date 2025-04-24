@@ -60,6 +60,10 @@ export type State = {
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
     loading: boolean;
+    columns?: ColumnInfo;
+    datapacks: DatapackConfigForChartRequest[];
+    columnHashMap: Map<string, ColumnInfo>;
+    columnSelected: string | null;
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -174,7 +178,10 @@ export const state = observable<State>({
     chartY: undefined,
     state: cloneDeep(defaultChartTabState),
     crossPlotBounds: undefined,
-    loading: false
+    loading: false,
+    datapacks: [],
+    columnHashMap: new Map<string, ColumnInfo>(),
+    columnSelected: null
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,

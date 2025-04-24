@@ -59,7 +59,10 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     ...actual,
     isDateValid: vi.fn().mockReturnValue(true),
     assertPrivateUserDatapack: vi.fn(),
-    assertDatapack: vi.fn()
+    assertDatapack: vi.fn(),
+    isWorkshopUUID: vi.fn().mockReturnValue(false),
+    isOfficialUUID: vi.fn().mockReturnValue(false),
+    isTempUUID: vi.fn().mockReturnValue(false)
   };
 });
 
@@ -465,6 +468,9 @@ describe("deleteUserDatapack tests", () => {
   const rm = vi.spyOn(fsPromises, "rm");
   const loggerError = vi.spyOn(logger.default, "error");
   const deleteDatapackFoundInMetadata = vi.spyOn(fileMetadataHandler, "deleteDatapackFoundInMetadata");
+  const isOfficialUUID = vi.spyOn(shared, "isOfficialUUID");
+  const isWorkshopUUID = vi.spyOn(shared, "isWorkshopUUID");
+  const isTempUUID = vi.spyOn(shared, "isTempUUID");
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -485,6 +491,32 @@ describe("deleteUserDatapack tests", () => {
     expect(loggerError).toHaveBeenCalledOnce();
     expect(rm).toHaveBeenCalledOnce();
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
+  });
+  const uuidChecks = {
+    isOfficialUUID,
+    isWorkshopUUID,
+    isTempUUID
+  };
+  test.each(["isOfficialUUID", "isWorkshopUUID", "isTempUUID"])(
+    "should not delete metadata if true for %s",
+    async (uuidCheck) => {
+      vi.clearAllMocks();
+      uuidChecks[uuidCheck].mockReturnValueOnce(true);
+      verifyFilepath.mockResolvedValueOnce(true);
+      fetchUserDatapackDirectory.mockResolvedValueOnce("test");
+      await deleteUserDatapack("uuid", "datapack");
+      expect(rm).toHaveBeenCalledOnce();
+      expect(deleteDatapackFoundInMetadata).not.toHaveBeenCalled();
+      expect(loggerError).not.toHaveBeenCalled();
+    }
+  );
+
+  it("should delete the datapack", async () => {
+    verifyFilepath.mockResolvedValueOnce(true);
+    fetchUserDatapackDirectory.mockResolvedValueOnce("test");
+    await deleteUserDatapack("uuid", "datapack");
+    expect(rm).toHaveBeenCalledOnce();
+    expect(deleteDatapackFoundInMetadata).toHaveBeenCalledOnce();
   });
 });
 

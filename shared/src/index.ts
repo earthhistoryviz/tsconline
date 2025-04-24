@@ -769,6 +769,9 @@ export function isWorkshopUUID(uuid: string): boolean {
   const workshopId = Number(uuid.slice(workshopPrefix.length));
   return uuid.startsWith(workshopPrefix) && !isNaN(workshopId) && Number.isInteger(workshopId) && workshopId > 0;
 }
+export function isTempUUID(uuid: string): boolean {
+  return uuid === "temp";
+}
 
 export function assertDatapackPriorityUpdateSuccess(o: any): asserts o is DatapackPriorityUpdateSuccess {
   if (!o || typeof o !== "object") throw new Error("DatapackPriorityUpdateSuccess must be a non-null object");

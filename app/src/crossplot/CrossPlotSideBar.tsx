@@ -5,7 +5,7 @@ import { context } from "../state";
 import styles from "./CrossPlotSideBar.module.css";
 import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, useTheme } from "@mui/material";
 import Color from "color";
-import { ColumnDisplay } from "../settings_tabs/Column";
+import { ColumnContext, ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
 import { CrossPlotTimeSettings } from "../types";
 import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
@@ -117,7 +117,7 @@ const Time: React.FC = observer(() => {
   return (
     <Box className={styles.timeComponent}>
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.settingsTabs.columns?.children}
+        possibleCharts={state.crossPlot.columns?.children}
         formLabel={t("crossPlot.time.xAxis")}
         disabled
         settings={state.crossPlot.chartXTimeSettings}
@@ -127,7 +127,7 @@ const Time: React.FC = observer(() => {
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.settingsTabs.columns?.children}
+        possibleCharts={state.crossPlot.columns?.children}
         formLabel={t("crossPlot.time.yAxis")}
         settings={state.crossPlot.chartYTimeSettings}
         column={state.crossPlot.chartY}
@@ -569,13 +569,46 @@ const MarkerOptions: React.FC<{ marker: Marker }> = observer(({ marker }) => {
     </Box>
   );
 });
+const CrossPlotColumns: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
+  return (
+    <ColumnContext.Provider
+      value={{
+        state: {
+          columns: state.crossPlot.columns,
+          columnSearchTerm: "",
+          columnSelected: state.crossPlot.columnSelected,
+          timeSettings: {
+            ...(state.crossPlot.chartX?.units && {
+              [state.crossPlot.chartX.units]: state.crossPlot.chartXTimeSettings
+            }),
+            ...(state.crossPlot.chartY?.units && {
+              [state.crossPlot.chartY.units]: state.crossPlot.chartYTimeSettings
+            })
+          }
+        },
+        actions: {
+          setColumnSelected: (col) => {
+            actions.setCrossPlotColumnSelected(col);
+          },
+          toggleSettingsTabColumn: (col) => {
+            actions.toggleSettingsTabColumn(col, {
+              hashMap: state.crossPlot.columnHashMap
+            });
+          }
+        }
+      }}>
+      <ColumnDisplay />
+    </ColumnContext.Provider>
+  );
+});
 
 const tabs = [
   { tabName: "Time", Icon: AccessTimeRounded, component: <Time /> },
   {
     tabName: "Columns",
     Icon: TableChartRounded,
-    component: <ColumnDisplay />
+    component: <CrossPlotColumns />
   },
   {
     tabName: "Markers",
