@@ -64,6 +64,14 @@ export type State = {
     datapacks: DatapackConfigForChartRequest[];
     columnHashMap: Map<string, ColumnInfo>;
     columnSelected: string | null;
+    previousSettings: {
+      chartXTimeSettings: CrossPlotTimeSettings;
+      chartYTimeSettings: CrossPlotTimeSettings;
+      chartX: ColumnInfo | undefined;
+      chartY: ColumnInfo | undefined;
+      columnHashMap: Map<string, ColumnInfo>;
+      columns: ColumnInfo | undefined;
+    };
   };
   loadSaveFilename: string;
   cookieConsent: boolean | null;
@@ -181,7 +189,15 @@ export const state = observable<State>({
     loading: false,
     datapacks: [],
     columnHashMap: new Map<string, ColumnInfo>(),
-    columnSelected: null
+    columnSelected: null,
+    previousSettings: {
+      chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+      chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+      chartX: undefined,
+      chartY: undefined,
+      columnHashMap: new Map<string, ColumnInfo>(),
+      columns: undefined
+    }
   },
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
@@ -316,17 +332,5 @@ reaction(
   () => {
     if (state.chartTab.state.madeChart === false) return;
     state.chartTab.state.matchesSettings = false;
-  }
-);
-reaction(
-  () => [
-    state.crossPlot.chartX,
-    state.crossPlot.chartY,
-    state.crossPlot.chartXTimeSettings,
-    state.crossPlot.chartYTimeSettings
-  ],
-  () => {
-    if (state.crossPlot.state.madeChart === false) return;
-    state.crossPlot.state.matchesSettings = false;
   }
 );

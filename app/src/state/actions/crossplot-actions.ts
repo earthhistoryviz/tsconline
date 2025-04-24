@@ -439,18 +439,45 @@ export const removeCrossPlotMarker = action((marker: Marker) => {
 });
 
 export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+  setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartX = chart;
 });
 export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+  setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartY = chart;
 });
+// set this before you set the actual changes so it remembers the previous settings
+export const setCrossPlotChartMatchesSettings = action((matchesSettings: boolean) => {
+  if (state.crossPlot.state.matchesSettings) {
+    state.crossPlot.previousSettings = cloneDeep({
+      chartX: state.crossPlot.chartX,
+      chartY: state.crossPlot.chartY,
+      chartXTimeSettings: state.crossPlot.chartXTimeSettings,
+      chartYTimeSettings: state.crossPlot.chartYTimeSettings,
+      columnHashMap: state.crossPlot.columnHashMap,
+      columns: state.crossPlot.columns
+    });
+  }
+  state.crossPlot.state.matchesSettings = matchesSettings;
+});
 export const setCrossPlotChartXTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
+  setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartXTimeSettings = {
     ...state.crossPlot.chartXTimeSettings,
     ...timeSettings
   };
 });
+export const revertCrossPlot = action(() => {
+  state.crossPlot.chartX = cloneDeep(state.crossPlot.previousSettings.chartX);
+  state.crossPlot.chartY = state.crossPlot.previousSettings.chartY;
+  state.crossPlot.chartXTimeSettings = state.crossPlot.previousSettings.chartXTimeSettings;
+  state.crossPlot.chartYTimeSettings = state.crossPlot.previousSettings.chartYTimeSettings;
+  state.crossPlot.columnHashMap = state.crossPlot.previousSettings.columnHashMap;
+  state.crossPlot.columns = state.crossPlot.previousSettings.columns;
+  state.crossPlot.state.matchesSettings = true;
+});
 export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
+  setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartYTimeSettings = {
     ...state.crossPlot.chartYTimeSettings,
     ...timeSettings
@@ -801,22 +828,23 @@ export const setCrossPlotDatapackConfig = action(
     });
     for (const child of state.crossPlot.columns!.children) {
       if (child.units.toLowerCase() === "ma") {
-        setCrossPlotChartX(child);
+        state.crossPlot.chartX = child;
         break;
       }
     }
-    if (!state.crossPlot.chartX) setCrossPlotChartX(state.crossPlot.columns!.children[0]);
-    setCrossPlotChartY(state.crossPlot.columns!.children[0]);
+    if (!state.crossPlot.chartX) state.crossPlot.chartX = state.crossPlot.columns!.children[0];
+    state.crossPlot.chartY = state.crossPlot.columns!.children[0];
+    state.crossPlot.state.matchesSettings = true;
   }
 );
-const initializeColumnHashMap = async (columnInfo: ColumnInfo) => {
+const initializeColumnHashMap = action("initializeColumnHashmap", async (columnInfo: ColumnInfo) => {
   state.crossPlot.columnHashMap.set(columnInfo.name, columnInfo);
   if (columnInfo.children) {
     for (const child of columnInfo.children) {
       await initializeColumnHashMap(child);
     }
   }
-};
+});
 
 export const setCrossPlotColumnSelected = action((column: string | null) => {
   state.crossPlot.columnSelected = column;

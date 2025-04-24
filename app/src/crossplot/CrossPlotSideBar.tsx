@@ -592,6 +592,7 @@ const CrossPlotColumns: React.FC = observer(() => {
             actions.setCrossPlotColumnSelected(col);
           },
           toggleSettingsTabColumn: (col) => {
+            actions.setCrossPlotChartMatchesSettings(false);
             actions.toggleSettingsTabColumn(col, {
               hashMap: state.crossPlot.columnHashMap
             });
