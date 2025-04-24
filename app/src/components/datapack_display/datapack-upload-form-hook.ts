@@ -5,7 +5,7 @@ import { context } from "../../state";
 import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
-import { getMetadataFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
+import { formatDateForDatapack, getMetadataFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
 import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
@@ -49,7 +49,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     ...type,
     ...(contact && { contact }),
     ...(notes && { notes }),
-    ...(date && { date: date.format("YYYY-MM-DD") })
+    ...(date && { date: formatDateForDatapack(date) })
   };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

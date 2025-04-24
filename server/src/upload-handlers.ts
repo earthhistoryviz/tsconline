@@ -533,6 +533,12 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };
   }
+  const oldCover = await fetchWorkshopCoverPictureFilepath(workshopId);
+  if (oldCover) {
+    await rm(oldCover, { force: true }).catch((e) => {
+      console.error(e);
+    });
+  }
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);
   const filePath = join(filesFolder, `${WORKSHOP_COVER_PICTURE}${fileExtension}`);

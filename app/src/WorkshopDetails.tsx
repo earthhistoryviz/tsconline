@@ -71,7 +71,7 @@ export const WorkshopDetails = observer(() => {
           </IconButton>
           <Typography className={styles.ht}>{workshop.title}</Typography>
 
-          <img className={styles.di} src={getWorkshopCoverImage()} />
+          <img className={styles.di} src={getWorkshopCoverImage(workshop.workshopId)} />
         </div>
         <CustomDivider className={styles.divider} />
         <Box className={styles.about} bgcolor="secondaryBackground.main">

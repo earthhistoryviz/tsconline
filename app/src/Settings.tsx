@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { context } from "./state";
 import { observer } from "mobx-react-lite";
-import { Column } from "./settings_tabs/Column";
+import { Column, ColumnContext } from "./settings_tabs/Column";
 import { Time } from "./settings_tabs/Time";
 import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
@@ -50,13 +50,30 @@ export const Settings = observer(function Settings() {
 });
 
 const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }) {
+  const { state, actions } = useContext(context);
   switch (tab) {
     case "time":
       return <Time />;
     case "preferences":
       return <Preferences />;
     case "column":
-      return <Column />;
+      return (
+        <ColumnContext.Provider
+          value={{
+            state: {
+              columns: state.settingsTabs.columns,
+              columnSearchTerm: "",
+              columnSelected: "",
+              timeSettings: state.settings.timeSettings
+            },
+            actions: {
+              setColumnSelected: actions.setColumnSelected,
+              toggleSettingsTabColumn: actions.toggleSettingsTabColumn
+            }
+          }}>
+          <Column />
+        </ColumnContext.Provider>
+      );
     case "search":
       return <Search />;
     case "font":

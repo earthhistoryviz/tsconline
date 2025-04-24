@@ -10,6 +10,9 @@ import chalk from "chalk";
 import sharp from "sharp";
 import Vibrant from "node-vibrant";
 
+export type DatapackParsingOptions = {
+  nonStandardFilepath?: string;
+};
 /**
  * Loads all the indexes for the active datapacks and mapPacks (if they exist)
  * will stop parsing if an error is thrown
