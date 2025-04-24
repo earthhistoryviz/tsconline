@@ -835,9 +835,6 @@ export const setCrossPlotDatapackConfig = action(
     if (!state.crossPlot.chartX) state.crossPlot.chartX = state.crossPlot.columns!.children[0];
     state.crossPlot.chartY = state.crossPlot.columns!.children[0];
     state.crossPlot.state.matchesSettings = true;
-    runInAction(() => {
-      state.crossPlot.state.matchesSettings = true;
-    });
   }
 );
 const initializeColumnHashMap = action("initializeColumnHashmap", async (columnInfo: ColumnInfo) => {
