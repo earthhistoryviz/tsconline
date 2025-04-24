@@ -1,0 +1,21 @@
+.custom-column-menu-paper {
+  border-radius: 0px;
+  width: 80vw;
+  overflow: hidden;
+}
+.custom-column-menu-black-line {
+  height: 1px;
+  width: 65%;
+  background-color: gray;
+}
+.custom-columns-menu-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  z-index: 1;
+}

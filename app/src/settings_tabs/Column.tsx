@@ -1,33 +1,14 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
-import { ColumnInfo, DataMiningPointDataType, EventFrequency } from "@tsconline/shared";
-import {
-  Box,
-  Button,
-  Dialog,
-  DialogContent,
-  FormControlLabel,
-  FormHelperText,
-  IconButton,
-  Radio,
-  RadioGroup,
-  TextField
-} from "@mui/material";
+import { ColumnInfo } from "@tsconline/shared";
+import { Box, Button, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import {
-  ColumnContainer,
-  TSCCheckbox,
-  Accordion,
-  CustomTooltip,
-  Lottie,
-  StyledScrollbar,
-  TSCButton
-} from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { Theme, styled, useTheme } from "@mui/material/styles";
+import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
@@ -41,12 +22,7 @@ import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from '@mui/icons-material/Add';
-import BarChartIcon from "@mui/icons-material/BarChart";
-import SpokeRoundedIcon from "@mui/icons-material/SpokeRounded";
-import SettingsIcon from "@mui/icons-material/Settings";
-import { OverlayColumnAccordion } from "./advanced_settings/OverlaySettings";
-import { createGradient } from "../util/util";
-import { DataMiningSettings } from "./advanced_settings/DataMiningSettings";
+import { CustomColumnMenu } from "./column_menu/CustomColumnMenu";
 
 type ColumnContextType = {
   state: {
@@ -108,187 +84,6 @@ export const Column = observer(function Column() {
         </StyledScrollbar>
       )}
     </>
-  );
-});
-
-type CustomColumnMenuProps = {
-  column: ColumnInfo | undefined;
-  onClose: () => void;
-};
-
-const CustomColumnPanel = styled(Box)(({ theme }: { theme: Theme }) => ({
-  backgroundColor: theme.palette.secondaryBackground.main,
-  flex: 1,
-  border: "1px solid black",
-  minWidth: 0
-}));
-const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
-  color: theme.palette.button.main,
-  "&.Mui-checked": {
-    color: theme.palette.button.main
-  }
-}));
-
-export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ column, onClose }) => {
-  if (!column) return null;
-  const { state, actions } = useContext(context);
-  const theme = useTheme();
-  const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
-  const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
-  const [columnType, setColumnType] = useState<"Data Mining" | "Overlay">(() => {
-    const tab = state.columnMenu.tabs[state.columnMenu.tabValue];
-    if (tab === "Data Mining" || tab === "Overlay") {
-      return tab;
-    }
-    return "Data Mining";
-  });
-  const columnSelected = state.columnMenu.columnSelected
-    ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null
-    : null;
-  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(
-    columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event"
-      ? columnSelected
-      : null
-  );
-  const [overlayColumn, setOverlayColumn] = useState<ColumnInfo | null>(null);
-  const [dataMiningEventType, setInternalDataMiningEventType] = useState<
-    EventFrequency | DataMiningPointDataType | null
-  >(null);
-  const setDataMiningEventType = (value: EventFrequency | DataMiningPointDataType) => {
-    setInternalDataMiningEventType(value);
-  };
-
-  return (
-    <Dialog
-      open={true}
-      onClose={onClose}
-      maxWidth="xl"
-      fullWidth
-      PaperProps={{ className: "custom-column-menu-paper" }}>
-      <StyledScrollbar className="custom-columns-menu-scrollbar">
-        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }}>
-          <Box display="grid" height="100%">
-            <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
-              <Box className="custom-column-menu-black-line" />
-            </Box>
-            <Box display="flex" justifyContent="space-between" gridRow="1" gridColumn="1">
-              {icons.map((Icon, index) => (
-                <Box
-                  key={index}
-                  className="custom-columns-menu-icon"
-                  sx={{
-                    background: gradient.main
-                  }}>
-                  <Icon
-                    sx={{
-                      "& path": {
-                        fill: "none",
-                        stroke: "black",
-                        strokeWidth: 1.0
-                      },
-                      fontSize: 30
-                    }}
-                  />
-                </Box>
-              ))}
-            </Box>
-          </Box>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-            <Typography variant="h6" textAlign="center" flex={1}>
-              Select a Base Column
-            </Typography>
-            <Typography variant="h6" textAlign="center" flex={1}>
-              Select a Type of Column
-            </Typography>
-            <Typography variant="h6" textAlign="center" flex={1}>
-              Customize Your Column
-            </Typography>
-          </Box>
-          <Box display="flex" justifyContent="space-between" height="70vh" gap={3}>
-            <CustomColumnPanel p={2}>
-              <StyledScrollbar>
-                {column.children &&
-                  Object.entries(column.children).map(([childName, childColumn]) => (
-                    <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setBaseColumn} />
-                  ))}
-              </StyledScrollbar>
-            </CustomColumnPanel>
-            <CustomColumnPanel height="fit-content">
-              <RadioGroup
-                value={columnType}
-                sx={{ m: 2 }}
-                onChange={(e) => setColumnType(e.target.value as typeof columnType)}>
-                <FormControlLabel
-                  value="Data Mining"
-                  control={<CustomRadioButton size="small" />}
-                  label="Data Mining"
-                />
-                <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given
-                  point column over sliding windows of data.
-                </FormHelperText>
-                <FormControlLabel
-                  value="Overlay"
-                  control={<CustomRadioButton size="small" />}
-                  label="Dual Column Comparison"
-                />
-                <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.
-                </FormHelperText>
-              </RadioGroup>
-            </CustomColumnPanel>
-            <CustomColumnPanel p={2}>
-              {!baseColumn ? (
-                <Box display="flex" alignItems="center" justifyContent="center" height="100%">
-                  <Typography variant="h4" textAlign="center">
-                    Please Select a Point or Event Column
-                  </Typography>
-                </Box>
-              ) : columnType === "Data Mining" ? (
-                <DataMiningSettings column={baseColumn} onDataMiningEventChange={setDataMiningEventType} />
-              ) : (
-                <StyledScrollbar>
-                  {column.children &&
-                    Object.entries(column.children).map(([childName, childColumn]) => (
-                      <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setOverlayColumn} />
-                    ))}
-                </StyledScrollbar>
-              )}
-            </CustomColumnPanel>
-          </Box>
-          <Box display="flex" justifyContent="flex-end" gap={3} mt={2}>
-            <TSCButton variant="outlined" onClick={onClose}>
-              Cancel
-            </TSCButton>
-            <TSCButton
-              disabled={
-                !baseColumn ||
-                (columnType === "Data Mining" && !dataMiningEventType) ||
-                (columnType === "Overlay" && !overlayColumn)
-              }
-              onClick={() => {
-                if (!baseColumn) return;
-                let newColumnName: string | undefined;
-                if (columnType === "Data Mining") {
-                  if (!dataMiningEventType) return;
-                  newColumnName = actions.addDataMiningColumn(baseColumn, dataMiningEventType);
-                } else if (columnType === "Overlay") {
-                  if (!overlayColumn) return;
-                  actions.setDrawDualColCompColumn(overlayColumn);
-                  newColumnName = actions.addDualColCompColumn(overlayColumn);
-                }
-                if (newColumnName) {
-                  actions.toggleSettingsTabColumn(newColumnName, true);
-                  actions.setColumnSelected(newColumnName);
-                }
-                onClose();
-              }}>
-              Create Column
-            </TSCButton>
-          </Box>
-        </DialogContent>
-      </StyledScrollbar>
-    </Dialog>
   );
 });
 
