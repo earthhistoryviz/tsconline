@@ -21,6 +21,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import SpokeRoundedIcon from "@mui/icons-material/SpokeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import "./CustomColumnMenu.css";
+import { useTranslation } from "react-i18next";
 
 type CustomColumnMenuProps = {
   column: ColumnInfo | undefined;
@@ -44,6 +45,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
   if (!column) return null;
   const { state, actions } = useContext(context);
   const theme = useTheme();
+  const { t } = useTranslation();
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
   const gradient = createGradient(theme.palette.mainGradientLeft.main, theme.palette.mainGradientRight.main);
   const [columnType, setColumnType] = useState<"Data Mining" | "Overlay">(() => {
@@ -77,7 +79,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
       fullWidth
       PaperProps={{ className: "custom-column-menu-paper" }}>
       <StyledScrollbar className="custom-columns-menu-scrollbar">
-        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }}>
+        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }} className="custom-column-menu-content">
           <Box display="grid" height="100%">
             <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
               <Box className="custom-column-menu-black-line" />
@@ -106,13 +108,13 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
           </Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" textAlign="center" flex={1}>
-              Select a Base Column
+              {t("settings.column.custom-column-menu.base-column-header")}
             </Typography>
             <Typography variant="h6" textAlign="center" flex={1}>
-              Select a Type of Column
+              {t("settings.column.custom-column-menu.type-column-header")}
             </Typography>
             <Typography variant="h6" textAlign="center" flex={1}>
-              Customize Your Column
+              {t("settings.column.custom-column-menu.customize-column-header")}
             </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" height="70vh" gap={3}>
@@ -135,8 +137,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   label="Data Mining"
                 />
                 <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given
-                  point column over sliding windows of data.
+                  {t("settings.column.custom-column-menu.data-mining-description")}
                 </FormHelperText>
                 <FormControlLabel
                   value="Overlay"
@@ -144,7 +145,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   label="Dual Column Comparison"
                 />
                 <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.
+                  {t("settings.column.custom-column-menu.dual-column-comparison-description")}
                 </FormHelperText>
               </RadioGroup>
             </CustomColumnPanel>
@@ -152,7 +153,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
               {!baseColumn ? (
                 <Box display="flex" alignItems="center" justifyContent="center" height="100%">
                   <Typography variant="h4" textAlign="center">
-                    Please Select a Point or Event Column
+                    {t("settings.column.custom-column-menu.select-base-column")}
                   </Typography>
                 </Box>
               ) : columnType === "Data Mining" ? (
@@ -167,9 +168,14 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
               )}
             </CustomColumnPanel>
           </Box>
-          <Box display="flex" justifyContent="flex-end" gap={3} mt={2}>
+          <Box display="flex" justifyContent="flex-end">
+            <Typography variant="caption" className="dcc-accordion-caption">
+              {t("settings.column.overlay-menu.overlay-accordion-caption")}
+            </Typography>
+          </Box>
+          <Box display="flex" justifyContent="flex-end" gap={3} mt={1}>
             <TSCButton variant="outlined" onClick={onClose}>
-              Cancel
+              {t("general-actions.cancel")}
             </TSCButton>
             <TSCButton
               disabled={
@@ -189,12 +195,15 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   newColumnName = actions.addDualColCompColumn(overlayColumn);
                 }
                 if (newColumnName) {
-                  actions.toggleSettingsTabColumn(newColumnName, true);
+                  const newColumn = state.settingsTabs.columnHashMap.get(newColumnName);
+                  if (!newColumn) return;
+                  actions.setColumnOn(false, newColumn);
+                  actions.toggleSettingsTabColumn(newColumn, { expand: true});
                   actions.setColumnSelected(newColumnName);
                 }
                 onClose();
               }}>
-              Create Column
+              {t("settings.column.custom-column-menu.create-column")}
             </TSCButton>
           </Box>
         </DialogContent>

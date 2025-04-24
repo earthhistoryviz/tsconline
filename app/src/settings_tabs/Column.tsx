@@ -56,6 +56,7 @@ export const ColumnContext = createContext<ColumnContextType>({
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
+  const { t } = useTranslation();
 
   return (
     <>
@@ -69,7 +70,7 @@ export const Column = observer(function Column() {
                 className="add-icon"
                 variant="text"
                 onClick={() => actions.setCustomColumnMenuOpen(true)}>
-                Create Custom Column
+                {t("settings.column.create-custom-column-button")}
               </Button>
             </div>
             <div className="column-display-container">

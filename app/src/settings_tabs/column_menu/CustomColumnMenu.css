@@ -2,6 +2,9 @@
   border-radius: 0px;
   width: 80vw;
   overflow: hidden;
+  max-height: 95vh;
+  display: flex;
+  flex-direction: column;
 }
 .custom-column-menu-black-line {
   height: 1px;
@@ -20,5 +23,5 @@
   z-index: 1;
 }
 .custom-columns-menu-scrollbar {
-  max-height: 90vh;
+  max-height: 95vh;
 }

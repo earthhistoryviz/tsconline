@@ -485,19 +485,20 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
 
 /**
  * toggles the "on" state for a column that had its checkbox clicked
- * @param columnOrName: the column or name of the toggled column
- * @param expand: if true, expands the column and all its parents
+ * @param columnOrName the column or name of the toggled column
+ * @param expand if true, expands the column and all its parents
  */
 export const toggleSettingsTabColumn = action(
   (
     columnOrName: ColumnInfo | string,
-    expand?: boolean,
     options?: {
+      expand?: boolean;
       hashMap?: Map<string, ColumnInfo>;
     }
   ) => {
     let column: ColumnInfo | undefined;
     const columnHashMap = options?.hashMap || state.settingsTabs.columnHashMap;
+    const expand = options?.expand || false;
     if (typeof columnOrName === "string") {
       column = columnHashMap.get(columnOrName);
       if (!column) {
