@@ -69,10 +69,6 @@
   align-self: flex-start;
 }
 
-.column-accordion {
-  overflow: hidden;
-}
-
 .column-accordion-wrapper {
   min-width: 10vw;
   width: 30vw;
@@ -87,4 +83,9 @@
 
 .custom-columns-menu-scrollbar {
   max-height: 90vh;
+}
+
+.column-display-name {
+  overflow: none;
+  width: 100%;
 }
