@@ -19,3 +19,6 @@
   margin: 0 auto;
   z-index: 1;
 }
+.custom-columns-menu-scrollbar {
+  max-height: 90vh;
+}

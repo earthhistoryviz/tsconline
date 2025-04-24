@@ -69,21 +69,11 @@
   align-self: flex-start;
 }
 
-.column-accordion-wrapper {
-  min-width: 10vw;
+.overlay-wrapper{
   width: max-content;
-  max-width: 70vw;
-  overflow: auto;
-  border-radius: 4px;
-  z-index: 0;
   resize: none;
-  position: relative;
   padding: 0;
   margin-bottom: 1rem;
-}
-
-.custom-columns-menu-scrollbar {
-  max-height: 90vh;
 }
 
 .column-row-container {

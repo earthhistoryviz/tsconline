@@ -10,6 +10,7 @@ import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { CustomTooltip } from "../../components";
 import { context } from "../../state";
 import "./OverlaySettings.css";
+import "../Column.css";
 
 const OverlayColumnContext = createContext<{
   selectedColumn: ColumnInfo | null;
@@ -28,7 +29,7 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
   const [selectedColumn, setSelectedColumn] = useState<ColumnInfo | null>(null);
 
   return (
-    <div className="column-accordion-wrapper">
+    <div className="column-accordion-wrapper overlay-wrapper">
       <OverlayColumnContext.Provider value={{ selectedColumn, setSelectedColumn }}>
         <ColumnAccordion column={column} onColumnClick={onColumnClick} />
       </OverlayColumnContext.Provider>

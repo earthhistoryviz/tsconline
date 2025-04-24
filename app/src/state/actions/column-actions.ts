@@ -491,10 +491,11 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
 export const toggleSettingsTabColumn = action(
   (
     columnOrName: ColumnInfo | string,
+    expand?: boolean,
     options?: {
       hashMap?: Map<string, ColumnInfo>;
     }
-  , expand?: boolean) => {
+  ) => {
     let column: ColumnInfo | undefined;
     const columnHashMap = options?.hashMap || state.settingsTabs.columnHashMap;
     if (typeof columnOrName === "string") {
@@ -516,6 +517,7 @@ export const toggleSettingsTabColumn = action(
     } else column = columnHashMap.get(column.parent!)!;
     while (column) {
       if (!column.on) column.on = true;
+      if (expand) column.expanded = true;
       if (!column.parent) break;
       if (columnHashMap.get(column.parent) === undefined) {
         console.log("WARNING: tried to get", column.parent, "in columnHashMap, but is undefined");

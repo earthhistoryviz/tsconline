@@ -177,6 +177,7 @@ type ColumnAccordionProps = {
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
   const { actions, state } = useContext(ColumnContext);
+  const { actions: globalActions } = useContext(context);
   if (!details.show) {
     return null;
   }
@@ -217,7 +218,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
-                actions.setExpanded(!details.expanded, details);
+                globalActions.setExpanded(!details.expanded, details);
               }}
             />
           }
