@@ -250,7 +250,7 @@ export const state = observable<State>({
     tabValue: 0
   },
   customColumnMenu: {
-    open: true,
+    open: false,
     columnType: "Data Mining"
   },
   settingsTabs: {

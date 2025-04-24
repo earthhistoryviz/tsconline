@@ -38,9 +38,19 @@
 .column-accordion-and-menu-container {
   display: flex;
   justify-content: start;
-  padding-top: 10px;
+  overflow-y: hidden;
+  height: 100%;
+}
+
+.column-display-container {
+  display: flex;
   flex-grow: 1;
   overflow-y: hidden;
+}
+
+.add-icon-and-menu-container {
+  display: flex;
+  flex-direction: column;
 }
 
 .column-accordion-wrapper {
@@ -53,7 +63,6 @@
   padding-left: 10px;
   resize: horizontal;
   position: relative;
-  height: 92%;
 }
 
 .add-icon {

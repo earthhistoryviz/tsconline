@@ -62,15 +62,19 @@ export const Column = observer(function Column() {
       <div className="column-top-level-container">
         <ColumnSearchBar />
         <div className="column-accordion-and-menu-container">
-          <div>
-            <Button
-              startIcon={<AddIcon />}
-              className="add-icon"
-              variant="text"
-              onClick={() => actions.setCustomColumnMenuOpen(true)}>
-              Create Custom Column
-            </Button>
-            <ColumnDisplay />
+          <div className="add-icon-and-menu-container">
+            <div>
+              <Button
+                startIcon={<AddIcon />}
+                className="add-icon"
+                variant="text"
+                onClick={() => actions.setCustomColumnMenuOpen(true)}>
+                Create Custom Column
+              </Button>
+            </div>
+            <div className="column-display-container">
+              <ColumnDisplay />
+            </div>
           </div>
           <ColumnMenu />
         </div>
