@@ -71,21 +71,21 @@
 
 .column-accordion-wrapper {
   min-width: 10vw;
-  width: 30vw;
+  width: max-content;
   max-width: 70vw;
   overflow: auto;
   border-radius: 4px;
   z-index: 0;
-  resize: horizontal;
+  resize: none;
   position: relative;
   padding: 0;
+  margin-bottom: 1rem;
 }
 
 .custom-columns-menu-scrollbar {
   max-height: 90vh;
 }
 
-.column-display-name {
-  overflow: none;
-  width: 100%;
+.column-row-container {
+  padding-right: 2rem;
 }

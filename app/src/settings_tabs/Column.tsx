@@ -166,7 +166,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
       fullWidth
       PaperProps={{ className: "custom-column-menu-paper" }}>
       <StyledScrollbar className="custom-columns-menu-scrollbar">
-        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main }}>
+        <DialogContent sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }}>
           <Box display="grid" height="100%">
             <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
               <Box className="custom-column-menu-black-line" />
