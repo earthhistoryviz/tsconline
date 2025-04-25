@@ -147,8 +147,8 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
     assertPointSettings(pointSettings);
     const handleDataTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
       if (!isDataMiningPointDataType(event.target.value)) return;
-      // if (pointSettings.dataMiningPointDataType !== null)
-      //   actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
+      if (pointSettings.dataMiningPointDataType !== null)
+        actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
       actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
       onDataMiningEventChange(event.target.value);
     };
