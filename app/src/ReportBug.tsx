@@ -5,6 +5,7 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { Link, useNavigate } from "react-router-dom";
 import { context } from "./state";
+import { useTranslation } from "react-i18next";
 
 export const ReportBug: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -15,6 +16,7 @@ export const ReportBug: React.FC = () => {
   const [titleError, setTitleError] = useState(false);
   const [descriptionError, setDescriptionError] = useState(false);
   const { actions } = useContext(context);
+  const { t } = useTranslation();
 
   const navigate = useNavigate();
 
@@ -101,13 +103,12 @@ export const ReportBug: React.FC = () => {
       <Box textAlign="center" mb={4}>
         <BugReportIcon sx={{ width: 48, height: 48 }} />
         <Typography variant="h4" component="h1" fontWeight="bold" mt={2} mb={3}>
-          Report a Bug
+          {t("report-bug.title")}
         </Typography>
 
         {!isSubmitted && (
           <Typography variant="h6" maxWidth={900} mx="auto">
-            Thank you for helping us improve our product! Please provide the details below to help us better understand
-            the issue and resolve it as quickly as possible.
+            {t("report-bug.subtitle")}
           </Typography>
         )}
       </Box>
@@ -116,33 +117,33 @@ export const ReportBug: React.FC = () => {
         <Box bgcolor="background.main" border={1} p={3} width="100%" maxWidth="1000px" mt={2}>
           <Box mb={3}>
             <Typography variant="h6" mb={1}>
-              Name/ID
+              {t("report-bug.name")}
             </Typography>
             <TextField
               fullWidth
               variant="outlined"
               required
-              placeholder="Bug Title"
+              placeholder={t("report-bug.name-placeholder")}
               value={title}
               onChange={(e) => {
                 setTitle(e.target.value);
                 clearTitleError(e.target.value);
               }}
               error={titleError}
-              helperText={titleError ? "This field is required." : " "}
+              helperText={titleError ? t("report-bug.helper-text") : " "}
               size="small"
             />
           </Box>
 
           <Box>
             <Typography variant="h6" mb={1}>
-              Please briefly describe the bug or issue you encountered.
+              {t("report-bug.description")}
             </Typography>
             <TextField
               fullWidth
               variant="outlined"
               required
-              placeholder="Bug Description"
+              placeholder={t("report-bug.description-placeholder")}
               value={description}
               onChange={(e) => {
                 setDescription(e.target.value);
@@ -156,7 +157,7 @@ export const ReportBug: React.FC = () => {
                 }
               }}
               error={descriptionError}
-              helperText={descriptionError ? "This field is required." : " "}
+              helperText={descriptionError ? t("report-bug.helper-text") : " "}
               size="small"
             />
           </Box>
@@ -164,34 +165,39 @@ export const ReportBug: React.FC = () => {
             <Box mb={2}>
               {files.map((file, index) => (
                 <Typography key={index} variant="body2" color="text.secondary">
-                  Attached: {file.name}
+                  {t("report-bug.attached")} {file.name}
                 </Typography>
               ))}
             </Box>
           )}
           <Box display="flex" alignItems="center" justifyContent="flex-end" gap={2}>
-            <InputFileUpload text="Attach Files" onChange={handleFileUpload} startIcon={<AttachFileIcon />} multiple />
+            <InputFileUpload
+              text={t("report-bug.attach-files")}
+              onChange={handleFileUpload}
+              startIcon={<AttachFileIcon />}
+              multiple
+            />
 
-            <TSCButton onClick={handleSubmit}>Send</TSCButton>
+            <TSCButton onClick={handleSubmit}>{t("report-bug.send")}</TSCButton>
           </Box>
         </Box>
       ) : (
         <Box textAlign="center" mt={4}>
           <Typography variant="h6" maxWidth={600} mx="auto">
-            Thank you for your feedback! We appreciate your help
-            <br />
-            in improving our product.
+            {t("report-bug.thank-you")}
           </Typography>
 
           <Typography variant="h6" color="text.secondary" marginTop={2}>
-            You will be redirected to the homepage in {countdown} second{countdown !== 1 && "s"}...
+            {t("report-bug.redirect")}
+            {countdown} {t("report-bug.second")}
+            {countdown !== 1 && "s"}...
           </Typography>
           <Typography variant="body2" color="text.secondary" marginTop={2}>
-            If you are not redirected,{" "}
+            {t("report-bug.not-redirect")}{" "}
             <Link to="/" style={{ textDecoration: "underline", color: "inherit" }}>
-              click here
+              {t("report-bug.click-here")}
             </Link>{" "}
-            to return to the homepage.
+            {t("report-bug.return-to-homepage")}
           </Typography>
         </Box>
       )}
