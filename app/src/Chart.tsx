@@ -318,7 +318,7 @@ const HistorySideBar: React.FC = observer(() => {
             <IconButton>
               <HistoryIcon fontSize="medium" />
             </IconButton>
-            <Typography variant="h5">History</Typography>
+            <Typography variant="h5">Recent History</Typography>
             <CustomTooltip title="Delete all history entries">
               <IconButton
                 onClick={async () => {

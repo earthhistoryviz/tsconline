@@ -1,9 +1,15 @@
 import { assetconfigs } from "../util.js";
 import { join, basename, dirname } from "path";
-import { cp, mkdir, readFile, readdir, realpath, rm, symlink, access, lstat } from "fs/promises";
+import { cp, mkdir, readdir, realpath, rm, symlink, lstat } from "fs/promises";
 import logger from "../error-logger.js";
-import { Datapack, HistoryEntry } from "@tsconline/shared";
+import { Datapack, HistoryEntry, extractDatapackMetadataFromDatapack } from "@tsconline/shared";
 import { getCachedDatapackFromDirectory } from "./fetch-user-files.js";
+import {
+  getChartContentFromChartHistoryTimeStamp,
+  getHistoryEntryDatapacksPath,
+  getSettingsFromChartHistoryTimeStamp,
+  getUserHistoryRootFilePath
+} from "./chart-history-helper-functions.js";
 
 export function isValidEpoch(timestamp: string) {
   return /^\d{13}$/.test(timestamp);
@@ -39,7 +45,7 @@ export async function saveChartHistory(
   chartPath: string,
   chartHash: string
 ) {
-  const historyRoot = join(assetconfigs.uploadDirectory, "private", uuid, "history");
+  const historyRoot = await getUserHistoryRootFilePath(uuid);
   const historyEntryDir = join(historyRoot, Date.now().toString());
   try {
     await mkdir(historyRoot, { recursive: true });
@@ -74,13 +80,7 @@ export async function saveChartHistory(
  * @param uuid User's UUID
  */
 export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntry[]> {
-  const historyRoot = join(assetconfigs.uploadDirectory, "private", uuid, "history");
-  try {
-    await access(historyRoot);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
-    return [];
-  }
+  const historyRoot = await getUserHistoryRootFilePath(uuid);
   const entries = await readdir(historyRoot);
   const validEntries: HistoryEntry[] = [];
   for (const entry of entries) {
@@ -89,19 +89,26 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
       await rm(join(historyRoot, entry), { recursive: true });
       continue;
     }
-    const datapacksPath = join(historyRoot, entry, "datapacks");
-    const datapacks = await readdir(datapacksPath);
+    const datapacksPath = await getHistoryEntryDatapacksPath(uuid, entry);
+    const datapackDirs = await readdir(datapacksPath);
+    const datapacks: Datapack[] = [];
     let validSymlinks = true;
-    for (const datapack of datapacks) {
-      if (!(validSymlinks = await verifySymlink(join(datapacksPath, datapack)))) break;
+    for (const datapack of datapackDirs) {
+      const symlinkPath = join(datapacksPath, datapack);
+      if (!(validSymlinks = await verifySymlink(symlinkPath))) break;
+      const cachedDatapack = await getCachedDatapackFromDirectory(symlinkPath);
+      datapacks.push(cachedDatapack);
     }
     if (!validSymlinks) {
       logger.error(`Invalid symlinks in history entry ${entry}`);
       await rm(join(historyRoot, entry), { recursive: true });
       continue;
     }
+    const { chartContent } = await getChartContentFromChartHistoryTimeStamp(uuid, entry);
     validEntries.push({
-      timestamp: entry
+      timestamp: entry,
+      datapacks: datapacks.map((dp) => extractDatapackMetadataFromDatapack(dp)),
+      chartContent
     });
   }
   return validEntries.sort();
@@ -114,14 +121,10 @@ export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntr
  */
 export async function getChartHistory(uuid: string, timestamp: string) {
   if (!isValidEpoch(timestamp)) throw new Error("Invalid timestamp");
-  const historyEntryPath = join(assetconfigs.uploadDirectory, "private", uuid, "history", timestamp);
-  const settings = await readFile(join(historyEntryPath, "settings.tsc"), "utf-8");
-  const chartPath = await readdir(historyEntryPath).then((files) => files.find((file) => file.endsWith(".svg")));
-  if (!chartPath) throw new Error("Chart not found");
-  const chartContent = await readFile(join(historyEntryPath, chartPath), "utf-8");
-  const chartHash = chartPath.replace(".svg", "");
+  const settings = await getSettingsFromChartHistoryTimeStamp(uuid, timestamp);
+  const { chartContent, chartHash } = await getChartContentFromChartHistoryTimeStamp(uuid, timestamp);
 
-  const datapackDirsPath = join(historyEntryPath, "datapacks");
+  const datapackDirsPath = await getHistoryEntryDatapacksPath(uuid, timestamp);
   const datapackDirs = await readdir(datapackDirsPath);
   const datapacks: Datapack[] = [];
   for (const datapackDir of datapackDirs) {

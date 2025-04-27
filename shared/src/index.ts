@@ -45,6 +45,8 @@ export type ChartHistory = {
 
 export type HistoryEntry = {
   timestamp: string;
+  chartContent: string;
+  datapacks: DatapackMetadata[];
 };
 
 export type SharedUser = {
@@ -892,6 +894,33 @@ export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser
 export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
   if (!o || typeof o !== "object") throw new Error("HistoryEntry must be a non-null object");
   if (typeof o.timestamp !== "string") throwError("HistoryEntry", "timestamp", "string", o.timestamp);
+  if (typeof o.chartContent !== "string") throwError("HistoryEntry", "chartContent", "string", o.chartContent);
+  if (!Array.isArray(o.datapacks)) {
+    throwError("HistoryEntry", "datapacks", "array", o.datapacks);
+  }
+  for (const entry of o.datapacks) {
+    assertDatapackMetadata(entry);
+  }
+}
+
+export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetadata {
+  const { description, title, originalFileName, storedFileName, size, date, authoredBy, tags, references, isPublic } =
+    o;
+  const datapackMetadata = {
+    description,
+    title,
+    originalFileName,
+    storedFileName,
+    size,
+    date,
+    authoredBy,
+    tags,
+    references,
+    isPublic,
+    ...extractDatapackType(o)
+  };
+  assertDatapackMetadata(datapackMetadata);
+  return datapackMetadata;
 }
 
 export function assertHistoryEntryArray(o: any): asserts o is HistoryEntry[] {
