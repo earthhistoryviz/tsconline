@@ -1,5 +1,5 @@
 import { join, parse } from "path";
-import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util";
+import { assetconfigs, verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { mkdir, readFile, readdir } from "fs/promises";
 
 export async function getUserHistoryRootFilePath(uuid: string): Promise<string> {

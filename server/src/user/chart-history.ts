@@ -2,7 +2,7 @@ import { assetconfigs } from "../util.js";
 import { join, basename, dirname } from "path";
 import { cp, mkdir, readdir, realpath, rm, symlink, lstat } from "fs/promises";
 import logger from "../error-logger.js";
-import { Datapack, HistoryEntry, extractDatapackMetadataFromDatapack } from "@tsconline/shared";
+import { Datapack, ChartHistoryMetadata, extractDatapackMetadataFromDatapack } from "@tsconline/shared";
 import { getCachedDatapackFromDirectory } from "./fetch-user-files.js";
 import {
   getChartContentFromChartHistoryTimeStamp,
@@ -79,10 +79,10 @@ export async function saveChartHistory(
  * Get the amount of chart history entries for a user
  * @param uuid User's UUID
  */
-export async function getChartHistoryMetadata(uuid: string): Promise<HistoryEntry[]> {
+export async function getChartHistoryMetadata(uuid: string): Promise<ChartHistoryMetadata[]> {
   const historyRoot = await getUserHistoryRootFilePath(uuid);
   const entries = await readdir(historyRoot);
-  const validEntries: HistoryEntry[] = [];
+  const validEntries: ChartHistoryMetadata[] = [];
   for (const entry of entries) {
     if (!isValidEpoch(entry)) {
       logger.error(`Invalid epoch in history entry ${entry}`);

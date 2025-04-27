@@ -43,7 +43,7 @@ export type ChartHistory = {
   chartHash: string;
 };
 
-export type HistoryEntry = {
+export type ChartHistoryMetadata = {
   timestamp: string;
   chartContent: string;
   datapacks: DatapackMetadata[];
@@ -58,7 +58,7 @@ export type SharedUser = {
   accountType: string;
   workshopIds?: number[];
   uuid: string;
-  historyEntries: HistoryEntry[];
+  historyEntries: ChartHistoryMetadata[];
 };
 
 export type AdminSharedUser = {
@@ -891,12 +891,12 @@ export function assertAdminSharedUserArray(o: any): asserts o is AdminSharedUser
   }
 }
 
-export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
-  if (!o || typeof o !== "object") throw new Error("HistoryEntry must be a non-null object");
-  if (typeof o.timestamp !== "string") throwError("HistoryEntry", "timestamp", "string", o.timestamp);
-  if (typeof o.chartContent !== "string") throwError("HistoryEntry", "chartContent", "string", o.chartContent);
+export function assertHistoryEntry(o: any): asserts o is ChartHistoryMetadata {
+  if (!o || typeof o !== "object") throw new Error("ChartHistoryMetadata must be a non-null object");
+  if (typeof o.timestamp !== "string") throwError("ChartHistoryMetadata", "timestamp", "string", o.timestamp);
+  if (typeof o.chartContent !== "string") throwError("ChartHistoryMetadata", "chartContent", "string", o.chartContent);
   if (!Array.isArray(o.datapacks)) {
-    throwError("HistoryEntry", "datapacks", "array", o.datapacks);
+    throwError("ChartHistoryMetadata", "datapacks", "array", o.datapacks);
   }
   for (const entry of o.datapacks) {
     assertDatapackMetadata(entry);
@@ -904,7 +904,7 @@ export function assertHistoryEntry(o: any): asserts o is HistoryEntry {
 }
 
 export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetadata {
-  const { description, title, originalFileName, storedFileName, size, date, authoredBy, tags, references, isPublic } =
+  const { hasFiles, description, title, originalFileName, storedFileName, size, date, authoredBy, tags, references, isPublic, priority } =
     o;
   const datapackMetadata = {
     description,
@@ -917,14 +917,16 @@ export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetada
     tags,
     references,
     isPublic,
+    priority,
+    hasFiles,
     ...extractDatapackType(o)
   };
   assertDatapackMetadata(datapackMetadata);
   return datapackMetadata;
 }
 
-export function assertHistoryEntryArray(o: any): asserts o is HistoryEntry[] {
-  if (!Array.isArray(o)) throw new Error("HistoryEntry must be an array");
+export function assertHistoryEntryArray(o: any): asserts o is ChartHistoryMetadata[] {
+  if (!Array.isArray(o)) throw new Error("ChartHistoryMetadata must be an array");
   for (const entry of o) {
     assertHistoryEntry(entry);
   }
