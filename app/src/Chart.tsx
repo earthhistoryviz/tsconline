@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
-import { Accordion, CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
+import { Accordion, CustomTooltip, TSCCheckbox, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -365,6 +365,10 @@ const HistorySideBar: React.FC = observer(() => {
                       }
                       aria-controls="panel1a-content"
                       id="panel1a-header">
+                      <Box display="flex" flexDirection="row" gap="10px"  alignItems="center">
+                        <TSCCheckbox
+                        checked={true}
+                        />
                       <div
                         className="history-entry-svg-display"
                         id={`${entry.timestamp}svg-display`}
@@ -377,12 +381,16 @@ const HistorySideBar: React.FC = observer(() => {
                         }}
                       />
                       <Typography>{formatDate(entry.timestamp)}</Typography>
+                      </Box>
                     </AccordionSummary>
                     <AccordionDetails className="history-entry-details">
-                      {entry.datapacks.map((dp) => (
-                        <Typography>
-                          {dp.title} - {dp.type}
-                        </Typography>
+                      {entry.datapacks.map((dp, index) => (
+                        <TimelineItem
+                          key={dp.title}
+                          title={dp.title}
+                          authoredBy={dp.authoredBy}
+                          isLast={entry.datapacks.length - 1 === index}
+                        />
                       ))}
                     </AccordionDetails>
                   </Accordion>
@@ -421,3 +429,44 @@ const HistorySideBar: React.FC = observer(() => {
     </>
   );
 });
+type TimelineItemProps = {
+  authoredBy: string;
+  title: string;
+  isLast: boolean;
+};
+
+const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }) => {
+  return (
+    <div style={{ position: "relative", display: "flex", alignItems: "flex-start" }}>
+        <Box sx={{
+          marginTop: "8px",
+          width: "10px",
+          height: "10px",
+          backgroundColor: "gray",
+          borderRadius: "50%",
+          position: "relative",
+          zIndex: 2,
+          marginRight: "12px"
+        }} />
+        {!isLast && (
+          <Box sx={{
+            position: "absolute",
+            top: "8px",
+            left: "4px",
+            width: "2px",
+            height: "100%",
+            backgroundColor: "gray",
+            zIndex: 1
+          }} />
+        )}
+      {/* Text */}
+      <div style={{ paddingTop: "2px", paddingLeft: "15px" }}>
+        <Typography>{title}</Typography>
+        <Typography variant="caption" color="textSecondary">
+          {"Created by: " + authoredBy}
+        </Typography>
+      </div>
+    </div>
+  );
+};
+
