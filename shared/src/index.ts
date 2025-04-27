@@ -904,8 +904,20 @@ export function assertHistoryEntry(o: any): asserts o is ChartHistoryMetadata {
 }
 
 export function extractDatapackMetadataFromDatapack(o: Datapack): DatapackMetadata {
-  const { hasFiles, description, title, originalFileName, storedFileName, size, date, authoredBy, tags, references, isPublic, priority } =
-    o;
+  const {
+    hasFiles,
+    description,
+    title,
+    originalFileName,
+    storedFileName,
+    size,
+    date,
+    authoredBy,
+    tags,
+    references,
+    isPublic,
+    priority
+  } = o;
   const datapackMetadata = {
     description,
     title,

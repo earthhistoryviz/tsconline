@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
-import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
+import { Accordion, CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -20,9 +20,11 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Paper
+  Paper,
+  AccordionSummary,
+  AccordionDetails
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, ArrowForwardIosSharp } from "@mui/icons-material";
 import HistoryIcon from "@mui/icons-material/History";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
@@ -33,7 +35,7 @@ import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
-import { formatDate } from "./state/non-action-util";
+import { formatDate, purifyChartContent } from "./state/non-action-util";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -313,7 +315,7 @@ const HistorySideBar: React.FC = observer(() => {
         open={isDrawerOpen}
         onClose={() => setDrawerOpen(false)}
         sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main" } }}>
-        <Box padding={2}>
+        <Box padding={2} width={400}>
           <Box display="flex" alignItems="center">
             <IconButton>
               <HistoryIcon fontSize="medium" />
@@ -334,33 +336,85 @@ const HistorySideBar: React.FC = observer(() => {
             </CustomTooltip>
           </Box>
           <List>
-            {state.user.historyEntries.map((entry) => (
-              <ListItemButton
-                key={entry.timestamp}
-                onClick={async () => {
-                  setLoading(true);
-                  try {
-                    await actions.loadUserHistory(entry.timestamp);
-                    setDrawerOpen(false);
-                  } finally {
-                    setLoading(false);
-                  }
-                }}>
-                <ListItemText primary={formatDate(entry.timestamp)} />
-                <IconButton
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    setLoading(true);
-                    try {
-                      await actions.deleteUserHistory(entry.timestamp);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}>
-                  <DeleteForeverIcon fontSize="small" />
-                </IconButton>
-              </ListItemButton>
-            ))}
+            {state.user.historyEntries.map(
+              (entry) => {
+                const [expanded, setExpanded] = useState(false);
+                return (
+                  <Accordion
+                    className="history-entry-accordion"
+                    sx={{
+                      backgroundColor: "backgroundColor.main",
+                      "&.Mui-expanded": {
+                        backgroundColor: "backgroundColor.main"
+                      }
+                    }}
+                    key={entry.timestamp}
+                    expanded={expanded}>
+                    <AccordionSummary
+                      className="history-entry-summary"
+                      tabIndex={0}
+                      expandIcon={
+                        <ArrowForwardIosSharp
+                          sx={{ fontSize: "0.9rem" }}
+                          color="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpanded(!expanded);
+                          }}
+                        />
+                      }
+                      aria-controls="panel1a-content"
+                      id="panel1a-header">
+                      <div
+                        className="history-entry-svg-display"
+                        id={`${entry.timestamp}svg-display`}
+                        dangerouslySetInnerHTML={{
+                          __html: purifyChartContent(entry.chartContent, {
+                            preserveAspectRatio: "none",
+                            width: "100%",
+                            height: "100%"
+                          })
+                        }}
+                      />
+                      <Typography>{formatDate(entry.timestamp)}</Typography>
+                    </AccordionSummary>
+                    <AccordionDetails className="history-entry-details">
+                      {entry.datapacks.map((dp) => (
+                        <Typography>
+                          {dp.title} - {dp.type}
+                        </Typography>
+                      ))}
+                    </AccordionDetails>
+                  </Accordion>
+                );
+              }
+
+              // <ListItemButton
+              //   key={entry.timestamp}
+              //   onClick={async () => {
+              //     setLoading(true);
+              //     try {
+              //       await actions.loadUserHistory(entry.timestamp);
+              //       setDrawerOpen(false);
+              //     } finally {
+              //       setLoading(false);
+              //     }
+              //   }}>
+              //   <ListItemText primary={formatDate(entry.timestamp)} />
+              //   <IconButton
+              //     onClick={async (e) => {
+              //       e.stopPropagation();
+              //       setLoading(true);
+              //       try {
+              //         await actions.deleteUserHistory(entry.timestamp);
+              //       } finally {
+              //         setLoading(false);
+              //       }
+              //     }}>
+              //     <DeleteForeverIcon fontSize="small" />
+              //   </IconButton>
+              // </ListItemButton>
+            )}
           </List>
         </Box>
       </Drawer>

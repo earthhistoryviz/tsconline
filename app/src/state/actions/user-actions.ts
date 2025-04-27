@@ -25,8 +25,8 @@ import {
   extractDatapackType
 } from "@tsconline/shared";
 import { state } from "../state";
-import { purifyChartContent } from "./generate-chart-actions";
 import { xmlToJson } from "../parse-settings";
+import { purifyChartContent } from "../non-action-util";
 
 export const setEditRequestInProgress = action((inProgress: boolean) => {
   state.datapackProfilePage.editRequestInProgress = inProgress;

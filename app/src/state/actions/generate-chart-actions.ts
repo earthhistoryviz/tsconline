@@ -10,7 +10,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import DOMPurify from "dompurify";
 import { ChartSettings, ChartTabState } from "../../types";
 import { cloneDeep } from "lodash";
-import { getDatapackFromArray } from "../non-action-util";
+import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
 
@@ -264,25 +264,3 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
-
-export function purifyChartContent(content: string) {
-  const domPurifyConfig = {
-    ADD_ATTR: [
-      "docbase",
-      "popuptext",
-      "minY",
-      "maxY",
-      "vertScale",
-      "topAge",
-      "baseAge",
-      "minX",
-      "maxX",
-      "baseLimit",
-      "topLimit",
-      "x1",
-      "y1"
-    ],
-    ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
-  };
-  return DOMPurify.sanitize(content, domPurifyConfig);
-}
