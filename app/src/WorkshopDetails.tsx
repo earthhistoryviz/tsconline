@@ -46,8 +46,6 @@ export const WorkshopDetails = observer(() => {
     return workshop;
   };
 
-  fetchWorkshop();
-
   const workshop = fetchWorkshop();
   const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
@@ -147,7 +145,7 @@ export const WorkshopDetails = observer(() => {
                   <Box sx={{ display: "flex", marginTop: 2 }}>
                     <CustomTooltip
                       title={
-                        !isRegistered && !isPublicWorkshop ? t("workshops.details-page.messages.not-registered") : ""
+                        !isRegistered && !isPublicWorkshop ? t("workshops.details-page.download-tooltip-not-registered") : ""
                       }
                       placement="bottom">
                       <div>
