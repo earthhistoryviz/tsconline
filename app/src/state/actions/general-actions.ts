@@ -53,6 +53,7 @@ import {
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
   SetDatapackConfigMessage,
+  SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
 import { settings, defaultTimeSettings } from "../../constants";
@@ -67,7 +68,6 @@ import {
   isOwnedByUser
 } from "../non-action-util";
 import { fetchUserDatapack } from "./user-actions";
-import { setCrossPlotChartX, setCrossPlotChartY } from "./crossplot-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 /**
@@ -136,6 +136,43 @@ export const fetchPublicOfficialDatapack = action(
     }
   }
 );
+
+export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+  const recaptchaToken = await getRecaptchaToken("fetchDatapackFiles");
+  if (!recaptchaToken) return null;
+  try {
+    const response = await fetcher(
+      `/user/datapack/download/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+      {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      }
+    );
+    const file = await response.blob();
+    if (response.ok) {
+      if (file) {
+        try {
+          await downloadFile(file, `FilesFor${datapackTitle}.zip`);
+        } catch (e) {
+          pushError(ErrorCodes.INVALID_PATH);
+        }
+      }
+    } else {
+      displayServerError(
+        response,
+        ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      );
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") return;
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
 
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
@@ -305,11 +342,13 @@ export const uploadUserDatapack = action(
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
     if (contact) formData.append("contact", contact);
+    formData.append("hasFiles", String(metadata.hasFiles));
     if (pdfFiles?.length) {
       pdfFiles.forEach((pdfFile) => {
         formData.append("pdfFiles[]", pdfFile);
       });
     }
+
     formData.append("priority", String(metadata.priority));
     try {
       const response = await fetcher(`/user/datapack`, {
@@ -332,6 +371,7 @@ export const uploadUserDatapack = action(
         if (metadata.isPublic) {
           refreshPublicDatapacks();
         }
+
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
       } else {
         if (response.status === 403) {
@@ -513,15 +553,20 @@ export const processDatapackConfig = action(
   "processDatapackConfig",
   async (
     datapacks: DatapackConfigForChartRequest[],
-    options?: { settings?: string | ChartInfoTSC; force?: boolean }
+    options?: {
+      settings?: string | ChartInfoTSC;
+      force?: boolean;
+      setter?: (message: SetDatapackConfigReturnValue) => Promise<void>;
+      currentConfig?: DatapackConfigForChartRequest[];
+    }
   ) => {
     if (datapacks.length === 0) {
       setEmptyDatapackConfig();
       return true;
     }
-    const { settings, force } = options ?? {};
-    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(state.config.datapacks)))
-      return true;
+    const { settings, force, currentConfig } = options ?? {};
+    const config = currentConfig ?? state.config.datapacks;
+    if (!force && (state.isProcessingDatapacks || JSON.stringify(datapacks) == JSON.stringify(config))) return true;
     setIsProcessingDatapacks(true);
     const fetchSettings = async () => {
       if (settings) {
@@ -561,17 +606,22 @@ export const processDatapackConfig = action(
 
           if (status === "success" && value) {
             try {
-              await actions.setDatapackConfig(
-                value.columnRoot,
-                value.foundDefaultAge,
-                value.mapHierarchy,
-                value.mapInfo,
-                value.datapacks,
-                chartSettings
-              );
-
+              if (options?.setter) {
+                // TODO: add the settings setter to this function at some point
+                options.setter(value);
+                setUnsavedDatapackConfig(state.config.datapacks);
+              } else {
+                await actions.setDatapackConfig(
+                  value.columnRoot,
+                  value.foundDefaultAge,
+                  value.mapHierarchy,
+                  value.mapInfo,
+                  value.datapacks,
+                  chartSettings
+                );
+                setUnsavedDatapackConfig(datapacks);
+              }
               pushSnackbar("Datapack Config Updated", "success");
-              setUnsavedDatapackConfig(datapacks);
               resolve("Datapack Config Updated successfully.");
             } catch (e) {
               reject(new Error("Failed to set datapack config with error " + e));
@@ -619,16 +669,9 @@ export const setDatapackConfig = action(
       state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
-      for (const child of state.settingsTabs.columns.children) {
-        if (child.units === "Ma") {
-          setCrossPlotChartX(child);
-        }
-      }
-      if (!state.crossPlot.chartX) setCrossPlotChartX(state.settingsTabs.columns.children[0]);
-      setCrossPlotChartY(state.settingsTabs.columns.children[0]);
     });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
-    if (datapacks.length !== 0) {
+    if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
         delete state.settings.timeSettings["Ma"];
       });
@@ -854,6 +897,9 @@ export const pushError = action("pushError", (context: ErrorCodes) => {
     errorCount: 1
   };
   state.errors.errorAlerts.set(context, error);
+});
+export const clearSuccessSnackbars = action("clearSuccessSnackbars", () => {
+  state.snackbars = state.snackbars.filter((info) => info.severity !== "success");
 });
 export const removeSnackbar = action("removeSnackbar", (text: string) => {
   state.snackbars = state.snackbars.filter((info) => info.snackbarText !== text);
@@ -1231,10 +1277,9 @@ export const setChartTabState = action("setChartTabState", (oldval: ChartTabStat
     setChartTabZoomSettings(oldval.chartZoomSettings, newval.chartZoomSettings);
   if (newval.chartLoading !== undefined) oldval.chartLoading = newval.chartLoading;
   if (newval.chartTimelineEnabled !== undefined) oldval.chartTimelineEnabled = newval.chartTimelineEnabled;
-  if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
-  if (newval.downloadFilename !== undefined) oldval.downloadFilename = newval.downloadFilename;
-  if (newval.isSavingChart !== undefined) oldval.isSavingChart = newval.isSavingChart;
   if (newval.unsafeChartContent !== undefined) oldval.unsafeChartContent = newval.unsafeChartContent;
+  if (newval.downloadFilename !== undefined) oldval.downloadFilename = newval.downloadFilename;
+  if (newval.downloadFiletype !== undefined) oldval.downloadFiletype = newval.downloadFiletype;
   if (newval.chartContent !== undefined) oldval.chartContent = newval.chartContent;
   if (newval.madeChart !== undefined) oldval.madeChart = newval.madeChart;
 });
@@ -1269,7 +1314,8 @@ export const resetEditableDatapackMetadata = action((metadata: EditableDatapackM
     type: metadata.type,
     authoredBy: metadata.authoredBy,
     priority: metadata.priority,
-    references: metadata.references
+    references: metadata.references,
+    hasFiles: metadata.hasFiles
   };
 });
 export const setUnsavedChanges = action((unsavedChanges: boolean) => {

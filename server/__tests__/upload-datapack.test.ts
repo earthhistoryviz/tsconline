@@ -2,7 +2,8 @@ import { Multipart, MultipartFile } from "@fastify/multipart";
 import { vi, it, describe, beforeEach, expect, afterEach } from "vitest";
 import {
   getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack,
-  processAndUploadDatapack
+  processAndUploadDatapack,
+  uploadTemporaryDatapack
 } from "../src/upload-datapack";
 import * as types from "../src/types";
 import * as uploadHandlers from "../src/upload-handlers";
@@ -21,7 +22,8 @@ vi.mock("fs/promises", () => {
 vi.mock("../src/user/user-handler", () => {
   return {
     doesDatapackFolderExistInAllUUIDDirectories: vi.fn().mockResolvedValue(false),
-    deleteUserDatapack: vi.fn().mockResolvedValue({})
+    deleteUserDatapack: vi.fn().mockResolvedValue({}),
+    fetchUserDatapack: vi.fn().mockResolvedValue({})
   };
 });
 vi.mock("../src/workshop/workshop-handler", () => {
@@ -32,7 +34,8 @@ vi.mock("../src/workshop/workshop-handler", () => {
 vi.mock("@tsconline/shared", () => {
   return {
     isOfficialDatapack: vi.fn().mockReturnValue(false),
-    isWorkshopDatapack: vi.fn().mockReturnValue(false)
+    isWorkshopDatapack: vi.fn().mockReturnValue(false),
+    isTempDatapack: vi.fn().mockReturnValue(true)
   };
 });
 vi.mock("../src/upload-handlers", () => {
@@ -51,13 +54,6 @@ vi.mock("../src/types", async (importOriginal) => {
   const actual = await importOriginal<typeof types>();
   return {
     isOperationResult: actual.isOperationResult
-  };
-});
-vi.mock("../src/error-logger", async () => {
-  return {
-    default: {
-      error: vi.fn().mockReturnValue({})
-    }
   };
 });
 const user = {
@@ -126,6 +122,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return 400 if processMultipartPartsForDatapackUpload does not return file or fields", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: {} as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "", originalFileName: "", storedFileName: "" }
     });
     const val = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack("uuid", formData);
@@ -135,6 +132,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return 500 if uploadUserDatapackHandler throws an error", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockRejectedValueOnce(new Error("error"));
@@ -146,6 +144,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return operation code if uploadUserDatapackHandler returns operation result", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockResolvedValueOnce({ code: 999, message: "error" });
@@ -156,6 +155,7 @@ describe("getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack", () => 
   it("should return file, filepath, tempProfilePictureFilepath, and datapackMetadata if successful", async () => {
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     uploadUserDatapackHandler.mockResolvedValueOnce({} as DatapackMetadata);
@@ -243,6 +243,7 @@ describe("processAndUploadDatapack", () => {
     vi.clearAllMocks();
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: {
         filepath: "test",
         originalFileName: "test",
@@ -315,6 +316,7 @@ describe("processAndUploadDatapack", () => {
     doesDatapackFolderExistInAllUUIDDirectories.mockResolvedValueOnce(true);
     processMultipartPartsForDatapackUpload.mockResolvedValueOnce({
       file: { file: { bytesRead: 1 } } as MultipartFile,
+      pdfFields: {},
       fields: { filepath: "test", originalFileName: "test", storedFileName: "test" }
     });
     const val = await processAndUploadDatapack("uuid", formData);
@@ -343,5 +345,48 @@ describe("processAndUploadDatapack", () => {
     const val = await processAndUploadDatapack("uuid", formData);
     expect(rm).toHaveBeenCalledTimes(2);
     expect(val).toEqual({ code: 500, message: "Unknown error" });
+  });
+});
+describe("uploadTemporaryDatapack", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const isTempDatapack = vi.spyOn(shared, "isTempDatapack");
+  const setupNewDatapackDirectoryInUUIDDirectory = vi.spyOn(uploadHandlers, "setupNewDatapackDirectoryInUUIDDirectory");
+  const deleteUserDatapack = vi.spyOn(userHandler, "deleteUserDatapack");
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const metadata: DatapackMetadata = {
+    title: "test"
+  } as DatapackMetadata;
+  it("should return 400 if metadata isn't a temporary datapack", async () => {
+    isTempDatapack.mockReturnValueOnce(false);
+    expect(await uploadTemporaryDatapack(metadata, "test")).toEqual({
+      code: 400,
+      message: "Datapack is not a temporary datapack"
+    });
+    expect(isTempDatapack).toHaveBeenCalledOnce();
+  });
+  it("should return 500 if setupNewDatapackDirectoryInUUIDDirectory throws an error", async () => {
+    setupNewDatapackDirectoryInUUIDDirectory.mockRejectedValueOnce(new Error("error"));
+    expect(await uploadTemporaryDatapack(metadata, "test")).toEqual({
+      code: 500,
+      message: "Error creating temporary datapack directory"
+    });
+    expect(setupNewDatapackDirectoryInUUIDDirectory).toHaveBeenCalledOnce();
+    expect(deleteUserDatapack).toHaveBeenCalledOnce();
+    expect(deleteUserDatapack).toHaveBeenCalledWith("temp", metadata.title);
+  });
+  it("should return 500 if datapack not found after creation", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("error"));
+    expect(await uploadTemporaryDatapack(metadata, "test")).toEqual({
+      code: 500,
+      message: "Error parsing temporary datapack"
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
+  });
+  it("should return datapack if successful", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ type: "temp" } as shared.Datapack);
+    expect(await uploadTemporaryDatapack(metadata, "test")).toEqual({ type: "temp" });
+    expect(fetchUserDatapack).toHaveBeenCalledOnce();
   });
 });

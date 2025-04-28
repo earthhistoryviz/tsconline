@@ -297,8 +297,7 @@
             }
         },
         "chart": {
-            "no-chart-yet": "您还未制作任何图表",
-            "save": "保存图表"
+            "no-chart-yet": "您还未制作任何图表"
         },
         "dialogs": {
             "confirm-datapack-change": {
@@ -376,7 +375,6 @@
             "UNABLE_TO_RESET_EMAIL": "无法重置邮箱。请稍后再试。",
             "UNABLE_TO_LOGIN_ACCOUNT_LOCKED": "您的账户已被锁定。请查看您的电子邮件以获取更多信息或联系技术支持获得帮助。",
             "UNABLE_TO_RECOVER_ACCOUNT": "无法恢复账户。请联系技术支持获取更多信息。",
-            "NOT_LOGGED_IN": "您尚未登录。请登录后访问此页面。",
             "USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD": "服务器上未找到所请求的数据包。请稍后再试，或联系我们的技术支持团队。",
             "INCORRECT_ENCRYPTION_HEADER": "无法加密文件。请稍后再试。",
             "TOO_MANY_REQUESTS": "请求过于频繁。请稍后再试。",
@@ -415,7 +413,8 @@
             "ADMIN_WORKSHOP_ALREADY_EXISTS": "该工作坊名称已存在。请另选名称。",
             "FETCH_WORKSHOPS_FAILED": "无法抓取工作坊。请稍后再试。",
             "ADMIN_WORKSHOP_NOT_FOUND": "服务器未找到工作坊。该工作坊可能已结束或被删除。",
-            "WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "请求文件不存在，请稍后再试或联系开发团队"
+            "WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "请求文件不存在，请稍后再试或联系开发团队",
+            "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "请求文件不存在，请稍后再试或联系开发团队"
         },
         "button": {
             "generate": "绘制",

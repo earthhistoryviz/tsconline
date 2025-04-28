@@ -141,7 +141,8 @@ describe("uploadUserDatapackHandler", () => {
     uuid: "user",
     isPublic: "true",
     type: "type",
-    priority: "1"
+    priority: "1",
+    hasFiles: "true"
   };
   beforeEach(async () => {
     vi.clearAllMocks();
@@ -165,7 +166,8 @@ describe("uploadUserDatapackHandler", () => {
     { originalFileName: "" },
     { storedFileName: "" },
     { isPublic: "" },
-    { type: "" }
+    { type: "" },
+    { hasFiles: "" }
   ])(`should return a 400 error if %p is missing`, async (field) => {
     const val = await uploadUserDatapackHandler({ ...fields, ...field }, 1);
     expect(isOperationResult(val)).toBe(true);
@@ -279,7 +281,8 @@ describe("uploadUserDatapackHandler", () => {
       type: fields.type,
       uuid: fields.uuid,
       isPublic: Boolean(fields.isPublic),
-      priority: parseInt(fields.priority)
+      priority: parseInt(fields.priority),
+      hasFiles: Boolean(fields.hasFiles)
     });
   });
   it("should return a 400 error if title is too long", async () => {
@@ -1084,7 +1087,9 @@ describe("uploadCoverToWorkshop tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+
   it("should return 500 if path is invalid", async () => {
+    getWorkshopCoverPath.mockRejectedValueOnce(new Error("Invalid Workshop Cover Directory."));
     expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({
       code: 500,
       message: "Invalid Workshop Cover Directory."
@@ -1095,21 +1100,23 @@ describe("uploadCoverToWorkshop tests", () => {
   });
   it("should return 200 if uploaded successfully", async () => {
     pipeline.mockResolvedValueOnce();
-    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover").mockResolvedValueOnce("oldCover");
     expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
-    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
-    expect(rm).not.toHaveBeenCalled();
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledTimes(2);
+    expect(getUserUUIDDirectory).toHaveBeenCalledTimes(2);
+    expect(getWorkshopCoverPath).toHaveBeenCalledTimes(2);
+    expect(rm).toHaveBeenCalledOnce();
   });
   it("should clean the file path and return the error code if failed to upload", async () => {
     pipeline.mockRejectedValueOnce(new Error("error"));
-    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
+    getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover").mockResolvedValueOnce("oldCover");
+
     expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
-    expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
-    expect(rm).toHaveBeenCalledOnce();
+    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledTimes(2);
+    expect(getUserUUIDDirectory).toHaveBeenCalledTimes(2);
+    expect(getWorkshopCoverPath).toHaveBeenCalledTimes(2);
+    expect(rm).toHaveBeenCalledTimes(2);
   });
 });
 

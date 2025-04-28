@@ -93,7 +93,8 @@ export async function uploadUserDatapackHandler(
     uuid,
     datapackImage,
     tempProfilePictureFilepath,
-    priority
+    priority,
+    hasFiles
   } = fields;
   let { references, tags } = fields;
   if (
@@ -106,7 +107,8 @@ export async function uploadUserDatapackHandler(
     !originalFileName ||
     !storedFileName ||
     !isPublic ||
-    !type
+    !type ||
+    !hasFiles
   ) {
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: "Missing required fields" };
@@ -194,6 +196,7 @@ export async function uploadUserDatapackHandler(
       type,
       priority: parseInt(priority),
       isPublic: isPublic === "true",
+      hasFiles: hasFiles === "true",
       size: getBytes(bytes),
       ...(uuid && { uuid }),
       ...(datapackImage && { datapackImage }),
@@ -529,6 +532,12 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };
+  }
+  const oldCover = await fetchWorkshopCoverPictureFilepath(workshopId);
+  if (oldCover) {
+    await rm(oldCover, { force: true }).catch((e) => {
+      console.error(e);
+    });
   }
   const filename = coverPicture.filename;
   const fileExtension = path.extname(filename);

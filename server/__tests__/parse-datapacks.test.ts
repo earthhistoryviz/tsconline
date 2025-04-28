@@ -68,7 +68,8 @@ describe("general parse-datapacks tests", () => {
     datapackImage: "image",
     isPublic: true,
     type: "official",
-    priority: 0
+    priority: 0,
+    hasFiles: false
   };
   it("should parse africa general datapack", async () => {
     const datapacks = await parseDatapacks(
@@ -123,6 +124,15 @@ describe("splice column entry tests", () => {
   });
   it("should splice line and store 3 children. On should be true, info should be empty, enableTitle should be true", () => {
     const array = ["child1", "child2", "child3", "_METACOLUMN_ON", "_TITLE_ON"];
+    expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
+      children: ["child1", "child2", "child3"],
+      on: true,
+      info: "",
+      enableTitle: true
+    });
+  });
+  it("should remove if off is included", () => {
+    const array = ["child1", "child2", "child3", "off"];
     expect(spliceArrayAtFirstSpecialMatch(array)).toEqual({
       children: ["child1", "child2", "child3"],
       on: true,

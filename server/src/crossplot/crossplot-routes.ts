@@ -2,7 +2,8 @@ import {
   AutoPlotResponse,
   isAutoPlotMarkerArray,
   assertAutoPlotRequest,
-  assertConvertCrossPlotRequest
+  assertConvertCrossPlotRequest,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { FastifyReply, FastifyRequest } from "fastify";
 import { verifyFilepath } from "../util.js";
@@ -16,6 +17,8 @@ import {
 import { getMarkersFromTextFile } from "./extract-markers.js";
 import { isOperationResult } from "../types.js";
 import logger from "../error-logger.js";
+import { uploadTemporaryDatapack } from "../upload-datapack.js";
+import { basename } from "path";
 
 export const convertCrossPlot = async function convertCrossPlot(request: FastifyRequest, reply: FastifyReply) {
   const body = request.body;
@@ -36,21 +39,48 @@ export const convertCrossPlot = async function convertCrossPlot(request: Fastify
       reply.code(result.code).send({ error: result.message });
       return;
     }
-    const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath } = result;
-
-    if (
-      (await convertCrossPlotWithModelsInJar(
-        body.datapackUniqueIdentifiers,
-        outputTextFilepath,
-        modelsTextFilepath,
-        settingsTextFilepath
-      )) &&
-      (await verifyFilepath(outputTextFilepath))
-    ) {
+    const { outputTextFilepath, modelsTextFilepath, settingsTextFilepath, hash } = result;
+    const convertedCrossPlot = await convertCrossPlotWithModelsInJar(
+      body.datapackUniqueIdentifiers,
+      outputTextFilepath,
+      modelsTextFilepath,
+      settingsTextFilepath
+    );
+    if (!convertedCrossPlot || !(await verifyFilepath(outputTextFilepath))) {
+      throw new Error("Conversion failed");
+    }
+    if (body.action === "file") {
       const file = await readFile(outputTextFilepath, "utf-8");
       reply.code(200).send(file);
-    } else {
-      throw new Error("Conversion failed");
+      return;
+    }
+    const tempDatapackMetadata: DatapackMetadata = {
+      title: hash,
+      description: "temporary crossplot",
+      originalFileName: basename(outputTextFilepath),
+      storedFileName: basename(outputTextFilepath),
+      date: new Date().toISOString(),
+      size: "0",
+      authoredBy: "auto-generated",
+      references: [],
+      tags: [],
+      notes: "",
+      type: "temp",
+      isPublic: true,
+      priority: 1,
+      hasFiles: true
+    };
+    try {
+      const dp = await uploadTemporaryDatapack(tempDatapackMetadata, outputTextFilepath);
+      if (isOperationResult(dp)) {
+        reply.code(dp.code).send({ error: dp.message });
+        return;
+      }
+      reply.code(200).send(dp);
+    } catch (e) {
+      logger.error(e);
+      reply.code(500).send({ error: "Error uploading temporary datapack" });
+      return;
     }
   } catch (error) {
     console.error(error);

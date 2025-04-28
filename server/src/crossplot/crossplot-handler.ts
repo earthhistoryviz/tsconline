@@ -52,6 +52,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
       outputTextFilepath: string;
       modelsTextFilepath: string;
       settingsTextFilepath: string;
+      hash: string;
     }
 > {
   // create a new directory for this request
@@ -59,15 +60,25 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
   let outputTextFilepath: string;
   let modelsTextFilepath: string;
   let settingsTextFilepath: string;
+  let hashedDir: string;
   try {
-    const hashedDir = md5(request.models + request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
+    hashedDir = md5(request.models + request.settings + JSON.stringify(request.datapackUniqueIdentifiers));
     dir = path.join(assetconfigs.modelConversionCacheDirectory, hashedDir);
     await mkdir(dir, { recursive: true });
     outputTextFilepath = path.join(dir, "output.txt");
     if (await verifyFilepath(outputTextFilepath)) {
-      const file = await readFile(outputTextFilepath, "utf-8");
-      console.log(chalk.green("Conversion already exists for this request"));
-      return file;
+      if (request.action === "file") {
+        const file = await readFile(outputTextFilepath, "utf-8");
+        console.log(chalk.green("Conversion already exists for this request"));
+        return file;
+      } else {
+        return {
+          outputTextFilepath,
+          modelsTextFilepath: path.join(dir, "models.txt"),
+          settingsTextFilepath: path.join(dir, "settings.xml"),
+          hash: hashedDir
+        };
+      }
     }
   } catch (error) {
     return { message: "Error creating directory for this conversion", code: 500 };
@@ -80,7 +91,7 @@ export const setupConversionDirectory = async function (request: ConvertCrossPlo
   } catch (e) {
     return { message: "Error writing files for conversion", code: 500 };
   }
-  return { outputTextFilepath, modelsTextFilepath, settingsTextFilepath };
+  return { outputTextFilepath, modelsTextFilepath, settingsTextFilepath, hash: hashedDir };
 };
 export const setupAutoPlotDirectory = async function (request: AutoPlotRequest): Promise<
   | OperationResult
