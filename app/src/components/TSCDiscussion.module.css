@@ -37,9 +37,16 @@
 
 .dc {
   padding: 16px;
+  width: 100%;
 }
 
 .send {
   width: 20px;
   height: 20px;
+}
+
+.commentsContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }

@@ -1,0 +1,71 @@
+.container {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  padding: 16px;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+  gap: 16px;
+  position: relative;
+}
+
+.textContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+}
+
+.usernameText {
+  font-weight: bold;
+}
+
+.dateText {
+  color: gray;
+}
+
+.topTextContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
+.commentText {
+  text-align: left;
+}
+
+.menuText {
+}
+
+.moreVertIcon {
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  cursor: pointer;
+}
+
+.menuContainer {
+  position: absolute;
+  top: 40px;
+  right: -50px;
+  z-index: 5;
+  border: 1px solid lightgray;
+  border-radius: 5px;
+}
+
+.reportContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  align-items: center;
+  padding: 6px;
+}
+
+.deleteContainer {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  align-items: center;
+  padding: 6px;
+  width: 100%;
+}
