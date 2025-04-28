@@ -146,7 +146,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
             className="menu-item"
             sx={{
               // Can't directly feed theme.palette.divider into the css file
-              borderLeft: `1px solid ${theme.palette.divider}`
+              borderLeft: `1px solid ${theme.palette.accordionLine.main}`
             }}>
             {link.children &&
               link.children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
