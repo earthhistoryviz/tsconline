@@ -12,6 +12,7 @@ import {
   assertDatapack,
   isDateValid,
   isOfficialUUID,
+  isTempUUID,
   isWorkshopUUID
 } from "@tsconline/shared";
 import logger from "../error-logger.js";
@@ -198,9 +199,11 @@ export async function deleteUserDatapack(uuid: string, datapack: string): Promis
     logger.error(e);
     throw e;
   });
-  await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
-    logger.error(e);
-  });
+  if (!isOfficialUUID(uuid) && !isWorkshopUUID(uuid) && !isTempUUID(uuid)) {
+    await deleteDatapackFoundInMetadata(assetconfigs.fileMetadata, datapackPath).catch((e) => {
+      logger.error(e);
+    });
+  }
 }
 
 export async function deleteDatapackFileAndDecryptedCounterpart(uuid: string, datapack: string): Promise<void> {

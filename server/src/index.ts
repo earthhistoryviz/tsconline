@@ -22,6 +22,8 @@ import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
+import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
+
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
@@ -33,7 +35,6 @@ import {
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
-import { syncTranslations } from "./sync-translations.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
@@ -304,6 +305,19 @@ server.get<{ Params: { title: string; uuid: string } }>(
   routes.fetchDatapackCoverImage
 );
 
+server.get<{ Params: { workshopId: number } }>(
+  "/workshop-images/:workshopId",
+  {
+    config: {
+      rateLimit: {
+        max: 100,
+        timeWindow: 1000 * 30
+      }
+    }
+  },
+  fetchWorkshopCoverImage
+);
+
 server.register(adminRoutes, { prefix: "/admin" });
 server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha
@@ -437,10 +451,6 @@ server.setNotFoundHandler((_request, reply) => {
 });
 
 export const queue = new PQueue({ concurrency: maxConcurrencySize });
-
-if (process.env.NODE_ENV !== "production") {
-  syncTranslations();
-}
 
 //Start the server...
 try {

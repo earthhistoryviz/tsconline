@@ -478,7 +478,6 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
   await yieldControl(counter, 30);
 
   state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-
   for (const childColumn of columnInfo.children) {
     await initializeColumnHashMap(childColumn, counter);
   }
@@ -490,34 +489,41 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
  * parents: list of names that indicates the path from top to the toggled column
  */
 
-export const toggleSettingsTabColumn = action((columnOrName: ColumnInfo | string) => {
-  let column: ColumnInfo | undefined;
-
-  if (typeof columnOrName === "string") {
-    column = state.settingsTabs.columnHashMap.get(columnOrName);
-    if (!column) {
-      console.log("WARNING: Column with name", columnOrName, "not found in columnHashMap.");
-      return;
+export const toggleSettingsTabColumn = action(
+  (
+    columnOrName: ColumnInfo | string,
+    options?: {
+      hashMap?: Map<string, ColumnInfo>;
     }
-  } else {
-    column = columnOrName;
-  }
+  ) => {
+    let column: ColumnInfo | undefined;
+    const columnHashMap = options?.hashMap || state.settingsTabs.columnHashMap;
+    if (typeof columnOrName === "string") {
+      column = columnHashMap.get(columnOrName);
+      if (!column) {
+        console.log("WARNING: Column with name", columnOrName, "not found in columnHashMap.");
+        return;
+      }
+    } else {
+      column = columnOrName;
+    }
 
-  column.on = !column.on;
-  if (!column.on || !column.parent) return;
-  if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
-    console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
-    return;
-  } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
-  while (column) {
-    if (!column.on) column.on = true;
-    if (!column.parent) break;
-    if (state.settingsTabs.columnHashMap.get(column.parent) === undefined) {
-      console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
+    column.on = !column.on;
+    if (!column.on || !column.parent) return;
+    if (columnHashMap.get(column.parent) === undefined) {
+      console.log("WARNING: tried to get", column.parent, "in hashMap, but is undefined");
       return;
-    } else column = state.settingsTabs.columnHashMap.get(column.parent!)!;
+    } else column = columnHashMap.get(column.parent!)!;
+    while (column) {
+      if (!column.on) column.on = true;
+      if (!column.parent) break;
+      if (columnHashMap.get(column.parent) === undefined) {
+        console.log("WARNING: tried to get", column.parent, "in columnHashMap, but is undefined");
+        return;
+      } else column = columnHashMap.get(column.parent!)!;
+    }
   }
-});
+);
 export const setSequenceColumnSettings = action(
   (sequenceSettings: SequenceSettings, newSettings: Partial<SequenceSettings>) => {
     Object.assign(sequenceSettings, newSettings);

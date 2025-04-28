@@ -18,7 +18,13 @@ import ViewCompactIcon from "@mui/icons-material/ViewCompact";
 import { TSCCompactDatapackRow } from "../components/datapack_display/TSCCompactDatapackRow";
 import { loadRecaptcha, removeRecaptcha } from "../util";
 import { toJS } from "mobx";
-import { DatapackConfigForChartRequest, DatapackMetadata, isUserDatapack, isWorkshopDatapack } from "@tsconline/shared";
+import {
+  DatapackConfigForChartRequest,
+  DatapackMetadata,
+  isTempDatapack,
+  isUserDatapack,
+  isWorkshopDatapack
+} from "@tsconline/shared";
 import { Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import {
@@ -163,6 +169,16 @@ export const Datapacks = observer(function Datapacks() {
         onClick={() => {
           navigate("/crossplot");
           actions.setTab(0);
+          for (const datapack of state.unsavedDatapackConfig) {
+            if (isTempDatapack(datapack)) {
+              // continue to crossplot, this assumes the user just made a converted datapack and is returning the crossplot page
+              return;
+            }
+          }
+          actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
+            setter: actions.setCrossPlotDatapackConfig,
+            currentConfig: state.crossPlot.datapacks
+          });
         }}>
         {t("crossPlot.create-datapack")}
       </TSCButton>

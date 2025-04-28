@@ -148,11 +148,13 @@
 .sub-header-section-landing-page,
 .home-landing-page-carousel {
   display: grid;
+  grid-template-columns: 1fr 1fr;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
-  padding-top: 0;
+  padding-left: 5vw;
+  padding-bottom: 0;
   position: relative;
 }
 
@@ -171,6 +173,7 @@
 
 .home-landing-page-carousel {
   padding-right: 0;
+  padding-bottom: 0;
   grid-template-columns: 0.5fr 1fr;
   grid-template-rows: 1fr;
   margin-bottom: 4vh;
