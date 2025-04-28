@@ -197,6 +197,15 @@ export function attachTscPrefixToName(name: string, displayType: DisplayedColumn
   }
 }
 
+export const formatPathSegment = (title: string): string => {
+  return title.toLowerCase().replace(/\s+/g, "-");
+};
+
+export const generatePath = (title: string, parentPath = ""): string => {
+  const encoded = encodeURIComponent(title);
+  return `${parentPath}/${encoded}`;
+};
+
 export function getWorkshopCoverImage(workshopId: number) {
   return devSafeUrl(`/workshop-images/${workshopId}`);
 }
