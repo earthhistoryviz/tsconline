@@ -95,6 +95,7 @@ export type ChartContextType = {
     label: string;
     onClick: () => void;
   }[];
+  downloadOptionLabel?: string;
 };
 
 export type SetDatapackConfigMessage = {

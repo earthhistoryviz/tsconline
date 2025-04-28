@@ -5,7 +5,8 @@ import {
   requestDownload,
   uploadDatapack,
   userDeleteDatapack,
-  fetchWorkshopDatapack
+  fetchWorkshopDatapack,
+  downloadDatapackFilesZip
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -77,6 +78,15 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       needEncryption: { type: "boolean" }
     }
   };
+  const downloadDatapackFilesZipParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" },
+      uuid: { type: "string" },
+      isPublic: { type: "boolean" }
+    },
+    required: ["datapackTitle", "uuid", "isPublic"]
+  };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
@@ -116,5 +126,13 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: fetchWorkshopDatapackParams }
     },
     fetchWorkshopDatapack
+  );
+  fastify.get(
+    "/datapack/download/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: downloadDatapackFilesZipParams }
+    },
+    downloadDatapackFilesZip
   );
 };

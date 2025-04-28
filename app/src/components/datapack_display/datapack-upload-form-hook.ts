@@ -5,7 +5,7 @@ import { context } from "../../state";
 import { Reference, UploadDatapackMethodType } from "../../types";
 import { ErrorCodes } from "../../util/error-codes";
 import { PickerChangeHandlerContext, DateValidationError } from "@mui/x-date-pickers";
-import { getMetadataFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
+import { formatDateForDatapack, getMetadataFromArray, hasLeadingTrailingWhiteSpace } from "../../state/non-action-util";
 import { checkDatapackValidity } from "../../state/actions/util-actions";
 
 type DatapackUploadFormProps = {
@@ -32,6 +32,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
   const [priority, setPriority] = useState(0);
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const profileImageRef = useRef<HTMLInputElement>(null);
+  const [hasFiles, setHasFiles] = useState(false);
   const filename = file?.name || "";
   const metadata: DatapackMetadata = {
     storedFileName: "", // don't write storedFileName to the metadata (need this to be set for types)
@@ -44,10 +45,11 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     tags,
     priority,
     size: "0", // placeholder, this will get set after the file is uploaded
+    hasFiles,
     ...type,
     ...(contact && { contact }),
     ...(notes && { notes }),
-    ...(date && { date: date.format("YYYY-MM-DD") })
+    ...(date && { date: formatDateForDatapack(date) })
   };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -128,9 +130,16 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       }
     });
     setPDFFiles(Array.from(fileMap.values()));
+    setHasFiles(true);
   };
   const handlePDFFileDelete = (fileName: string) => {
-    setPDFFiles((prevFiles) => prevFiles.filter((file) => file.name !== fileName));
+    setPDFFiles((prevFiles) => {
+      const updatedFiles = prevFiles.filter((file) => file.name !== fileName);
+      if (updatedFiles.length === 0) {
+        setHasFiles(false);
+      }
+      return updatedFiles;
+    });
     actions.removeAllErrors();
   };
 
@@ -146,6 +155,7 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
     setDate(null);
     setFile(null);
     setPDFFiles([]);
+    setHasFiles(false);
   };
   return {
     state: {
@@ -163,7 +173,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       file,
       pdfFiles,
       profileImageRef,
-      priority
+      priority,
+      hasFiles
     },
     setters: {
       setTitle,
@@ -176,7 +187,8 @@ const useDatapackUploadForm = (props: DatapackUploadFormProps) => {
       setReferences,
       setDate,
       setFile,
-      setPriority
+      setPriority,
+      setHasFiles
     },
     handlers: {
       resetForm,

@@ -93,7 +93,8 @@ export async function uploadUserDatapackHandler(
     uuid,
     datapackImage,
     tempProfilePictureFilepath,
-    priority
+    priority,
+    hasFiles
   } = fields;
   let { references, tags } = fields;
   if (
@@ -106,7 +107,8 @@ export async function uploadUserDatapackHandler(
     !originalFileName ||
     !storedFileName ||
     !isPublic ||
-    !type
+    !type ||
+    !hasFiles
   ) {
     await userUploadHandler(filepath, tempProfilePictureFilepath);
     return { code: 400, message: "Missing required fields" };
@@ -194,6 +196,7 @@ export async function uploadUserDatapackHandler(
       type,
       priority: parseInt(priority),
       isPublic: isPublic === "true",
+      hasFiles: hasFiles === "true",
       size: getBytes(bytes),
       ...(uuid && { uuid }),
       ...(datapackImage && { datapackImage }),

@@ -1,13 +1,25 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
+import {
+  assetconfigs,
+  checkHeader,
+  extractMetadataFromDatapack,
+  verifyFilepath,
+  verifyNonExistentFilepath
+} from "../util.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
+import {
+  getPDFFilesDirectoryFromDatapackDirectory,
+  getUsersDatapacksDirectoryFromUUIDDirectory,
+  getUserUUIDDirectory
+} from "../user/fetch-user-files.js";
+import path from "path";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
@@ -462,5 +474,68 @@ export const deleteUserHistory = async function deleteUserHistory(
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to delete history" });
+  }
+};
+
+export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
+  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle, uuid, isPublic } = request.params;
+
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
+
+  const directory = await getUserUUIDDirectory(uuid, isPublic);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+
+  if (!datapackFolder.startsWith(datapacksFolder)) {
+    reply.status(400).send({ error: "Invalid datapack title" });
+    return;
+  }
+
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+  if (!(await verifyFilepath(filesDir))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
+  if (!(await verifyNonExistentFilepath(zipfile))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  if (!zipfile.startsWith(path.join(process.cwd(), directory))) {
+    reply.status(500).send({ error: "Invalid directory path" });
+    return;
+  }
+  try {
+    let file;
+    try {
+      if (!zipfile.startsWith(process.cwd())) {
+        reply.status(500).send({ error: "Invalid directory path" });
+      }
+      file = await readFile(zipfile);
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
+    }
+
+    if (!file) {
+      file = await createZipFile(zipfile, filesDir);
+    }
+    reply.send(file);
+  } catch (e) {
+    const error = e as NodeJS.ErrnoException;
+    if (error.code === "ENOENT") {
+      reply.status(404).send({ error: "Failed to process the file" });
+    } else {
+      reply.status(500).send({ error: "An error occurred: " + e });
+    }
   }
 };

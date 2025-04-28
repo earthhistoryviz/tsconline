@@ -14,7 +14,7 @@ import {
   TableChart,
   Tune
 } from "@mui/icons-material";
-import { Typography, Box, IconButton, Chip, useMediaQuery, Divider } from "@mui/material";
+import { Typography, Box, IconButton, Chip, useMediaQuery, Divider, Drawer, Portal } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { TSCButton, Attribution, CustomDivider, StyledScrollbar } from "./components";
 import "./Home.css";
@@ -26,7 +26,6 @@ import { TSCStepper } from "./components/TSCStepper";
 export const Home = observer(function Home() {
   const { actions } = useContext(context);
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [hoveringGetStarted, setHoveringGetStarted] = useState(false);
   const { t } = useTranslation();
   const scrollRef = createRef<HTMLDivElement>();
@@ -54,12 +53,14 @@ export const Home = observer(function Home() {
               {t("landing-page.welcome-desc")}
             </Typography>
           </Box>
-          <img
-            loading="lazy"
-            rel="preload"
-            className="sub-header-section-landing-page-image"
-            src={devSafeUrl("/public/website-images/landing-page.png")}
-          />
+          <div className="sub-header-section-landing-page-image-container">
+            <img
+              loading="lazy"
+              rel="preload"
+              className="sub-header-section-landing-page-image"
+              src={devSafeUrl("/public/website-images/landing-page.png")}
+            />
+          </div>
           <Box className="get-started-landing-page">
             <Box
               className="get-started-button-container"
@@ -70,9 +71,7 @@ export const Home = observer(function Home() {
                 animate={{ scale: hoveringGetStarted ? 1.1 : 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 11 }}
                 style={{ display: "inline-block" }}>
-                <Typography marginBottom="-6px" variant="h5" fontSize="1.8rem" fontWeight="700">
-                  {t("landing-page.get-started")}
-                </Typography>
+                <Typography className="get-started-button-text">{t("landing-page.get-started")}</Typography>
               </motion.div>
               <motion.div
                 initial={{ y: 0 }}
@@ -84,7 +83,7 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
-          {!isMobile && <UpcomingWorkshops />}
+          <UpcomingWorkshops />
         </Box>
       </Box>
       <CustomDivider />
@@ -558,9 +557,10 @@ const ChartCreationSteps = observer(
 
 const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+    const isMobile = useMediaQuery("(max-width:900px)");
+    const isTall = useMediaQuery("(min-height:650px)");
     const { t } = useTranslation();
+    const [open, setOpen] = useState(false);
     const workshops = [
       {
         title: "Switzerland Workshop",
@@ -596,46 +596,98 @@ const UpcomingWorkshops = observer(
       }
     ];
     return (
-      <Box
-        className="upcoming-workshops-section"
-        sx={{
-          alignSelf: "flex-start",
-          backgroundColor: "secondaryBackground.main"
-        }}>
-        <Box
-          sx={{
-            position: "sticky",
-            zIndex: 10,
-            height: "60px"
-          }}>
-          <Typography className="upcoming-workshop-title" variant="h3">
-            {t("UPCOMING WORKSHOPS")}
-          </Typography>
-          <CustomDivider />
-        </Box>
-        <Box className="scrollable_item">
-          <StyledScrollbar>
-            {!isMobile &&
-              workshops.map((step, index) => (
-                <Box key={index}>
-                  <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
-                  <Box
-                    key={index}
-                    sx={{
-                      display: "flex",
-                      flexDirection: "column"
-                    }}>
-                    <Typography className="upcoming-workshop-subtitle">{step.title}</Typography>
-                    <Typography className="upcoming-workshop-date">{step.date}</Typography>
-                    <Typography className="upcoming-workshop-description">{step.description}</Typography>
-                    <Typography className="upcoming-workshop-pd">{step.dataPacks} Datapacks</Typography>
-                    <CustomDivider />
-                  </Box>
-                </Box>
+      <>
+        {!isMobile && (
+          <Box
+            className="upcoming-workshops-section"
+            sx={{
+              alignSelf: "flex-start",
+              backgroundColor: "secondaryBackground.main"
+            }}>
+            <Box
+              sx={{
+                position: "sticky",
+                zIndex: 10,
+                height: "60px"
+              }}>
+              <Typography className="upcoming-workshop-title" variant="h3">
+                {t("UPCOMING WORKSHOPS")}
+              </Typography>
+              <CustomDivider />
+            </Box>
+            <StyledScrollbar
+              sx={
+                !isMobile && isTall
+                  ? { height: "calc(100% - 60px)", maxHeight: "calc(100% - 60px)" }
+                  : { height: "590px", maxHeight: "590px" }
+              }>
+              {" "}
+              {workshops.map((step, index) => (
+                <WorkshopItem key={index} step={step} />
               ))}
-          </StyledScrollbar>
-        </Box>
-      </Box>
+            </StyledScrollbar>
+          </Box>
+        )}
+        {isMobile && (
+          <>
+            <Portal>
+              <TSCButton
+                buttonType="gradient"
+                onClick={() => setOpen(true)}
+                sx={{
+                  position: "fixed",
+                  bottom: "-3px",
+                  right: "20px",
+                  visibility: open ? "hidden" : "visible",
+                  zIndex: 3600
+                }}>
+                {t("Upcoming Workshops")}
+              </TSCButton>
+              <Drawer
+                open={open}
+                anchor="bottom"
+                onClose={() => setOpen(false)}
+                PaperProps={{
+                  sx: {
+                    height: "90vh",
+                    background: "linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0) 100%)"
+                  }
+                }}>
+                <TSCButton onClick={() => setOpen(false)} buttonType="gradient" className="upcoming-workshop-button">
+                  {t("Upcoming Workshops")}
+                </TSCButton>
+                <StyledScrollbar>
+                  {workshops.map((step, index) => (
+                    <WorkshopItem key={index} step={step} />
+                  ))}
+                </StyledScrollbar>
+              </Drawer>
+            </Portal>
+          </>
+        )}
+      </>
     );
   })
+);
+
+interface Workshop {
+  title: string;
+  date: string;
+  description: string;
+  dataPacks: string;
+  image: string;
+}
+const WorkshopItem: React.FC<{ step: Workshop }> = ({ step }) => (
+  <Box className="scrollable_item">
+    <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
+      <Box sx={{ display: "flex", flexDirection: "column", marginLeft: "4%", marginRight: "4%", width: "inherit" }}>
+        <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
+        <Typography className="upcoming-workshop-subtitle">{step.title}</Typography>
+        <Typography className="upcoming-workshop-date">{step.date}</Typography>
+        <Typography className="upcoming-workshop-description">{step.description}</Typography>
+        <Typography className="upcoming-workshop-pd">{step.dataPacks} Datapacks</Typography>
+        <CustomDivider />
+      </Box>
+    </Box>
+  </Box>
 );
