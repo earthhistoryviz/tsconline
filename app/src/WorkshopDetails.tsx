@@ -145,7 +145,9 @@ export const WorkshopDetails = observer(() => {
                   <Box sx={{ display: "flex", marginTop: 2 }}>
                     <CustomTooltip
                       title={
-                        !isRegistered && !isPublicWorkshop ? t("workshops.details-page.download-tooltip-not-registered") : ""
+                        !isRegistered && !isPublicWorkshop
+                          ? t("workshops.details-page.download-tooltip-not-registered")
+                          : ""
                       }
                       placement="bottom">
                       <div>
