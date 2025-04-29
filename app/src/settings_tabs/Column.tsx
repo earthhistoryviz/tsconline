@@ -2,18 +2,16 @@ import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
 import { ColumnInfo } from "@tsconline/shared";
-import { Box, IconButton, TextField } from "@mui/material";
+import { Box, Button, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
-import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie } from "../components";
+import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
-
 import { ColumnMenu } from "./column_menu/ColumnMenu";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
 import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
-import { setExpanded } from "../state/actions";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
@@ -23,6 +21,8 @@ import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
+import AddIcon from "@mui/icons-material/Add";
+import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 
 type ColumnContextType = {
   state: {
@@ -55,14 +55,40 @@ export const ColumnContext = createContext<ColumnContextType>({
 
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
+  const { state, actions } = useContext(context);
+  const { t } = useTranslation();
+
   return (
-    <div className="column-top-level-container">
-      <ColumnSearchBar />
-      <div className="column-accordion-and-menu-container">
-        <ColumnDisplay />
-        <ColumnMenu />
+    <>
+      <div className="column-top-level-container">
+        <ColumnSearchBar />
+        <div className="column-accordion-and-menu-container">
+          <div className="add-icon-and-menu-container">
+            <div>
+              <Button
+                startIcon={<AddIcon />}
+                className="add-icon"
+                variant="text"
+                onClick={() => actions.setCustomColumnMenuOpen(true)}>
+                {t("settings.column.create-custom-column-button")}
+              </Button>
+            </div>
+            <div className="column-display-container">
+              <ColumnDisplay />
+            </div>
+          </div>
+          <ColumnMenu />
+        </div>
       </div>
-    </div>
+      {state.addCustomColumnMenu.open && (
+        <StyledScrollbar>
+          <AddCustomColumnMenu
+            onClose={() => actions.setCustomColumnMenuOpen(false)}
+            column={state.settingsTabs.columns}
+          />
+        </StyledScrollbar>
+      )}
+    </>
   );
 });
 
@@ -156,6 +182,7 @@ type ColumnAccordionProps = {
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
   const { actions, state } = useContext(ColumnContext);
+  const { actions: globalActions } = useContext(context);
   if (!details.show) {
     return null;
   }
@@ -196,7 +223,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
               sx={{ fontSize: "0.9rem" }}
               onClick={(e) => {
                 e.stopPropagation();
-                setExpanded(!details.expanded, details);
+                globalActions.setExpanded(!details.expanded, details);
               }}
             />
           }

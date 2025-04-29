@@ -365,6 +365,7 @@
                         "right": "Right"
                     }
                 },
+                "create-custom-column-button": "Create Custom Column",
                 "font-menu": {
                     "change": "Change Font",
                     "additional": "Additional fonts for child columns"
@@ -414,6 +415,15 @@
                     "overlay-accordion-caption": "*Grayed out columns are disabled for Overlay (not Event or Point column)",
                     "invalid-column-mouseover": "Not an Event or Point Column",
                     "column-not-selected": "Select Column from Menu"
+                },
+                "add-custom-column-menu": {
+                    "base-column-header": "Select a Base Column",
+                    "type-column-header": "Select a Type Column",
+                    "customize-column-header": "Customize Column",
+                    "data-mining-description": "Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point column over sliding windows of data.",
+                    "dual-column-comparison-description": "Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.",
+                    "select-base-column": "Please Select a Point or Event Column",
+                    "create-column": "Create Column"
                 }
             },
             "search": {
