@@ -22,7 +22,7 @@ import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
-import { AddCustomColumnMenu } from "./column_menu/CustomColumnMenu";
+import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 
 type ColumnContextType = {
   state: {

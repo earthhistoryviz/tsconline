@@ -20,10 +20,10 @@ import { context } from "../../state";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import SpokeRoundedIcon from "@mui/icons-material/SpokeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
-import "./CustomColumnMenu.css";
+import "./AddCustomColumnMenu.css";
 import { useTranslation } from "react-i18next";
 
-type CustomColumnMenuProps = {
+type AddCustomColumnMenuProps = {
   column: ColumnInfo | undefined;
   onClose: () => void;
 };
@@ -41,7 +41,7 @@ const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
   }
 }));
 
-export const AddCustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ column, onClose }) => {
+export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(({ column, onClose }) => {
   if (!column) return null;
   const { state, actions } = useContext(context);
   const theme = useTheme();
