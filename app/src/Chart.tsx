@@ -2,7 +2,12 @@ import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
-import { CustomDivider, CustomTooltip, TSCCheckbox, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
+import {
+  CustomTooltip,
+  TSCDialogLoader,
+  TSCPopupManager,
+  TSCSvgComponent
+} from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -18,9 +23,6 @@ import {
   IconButton,
   FormControlLabel,
   Drawer,
-  List,
-  ListItemButton,
-  ListItemText,
   Paper,
   AccordionSummary,
   AccordionDetails
@@ -312,7 +314,7 @@ const HistorySideBar: React.FC = observer(() => {
         className="floating-history-button"
         sx={{
           color: theme.palette.dark.contrastText,
-          backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
+          backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string()
         }}>
         <HistoryIcon fontSize="medium" />
       </Paper>
@@ -341,37 +343,34 @@ const HistorySideBar: React.FC = observer(() => {
               </IconButton>
             </CustomTooltip>
           </Box>
-            {state.user.historyEntries.map(
-              (entry) => {
-                return (
-                  <HistoryEntry key={entry.timestamp} entry={entry} />
-                )
-              // <ListItemButton
-              //   key={entry.timestamp}
-              //   onClick={async () => {
-              //     setLoading(true);
-              //     try {
-              //       await actions.loadUserHistory(entry.timestamp);
-              //       setDrawerOpen(false);
-              //     } finally {
-              //       setLoading(false);
-              //     }
-              //   }}>
-              //   <ListItemText primary={formatDate(entry.timestamp)} />
-              //   <IconButton
-              //     onClick={async (e) => {
-              //       e.stopPropagation();
-              //       setLoading(true);
-              //       try {
-              //         await actions.deleteUserHistory(entry.timestamp);
-              //       } finally {
-              //         setLoading(false);
-              //       }
-              //     }}>
-              //     <DeleteForeverIcon fontSize="small" />
-              //   </IconButton>
-              // </ListItemButton>
-              })}
+          {state.user.historyEntries.map((entry) => {
+            return <HistoryEntry key={entry.timestamp} entry={entry} />;
+            // <ListItemButton
+            //   key={entry.timestamp}
+            //   onClick={async () => {
+            //     setLoading(true);
+            //     try {
+            //       await actions.loadUserHistory(entry.timestamp);
+            //       setDrawerOpen(false);
+            //     } finally {
+            //       setLoading(false);
+            //     }
+            //   }}>
+            //   <ListItemText primary={formatDate(entry.timestamp)} />
+            //   <IconButton
+            //     onClick={async (e) => {
+            //       e.stopPropagation();
+            //       setLoading(true);
+            //       try {
+            //         await actions.deleteUserHistory(entry.timestamp);
+            //       } finally {
+            //         setLoading(false);
+            //       }
+            //     }}>
+            //     <DeleteForeverIcon fontSize="small" />
+            //   </IconButton>
+            // </ListItemButton>
+          })}
         </Box>
       </Drawer>
     </>
@@ -379,85 +378,81 @@ const HistorySideBar: React.FC = observer(() => {
 });
 
 type HistoryEntryProps = {
-  entry : ChartHistoryMetadata;
-}
+  entry: ChartHistoryMetadata;
+};
 const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry }) => {
-                const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
-                return (
-                  <Accordion
-                    className="history-entry-accordion"
-                    disableGutters
-                    elevation={0}
-                    slotProps={{ transition: { timeout: 200 } }}
-                    square
-                    sx={{
-                      backgroundColor: "backgroundColor.main",
-                      "&.Mui-expanded": {
-                        backgroundColor: "backgroundColor.main"
-                      },
-                      "&:hover": { 
-                        bgcolor:
-                          theme.palette.mode === "light"
-                            ? Color(theme.palette.backgroundColor.main).darken(0.04).string()
-                            : Color(theme.palette.backgroundColor.main).lighten(0.26).string()
-                      }
-                    }}
-                    key={entry.timestamp}
-                    expanded={expanded}>
-                    <AccordionSummary
-                      className="history-entry-summary"
-                      tabIndex={0}
-                      expandIcon={
-                        <ArrowForwardIosSharp
-                          sx={{ fontSize: "0.9rem" }}
-                          color="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpanded(!expanded);
-                          }}
-                        />
-                      }
-                      aria-controls="panel1a-content"
-                      id="panel1a-header">
-                      <Box display="flex" flexDirection="row" gap="10px"  alignItems="center">
-                      <div
-                        className="history-entry-svg-display"
-                        id={`${entry.timestamp}svg-display`}
-                        dangerouslySetInnerHTML={{
-                          __html: purifyChartContent(entry.chartContent, {
-                            preserveAspectRatio: "none",
-                            width: "100%",
-                            height: "100%"
-                          })
-                        }}
-                      />
-                      <Typography>{formatDate(entry.timestamp)}</Typography>
-                      </Box>
-                    </AccordionSummary>
-                    <AccordionDetails className="history-entry-details">
-                      <Box display="flex" gap="3px" flexDirection="column">
-                      <Typography variant="caption" color="textSecondary">
-                        Datapacks
-                      </Typography>
-                      </Box>
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        layout
-                      >
-                      {entry.datapacks.map((dp, index) => (
-                        <TimelineItem
-                          key={dp.title}
-                          title={dp.title}
-                          authoredBy={dp.authoredBy}
-                          isLast={entry.datapacks.length - 1 === index}
-                        />
-                      ))}
-                      </motion.div>
-                    </AccordionDetails>
-                  </Accordion>
-                );
+  return (
+    <Accordion
+      className="history-entry-accordion"
+      disableGutters
+      elevation={0}
+      slotProps={{ transition: { timeout: 200 } }}
+      square
+      sx={{
+        backgroundColor: "backgroundColor.main",
+        "&.Mui-expanded": {
+          backgroundColor: "backgroundColor.main"
+        },
+        "&:hover": {
+          bgcolor:
+            theme.palette.mode === "light"
+              ? Color(theme.palette.backgroundColor.main).darken(0.04).string()
+              : Color(theme.palette.backgroundColor.main).lighten(0.26).string()
+        }
+      }}
+      key={entry.timestamp}
+      expanded={expanded}>
+      <AccordionSummary
+        className="history-entry-summary"
+        tabIndex={0}
+        expandIcon={
+          <ArrowForwardIosSharp
+            sx={{ fontSize: "0.9rem" }}
+            color="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
+          />
+        }
+        aria-controls="panel1a-content"
+        id="panel1a-header">
+        <Box display="flex" flexDirection="row" gap="10px" alignItems="center">
+          <div
+            className="history-entry-svg-display"
+            id={`${entry.timestamp}svg-display`}
+            dangerouslySetInnerHTML={{
+              __html: purifyChartContent(entry.chartContent, {
+                preserveAspectRatio: "none",
+                width: "100%",
+                height: "100%"
+              })
+            }}
+          />
+          <Typography>{formatDate(entry.timestamp)}</Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails className="history-entry-details">
+        <Box display="flex" gap="3px" flexDirection="column">
+          <Typography variant="caption" color="textSecondary">
+            Datapacks
+          </Typography>
+        </Box>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
+          {entry.datapacks.map((dp, index) => (
+            <TimelineItem
+              key={dp.title}
+              title={dp.title}
+              authoredBy={dp.authoredBy}
+              isLast={entry.datapacks.length - 1 === index}
+            />
+          ))}
+        </motion.div>
+      </AccordionDetails>
+    </Accordion>
+  );
 });
 type TimelineItemProps = {
   authoredBy: string;
@@ -467,9 +462,9 @@ type TimelineItemProps = {
 
 const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }) => {
   return (
-    <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", paddingBottom: "10px"
-     }}>
-        <Box sx={{
+    <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", paddingBottom: "10px" }}>
+      <Box
+        sx={{
           marginTop: "8px",
           width: "10px",
           height: "10px",
@@ -478,18 +473,21 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }
           position: "relative",
           zIndex: 2,
           marginRight: "12px"
-        }} />
-        {!isLast && (
-          <Box sx={{
+        }}
+      />
+      {!isLast && (
+        <Box
+          sx={{
             position: "absolute",
             top: "8px",
             left: "4px",
             width: "2px",
             height: "100%",
             backgroundColor: "gray",
-            zIndex: 1,
-          }} />
-        )}
+            zIndex: 1
+          }}
+        />
+      )}
       <div style={{ paddingTop: "2px", paddingLeft: "15px" }}>
         <Typography>{title}</Typography>
         <Typography variant="caption" color="textSecondary">
@@ -499,4 +497,3 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }
     </Box>
   );
 };
-
