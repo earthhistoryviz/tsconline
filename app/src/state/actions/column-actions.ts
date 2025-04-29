@@ -1204,7 +1204,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
  * @param columnType the type of column that is being edited. If not specified, defaults to "dataMining"
  */
 export const setCustomColumnMenuOpen = action((open: boolean, columnType?: "Data Mining" | "Overlay") => {
-  state.customColumnMenu = { open, columnType: columnType ?? "Data Mining" };
+  state.addCustomColumnMenu = { open, columnType: columnType ?? "Data Mining" };
 });
 
 export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[]) => {

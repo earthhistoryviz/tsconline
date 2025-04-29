@@ -416,7 +416,7 @@
                     "invalid-column-mouseover": "Not an Event or Point Column",
                     "column-not-selected": "Select Column from Menu"
                 },
-                "custom-column-menu": {
+                "add-custom-column-menu": {
                     "base-column-header": "Select a Base Column",
                     "type-column-header": "Select a Type Column",
                     "customize-column-header": "Customize Column",

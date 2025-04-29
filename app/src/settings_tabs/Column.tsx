@@ -21,8 +21,8 @@ import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings } from "../types";
 import { context } from "../state";
-import AddIcon from '@mui/icons-material/Add';
-import { CustomColumnMenu } from "./column_menu/CustomColumnMenu";
+import AddIcon from "@mui/icons-material/Add";
+import { AddCustomColumnMenu } from "./column_menu/CustomColumnMenu";
 
 type ColumnContextType = {
   state: {
@@ -80,9 +80,9 @@ export const Column = observer(function Column() {
           <ColumnMenu />
         </div>
       </div>
-      {state.customColumnMenu.open && (
+      {state.addCustomColumnMenu.open && (
         <StyledScrollbar>
-          <CustomColumnMenu
+          <AddCustomColumnMenu
             onClose={() => actions.setCustomColumnMenuOpen(false)}
             column={state.settingsTabs.columns}
           />

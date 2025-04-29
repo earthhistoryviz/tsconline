@@ -41,7 +41,7 @@ const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
   }
 }));
 
-export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ column, onClose }) => {
+export const AddCustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ column, onClose }) => {
   if (!column) return null;
   const { state, actions } = useContext(context);
   const theme = useTheme();
@@ -77,14 +77,14 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
       onClose={onClose}
       maxWidth="xl"
       fullWidth
-      PaperProps={{ className: "custom-column-menu-paper" }}>
+      PaperProps={{ className: "add-custom-column-menu-paper" }}>
       <StyledScrollbar className="custom-columns-menu-scrollbar">
         <DialogContent
           sx={{ backgroundColor: theme.palette.backgroundColor.main, overflow: "hidden" }}
-          className="custom-column-menu-content">
+          className="add-custom-column-menu-content">
           <Box display="grid" height="100%">
             <Box gridRow="1" gridColumn="1" display="flex" alignItems="center" justifyContent="center">
-              <Box className="custom-column-menu-black-line" />
+              <Box className="add-custom-column-menu-black-line" />
             </Box>
             <Box display="flex" justifyContent="space-between" gridRow="1" gridColumn="1">
               {icons.map((Icon, index) => (
@@ -110,13 +110,13 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
           </Box>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
             <Typography variant="h6" textAlign="center" flex={1}>
-              {t("settings.column.custom-column-menu.base-column-header")}
+              {t("settings.column.add-custom-column-menu.base-column-header")}
             </Typography>
             <Typography variant="h6" textAlign="center" flex={1}>
-              {t("settings.column.custom-column-menu.type-column-header")}
+              {t("settings.column.add-custom-column-menu.type-column-header")}
             </Typography>
             <Typography variant="h6" textAlign="center" flex={1}>
-              {t("settings.column.custom-column-menu.customize-column-header")}
+              {t("settings.column.add-custom-column-menu.customize-column-header")}
             </Typography>
           </Box>
           <Box display="flex" justifyContent="space-between" height="70vh" gap={3}>
@@ -139,7 +139,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   label="Data Mining"
                 />
                 <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  {t("settings.column.custom-column-menu.data-mining-description")}
+                  {t("settings.column.add-custom-column-menu.data-mining-description")}
                 </FormHelperText>
                 <FormControlLabel
                   value="Overlay"
@@ -147,7 +147,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   label="Dual Column Comparison"
                 />
                 <FormHelperText sx={{ ml: 3.5, mt: -1 }}>
-                  {t("settings.column.custom-column-menu.dual-column-comparison-description")}
+                  {t("settings.column.add-custom-column-menu.dual-column-comparison-description")}
                 </FormHelperText>
               </RadioGroup>
             </CustomColumnPanel>
@@ -155,7 +155,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
               {!baseColumn ? (
                 <Box display="flex" alignItems="center" justifyContent="center" height="100%">
                   <Typography variant="h4" textAlign="center">
-                    {t("settings.column.custom-column-menu.select-base-column")}
+                    {t("settings.column.add-custom-column-menu.select-base-column")}
                   </Typography>
                 </Box>
               ) : columnType === "Data Mining" ? (
@@ -205,7 +205,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                 }
                 onClose();
               }}>
-              {t("settings.column.custom-column-menu.create-column")}
+              {t("settings.column.add-custom-column-menu.create-column")}
             </TSCButton>
           </Box>
         </DialogContent>

@@ -71,12 +71,12 @@ export const ColumnMenu = observer(() => {
           value={state.columnMenu.tabValue}
           verticalCenter
           onChange={(index) => {
-            setColumnMenuTabValue(index);
             const tab = state.columnMenu.tabs[index];
             if (tab === "Data Mining" || tab === "Overlay") {
               actions.setCustomColumnMenuOpen(true, tab);
               return;
             }
+            setColumnMenuTabValue(index);
           }}
           orientation="vertical-right"
           width={90}
