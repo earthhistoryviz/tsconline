@@ -21,9 +21,9 @@ import { useTranslation } from "react-i18next";
 
 type DataMiningSettingsProps = {
   column: ColumnInfo;
-  onDataMiningEventChange: (event: EventFrequency | DataMiningPointDataType) => void;
+  onDataMiningTypeChange: (event: EventFrequency | DataMiningPointDataType) => void;
 };
-export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ column, onDataMiningEventChange }) => {
+export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ column, onDataMiningTypeChange }) => {
   const [openMenu, setOpenMenu] = useState(false);
   const { t } = useTranslation();
   if (column.columnDisplayType !== "Event" && column.columnDisplayType !== "Point") return;
@@ -33,13 +33,13 @@ export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ co
         {t("settings.column.datamining-menu.title")}
       </Button>
       <Dialog open={openMenu} onClose={() => setOpenMenu(false)}>
-        <DataMiningSettings column={column} onDataMiningEventChange={onDataMiningEventChange} />
+        <DataMiningSettings column={column} onDataMiningTypeChange={onDataMiningTypeChange} />
       </Dialog>
     </div>
   );
 });
 
-export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column, onDataMiningEventChange }) => {
+export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({ column, onDataMiningTypeChange }) => {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const dataMiningSettings = column.columnSpecificSettings;
@@ -73,16 +73,16 @@ export const DataMiningSettings: React.FC<DataMiningSettingsProps> = observer(({
               }
             ]}
           />
-          <EventDataMiningOptions column={column} onDataMiningEventChange={onDataMiningEventChange} />
-          <PointDataMiningOptions column={column} onDataMiningEventChange={onDataMiningEventChange} />
-          <ChronDataMiningOptions column={column} onDataMiningEventChange={onDataMiningEventChange} />
+          <EventDataMiningOptions column={column} onDataMiningTypeChange={onDataMiningTypeChange} />
+          <PointDataMiningOptions column={column} onDataMiningTypeChange={onDataMiningTypeChange} />
+          <ChronDataMiningOptions column={column} onDataMiningTypeChange={onDataMiningTypeChange} />
         </div>
       </Box>
     </StyledScrollbar>
   );
 });
 export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(
-  ({ column, onDataMiningEventChange }) => {
+  ({ column, onDataMiningTypeChange }) => {
     const { actions } = useContext(context);
     const { t } = useTranslation();
     if (column.columnDisplayType !== "Chron") return;
@@ -94,7 +94,7 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
         actions.removeDataMiningColumn(column, chronSettings.dataMiningChronDataType);
       }
       actions.setChronColumnSettings(chronSettings, { dataMiningChronDataType: event.target.value });
-      onDataMiningEventChange(event.target.value);
+      onDataMiningTypeChange(event.target.value);
     };
     return (
       <Box className="data-mining-type-container">
@@ -109,7 +109,7 @@ export const ChronDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
   }
 );
 export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(
-  ({ column, onDataMiningEventChange }) => {
+  ({ column, onDataMiningTypeChange }) => {
     const { actions } = useContext(context);
     const { t } = useTranslation();
     if (column.columnDisplayType !== "Event") return;
@@ -119,7 +119,7 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       if (!isEventFrequency(event.target.value)) return;
       if (eventSettings.frequency !== null) actions.removeDataMiningColumn(column, eventSettings.frequency);
       actions.setEventColumnSettings(eventSettings, { frequency: event.target.value });
-      onDataMiningEventChange(event.target.value);
+      onDataMiningTypeChange(event.target.value);
     };
     return (
       <Box className="data-mining-type-container">
@@ -139,7 +139,7 @@ export const EventDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
 );
 
 export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observer(
-  ({ column, onDataMiningEventChange }) => {
+  ({ column, onDataMiningTypeChange }) => {
     const { actions } = useContext(context);
     const { t } = useTranslation();
     if (column.columnDisplayType !== "Point") return;
@@ -150,7 +150,7 @@ export const PointDataMiningOptions: React.FC<DataMiningSettingsProps> = observe
       if (pointSettings.dataMiningPointDataType !== null)
         actions.removeDataMiningColumn(column, pointSettings.dataMiningPointDataType);
       actions.setPointColumnSettings(pointSettings, { dataMiningPointDataType: event.target.value });
-      onDataMiningEventChange(event.target.value);
+      onDataMiningTypeChange(event.target.value);
     };
     return (
       <Box className="data-mining-type-container">

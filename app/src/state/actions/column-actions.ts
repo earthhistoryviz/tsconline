@@ -655,16 +655,16 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   searchColumnsAbortController = null;
 });
 
-export const setDrawDualColCompColumn = action((column: ColumnInfo) => {
-  if (column.columnDisplayType === "Point") {
-    assertPointSettings(column.columnSpecificSettings);
-  } else if (column.columnDisplayType === "Event") {
-    assertEventSettings(column.columnSpecificSettings);
+export const setDrawDualColCompColumn = action((baseColumn: ColumnInfo, overlayColumn: ColumnInfo) => {
+  if (baseColumn.columnDisplayType === "Point") {
+    assertPointSettings(baseColumn.columnSpecificSettings);
+  } else if (baseColumn.columnDisplayType === "Event") {
+    assertEventSettings(baseColumn.columnSpecificSettings);
   } else {
     console.warn("WARNING: tried to set drawDualColCompColumn on a column that is not an event or point column");
     return;
   }
-  column.columnSpecificSettings.drawDualColCompColumn = `class datastore.${column.columnDisplayType}Column:${column.name}`;
+  baseColumn.columnSpecificSettings.drawDualColCompColumn = `class datastore.${overlayColumn.columnDisplayType}Column:${overlayColumn.name}`;
 });
 
 /**

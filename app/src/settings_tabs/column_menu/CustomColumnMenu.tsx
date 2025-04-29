@@ -159,7 +159,7 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   </Typography>
                 </Box>
               ) : columnType === "Data Mining" ? (
-                <DataMiningSettings column={baseColumn} onDataMiningEventChange={setDataMiningEventType} />
+                <DataMiningSettings column={baseColumn} onDataMiningTypeChange={setDataMiningEventType} />
               ) : (
                 <StyledScrollbar>
                   {column.children &&
@@ -193,8 +193,8 @@ export const CustomColumnMenu: React.FC<CustomColumnMenuProps> = observer(({ col
                   newColumnName = actions.addDataMiningColumn(baseColumn, dataMiningEventType);
                 } else if (columnType === "Overlay") {
                   if (!overlayColumn) return;
-                  actions.setDrawDualColCompColumn(overlayColumn);
-                  newColumnName = actions.addDualColCompColumn(overlayColumn);
+                  actions.setDrawDualColCompColumn(baseColumn, overlayColumn);
+                  newColumnName = actions.addDualColCompColumn(baseColumn);
                 }
                 if (newColumnName) {
                   const newColumn = state.settingsTabs.columnHashMap.get(newColumnName);
