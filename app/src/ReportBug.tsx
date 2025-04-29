@@ -1,11 +1,12 @@
 import React, { useContext, useState } from "react";
-import { Box, Typography, TextField } from "@mui/material";
-import { InputFileUpload, TSCButton } from "./components";
+import { Box, Typography, TextField, useTheme } from "@mui/material";
+import { InputFileUpload, TSCButton, TSCDialogLoader } from "./components";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import { Link, useNavigate } from "react-router-dom";
 import { context } from "./state";
 import { useTranslation } from "react-i18next";
+import { ErrorCodes } from "./util/error-codes";
 
 export const ReportBug: React.FC = () => {
   const [title, setTitle] = useState("");
@@ -17,6 +18,8 @@ export const ReportBug: React.FC = () => {
   const [descriptionError, setDescriptionError] = useState(false);
   const { actions } = useContext(context);
   const { t } = useTranslation();
+  const theme = useTheme();
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -60,7 +63,7 @@ export const ReportBug: React.FC = () => {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     let hasError = false;
 
     if (!title.trim()) {
@@ -80,26 +83,42 @@ export const ReportBug: React.FC = () => {
     if (hasError) {
       return;
     }
-    setIsSubmitted(true);
 
-    const timer = setInterval(() => {
-      setCountdown((prev) => prev - 1);
-    }, 1000);
+    setLoading(true);
+    try {
+      // TODO: add backend stuff. This is just a mock
+      await mockSubmitBugReport();
+      setIsSubmitted(true);
+      const timer = setInterval(() => {
+        setCountdown((prev) => prev - 1);
+      }, 1000);
 
-    setTimeout(() => {
-      clearInterval(timer);
-      navigate("/");
-    }, 5000);
+      setTimeout(() => {
+        clearInterval(timer);
+        navigate("/");
+      }, 5000);
+    } catch (error) {
+      actions.pushError(ErrorCodes.USER_SUBMIT_BUG_REPORT_FAILED);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // TODO: add backend stuff. This is just a mock
+  const mockSubmitBugReport = async (): Promise<void> => {
+    return new Promise((resolve) => setTimeout(resolve, 2000));
   };
 
   return (
     <Box
-      minHeight="80vh"
+      minHeight="70vh"
       display="flex"
       flexDirection="column"
       alignItems="center"
       justifyContent="center"
-      bgcolor="background.main">
+      bgcolor="background.main"
+      mt={10}
+      mb={10}>
       <Box textAlign="center" mb={4}>
         <BugReportIcon sx={{ width: 48, height: 48 }} />
         <Typography variant="h4" component="h1" fontWeight="bold" mt={2} mb={3}>
@@ -107,14 +126,28 @@ export const ReportBug: React.FC = () => {
         </Typography>
 
         {!isSubmitted && (
-          <Typography variant="h6" maxWidth={900} mx="auto">
+          <Typography variant="h6" maxWidth={900} mx="auto" m={1}>
             {t("report-bug.subtitle")}
           </Typography>
         )}
       </Box>
+      <TSCDialogLoader
+        open={loading}
+        headerText={t("report-bug.loading-header") || "Sending your report..."}
+        subHeaderText={t("report-bug.loading-subheader") || "Please wait while we process your report."}
+      />
 
       {!isSubmitted ? (
-        <Box bgcolor="background.main" border={1} p={3} width="100%" maxWidth="1000px" mt={2}>
+        <Box
+          bgcolor="background.main"
+          border={1}
+          sx={{
+            border: `1px solid ${theme.palette.divider}`
+          }}
+          p={3}
+          mt={2}
+          width="90%"
+          maxWidth="1000px">
           <Box mb={3}>
             <Typography variant="h6" mb={1}>
               {t("report-bug.name")}
@@ -151,11 +184,6 @@ export const ReportBug: React.FC = () => {
               }}
               multiline
               rows={6}
-              sx={{
-                "& .MuiInputBase-root textarea": {
-                  resize: "both"
-                }
-              }}
               error={descriptionError}
               helperText={descriptionError ? t("report-bug.helper-text") : " "}
               size="small"
