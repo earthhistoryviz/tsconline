@@ -119,7 +119,7 @@ export const ReportBug: React.FC = () => {
       bgcolor="background.main"
       mt={10}
       mb={10}>
-      <Box textAlign="center" mb={4}>
+      <Box textAlign="center" mb={isSubmitted ? 0 : 4}>
         <BugReportIcon sx={{ width: 48, height: 48 }} />
         <Typography variant="h4" component="h1" fontWeight="bold" mt={2} mb={3}>
           {t("report-bug.title")}
@@ -210,7 +210,7 @@ export const ReportBug: React.FC = () => {
           </Box>
         </Box>
       ) : (
-        <Box textAlign="center" mt={4}>
+        <Box textAlign="center">
           <Typography variant="h6" maxWidth={600} mx="auto">
             {t("report-bug.thank-you")}
           </Typography>
