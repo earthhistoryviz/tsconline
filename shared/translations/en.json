@@ -523,6 +523,26 @@
                 "link": "View File Format Info"
             }
         },
+        "report-bug": {
+            "title": "Report a Bug",
+            "subtitle": "Thank you for helping us improve our product! Please provide the details below to help us better understand the issue and resolve it as quickly as possible.",
+            "name": "Name/ID",
+            "name-placeholder": "Bug Title",
+            "helper-text": "This field is required.",
+            "description": "Please briefly describe the bug or issue you encountered.",
+            "description-placeholder": "Bug Description",
+            "attached": "Attached",
+            "send": "Send",
+            "attach-files": "Attach Files",
+            "thank-you": "Thank you for your feedback! We appreciate your help\nin improving our product.",
+            "redirect": "You will be redirected to the homepage in ",
+            "not-redirect": "If you are not redirected,",
+            "click-here": "click here",
+            "return-to-homepage": "to return to the homepage.",
+            "second": "second",
+            "loading-header": "Sending your report...",
+            "loading-subheader": "Please wait while we process your report."
+        },
         "errors": {
             "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
             "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",
@@ -639,7 +659,8 @@
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
             "title": "Error",
             "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
-            "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further."
+            "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further.",
+            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report."
         },
         "button": {
             "generate": "Generate",
