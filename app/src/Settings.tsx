@@ -62,8 +62,8 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
           value={{
             state: {
               columns: state.settingsTabs.columns,
-              columnSearchTerm: "",
-              columnSelected: "",
+              columnSearchTerm: state.settingsTabs.columnSearchTerm,
+              columnSelected: state.columnMenu.columnSelected,
               timeSettings: state.settings.timeSettings
             },
             actions: {
