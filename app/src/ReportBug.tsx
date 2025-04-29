@@ -133,8 +133,8 @@ export const ReportBug: React.FC = () => {
       </Box>
       <TSCDialogLoader
         open={loading}
-        headerText={t("report-bug.loading-header") || "Sending your report..."}
-        subHeaderText={t("report-bug.loading-subheader") || "Please wait while we process your report."}
+        headerText={t("report-bug.loading-header")}
+        subHeaderText={t("report-bug.loading-subheader")}
       />
 
       {!isSubmitted ? (
