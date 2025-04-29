@@ -2,7 +2,7 @@ import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
-import { Accordion, CustomTooltip, TSCCheckbox, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
+import { CustomDivider, CustomTooltip, TSCCheckbox, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
@@ -14,6 +14,7 @@ import { OptionsBar } from "./ChartOptionsBar";
 import {
   Box,
   Typography,
+  Accordion,
   IconButton,
   FormControlLabel,
   Drawer,
@@ -36,6 +37,9 @@ import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
+import { motion } from "framer-motion";
+import { ChartHistoryMetadata } from "@tsconline/shared";
+import Color from "color";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -56,6 +60,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
+  const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 2;
@@ -200,7 +205,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
   return (
     <Box className="chart-container">
-      {state.isLoggedIn && <HistorySideBar />}
+      {state.isLoggedIn && !isCrossPlot && <HistorySideBar />}
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
@@ -294,11 +299,11 @@ export const ChartTab: React.FC = observer(() => {
     </>
   );
 });
-
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
   return (
     <>
       <TSCDialogLoader open={loading} transparentBackground />
@@ -306,7 +311,8 @@ const HistorySideBar: React.FC = observer(() => {
         onClick={() => setDrawerOpen(true)}
         className="floating-history-button"
         sx={{
-          backgroundColor: "backgroundColor.main"
+          color: theme.palette.dark.contrastText,
+          backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string(),
         }}>
         <HistoryIcon fontSize="medium" />
       </Paper>
@@ -314,7 +320,7 @@ const HistorySideBar: React.FC = observer(() => {
         anchor="left"
         open={isDrawerOpen}
         onClose={() => setDrawerOpen(false)}
-        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main" } }}>
+        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main", backgroundImage: "none" } }}>
         <Box padding={2} width={400}>
           <Box display="flex" alignItems="center">
             <IconButton>
@@ -335,68 +341,11 @@ const HistorySideBar: React.FC = observer(() => {
               </IconButton>
             </CustomTooltip>
           </Box>
-          <List>
             {state.user.historyEntries.map(
               (entry) => {
-                const [expanded, setExpanded] = useState(false);
                 return (
-                  <Accordion
-                    className="history-entry-accordion"
-                    sx={{
-                      backgroundColor: "backgroundColor.main",
-                      "&.Mui-expanded": {
-                        backgroundColor: "backgroundColor.main"
-                      }
-                    }}
-                    key={entry.timestamp}
-                    expanded={expanded}>
-                    <AccordionSummary
-                      className="history-entry-summary"
-                      tabIndex={0}
-                      expandIcon={
-                        <ArrowForwardIosSharp
-                          sx={{ fontSize: "0.9rem" }}
-                          color="icon"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setExpanded(!expanded);
-                          }}
-                        />
-                      }
-                      aria-controls="panel1a-content"
-                      id="panel1a-header">
-                      <Box display="flex" flexDirection="row" gap="10px"  alignItems="center">
-                        <TSCCheckbox
-                        checked={true}
-                        />
-                      <div
-                        className="history-entry-svg-display"
-                        id={`${entry.timestamp}svg-display`}
-                        dangerouslySetInnerHTML={{
-                          __html: purifyChartContent(entry.chartContent, {
-                            preserveAspectRatio: "none",
-                            width: "100%",
-                            height: "100%"
-                          })
-                        }}
-                      />
-                      <Typography>{formatDate(entry.timestamp)}</Typography>
-                      </Box>
-                    </AccordionSummary>
-                    <AccordionDetails className="history-entry-details">
-                      {entry.datapacks.map((dp, index) => (
-                        <TimelineItem
-                          key={dp.title}
-                          title={dp.title}
-                          authoredBy={dp.authoredBy}
-                          isLast={entry.datapacks.length - 1 === index}
-                        />
-                      ))}
-                    </AccordionDetails>
-                  </Accordion>
-                );
-              }
-
+                  <HistoryEntry key={entry.timestamp} entry={entry} />
+                )
               // <ListItemButton
               //   key={entry.timestamp}
               //   onClick={async () => {
@@ -422,12 +371,93 @@ const HistorySideBar: React.FC = observer(() => {
               //     <DeleteForeverIcon fontSize="small" />
               //   </IconButton>
               // </ListItemButton>
-            )}
-          </List>
+              })}
         </Box>
       </Drawer>
     </>
   );
+});
+
+type HistoryEntryProps = {
+  entry : ChartHistoryMetadata;
+}
+const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry }) => {
+                const [expanded, setExpanded] = useState(false);
+  const theme = useTheme();
+                return (
+                  <Accordion
+                    className="history-entry-accordion"
+                    disableGutters
+                    elevation={0}
+                    slotProps={{ transition: { timeout: 200 } }}
+                    square
+                    sx={{
+                      backgroundColor: "backgroundColor.main",
+                      "&.Mui-expanded": {
+                        backgroundColor: "backgroundColor.main"
+                      },
+                      "&:hover": { 
+                        bgcolor:
+                          theme.palette.mode === "light"
+                            ? Color(theme.palette.backgroundColor.main).darken(0.04).string()
+                            : Color(theme.palette.backgroundColor.main).lighten(0.26).string()
+                      }
+                    }}
+                    key={entry.timestamp}
+                    expanded={expanded}>
+                    <AccordionSummary
+                      className="history-entry-summary"
+                      tabIndex={0}
+                      expandIcon={
+                        <ArrowForwardIosSharp
+                          sx={{ fontSize: "0.9rem" }}
+                          color="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setExpanded(!expanded);
+                          }}
+                        />
+                      }
+                      aria-controls="panel1a-content"
+                      id="panel1a-header">
+                      <Box display="flex" flexDirection="row" gap="10px"  alignItems="center">
+                      <div
+                        className="history-entry-svg-display"
+                        id={`${entry.timestamp}svg-display`}
+                        dangerouslySetInnerHTML={{
+                          __html: purifyChartContent(entry.chartContent, {
+                            preserveAspectRatio: "none",
+                            width: "100%",
+                            height: "100%"
+                          })
+                        }}
+                      />
+                      <Typography>{formatDate(entry.timestamp)}</Typography>
+                      </Box>
+                    </AccordionSummary>
+                    <AccordionDetails className="history-entry-details">
+                      <Box display="flex" gap="3px" flexDirection="column">
+                      <Typography variant="caption" color="textSecondary">
+                        Datapacks
+                      </Typography>
+                      </Box>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        layout
+                      >
+                      {entry.datapacks.map((dp, index) => (
+                        <TimelineItem
+                          key={dp.title}
+                          title={dp.title}
+                          authoredBy={dp.authoredBy}
+                          isLast={entry.datapacks.length - 1 === index}
+                        />
+                      ))}
+                      </motion.div>
+                    </AccordionDetails>
+                  </Accordion>
+                );
 });
 type TimelineItemProps = {
   authoredBy: string;
@@ -437,7 +467,8 @@ type TimelineItemProps = {
 
 const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }) => {
   return (
-    <div style={{ position: "relative", display: "flex", alignItems: "flex-start" }}>
+    <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", paddingBottom: "10px"
+     }}>
         <Box sx={{
           marginTop: "8px",
           width: "10px",
@@ -456,17 +487,16 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }
             width: "2px",
             height: "100%",
             backgroundColor: "gray",
-            zIndex: 1
+            zIndex: 1,
           }} />
         )}
-      {/* Text */}
       <div style={{ paddingTop: "2px", paddingLeft: "15px" }}>
         <Typography>{title}</Typography>
         <Typography variant="caption" color="textSecondary">
           {"Created by: " + authoredBy}
         </Typography>
       </div>
-    </div>
+    </Box>
   );
 };
 

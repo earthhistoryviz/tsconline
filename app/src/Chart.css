@@ -113,6 +113,10 @@
 .history-entry-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
   transform: rotate(90deg);
   display: flex;
+  order: -1;
+}
+.history-entry-summary > .MuiAccordionSummary-expandIconWrapper {
+  order: -1;
 }
 .Mui-focusVisible.history-entry-summary,
 .history-entry-summary:focus-visible {
@@ -127,20 +131,36 @@
   margin: 0;
   padding: 0;
 }
+.history-entry-accordion:not(:last-child) {
+  border-bottom: 0;
+}
+.history-entry-accordion:before {
+  display: none;
+}
+.history-entry-accordion:last-child {
+  padding-bottom: 10px;
+}
 .history-entry-summary {
   display: flex;
   justify-content: flex-start;
   align-items: center;
   min-height: 70px;
   height: 70px;
+  gap: 20px;
   width: 100%;
 }
 .history-entry-details {
-  padding: 0 0 0 29px;
+  padding: 0 0 0 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .history-entry-svg-display {
   width: 40px;
   height: 40px;
   position: relative;
   overflow: hidden;
+}
+.history-divider {
+  width: 70%;
 }
