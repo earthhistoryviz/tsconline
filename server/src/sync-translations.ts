@@ -126,8 +126,8 @@ export async function syncTranslations() {
     process.exit(1);
   }
 
-  const translationExcel = path.join(assetconfigs.translationFilepath);
-  const translationJsonDir = path.join("../shared/translations");
+  const translationExcel = path.join(assetconfigs.translationsDirectory);
+  const translationJsonDir = path.join("..", "shared", "translations");
   const mergedData: Record<string, NestedTranslations> = mergeData(translationExcel, translationJsonDir);
 
   writeTranslationsToExcel(mergedData, translationExcel);

@@ -41,7 +41,7 @@ import { toJS } from "mobx";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
 import React from "react";
-import languageList from "@tsconline/shared/translations/avaliable-language.json";
+import languageList from "@tsconline/shared/translations/available-languages.json";
 import Switch from "@mui/material/Switch";
 import { CustomFormControlLabel } from "./components/TSCComponents";
 import SettingsIcon from "@mui/icons-material/Settings";

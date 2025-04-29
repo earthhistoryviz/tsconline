@@ -73,6 +73,7 @@
     "build": "tsc -b",
     "dev": "tsc -b -w",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
+    "modify-translations": "node dist/modify-translations.js",
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
     "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",
