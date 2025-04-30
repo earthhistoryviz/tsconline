@@ -3,11 +3,14 @@ import { describe, it, vi, expect, beforeEach } from "vitest";
 import * as util from "../src/util";
 import * as fs from "fs/promises";
 import {
+  getChartContentFromChartHistoryTimeStamp,
   getHistoryEntryDatapacksPath,
+  getSettingsFromChartHistoryTimeStamp,
   getSpecificUserHistoryRootFilePath,
   getUserHistoryRootFilePath
 } from "../src/user/chart-history-helper-functions";
 import { join } from "path";
+import { Dirent } from "fs";
 
 vi.mock("fs/promises", async () => {
   return {
@@ -106,5 +109,56 @@ describe("getSpecificUserHistoryRootFilePath", () => {
       join("/testdir/uploadDirectory", "private", uuid, "history", timestamp)
     );
     expect(verifyFilepath).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("getChartContentFromChartHistoryTimeStamp", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const readdir = vi.spyOn(fs, "readdir");
+  const readFile = vi.spyOn(fs, "readFile");
+  it("should throw error if chart doesn't exist", async () => {
+    readdir.mockResolvedValueOnce(["chart"] as unknown as Dirent[]);
+    await expect(getChartContentFromChartHistoryTimeStamp("test-uuid", "1234567890123")).rejects.toThrow(
+      "Chart not found"
+    );
+    expect(readdir).toHaveBeenCalledOnce();
+  });
+  it("should return chart content and hash", async () => {
+    readdir.mockResolvedValueOnce(["chart.svg"] as unknown as Dirent[]);
+    readFile.mockResolvedValueOnce("chart-content");
+    const result = await getChartContentFromChartHistoryTimeStamp("test-uuid", "1234567890123");
+    expect(result).toEqual({ chartContent: "chart-content", chartHash: "chart" });
+    expect(readdir).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledWith(
+      join("/testdir/uploadDirectory/private", "test-uuid", "history", "1234567890123", "chart.svg"),
+      "utf-8"
+    );
+  });
+});
+describe("getSettingsFromChartHistoryTimeStamp", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const readdir = vi.spyOn(fs, "readdir");
+  const readFile = vi.spyOn(fs, "readFile");
+  it("should throw error if settings don't exist", async () => {
+    readdir.mockResolvedValueOnce(["settings"] as unknown as Dirent[]);
+    await expect(getSettingsFromChartHistoryTimeStamp("test-uuid", "1234567890123")).rejects.toThrow(
+      "Settings not found"
+    );
+    expect(readdir).toHaveBeenCalledOnce();
+  });
+  it("should return settings content", async () => {
+    readdir.mockResolvedValueOnce(["settings.tsc"] as unknown as Dirent[]);
+    readFile.mockResolvedValueOnce("settings-content");
+    const result = await getSettingsFromChartHistoryTimeStamp("test-uuid", "1234567890123");
+    expect(result).toEqual("settings-content");
+    expect(readdir).toHaveBeenCalledOnce();
+    expect(readFile).toHaveBeenCalledWith(
+      join("/testdir/uploadDirectory/private", "test-uuid", "history", "1234567890123", "settings.tsc"),
+      "utf-8"
+    );
   });
 });
