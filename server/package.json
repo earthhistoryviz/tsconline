@@ -75,6 +75,8 @@
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
     "modify-translations": "node dist/translations/modify-translations.js",
     "verify-translations": "node dist/translations/verify-translations.js",
+    "warn-modify-translations": "node dist/translations/warn-modify-translations.js",
+    "create-translations-from-csv": "node dist/translations/create-translations-from-csv.js",
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
     "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",

@@ -28,11 +28,10 @@ export async function checkKeysExistInEnglish() {
   return keysExist;
 }
 
-type JSONValue = string | number | boolean | null | JSONObject | JSONArray;
+type JSONValue = string | JSONObject;
 interface JSONObject {
   [key: string]: JSONValue;
 }
-interface JSONArray extends Array<JSONValue> {}
 
 /**
  * Recursively collect all key paths from a JSON object

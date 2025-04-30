@@ -1,8 +1,13 @@
-import { WatchListener, existsSync, readFileSync, watch, writeFileSync } from "fs";
+import { WatchListener, existsSync, readFileSync, unlinkSync, watch, writeFileSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 
-// modifyTranslations();
+modifyTranslations();
+
+type JSONValue = string | JSONObject;
+interface JSONObject {
+  [key: string]: JSONValue;
+}
 
 export async function modifyTranslations() {
   try {
@@ -23,7 +28,7 @@ export async function modifyTranslations() {
     writeFileSync(devTranslationJson, data);
   }
 
-  function flattenJson(obj: Record<string, any>, parentKey = "", result: [string, string][] = []): [string, string][] {
+  function flattenJson(obj: JSONObject, parentKey = "", result: [string, string][] = []): [string, string][] {
     for (const [key, value] of Object.entries(obj)) {
       const newKey = parentKey ? `${parentKey}.${key}` : key;
       if (typeof value === "object" && value !== null) {
@@ -47,7 +52,28 @@ export async function modifyTranslations() {
     }
   };
 
-  const watcher = watch(devTranslationJson, listener);
+  watch(devTranslationJson, listener);
 
   console.log(`Watching for changes in ${devTranslationJson}...`);
+
+  const cleanup = () => {
+    try {
+      if (existsSync(devTranslationJson)) {
+        unlinkSync(devTranslationJson);
+        console.log(`Deleted ${devTranslationJson}`);
+      }
+    } catch (err) {
+      console.error(`Error deleting file: ${err}`);
+    }
+  };
+
+  process.on("exit", cleanup);
+  process.on("SIGINT", () => {
+    cleanup();
+    process.exit();
+  });
+  process.on("SIGTERM", () => {
+    cleanup();
+    process.exit();
+  });
 }
