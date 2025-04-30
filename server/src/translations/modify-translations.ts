@@ -1,8 +1,6 @@
-import { WatchListener, existsSync, readFileSync, readdir, watch, writeFileSync } from 'fs';
-import { assetconfigs, loadAssetConfigs } from "./util.js";
+import { WatchListener, existsSync, readFileSync, watch, writeFileSync } from 'fs';
+import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
-
-
 
 modifyTranslations();
 
