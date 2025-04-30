@@ -10,22 +10,24 @@ type CommentType = {
   text: string;
   username: string;
   date: string;
+  isFlagged?: boolean;
 };
 
 export const Discussion = () => {
   const [comments, setComments] = useState<CommentType[]>([
     {
       username: "Username",
-      date: "10 days ago",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
+      date: "May 1, 2025",
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean.",
+      isFlagged: true
     },
     {
-      username: "Username",
+      username: "May 1, 2025",
       date: "10 days ago",
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
     },
     {
-      username: "Username",
+      username: "May 1, 2025",
       date: "10 days ago",
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
     }
@@ -38,7 +40,7 @@ export const Discussion = () => {
       month: "long",
       day: "numeric"
     });
-    setComments((prevState) => [...prevState, { username: "breh", date: formattedDate, text: input }]);
+    setComments((prevState) => [...prevState, { username: "You", date: formattedDate, text: input }]);
     setInput("");
   };
 
@@ -77,7 +79,13 @@ export const Discussion = () => {
         ) : (
           <div className={styles.commentsContainer}>
             {comments.map((comment, index) => (
-              <Comment key={index} username={comment.username} date={comment.date} text={comment.text} />
+              <Comment
+                key={index}
+                username={comment.username}
+                date={comment.date}
+                text={comment.text}
+                isFlagged={comment?.isFlagged}
+              />
             ))}
           </div>
         )}

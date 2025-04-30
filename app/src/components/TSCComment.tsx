@@ -11,17 +11,20 @@ type TSCCommentProps = {
   date: string;
   text: string;
   isSelf?: boolean;
+  isFlagged?: boolean;
 };
 
-export const Comment = ({ username, date, text, isSelf = true }: TSCCommentProps) => {
+export const Comment = ({ username, date, text, isSelf = true, isFlagged = false }: TSCCommentProps) => {
   const [showMenu, setShowMenu] = useState(false);
-
+  const theme = useTheme();
   const handleReport = () => {
     console.log("reported");
+    setShowMenu(false);
   };
 
   const handleDelete = () => {
     console.log("delete");
+    setShowMenu(false);
   };
 
   return (
@@ -60,6 +63,11 @@ export const Comment = ({ username, date, text, isSelf = true }: TSCCommentProps
           <Typography className={styles.dateText}>{date}</Typography>
         </div>
         <Typography className={styles.commentText}>{text}</Typography>
+        {isFlagged && (
+          <Typography className={styles.flaggedText} style={{ color: theme.palette.error.main }}>
+            This comment has been flagged.
+          </Typography>
+        )}
       </div>
     </Box>
   );
