@@ -164,3 +164,31 @@
 .history-divider {
   width: 70%;
 }
+
+.history-entry-summary-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.history-entry-summary-display-date {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+}
+.history-entry-summary:hover
+  > .MuiAccordionSummary-content
+  > .history-entry-summary-container
+  > .history-entry-summary-delete-button,
+.history-entry-summary
+  > .MuiAccordionSummary-content.Mui-expanded
+  > .history-entry-summary-container
+  > .history-entry-summary-delete-button {
+  display: block;
+}
+.history-entry-summary-delete-button {
+  display: none;
+}

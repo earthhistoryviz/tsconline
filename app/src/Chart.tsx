@@ -339,7 +339,30 @@ const HistorySideBar: React.FC = observer(() => {
             </CustomTooltip>
           </Box>
           {state.user.historyEntries.map((entry) => {
-            return <HistoryEntry key={entry.timestamp} entry={entry} />;
+            return (
+              <HistoryEntry
+                key={entry.timestamp}
+                entry={entry}
+                onClick={async () => {
+                  setLoading(true);
+                  try {
+                    await actions.loadUserHistory(entry.timestamp);
+                    setDrawerOpen(false);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+                onDelete={async (e) => {
+                  e.stopPropagation();
+                  setLoading(true);
+                  try {
+                    await actions.deleteUserHistory(entry.timestamp);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              />
+            );
             // <ListItemButton
             //   key={entry.timestamp}
             //   onClick={async () => {
@@ -374,8 +397,10 @@ const HistorySideBar: React.FC = observer(() => {
 
 type HistoryEntryProps = {
   entry: ChartHistoryMetadata;
+  onClick: () => void;
+  onDelete: (e: React.MouseEvent) => void;
 };
-const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry }) => {
+const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry, onClick, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
   const theme = useTheme();
   return (
@@ -411,22 +436,29 @@ const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry }) => {
               setExpanded(!expanded);
             }}
           />
-        }
-        aria-controls="panel1a-content"
-        id="panel1a-header">
-        <Box display="flex" flexDirection="row" gap="10px" alignItems="center">
-          <div
-            className="history-entry-svg-display"
-            id={`${entry.timestamp}svg-display`}
-            dangerouslySetInnerHTML={{
-              __html: purifyChartContent(entry.chartContent, {
-                preserveAspectRatio: "none",
-                width: "100%",
-                height: "100%"
-              })
-            }}
-          />
-          <Typography>{formatDate(entry.timestamp)}</Typography>
+        }>
+        <Box className="history-entry-summary-container">
+          <Box
+            className="history-entry-summary-display-date"
+            onClick={() => {
+              onClick();
+            }}>
+            <div
+              className="history-entry-svg-display"
+              id={`${entry.timestamp}svg-display`}
+              dangerouslySetInnerHTML={{
+                __html: purifyChartContent(entry.chartContent, {
+                  preserveAspectRatio: "none",
+                  width: "100%",
+                  height: "100%"
+                })
+              }}
+            />
+            <Typography>{formatDate(entry.timestamp)}</Typography>
+          </Box>
+          <IconButton className="history-entry-summary-delete-button" onClick={onDelete}>
+            <DeleteForeverIcon />
+          </IconButton>
         </Box>
       </AccordionSummary>
       <AccordionDetails className="history-entry-details">
