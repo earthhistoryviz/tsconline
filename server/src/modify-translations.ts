@@ -6,10 +6,9 @@ import path from "path";
 
 modifyTranslations();
 
-// const translationExcel = path.join(assetconfigs.translationFilepath);
-const devTranslationJson = path.join("..", "app", "dev-translation-en.json");
+const devTranslationJson = path.join("..", "shared", "translations", "dev-translation-en.json");
 const staticTranslationJson = path.join("..", "shared", "translations", "en.json");
-const translationCSV = 
+const translationCSV = path.join("assets", "translations", "en.csv");
 
 export async function modifyTranslations() {
     try {
@@ -20,8 +19,9 @@ export async function modifyTranslations() {
       process.exit(1);
     }
 
+    //missing dev translation file, so load the static JSON for initializing
     if (!existsSync(devTranslationJson)) {
-        const data =  JSON.parse(readFileSync(staticTranslationJson, 'utf-8'));
+        const data = readFileSync(staticTranslationJson, 'utf-8');
         writeFileSync(devTranslationJson, data);
     }
 
@@ -37,28 +37,21 @@ export async function modifyTranslations() {
           return result;
       }
 
+    //dev-translation-en.json becomes master, so on change overwrite static JSON and csv
     const listener: WatchListener<string> = (event, filename) => {
         if (filename) {
-            
-            const jsonData = JSON.parse(readFileSync(devTranslationJson, 'utf-8'));
-            writeFileSync(staticTranslationJson, jsonData);
-            const flattened = flattenJson(jsonData);
+            const data = readFileSync(devTranslationJson, 'utf-8');
+            writeFileSync(staticTranslationJson, data);
+            const flattened = flattenJson(JSON.parse(data));
             const csvContent = flattened.map(([key, value]) => `${key},${value}`).join('\n');
             writeFileSync(translationCSV, csvContent, 'utf-8');
+            console.log("successfully updated translations!");
         }
       };
 
     const watcher = watch(devTranslationJson, listener)
-    
 
-    //create en dev json
-    
-    //copy en static json to en dev json
-    //create listener for dev json
-    //change static and csv on change
-
-
-    console.log(`Watching for changes in ${path}...`);
+    console.log(`Watching for changes in ${devTranslationJson}...`);
   }
 
 
