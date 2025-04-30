@@ -1,6 +1,6 @@
-import { assetconfigs } from "../util.js";
+import { verifySymlink } from "../util.js";
 import { join, basename, dirname } from "path";
-import { cp, mkdir, readdir, realpath, rm, symlink, lstat } from "fs/promises";
+import { cp, mkdir, readdir, realpath, rm, symlink } from "fs/promises";
 import logger from "../error-logger.js";
 import { Datapack, ChartHistoryMetadata, extractDatapackMetadataFromDatapack } from "@tsconline/shared";
 import { getCachedDatapackFromDirectory } from "./fetch-user-files.js";
@@ -13,21 +13,6 @@ import {
 
 export function isValidEpoch(timestamp: string) {
   return /^\d{13}$/.test(timestamp);
-}
-
-/**
- * Verify that a path is a symlink and that it points to a valid target
- * @param symlink
- */
-export async function verifySymlink(symlink: string): Promise<boolean> {
-  try {
-    const stats = await lstat(symlink);
-    if (!stats.isSymbolicLink()) return false;
-    await realpath(symlink);
-    return true;
-  } catch {
-    return false;
-  }
 }
 
 /**
@@ -111,7 +96,7 @@ export async function getChartHistoryMetadata(uuid: string): Promise<ChartHistor
       chartContent
     });
   }
-  return validEntries.sort();
+  return validEntries.sort((a, b) => parseInt(a.timestamp) - parseInt(b.timestamp));
 }
 
 /**
@@ -150,7 +135,7 @@ export async function getChartHistory(uuid: string, timestamp: string) {
  */
 export async function deleteChartHistory(uuid: string, timestamp: string) {
   if (!isValidEpoch(timestamp) && timestamp !== "-1") throw new Error("Invalid timestamp");
-  const historyRoot = join(assetconfigs.uploadDirectory, "private", uuid, "history");
+  const historyRoot = await getUserHistoryRootFilePath(uuid);
   if (parseInt(timestamp) === -1) {
     const entries = await readdir(historyRoot);
     await Promise.all(entries.map((entry) => rm(join(historyRoot, entry), { recursive: true })));

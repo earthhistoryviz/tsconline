@@ -2,12 +2,7 @@ import { observer } from "mobx-react-lite";
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Chart.css";
-import {
-  CustomTooltip,
-  TSCDialogLoader,
-  TSCPopupManager,
-  TSCSvgComponent
-} from "./components";
+import { CustomTooltip, TSCDialogLoader, TSCPopupManager, TSCSvgComponent } from "./components";
 import LoadingChart from "./LoadingChart";
 import {
   TransformWrapper,
