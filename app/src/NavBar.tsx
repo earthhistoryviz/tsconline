@@ -288,7 +288,7 @@ const NonUserSettings: React.FC = () => {
           onClick={() => {
             i18next.changeLanguage(value);
           }}>
-          <Typography>{t(`language-names.${value}`)}</Typography>
+          <Typography>{t(`languageNames.${value}`)}</Typography>
         </TSCMenuItem>
       ))}
     </Menu>

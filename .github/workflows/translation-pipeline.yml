@@ -1,0 +1,38 @@
+name: Check translation JSON vs CSV
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  compare-json-csv:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch master
+        run: git fetch origin main:main
+
+      - name: Extract CSV from main
+        run: |
+          git show origin/main:server/translations/en.csv > master_translations.csv
+
+      - name: Convert en.json to CSV format
+        run: |
+          jq -r 'to_entries | map("\(.key),\(.value)") | .[]' shared/translations/en.json > current_translations.csv
+
+      - name: Compare converted JSON to master CSV
+        run: |
+          if ! diff -u master_translations.csv current_translations.csv; then
+            echo "::warning file=en.json::en.json differs from en.csv on main"
+            # Uncomment to fail instead of warn:
+            # exit 1
+          fi
