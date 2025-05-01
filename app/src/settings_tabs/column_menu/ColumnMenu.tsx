@@ -18,7 +18,6 @@ import { InfoBox } from "./InfoBox";
 import { EventSpecificSettings } from "../advanced_settings/EventSpecificSettings";
 import { PointSettingsDisplay } from "../advanced_settings/PointSettingsPopup";
 import { EditNameField } from "./EditNameField";
-import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import AccordionPositionControls from "./AccordionPositionControls";
 import { CustomTabs } from "../../components/TSCCustomTabs";
 import { RangeSpecificSettings } from "../advanced_settings/RangeSpecificSettings";
@@ -26,10 +25,9 @@ import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings"
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
-import { OverlaySettings } from "../advanced_settings/OverlaySettings";
 
 export const ColumnMenu = observer(() => {
-  const { state } = useContext(context);
+  const { state, actions } = useContext(context);
   const selectedColumn = state.columnMenu.columnSelected;
   const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
 
@@ -72,7 +70,14 @@ export const ColumnMenu = observer(() => {
           tabIndicatorLength={25}
           value={state.columnMenu.tabValue}
           verticalCenter
-          onChange={(index) => setColumnMenuTabValue(index)}
+          onChange={(index) => {
+            const tab = state.columnMenu.tabs[index];
+            if (tab === "Data Mining" || tab === "Overlay") {
+              actions.setCustomColumnMenuOpen(true, tab);
+              return;
+            }
+            setColumnMenuTabValue(index);
+          }}
           orientation="vertical-right"
           width={90}
           tabs={state.columnMenu.tabs.map((val) => ({ id: val, tab: val }))}
@@ -147,12 +152,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
       );
     case "Font":
       return <FontMenu column={column} />;
-    case "Data Mining":
-      return <DataMiningSettings column={column} />;
     case "Curve Drawing":
       return <PointSettingsDisplay column={column} />;
-    case "Overlay":
-      return <OverlaySettings column={column} />;
     default:
       return null;
   }

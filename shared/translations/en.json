@@ -183,11 +183,13 @@
                 "files": "Files",
                 "download-button": "Download Files",
                 "description": "Description",
+                "register-button": "Register",
+                "registered-button": "Registered",
+                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
                 "messages": {
                     "no-datapacks": "No datapacks available",
                     "no-files": "No files available"
-                },
-                "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!"
+                }
             },
             "calendar": {
                 "switchLabel": "Toggle calendar",
@@ -363,6 +365,7 @@
                         "right": "Right"
                     }
                 },
+                "create-custom-column-button": "Create Custom Column",
                 "font-menu": {
                     "change": "Change Font",
                     "additional": "Additional fonts for child columns"
@@ -412,6 +415,15 @@
                     "overlay-accordion-caption": "*Grayed out columns are disabled for Overlay (not Event or Point column)",
                     "invalid-column-mouseover": "Not an Event or Point Column",
                     "column-not-selected": "Select Column from Menu"
+                },
+                "add-custom-column-menu": {
+                    "base-column-header": "Select a Base Column",
+                    "type-column-header": "Select a Type Column",
+                    "customize-column-header": "Customize Column",
+                    "data-mining-description": "Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point column over sliding windows of data.",
+                    "dual-column-comparison-description": "Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.",
+                    "select-base-column": "Please Select a Point or Event Column",
+                    "create-column": "Create Column"
                 }
             },
             "search": {
@@ -520,6 +532,26 @@
                 "title": "File Format Info",
                 "link": "View File Format Info"
             }
+        },
+        "report-bug": {
+            "title": "Report a Bug",
+            "subtitle": "Thank you for helping us improve our product! Please provide the details below to help us better understand the issue and resolve it as quickly as possible.",
+            "name": "Name/ID",
+            "name-placeholder": "Bug Title",
+            "helper-text": "This field is required.",
+            "description": "Please briefly describe the bug or issue you encountered.",
+            "description-placeholder": "Bug Description",
+            "attached": "Attached",
+            "send": "Send",
+            "attach-files": "Attach Files",
+            "thank-you": "Thank you for your feedback! We appreciate your help\nin improving our product.",
+            "redirect": "You will be redirected to the homepage in ",
+            "not-redirect": "If you are not redirected,",
+            "click-here": "click here",
+            "return-to-homepage": "to return to the homepage.",
+            "second": "second",
+            "loading-header": "Sending your report...",
+            "loading-subheader": "Please wait while we process your report."
         },
         "errors": {
             "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
@@ -637,7 +669,8 @@
             "USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING": "This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.",
             "title": "Error",
             "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
-            "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further."
+            "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further.",
+            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report."
         },
         "button": {
             "generate": "Generate",

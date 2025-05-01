@@ -83,7 +83,6 @@ export const CustomTabs: React.FC<CustomTabsProps> = observer(
               }}
               className={`tsc-tab-panel ${(value ?? selectedTab) === index ? "tsc-tab-panel-selected" : ""}`}
               onClick={() => {
-                if (selectedTab === index) return;
                 setSelectedTab(index);
                 if (onChange) onChange(index);
               }}>

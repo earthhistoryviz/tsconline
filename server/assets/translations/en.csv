@@ -1,0 +1,492 @@
+translation.general-actions.save,Save
+translation.general-actions.cancel,Cancel
+translation.landing-page.get-started,Get Started
+translation.landing-page.welcome,Welcome to TimeScale Creator!
+translation.landing-page.welcome-desc,TimeScale Creator is an advanced online cloud service designed to help you explore and visualize the geologic time scale with ease. With access to a vast internal database of over 20,000 global and regional events—including biologic, geomagnetic, sea-level, and stable isotope data—TimeScale Creator is the ultimate tool for researchers, educators, and enthusiasts of Earth history.
+translation.landing-page.carousel.customize-chart.title,Customize Your Chart
+translation.landing-page.carousel.customize-chart.customize-chart-appearance.title,Customize Chart Appearance
+translation.landing-page.carousel.customize-chart.customize-chart-appearance.description,Personalize your chart by adjusting the appearance, colors, and fonts to suit your preferences.
+translation.landing-page.carousel.customize-chart.save-custom-settings.title,Save Custom Settings
+translation.landing-page.carousel.customize-chart.save-custom-settings.description,Save your custom chart settings for future use and easy access to your preferred configurations.
+translation.landing-page.carousel.customize-chart.share-your-charts.title,Share Your Charts
+translation.landing-page.carousel.customize-chart.share-your-charts.description,Easily share your custom charts with others via a simple link or by downloading the chart as an image.
+translation.landing-page.carousel.interactive-map-points.title,Interactive Map Points
+translation.landing-page.carousel.interactive-map-points.toggle-columns.title,Toggle Columns Directly on the Map
+translation.landing-page.carousel.interactive-map-points.toggle-columns.description,Select specific areas to focus on by enabling or disabling chart columns directly on the map.
+translation.landing-page.carousel.interactive-map-points.age-slider.title,Dynamic Age Slider
+translation.landing-page.carousel.interactive-map-points.age-slider.description,Explore how rock formations and geologic events change over time with a simple slider.
+translation.landing-page.carousel.interactive-map-points.link-charts.title,Link Charts to Locations
+translation.landing-page.carousel.interactive-map-points.link-charts.description,Map points connect chart columns to real-world locations for intuitive visualization.
+translation.landing-page.carousel.search-columns.title,Search Within Columns
+translation.landing-page.carousel.search-columns.find-columns.title,Find Columns/Events Quickly
+translation.landing-page.carousel.search-columns.find-columns.description,Search for specific columns or events within the chart to quickly locate and focus on relevant information.
+translation.landing-page.carousel.search-columns.age-range.title,Extend/Center Age Range
+translation.landing-page.carousel.search-columns.age-range.description,Extend or center the age range to focus on the details and gurantee the inclusion of the desired information in the chart.
+translation.landing-page.carousel.search-columns.notes.title,View Specific Notes
+translation.landing-page.carousel.search-columns.notes.description,Access detailed notes and information about specific events directly from the chart.
+translation.landing-page.carousel.upload.title,Upload Your Own!
+translation.landing-page.carousel.upload.custom.title,Create Custom Datapacks
+translation.landing-page.carousel.upload.custom.description,Upload your own data to create custom datapacks and generate charts based on your unique research and findings.
+translation.landing-page.carousel.upload.showcase.title,Showcase Your Research
+translation.landing-page.carousel.upload.showcase.description,Publish your custom datapacks to share your research, findings, and insights with the global scientific community.
+translation.landing-page.carousel.upload.collaborate.title,Collaborate with Others
+translation.landing-page.carousel.upload.collaborate.description,View other users' datapacks and collaborate to expand your knowledge and expertise.
+translation.landing-page.cards.datapack.title,What Are Datapacks?
+translation.landing-page.cards.datapack.description,Datapacks are collections of data that can be used to generate charts. TimeScale Creator provides a variety of official datapacks that contain information on global and regional geologic events.
+translation.landing-page.cards.charts.title,What Are Charts?
+translation.landing-page.cards.charts.description,Charts are visual representations of geologic time scales that display the relationships between different geologic events. Users can customize and generate charts based on their unique research and findings.
+translation.landing-page.cards.help.title,Need Help?
+translation.landing-page.cards.help.description,Attend one of our workshops to learn more about TimeScale Creator and how to use its features. Our workshops cover a variety of topics, including chart customization, datapack creation, and more.
+translation.landing-page.cards.more,Explore More
+translation.landing-page.chart-steps.title,Chart Creation Steps
+translation.landing-page.chart-steps.select-datapack.title,Select any Datapack
+translation.landing-page.chart-steps.select-datapack.description,Choose from a variety of official datapacks that contain information on global and regional geologic events.
+translation.landing-page.chart-steps.select-age-range.title,Select An Age Range
+translation.landing-page.chart-steps.select-age-range.description,Select the desired age range for your chart to focus on specific geologic events and formations.
+translation.landing-page.chart-steps.select-columns.title,Select/Edit Columns
+translation.landing-page.chart-steps.select-columns.description,Choose the columns you want to display on your chart and customize their appearance, colors
+translation.landing-page.chart-steps.generate.title,Generate Your Chart
+translation.landing-page.chart-steps.generate.description,Generate your chart based on the selected datapack and customized settings.
+translation.languages,LANGUAGES
+translation.about,TimeScale Creator Online enables you to explore and create charts of any portion of the geologic time scale from an extensive suite of global and regional events in Earth History. The internal database suite encompasses over 20,000 biologic, geomagnetic, sea-level, stable isotope, and other events.
+translation.login.signin,Sign In
+translation.login.forgot-password,Forgot password?
+translation.login.signup,Don't have an account? Sign Up
+translation.login.username,Username
+translation.login.password,Password
+translation.login.tooltip,Account Settings
+translation.login.profile,Profile
+translation.login.add,Add another account
+translation.login.logout,Logout
+translation.login.admin,Admin
+translation.login.profile-info,Profile Information
+translation.login.welcome,Welcome
+translation.login.email,Email
+translation.login.settings,Settings
+translation.login.dark-mode,Dark Mode
+translation.login.delete,Delete Profile
+translation.login.save,Save
+translation.login.cancel,Cancel
+translation.login.change,Change
+translation.login.current-password,Current Password
+translation.login.new-password,New Password
+translation.login.new-email,New Email
+translation.login.new-username,New Username
+translation.login.reset-password,Enter your email to receive a password reset link.
+translation.login.enter-new-password,Please enter your new password.
+translation.login.recovery,Password Recovery
+translation.login.send,Send
+translation.signup.title,Sign Up
+translation.signup.email,Email Address
+translation.signup.username,Username
+translation.signup.password,Password
+translation.signup.signin,Already have an account? Sign in
+translation.signup.email-sent,Email sent. Please check your email to verify your account.
+translation.title.about,About
+translation.title.main,Time Scale Creator Online
+translation.title.settings,Settings
+translation.navBar.home,Home
+translation.navBar.presets,Presets
+translation.navBar.chart,Chart
+translation.navBar.datapacks,Datapacks
+translation.navBar.settings,Settings
+translation.navBar.help,Help
+translation.navBar.about,About
+translation.navBar.workshops,Workshops
+translation.workshops.login-first,You are not logged in. Please sign in to view your workshops.
+translation.workshops.header,Your Registered Workshops
+translation.workshops.description-header,Click a workshop to see more information!
+translation.workshops.titles.all,All Workshops
+translation.workshops.titles.upcoming,Upcoming Workshops
+translation.workshops.titles.active,Active Workshops
+translation.workshops.titles.past,Past Workshops
+translation.workshops.messages.upcoming,No upcoming workshops at the moment.
+translation.workshops.messages.active,No active workshops at the moment.
+translation.workshops.messages.past,No past workshops at the moment.
+translation.workshops.dates.start,Start Date:
+translation.workshops.dates.end,End Date:
+translation.workshops.details-page.datapacks,Datapacks
+translation.workshops.details-page.files,Files
+translation.workshops.details-page.download-button,Download Files
+translation.workshops.details-page.description,Description
+translation.workshops.details-page.messages.no-datapacks,No datapacks available
+translation.workshops.details-page.messages.no-files,No files available
+translation.workshops.details-page.download-tooltip-not-registered,Contact jogg@purdue.edu to register!
+translation.workshops.calendar.switchLabel,Toggle calendar
+translation.workshops.calendar.month,Month
+translation.workshops.calendar.week,Week
+translation.workshops.calendar.days.sunday,Sun
+translation.workshops.calendar.days.monday,Mon
+translation.workshops.calendar.days.tuesday,Tue
+translation.workshops.calendar.days.wednesday,Wed
+translation.workshops.calendar.days.thursday,Thu
+translation.workshops.calendar.days.friday,Fri
+translation.workshops.calendar.days.saturday,Sat
+translation.workshops.calendar.months.1,January
+translation.workshops.calendar.months.2,February
+translation.workshops.calendar.months.3,March
+translation.workshops.calendar.months.4,April
+translation.workshops.calendar.months.5,May
+translation.workshops.calendar.months.6,June
+translation.workshops.calendar.months.7,July
+translation.workshops.calendar.months.8,August
+translation.workshops.calendar.months.9,September
+translation.workshops.calendar.months.10,October
+translation.workshops.calendar.months.11,November
+translation.workshops.calendar.months.12,December
+translation.loading.loading-chart,Loading Chart...
+translation.loading.loading-datapacks,Loading Datapacks
+translation.loading.time,this could take more than a minute
+translation.loading.fetching-datapacks,Fetching Datapacks
+translation.crossPlot.options.save,Save Crossplot
+translation.crossPlot.options.models,Models
+translation.crossPlot.options.markers,Markers
+translation.crossPlot.options.show-tooltips,Show Tooltips
+translation.crossPlot.options.timeline,Timeline On/Off
+translation.crossPlot.options.auto-plot,Auto Plot
+translation.crossPlot.options.download-converted-datapack,Download Converted Datapack
+translation.crossPlot.options.upload-converted-datapack,Upload Converted Datapack to Profile
+translation.crossPlot.save-modal.save-filename,Save file as...
+translation.crossPlot.save-modal.upload-title,Upload datapack as...
+translation.crossPlot.time.select-unit,Please select a unit.
+translation.crossPlot.time.no-chart-units-available,No units available
+translation.crossPlot.time.disabled-unit-reason,You cannot change the age unit since it must be on the x-axis.
+translation.crossPlot.time.select-datapack,Please select a datapack.
+translation.crossPlot.time.no-unit-selected,No unit selected
+translation.crossPlot.time.xAxis,X Axis (Age-only)
+translation.crossPlot.time.yAxis,Y Axis (Age/Depth)
+translation.crossPlot.sidebar.no-markers,No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)
+translation.crossPlot.sidebar.no-models,No Models Available (Please Add a Model by Clicking the Chart in the Main View)
+translation.crossPlot.out-of-date.title,Chart Out of Date
+translation.crossPlot.out-of-date.description,When you're ready, click the button below to apply your changes.
+translation.crossPlot.out-of-date.revert,Revert Changes
+translation.crossPlot.out-of-date.apply,Apply Changes
+translation.crossPlot.not-created.title,Crossplot Chart Not Created
+translation.crossPlot.not-created.description,Please configure your desired crossplot settings and click the button below to generate a crossplot chart.
+translation.crossPlot.not-created.generate,Generate Crossplot
+translation.crossPlot.create-datapack,Create Crossplot
+translation.settingsTabs.Time,Time
+translation.settingsTabs.Preferences,Preferences
+translation.settingsTabs.Column,Column
+translation.settingsTabs.Search,Search
+translation.settingsTabs.Font,Font
+translation.settingsTabs.Map Points,Map Points
+translation.settingsTabs.Datapacks,Datapacks
+translation.settingsTabs.General,General
+translation.settingsTabs.Data Mining,Data Mining
+translation.settingsTabs.Curve Drawing,Curve Drawing
+translation.settingsTabs.Overlay,Overlay
+translation.settingsTabs.About,About
+translation.settingsTabs.View Data,View Data
+translation.settingsTabs.Discussion,Discussion
+translation.settingsTabs.Warnings,Warnings
+translation.settingsTabs.Load/Save,Load/Save
+translation.settingsTabs.xAxis,X Axis (Age-only)
+translation.settingsTabs.yAxis,Y Axis (Age/Depth)
+translation.settings.time.interval.top,Top of Interval
+translation.settings.time.interval.base,Base of Interval
+translation.settings.time.interval.top-name,Top Age/Stage Name
+translation.settings.time.interval.base-name,Base Age/Stage Name
+translation.settings.time.interval.not-avaliable,Not Available for this Unit
+translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
+translation.settings.time.interval.helper-text,Base age should be older than top age
+translation.settings.time.interval.vertical-scale-header,Vertical Scale
+translation.settings.preferences.checkboxs.skip-empty-columns,Gray out (and do not draw) columns which do not have data on the selected time interval
+translation.settings.preferences.checkboxs.mouse-over-info,Add MouseOver info (popups)
+translation.settings.preferences.checkboxs.global-priority,Enabled Global Priority Filtering for block columns
+translation.settings.preferences.checkboxs.stage-background,Enabled stage background for event columns
+translation.settings.preferences.checkboxs.enable-legend,Enable legend for the chart
+translation.settings.preferences.checkboxs.lithology-auto-indent,Do not auto-indent lithology patterns
+translation.settings.preferences.checkboxs.conserve-chart,Conserve Chart Space in Family Tree Plotting (Not implemented)
+translation.settings.preferences.checkboxs.hide-block-labels,Hide block labels based on priority
+translation.settings.preferences.checkboxs.use-suggested-age-spans,Do not use the Data-Pack's suggested age span
+translation.settings.preferences.settings-file.load,Load Settings
+translation.settings.preferences.settings-file.save,Save Settings
+translation.settings.preferences.settings-file.load-dialog.message,This will overwrite any changes you've made!
+translation.settings.preferences.settings-file.load-dialog.cancel,Cancel
+translation.settings.preferences.settings-file.load-dialog.load,Load
+translation.settings.preferences.settings-file.save-dialog.message,Please enter the filename below.
+translation.settings.preferences.settings-file.save-dialog.cancel,Cancel
+translation.settings.preferences.settings-file.save-dialog.save,Save
+translation.settings.column.tooltip.not-in-range,Data not included in time range
+translation.settings.column.tooltip.auto-scale,Auto Scale
+translation.settings.column.tooltip.flip,Flip Range
+translation.settings.column.titles.column-menu-title,Column Customization
+translation.settings.column.titles.data-mining-title,Data Mining Settings
+translation.settings.column.titles.font-option-title,Font Options for "{{name}}
+translation.settings.column.menu.shift-row,Shift Row Positions
+translation.settings.column.menu.edit-name,Edit Title
+translation.settings.column.menu.background-color,Background Color
+translation.settings.column.menu.enable-title,Enable Title
+translation.settings.column.menu.show-age-label,Show Age Label
+translation.settings.column.menu.info-box,Information and References
+translation.settings.column.menu.add-blank-column,Add Blank Column
+translation.settings.column.menu.add-age-column,Add Age Column
+translation.settings.column.menu.width,Width
+translation.settings.column.menu.orientation.title,Label Orientation
+translation.settings.column.menu.orientation.horizontal,Horizontal
+translation.settings.column.menu.orientation.vertical,Vertical
+translation.settings.column.menu.show-uncertainty,Show Uncertainty Labels
+translation.settings.column.menu.events,Events
+translation.settings.column.menu.ranges,Ranges
+translation.settings.column.menu.first-occurrence,First Occurrence
+translation.settings.column.menu.last-occurrence,Last Occurrence
+translation.settings.column.menu.alphabetical,Alphabetical
+translation.settings.column.menu.ruler.title,Age Ruler Justification
+translation.settings.column.menu.ruler.left,Left
+translation.settings.column.menu.ruler.right,Right
+translation.settings.column.font-menu.change,Change Font
+translation.settings.column.font-menu.additional,Additional fonts for child columns
+translation.settings.column.datamining-menu.title,Data Mining Settings
+translation.settings.column.datamining-menu.window-size,Window Size
+translation.settings.column.datamining-menu.step-size,Step Size
+translation.settings.column.datamining-menu.options.frequency,Frequency
+translation.settings.column.datamining-menu.options.max-val,Maximum Value
+translation.settings.column.datamining-menu.options.min-val,Minimum Value
+translation.settings.column.datamining-menu.options.avg-val,Average Value
+translation.settings.column.datamining-menu.options.roc,Rate of Change
+translation.settings.column.datamining-menu.options.freq-of-LAD,Frequency of LAD
+translation.settings.column.datamining-menu.options.freq-of-FAD,Frequency of FAD
+translation.settings.column.datamining-menu.options.combined-events,Combined Events
+translation.settings.column.datamining-menu.options-title.event,Event Type
+translation.settings.column.datamining-menu.options-title.chron,Chron Type
+translation.settings.column.datamining-menu.options-title.plot,Data Type to Plot
+translation.settings.column.curve-drawing-menu.title,Point Settings
+translation.settings.column.curve-drawing-menu.rod,Range of Data
+translation.settings.column.curve-drawing-menu.lower-range,Lower Range
+translation.settings.column.curve-drawing-menu.upper-range,Upper Range
+translation.settings.column.curve-drawing-menu.scale-start,Scale Start
+translation.settings.column.curve-drawing-menu.scale-step,Scale Step
+translation.settings.column.curve-drawing-menu.show-scale,Show Scale
+translation.settings.column.curve-drawing-menu.draw-points,Draw Points
+translation.settings.column.curve-drawing-menu.point-shape,Point Shape
+translation.settings.column.curve-drawing-menu.line,Line
+translation.settings.column.curve-drawing-menu.fill,Fill
+translation.settings.column.curve-drawing-menu.background-gradient,Background Gradient
+translation.settings.column.curve-drawing-menu.curve-gradient,Curve Gradient
+translation.settings.column.curve-drawing-menu.start,Start
+translation.settings.column.curve-drawing-menu.end,End
+translation.settings.column.overlay-menu.title,Overlay Settings
+translation.settings.column.overlay-menu.display-overlay,Display Overlay
+translation.settings.column.overlay-menu.overlay-column-header,Overlaying
+translation.settings.column.overlay-menu.overlay-column-preposition,On
+translation.settings.column.overlay-menu.overlay-accordion-caption,*Grayed out columns are disabled for Overlay (not Event or Point column)
+translation.settings.column.overlay-menu.invalid-column-mouseover,Not an Event or Point Column
+translation.settings.column.overlay-menu.column-not-selected,Select Column from Menu
+translation.settings.search.search-bar,Search
+translation.settings.search.found-result,Found {{count}} Results
+translation.settings.search.current-time-settings,Current Time Settings(Top / Base)
+translation.settings.search.header.status,Column On?
+translation.settings.search.header.center,Center
+translation.settings.search.header.extend,Extend
+translation.settings.search.header.column,Column
+translation.settings.search.header.age,Age
+translation.settings.search.header.qualifier,Type
+translation.settings.search.header.notes,Notes
+translation.settings.font.notes1,These are the default systemwide fonts.
+translation.settings.font.notes2,Changing one here will affect the entire chart.
+translation.settings.font.notes3,NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
+translation.settings.map-points.not-avaliable,No Map Points available for this datapack
+translation.settings.datapacks.see-info-guidance,Click a datapack to see more information!
+translation.settings.datapacks.add-datapack-guidance,Add a datapack by clicking the checkbox
+translation.settings.datapacks.title.private-official,Private Official Datapacks
+translation.settings.datapacks.title.public-official,Official Datapacks
+translation.settings.datapacks.title.contributed,User Contributed Datapacks
+translation.settings.datapacks.title.workshop,Workshop Datapacks
+translation.settings.datapacks.title.your,Your Datapacks
+translation.settings.datapacks.title.treatise,Treatise Datapacks
+translation.settings.datapacks.no,No
+translation.settings.datapacks.avaliable,Avaliable
+translation.settings.datapacks.upload,Upload Datapack
+translation.settings.datapacks.seeMore,See More...
+translation.settings.datapacks.seeLess,See Less...
+translation.settings.datapacks.upload-form.title,Upload Your Own Datapack
+translation.settings.datapacks.upload-form.no-file,No file selected
+translation.settings.datapacks.upload-form.name,Datapack Name
+translation.settings.datapacks.upload-form.name-placeholder,Enter a name for your datapack.
+translation.settings.datapacks.upload-form.author,Authored By
+translation.settings.datapacks.upload-form.author-placeholder,Credited to...
+translation.settings.datapacks.upload-form.description,Datapack Description
+translation.settings.datapacks.upload-form.description-placeholder,Enter a description for your datapack.
+translation.settings.datapacks.upload-form.tags,Tags
+translation.settings.datapacks.upload-form.make-public,Make Datapack Publicly Accessible
+translation.settings.datapacks.upload-form.button.add-ref,Add Reference
+translation.settings.datapacks.upload-form.button.more,More Options
+translation.settings.datapacks.upload-form.button.finish,Finish & Upload
+translation.settings.datapacks.upload-form.button.startover,Start Over
+translation.settings.datapacks.upload-form.reference,Reference
+translation.settings.datapacks.upload-form.contact,Contact
+translation.settings.datapacks.upload-form.contact-placeholder,Enter your contact information
+translation.settings.datapacks.upload-form.contact-helper-text,(OPTIONAL) If you would like others to contact you about this datapack
+translation.settings.datapacks.upload-form.notes,Notes
+translation.settings.datapacks.upload-form.notes-placeholder,Enter notes for the datapack here
+translation.settings.datapacks.upload-form.notes-helper-text,(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently
+translation.settings.datapacks.pdf-upload,PDF Upload
+translation.chart.no-chart-yet,You have not made a chart yet
+translation.chart.save,Save
+translation.dialogs.confirm-datapack-change.title,Confirm Datapack Selection Change
+translation.dialogs.confirm-datapack-change.message,You have unsaved changes! Do you want to save your changes?
+translation.dialogs.confirm-datapack-change.yes,Save
+translation.dialogs.confirm-datapack-change.no,Discard
+translation.dialogs.default-age.title,Use default age range?
+translation.dialogs.confirm-changes.message,Are you sure you want to discard your changes?
+translation.help.qsg.title,Quick Start Quide
+translation.help.qsg.content,Welcome to Time Scale Creator Online! In this Quick Start Guide, you will quickly learn about the functions of each tab on the Nav bar. Click the 'Start QSG' button to begin.
+translation.help.qsg.button,Start QSG
+translation.help.tour.title,Tour
+translation.help.tour.content.datapacks,In the datapacks tour you will explore the Datapacks page in depth. Click the button to start your tour!
+translation.help.tour.content.settings,In the settings tour you will explore the Settings page in depth. Click the button to start your tour!
+translation.help.tour.button.datapacks,Start Datapacks Tour
+translation.help.tour.button.settings,Start Settings Tour
+translation.help.license,Software License
+translation.help.file-format-info.title,File Format Info
+translation.help.file-format-info.link,View File Format Info
+translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.
+translation.errors.SERVER_RESPONSE_ERROR,Server response error. Please try again later.
+translation.errors.INVALID_DATAPACK_INFO,Invalid datapack info received from server. Please try again later.
+translation.errors.INVALID_PRESET_INFO,Invalid preset info received from server. Please try again later.
+translation.errors.INVALID_PATTERN_INFO,Invalid pattern info received from server. Please try again later.
+translation.errors.INVALID_TIME_SCALE,Invalid time scale received from server. Please try again later.
+translation.errors.INVALID_DATAPACK_CONFIG,Datapacks were not properly set. Please try again later.
+translation.errors.INVALID_SVG_READY_RESPONSE,Invalid SVG ready response received from server. Please try again later.
+translation.errors.INVALID_SETTINGS_RESPONSE,Invalid settings response received from server. Please try again later.
+translation.errors.INVALID_CHART_RESPONSE,Invalid chart response received from server. Please try again later.
+translation.errors.INVALID_PATH,The requested path was invalid. Please ensure the path is correct.
+translation.errors.INVALID_DATAPACK_UPLOAD,Invalid datapack upload.
+translation.errors.INVALID_DATAPACK_PHYLUM,Invalid treatise datapack phylum provided.
+translation.errors.REGULAR_USER_UPLOAD_DATAPACK_TOO_LARGE,Uploaded datapack is over 3000 characters.
+translation.errors.INVALID_USER_DATAPACKS,Invalid user datapacks received from server. Please try again later.
+translation.errors.INVALID_PUBLIC_DATAPACKS,Invalid public datapacks received from server. Please try again later.
+translation.errors.NO_DATAPACK_FILE_FOUND,No datapack file found. Please upload a datapack file first.
+translation.errors.DATAPACK_FILE_NAME_TOO_LONG,Datapack file name is too long. Please shorten the file name.
+translation.errors.UNRECOGNIZED_DATAPACK_EXTENSION,Unrecognized datapack extension. File must be of type .dpk, .mdpk, .map, .txt. Please upload a valid datapack file.
+translation.errors.UNRECOGNIZED_DATAPACK_FILE,Unrecognized datapack file. Please upload a valid datapack file.
+translation.errors.UNFINISHED_DATAPACK_UPLOAD_FORM,Please finish the datapack upload form before attempting to upload the file.
+translation.errors.DATAPACK_ALREADY_EXISTS,Datapack already exists. Please upload a datapack with a unique title.
+translation.errors.NO_DATAPACKS_SELECTED,No datapacks selected. Please select at least one datapack to generate.
+translation.errors.NO_COLUMNS_SELECTED,No columns selected. Please select at least one column to generate.
+translation.errors.IS_BAD_RANGE,Base age must be greater than the top age.
+translation.errors.INVALID_MAPPACK_INFO,Invalid mappack info received from server. Please try again later.
+translation.errors.UNABLE_TO_LOGIN_SERVER,Unable to login due to server error. Please try again later.
+translation.errors.UNABLE_TO_LOGIN_GOOGLE_CREDENTIAL,Unable to login with Google credentials. Please try again.
+translation.errors.UNABLE_TO_LOGIN_USERNAME_OR_PASSWORD,Invalid username or password. Please try again.
+translation.errors.UNABLE_TO_LOGIN_EXISTING_USER,User with that email already exists. Please log in or sign up with a different email.
+translation.errors.UNABLE_TO_LOGOUT,Unable to logout. Please try again later.
+translation.errors.UNABLE_TO_SIGNUP_SERVER,Unable to sign up due to server error. Please try again later.
+translation.errors.UNABLE_TO_SIGNUP_USERNAME_OR_EMAIL,Email or username already exists. Please try again with a different email or username.
+translation.errors.INVALID_FORM,Invalid form. Please ensure all fields are filled out correctly.
+translation.errors.UNABLE_TO_VERIFY_ACCOUNT,Your email is not verified. Please verify your email first. If you did not receive an email, please resend.
+translation.errors.ALREADY_VERIFIED_ACCOUNT,Account is already verified. Please log in.
+translation.errors.UNABLE_TO_VERIFY_ACCOUNT_SERVER,Unable to verify account due to server error. Please try again later.
+translation.errors.TOKEN_EXPIRED_OR_INVALID,Your token is either invalid or has expired. Please request a new verification email.
+translation.errors.UNABLE_TO_SEND_EMAIL,Unable to send email. Please try again later.
+translation.errors.UNABLE_TO_RESET_PASSWORD,Unable to reset password. Please try again later.
+translation.errors.UNABLE_TO_RESET_EMAIL,Unable to reset email. Please try again later.
+translation.errors.UNABLE_TO_LOGIN_ACCOUNT_LOCKED,Your account has been locked. Please check your email for more information or contact support.
+translation.errors.UNABLE_TO_RECOVER_ACCOUNT,Unable to recover account. Please contact support for more information.
+translation.errors.NOT_LOGGED_IN,Please log in to access this feature.
+translation.errors.USER_DATAPACK_FILE_NOT_FOUND_FOR_DOWNLOAD,The datapack requested was not found on the server. Please try again later or contact our support team.
+translation.errors.INCORRECT_ENCRYPTION_HEADER,Unable to encrypt the file, please try again later.
+translation.errors.TOO_MANY_REQUESTS,You have made too many requests. Please try again later.
+translation.errors.RECAPTCHA_FAILED,Recaptcha failed. Please try again.
+translation.errors.COOKIE_REJECTED,You must accept cookies to sign in.
+translation.errors.UNRECOGNIZED_IMAGE_FILE,Unrecognized image extension. Please upload a valid image file.
+translation.errors.UPLOAD_PROFILE_PICTURE_FAILED,Unable to upload profile picture. Please try again later.
+translation.errors.UNABLE_TO_CHANGE_USERNAME,Unable to change username. Please try again later.
+translation.errors.UNABLE_TO_DELETE_PROFILE,Unable to delete profile. Please try again later.
+translation.errors.INCORRECT_PASSWORD,Incorrect password. Please try again.
+translation.errors.USERNAME_TAKEN,Username is already taken. Please try a different username.
+translation.errors.UNABLE_TO_READ_FILE_OR_EMPTY_FILE,Unable to read file or file is empty. Please try again.
+translation.errors.FETCH_USERS_FAILED,Unable to fetch users for admin display. Please try again later.
+translation.errors.ADMIN_ADD_USER_FAILED,Unable to add user. Please try again later.
+translation.errors.SERVER_TIMEOUT,Server timed out. Please try again later.
+translation.errors.SERVER_BUSY,Server is too busy. Please try again later.
+translation.errors.ADMIN_DELETE_USER_FAILED,Unable to delete user. Please try again later.
+translation.errors.UNABLE_TO_FETCH_DATAPACKS,Unable to fetch datapacks. Please try again later.
+translation.errors.UNABLE_TO_FETCH_USER_DATAPACKS,Unable to fetch user datapacks. Please try again later.
+translation.errors.CANNOT_DELETE_ROOT_USER,Cannot delete root user.
+translation.errors.ADMIN_DELETE_USER_DATAPACK_FAILED,Unable to delete user datapack. Please try again later.
+translation.errors.ADMIN_MODIFY_USER_FAILED,Unable to modify user. Please try again later.
+translation.errors.ADMIN_DELETE_SERVER_DATAPACK_FAILED,Unable to delete server datapack. Please try again later.
+translation.errors.ADMIN_CANNOT_DELETE_ROOT_DATAPACK,Cannot delete root datapack. Ask server admin for assistance.
+translation.errors.INVALID_SERVER_DATAPACK_REQUEST,Invalid server datapack request. Please try again later.
+translation.errors.SERVER_FILE_METADATA_ERROR,Server file metadata error. Please try again later.
+translation.errors.USER_DELETE_DATAPACK_FAILED,Unable to delete user datapack. Please try again later.
+translation.errors.UNABLE_TO_PROCESS_DATAPACK_CONFIG,Failed to process datapack config. Please try again later.
+translation.errors.INVALID_SETTINGS,Invalid settings. Please try again.
+translation.errors.INTERNAL_ERROR,There was an internal error while generating the chart. Please try again later.
+translation.errors.ADMIN_ADD_USERS_TO_WORKSHOP_FAILED,Unable to add users to workshop. Please try again later.
+translation.errors.ADMIN_EMAIL_INVALID,Invalid email. Please fix the email and try again.
+translation.errors.ADMIN_WORKSHOP_FIELDS_EMPTY,You must provide at least one field to add users to a workshop.
+translation.errors.UNRECOGNIZED_EXCEL_FILE,Unrecognized Excel file. Please upload a valid Excel file.
+translation.errors.SERVER_DATAPACK_ALREADY_EXISTS,Server datapack already exists. Please upload a unique datapack (different title).
+translation.errors.ADMIN_WORKSHOP_START_AFTER_END,The start date must be before the end date.
+translation.errors.ADMIN_CREATE_WORKSHOP_FAILED,Unable to create workshop. Please try again later.
+translation.errors.ADMIN_WORKSHOP_ALREADY_EXISTS,Workshop with that title and dates already exists. Please try again.
+translation.errors.FETCH_WORKSHOPS_FAILED,Unable to fetch workshops. Please try again later.
+translation.errors.ADMIN_DELETE_WORKSHOP_FAILED,Unable to delete workshop. Please try again later.
+translation.errors.ADMIN_WORKSHOP_NOT_FOUND,Workshop not found on server, it has likely ended or been deleted.
+translation.errors.ADMIN_WORKSHOP_EDIT_FAILED,Unable to edit workshop. Please try again later.
+translation.errors.USER_EDIT_DATAPACK_FAILED,Failed to edit user datapack. Please try again later.
+translation.errors.USER_FETCH_DATAPACK_FAILED,Failed to fetch user datapack. Please try again later.
+translation.errors.USER_REPLACE_DATAPACK_FILE_FAILED,Failed to replace user datapack file. Please try again later.
+translation.errors.USER_REPLACE_DATAPACK_PROFILE_IMAGE_FAILED,Failed to replace user datapack profile image. Please try again later.
+translation.errors.DATAPACK_TITLE_LEADING_TRAILING_WHITESPACE,Datapack title cannot have leading or trailing whitespace.
+translation.errors.ADMIN_FETCH_PRIVATE_DATAPACKS_FAILED,Failed to fetch private datapacks. Please try again later.
+translation.errors.ADMIN_PRIORITY_BATCH_UPDATE_FAILED,Failed to update datapack priorities. Please contact a server admin for assistance.
+translation.errors.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED,Failed to add official datapack to workshop. Please try again later.
+translation.errors.ADMIN_SERVER_DATAPACK_ALREADY_EXISTS,Server datapack already exists in workshop. Please choose a different datapack.
+translation.errors.ADMIN_WORKSHOP_ENDED,Workshop has ended. You can no longer edit or add datapacks to it.
+translation.errors.WORKSHOP_FETCH_DATAPACK_FAILED,Failed to fetch workshop datapacks. Please try again later.
+translation.errors.METADATA_NOT_FOUND,Metadata not found. Please try again later.
+translation.errors.INVALID_CROSSPLOT_CONVERSION,Invalid crossplot conversion. Please select a valid chart for the Y Axis.
+translation.errors.INVALID_CROSSPLOT_UNITS,Please select a different unit for the Y Axis. This unit cannot be converted.
+translation.errors.CROSSPLOT_CONVERSION_FAILED,Crossplot conversion failed. Please try again later.
+translation.errors.NO_MODELS,At least 2 models are required for conversion. Please add a model by clicking the chart in the main view.
+translation.errors.CROSSPLOT_SETTINGS_MISMATCH,Crossplot settings mismatch. Please generate the crossplot with your most recent changes.
+translation.errors.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED,Failed to add files to workshop
+translation.errors.ADMIN_ADD_COVER_TO_WORKSHOP_FAILED,Failed to add cover to workshop
+translation.errors.INVALID_FILE_FORMAT,Invalid file format.
+translation.errors.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD,The workshop file requested was not found on the server. Please try again later or contact our support team.
+translation.errors.WORKSHOP_FILE_DOWNLOAD_NOT_AUTHORIZED,Please register for the workshop to download the file.
+translation.errors.INVALID_DATAPACK_HASH,Invalid treatise datapack hash provided.
+translation.errors.USER_FETCH_HISTORY_FAILED,Failed to fetch user history. Please try again later.
+translation.errors.USER_DELETE_HISTORY_FAILED,Failed to delete user history. Please try again later
+translation.errors.USER_FETCH_HISTORY_METADATA_FAILED,Failed to fetch user history metadata. Please try again later
+translation.errors.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING,This chart entry couldn&apos;t be loaded due to missing files and has been removed from your history.
+translation.errors.title,Error
+translation.errors.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD,The workshop file requested was not found on the server. Please try again later or contact our support team.
+translation.errors.LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK,Please login to upload and customize this datapack further.
+translation.button.generate,Generate
+translation.button.generate-chart,Generate Chart
+translation.button.remove-cache,Remove Cache
+translation.button.confirm-selection,Confirm Selection
+translation.button.generate-cross-plot,Generate Cross Plot
+translation.yes,Yes
+translation.no,No
+translation.languageNames.en-US,English
+translation.languageNames.en,English
+translation.languageNames.zh,中文
+translation.tours.quit,Quit Tour
+translation.tours.finish,Finish Tour
+translation.tours.next,Next
+translation.tours.back,Back
+translation.tours.qsg.step1,In the Presets page, we offer pre-configured settings that allow you to rapidly generate specific types of charts without configuring all options from the beginning. Each preset comes equipped with designated data packs, visual styles, and settings, enabling you to create charts with just a single click.
+translation.tours.qsg.step2,In the Datapacks page, you can select the datapacks required to generate your charts. We offer nine official data packs, each containing a curated collection of datasets tailored for specific thematic explorations. For more detailed guidance on Datapacks, please refer to the Datapacks Tour under the "Tours" section
+translation.tours.qsg.step3,In the Chart page, you can view the charts you have created and explore the detailed visualizations of geologic events. Additionally, you have the option to download and save these charts for your reference or further analysis.
+translation.tours.qsg.step4,In the Settings page, you can customize all aspects of your charts. This includes adjusting the scale and time range, selecting which rows to display, setting the background color and font style, etc. Tailor your charts to meet your specific needs and preferences to optimize your visual analysis. For more detailed guidance on Settings, please refer to the Settings Tour under the "Tours" section
+translation.tours.qsg.step5,In the Help Page, you can find detailed assistance and information on how to use the website.
+translation.tours.qsg.step6,In the Workshops Page, you can access a range of educational and experimental tutorials that offer in-depth guidance. Here, you can explore the workshops you have registered for, allowing you to engage with the content and enhance your skills in a hands-on learning environment.
+translation.tours.qsg.step7,The About Page provides information about our development team.
+translation.tours.qsg.step8,Click here to sign in and unlock the features mentioned earlier, such as accessing registered workshops. Once logged in, you will also have the ability to upload datapacks and take full advantage of all functionalities.
+translation.tours.datapack.step1,Switch between different display types for datapacks: rows, cards, or compact view.
+translation.tours.datapack.step2,Add a datapack by clicking the checkbox
+translation.tours.datapack.step3,Click the deselect icon to deselect all datapacks
+translation.tours.datapack.step4,Remember to confirm your selection
+translation.tours.settings.step1,In the Time settings, you can Set the "Top of Interval" and "Base of Interval" for your data. These fields allow you to define the starting and ending ages or stages, which can be adjusted by entering values or using the dropdown selectors. Adjust the vertical scale to change how much vertical space each million years occupies on your charts. For example, setting it higher will spread the intervals further apart, making each period easier to examine closely.
+translation.tours.settings.step2,In the Preferences settings, you can customize the display options. For instance, you may choose to gray out columns with no data for selected time periods, add tooltips for additional information, or enable filtering and legend options for charts. Furthermore, you can load your settings from a file or save your current settings to a file. This feature is useful for backing up your configurations, sharing them with others, or quickly applying previously saved configurations to your chart.
+translation.tours.settings.step3,In Column Settings, you can deeply customize the appearance and organization of your charts.In the "Column Customization" area, you can adjust titles and shift row positions to streamline how data is displayed on your charts. Enable or disable specific elements like the chart title and Ma markers to suit your presentation needs. In the "Font Options" section, refine the appearance of your charts by choosing different fonts, sizes, and styles for headers and labels, ensuring important data stands out or meets formatting requirements. Please note that the advanced settings for columns can vary depending on the datapack you are working with, allowing for tailored configurations that best fit the data characteristics.
+translation.tours.settings.step4,In the Search Settings, you can quickly locate specific columns by entering keywords and then directly add them to your chart. Simply enter a term related to the setting you are looking for, and the system will display all relevant results.This feature is particularly useful when managing numerous data points or when you need to make quick adjustments without browsing through extensive lists.
+translation.tours.settings.step5,The Font Settings section allows you to customize the appearance of text within your charts. You can adjust font styles, sizes, and formatting for various elements such as column headers, age labels, and more. Each setting is inheritable, ensuring consistency across related elements unless specified otherwise. Changing a font setting here applies it system-wide, but you can override these for individual columns by using the "Change Font" option within each columns settings.Experiment with different fonts and sizes to enhance readability and visual appeal of your charts.
+translation.tours.settings.step6,In the Map Points Settings, you can access and manage geographic data points for different locations. This feature allows you to view specific location details directly on the interactive map. You can toggle different map layers and visualize data points with detailed descriptions, like latitude, longitude, and additional notes. Please note, however, that not all datapacks contain map points.
+translation.tours.settings.step7,In the Datapacks Settings, you can select the datapacks you wish to use for generating charts. We offer nine official datapacks, each comprising a curated collection of datasets tailored for specific thematic explorations. You might notice that this page resembles the Datapack page; selections can be configured here or there interchangeably. For more detailed guidance on how to utilize datapacks, please refer to the Datapacks Tour in the Help page "Tours" section.

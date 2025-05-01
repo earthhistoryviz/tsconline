@@ -38,6 +38,7 @@ import i18n from "../i18n";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
+import { ReportBug } from "./ReportBug";
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
@@ -167,6 +168,7 @@ export default observer(function App() {
               <Route path="/file-format-info" element={<FileFormatInfo />} />
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
               <Route path="/crossplot" element={<CrossPlotChart />} />
+              <Route path="/report-bug" element={<ReportBug />} />
             </Routes>
             {Array.from(state.errors.errorAlerts.entries())
               .reverse()
