@@ -17,7 +17,16 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          
+      - name: Install Dependencies
+        run: yarn install
 
+      - name: Build Scripts
+        run: yarn build
+
+      - name: Check that all keys have an English translation
+        working-directory: server
+        run: yarn check-keys-have-eng-translations
       - name: Fetch master
         run: git fetch origin main:main
 
@@ -34,11 +43,6 @@ jobs:
           if ! diff -u master_translations.csv current_translations.csv; then
             echo "::warning file=en.json::en.json differs from en.csv on main"
             # Uncomment to fail instead of warn:
-            # exit 1
+            exit 1
           fi
-      - name: Install Dependencies
-        run: yarn install
-        
-      - name: Check that all keys have an English translation
-        working-directory: server
-        run: yarn check-keys-have-eng-translations
+      
