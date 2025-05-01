@@ -1,4 +1,4 @@
-name: Verify Translations
+name: Translations Pipeline
 
 on:
   push:
@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  compare-json-csv:
+  verify-translations:
     runs-on: ubuntu-latest
 
     steps:
