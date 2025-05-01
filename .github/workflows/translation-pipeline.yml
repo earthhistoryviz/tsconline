@@ -36,3 +36,8 @@ jobs:
             # Uncomment to fail instead of warn:
             # exit 1
           fi
+
+      - name: Check that all keys have an English translation
+        working-directory: server
+        run: yarn check-keys-have-eng-translations
+

@@ -1,7 +1,13 @@
 import { readFileSync } from "fs";
 import path from "path";
 
-checkKeysExistInEnglish();
+if (!checkKeysExistInEnglish()) {
+  console.error("❌ Some keys are missing English translations.");
+  process.exit(1); // Fail the action
+} else {
+  console.log("✅ All keys have English translations.");
+  process.exit(0);
+}
 
 // Check that all keys have an English translation
 // i.e. throw an error if there are keys in other languages that are not in the English translation
