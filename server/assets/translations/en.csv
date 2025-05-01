@@ -109,9 +109,11 @@ translation.workshops.details-page.datapacks,Datapacks
 translation.workshops.details-page.files,Files
 translation.workshops.details-page.download-button,Download Files
 translation.workshops.details-page.description,Description
+translation.workshops.details-page.register-button,Register
+translation.workshops.details-page.registered-button,Registered
+translation.workshops.details-page.download-tooltip-not-registered,Contact jogg@purdue.edu to register!
 translation.workshops.details-page.messages.no-datapacks,No datapacks available
 translation.workshops.details-page.messages.no-files,No files available
-translation.workshops.details-page.download-tooltip-not-registered,Contact jogg@purdue.edu to register!
 translation.workshops.calendar.switchLabel,Toggle calendar
 translation.workshops.calendar.month,Month
 translation.workshops.calendar.week,Week
@@ -235,6 +237,7 @@ translation.settings.column.menu.alphabetical,Alphabetical
 translation.settings.column.menu.ruler.title,Age Ruler Justification
 translation.settings.column.menu.ruler.left,Left
 translation.settings.column.menu.ruler.right,Right
+translation.settings.column.create-custom-column-button,Create Custom Column
 translation.settings.column.font-menu.change,Change Font
 translation.settings.column.font-menu.additional,Additional fonts for child columns
 translation.settings.column.datamining-menu.title,Data Mining Settings
@@ -273,6 +276,13 @@ translation.settings.column.overlay-menu.overlay-column-preposition,On
 translation.settings.column.overlay-menu.overlay-accordion-caption,*Grayed out columns are disabled for Overlay (not Event or Point column)
 translation.settings.column.overlay-menu.invalid-column-mouseover,Not an Event or Point Column
 translation.settings.column.overlay-menu.column-not-selected,Select Column from Menu
+translation.settings.column.add-custom-column-menu.base-column-header,Select a Base Column
+translation.settings.column.add-custom-column-menu.type-column-header,Select a Type Column
+translation.settings.column.add-custom-column-menu.customize-column-header,Customize Column
+translation.settings.column.add-custom-column-menu.data-mining-description,Calculates statistical metrics (such as minimum, maximum, average, and rate of change) for a given point column over sliding windows of data.
+translation.settings.column.add-custom-column-menu.dual-column-comparison-description,Overlays multiple columns of data to visually compare their trends, patterns, or values side-by-side.
+translation.settings.column.add-custom-column-menu.select-base-column,Please Select a Point or Event Column
+translation.settings.column.add-custom-column-menu.create-column,Create Column
 translation.settings.search.search-bar,Search
 translation.settings.search.found-result,Found {{count}} Results
 translation.settings.search.current-time-settings,Current Time Settings(Top / Base)
@@ -341,6 +351,24 @@ translation.help.tour.button.settings,Start Settings Tour
 translation.help.license,Software License
 translation.help.file-format-info.title,File Format Info
 translation.help.file-format-info.link,View File Format Info
+translation.report-bug.title,Report a Bug
+translation.report-bug.subtitle,Thank you for helping us improve our product! Please provide the details below to help us better understand the issue and resolve it as quickly as possible.
+translation.report-bug.name,Name/ID
+translation.report-bug.name-placeholder,Bug Title
+translation.report-bug.helper-text,This field is required.
+translation.report-bug.description,Please briefly describe the bug or issue you encountered.
+translation.report-bug.description-placeholder,Bug Description
+translation.report-bug.attached,Attached
+translation.report-bug.send,Send
+translation.report-bug.attach-files,Attach Files
+translation.report-bug.thank-you,Thank you for your feedback! We appreciate your help
+translation.report-bug.redirect,You will be redirected to the homepage in
+translation.report-bug.not-redirect,If you are not redirected,
+translation.report-bug.click-here,click here
+translation.report-bug.return-to-homepage,to return to the homepage.
+translation.report-bug.second,second
+translation.report-bug.loading-header,Sending your report...
+translation.report-bug.loading-subheader,Please wait while we process your report.
 translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.
 translation.errors.SERVER_RESPONSE_ERROR,Server response error. Please try again later.
 translation.errors.INVALID_DATAPACK_INFO,Invalid datapack info received from server. Please try again later.
@@ -457,6 +485,7 @@ translation.errors.USER_FETCH_HISTORY_FAILED_DATAPACKS_MISSING,This chart entry 
 translation.errors.title,Error
 translation.errors.USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD,The workshop file requested was not found on the server. Please try again later or contact our support team.
 translation.errors.LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK,Please login to upload and customize this datapack further.
+translation.errors.USER_SUBMIT_BUG_REPORT_FAILED,Something went wrong while submitting the bug report.
 translation.button.generate,Generate
 translation.button.generate-chart,Generate Chart
 translation.button.remove-cache,Remove Cache
