@@ -1,4 +1,4 @@
-name: Check translation JSON vs CSV
+name: Verify Translations
 
 on:
   push:
@@ -17,32 +17,10 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Install Dependencies
         run: yarn install
 
-      - name: Build Scripts
-        run: yarn build
-
-      - name: Check that all keys have an English translation
+      - name: Verify Translations
         working-directory: server
-        run: yarn check-keys-have-eng-translations
-      - name: Fetch master
-        run: git fetch origin main:main
-
-      - name: Extract CSV from main
-        run: |
-          git show origin/main:server/assets/translations/en.csv > master_translations.csv
-
-      - name: Convert en.json to CSV format
-        run: |
-          jq -r 'to_entries | map("\(.key),\(.value)") | .[]' shared/translations/en.json > current_translations.csv
-
-      - name: Compare converted JSON to master CSV
-        run: |
-          if ! diff -u master_translations.csv current_translations.csv; then
-            echo "::warning file=en.json::en.json differs from en.csv on main"
-            # Uncomment to fail instead of warn:
-            exit 1
-          fi
-      
+        run: yarn build && yarn verify-translations

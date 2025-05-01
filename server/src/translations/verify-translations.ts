@@ -1,17 +1,63 @@
 import { readFileSync } from "fs";
+import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 
 if (!checkKeysExistInEnglish()) {
   console.error("❌ Some keys are missing English translations.");
   process.exit(1); // Fail the action
+} else if (!(await checkTranslationSync())) {
+  console.error("❌ Translation JSON and CSV are not equivalent.");
+  process.exit(1);
 } else {
-  console.log("✅ All keys have English translations.");
+  console.log("✅ verified translations.");
   process.exit(0);
+}
+
+//check that static JSON and translation CSV are equivalent
+//i.e. have same keys and same translations
+async function checkTranslationSync() {
+  try {
+    // Load the current asset config:
+    await loadAssetConfigs();
+  } catch (e) {
+    console.error("Error loading configs: ", e);
+    process.exit(1);
+  }
+
+  const availLangJSON = path.join("..", "shared", "translations", "available-languages.json");
+  const availLang = JSON.parse(readFileSync(availLangJSON, "utf-8"));
+  for (const lang in availLang) {
+    const currLang = availLang[lang];
+    const staticTranslationJson = path.join("..", "shared", "translations", `${currLang}.json`);
+    const translationCSV = path.join(assetconfigs.translationsDirectory, `${currLang}.csv`);
+
+    const data = readFileSync(staticTranslationJson, "utf-8");
+    const flattened = flattenJson(JSON.parse(data));
+    const jsonData = flattened.map(([key, value]) => `${key},${value}`).join("\n");
+
+    const csvData = readFileSync(translationCSV, "utf-8");
+    if (jsonData !== csvData) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function flattenJson(obj: Record<string, string>, parentKey = "", result: [string, string][] = []): [string, string][] {
+  for (const [key, value] of Object.entries(obj)) {
+    const newKey = parentKey ? `${parentKey}.${key}` : key;
+    if (typeof value === "object" && value !== null) {
+      flattenJson(value, newKey, result);
+    } else {
+      result.push([newKey, String(value)]);
+    }
+  }
+  return result;
 }
 
 // Check that all keys have an English translation
 // i.e. throw an error if there are keys in other languages that are not in the English translation
-export async function checkKeysExistInEnglish() {
+function checkKeysExistInEnglish() {
   const staticTranslationJson = path.join("..", "shared", "translations", "en.json");
   const engData = JSON.parse(readFileSync(staticTranslationJson, "utf-8"));
   const availLang = JSON.parse(

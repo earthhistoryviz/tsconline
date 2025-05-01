@@ -39,7 +39,7 @@ async function checkPrematureChange() {
   const JSONtoCSV = flattened.map(([key, value]) => `${key},${value}`).join("\n");
   const csvData = readFileSync(translationCSV, "utf-8");
   if (JSONtoCSV !== csvData) {
-    console.log("For translations, JSON not equal to CSV, any changes made to JSON will be discarded!!!");
-    console.log("To make changes to translations, run yarn modify-translations in server directory");
+    console.warn("For translations, JSON not equal to CSV, any changes made to JSON will be discarded!!!");
+    console.warn("To make changes to translations, run yarn modify-translations in server directory");
   }
 }
