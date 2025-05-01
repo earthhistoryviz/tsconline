@@ -19,8 +19,8 @@ jobs:
           fetch-depth: 0
 
       - name: Install Dependencies
-        run: yarn install
+        run: yarn install && yarn build
 
       - name: Verify Translations
         working-directory: server
-        run: yarn build && yarn verify-translations
+        run: yarn verify-translations
