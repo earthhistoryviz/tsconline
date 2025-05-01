@@ -37,7 +37,7 @@ async function checkTranslationSync() {
 
     const csvData = readFileSync(translationCSV, "utf-8");
     if (jsonData !== csvData) {
-      console.log(csvData)
+      console.log(csvData);
       return false;
     }
   }
