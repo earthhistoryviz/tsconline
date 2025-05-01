@@ -23,7 +23,7 @@ jobs:
 
       - name: Extract CSV from main
         run: |
-          git show origin/main:server/translations/en.csv > master_translations.csv
+          git show origin/main:server/assets/translations/en.csv > master_translations.csv
 
       - name: Convert en.json to CSV format
         run: |
@@ -40,4 +40,3 @@ jobs:
       - name: Check that all keys have an English translation
         working-directory: server
         run: yarn check-keys-have-eng-translations
-
