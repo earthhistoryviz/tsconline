@@ -1,4 +1,4 @@
-// If en is changed without a dev JSON existing, throw a warning (i.e. check if en JSON has keys that CSV doesn’t)
+// If en is changed without a dev JSON existing, throw a warning (i.e. check if en JSON is different from CSV)
 // this is for the case where the developer changes the static translation file (before using modify-translations).
 // This will cause any added translations to disappear.
 
@@ -8,7 +8,7 @@ import path from "path";
 
 checkPrematureChange();
 
-export async function checkPrematureChange() {
+async function checkPrematureChange() {
   try {
     // Load the current asset config:
     await loadAssetConfigs();

@@ -22,10 +22,10 @@ async function createJsonTranslations() {
     const csvToJson = JSON.stringify(csvToNestedJson(csvData), null, 4);
     writeFileSync(staticTranslationJson, csvToJson);
   }
+  console.log("Successfully created translation JSON from CSV");
 }
 
-type JSONLeaf = string;
-type JSONValue = JSONLeaf | JSONObject;
+type JSONValue = string | JSONObject;
 interface JSONObject {
   [key: string]: JSONValue;
 }
@@ -39,7 +39,7 @@ function csvToNestedJson(csv: string): JSONObject {
     if (!rawKey || rawValueParts.length === 0) continue;
 
     const keyPath = rawKey.trim().split(".");
-    const value: JSONLeaf = rawValueParts.join(",").trim().replace(/^"|"$/g, "");
+    const value: JSONValue = rawValueParts.join(",").trim().replace(/^"|"$/g, "");
 
     let current: JSONObject = result;
     for (let i = 0; i < keyPath.length; i++) {
