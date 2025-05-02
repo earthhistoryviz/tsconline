@@ -192,3 +192,24 @@
 .history-entry-summary-delete-button {
   display: none;
 }
+
+.timeline-line {
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  width: 2px;
+  height: calc(100% + 10px);
+  background-color: gray;
+  z-index: 1;
+}
+
+.timeline-dot {
+  margin-top: 8px;
+  width: 10px;
+  height: 10px;
+  background-color: gray;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  margin-right: 12px;
+}

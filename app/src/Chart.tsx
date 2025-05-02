@@ -462,31 +462,8 @@ type TimelineItemProps = {
 const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }) => {
   return (
     <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", paddingBottom: "10px" }}>
-      <Box
-        sx={{
-          marginTop: "8px",
-          width: "10px",
-          height: "10px",
-          backgroundColor: "gray",
-          borderRadius: "50%",
-          position: "relative",
-          zIndex: 2,
-          marginRight: "12px"
-        }}
-      />
-      {!isLast && (
-        <Box
-          sx={{
-            position: "absolute",
-            top: "8px",
-            left: "4px",
-            width: "2px",
-            height: "calc(100% + 10px)",
-            backgroundColor: "gray",
-            zIndex: 1
-          }}
-        />
-      )}
+      <Box className="timeline-dot" />
+      {!isLast && <Box className="timeline-line" />}
       <div style={{ paddingTop: "2px", paddingLeft: "15px" }}>
         <Typography>{title}</Typography>
         <Typography variant="caption" color="textSecondary">
