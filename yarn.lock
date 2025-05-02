@@ -2310,7 +2310,9 @@ __metadata:
     lottie-web: "npm:^5.12.2"
     material-ui-popup-state: "npm:^5.3.1"
     mobx: "npm:^6.8.0"
+    mobx-devtools-mst: "npm:^0.9.46"
     mobx-react-lite: "npm:^3.4.0"
+    mobx-state-tree: "npm:^7.0.2"
     node-fetch: "npm:^3.3.0"
     react: "npm:^18.2.0"
     react-big-calendar: "npm:^1.17.1"
@@ -8522,6 +8524,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"mobx-devtools-mst@npm:^0.9.46":
+  version: 0.9.46
+  resolution: "mobx-devtools-mst@npm:0.9.46"
+  peerDependencies:
+    mobx: ^2.2.0 || ^3.0.0 || ^4.0.0 || ^5.0.0 || ^6.0.0
+    mobx-state-tree: "*"
+  checksum: 128e1af62993ef0d194932dccaae0edb850da13699e7c1ba9fe3e1f195bcee8f1370f691b72be153f2f47fbf28cbcc64bbed827b00aa5db6a60bd55bc9ff504c
+  languageName: node
+  linkType: hard
+
 "mobx-react-lite@npm:^3.4.0":
   version: 3.4.3
   resolution: "mobx-react-lite@npm:3.4.3"
@@ -8534,6 +8546,17 @@ __metadata:
     react-native:
       optional: true
   checksum: 768ada82ab181330cf57562552c591065c57e59378cafe1a9d100660b1acf5d73fe9f5eeea8ea7b2adc5a87dd322bc1e119d853474c51e032021deef967b07e4
+  languageName: node
+  linkType: hard
+
+"mobx-state-tree@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "mobx-state-tree@npm:7.0.2"
+  dependencies:
+    ts-essentials: "npm:^9.4.1"
+  peerDependencies:
+    mobx: ^6.3.0
+  checksum: 6fd5a4507c276471a6b9e1deb2b52bcd548256de123ca0af5afc657266620535f108472bb80efae631501820038e4877898b21a5abba3a2a671caa90ec6fbd78
   languageName: node
   linkType: hard
 
@@ -11618,6 +11641,18 @@ __metadata:
   peerDependencies:
     typescript: ">=4.2.0"
   checksum: 3ee44faa24410cd649b5c864e068d438aa437ef64e9e4a66a41646a6d3024d3097a695eeb3fb26ee364705d3cb9653a65756d009e6a53badb6066a5f447bf7ed
+  languageName: node
+  linkType: hard
+
+"ts-essentials@npm:^9.4.1":
+  version: 9.4.2
+  resolution: "ts-essentials@npm:9.4.2"
+  peerDependencies:
+    typescript: ">=4.1.0"
+  peerDependenciesMeta:
+    typescript:
+      optional: true
+  checksum: 235b9e86a86569085a414ddd10a7615a84ab127f946fed460b37c691798578f20b11541d3bba65cc8c12a25af81a9e3ba34f1ae4e41c12556725fa0766848cca
   languageName: node
   linkType: hard
 

@@ -40,6 +40,18 @@ import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from ".
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
+const settingsTabs = observable({
+  selected: "time" as SettingsTabs,
+  columns: undefined, // this will remain plain
+  columnHashMap: new Map<string, ColumnInfo>(),
+  columnSearchTerm: "",
+  datapackDisplayType: "compact" as const,
+  eventSearchTerm: "",
+  groupedEvents: []
+}, {
+  columns: false // ✅ properly disables wrapping
+});
+
 export type State = {
   chartTab: {
     chartTimelineLocked: boolean;
@@ -253,15 +265,7 @@ export const state = observable<State>({
     open: false,
     columnType: "Data Mining"
   },
-  settingsTabs: {
-    selected: "time",
-    columns: undefined,
-    columnHashMap: new Map<string, ColumnInfo>(),
-    columnSearchTerm: "",
-    datapackDisplayType: "compact",
-    eventSearchTerm: "",
-    groupedEvents: []
-  },
+  settingsTabs,
   mapState: {
     mapInfo: {},
     mapHierarchy: {},
@@ -335,10 +339,10 @@ reaction(
     adjustScaleOfModels(scale);
   }
 );
-reaction(
-  () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
-  () => {
-    if (state.chartTab.state.madeChart === false) return;
-    state.chartTab.state.matchesSettings = false;
-  }
-);
+// reaction(
+//   () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
+//   () => {
+//     if (state.chartTab.state.madeChart === false) return;
+//     state.chartTab.state.matchesSettings = false;
+//   }
+// );

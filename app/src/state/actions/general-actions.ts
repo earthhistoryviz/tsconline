@@ -1,4 +1,4 @@
-import { action, isObservable, observable, runInAction, toJS } from "mobx";
+import { action, isObservable, makeAutoObservable, observable, runInAction, toJS, trace } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,
@@ -661,15 +661,20 @@ export const setDatapackConfig = action(
   ): Promise<boolean> => {
     resetSettings();
     // throws warning if this isn't in its own action. may have other fix but left as is
-    await runInAction(async () => {
+    // runInAction(() => {
+    // trace(state.settingsTabs.columns);
+    console.time("column assign");
+    runInAction(() => {
       state.settingsTabs.columns = columnRoot;
-      state.settings.datapackContainsSuggAge = foundDefaultAge;
-      state.mapState.mapHierarchy = mapHierarchy;
-      state.mapState.mapInfo = mapInfo;
-      state.settingsTabs.columnHashMap = new Map();
-      state.config.datapacks = datapacks;
-      await initializeColumnHashMap(state.settingsTabs.columns);
     });
+    console.timeEnd("column assign");
+      // state.settings.datapackContainsSuggAge = foundDefaultAge;
+      // state.mapState.mapHierarchy = mapHierarchy;
+      // state.mapState.mapInfo = mapInfo;
+      // state.settingsTabs.columnHashMap = new Map();
+      // state.config.datapacks = datapacks;
+      // await initializeColumnHashMap(columnRoot);
+    // });
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
