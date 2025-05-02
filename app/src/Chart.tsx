@@ -34,7 +34,6 @@ import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
 import { formatDate, purifyChartContent } from "./state/non-action-util";
-import { motion } from "framer-motion";
 import { ChartHistoryMetadata } from "@tsconline/shared";
 import Color from "color";
 
@@ -363,31 +362,6 @@ const HistorySideBar: React.FC = observer(() => {
                 }}
               />
             );
-            // <ListItemButton
-            //   key={entry.timestamp}
-            //   onClick={async () => {
-            //     setLoading(true);
-            //     try {
-            //       await actions.loadUserHistory(entry.timestamp);
-            //       setDrawerOpen(false);
-            //     } finally {
-            //       setLoading(false);
-            //     }
-            //   }}>
-            //   <ListItemText primary={formatDate(entry.timestamp)} />
-            //   <IconButton
-            //     onClick={async (e) => {
-            //       e.stopPropagation();
-            //       setLoading(true);
-            //       try {
-            //         await actions.deleteUserHistory(entry.timestamp);
-            //       } finally {
-            //         setLoading(false);
-            //       }
-            //     }}>
-            //     <DeleteForeverIcon fontSize="small" />
-            //   </IconButton>
-            // </ListItemButton>
           })}
         </Box>
       </Drawer>
@@ -467,16 +441,14 @@ const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry, onClick, on
             Datapacks
           </Typography>
         </Box>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} layout>
-          {entry.datapacks.map((dp, index) => (
-            <TimelineItem
-              key={dp.title}
-              title={dp.title}
-              authoredBy={dp.authoredBy}
-              isLast={entry.datapacks.length - 1 === index}
-            />
-          ))}
-        </motion.div>
+        {entry.datapacks.map((dp, index) => (
+          <TimelineItem
+            key={dp.title}
+            title={dp.title}
+            authoredBy={dp.authoredBy}
+            isLast={entry.datapacks.length - 1 === index}
+          />
+        ))}
       </AccordionDetails>
     </Accordion>
   );
@@ -509,7 +481,7 @@ const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }
             top: "8px",
             left: "4px",
             width: "2px",
-            height: "100%",
+            height: "calc(100% + 10px)",
             backgroundColor: "gray",
             zIndex: 1
           }}
