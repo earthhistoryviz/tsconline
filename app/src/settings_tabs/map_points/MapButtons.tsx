@@ -21,6 +21,7 @@ import LocationOnSharpIcon from "@mui/icons-material/LocationOnSharp";
 import { devSafeUrl } from "../../util";
 import { BorderedIcon } from "../../components";
 import { checkIfDataIsInRange, willColumnBeVisibleOnChart } from "../../util/util";
+import { useColumnRerender } from "../../state/actions";
 
 const IconSize = 40;
 export const InfoIcon = NotListedLocationIcon;
@@ -91,6 +92,7 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
         )
       : false;
     const scaleButton = !isInfo && state.mapState.isFacies;
+    useColumnRerender();
 
     // below is the hook for grabbing the scale from map image scaling
     const [scale, setScale] = useState(1);

@@ -5,12 +5,15 @@ import { TextField, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
+import { useColumnRerender } from "../../state/actions";
+import { debounce } from "lodash";
 
 export const EditNameField: React.FC<{
   column: ColumnInfo;
 }> = observer(({ column }) => {
   const { actions } = useContext(context);
   const { t } = useTranslation();
+  useColumnRerender();
   return (
     <div>
       <Typography id="edit-name-text">{t("settings.column.menu.edit-name")}</Typography>

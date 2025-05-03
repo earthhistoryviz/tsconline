@@ -52,6 +52,7 @@ import {
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
+import { t } from "i18next";
 
 /**
  * Call this function in any component that needs to rerender when the columns change.
@@ -63,9 +64,9 @@ export function useColumnRerender() {
 /**
  * Call this function to trigger a rerender of the columns.
  */
-export function triggerColumnRerender() {
+export const triggerColumnRerender = action("triggerColumnRerender", () => {
   state.settingsTabs.columnsVersion++;
-}
+});
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -494,7 +495,7 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
   const counter = { count: 0 };
 
   while (stack.length > 0) {
-    await yieldControl(counter, 30);
+    await yieldControl(counter, 20);
     const current = stack.pop()!;
     tempMap.set(current.name, current);
     for (const child of current.children) {
@@ -532,9 +533,13 @@ export const toggleSettingsTabColumn = action(
 
     column.on = !column.on;
     if (expand) column.expanded = true;
-    if (!column.on || !column.parent) return;
+    if (!column.on || !column.parent) {
+      triggerColumnRerender();
+      return;
+    }
     if (columnHashMap.get(column.parent) === undefined) {
       console.log("WARNING: tried to get", column.parent, "in hashMap, but is undefined");
+      triggerColumnRerender();
       return;
     } else column = columnHashMap.get(column.parent!)!;
     while (column) {
@@ -543,9 +548,10 @@ export const toggleSettingsTabColumn = action(
       if (!column.parent) break;
       if (columnHashMap.get(column.parent) === undefined) {
         console.log("WARNING: tried to get", column.parent, "in columnHashMap, but is undefined");
-        return;
+        break;
       } else column = columnHashMap.get(column.parent!)!;
     }
+    triggerColumnRerender();
   }
 );
 export const setSequenceColumnSettings = action(
@@ -578,6 +584,7 @@ export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
 });
 export const setEditName = action((newName: string, column: ColumnInfo) => {
   column.editName = newName;
+  triggerColumnRerender();
 });
 
 export const setAutoScale = action((pointSettings: PointSettings) => {
@@ -772,6 +779,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
   }
   parent.children.splice(index + 1, 0, dualColCompColumn);
   state.settingsTabs.columnHashMap.set(dualColCompColumnName, dualColCompColumn);
+  triggerColumnRerender();
   return dualColCompColumnName;
 });
 
@@ -1000,6 +1008,7 @@ export const addDataMiningColumn = action(
     });
     parent.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    triggerColumnRerender();
     return dataMiningColumnName;
   }
 );
