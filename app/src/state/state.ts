@@ -42,14 +42,16 @@ configure({ enforceActions: "observed" });
 
 const settingsTabs = observable({
   selected: "time" as SettingsTabs,
-  columns: undefined, // this will remain plain
+  columns: undefined,
+  columnsVersion: 0,
   columnHashMap: new Map<string, ColumnInfo>(),
   columnSearchTerm: "",
   datapackDisplayType: "compact" as const,
   eventSearchTerm: "",
   groupedEvents: []
 }, {
-  columns: false // ✅ properly disables wrapping
+  columns: false,
+  columnHashMap: false
 });
 
 export type State = {
@@ -107,6 +109,7 @@ export type State = {
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
+    columnsVersion: number;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";

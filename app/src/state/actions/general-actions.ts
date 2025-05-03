@@ -40,7 +40,8 @@ import {
   handleDualColCompColumns,
   initializeColumnHashMap,
   searchColumns,
-  searchEvents
+  searchEvents,
+  triggerColumnRerender
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
@@ -660,21 +661,14 @@ export const setDatapackConfig = action(
     chartSettings: ChartInfoTSC | null
   ): Promise<boolean> => {
     resetSettings();
-    // throws warning if this isn't in its own action. may have other fix but left as is
-    // runInAction(() => {
-    // trace(state.settingsTabs.columns);
-    console.time("column assign");
-    runInAction(() => {
-      state.settingsTabs.columns = columnRoot;
-    });
-    console.timeEnd("column assign");
-      // state.settings.datapackContainsSuggAge = foundDefaultAge;
-      // state.mapState.mapHierarchy = mapHierarchy;
-      // state.mapState.mapInfo = mapInfo;
-      // state.settingsTabs.columnHashMap = new Map();
-      // state.config.datapacks = datapacks;
-      // await initializeColumnHashMap(columnRoot);
-    // });
+    state.settingsTabs.columns = columnRoot;
+    state.settings.datapackContainsSuggAge = foundDefaultAge;
+    state.mapState.mapHierarchy = mapHierarchy;
+    state.mapState.mapInfo = mapInfo;
+    state.settingsTabs.columnHashMap = new Map();
+    state.config.datapacks = datapacks;
+    await initializeColumnHashMap(columnRoot);
+    triggerColumnRerender();
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {

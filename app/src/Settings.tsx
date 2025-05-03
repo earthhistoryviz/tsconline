@@ -15,6 +15,7 @@ import { Search } from "./settings_tabs/Search";
 import { useTranslation } from "react-i18next";
 import { Preferences } from "./settings_tabs/Preferences";
 import LoadSave from "./settings_tabs/LoadSave";
+import { useColumnRerender } from "./state/actions";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -51,6 +52,7 @@ export const Settings = observer(function Settings() {
 
 const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }) {
   const { state, actions } = useContext(context);
+  useColumnRerender();
   switch (tab) {
     case "time":
       return <Time />;

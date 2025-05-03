@@ -53,6 +53,20 @@ import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
 
+/**
+ * Call this function in any component that needs to rerender when the columns change.
+ */
+export function useColumnRerender() {
+  void state.settingsTabs.columnsVersion;
+}
+
+/**
+ * Call this function to trigger a rerender of the columns.
+ */
+export function triggerColumnRerender() {
+  state.settingsTabs.columnsVersion++;
+}
+
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
 }
@@ -474,13 +488,20 @@ export const applyRowOrder = action(
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
+export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
+  const tempMap = new Map<string, ColumnInfo>();
+  const stack: ColumnInfo[] = [root];
+  const counter = { count: 0 };
 
-  state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, counter);
+  while (stack.length > 0) {
+    await yieldControl(counter, 30);
+    const current = stack.pop()!;
+    tempMap.set(current.name, current);
+    for (const child of current.children) {
+      stack.push(child);
+    }
   }
+  state.settingsTabs.columnHashMap = tempMap;
 });
 
 /**
@@ -1037,6 +1058,7 @@ export const addBlankColumn = action((column: ColumnInfo) => {
 
   column.children.splice(column.children.length, 0, blankColumn);
   state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
+  triggerColumnRerender()
 });
 export const addAgeColumn = action((column: ColumnInfo) => {
   if (column.children.length == 0) {
@@ -1075,6 +1097,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
   });
   column.children.splice(column.children.length, 0, ageColumn);
   state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
+  triggerColumnRerender()
 });
 export const makeColumnPath = action((name: string): string[] => {
   const columnPath: string[] = [];
@@ -1289,6 +1312,7 @@ export const setShow = action((show: boolean, column: ColumnInfo) => {
 
 export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
   column.expanded = expanded;
+  triggerColumnRerender()
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
@@ -1321,6 +1345,7 @@ export const incrementColumnPosition = action((column: ColumnInfo) => {
       parent.children.push(firstElement);
     }
   }
+  triggerColumnRerender()
 });
 
 export const decrementColumnPosition = action((column: ColumnInfo) => {
@@ -1336,4 +1361,5 @@ export const decrementColumnPosition = action((column: ColumnInfo) => {
       parent.children.unshift(lastElement);
     }
   }
+  triggerColumnRerender()
 });
