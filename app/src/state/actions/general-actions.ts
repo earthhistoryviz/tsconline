@@ -1,4 +1,4 @@
-import { action, isObservable, makeAutoObservable, observable, runInAction, toJS, trace } from "mobx";
+import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
   SharedUser,
   ChartInfoTSC,

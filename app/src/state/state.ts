@@ -40,19 +40,22 @@ import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from ".
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
 
-const settingsTabs = observable({
-  selected: "time" as SettingsTabs,
-  columns: undefined,
-  columnsVersion: 0,
-  columnHashMap: new Map<string, ColumnInfo>(),
-  columnSearchTerm: "",
-  datapackDisplayType: "compact" as const,
-  eventSearchTerm: "",
-  groupedEvents: []
-}, {
-  columns: false,
-  columnHashMap: false
-});
+const settingsTabs = observable(
+  {
+    selected: "time" as SettingsTabs,
+    columns: undefined,
+    columnsVersion: 0,
+    columnHashMap: new Map<string, ColumnInfo>(),
+    columnSearchTerm: "",
+    datapackDisplayType: "compact" as const,
+    eventSearchTerm: "",
+    groupedEvents: []
+  },
+  {
+    columns: false,
+    columnHashMap: false
+  }
+);
 
 export type State = {
   chartTab: {

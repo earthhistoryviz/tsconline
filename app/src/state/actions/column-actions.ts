@@ -52,7 +52,6 @@ import {
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
-import { t } from "i18next";
 
 /**
  * Call this function in any component that needs to rerender when the columns change.
@@ -1067,7 +1066,7 @@ export const addBlankColumn = action((column: ColumnInfo) => {
 
   column.children.splice(column.children.length, 0, blankColumn);
   state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
-  triggerColumnRerender()
+  triggerColumnRerender();
 });
 export const addAgeColumn = action((column: ColumnInfo) => {
   if (column.children.length == 0) {
@@ -1106,7 +1105,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
   });
   column.children.splice(column.children.length, 0, ageColumn);
   state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
-  triggerColumnRerender()
+  triggerColumnRerender();
 });
 export const makeColumnPath = action((name: string): string[] => {
   const columnPath: string[] = [];
@@ -1321,7 +1320,7 @@ export const setShow = action((show: boolean, column: ColumnInfo) => {
 
 export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
   column.expanded = expanded;
-  triggerColumnRerender()
+  triggerColumnRerender();
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
@@ -1354,7 +1353,7 @@ export const incrementColumnPosition = action((column: ColumnInfo) => {
       parent.children.push(firstElement);
     }
   }
-  triggerColumnRerender()
+  triggerColumnRerender();
 });
 
 export const decrementColumnPosition = action((column: ColumnInfo) => {
@@ -1370,5 +1369,5 @@ export const decrementColumnPosition = action((column: ColumnInfo) => {
       parent.children.unshift(lastElement);
     }
   }
-  triggerColumnRerender()
+  triggerColumnRerender();
 });

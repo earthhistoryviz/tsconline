@@ -6,7 +6,6 @@ import "./ColumnMenu.css";
 import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { useColumnRerender } from "../../state/actions";
-import { debounce } from "lodash";
 
 export const EditNameField: React.FC<{
   column: ColumnInfo;
