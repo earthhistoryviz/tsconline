@@ -5,18 +5,6 @@ import { context, initialContext } from "./state";
 import { Route, createBrowserRouter, createRoutesFromElements, RouterProvider } from "react-router-dom";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import "../i18n";
-import { spy } from "mobx";
-
-
-// spy((event) => {
-//   if (event.type === "action") {
-//     console.log("Action: ", event.name);
-//   } else if (event.type === "reaction") {
-//     console.log("Reaction: ", event.name);
-//   } else if (event.type === "update") {
-//     console.log("Update: ", event.name);
-//   }
-// });
 
 // required to use react-router-dom v6
 const router = createBrowserRouter(createRoutesFromElements(<Route path="*" element={<App />} />));

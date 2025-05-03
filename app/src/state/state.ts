@@ -342,10 +342,10 @@ reaction(
     adjustScaleOfModels(scale);
   }
 );
-// reaction(
-//   () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
-//   () => {
-//     if (state.chartTab.state.madeChart === false) return;
-//     state.chartTab.state.matchesSettings = false;
-//   }
-// );
+reaction(
+  () => [toJS(state.config.datapacks), toJS(state.settings), toJS(state.settingsTabs.columns)],
+  () => {
+    if (state.chartTab.state.madeChart === false) return;
+    state.chartTab.state.matchesSettings = false;
+  }
+);
