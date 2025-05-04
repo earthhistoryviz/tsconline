@@ -1,10 +1,21 @@
-import { Avatar, Box, Button, IconButton, Typography, useTheme } from "@mui/material";
+import {
+  Avatar,
+  Box,
+  Dialog,
+  DialogContent,
+  IconButton,
+  Menu,
+  Typography,
+  useMediaQuery,
+  useTheme
+} from "@mui/material";
 import styles from "./TSCComment.module.css";
 import PersonIcon from "@mui/icons-material/Person";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import { useState } from "react";
+import React, { useState } from "react";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
+import MenuItem from "@mui/material/MenuItem";
 
 type TSCCommentProps = {
   username: string;
@@ -15,45 +26,92 @@ type TSCCommentProps = {
 };
 
 export const Comment = ({ username, date, text, isSelf = true, isFlagged = false }: TSCCommentProps) => {
-  const [showMenu, setShowMenu] = useState(false);
+  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
   const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    if (isMobile) {
+      setMobileOpen(true);
+    } else {
+      setAnchorEl(event.currentTarget);
+    }
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+    setMobileOpen(false);
+  };
+
   const handleReport = () => {
     console.log("reported");
-    setShowMenu(false);
+    handleClose();
   };
 
   const handleDelete = () => {
     console.log("delete");
-    setShowMenu(false);
+    handleClose();
   };
 
   return (
     <Box className={styles.container} bgcolor="secondaryBackground.main">
-      <IconButton className={styles.moreVertIcon} onClick={() => setShowMenu(!showMenu)}>
+      <IconButton className={styles.moreVertIcon} onClick={handleClick}>
         <MoreVertIcon />
       </IconButton>
-      {showMenu && (
-        <div className={styles.menuContainer}>
-          <Button
-            variant="contained"
-            className={styles.reportContainer}
-            sx={{ backgroundColor: "secondaryBackground.main" }}
-            onClick={() => handleReport()}>
-            <OutlinedFlagIcon sx={{ color: "text.primary" }} />
-            <Typography color="text.primary">Report</Typography>
-          </Button>
-          {isSelf && (
-            <Button
-              variant="contained"
-              className={styles.deleteContainer}
-              sx={{ backgroundColor: "secondaryBackground.main" }}
-              onClick={() => handleDelete()}>
-              <DeleteIcon sx={{ color: "text.primary" }} />
-              <Typography color="text.primary">Delete</Typography>
-            </Button>
-          )}
-        </div>
-      )}
+
+      {/*  menu for desktop and tablet */}
+      <Menu
+        open={open}
+        onClose={handleClose}
+        anchorEl={!isMobile ? anchorEl : null}
+        anchorReference={isMobile ? "anchorPosition" : "anchorEl"}
+        anchorPosition={isMobile ? { top: window.innerHeight - 10, left: window.innerWidth / 2 } : undefined}
+        transformOrigin={{
+          vertical: isMobile ? "bottom" : "top",
+          horizontal: isMobile ? "center" : "left"
+        }}>
+        <MenuItem onClick={() => handleReport()}>
+          <OutlinedFlagIcon sx={{ color: "text.primary" }} />
+          <Typography color="text.primary">Report</Typography>
+        </MenuItem>
+        {isSelf && (
+          <MenuItem onClick={() => handleDelete()}>
+            <DeleteIcon sx={{ color: "text.primary" }} />
+            <Typography color="text.primary">Delete</Typography>
+          </MenuItem>
+        )}
+      </Menu>
+
+      {/*  dialog for mobile */}
+      <Dialog
+        open={mobileOpen}
+        onClose={handleClose}
+        fullWidth
+        PaperProps={{
+          sx: {
+            position: "fixed",
+            bottom: 0,
+            borderRadius: 3,
+            width: "92%"
+          }
+        }}>
+        <DialogContent sx={{ p: 2 }}>
+          <Box>
+            <MenuItem onClick={() => handleReport()}>
+              <OutlinedFlagIcon sx={{ color: "text.primary" }} />
+              <Typography color="text.primary">Report</Typography>
+            </MenuItem>
+            {isSelf && (
+              <MenuItem onClick={() => handleDelete()}>
+                <DeleteIcon sx={{ color: "text.primary" }} />
+                <Typography color="text.primary">Delete</Typography>
+              </MenuItem>
+            )}
+          </Box>
+        </DialogContent>
+      </Dialog>
       <Avatar>
         <PersonIcon />
       </Avatar>
