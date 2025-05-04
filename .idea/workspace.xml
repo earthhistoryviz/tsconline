@@ -13,7 +13,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "node.js.selected.package.tslint": "(autodetect)",
-    "ts.external.directory.path": "yarn:shared\\package.json:typescript"
+    "ts.external.directory.path": "yarn:package.json:typescript"
   }
 }]]></component>
   <component name="ReactDesignerToolWindowState">
