@@ -666,7 +666,6 @@ export const setDatapackConfig = action(
       state.settings.datapackContainsSuggAge = foundDefaultAge;
       state.mapState.mapHierarchy = mapHierarchy;
       state.mapState.mapInfo = mapInfo;
-      state.settingsTabs.columnHashMap = new Map();
       state.config.datapacks = datapacks;
       await initializeColumnHashMap(state.settingsTabs.columns);
     });

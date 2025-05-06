@@ -13,7 +13,8 @@ import {
   EditableDatapackMetadata,
   CrossPlotTimeSettings,
   ChartTabState,
-  CrossPlotBounds
+  CrossPlotBounds,
+  RenderColumnInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -39,6 +40,24 @@ import { defaultChartTabState, defaultCrossPlotSettings, settings } from "../con
 import { adjustScaleOfMarkers, adjustScaleOfModels, getInitialDarkMode } from "./actions";
 import { cloneDeep } from "lodash";
 configure({ enforceActions: "observed" });
+
+const settingsTabs = observable(
+  {
+    selected: "time" as SettingsTabs,
+    columns: undefined,
+    rootColumnName: "",
+    renderColumnHashMap: observable.map<string, RenderColumnInfo>(),
+    columnHashMap: new Map<string, ColumnInfo>(),
+    columnSearchTerm: "",
+    datapackDisplayType: "compact" as const,
+    eventSearchTerm: "",
+    groupedEvents: []
+  },
+  {
+    columns: false,
+    columnHashMap: false
+  }
+);
 
 export type State = {
   chartTab: {
@@ -95,6 +114,8 @@ export type State = {
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
+    rootColumnName: string;
+    renderColumnHashMap: Map<string, RenderColumnInfo>;
     columnHashMap: Map<string, ColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";
@@ -253,15 +274,7 @@ export const state = observable<State>({
     open: false,
     columnType: "Data Mining"
   },
-  settingsTabs: {
-    selected: "time",
-    columns: undefined,
-    columnHashMap: new Map<string, ColumnInfo>(),
-    columnSearchTerm: "",
-    datapackDisplayType: "compact",
-    eventSearchTerm: "",
-    groupedEvents: []
-  },
+  settingsTabs,
   mapState: {
     mapInfo: {},
     mapHierarchy: {},

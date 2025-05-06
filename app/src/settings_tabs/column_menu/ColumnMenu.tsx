@@ -25,11 +25,12 @@ import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings"
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../state/state";
 
 export const ColumnMenu = observer(() => {
   const { state, actions } = useContext(context);
   const selectedColumn = state.columnMenu.columnSelected;
-  const column = selectedColumn ? state.settingsTabs.columnHashMap.get(selectedColumn!) : undefined;
+  const column = selectedColumn ? state.settingsTabs.renderColumns.get(selectedColumn!) : undefined;
 
   // Resize the column menu tabs based on the width of the column menu
   const columnAccordionWrapper = document.getElementById("ResizableColumnAccordionWrapper");
@@ -92,7 +93,7 @@ export const ColumnMenu = observer(() => {
 
 type ColumnContentProps = {
   tab: string;
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);

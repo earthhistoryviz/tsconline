@@ -19,10 +19,10 @@ import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
-import { CrossPlotTimeSettings, TimeSettings } from "../types";
+import { CrossPlotTimeSettings, TimeSettings, RenderColumnInfo } from "../types";
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
-import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
+import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";;
 
 type ColumnContextType = {
   state: {
@@ -94,11 +94,12 @@ export const Column = observer(function Column() {
 
 export const ColumnDisplay = observer(() => {
   const { state } = useContext(ColumnContext);
+  const { state: globalState } = useContext(context);
   const { actions: globalActions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  console.log("state.columnSelected", state.columnSelected);
+
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -158,10 +159,11 @@ export const ColumnDisplay = observer(() => {
           </IconButton>
         </CustomTooltip>
       </div>
-      {state.columns &&
-        Object.entries(state.columns.children).map(([childName, childDetails]) => (
-          <ColumnAccordion key={childName} details={childDetails} />
-        ))}
+      {globalState.settingsTabs.renderColumnHashMap.get(globalState.settingsTabs.rootColumnName)?.children.map((childId) => {
+        const child = globalState.settingsTabs.renderColumnHashMap.get(childId);
+        if (!child) return null;
+        return <ColumnAccordion key={childId} details={child} />;
+      })}
       {/* Button to take users to top of column menu when scrolling */}
 
       <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
@@ -177,12 +179,12 @@ export const ColumnDisplay = observer(() => {
 });
 
 type ColumnAccordionProps = {
-  details: ColumnInfo;
+  details: RenderColumnInfo;
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
   const { actions, state } = useContext(ColumnContext);
-  const { actions: globalActions } = useContext(context);
+  const { actions: globalActions, state: globalState } = useContext(context);
   if (!details.show) {
     return null;
   }
@@ -200,7 +202,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
 
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.columnSelected)
+  const containsSelectedChild = details.children.some((column) => column === state.columnSelected)
     ? { opacity: 1 }
     : {};
   return (
@@ -232,32 +234,36 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
+        {details.children &&
+          details.children.map((childId) => {
+            const childDetails = globalState.settingsTabs.renderColumnHashMap.get(childId);
+            if (!childDetails) return null;
+            return <ColumnAccordion key={childId} details={childDetails} />;
+          })}
         </MuiAccordionDetails>
       </Accordion>
     </div>
   );
 });
 
-const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
+const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
+  const { state: globalState } = useContext(context);
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
   const theme = useTheme();
+  const fullColumn = globalState.settingsTabs.columnHashMap.get(column.name)!;
   // todo fix this for crossplot
-  const dataInRange = checkIfDccColumn(column)
+  const dataInRange = checkIfDccColumn(fullColumn)
     ? checkIfDccDataIsInRange(
-        column,
-        state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        fullColumn,
+        state.timeSettings[fullColumn.units].topStageAge,
+        state.timeSettings[fullColumn.units].baseStageAge
       )
     : checkIfDataIsInRange(
-        column.minAge,
-        column.maxAge,
-        state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        fullColumn.minAge,
+        fullColumn.maxAge,
+        state.timeSettings[fullColumn.units].topStageAge,
+        state.timeSettings[fullColumn.units].baseStageAge
       );
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
@@ -291,7 +297,7 @@ const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
         onClick={(event) => {
           // to stop selection of column when clicking on checkbox
           event.stopPropagation();
-          actions.toggleSettingsTabColumn(column);
+          actions.toggleSettingsTabColumn(fullColumn);
         }}
       />
     );

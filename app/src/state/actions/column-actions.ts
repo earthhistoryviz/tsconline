@@ -1,4 +1,4 @@
-import { action, observable } from "mobx";
+import { action, observable, reaction, observe } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -42,7 +42,8 @@ import {
   EventSearchInfo,
   GroupedEventSearchInfo,
   WindowStats,
-  convertDataMiningPointDataTypeToDataMiningStatisticApproach
+  convertDataMiningPointDataTypeToDataMiningStatisticApproach,
+  RenderColumnInfo
 } from "../../types";
 import {
   computeWindowStatistics,
@@ -474,13 +475,58 @@ export const applyRowOrder = action(
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
+export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
+  const tempMap = new Map<string, ColumnInfo>();
+  const tempRendersMap = observable.map<string, RenderColumnInfo>();
+  const stack: ColumnInfo[] = [root];
+  const counter = { count: 0 };
 
-  state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, counter);
+  while (stack.length > 0) {
+    await yieldControl(counter, 20);
+    const current = stack.pop()!;
+    tempMap.set(current.name, current);
+
+    const renderEntry = observable.object<RenderColumnInfo>({
+      name: current.name,
+      editName: current.editName,
+      children: current.children.map((child) => child.name),
+      on: current.on,
+      expanded: current.expanded,
+      show: current.show
+    });
+
+    tempRendersMap.set(current.name, renderEntry);
+
+    reaction(
+      () => [
+        renderEntry.on,
+        renderEntry.editName,
+        renderEntry.expanded,
+        renderEntry.show,
+        renderEntry.children.slice()
+      ],
+      () => {
+        const realNode = tempMap.get(current.name);
+        if (!realNode) return;
+
+        realNode.on = renderEntry.on;
+        realNode.expanded = renderEntry.expanded;
+        realNode.show = renderEntry.show;
+        realNode.editName = renderEntry.editName;
+
+        realNode.children = renderEntry.children
+          .map((name) => tempMap.get(name))
+          .filter((child): child is ColumnInfo => !!child);
+      }
+    );
+
+    for (const child of current.children) {
+      stack.push(child);
+    }
   }
+  state.settingsTabs.columnHashMap = tempMap;
+  state.settingsTabs.renderColumnHashMap = tempRendersMap;
+  state.settingsTabs.rootColumnName = root.name;
 });
 
 /**
@@ -555,7 +601,7 @@ export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newS
 export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
   column.on = isOn;
 });
-export const setEditName = action((newName: string, column: ColumnInfo) => {
+export const setEditName = action((newName: string, column: RenderColumnInfo) => {
   column.editName = newName;
 });
 
@@ -614,17 +660,22 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   searchColumnsAbortController = new AbortController();
   setColumnSearchTerm(searchTerm);
   if (searchTerm === "") {
-    state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    state.settingsTabs.renderColumnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
       setShow(true, columnInfo);
     });
     if (!state.settingsTabs.columns) return;
     for (const child of state.settingsTabs.columns.children) {
-      setExpanded(true, child);
+      const renderColumn = state.settingsTabs.renderColumnHashMap.get(child.name);
+      if (!renderColumn) {
+        console.warn("WARNING: tried to get", child.name, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+        continue;
+      }
+      setExpanded(true, renderColumn);
     }
     return;
   }
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+  for (const columnInfo of state.settingsTabs.renderColumnHashMap.values()) {
     await yieldControl(counter, 30);
     setShow(false, columnInfo);
     setExpanded(false, columnInfo);
@@ -632,7 +683,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
 
   const regExp = getRegex(searchTerm);
 
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+  for (const columnInfo of state.settingsTabs.renderColumnHashMap.values()) {
     await yieldControl(counter, 30);
     if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
@@ -641,7 +692,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       await setExpansionOfAllChildren(columnInfo, false);
       await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
-        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
+        const parentColumnInfo = state.settingsTabs.renderColumnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
           setShow(true, parentColumnInfo);
           setExpanded(true, parentColumnInfo);
@@ -1227,20 +1278,30 @@ export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrient
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+export const setShowOfAllChildren = action(async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
   await yieldControl(counter, 30);
   for (const child of column.children) {
-    await setShowOfAllChildren(child, isShown, counter);
+    const childRender = state.settingsTabs.renderColumnHashMap.get(child);
+    if (!childRender) {
+      console.log("WARNING: tried to get", child, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+      continue;
+    }
+    await setShowOfAllChildren(childRender, isShown, counter);
   }
 });
 
 export const setExpansionOfAllChildren = action(
-  async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+  async (column: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
     column.expanded = isExpanded;
     await yieldControl(counter, 30);
     for (const child of column.children) {
-      await setExpansionOfAllChildren(child, isExpanded, counter);
+      const childRender = state.settingsTabs.renderColumnHashMap.get(child);
+      if (!childRender) {
+        console.log("WARNING: tried to get", child, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+        continue;
+      }
+      await setExpansionOfAllChildren(childRender, isExpanded, counter);
     }
   }
 );
@@ -1283,11 +1344,17 @@ export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
 });
 
-export const setShow = action((show: boolean, column: ColumnInfo) => {
+/**
+ * will sync to columnHashMap via MobX reaction
+ */
+export const setShow = action((show: boolean, column: RenderColumnInfo) => {
   column.show = show;
 });
 
-export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
+/**
+ * will sync to columnHashMap via MobX reaction
+ */
+export const setExpanded = action((expanded: boolean, column: RenderColumnInfo) => {
   column.expanded = expanded;
 });
 

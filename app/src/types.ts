@@ -17,6 +17,15 @@ import {
 } from "@tsconline/shared";
 import React from "react";
 
+export type RenderColumnInfo = {
+  name: string;
+  editName: string;
+  children: string[];
+  on: boolean;
+  expanded: boolean;
+  show: boolean;
+}
+
 export type DatapackFetchParams = {
   isPublic: boolean;
 } & DatapackUniqueIdentifier;
