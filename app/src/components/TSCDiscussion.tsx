@@ -6,42 +6,52 @@ import SendIcon from "@mui/icons-material/Send";
 import { Comment } from "./TSCComment";
 import { useState } from "react";
 
-type CommentType = {
-  text: string;
+export type CommentType = {
+  id: number;
   username: string;
-  date: string;
+  date: Date;
+  text: string;
+  isSelf?: boolean;
   isFlagged?: boolean;
 };
 
 export const Discussion = () => {
   const [comments, setComments] = useState<CommentType[]>([
     {
+      id: 0,
+      username: "TestUser88",
+      date: new Date("May 5, 2025"),
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
+    },
+
+    {
+      id: 1,
+      username: "TestUser3",
+      date: new Date("May 3, 2025"),
+      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
+    },
+    {
+      id: 2,
       username: "Username",
-      date: "May 1, 2025",
+      date: new Date("May 1, 2025"),
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean.",
-      isFlagged: true
-    },
-    {
-      username: "May 1, 2025",
-      date: "10 days ago",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
-    },
-    {
-      username: "May 1, 2025",
-      date: "10 days ago",
-      text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean."
+      isFlagged: true,
+      isSelf: true
     }
   ]);
   const [input, setInput] = useState("");
   const addComment = () => {
     const date = new Date();
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric"
+    setComments((prevState) => {
+      const newComments = [{ username: "You", date, text: input, isSelf: true, id: prevState.length }, ...prevState];
+      newComments.sort((a, b) => b.date.getTime() - a.date.getTime());
+      return newComments;
     });
-    setComments((prevState) => [...prevState, { username: "You", date: formattedDate, text: input }]);
     setInput("");
+  };
+
+  const deleteComment = (id: number): void => {
+    setComments((prevState) => prevState.filter((comment) => comment.id !== id));
   };
 
   return (
@@ -81,10 +91,13 @@ export const Discussion = () => {
             {comments.map((comment, index) => (
               <Comment
                 key={index}
+                id={comment.id}
                 username={comment.username}
                 date={comment.date}
                 text={comment.text}
+                isSelf={comment?.isSelf}
                 isFlagged={comment?.isFlagged}
+                handleDelete={() => deleteComment(comment.id)}
               />
             ))}
           </div>
