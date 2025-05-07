@@ -16,21 +16,28 @@ import React, { useState } from "react";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
+import { CommentType } from "./TSCDiscussion";
 
-type TSCCommentProps = {
-  username: string;
-  date: string;
-  text: string;
-  isSelf?: boolean;
-  isFlagged?: boolean;
+export type TSCCommentProps = CommentType & {
+  handleDelete: (id: number) => void;
 };
 
-export const Comment = ({ username, date, text, isSelf = true, isFlagged = false }: TSCCommentProps) => {
+export const Comment = ({
+  id,
+  username,
+  date,
+  text,
+  isSelf = false,
+  isFlagged = false,
+  handleDelete
+}: TSCCommentProps) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [flagged, setFlagged] = useState(isFlagged);
+  const formattedDate = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isMobile) {
@@ -46,12 +53,12 @@ export const Comment = ({ username, date, text, isSelf = true, isFlagged = false
   };
 
   const handleReport = () => {
-    console.log("reported");
+    setFlagged(true);
     handleClose();
   };
 
-  const handleDelete = () => {
-    console.log("delete");
+  const handleDeleteComment = () => {
+    handleDelete(id);
     handleClose();
   };
 
@@ -77,7 +84,7 @@ export const Comment = ({ username, date, text, isSelf = true, isFlagged = false
           <Typography color="text.primary">Report</Typography>
         </MenuItem>
         {isSelf && (
-          <MenuItem onClick={() => handleDelete()}>
+          <MenuItem onClick={() => handleDeleteComment()}>
             <DeleteIcon sx={{ color: "text.primary" }} />
             <Typography color="text.primary">Delete</Typography>
           </MenuItem>
@@ -104,7 +111,7 @@ export const Comment = ({ username, date, text, isSelf = true, isFlagged = false
               <Typography color="text.primary">Report</Typography>
             </MenuItem>
             {isSelf && (
-              <MenuItem onClick={() => handleDelete()}>
+              <MenuItem onClick={() => handleDeleteComment()}>
                 <DeleteIcon sx={{ color: "text.primary" }} />
                 <Typography color="text.primary">Delete</Typography>
               </MenuItem>
@@ -118,10 +125,10 @@ export const Comment = ({ username, date, text, isSelf = true, isFlagged = false
       <div className={styles.textContainer}>
         <div className={styles.topTextContainer}>
           <Typography className={styles.usernameText}>{username}</Typography>
-          <Typography className={styles.dateText}>{date}</Typography>
+          <Typography className={styles.dateText}>{formattedDate}</Typography>
         </div>
         <Typography className={styles.commentText}>{text}</Typography>
-        {isFlagged && (
+        {flagged && (
           <Typography className={styles.flaggedText} style={{ color: theme.palette.error.main }}>
             This comment has been flagged.
           </Typography>
