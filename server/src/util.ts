@@ -15,9 +15,12 @@ import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/s
  */
 export async function verifySymlink(symlink: string): Promise<boolean> {
   try {
-    const stats = await lstat(symlink);
+    const stats = await lstat(path.resolve(symlink));
     if (!stats.isSymbolicLink()) return false;
     await realpath(symlink);
+    const ROOT_DIRECTORY = path.resolve(process.cwd());
+    const resolvedRoot = path.resolve(ROOT_DIRECTORY);
+    if (!symlink.startsWith(resolvedRoot)) return false;
     return true;
   } catch {
     return false;
