@@ -25,12 +25,12 @@ import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings"
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
-import { RenderColumnInfo } from "../../state/state";
+import { RenderColumnInfo } from "../../types";
 
 export const ColumnMenu = observer(() => {
   const { state, actions } = useContext(context);
   const selectedColumn = state.columnMenu.columnSelected;
-  const column = selectedColumn ? state.settingsTabs.renderColumns.get(selectedColumn!) : undefined;
+  const column = selectedColumn ? state.settingsTabs.renderColumnHashMap.get(selectedColumn!) : undefined;
 
   // Resize the column menu tabs based on the width of the column menu
   const columnAccordionWrapper = document.getElementById("ResizableColumnAccordionWrapper");
@@ -96,7 +96,7 @@ type ColumnContentProps = {
   column: RenderColumnInfo;
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
-  const { actions } = useContext(context);
+  const { actions, state } = useContext(context);
   const { t } = useTranslation(); //pass translation to components to avoid hook bugs
   function addBlankColumn() {
     actions.addBlankColumn(column);
@@ -104,6 +104,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
   function addAgeColumn() {
     actions.addAgeColumn(column);
   }
+  const fullColumn = state.settingsTabs.columnHashMap.get(column.name);
+  if (!fullColumn) return null;
 
   switch (tab) {
     case "General":
@@ -111,8 +113,8 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
         <StyledScrollbar>
           <Box display="flex" flexDirection="column" gap="10px">
             <EditNameField column={column} />
-            {column.children.length === 0 && <ChangeBackgroundColor column={column} />}
-            {column.width !== undefined && column.columnDisplayType !== "Ruler" && (
+            {column.children.length === 0 && <ChangeBackgroundColor column={fullColumn} />}
+            {column.width !== undefined && fullColumn.columnDisplayType !== "Ruler" && (
               <GenericTextField
                 orientation="start"
                 helperOrientation="start"
@@ -125,18 +127,18 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                       actions.setWidth(value, column);
                     }
                   },
-                  ...addRangeFields(column, actions.setRangeColumnSettings)
+                  ...addRangeFields(fullColumn, actions.setRangeColumnSettings)
                 ]}
               />
             )}
             <div className="column-advanced-controls">
               <AccordionPositionControls column={column} />
             </div>
-            <ShowTitles column={column} />
-            <EventSpecificSettings column={column} />
-            <RangeSpecificSettings column={column} />
-            <AgeRulerSpecificSettings column={column} />
-            <ZoneSpecificSettings column={column} />
+            <ShowTitles column={fullColumn} />
+            <EventSpecificSettings column={fullColumn} />
+            <RangeSpecificSettings column={fullColumn} />
+            <AgeRulerSpecificSettings column={fullColumn} />
+            <ZoneSpecificSettings column={fullColumn} />
             {column.children.length != 0 && (
               <Box className="add-blank-or-age-button-container">
                 <TSCButton className="add-blank-or-age-button" onClick={addBlankColumn}>
@@ -147,14 +149,14 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
                 </TSCButton>
               </Box>
             )}
-            {!!column.popup && <InfoBox info={column.popup} />}
+            {!!fullColumn.popup && <InfoBox info={fullColumn.popup} />}
           </Box>
         </StyledScrollbar>
       );
     case "Font":
-      return <FontMenu column={column} />;
+      return <FontMenu column={fullColumn} />;
     case "Curve Drawing":
-      return <PointSettingsDisplay column={column} />;
+      return <PointSettingsDisplay column={fullColumn} />;
     default:
       return null;
   }

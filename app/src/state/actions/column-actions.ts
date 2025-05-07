@@ -1,4 +1,4 @@
-import { action, observable, reaction, observe } from "mobx";
+import { action, observable, reaction } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -43,7 +43,8 @@ import {
   GroupedEventSearchInfo,
   WindowStats,
   convertDataMiningPointDataTypeToDataMiningStatisticApproach,
-  RenderColumnInfo
+  RenderColumnInfo,
+  isRenderColumnInfo
 } from "../../types";
 import {
   computeWindowStatistics,
@@ -477,7 +478,7 @@ export const applyRowOrder = action(
 
 export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
   const tempMap = new Map<string, ColumnInfo>();
-  const tempRendersMap = observable.map<string, RenderColumnInfo>();
+  const tempRenderMap = observable.map<string, RenderColumnInfo>();
   const stack: ColumnInfo[] = [root];
   const counter = { count: 0 };
 
@@ -486,25 +487,21 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
     const current = stack.pop()!;
     tempMap.set(current.name, current);
 
-    const renderEntry = observable.object<RenderColumnInfo>({
+    const renderEntry = observable({
+      isRender: true,
       name: current.name,
       editName: current.editName,
       children: current.children.map((child) => child.name),
       on: current.on,
       expanded: current.expanded,
-      show: current.show
+      show: current.show,
+      width: current.width
     });
 
-    tempRendersMap.set(current.name, renderEntry);
+    tempRenderMap.set(current.name, renderEntry);
 
     reaction(
-      () => [
-        renderEntry.on,
-        renderEntry.editName,
-        renderEntry.expanded,
-        renderEntry.show,
-        renderEntry.children.slice()
-      ],
+      () => [renderEntry.on, renderEntry.editName, renderEntry.expanded, renderEntry.show, renderEntry.width],
       () => {
         const realNode = tempMap.get(current.name);
         if (!realNode) return;
@@ -513,10 +510,7 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
         realNode.expanded = renderEntry.expanded;
         realNode.show = renderEntry.show;
         realNode.editName = renderEntry.editName;
-
-        realNode.children = renderEntry.children
-          .map((name) => tempMap.get(name))
-          .filter((child): child is ColumnInfo => !!child);
+        realNode.width = renderEntry.width;
       }
     );
 
@@ -525,7 +519,7 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
     }
   }
   state.settingsTabs.columnHashMap = tempMap;
-  state.settingsTabs.renderColumnHashMap = tempRendersMap;
+  state.settingsTabs.renderColumnHashMap = tempRenderMap;
   state.settingsTabs.rootColumnName = root.name;
 });
 
@@ -601,8 +595,21 @@ export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newS
 export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
   column.on = isOn;
 });
-export const setEditName = action((newName: string, column: RenderColumnInfo) => {
-  column.editName = newName;
+export const getRenderColumnInfoFromColumnInfo = (column: ColumnInfo): RenderColumnInfo | undefined => {
+  const renderColumn = state.settingsTabs.renderColumnHashMap.get(column.name);
+  if (!renderColumn) {
+    console.warn("WARNING: tried to get", column.name, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+    return;
+  }
+  return renderColumn;
+};
+export const setEditName = action((newName: string, column: ColumnInfo | RenderColumnInfo) => {
+  if (isRenderColumnInfo(column)) {
+    column.editName = newName;
+  } else {
+    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
+    if (renderColumn) renderColumn.editName = newName;
+  }
 });
 
 export const setAutoScale = action((pointSettings: PointSettings) => {
@@ -620,8 +627,13 @@ export const flipRange = action((pointSettings: PointSettings) => {
   pointSettings.flipScale = !pointSettings.flipScale;
 });
 
-export const setWidth = action((newWidth: number, column: ColumnInfo) => {
-  column.width = newWidth;
+export const setWidth = action((newWidth: number, column: ColumnInfo | RenderColumnInfo) => {
+  if (isRenderColumnInfo(column)) {
+    column.width = newWidth;
+  } else {
+    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
+    if (renderColumn) renderColumn.width = newWidth;
+  }
 });
 
 export const setColumnSelected = action((name: string) => {
@@ -668,7 +680,11 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     for (const child of state.settingsTabs.columns.children) {
       const renderColumn = state.settingsTabs.renderColumnHashMap.get(child.name);
       if (!renderColumn) {
-        console.warn("WARNING: tried to get", child.name, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+        console.warn(
+          "WARNING: tried to get",
+          child.name,
+          "in state.settingsTabs.renderColumnHashMap, but is undefined"
+        );
         continue;
       }
       setExpanded(true, renderColumn);
@@ -688,7 +704,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
-      let parentName = columnInfo.parent;
+      let parentName = state.settingsTabs.columnHashMap.get(columnInfo.name)?.parent;
       await setExpansionOfAllChildren(columnInfo, false);
       await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
@@ -696,7 +712,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
           setShow(true, parentColumnInfo);
           setExpanded(true, parentColumnInfo);
-          parentName = parentColumnInfo.parent;
+          parentName = state.settingsTabs.columnHashMap.get(parentColumnInfo.name)?.parent;
         } else {
           break;
         }
@@ -1054,21 +1070,26 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
-export const addBlankColumn = action((column: ColumnInfo) => {
+export const addBlankColumn = action((column: ColumnInfo | RenderColumnInfo) => {
   if (column.children.length == 0) {
     console.log("WARNING: tried to add a blank column to a column with no children");
     return;
   }
+  const fullColumn = isRenderColumnInfo(column) ? state.settingsTabs.columnHashMap.get(column.name) : column;
+  if (!fullColumn) {
+    console.log("WARNING: tried to get", column.name, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
   let serialNumber = 1;
-  const largestExistingSerialNum = column.children.findLastIndex(
+  const largestExistingSerialNum = fullColumn.children.findLastIndex(
     (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
   );
   if (largestExistingSerialNum > -1) {
-    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+    serialNumber = findSerialNum(fullColumn.children[largestExistingSerialNum].name) + 1;
   }
   const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
-  const blankColumn: ColumnInfo = observable({
-    ...cloneDeep(column),
+  const blankColumn: ColumnInfo = {
+    ...cloneDeep(fullColumn),
     on: true,
     children: [],
     subInfo: [],
@@ -1084,27 +1105,47 @@ export const addBlankColumn = action((column: ColumnInfo) => {
       g: 255,
       b: 255
     }
+  };
+  const blankRenderColumn: RenderColumnInfo = observable({
+    isRender: true,
+    name: blankColumnName,
+    editName: blankColumn.editName,
+    children: [],
+    on: blankColumn.on,
+    expanded: blankColumn.expanded,
+    show: blankColumn.show
   });
 
-  column.children.splice(column.children.length, 0, blankColumn);
+  fullColumn.children.push(blankColumn);
+  if (isRenderColumnInfo(column)) {
+    column.children.push(blankColumnName);
+  } else {
+    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
+    if (renderColumn) renderColumn.children.push(blankColumnName);
+  }
+  state.settingsTabs.renderColumnHashMap.set(blankColumnName, blankRenderColumn);
   state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
 });
-export const addAgeColumn = action((column: ColumnInfo) => {
+export const addAgeColumn = action((column: ColumnInfo | RenderColumnInfo) => {
   if (column.children.length == 0) {
     console.log("WARNING: tried to add an age column to a column with no children");
     return;
   }
-
+  const fullColumn = isRenderColumnInfo(column) ? state.settingsTabs.columnHashMap.get(column.name) : column;
+  if (!fullColumn) {
+    console.log("WARNING: tried to get", column.name, "in state.settingsTabs.columnHashMap, but is undefined");
+    return;
+  }
   let serialNumber = 1;
-  const largestExistingSerialNum = column.children.findLastIndex(
+  const largestExistingSerialNum = fullColumn.children.findLastIndex(
     (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
   );
   if (largestExistingSerialNum > -1) {
-    serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
+    serialNumber = findSerialNum(fullColumn.children[largestExistingSerialNum].name) + 1;
   }
   const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
-  const ageColumn: ColumnInfo = observable({
-    ...cloneDeep(column),
+  const ageColumn: ColumnInfo = {
+    ...cloneDeep(fullColumn),
     on: true,
     children: [],
     parent: column.name,
@@ -1123,8 +1164,24 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     columnSpecificSettings: {
       justification: "left"
     }
+  };
+  const ageRenderColumn: RenderColumnInfo = observable({
+    isRender: true,
+    name: ageColumnName,
+    editName: ageColumn.editName,
+    children: [],
+    on: ageColumn.on,
+    expanded: ageColumn.expanded,
+    show: ageColumn.show
   });
-  column.children.splice(column.children.length, 0, ageColumn);
+  fullColumn.children.push(ageColumn);
+  if (isRenderColumnInfo(column)) {
+    column.children.push(ageColumnName);
+  } else {
+    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
+    if (renderColumn) renderColumn.children.push(ageColumnName);
+  }
+  state.settingsTabs.renderColumnHashMap.set(ageColumnName, ageRenderColumn);
   state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
 });
 export const makeColumnPath = action((name: string): string[] => {
@@ -1278,24 +1335,30 @@ export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrient
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
-  column.show = isShown;
-  await yieldControl(counter, 30);
-  for (const child of column.children) {
-    const childRender = state.settingsTabs.renderColumnHashMap.get(child);
-    if (!childRender) {
-      console.log("WARNING: tried to get", child, "in state.settingsTabs.renderColumnHashMap, but is undefined");
-      continue;
+export const setShowOfAllChildren = action(
+  async (column: ColumnInfo | RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+    const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
+    if (!renderColumn) return;
+    renderColumn.show = isShown;
+    await yieldControl(counter, 30);
+    for (const child of renderColumn.children) {
+      const childRender = state.settingsTabs.renderColumnHashMap.get(child);
+      if (!childRender) {
+        console.log("WARNING: tried to get", child, "in state.settingsTabs.renderColumnHashMap, but is undefined");
+        continue;
+      }
+      await setShowOfAllChildren(childRender, isShown, counter);
     }
-    await setShowOfAllChildren(childRender, isShown, counter);
   }
-});
+);
 
 export const setExpansionOfAllChildren = action(
-  async (column: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
-    column.expanded = isExpanded;
+  async (column: ColumnInfo | RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+    const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
+    if (!renderColumn) return;
+    renderColumn.expanded = isExpanded;
     await yieldControl(counter, 30);
-    for (const child of column.children) {
+    for (const child of renderColumn.children) {
       const childRender = state.settingsTabs.renderColumnHashMap.get(child);
       if (!childRender) {
         console.log("WARNING: tried to get", child, "in state.settingsTabs.renderColumnHashMap, but is undefined");
@@ -1347,15 +1410,19 @@ export const setRGB = action((color: RGB, column: ColumnInfo) => {
 /**
  * will sync to columnHashMap via MobX reaction
  */
-export const setShow = action((show: boolean, column: RenderColumnInfo) => {
-  column.show = show;
+export const setShow = action((show: boolean, column: ColumnInfo | RenderColumnInfo) => {
+  const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
+  if (!renderColumn) return;
+  renderColumn.show = show;
 });
 
 /**
  * will sync to columnHashMap via MobX reaction
  */
-export const setExpanded = action((expanded: boolean, column: RenderColumnInfo) => {
-  column.expanded = expanded;
+export const setExpanded = action((expanded: boolean, column: ColumnInfo | RenderColumnInfo) => {
+  const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
+  if (!renderColumn) return;
+  renderColumn.expanded = expanded;
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
@@ -1375,32 +1442,52 @@ export const setEventSearchTerm = action((term: string) => {
 });
 
 // The following settings should wrap around if it overflows. Ex: last element that gets decremeneted should go to the top
-export const incrementColumnPosition = action((column: ColumnInfo) => {
-  const parent = state.settingsTabs.columnHashMap.get(column.parent!);
+export const incrementColumnPosition = action((column: ColumnInfo | RenderColumnInfo) => {
+  const fullColumn = isRenderColumnInfo(column) ? state.settingsTabs.columnHashMap.get(column.name) : column;
+  if (!fullColumn) return;
+  const parent = state.settingsTabs.columnHashMap.get(fullColumn.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
+  const renderParent = state.settingsTabs.renderColumnHashMap.get(fullColumn.parent!);
+  if (!renderParent) return;
+  const index = parent.children.indexOf(fullColumn);
   if (index > 0) {
     // If it's not the first element, swap with the previous one
     [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
+    [renderParent.children[index], renderParent.children[index - 1]] = [
+      renderParent.children[index - 1],
+      renderParent.children[index]
+    ];
   } else if (index === 0) {
     const firstElement = parent.children.shift();
-    if (firstElement) {
+    const firstRenderName = renderParent.children.shift();
+    if (firstElement && firstRenderName) {
       parent.children.push(firstElement);
+      renderParent.children.push(firstRenderName);
     }
   }
 });
 
-export const decrementColumnPosition = action((column: ColumnInfo) => {
-  const parent = state.settingsTabs.columnHashMap.get(column.parent!);
+export const decrementColumnPosition = action((column: ColumnInfo | RenderColumnInfo) => {
+  const fullColumn = isRenderColumnInfo(column) ? state.settingsTabs.columnHashMap.get(column.name) : column;
+  if (!fullColumn) return;
+  const parent = state.settingsTabs.columnHashMap.get(fullColumn.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
+  const renderParent = state.settingsTabs.renderColumnHashMap.get(fullColumn.parent!);
+  if (!renderParent) return;
+  const index = parent.children.indexOf(fullColumn);
   if (index < parent.children.length - 1 && index !== -1) {
     // If it's not the last element, swap with the next one
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
+    [renderParent.children[index], renderParent.children[index + 1]] = [
+      renderParent.children[index + 1],
+      renderParent.children[index]
+    ];
   } else if (index === parent.children.length - 1) {
     const lastElement = parent.children.pop();
-    if (lastElement) {
+    const lastRenderName = renderParent.children.pop();
+    if (lastElement && lastRenderName) {
       parent.children.unshift(lastElement);
+      renderParent.children.unshift(lastRenderName);
     }
   }
 });

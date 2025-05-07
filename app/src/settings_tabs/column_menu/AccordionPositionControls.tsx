@@ -2,12 +2,12 @@ import React, { useContext } from "react";
 import { Typography, IconButton } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import { ColumnInfo } from "@tsconline/shared";
 import { context } from "../../state"; // Import the context
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 interface AccordionPositionControlsProps {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 }
 
 const AccordionPositionControls: React.FC<AccordionPositionControlsProps> = ({ column }) => {

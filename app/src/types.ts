@@ -18,13 +18,15 @@ import {
 import React from "react";
 
 export type RenderColumnInfo = {
+  isRender: boolean;
   name: string;
   editName: string;
   children: string[];
   on: boolean;
   expanded: boolean;
   show: boolean;
-}
+  width?: number;
+};
 
 export type DatapackFetchParams = {
   isPublic: boolean;
@@ -262,6 +264,10 @@ export type CrossPlotBounds = {
   topAgeX: number;
   topAgeY: number;
 };
+
+export function isRenderColumnInfo(col: ColumnInfo | RenderColumnInfo): col is RenderColumnInfo {
+  return "isRender" in col && col.isRender;
+}
 
 export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");

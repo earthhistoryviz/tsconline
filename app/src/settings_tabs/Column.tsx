@@ -22,7 +22,7 @@ import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
 import { CrossPlotTimeSettings, TimeSettings, RenderColumnInfo } from "../types";
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
-import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";;
+import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 
 type ColumnContextType = {
   state: {
@@ -159,11 +159,13 @@ export const ColumnDisplay = observer(() => {
           </IconButton>
         </CustomTooltip>
       </div>
-      {globalState.settingsTabs.renderColumnHashMap.get(globalState.settingsTabs.rootColumnName)?.children.map((childId) => {
-        const child = globalState.settingsTabs.renderColumnHashMap.get(childId);
-        if (!child) return null;
-        return <ColumnAccordion key={childId} details={child} />;
-      })}
+      {globalState.settingsTabs.renderColumnHashMap
+        .get(globalState.settingsTabs.rootColumnName)
+        ?.children.map((childId) => {
+          const child = globalState.settingsTabs.renderColumnHashMap.get(childId);
+          if (!child) return null;
+          return <ColumnAccordion key={childId} details={child} />;
+        })}
       {/* Button to take users to top of column menu when scrolling */}
 
       <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
@@ -234,12 +236,12 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-        {details.children &&
-          details.children.map((childId) => {
-            const childDetails = globalState.settingsTabs.renderColumnHashMap.get(childId);
-            if (!childDetails) return null;
-            return <ColumnAccordion key={childId} details={childDetails} />;
-          })}
+          {details.children &&
+            details.children.map((childId) => {
+              const childDetails = globalState.settingsTabs.renderColumnHashMap.get(childId);
+              if (!childDetails) return null;
+              return <ColumnAccordion key={childId} details={childDetails} />;
+            })}
         </MuiAccordionDetails>
       </Accordion>
     </div>

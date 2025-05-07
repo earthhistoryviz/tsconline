@@ -4,7 +4,7 @@ import { context } from "../../state";
 import { TextField, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { useTranslation } from "react-i18next";
-import { RenderColumnInfo } from "../../state/state";
+import { RenderColumnInfo } from "../../types";
 
 export const EditNameField: React.FC<{
   column: RenderColumnInfo;
