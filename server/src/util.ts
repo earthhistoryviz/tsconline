@@ -17,9 +17,9 @@ export async function verifySymlink(symlink: string): Promise<boolean> {
   try {
     const ROOT_DIRECTORY = path.resolve(process.cwd());
     const absPath = path.resolve(ROOT_DIRECTORY, symlink);
+    await realpath(absPath);
     const stats = await lstat(absPath);
     if (!stats.isSymbolicLink()) return false;
-    await realpath(absPath);
     const resolvedRoot = path.resolve(ROOT_DIRECTORY);
     if (!absPath.startsWith(resolvedRoot)) return false;
     return true;
