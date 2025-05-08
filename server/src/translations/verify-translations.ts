@@ -3,13 +3,13 @@ import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 
 if (!checkKeysExistInEnglish()) {
-  console.error("❌ Some keys are missing English translations.");
-  process.exit(1); // Fail the action
+  console.error("Some keys are missing English translations.");
+  process.exit(1);
 } else if (!(await checkTranslationSync())) {
-  console.error("❌ Translation JSON and CSV are not equivalent.");
+  console.error("Translation JSON and CSV are not equivalent.");
   process.exit(1);
 } else {
-  console.log("✅ verified translations.");
+  console.log("verified translations.");
   process.exit(0);
 }
 
@@ -37,7 +37,6 @@ async function checkTranslationSync() {
 
     const csvData = readFileSync(translationCSV, "utf-8");
     if (jsonData !== csvData) {
-      console.log(csvData);
       return false;
     }
   }

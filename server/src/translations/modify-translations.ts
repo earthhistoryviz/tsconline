@@ -2,7 +2,7 @@ import { WatchListener, existsSync, readFileSync, unlinkSync, watch, writeFileSy
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 
-modifyTranslations();
+await modifyTranslations();
 
 type JSONValue = string | JSONObject;
 interface JSONObject {
@@ -56,6 +56,7 @@ export async function modifyTranslations() {
 
   console.log(`Watching for changes in ${devTranslationJson}...`);
 
+  //delete dev translation file when exiting modify mode (no longer needed)
   const cleanup = () => {
     try {
       if (existsSync(devTranslationJson)) {

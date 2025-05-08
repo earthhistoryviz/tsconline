@@ -1,8 +1,13 @@
 import { readFileSync, writeFileSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
+import chalk from "chalk";
 
-createJsonTranslations();
+try {
+  await createJsonTranslations();
+} catch (e) {
+  console.error(chalk.red("failed to create JSON translations from CSV"));
+}
 
 async function createJsonTranslations() {
   try {
@@ -22,7 +27,7 @@ async function createJsonTranslations() {
     const csvToJson = JSON.stringify(csvToNestedJson(csvData), null, 4);
     writeFileSync(staticTranslationJson, csvToJson);
   }
-  console.log("Successfully created translation JSON from CSV");
+  console.log(chalk.green("Successfully created translation JSON from CSV"));
 }
 
 type JSONValue = string | JSONObject;

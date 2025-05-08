@@ -5,8 +5,9 @@
 import { readFileSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
+import chalk from "chalk";
 
-checkPrematureChange();
+await checkPrematureChange();
 
 async function checkPrematureChange() {
   try {
@@ -39,7 +40,9 @@ async function checkPrematureChange() {
   const JSONtoCSV = flattened.map(([key, value]) => `${key},${value}`).join("\n");
   const csvData = readFileSync(translationCSV, "utf-8");
   if (JSONtoCSV !== csvData) {
-    console.warn("For translations, JSON not equal to CSV, any changes made to JSON will be discarded!!!");
-    console.warn("To make changes to translations, run yarn modify-translations in server directory");
+    console.warn(
+      chalk.yellow("\nFor translations, JSON not equal to CSV, any changes made to JSON will be discarded!!!")
+    );
+    console.warn(chalk.yellow("To make changes to translations, run yarn modify-translations in server directory\n"));
   }
 }
