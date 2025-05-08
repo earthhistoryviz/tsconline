@@ -1,8 +1,13 @@
 import { WatchListener, existsSync, readFileSync, unlinkSync, watch, writeFileSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
+import chalk from "chalk";
 
-await modifyTranslations();
+try {
+  await modifyTranslations();
+} catch (e) {
+  console.error("failed to activate modify translation mode");
+}
 
 type JSONValue = string | JSONObject;
 interface JSONObject {
@@ -48,7 +53,7 @@ export async function modifyTranslations() {
       const flattened = flattenJson(JSON.parse(data));
       const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
       writeFileSync(translationCSV, csvContent, "utf-8");
-      console.log("successfully updated translations!");
+      console.log(chalk.green("successfully updated translations!"));
     }
   };
 

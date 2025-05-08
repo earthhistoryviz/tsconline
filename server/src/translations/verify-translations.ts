@@ -1,16 +1,20 @@
 import { readFileSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
+import { printUnifiedDiff } from "print-diff";
 import path from "path";
-
-if (!checkKeysExistInEnglish()) {
-  console.error("Some keys are missing English translations.");
-  process.exit(1);
-} else if (!(await checkTranslationSync())) {
-  console.error("Translation JSON and CSV are not equivalent.");
-  process.exit(1);
-} else {
-  console.log("verified translations.");
-  process.exit(0);
+try {
+  if (!checkKeysExistInEnglish()) {
+    console.error("Some keys are missing English translations.");
+    process.exit(1);
+  } else if (!(await checkTranslationSync())) {
+    console.error("Translation JSON and CSV are not equivalent.");
+    process.exit(1);
+  } else {
+    console.log("verified translations.");
+    process.exit(0);
+  }
+} catch (e) {
+  console.error("failed to verify translations");
 }
 
 //check that static JSON and translation CSV are equivalent
@@ -37,6 +41,7 @@ async function checkTranslationSync() {
 
     const csvData = readFileSync(translationCSV, "utf-8");
     if (jsonData !== csvData) {
+      printUnifiedDiff(jsonData, csvData);
       return false;
     }
   }

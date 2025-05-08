@@ -6,7 +6,7 @@ import chalk from "chalk";
 try {
   await createJsonTranslations();
 } catch (e) {
-  console.error(chalk.red("failed to create JSON translations from CSV"));
+  console.error("failed to create JSON translations from CSV");
 }
 
 async function createJsonTranslations() {

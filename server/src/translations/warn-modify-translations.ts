@@ -7,7 +7,11 @@ import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 import chalk from "chalk";
 
-await checkPrematureChange();
+try {
+  await checkPrematureChange();
+} catch (e) {
+  console.error("failed to check premature change for translations");
+}
 
 async function checkPrematureChange() {
   try {
