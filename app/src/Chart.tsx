@@ -14,15 +14,15 @@ import { OptionsBar } from "./ChartOptionsBar";
 import {
   Box,
   Typography,
+  Accordion,
   IconButton,
   FormControlLabel,
   Drawer,
-  List,
-  ListItemButton,
-  ListItemText,
-  Paper
+  Paper,
+  AccordionSummary,
+  AccordionDetails
 } from "@mui/material";
-import { ArrowBack } from "@mui/icons-material";
+import { ArrowBack, ArrowForwardIosSharp } from "@mui/icons-material";
 import HistoryIcon from "@mui/icons-material/History";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import { useTheme } from "@mui/material/styles";
@@ -33,7 +33,9 @@ import { defaultChartTabState } from "./constants";
 import { cloneDeep } from "lodash";
 import TimeLine from "./assets/icons/axes=one.svg";
 import { usePreviousLocation } from "./providers/PreviousLocationProvider";
-import { formatDate } from "./state/non-action-util";
+import { formatDate, purifyChartContent } from "./state/non-action-util";
+import { ChartHistoryMetadata } from "@tsconline/shared";
+import Color from "color";
 
 export const ChartContext = createContext<ChartContextType>({
   chartTabState: cloneDeep(defaultChartTabState)
@@ -54,6 +56,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
   const transformContainerRef = useRef<ReactZoomPanPinchContentRef>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const [chartAlignmentInitialized, setChartAlignmentInitialized] = useState(false); // used to make sure the chart alignment values are setup before we try to use them
+  const isCrossPlot = useLocation().pathname === "/crossplot";
   const step = 0.1;
   const minScale = 0.1;
   const maxScale = 2;
@@ -198,7 +201,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
 
   return (
     <Box className="chart-container">
-      {state.isLoggedIn && <HistorySideBar />}
+      {state.isLoggedIn && !isCrossPlot && <HistorySideBar />}
       {chartLoading ? (
         <LoadingChart />
       ) : madeChart ? (
@@ -292,11 +295,11 @@ export const ChartTab: React.FC = observer(() => {
     </>
   );
 });
-
 const HistorySideBar: React.FC = observer(() => {
   const { state, actions } = useContext(context);
   const [isDrawerOpen, setDrawerOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const theme = useTheme();
   return (
     <>
       <TSCDialogLoader open={loading} transparentBackground />
@@ -304,7 +307,8 @@ const HistorySideBar: React.FC = observer(() => {
         onClick={() => setDrawerOpen(true)}
         className="floating-history-button"
         sx={{
-          backgroundColor: "backgroundColor.main"
+          color: theme.palette.dark.contrastText,
+          backgroundColor: Color(theme.palette.dark.main).alpha(0.9).string()
         }}>
         <HistoryIcon fontSize="medium" />
       </Paper>
@@ -312,13 +316,13 @@ const HistorySideBar: React.FC = observer(() => {
         anchor="left"
         open={isDrawerOpen}
         onClose={() => setDrawerOpen(false)}
-        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main" } }}>
-        <Box padding={2}>
+        sx={{ "& .MuiDrawer-paper": { backgroundColor: "backgroundColor.main", backgroundImage: "none" } }}>
+        <Box padding={2} width={400}>
           <Box display="flex" alignItems="center">
             <IconButton>
               <HistoryIcon fontSize="medium" />
             </IconButton>
-            <Typography variant="h5">History</Typography>
+            <Typography variant="h5">Recent History</Typography>
             <CustomTooltip title="Delete all history entries">
               <IconButton
                 onClick={async () => {
@@ -333,10 +337,11 @@ const HistorySideBar: React.FC = observer(() => {
               </IconButton>
             </CustomTooltip>
           </Box>
-          <List>
-            {state.user.historyEntries.map((entry) => (
-              <ListItemButton
+          {state.user.historyEntries.map((entry) => {
+            return (
+              <HistoryEntry
                 key={entry.timestamp}
+                entry={entry}
                 onClick={async () => {
                   setLoading(true);
                   try {
@@ -345,25 +350,126 @@ const HistorySideBar: React.FC = observer(() => {
                   } finally {
                     setLoading(false);
                   }
-                }}>
-                <ListItemText primary={formatDate(entry.timestamp)} />
-                <IconButton
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    setLoading(true);
-                    try {
-                      await actions.deleteUserHistory(entry.timestamp);
-                    } finally {
-                      setLoading(false);
-                    }
-                  }}>
-                  <DeleteForeverIcon fontSize="small" />
-                </IconButton>
-              </ListItemButton>
-            ))}
-          </List>
+                }}
+                onDelete={async (e) => {
+                  e.stopPropagation();
+                  setLoading(true);
+                  try {
+                    await actions.deleteUserHistory(entry.timestamp);
+                  } finally {
+                    setLoading(false);
+                  }
+                }}
+              />
+            );
+          })}
         </Box>
       </Drawer>
     </>
   );
 });
+
+type HistoryEntryProps = {
+  entry: ChartHistoryMetadata;
+  onClick: () => void;
+  onDelete: (e: React.MouseEvent) => void;
+};
+const HistoryEntry: React.FC<HistoryEntryProps> = observer(({ entry, onClick, onDelete }) => {
+  const [expanded, setExpanded] = useState(false);
+  const theme = useTheme();
+  return (
+    <Accordion
+      className="history-entry-accordion"
+      disableGutters
+      elevation={0}
+      slotProps={{ transition: { timeout: 200 } }}
+      square
+      sx={{
+        backgroundColor: "backgroundColor.main",
+        "&.Mui-expanded": {
+          backgroundColor: "backgroundColor.main"
+        },
+        "&:hover": {
+          bgcolor:
+            theme.palette.mode === "light"
+              ? Color(theme.palette.backgroundColor.main).darken(0.04).string()
+              : Color(theme.palette.backgroundColor.main).lighten(0.26).string()
+        }
+      }}
+      key={entry.timestamp}
+      expanded={expanded}>
+      <AccordionSummary
+        className="history-entry-summary"
+        tabIndex={0}
+        expandIcon={
+          <ArrowForwardIosSharp
+            sx={{ fontSize: "0.9rem" }}
+            color="icon"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
+          />
+        }>
+        <Box className="history-entry-summary-container">
+          <Box
+            className="history-entry-summary-display-date"
+            onClick={() => {
+              onClick();
+            }}>
+            <div
+              className="history-entry-svg-display"
+              id={`${entry.timestamp}svg-display`}
+              dangerouslySetInnerHTML={{
+                __html: purifyChartContent(entry.chartContent, {
+                  preserveAspectRatio: "none",
+                  width: "100%",
+                  height: "100%"
+                })
+              }}
+            />
+            <Typography>{formatDate(entry.timestamp)}</Typography>
+          </Box>
+          <IconButton className="history-entry-summary-delete-button" onClick={onDelete}>
+            <DeleteForeverIcon />
+          </IconButton>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails className="history-entry-details">
+        <Box display="flex" gap="3px" flexDirection="column">
+          <Typography variant="caption" color="textSecondary">
+            Datapacks
+          </Typography>
+        </Box>
+        {entry.datapacks.map((dp, index) => (
+          <TimelineItem
+            key={dp.title}
+            title={dp.title}
+            authoredBy={dp.authoredBy}
+            isLast={entry.datapacks.length - 1 === index}
+          />
+        ))}
+      </AccordionDetails>
+    </Accordion>
+  );
+});
+type TimelineItemProps = {
+  authoredBy: string;
+  title: string;
+  isLast: boolean;
+};
+
+const TimelineItem: React.FC<TimelineItemProps> = ({ authoredBy, isLast, title }) => {
+  return (
+    <Box sx={{ position: "relative", display: "flex", alignItems: "flex-start", paddingBottom: "10px" }}>
+      <Box className="timeline-dot" />
+      {!isLast && <Box className="timeline-line" />}
+      <div style={{ paddingTop: "2px", paddingLeft: "15px" }}>
+        <Typography>{title}</Typography>
+        <Typography variant="caption" color="textSecondary">
+          {"Created by: " + authoredBy}
+        </Typography>
+      </div>
+    </Box>
+  );
+};
