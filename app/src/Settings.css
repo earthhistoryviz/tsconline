@@ -23,3 +23,11 @@
 .settings-tabs-side-bar {
   width: 190px;
 }
+.settings-container > :not(.settings-tabs-side-bar) {
+  padding: 20px;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}

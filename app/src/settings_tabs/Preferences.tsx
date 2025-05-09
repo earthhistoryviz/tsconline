@@ -17,7 +17,7 @@ export const Preferences = observer(function Preferences() {
 
   return (
     <div className="preferences-container">
-      <Box className="preferences-settings-container" sx={{ backgroundColor: "secondaryBackground.main" }}>
+      <Box className="preferences-settings-container">
         <FormGroup>
           <FormControlLabel
             name="skip-empty-columns"
