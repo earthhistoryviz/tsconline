@@ -523,6 +523,21 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
   state.settingsTabs.rootColumnName = root.name;
 });
 
+export const setRenderColumnInfoField = action(
+  function setRenderColumnInfoField<K extends keyof RenderColumnInfo>(
+    column: ColumnInfo | RenderColumnInfo,
+    key: K,
+    value: RenderColumnInfo[K]
+  ) {
+    const renderColumn = isRenderColumnInfo(column)
+      ? column
+      : getRenderColumnInfoFromColumnInfo(column);
+    if (renderColumn) {
+      renderColumn[key] = value;
+    }
+  }
+);
+
 /**
  * toggles the "on" state for a column that had its checkbox clicked
  * @param columnOrName the column or name of the toggled column
@@ -593,7 +608,7 @@ export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newS
   Object.assign(rangeSettings, newSettings);
 });
 export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
-  column.on = isOn;
+  setRenderColumnInfoField(column, "on", isOn);
 });
 export const getRenderColumnInfoFromColumnInfo = (column: ColumnInfo): RenderColumnInfo | undefined => {
   const renderColumn = state.settingsTabs.renderColumnHashMap.get(column.name);
@@ -604,12 +619,7 @@ export const getRenderColumnInfoFromColumnInfo = (column: ColumnInfo): RenderCol
   return renderColumn;
 };
 export const setEditName = action((newName: string, column: ColumnInfo | RenderColumnInfo) => {
-  if (isRenderColumnInfo(column)) {
-    column.editName = newName;
-  } else {
-    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
-    if (renderColumn) renderColumn.editName = newName;
-  }
+  setRenderColumnInfoField(column, "editName", newName);
 });
 
 export const setAutoScale = action((pointSettings: PointSettings) => {
@@ -628,12 +638,7 @@ export const flipRange = action((pointSettings: PointSettings) => {
 });
 
 export const setWidth = action((newWidth: number, column: ColumnInfo | RenderColumnInfo) => {
-  if (isRenderColumnInfo(column)) {
-    column.width = newWidth;
-  } else {
-    const renderColumn = getRenderColumnInfoFromColumnInfo(column);
-    if (renderColumn) renderColumn.width = newWidth;
-  }
+  setRenderColumnInfoField(column, "width", newWidth);
 });
 
 export const setColumnSelected = action((name: string) => {
@@ -1411,18 +1416,14 @@ export const setRGB = action((color: RGB, column: ColumnInfo) => {
  * will sync to columnHashMap via MobX reaction
  */
 export const setShow = action((show: boolean, column: ColumnInfo | RenderColumnInfo) => {
-  const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
-  if (!renderColumn) return;
-  renderColumn.show = show;
+  setRenderColumnInfoField(column, "show", show);
 });
 
 /**
  * will sync to columnHashMap via MobX reaction
  */
 export const setExpanded = action((expanded: boolean, column: ColumnInfo | RenderColumnInfo) => {
-  const renderColumn = isRenderColumnInfo(column) ? column : getRenderColumnInfoFromColumnInfo(column);
-  if (!renderColumn) return;
-  renderColumn.expanded = expanded;
+  setRenderColumnInfoField(column, "expanded", expanded);
 });
 
 export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
