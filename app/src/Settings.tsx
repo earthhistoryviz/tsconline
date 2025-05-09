@@ -6,44 +6,87 @@ import { Time } from "./settings_tabs/Time";
 import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
-import { useTheme } from "@mui/material/styles";
-import { Typography } from "@mui/material";
+import { styled, useTheme } from "@mui/material/styles";
+import { Box, Tab, Tabs, Typography } from "@mui/material";
 import "./Settings.css";
-import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
-import { useTranslation } from "react-i18next";
 import { Preferences } from "./settings_tabs/Preferences";
 import LoadSave from "./settings_tabs/LoadSave";
+import Color from "color";
 
+const TabWrapper = styled(Tab, { shouldForwardProp: (prop) => prop !== "showIndicator" })<{ showIndicator?: boolean }>(
+  ({ theme, showIndicator }) => ({
+    textTransform: "none",
+    minHeight: "auto",
+    justifyContent: "flex-start",
+    borderRadius: "10px",
+    marginLeft: "5px",
+    "&.Mui-selected": {
+      backgroundColor: Color(theme.palette.button.main).alpha(0.15).string(),
+      transition: "background-color 0.3s"
+    },
+    ...(showIndicator && {
+      "&::before": {
+        content: '""',
+        position: "absolute",
+        bottom: "10px",
+        left: 0,
+        width: "1px",
+        height: "22px",
+        backgroundColor: theme.palette.button.main,
+        transition: "width 0.3s ease"
+      }
+    }),
+    "&:hover:not(.Mui-selected)": {
+      backgroundColor: Color(theme.palette.button.light).alpha(0.1).string(),
+      transition: "background-color 0.3s"
+    }
+  })
+);
+const TabsWrapper = styled(Tabs)(() => ({
+  width: "180px",
+  justifyContent: "flex-start",
+  "& .MuiTabs-indicator": {
+    display: "none"
+  }
+}));
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  const SettingsHeader = () => {
-    const { t } = useTranslation();
-    return (
-      <div className="settings-header">
-        <Typography className="settings-header-title" variant="h3">
-          {t("title.settings")}
-        </Typography>
-      </div>
-    );
-  };
-  const tabs = Object.values(SettingsMenuOptionLabels).map((val) => ({ id: val, tab: val }));
+  const tabs = Object.entries(SettingsMenuOptionLabels).map(([key, val]) => ({
+    id: key,
+    tab: val.label,
+    icon: val.icon
+  }));
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
 
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
-      <SettingsHeader />
-      <CustomTabs
-        tabs={tabs}
-        value={tabIndex}
-        onChange={actions.setSettingsTabsSelected}
-        tabIndicatorLength={70}
-        centered
-        className="main-settings-tabs"
-      />
+      <Box bgcolor="dark.main" className="settings-tabs-side-bar">
+        <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
+          Settings
+        </Typography>
+        <TabsWrapper
+          onChange={(_, val) => {
+            actions.setSettingsTabsSelected(tabKeys[val] as SettingsTabs);
+          }}
+          value={tabIndex}
+          orientation="vertical">
+          {tabs.map((tab) => {
+            return (
+              <TabWrapper
+                showIndicator={state.settingsTabs.selected === tab.id}
+                key={tab.id}
+                label={tab.tab}
+                icon={<tab.icon />}
+                iconPosition="start"
+              />
+            );
+          })}
+        </TabsWrapper>
+      </Box>
       <SettingsTab tab={state.settingsTabs.selected} />
     </div>
   );
