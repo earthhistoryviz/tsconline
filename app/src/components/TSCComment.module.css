@@ -33,6 +33,7 @@
 
 .commentText {
   text-align: left;
+  white-space: pre-wrap;
 }
 
 .flaggedText {
