@@ -39,8 +39,8 @@ export const Comment = ({
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flagged, setFlagged] = useState(isFlagged);
   const { state } = useContext(context);
-  const [isSignedIn, setIsSignedIn] = useState(state.user !== null);
-  const [isAdmin, setIsAdmin] = useState(state.user.isAdmin);
+  const [isSignedIn] = useState(state.user !== null);
+  const [isAdmin] = useState(state.user.isAdmin);
   const formattedDate = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
