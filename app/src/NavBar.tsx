@@ -153,7 +153,7 @@ export const NavBar = observer(function Navbar() {
               }}
               gap={-2}
               onClose={() => settingsMenuToggle(false)}>
-              {Object.entries(SettingsMenuOptionLabels).map(([key, label]) => (
+              {Object.entries(SettingsMenuOptionLabels).map(([key, val]) => (
                 <TSCMenuItem
                   key={key}
                   className="settings-sub-menu-item"
@@ -164,7 +164,7 @@ export const NavBar = observer(function Navbar() {
                     navigate("/settings");
                     settingsMenuToggle(false);
                   }}>
-                  <Typography>{t(`settingsTabs.${label}`)}</Typography>
+                  <Typography>{t(`settingsTabs.${val.label}`)}</Typography>
                 </TSCMenuItem>
               ))}
             </ControlledMenu>
