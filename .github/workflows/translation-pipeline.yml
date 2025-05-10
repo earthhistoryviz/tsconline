@@ -1,0 +1,26 @@
+name: Translations Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  verify-translations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Dependencies
+        run: yarn install && yarn build
+
+      - name: Verify Translations
+        working-directory: server
+        run: yarn verify-translations
