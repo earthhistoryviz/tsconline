@@ -175,8 +175,8 @@
                 "past": "No past workshops at the moment."
             },
             "dates": {
-                "start": "Start Date: ",
-                "end": "End Date: "
+                "start": "Start Date:",
+                "end": "End Date:"
             },
             "details-page": {
                 "datapacks": "Datapacks",
@@ -251,7 +251,7 @@
                 "yAxis": "Y Axis (Age/Depth)"
             },
             "sidebar": {
-                "no-markers": " No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
+                "no-markers": "No Markers Available (Please Add a Marker by Clicking the Chart in the Main View)",
                 "no-models": "No Models Available (Please Add a Model by Clicking the Chart in the Main View)"
             },
             "out-of-date": {
@@ -295,7 +295,7 @@
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
                     "not-avaliable": "Not Available for this Unit",
-                    "vertical-scale": "Vertical Scale (cm per 1 ",
+                    "vertical-scale": "Vertical Scale (cm per 1",
                     "helper-text": "Base age should be older than top age",
                     "vertical-scale-header": "Vertical Scale"
                 }
@@ -336,7 +336,7 @@
                 "titles": {
                     "column-menu-title": "Column Customization",
                     "data-mining-title": "Data Mining Settings",
-                    "font-option-title": "Font Options for \"{{name}}\""
+                    "font-option-title": "Font Options for \"{{name}}"
                 },
                 "menu": {
                     "shift-row": "Shift Row Positions",
@@ -544,8 +544,8 @@
             "attached": "Attached",
             "send": "Send",
             "attach-files": "Attach Files",
-            "thank-you": "Thank you for your feedback! We appreciate your help\nin improving our product.",
-            "redirect": "You will be redirected to the homepage in ",
+            "thank-you": "Thank you for your feedback! We appreciate your help",
+            "redirect": "You will be redirected to the homepage in",
             "not-redirect": "If you are not redirected,",
             "click-here": "click here",
             "return-to-homepage": "to return to the homepage.",
