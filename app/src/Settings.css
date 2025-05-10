@@ -31,3 +31,6 @@
   align-items: flex-start;
   width: 100%;
 }
+.settings-container > :not(.settings-tabs-side-bar) .datapack-display-container {
+  width: 100%;
+}
