@@ -659,18 +659,19 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   if (searchColumnsAbortController) searchColumnsAbortController.abort();
   searchColumnsAbortController = new AbortController();
   setColumnSearchTerm(searchTerm);
+  const columnHashMap = state.settingsTabs.columnHashMap;
   if (searchTerm === "") {
-    state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    columnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
       setShow(true, columnInfo);
     });
     if (!state.settingsTabs.columns) return;
-    for (const child of state.settingsTabs.columns.children) {
+    for (const child of getChildRenderColumns(columnHashMap.get(state.settingsTabs.columns.name)!, columnHashMap)) {
       setExpanded(true, child);
     }
     return;
   }
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+  for (const columnInfo of columnHashMap.values()) {
     await yieldControl(counter, 30);
     setShow(false, columnInfo);
     setExpanded(false, columnInfo);
@@ -678,7 +679,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
 
   const regExp = getRegex(searchTerm);
 
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+  for (const columnInfo of columnHashMap.values()) {
     await yieldControl(counter, 30);
     if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
@@ -687,7 +688,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       await setExpansionOfAllChildren(columnInfo, false);
       await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
-        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
+        const parentColumnInfo = columnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
           setShow(true, parentColumnInfo);
           setExpanded(true, parentColumnInfo);
@@ -718,7 +719,7 @@ export const setDrawDualColCompColumn = action((baseColumn: ColumnInfo, overlayC
  * the minAge and maxAge are set to the minAge and maxAge of the overlay for time checking purposes.
  */
 
-export const addDualColCompColumn = action((column: ColumnInfo) => {
+export const addDualColCompColumn = action((column: RenderColumnInfo) => {
   if (column.columnDisplayType === "Event") {
     assertEventSettings(column.columnSpecificSettings);
     if (column.columnSpecificSettings.drawDualColCompColumn === null) {
@@ -744,7 +745,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     console.warn("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const index = parent.children.findIndex((child) => child.name === column.name);
+  const index = parent.children.findIndex((child) => child === column.name);
   if (index === -1) {
     console.warn(
       "WARNING: ",
@@ -765,8 +766,8 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     return;
   }
   const dualColCompColumnName = prependDualColCompColumnName(column.name);
-  const dualColCompColumn: ColumnInfo = observable({
-    ...cloneDeep(column),
+  const dualColCompColumn: ColumnInfo = {
+    ...cloneDeep(column.columnRef),
     name: dualColCompColumnName,
     editName: dualColCompColumnName,
     minAge: overlayColumn.minAge,
@@ -777,7 +778,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
       g: 255,
       b: 255
     }
-  });
+  };
   if (column.columnDisplayType === "Event") {
     dualColCompColumn.columnDisplayType = "Event";
     assertEventSettings(column.columnSpecificSettings);
@@ -795,12 +796,13 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
       dualColCompColumnRef: column.name
     };
   }
-  parent.children.splice(index + 1, 0, dualColCompColumn);
-  state.settingsTabs.columnHashMap.set(dualColCompColumnName, dualColCompColumn);
+  parent.children.splice(index + 1, 0, dualColCompColumnName);
+  parent.columnRef.children.splice(index + 1, 0, dualColCompColumn);
+  state.settingsTabs.columnHashMap.set(dualColCompColumnName, convertColumnInfoToRenderColumnInfo(dualColCompColumn));
   return dualColCompColumnName;
 });
 
-export const removeDualColCompColumn = action((column: ColumnInfo) => {
+export const removeDualColCompColumn = action((column: RenderColumnInfo) => {
   if (!column.parent) {
     console.log("WARNING: tried to remove a dual col comp column from a column with no parent");
     return;
@@ -811,11 +813,12 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     return;
   }
   const columnToRemove = prependDualColCompColumnName(column.name);
-  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  const index = parent.children.findIndex((child) => child=== columnToRemove);
   if (index === -1) {
     return;
   }
   parent.children.splice(index, 1);
+  parent.columnRef.children.splice(index, 1);
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
@@ -1279,10 +1282,10 @@ export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrient
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+export const setShowOfAllChildren = action(async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
   column.show = isShown;
   await yieldControl(counter, 30);
-  for (const child of column.children) {
+  for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
     await setShowOfAllChildren(child, isShown, counter);
   }
 });
@@ -1335,11 +1338,11 @@ export const setRGB = action((color: RGB, column: ColumnInfo) => {
   column.rgb = color;
 });
 
-export const setShow = action((show: boolean, column: ColumnInfo) => {
+export const setShow = action((show: boolean, column: RenderColumnInfo) => {
   column.show = show;
 });
 
-export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
+export const setExpanded = action((expanded: boolean, column: RenderColumnInfo) => {
   column.expanded = expanded;
 });
 
