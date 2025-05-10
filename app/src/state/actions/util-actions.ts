@@ -1,8 +1,9 @@
-import { action } from "mobx";
+import { action, observable } from "mobx";
 import { ErrorCodes } from "../../util/error-codes";
 import { pushError, pushSnackbar } from "./general-actions";
 import { ColumnInfo, assertEventSettings, assertPointSettings, isServerResponseError } from "@tsconline/shared";
 import { state } from "../state";
+import { RenderColumnInfo } from "../../types";
 /**
  * Since we hash by name only to allow consistency between facies maps and
  * the column page, a generic like Facies Label will cause errors.
@@ -12,7 +13,7 @@ import { state } from "../state";
  * However, this is asyncronous, which makes it less likely to cause problems.
  * @param column
  */
-export const changeManuallyAddedColumns = action((column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>) => {
+export const changeManuallyAddedColumns = action((column: ColumnInfo, columnHashMap: Map<string, RenderColumnInfo>) => {
   const parent = column.parent && columnHashMap.get(column.parent);
   if (parent && parent.columnDisplayType === "BlockSeriesMetaColumn") {
     if (column.name === `${column.parent} Facies Label`) {

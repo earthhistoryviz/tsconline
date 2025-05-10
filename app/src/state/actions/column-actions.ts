@@ -1,4 +1,4 @@
-import { action, observable } from "mobx";
+import { action, observable, reaction } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -41,6 +41,7 @@ import {
   DataMiningStatisticApproach,
   EventSearchInfo,
   GroupedEventSearchInfo,
+  RenderColumnInfo,
   WindowStats,
   convertDataMiningPointDataTypeToDataMiningStatisticApproach
 } from "../../types";
@@ -51,7 +52,7 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
+import { convertColumnInfoToRenderColumnInfo, discardTscPrefix, findSerialNum, getChildRenderColumns, prependDualColCompColumnName } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -474,13 +475,58 @@ export const applyRowOrder = action(
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
+export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
+  const tempMap = observable.map<string, RenderColumnInfo>();
+  const stack: ColumnInfo[] = [root];
+  const counter = { count: 0 };
 
-  state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, counter);
+  while (stack.length > 0) {
+    await yieldControl(counter, 30);
+    const current = stack.pop()!;
+    const renderColumn = convertColumnInfoToRenderColumnInfo(current);
+    tempMap.set(renderColumn.name, renderColumn);
+
+    reaction(
+      () => ({
+        name: renderColumn.name,
+        editName: renderColumn.editName,
+        fontsInfo: renderColumn.fontsInfo,
+        fontOptions: renderColumn.fontOptions,
+        on: renderColumn.on,
+        popup: renderColumn.popup,
+        parent: renderColumn.parent,
+        subInfo: renderColumn.subInfo,
+        expanded: renderColumn.expanded,
+        show: renderColumn.show,
+        enableTitle: renderColumn.enableTitle,
+        columnDisplayType: renderColumn.columnDisplayType,
+        width: renderColumn.width,
+        rgb: renderColumn.rgb,
+        columnSpecificSettings: renderColumn.columnSpecificSettings,
+      }),
+      (updated) => {
+        current.editName = updated.editName;
+        current.fontsInfo = updated.fontsInfo;
+        current.fontOptions = updated.fontOptions;
+        current.on = updated.on;
+        current.popup = updated.popup;
+        current.parent = updated.parent;
+        current.subInfo = updated.subInfo;
+        current.expanded = updated.expanded;
+        current.show = updated.show;
+        current.enableTitle = updated.enableTitle;
+        current.columnDisplayType = updated.columnDisplayType;
+        current.width = updated.width;
+        current.rgb = updated.rgb;
+        current.columnSpecificSettings = updated.columnSpecificSettings;
+      }
+    );
+
+    for (const child of current.children) {
+      stack.push(child);
+    }
   }
+  state.settingsTabs.columnHashMap = tempMap;
 });
 
 /**
@@ -774,7 +820,7 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
 });
 
 export const addDataMiningColumn = action(
-  (column: ColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
+  (column: RenderColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
     if (
       column.columnDisplayType !== "Event" &&
       column.columnDisplayType !== "Point" &&
@@ -794,7 +840,7 @@ export const addDataMiningColumn = action(
       console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
       return;
     }
-    const index = parent.children.findIndex((child) => child.name === column.name);
+    const index = parent.children.findIndex((child) => child === column.name);
     if (index === -1) {
       console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
       return;
@@ -953,8 +999,8 @@ export const addDataMiningColumn = action(
       stat
     );
     const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
-    const dataMiningColumn: ColumnInfo = observable({
-      ...cloneDeep(column),
+    const dataMiningColumn: ColumnInfo = {
+      ...cloneDeep(column.columnRef),
       name: dataMiningColumnName,
       editName: dataMiningColumnName,
       enableTitle: true,
@@ -976,14 +1022,15 @@ export const addDataMiningColumn = action(
         scaleStart,
         isDataMiningColumn: true
       }
-    });
-    parent.children.splice(index + 1, 0, dataMiningColumn);
-    state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    };
+    parent.columnRef.children.splice(index + 1, 0, dataMiningColumn);
+    state.settingsTabs.columnHashMap.set(dataMiningColumnName, convertColumnInfoToRenderColumnInfo(dataMiningColumn));
+    state.settingsTabs.columnHashMap.get(parent.name)?.children.push(dataMiningColumnName);
     return dataMiningColumnName;
   }
 );
 
-export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
+export const removeDataMiningColumn = action((column: RenderColumnInfo, type: string) => {
   if (!column.parent) {
     console.log("WARNING: tried to remove a data mining column from a column with no parent");
     return;
@@ -995,7 +1042,7 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   }
   const columnToRemove =
     column.columnDisplayType !== "Chron" ? type + " for " + column.name : type + " for " + parent.name;
-  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  const index = parent.children.findIndex((child) => child === columnToRemove);
   if (index === -1) {
     return;
   }
@@ -1003,11 +1050,12 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
-export const addBlankColumn = action((column: ColumnInfo) => {
-  if (column.children.length == 0) {
+export const addBlankColumn = action((renderColumn: RenderColumnInfo) => {
+  if (renderColumn.children.length == 0) {
     console.log("WARNING: tried to add a blank column to a column with no children");
     return;
   }
+  const column = renderColumn.columnRef;
   let serialNumber = 1;
   const largestExistingSerialNum = column.children.findLastIndex(
     (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
@@ -1016,7 +1064,7 @@ export const addBlankColumn = action((column: ColumnInfo) => {
     serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
-  const blankColumn: ColumnInfo = observable({
+  const blankColumn: ColumnInfo = {
     ...cloneDeep(column),
     on: true,
     children: [],
@@ -1033,17 +1081,19 @@ export const addBlankColumn = action((column: ColumnInfo) => {
       g: 255,
       b: 255
     }
-  });
+  };
 
-  column.children.splice(column.children.length, 0, blankColumn);
-  state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
+  column.children.push(blankColumn);
+  state.settingsTabs.columnHashMap.get(column.name)?.children.push(blankColumnName);
+  const renderBlankColumn = convertColumnInfoToRenderColumnInfo(blankColumn);
+  state.settingsTabs.columnHashMap.set(blankColumnName, renderBlankColumn);
 });
-export const addAgeColumn = action((column: ColumnInfo) => {
-  if (column.children.length == 0) {
+export const addAgeColumn = action((renderColumn: RenderColumnInfo) => {
+  if (renderColumn.children.length == 0) {
     console.log("WARNING: tried to add an age column to a column with no children");
     return;
   }
-
+  const column = renderColumn.columnRef;
   let serialNumber = 1;
   const largestExistingSerialNum = column.children.findLastIndex(
     (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
@@ -1052,7 +1102,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
-  const ageColumn: ColumnInfo = observable({
+  const ageColumn: ColumnInfo = {
     ...cloneDeep(column),
     on: true,
     children: [],
@@ -1072,9 +1122,11 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     columnSpecificSettings: {
       justification: "left"
     }
-  });
-  column.children.splice(column.children.length, 0, ageColumn);
-  state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
+  };
+  column.children.push(ageColumn);
+  state.settingsTabs.columnHashMap.get(column.name)?.children.push(ageColumnName);
+  const renderAgeColumn = convertColumnInfoToRenderColumnInfo(ageColumn);
+  state.settingsTabs.columnHashMap.set(ageColumnName, renderAgeColumn);
 });
 export const makeColumnPath = action((name: string): string[] => {
   const columnPath: string[] = [];
@@ -1236,10 +1288,10 @@ export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: b
 });
 
 export const setExpansionOfAllChildren = action(
-  async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+  async (column: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
     column.expanded = isExpanded;
     await yieldControl(counter, 30);
-    for (const child of column.children) {
+    for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
       await setExpansionOfAllChildren(child, isExpanded, counter);
     }
   }
@@ -1311,7 +1363,7 @@ export const setEventSearchTerm = action((term: string) => {
 export const incrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
+  const index = parent.children.indexOf(column.name);
   if (index > 0) {
     // If it's not the first element, swap with the previous one
     [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
@@ -1326,7 +1378,7 @@ export const incrementColumnPosition = action((column: ColumnInfo) => {
 export const decrementColumnPosition = action((column: ColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
+  const index = parent.children.indexOf(column.name);
   if (index < parent.children.length - 1 && index !== -1) {
     // If it's not the last element, swap with the next one
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];

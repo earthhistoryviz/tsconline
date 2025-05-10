@@ -77,7 +77,8 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
         <ColumnContext.Provider
           value={{
             state: {
-              columns: state.settingsTabs.columns,
+              rootColumnName: state.settingsTabs.columns?.name || "",
+              columnHashMap: state.settingsTabs.columnHashMap,
               columnSearchTerm: state.settingsTabs.columnSearchTerm,
               columnSelected: state.columnMenu.columnSelected,
               timeSettings: state.settings.timeSettings

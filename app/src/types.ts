@@ -18,6 +18,11 @@ import {
 } from "@tsconline/shared";
 import React from "react";
 
+export type RenderColumnInfo = {
+  children: string[];
+  columnRef: ColumnInfo;
+} & Omit<ColumnInfo, "children">;
+
 export type DatapackFetchParams = {
   isPublic: boolean;
 } & DatapackUniqueIdentifier;

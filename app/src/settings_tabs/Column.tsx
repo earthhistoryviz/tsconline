@@ -19,14 +19,15 @@ import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
-import { CrossPlotTimeSettings, TimeSettings } from "../types";
+import { CrossPlotTimeSettings, RenderColumnInfo, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
 import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 
 type ColumnContextType = {
   state: {
-    columns: ColumnInfo | undefined;
+    rootColumnName: string;
+    columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
     columnSelected: string | null;
     timeSettings:
@@ -42,7 +43,8 @@ type ColumnContextType = {
 };
 export const ColumnContext = createContext<ColumnContextType>({
   state: {
-    columns: undefined,
+    rootColumnName: "",
+    columnHashMap: new Map<string, RenderColumnInfo>(),
     columnSearchTerm: "",
     columnSelected: "",
     timeSettings: {} as TimeSettings
@@ -98,7 +100,6 @@ export const ColumnDisplay = observer(() => {
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  console.log("state.columnSelected", state.columnSelected);
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -140,8 +141,8 @@ export const ColumnDisplay = observer(() => {
             disableRipple
             className="expand-collapse-column-buttons"
             onClick={() => {
-              if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, true);
+              if (!state.columnHashMap.size) return;
+              globalActions.setExpansionOfAllChildren(state.columnHashMap.get(state.rootColumnName)!, true);
             }}>
             <ExpandIcon />
           </IconButton>
@@ -151,17 +152,20 @@ export const ColumnDisplay = observer(() => {
             disableRipple
             className="expand-collapse-column-buttons"
             onClick={() => {
-              if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, false);
+              if (!state.columnHashMap.size) return;
+              globalActions.setExpansionOfAllChildren(state.columnHashMap.get(state.rootColumnName)!, false);
             }}>
             <CompressIcon />
           </IconButton>
         </CustomTooltip>
       </div>
-      {state.columns &&
-        Object.entries(state.columns.children).map(([childName, childDetails]) => (
-          <ColumnAccordion key={childName} details={childDetails} />
-        ))}
+      {state.columnHashMap.get(state.rootColumnName)?.children.map((columnName) => {
+        const column = state.columnHashMap.get(columnName);
+        if (!column) return null;
+        return (
+          <ColumnAccordion key={columnName} details={column} />
+        );
+      })}
       {/* Button to take users to top of column menu when scrolling */}
 
       <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
@@ -177,7 +181,7 @@ export const ColumnDisplay = observer(() => {
 });
 
 type ColumnAccordionProps = {
-  details: ColumnInfo;
+  details: RenderColumnInfo;
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
@@ -232,17 +236,20 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
+        {state.columnHashMap.get(details.name)?.children.map((columnName) => {
+          const column = state.columnHashMap.get(columnName);
+          if (!column) return null;
+          return (
+            <ColumnAccordion key={columnName} details={column} />
+          );
+        })}
         </MuiAccordionDetails>
       </Accordion>
     </div>
   );
 });
 
-const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
+const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
   const theme = useTheme();
