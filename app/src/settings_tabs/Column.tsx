@@ -157,9 +157,9 @@ export const ColumnDisplay = observer(() => {
         </CustomTooltip>
       </div>
       {state.columns &&
-        getChildRenderColumns(state.columns, state.columnHashMap).map((column) => {
-          return <ColumnAccordion key={column.name} details={column} />;
-        })}
+        getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
+          <ColumnAccordion key={column.name} details={column} />
+        ))}
       {/* Button to take users to top of column menu when scrolling */}
 
       <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>

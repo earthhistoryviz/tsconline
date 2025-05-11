@@ -437,7 +437,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
   handleDualColCompColumns();
-  await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
+  await applyRowOrder(state.settingsTabs.renderColumns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
@@ -527,15 +527,17 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   for (const opt in columnRoot.fontsInfo) {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
+  const renderColumnRoot = convertColumnInfoToRenderColumnInfo(columnRoot);
   // throws warning if this isn't in its own action.
   runInAction(() => {
     state.settingsTabs.columns = columnRoot;
+    state.settingsTabs.renderColumns = renderColumnRoot;
     state.settings.datapackContainsSuggAge = false;
     state.mapState.mapHierarchy = {};
     state.mapState.mapInfo = {};
     state.settingsTabs.columnHashMap = new Map();
     state.config.datapacks = [];
-    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
+    state.settingsTabs.columnHashMap.set(renderColumnRoot.name, renderColumnRoot);
   });
 
   // we add Ma unit by default

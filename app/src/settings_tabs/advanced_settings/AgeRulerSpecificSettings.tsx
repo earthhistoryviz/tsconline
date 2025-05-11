@@ -1,12 +1,13 @@
-import { ColumnInfo, assertRulerSettings } from "@tsconline/shared";
+import { assertRulerSettings } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 type AgeRulerSpecificSettingsProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 
 export const AgeRulerSpecificSettings: React.FC<AgeRulerSpecificSettingsProps> = observer(({ column }) => {

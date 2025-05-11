@@ -1,5 +1,5 @@
 import { Box, IconButton, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
-import { ColumnInfo, assertPointSettings, isPointShape } from "@tsconline/shared";
+import { assertPointSettings, isPointShape } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
@@ -14,9 +14,10 @@ import {
 } from "../../components";
 import { GenericTextField } from "../../components";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 type PointSettingsPopupProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 
 export const PointSettingsDisplay: React.FC<PointSettingsPopupProps> = observer(({ column }) => {

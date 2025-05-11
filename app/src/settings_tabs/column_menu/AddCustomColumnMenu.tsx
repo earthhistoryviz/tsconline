@@ -125,9 +125,9 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
           <Box display="flex" justifyContent="space-between" height="70vh" gap={3}>
             <CustomColumnPanel p={2}>
               <StyledScrollbar>
-                {getChildRenderColumns(column, chartState.columnHashMap).map((column) => {
-                  return <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setBaseColumn} />;
-                })}
+                {getChildRenderColumns(column, chartState.columnHashMap).map((column) => (
+                  <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setBaseColumn} />
+                ))}
               </StyledScrollbar>
             </CustomColumnPanel>
             <CustomColumnPanel height="fit-content">
@@ -164,11 +164,9 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
                 <DataMiningSettings column={baseColumn} onDataMiningTypeChange={setDataMiningEventType} />
               ) : (
                 <StyledScrollbar>
-                  {getChildRenderColumns(column, chartState.columnHashMap).map((column) => {
-                    return (
-                      <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setOverlayColumn} />
-                    );
-                  })}
+                  {getChildRenderColumns(column, chartState.columnHashMap).map((column) => (
+                    <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setOverlayColumn} />
+                  ))}
                 </StyledScrollbar>
               )}
             </CustomColumnPanel>

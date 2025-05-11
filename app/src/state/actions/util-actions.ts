@@ -1,4 +1,4 @@
-import { action, observable } from "mobx";
+import { action } from "mobx";
 import { ErrorCodes } from "../../util/error-codes";
 import { pushError, pushSnackbar } from "./general-actions";
 import { ColumnInfo, assertEventSettings, assertPointSettings, isServerResponseError } from "@tsconline/shared";
@@ -86,7 +86,7 @@ export function checkDatapackValidity(file: File) {
   return true;
 }
 
-export function checkIfDccDataIsInRange(dccColumn: ColumnInfo, userTopAge: number, userBaseAge: number) {
+export function checkIfDccDataIsInRange(dccColumn: RenderColumnInfo, userTopAge: number, userBaseAge: number) {
   if (userBaseAge <= userTopAge) {
     return false;
   }
