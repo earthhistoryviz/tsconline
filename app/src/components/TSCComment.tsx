@@ -18,6 +18,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
 import { CommentType } from "./TSCDiscussion";
 import { context } from "../state";
+import { useTranslation } from "react-i18next";
 
 export type TSCCommentProps = CommentType & {
   handleDelete: (id: number) => void;
@@ -32,6 +33,7 @@ export const Comment = ({
   isFlagged = false,
   handleDelete
 }: TSCCommentProps) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const theme = useTheme();
@@ -85,12 +87,12 @@ export const Comment = ({
         }}>
         <MenuItem onClick={() => handleReport()}>
           <OutlinedFlagIcon sx={{ color: "text.primary" }} />
-          <Typography color="text.primary">Report</Typography>
+          <Typography color="text.primary">{t("general-actions.report")}</Typography>
         </MenuItem>
         {((isSelf && isSignedIn) || isAdmin) && (
           <MenuItem onClick={() => handleDeleteComment()}>
             <DeleteIcon sx={{ color: "text.primary" }} />
-            <Typography color="text.primary">Delete</Typography>
+            <Typography color="text.primary">{t("general-actions.delete")}</Typography>
           </MenuItem>
         )}
       </Menu>
@@ -112,12 +114,12 @@ export const Comment = ({
           <Box>
             <MenuItem onClick={() => handleReport()}>
               <OutlinedFlagIcon sx={{ color: "text.primary" }} />
-              <Typography color="text.primary">Report</Typography>
+              <Typography color="text.primary">{t("general-actions.report")}</Typography>
             </MenuItem>
             {((isSelf && isSignedIn) || isAdmin) && (
               <MenuItem onClick={() => handleDeleteComment()}>
                 <DeleteIcon sx={{ color: "text.primary" }} />
-                <Typography color="text.primary">Delete</Typography>
+                <Typography color="text.primary">{t("general-actions.delete")}</Typography>
               </MenuItem>
             )}
           </Box>
@@ -134,7 +136,7 @@ export const Comment = ({
         <Typography className={styles.commentText}>{text}</Typography>
         {flagged && (
           <Typography className={styles.flaggedText} style={{ color: theme.palette.error.main }}>
-            This comment has been flagged.
+            {t("settings.datapacks.comment-flagged")}
           </Typography>
         )}
       </div>
