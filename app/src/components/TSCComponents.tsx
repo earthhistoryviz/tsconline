@@ -6,6 +6,8 @@ import {
   IconButton,
   SvgIcon,
   SvgIconProps,
+  Tab,
+  Tabs,
   Tooltip,
   TooltipProps,
   Typography,
@@ -22,6 +24,42 @@ import Lottie from "./TSCLottie";
 
 export const ColoredIconButton = styled(IconButton)(({ theme }) => ({
   color: theme.palette.primary.main
+}));
+export const TabWrapper = styled(Tab, { shouldForwardProp: (prop) => prop !== "showIndicator" })<{
+  showIndicator?: boolean;
+}>(({ theme, showIndicator }) => ({
+  textTransform: "none",
+  minHeight: "auto",
+  justifyContent: "flex-start",
+  borderRadius: "10px",
+  marginLeft: "5px",
+  "&.Mui-selected": {
+    backgroundColor: Color(theme.palette.button.main).alpha(0.15).string(),
+    transition: "background-color 0.3s"
+  },
+  ...(showIndicator && {
+    "&::before": {
+      content: '""',
+      position: "absolute",
+      bottom: "10px",
+      left: 0,
+      width: "1px",
+      height: "22px",
+      backgroundColor: theme.palette.button.main,
+      transition: "width 0.3s ease"
+    }
+  }),
+  "&:hover:not(.Mui-selected)": {
+    backgroundColor: Color(theme.palette.button.light).alpha(0.1).string(),
+    transition: "background-color 0.3s"
+  }
+}));
+export const TabsWrapper = styled(Tabs)(() => ({
+  width: "180px",
+  justifyContent: "flex-start",
+  "& .MuiTabs-indicator": {
+    display: "none"
+  }
 }));
 
 export const CustomHeader = styled(Typography)(({ theme }) => ({

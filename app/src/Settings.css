@@ -24,7 +24,7 @@
   width: 190px;
 }
 .settings-container > :not(.settings-tabs-side-bar) {
-  padding: 20px;
+  padding: 20px 10px 0px 10px;
   display: flex;
   justify-content: flex-start;
   flex-direction: column;

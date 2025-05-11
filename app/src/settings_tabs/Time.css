@@ -3,12 +3,9 @@
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  border: 1px solid gray;
-  border-radius: 4px;
-  padding: 10px;
   /* top | left and right | bottom */
   margin: 10px auto 10px;
-  width: 50%;
+  width: 100%;
 }
 .time-settings-container > * {
   width: 100%;
@@ -16,19 +13,18 @@
 .time-settings-age-container {
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: center;
   padding: 12px;
   margin: 10px 0px;
 }
 .IntervalLabel {
   margin-bottom: 2px;
+  padding-left: 10px;
+  padding-bottom: 5px;
 }
-.MuiToggleButtonGroup-root.ToggleButtonGroup {
+.MuiToggleButtonGroup-root.TimeToggleButtonGroup {
   margin-top: 10px;
-  width: 100%;
-  align-items: center;
-  justify-content: center;
+  align-self: flex-start;
 }
 .FormControlIntervals {
   width: 100%;
@@ -67,6 +63,12 @@
   display: flex;
   justify-content: center;
   margin-bottom: 10px;
+}
+.time-settings-header-and-settings {
+  display: grid;
+  grid-template-columns: minmax(min-content, 100px) 1fr;
+  grid-template-rows: 1fr;
+  width: 100%;
 }
 @media screen and (max-width: 600px) {
   .time-settings-container {

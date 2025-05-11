@@ -6,51 +6,15 @@ import { Time } from "./settings_tabs/Time";
 import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
-import { styled, useTheme } from "@mui/material/styles";
-import { Box, Tab, Tabs, Typography } from "@mui/material";
+import { useTheme } from "@mui/material/styles";
+import { Box, Typography } from "@mui/material";
 import "./Settings.css";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { Preferences } from "./settings_tabs/Preferences";
 import LoadSave from "./settings_tabs/LoadSave";
-import Color from "color";
+import { TabWrapper, TabsWrapper } from "./components";
 
-const TabWrapper = styled(Tab, { shouldForwardProp: (prop) => prop !== "showIndicator" })<{ showIndicator?: boolean }>(
-  ({ theme, showIndicator }) => ({
-    textTransform: "none",
-    minHeight: "auto",
-    justifyContent: "flex-start",
-    borderRadius: "10px",
-    marginLeft: "5px",
-    "&.Mui-selected": {
-      backgroundColor: Color(theme.palette.button.main).alpha(0.15).string(),
-      transition: "background-color 0.3s"
-    },
-    ...(showIndicator && {
-      "&::before": {
-        content: '""',
-        position: "absolute",
-        bottom: "10px",
-        left: 0,
-        width: "1px",
-        height: "22px",
-        backgroundColor: theme.palette.button.main,
-        transition: "width 0.3s ease"
-      }
-    }),
-    "&:hover:not(.Mui-selected)": {
-      backgroundColor: Color(theme.palette.button.light).alpha(0.1).string(),
-      transition: "background-color 0.3s"
-    }
-  })
-);
-const TabsWrapper = styled(Tabs)(() => ({
-  width: "180px",
-  justifyContent: "flex-start",
-  "& .MuiTabs-indicator": {
-    display: "none"
-  }
-}));
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
