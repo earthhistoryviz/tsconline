@@ -728,7 +728,7 @@ describe("configureOptionalPointSettings tests", () => {
       (point: Point) => ({
         ...point,
         pointShape: "rect",
-        drawLine: false,
+        drawLine: true,
         lineColor: { r: 255, g: 0, b: 0 },
         fill: { r: 255, g: 255, b: 255 },
         lowerRange: -100,
@@ -741,7 +741,7 @@ describe("configureOptionalPointSettings tests", () => {
       (point: Point) => ({
         ...point,
         pointShape: "rect",
-        drawLine: false,
+        drawLine: true,
         lineColor: { r: 255, g: 0, b: 0 },
         drawFill: false,
         lowerRange: -100,
