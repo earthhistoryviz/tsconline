@@ -44,7 +44,7 @@ import {
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { compareStrings } from "../../util/util";
+import { compareStrings, convertColumnInfoToRenderColumnInfo } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
@@ -661,6 +661,7 @@ export const setDatapackConfig = action(
   ): Promise<boolean> => {
     resetSettings();
     state.settingsTabs.columns = columnRoot;
+    state.settingsTabs.renderColumns = convertColumnInfoToRenderColumnInfo(columnRoot);
     state.settings.datapackContainsSuggAge = foundDefaultAge;
     state.mapState.mapHierarchy = mapHierarchy;
     state.mapState.mapInfo = mapInfo;

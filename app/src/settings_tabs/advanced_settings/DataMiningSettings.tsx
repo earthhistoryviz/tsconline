@@ -1,5 +1,4 @@
 import {
-  ColumnInfo,
   assertEventSettings,
   assertPointSettings,
   isEventFrequency,
@@ -18,9 +17,10 @@ import "./DataMiningSettings.css";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { context } from "../../state";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 type DataMiningSettingsProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
   onDataMiningTypeChange: (event: EventFrequency | DataMiningPointDataType) => void;
 };
 export const DataMiningModal: React.FC<DataMiningSettingsProps> = observer(({ column, onDataMiningTypeChange }) => {

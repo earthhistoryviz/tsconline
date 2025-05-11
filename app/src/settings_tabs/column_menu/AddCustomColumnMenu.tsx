@@ -9,11 +9,11 @@ import {
   FormHelperText,
   Box
 } from "@mui/material";
-import { ColumnInfo, EventFrequency, DataMiningPointDataType } from "@tsconline/shared";
+import { EventFrequency, DataMiningPointDataType } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext, useState } from "react";
 import { StyledScrollbar, TSCButton } from "../../components";
-import { createGradient } from "../../util/util";
+import { createGradient, getChildRenderColumns } from "../../util/util";
 import { DataMiningSettings } from "../advanced_settings/DataMiningSettings";
 import { OverlayColumnAccordion } from "../advanced_settings/OverlaySettings";
 import { context } from "../../state";
@@ -22,9 +22,11 @@ import SpokeRoundedIcon from "@mui/icons-material/SpokeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import "./AddCustomColumnMenu.css";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
+import { ColumnContext } from "../Column";
 
 type AddCustomColumnMenuProps = {
-  column: ColumnInfo | undefined;
+  column: RenderColumnInfo | undefined;
   onClose: () => void;
 };
 
@@ -44,6 +46,7 @@ const CustomRadioButton = styled(Radio)(({ theme }: { theme: Theme }) => ({
 export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(({ column, onClose }) => {
   if (!column) return null;
   const { state, actions } = useContext(context);
+  const { state: chartState } = useContext(ColumnContext);
   const theme = useTheme();
   const { t } = useTranslation();
   const icons = [BarChartIcon, SpokeRoundedIcon, SettingsIcon];
@@ -58,12 +61,12 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
   const columnSelected = state.columnMenu.columnSelected
     ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null
     : null;
-  const [baseColumn, setBaseColumn] = useState<ColumnInfo | null>(
+  const [baseColumn, setBaseColumn] = useState<RenderColumnInfo | null>(
     columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event"
       ? columnSelected
       : null
   );
-  const [overlayColumn, setOverlayColumn] = useState<ColumnInfo | null>(null);
+  const [overlayColumn, setOverlayColumn] = useState<RenderColumnInfo | null>(null);
   const [dataMiningEventType, setInternalDataMiningEventType] = useState<
     EventFrequency | DataMiningPointDataType | null
   >(null);
@@ -122,10 +125,9 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
           <Box display="flex" justifyContent="space-between" height="70vh" gap={3}>
             <CustomColumnPanel p={2}>
               <StyledScrollbar>
-                {column.children &&
-                  Object.entries(column.children).map(([childName, childColumn]) => (
-                    <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setBaseColumn} />
-                  ))}
+                {getChildRenderColumns(column, chartState.columnHashMap).map((column) => {
+                  return <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setBaseColumn} />;
+                })}
               </StyledScrollbar>
             </CustomColumnPanel>
             <CustomColumnPanel height="fit-content">
@@ -162,10 +164,11 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
                 <DataMiningSettings column={baseColumn} onDataMiningTypeChange={setDataMiningEventType} />
               ) : (
                 <StyledScrollbar>
-                  {column.children &&
-                    Object.entries(column.children).map(([childName, childColumn]) => (
-                      <OverlayColumnAccordion key={childName} column={childColumn} onColumnClick={setOverlayColumn} />
-                    ))}
+                  {getChildRenderColumns(column, chartState.columnHashMap).map((column) => {
+                    return (
+                      <OverlayColumnAccordion key={column.name} column={column} onColumnClick={setOverlayColumn} />
+                    );
+                  })}
                 </StyledScrollbar>
               )}
             </CustomColumnPanel>
