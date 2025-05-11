@@ -45,6 +45,7 @@ const settingsTabs = observable(
   {
     selected: "time" as SettingsTabs,
     columns: undefined,
+    renderColumns: undefined,
     columnHashMap: new Map<string, RenderColumnInfo>(),
     columnSearchTerm: "",
     datapackDisplayType: "compact" as const,
@@ -52,7 +53,7 @@ const settingsTabs = observable(
     groupedEvents: []
   },
   {
-    columns: false,
+    columns: false
   }
 );
 
@@ -111,6 +112,7 @@ export type State = {
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
+    renderColumns: RenderColumnInfo | undefined;
     columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
     datapackDisplayType: "rows" | "cards" | "compact";

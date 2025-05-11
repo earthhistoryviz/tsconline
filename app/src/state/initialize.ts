@@ -1,3 +1,4 @@
+import { extractDatapackType } from "@tsconline/shared";
 import { actions } from "./index";
 
 export async function initialize() {
@@ -10,4 +11,18 @@ export async function initialize() {
   actions.fetchFaciesPatterns();
   actions.fetchTimescaleDataAction();
   actions.fetchAllWorkshops();
+  const datapack = (await actions.fetchDatapack({
+    title: "TimeScale Creator Internal Datapack",
+    type: "official",
+    isPublic: true
+  }))!;
+  actions.addDatapack(datapack);
+  actions.processDatapackConfig([
+    {
+      title: datapack.title,
+      isPublic: datapack.isPublic,
+      storedFileName: datapack.storedFileName,
+      ...extractDatapackType(datapack)
+    }
+  ]);
 }

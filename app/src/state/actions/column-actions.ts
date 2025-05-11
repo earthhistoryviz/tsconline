@@ -52,7 +52,13 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import { convertColumnInfoToRenderColumnInfo, discardTscPrefix, findSerialNum, getChildRenderColumns, prependDualColCompColumnName } from "../../util/util";
+import {
+  convertColumnInfoToRenderColumnInfo,
+  discardTscPrefix,
+  findSerialNum,
+  getChildRenderColumns,
+  prependDualColCompColumnName
+} from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -503,7 +509,7 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
         columnDisplayType: renderColumn.columnDisplayType,
         width: renderColumn.width,
         rgb: renderColumn.rgb,
-        columnSpecificSettings: renderColumn.columnSpecificSettings,
+        columnSpecificSettings: renderColumn.columnSpecificSettings
       }),
       (updated) => {
         current.editName = updated.editName;
@@ -703,7 +709,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   searchColumnsAbortController = null;
 });
 
-export const setDrawDualColCompColumn = action((baseColumn: ColumnInfo, overlayColumn: ColumnInfo) => {
+export const setDrawDualColCompColumn = action((baseColumn: RenderColumnInfo, overlayColumn: RenderColumnInfo) => {
   if (baseColumn.columnDisplayType === "Point") {
     assertPointSettings(baseColumn.columnSpecificSettings);
   } else if (baseColumn.columnDisplayType === "Event") {
@@ -814,7 +820,7 @@ export const removeDualColCompColumn = action((column: RenderColumnInfo) => {
     return;
   }
   const columnToRemove = prependDualColCompColumnName(column.name);
-  const index = parent.children.findIndex((child) => child=== columnToRemove);
+  const index = parent.children.findIndex((child) => child === columnToRemove);
   if (index === -1) {
     return;
   }
@@ -1027,9 +1033,9 @@ export const addDataMiningColumn = action(
         isDataMiningColumn: true
       }
     };
+    parent.children.splice(index + 1, 0, dataMiningColumnName);
     parent.columnRef.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, convertColumnInfoToRenderColumnInfo(dataMiningColumn));
-    state.settingsTabs.columnHashMap.get(parent.name)?.children.push(dataMiningColumnName);
     return dataMiningColumnName;
   }
 );
@@ -1283,13 +1289,15 @@ export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrient
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
-  column.show = isShown;
-  await yieldControl(counter, 30);
-  for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
-    await setShowOfAllChildren(child, isShown, counter);
+export const setShowOfAllChildren = action(
+  async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+    column.show = isShown;
+    await yieldControl(counter, 30);
+    for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
+      await setShowOfAllChildren(child, isShown, counter);
+    }
   }
-});
+);
 
 export const setExpansionOfAllChildren = action(
   async (column: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {

@@ -63,7 +63,10 @@ export function checkIfDccColumn(column: RenderColumnInfo) {
   }
 }
 
-export const willColumnBeVisibleOnChart = (column: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>): boolean => {
+export const willColumnBeVisibleOnChart = (
+  column: RenderColumnInfo,
+  columnHashMap: Map<string, RenderColumnInfo>
+): boolean => {
   if (!column.on) return false;
   // reached the top, so it will be visible
   if (!column.parent) return true;
@@ -227,21 +230,29 @@ export function findSerialNum(name: string) {
 }
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const renderColumn: RenderColumnInfo = observable({
-    ...column,
-    columnRef: column,
-    children: column.children.map((child) => child.name)
-  }, { columnRef: false });
+  const renderColumn: RenderColumnInfo = observable(
+    {
+      ...column,
+      columnRef: column,
+      children: column.children.map((child) => child.name)
+    },
+    { columnRef: false }
+  );
   return renderColumn;
 }
 
-export function getChildRenderColumns(parent: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>): RenderColumnInfo[] {
-  return parent.children.map((child) => {
-    const childColumn = columnHashMap.get(child);
-    if (!childColumn) {
-      console.error("Failed to find child column in columnHashMap");
-      return null;
-    }
-    return childColumn;
-  }).filter((child): child is RenderColumnInfo => child !== null);
+export function getChildRenderColumns(
+  parent: RenderColumnInfo,
+  columnHashMap: Map<string, RenderColumnInfo>
+): RenderColumnInfo[] {
+  return parent.children
+    .map((child) => {
+      const childColumn = columnHashMap.get(child);
+      if (!childColumn) {
+        console.error("Failed to find child column", child, "in columnHashMap");
+        return null;
+      }
+      return childColumn;
+    })
+    .filter((child): child is RenderColumnInfo => child !== null);
 }
