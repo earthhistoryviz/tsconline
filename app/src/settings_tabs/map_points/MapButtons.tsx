@@ -1,8 +1,7 @@
 import { Button, IconButton, Theme, Tooltip, TooltipProps, styled, useTheme } from "@mui/material";
-import { FaciesOptions } from "../../types";
+import { FaciesOptions, RenderColumnInfo } from "../../types";
 import {
   Bounds,
-  ColumnInfo,
   InfoPoints,
   MapPoints,
   Transects,
@@ -414,7 +413,7 @@ export function loadTransects(
  * @param name name of map point
  * @returns
  */
-function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: number, column?: ColumnInfo) {
+function getIcon(disabled: boolean, isInfo: boolean, iconSize: number, scale: number, column?: RenderColumnInfo) {
   const { state, actions } = useContext(context);
   const [adjustX, setAdjustX] = useState(0);
   const [adjustY, setAdjustY] = useState(0);
@@ -456,7 +455,7 @@ function getFaciesIcon(
   currentFaciesOptions: FaciesOptions,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void,
-  column: ColumnInfo,
+  column: RenderColumnInfo,
   adjustX: number,
   adjustY: number
 ) {
@@ -498,7 +497,7 @@ function getFaciesIcon(
  * @returns
  */
 function getRockTypeForAge(
-  column: ColumnInfo,
+  column: RenderColumnInfo,
   currentAge: number,
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void

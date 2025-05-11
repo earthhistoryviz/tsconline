@@ -443,7 +443,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
 
 export const applyRowOrder = action(
   "applyRowOrder",
-  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
+  async (column: RenderColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
     if (!column) return;
     //needed since number of children in column and settings file could be different
     let columnIndex = 0;
@@ -465,7 +465,7 @@ export const applyRowOrder = action(
       }
       let indexOfMatch = -1;
       //column doesn't exist in the childrens of loaded column, so skip
-      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
+      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child === childName)) === -1) {
         continue;
       }
       indexOfMatch += columnIndex;
@@ -475,8 +475,12 @@ export const applyRowOrder = action(
           column.children[indexOfMatch],
           column.children[columnIndex]
         ];
+        [column.columnRef.children[columnIndex], column.columnRef.children[indexOfMatch]] = [
+          column.columnRef.children[indexOfMatch],
+          column.columnRef.children[columnIndex]
+        ];
       }
-      await applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      await applyRowOrder(state.settingsTabs.columnHashMap.get(column.children[columnIndex]), settingsChild, counter);
       columnIndex++;
     }
   }
@@ -1273,7 +1277,7 @@ export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[])
   state.settingsTabs.groupedEvents = groupedEvents;
 });
 
-export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
+export const changeAgeColumnJustification = action((column: RenderColumnInfo, newJustification: "left" | "right") => {
   if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
     console.log("WARNING: tried to change justification on a column which is not Age");
     return;
@@ -1281,7 +1285,7 @@ export const changeAgeColumnJustification = action((column: ColumnInfo, newJusti
   assertRulerSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.justification = newJustification;
 });
-export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrientation: "normal" | "vertical") => {
+export const changeZoneColumnOrientation = action((column: RenderColumnInfo, newOrientation: "normal" | "vertical") => {
   if (column.columnDisplayType !== "Zone") {
     console.log("WARNING: tried to change orientation on a column which is not Zone");
     return;
@@ -1372,32 +1376,44 @@ export const setEventSearchTerm = action((term: string) => {
 });
 
 // The following settings should wrap around if it overflows. Ex: last element that gets decremeneted should go to the top
-export const incrementColumnPosition = action((column: ColumnInfo) => {
+export const incrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column.name);
   if (index > 0) {
     // If it's not the first element, swap with the previous one
     [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
+    [parent.columnRef.children[index], parent.columnRef.children[index - 1]] = [
+      parent.columnRef.children[index - 1],
+      parent.columnRef.children[index]
+    ];
   } else if (index === 0) {
     const firstElement = parent.children.shift();
-    if (firstElement) {
+    const firstElementColumn = parent.columnRef.children.shift();
+    if (firstElement && firstElementColumn) {
       parent.children.push(firstElement);
+      parent.columnRef.children.push(firstElementColumn);
     }
   }
 });
 
-export const decrementColumnPosition = action((column: ColumnInfo) => {
+export const decrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
   const index = parent.children.indexOf(column.name);
   if (index < parent.children.length - 1 && index !== -1) {
     // If it's not the last element, swap with the next one
     [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
+    [parent.columnRef.children[index], parent.columnRef.children[index + 1]] = [
+      parent.columnRef.children[index + 1],
+      parent.columnRef.children[index]
+    ];
   } else if (index === parent.children.length - 1) {
     const lastElement = parent.children.pop();
-    if (lastElement) {
+    const lastElementColumn = parent.columnRef.children.pop();
+    if (lastElement && lastElementColumn) {
       parent.children.unshift(lastElement);
+      parent.columnRef.children.unshift(lastElementColumn);
     }
   }
 });

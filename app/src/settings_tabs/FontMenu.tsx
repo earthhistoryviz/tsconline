@@ -16,13 +16,14 @@ import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
 import { CustomDivider, CustomFormControlLabel, StyledScrollbar, TSCCheckbox } from "../components";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../types";
 const FontSizeTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} className="font-size-container" label="Size" size="small" variant="outlined" />
 );
 
 const FontMenuRow: React.FC<{
   target: ValidFontOptions;
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 }> = observer(({ target, column }) => {
   const { actions } = useContext(context);
   const fontOpts = column.fontsInfo[target];
@@ -142,7 +143,7 @@ const FontMenuRow: React.FC<{
 });
 
 type FontMenuProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 
 export const FontMenu: React.FC<FontMenuProps> = observer(({ column }) => {
