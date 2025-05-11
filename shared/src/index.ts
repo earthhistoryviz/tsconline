@@ -455,6 +455,7 @@ export type PointShape = "nopoints" | "rect" | "circle" | "cross";
 export type Point = ColumnHeaderProps & {
   subPointInfo: SubPointInfo[];
   drawLine: boolean;
+  lineColor: RGB;
   drawFill: boolean;
   fill: RGB;
   lowerRange: number;
@@ -1110,6 +1111,7 @@ export function assertPoint(o: any): asserts o is Point {
     throwError("Point", "pointShape", "string", o.pointShape);
   if (typeof o.drawFill !== "boolean") throwError("Point", "drawFill", "boolean", o.drawFill);
   assertRGB(o.fill);
+  assertRGB(o.lineColor);
   assertColumnHeaderProps(o);
 }
 export function assertSubPointInfoArray(o: any): asserts o is SubPointInfo[] {
