@@ -648,6 +648,7 @@ describe("configureOptionalPointSettings tests", () => {
     upperRange: 0,
     smoothed: true,
     drawLine: false,
+    lineColor: { r: 0, g: 0, b: 0 },
     pointShape: "rect",
     drawFill: true,
     fill: {
@@ -717,6 +718,32 @@ describe("configureOptionalPointSettings tests", () => {
         pointShape: "rect",
         drawLine: false,
         fill: { r: 255, g: 255, b: 255 },
+        lowerRange: -100,
+        upperRange: 200,
+        smoothed: false
+      })
+    ],
+    [
+      ["rect", "255/0/0", "255/255/255", "-100", "200", "unsmoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: false,
+        lineColor: { r: 255, g: 0, b: 0 },
+        fill: { r: 255, g: 255, b: 255 },
+        lowerRange: -100,
+        upperRange: 200,
+        smoothed: false
+      })
+    ],
+    [
+      ["rect", "255/0/0", "nofill", "-100", "200", "unsmoothed"],
+      (point: Point) => ({
+        ...point,
+        pointShape: "rect",
+        drawLine: false,
+        lineColor: { r: 255, g: 0, b: 0 },
+        drawFill: false,
         lowerRange: -100,
         upperRange: 200,
         smoothed: false
