@@ -1840,6 +1840,15 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
     return;
   }
   if (tabSeparated[1] && /^(line|noline)$/.test(tabSeparated[1])) point.drawLine = tabSeparated[1] === "line";
+  else if (tabSeparated[1] && patternForColor.test(tabSeparated[1])) {
+    const rgb = tabSeparated[1].split("/");
+    point.lineColor = {
+      r: Number(rgb[0]),
+      g: Number(rgb[1]),
+      b: Number(rgb[2])
+    };
+    point.drawLine = true;
+  }
   if (tabSeparated[2] && patternForColor.test(tabSeparated[2])) {
     const rgb = tabSeparated[2].split("/");
     point.fill = {
@@ -1848,7 +1857,7 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
       b: Number(rgb[2])
     };
     point.drawFill = true;
-  }
+  } else if (tabSeparated[2] && /^(nofill)$/.test(tabSeparated[2])) point.drawFill = false;
   if (tabSeparated[3] && !isNaN(Number(tabSeparated[3]))) point.lowerRange = Number(tabSeparated[3]);
   if (tabSeparated[4] && !isNaN(Number(tabSeparated[4]))) point.upperRange = Number(tabSeparated[4]);
   if (tabSeparated[5]) point.smoothed = tabSeparated[5] === "smoothed";
@@ -1911,6 +1920,7 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
     scaleStep,
     drawFill,
     drawLine,
+    lineColor,
     fill,
     smoothed,
     pointShape,
@@ -1926,6 +1936,7 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
     scaleStep,
     drawFill,
     drawLine,
+    lineColor,
     fill,
     smoothed,
     pointShape
