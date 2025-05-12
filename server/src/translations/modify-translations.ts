@@ -27,11 +27,9 @@ export async function modifyTranslations() {
   const staticTranslationJson = path.join("..", "shared", "translations", "en.json");
   const translationCSV = path.join(assetconfigs.translationsDirectory, "en.csv");
 
-  //missing dev translation file, so load the static JSON for initializing
-  if (!existsSync(devTranslationJson)) {
-    const data = readFileSync(staticTranslationJson, "utf-8");
-    writeFileSync(devTranslationJson, data);
-  }
+  //load the static JSON for initializing
+  const data = readFileSync(staticTranslationJson, "utf-8");
+  writeFileSync(devTranslationJson, data);
 
   function flattenJson(obj: JSONObject, parentKey = "", result: [string, string][] = []): [string, string][] {
     for (const [key, value] of Object.entries(obj)) {
@@ -49,11 +47,17 @@ export async function modifyTranslations() {
   const listener: WatchListener<string> = (event, filename) => {
     if (filename) {
       const data = readFileSync(devTranslationJson, "utf-8");
-      writeFileSync(staticTranslationJson, data);
-      const flattened = flattenJson(JSON.parse(data));
-      const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
-      writeFileSync(translationCSV, csvContent, "utf-8");
-      console.log(chalk.green("successfully updated translations!"));
+      try {
+        //for checking if content is parsable
+        const parsedData = JSON.stringify(JSON.parse(data), null, 4);
+        writeFileSync(staticTranslationJson, parsedData);
+        const flattened = flattenJson(JSON.parse(parsedData));
+        const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
+        writeFileSync(translationCSV, csvContent, "utf-8");
+        console.log(chalk.green("successfully updated translations!"));
+      } catch (e) {
+        console.log(chalk.yellow("check JSON formatting..."));
+      }
     }
   };
 
