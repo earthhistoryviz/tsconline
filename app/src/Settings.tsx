@@ -12,8 +12,9 @@ import "./Settings.css";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
 import { Preferences } from "./settings_tabs/Preferences";
-import LoadSave from "./settings_tabs/LoadSave";
 import { TabWrapper, TabsWrapper } from "./components";
+import LoadSettings from "./settings_tabs/LoadSettings";
+import SaveSettings from "./settings_tabs/SaveSettings";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
@@ -29,27 +30,33 @@ export const Settings = observer(function Settings() {
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
       <Box bgcolor="dark.main" className="settings-tabs-side-bar">
-        <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
-          Settings
-        </Typography>
-        <TabsWrapper
-          onChange={(_, val) => {
-            actions.setSettingsTabsSelected(tabKeys[val] as SettingsTabs);
-          }}
-          value={tabIndex}
-          orientation="vertical">
-          {tabs.map((tab) => {
-            return (
-              <TabWrapper
-                showIndicator={state.settingsTabs.selected === tab.id}
-                key={tab.id}
-                label={tab.tab}
-                icon={<tab.icon />}
-                iconPosition="start"
-              />
-            );
-          })}
-        </TabsWrapper>
+        <Box>
+          <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
+            Settings
+          </Typography>
+          <TabsWrapper
+            onChange={(_, val) => {
+              actions.setSettingsTabsSelected(tabKeys[val] as SettingsTabs);
+            }}
+            value={tabIndex}
+            orientation="vertical">
+            {tabs.map((tab) => {
+              return (
+                <TabWrapper
+                  showIndicator={state.settingsTabs.selected === tab.id}
+                  key={tab.id}
+                  label={tab.tab}
+                  icon={<tab.icon />}
+                  iconPosition="start"
+                />
+              );
+            })}
+          </TabsWrapper>
+        </Box>
+        <Box className="load-save-settings-sidebar">
+          <LoadSettings />
+          <SaveSettings />
+        </Box>
       </Box>
       <SettingsTab tab={state.settingsTabs.selected} />
     </div>
@@ -89,7 +96,5 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
       return <MapPoints />;
     case "datapacks":
       return <Datapacks />;
-    case "loadsave":
-      return <LoadSave />;
   }
 });

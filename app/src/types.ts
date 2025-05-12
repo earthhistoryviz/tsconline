@@ -1,4 +1,4 @@
-import { AccessTime, Dataset, FontDownload, LocationOn, Save, Search, Settings, ViewColumn } from "@mui/icons-material";
+import { AccessTime, Dataset, FontDownload, LocationOn, Search, Settings, ViewColumn } from "@mui/icons-material";
 import {
   ColumnInfo,
   DataMiningPointDataType,
@@ -218,10 +218,6 @@ export const SettingsMenuOptionLabels = {
   datapacks: {
     label: "Datapacks",
     icon: Dataset
-  },
-  loadsave: {
-    label: "Load/Save",
-    icon: Save
   }
 };
 

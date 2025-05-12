@@ -22,6 +22,9 @@
 }
 .settings-tabs-side-bar {
   width: 190px;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
 }
 .settings-container > :not(.settings-tabs-side-bar) {
   padding: 20px 10px 0px 10px;
@@ -33,4 +36,13 @@
 }
 .settings-container > :not(.settings-tabs-side-bar) .datapack-display-container {
   width: 100%;
+}
+.load-save-settings-sidebar {
+  display: flex;
+  padding-top: 20px;
+  flex-direction: column;
+  gap: 10px;
+  justify-self: center;
+  align-self: center;
+  width: 70%;
 }
