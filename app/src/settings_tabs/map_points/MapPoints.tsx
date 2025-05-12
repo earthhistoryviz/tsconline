@@ -39,7 +39,7 @@ export const MapPoints = observer(function MapPoint() {
       ) : (
         <Box width="100%">
           <Typography variant="h5" fontWeight={700}>
-            Included Maps
+            {t("settings.map-points.included")}
           </Typography>
           <MapList mapInfo={state.mapState.mapInfo} />
         </Box>

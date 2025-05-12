@@ -450,6 +450,7 @@
                 "notes3": "NOTE: These fonts can be changed on a column by column basis by using the Font button for each column"
             },
             "map-points": {
+                "included": "Included Maps",
                 "not-avaliable": "No Map Points available for this datapack"
             },
             "datapacks": {

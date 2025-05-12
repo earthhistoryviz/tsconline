@@ -300,6 +300,7 @@ translation.settings.search.header.notes,Notes
 translation.settings.font.notes1,These are the default systemwide fonts.
 translation.settings.font.notes2,Changing one here will affect the entire chart.
 translation.settings.font.notes3,NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
+translation.settings.map-points.included,Included Maps
 translation.settings.map-points.not-avaliable,No Map Points available for this datapack
 translation.settings.datapacks.see-info-guidance,Click a datapack to see more information!
 translation.settings.datapacks.add-datapack-guidance,Add a datapack by clicking the checkbox
