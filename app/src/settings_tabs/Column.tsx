@@ -28,7 +28,6 @@ type ColumnContextType = {
     columns: RenderColumnInfo | undefined;
     columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
-    columnSelected: string | null;
     timeSettings:
       | {
           [unit: string]: CrossPlotTimeSettings;
@@ -45,7 +44,6 @@ export const ColumnContext = createContext<ColumnContextType>({
     columns: undefined,
     columnHashMap: new Map<string, RenderColumnInfo>(),
     columnSearchTerm: "",
-    columnSelected: "",
     timeSettings: {} as TimeSettings
   },
   actions: {
@@ -184,7 +182,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.columnSelected ? "selected-column" : "";
+  const selectedClass = details.isSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -198,9 +196,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
 
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column === state.columnSelected)
-    ? { opacity: 1 }
-    : {};
+  const containsSelectedChild = details.hasSelectedChildren ? { opacity: 1 } : {};
   return (
     <div className="column-accordion-container">
       {details.expanded && (

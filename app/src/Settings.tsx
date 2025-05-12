@@ -80,7 +80,6 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
               columns: state.settingsTabs.renderColumns,
               columnHashMap: state.settingsTabs.columnHashMap,
               columnSearchTerm: state.settingsTabs.columnSearchTerm,
-              columnSelected: state.columnMenu.columnSelected,
               timeSettings: state.settings.timeSettings
             },
             actions: {

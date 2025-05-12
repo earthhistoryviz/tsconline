@@ -12,7 +12,6 @@ import "./FontMenu.css";
 import { ValidFontOptions } from "@tsconline/shared";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { NumericFormat } from "react-number-format";
-import { ColumnInfo } from "@tsconline/shared";
 import { convertHexToRGB } from "../util/util";
 import { CustomDivider, CustomFormControlLabel, StyledScrollbar, TSCCheckbox } from "../components";
 import { useTranslation } from "react-i18next";
