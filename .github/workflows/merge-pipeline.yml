@@ -287,6 +287,14 @@ jobs:
         id: run_tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
+          yarn test:charts:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+          if grep -q 'ERROR: Coverage' test_output.log; then
+            echo "Coverage errors found."
+            echo "coverage_failed=true" >> $GITHUB_OUTPUT
+          else
+            echo "No coverage errors found."
+          fi
+
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
