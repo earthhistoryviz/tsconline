@@ -1,4 +1,4 @@
-import { action, observable, reaction } from "mobx";
+import { action, observable, reaction, toJS } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -36,7 +36,7 @@ import {
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
-import { add, cloneDeep } from "lodash";
+import { cloneDeep } from "lodash";
 import {
   DataMiningStatisticApproach,
   EventSearchInfo,
@@ -52,12 +52,7 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import {
-  discardTscPrefix,
-  findSerialNum,
-  getChildRenderColumns,
-  prependDualColCompColumnName
-} from "../../util/util";
+import { discardTscPrefix, findSerialNum, getChildRenderColumns, prependDualColCompColumnName } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -508,7 +503,9 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
     {
       ...column,
       columnRef: column,
-      children: column.children.map((child) => child.name)
+      children: column.children.map((child) => child.name),
+      isSelected: false,
+      hasSelectedChildren: false
     },
     { columnRef: false }
   );
@@ -521,19 +518,19 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
     () => ({
       name: renderColumn.name,
       editName: renderColumn.editName,
-      fontsInfo: renderColumn.fontsInfo,
-      fontOptions: renderColumn.fontOptions,
+      fontsInfo: toJS(renderColumn.fontsInfo),
+      fontOptions: toJS(renderColumn.fontOptions),
       on: renderColumn.on,
       popup: renderColumn.popup,
       parent: renderColumn.parent,
-      subInfo: renderColumn.subInfo,
+      subInfo: toJS(renderColumn.subInfo),
       expanded: renderColumn.expanded,
       show: renderColumn.show,
       enableTitle: renderColumn.enableTitle,
       columnDisplayType: renderColumn.columnDisplayType,
       width: renderColumn.width,
-      rgb: renderColumn.rgb,
-      columnSpecificSettings: renderColumn.columnSpecificSettings
+      rgb: toJS(renderColumn.rgb),
+      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings)
     }),
     (updated) => {
       column.editName = updated.editName;
@@ -553,7 +550,6 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
     }
   );
 }
-
 
 /**
  * toggles the "on" state for a column that had its checkbox clicked
@@ -651,6 +647,16 @@ export const setWidth = action((newWidth: number, column: RenderColumnInfo) => {
 });
 
 export const setColumnSelected = action((name: string) => {
+  const previouslySelectedColumn = state.columnMenu.columnSelected
+    ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected)
+    : null;
+  if (previouslySelectedColumn) {
+    previouslySelectedColumn.isSelected = false;
+    const parentColumn = previouslySelectedColumn.parent
+      ? state.settingsTabs.columnHashMap.get(previouslySelectedColumn.parent)
+      : null;
+    if (parentColumn) parentColumn.hasSelectedChildren = false;
+  }
   state.columnMenu.columnSelected = name;
   const column = state.settingsTabs.columnHashMap.get(name);
   setColumnMenuTabValue(0);
@@ -669,6 +675,8 @@ export const setColumnSelected = action((name: string) => {
       default:
         setColumnMenuTabs(["General", "Font"]);
     }
+    column.isSelected = true;
+    if (column.parent) state.settingsTabs.columnHashMap.get(column.parent)!.hasSelectedChildren = true;
   } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
@@ -1055,6 +1063,7 @@ export const addDataMiningColumn = action(
     parent.children.splice(index + 1, 0, dataMiningColumnName);
     parent.columnRef.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, convertColumnInfoToRenderColumnInfo(dataMiningColumn));
+    console.log(parent.columnRef);
     return dataMiningColumnName;
   }
 );
@@ -1076,6 +1085,7 @@ export const removeDataMiningColumn = action((column: RenderColumnInfo, type: st
     return;
   }
   parent.children.splice(index, 1);
+  parent.columnRef.children.splice(index, 1);
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 

@@ -20,6 +20,8 @@ import React from "react";
 export type RenderColumnInfo = {
   children: string[];
   columnRef: ColumnInfo;
+  isSelected: boolean;
+  hasSelectedChildren: boolean;
 } & Omit<ColumnInfo, "children">;
 
 export type DatapackFetchParams = {
