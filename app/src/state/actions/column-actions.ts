@@ -481,7 +481,7 @@ export const applyRowOrder = action(
 );
 
 export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
-  const tempMap = observable.map<string, RenderColumnInfo>();
+  const tempMap = new Map<string, RenderColumnInfo>();
   const stack: ColumnInfo[] = [root];
   const counter = { count: 0 };
 
@@ -499,16 +499,30 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
 });
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const renderColumn: RenderColumnInfo = observable(
-    {
-      ...column,
-      columnRef: column,
-      children: column.children.map((child) => child.name),
-      isSelected: false,
-      hasSelectedChildren: false
-    },
-    { columnRef: false }
-  );
+  const renderColumn: RenderColumnInfo = observable({
+    name: column.name,
+    editName: column.editName,
+    children: column.children.map(child => child.name),
+    columnRef: column,
+    isSelected: false,
+    hasSelectedChildren: false,
+    expanded: column.expanded,
+    show: column.show,
+    enableTitle: column.enableTitle,
+    columnDisplayType: column.columnDisplayType,
+    width: column.width,
+    rgb: column.rgb,
+    fontsInfo: column.fontsInfo,
+    fontOptions: column.fontOptions,
+    columnSpecificSettings: column.columnSpecificSettings,
+    popup: column.popup,
+    on: column.on,
+    parent: column.parent,
+    subInfo: column.subInfo,
+    minAge: column.minAge,
+    maxAge: column.maxAge,
+    units: column.units
+  }, { columnRef: false, name: false, columnDisplayType: false, minAge: false, maxAge: false, units: false });
   addReactionToRenderColumnInfo(column, renderColumn);
   return renderColumn;
 }
@@ -516,34 +530,37 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
 export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: RenderColumnInfo) {
   reaction(
     () => ({
-      name: renderColumn.name,
-      editName: renderColumn.editName,
+      on: renderColumn.on,
+      expanded: renderColumn.expanded,
+      show: renderColumn.show,
+      editname: renderColumn.editName,
+    }),
+    (updated) => {
+      column.on = updated.on;
+      column.expanded = updated.expanded;
+      column.show = updated.show;
+      column.editName = updated.editname;
+    }
+  )
+  reaction(
+    () => ({
       fontsInfo: toJS(renderColumn.fontsInfo),
       fontOptions: toJS(renderColumn.fontOptions),
-      on: renderColumn.on,
       popup: renderColumn.popup,
       parent: renderColumn.parent,
       subInfo: toJS(renderColumn.subInfo),
-      expanded: renderColumn.expanded,
-      show: renderColumn.show,
       enableTitle: renderColumn.enableTitle,
-      columnDisplayType: renderColumn.columnDisplayType,
       width: renderColumn.width,
       rgb: toJS(renderColumn.rgb),
       columnSpecificSettings: toJS(renderColumn.columnSpecificSettings)
     }),
     (updated) => {
-      column.editName = updated.editName;
       column.fontsInfo = updated.fontsInfo;
       column.fontOptions = updated.fontOptions;
-      column.on = updated.on;
       column.popup = updated.popup;
       column.parent = updated.parent;
       column.subInfo = updated.subInfo;
-      column.expanded = updated.expanded;
-      column.show = updated.show;
       column.enableTitle = updated.enableTitle;
-      column.columnDisplayType = updated.columnDisplayType;
       column.width = updated.width;
       column.rgb = updated.rgb;
       column.columnSpecificSettings = updated.columnSpecificSettings;
@@ -688,10 +705,9 @@ export const setColumnMenuTabValue = action((tabValue: number) => {
   state.columnMenu.tabValue = tabValue;
 });
 
-let searchColumnsAbortController: AbortController | null = null;
+let currentSearchToken = 0;
 export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
-  if (searchColumnsAbortController) searchColumnsAbortController.abort();
-  searchColumnsAbortController = new AbortController();
+  const thisToken = ++currentSearchToken;
   setColumnSearchTerm(searchTerm);
   const columnHashMap = state.settingsTabs.columnHashMap;
   if (searchTerm === "") {
@@ -706,6 +722,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     return;
   }
   for (const columnInfo of columnHashMap.values()) {
+    if (thisToken !== currentSearchToken) return;
     await yieldControl(counter, 30);
     setShow(false, columnInfo);
     setExpanded(false, columnInfo);
@@ -714,6 +731,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   const regExp = getRegex(searchTerm);
 
   for (const columnInfo of columnHashMap.values()) {
+    if (thisToken !== currentSearchToken) return;
     await yieldControl(counter, 30);
     if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
@@ -733,7 +751,6 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       }
     }
   }
-  searchColumnsAbortController = null;
 });
 
 export const setDrawDualColCompColumn = action((baseColumn: RenderColumnInfo, overlayColumn: RenderColumnInfo) => {
@@ -1318,25 +1335,38 @@ export const changeZoneColumnOrientation = action((column: RenderColumnInfo, new
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(
-  async (column: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
-    column.show = isShown;
-    await yieldControl(counter, 30);
-    for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
-      await setShowOfAllChildren(child, isShown, counter);
+
+export const setShowOfAllChildren  = action(
+  async (root: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+    const stack: RenderColumnInfo[] = [root];
+    const columnHashMap = state.settingsTabs.columnHashMap;
+
+    while (stack.length > 0) {
+      const column = stack.pop()!;
+      column.show = isShown;
+      // await yieldControl(counter, 30);
+
+      for (const child of getChildRenderColumns(column, columnHashMap)) {
+        stack.push(child);
+      }
     }
   }
 );
 
 export const setExpansionOfAllChildren = action(
-  async (column: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
-    column.expanded = isExpanded;
-    await yieldControl(counter, 30);
-    for (const child of getChildRenderColumns(column, state.settingsTabs.columnHashMap)) {
-      await setExpansionOfAllChildren(child, isExpanded, counter);
+  async (root: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+    const queue: RenderColumnInfo[] = [root];
+    const columnHashMap = state.settingsTabs.columnHashMap;
+
+    while (queue.length > 0) {
+      const column = queue.shift()!;
+      column.expanded = isExpanded;
+      await yieldControl(counter, 30);
+      for (const child of getChildRenderColumns(column, columnHashMap)) queue.push(child);
     }
   }
 );
+
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
