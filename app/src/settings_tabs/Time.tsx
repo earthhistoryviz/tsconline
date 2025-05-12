@@ -28,11 +28,11 @@ export const Time = observer(function Time() {
   const { t } = useTranslation();
   // check if processing, because timeSettings will be undefined while loading
   if (state.isProcessingDatapacks) {
-    return <Typography>Loading</Typography>;
+    return <Typography>{t("general-actions.loading")}</Typography>;
   }
   const allUnits = Object.keys(state.settings.timeSettings).sort((a, b) => {
     // sort the units so that Ma is first
-    if (a === "Ma") {
+    if (a.toLowerCase() === "ma") {
       return -1;
     }
     return a.localeCompare(b);

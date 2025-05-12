@@ -15,10 +15,12 @@ import { Preferences } from "./settings_tabs/Preferences";
 import { TabWrapper, TabsWrapper } from "./components";
 import LoadSettings from "./settings_tabs/LoadSettings";
 import SaveSettings from "./settings_tabs/SaveSettings";
+import { useTranslation } from "react-i18next";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
+  const { t } = useTranslation();
   const tabs = Object.entries(SettingsMenuOptionLabels).map(([key, val]) => ({
     id: key,
     tab: val.label,
@@ -32,7 +34,7 @@ export const Settings = observer(function Settings() {
       <Box bgcolor="dark.main" className="settings-tabs-side-bar">
         <Box>
           <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
-            Settings
+            {t("settings.header")}
           </Typography>
           <TabsWrapper
             onChange={(_, val) => {

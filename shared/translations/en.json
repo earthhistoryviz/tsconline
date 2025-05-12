@@ -4,7 +4,8 @@
             "save": "Save",
             "cancel": "Cancel",
             "report": "Report",
-            "delete": "Delete"
+            "delete": "Delete",
+            "loading": "Loading"
         },
         "landing-page": {
             "get-started": "Get Started",
@@ -290,6 +291,7 @@
             "yAxis": "Y Axis (Age/Depth)"
         },
         "settings": {
+            "header": "Settings",
             "time": {
                 "interval": {
                     "top": "Top of Interval",
