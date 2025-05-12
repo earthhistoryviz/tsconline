@@ -280,6 +280,8 @@ jobs:
             exit 1
           fi
           echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
+            echo "Contents of the assets folder:"
+            ls -R ${{ github.workspace }}/server/assets
 
       - name: Run Tests
         id: run_tests
@@ -297,7 +299,6 @@ jobs:
 
           mv ${{ github.workspace }}/server/assets/jars/$pr_jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
 
-          echo "Renamed jar back to testUsageJar.jar"
           if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
             echo "Successfully renamed jar back to testUsageJar.jar."
           else
