@@ -499,30 +499,33 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
 });
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const renderColumn: RenderColumnInfo = observable({
-    name: column.name,
-    editName: column.editName,
-    children: column.children.map(child => child.name),
-    columnRef: column,
-    isSelected: false,
-    hasSelectedChildren: false,
-    expanded: column.expanded,
-    show: column.show,
-    enableTitle: column.enableTitle,
-    columnDisplayType: column.columnDisplayType,
-    width: column.width,
-    rgb: column.rgb,
-    fontsInfo: column.fontsInfo,
-    fontOptions: column.fontOptions,
-    columnSpecificSettings: column.columnSpecificSettings,
-    popup: column.popup,
-    on: column.on,
-    parent: column.parent,
-    subInfo: column.subInfo,
-    minAge: column.minAge,
-    maxAge: column.maxAge,
-    units: column.units
-  }, { columnRef: false, name: false, columnDisplayType: false, minAge: false, maxAge: false, units: false });
+  const renderColumn: RenderColumnInfo = observable(
+    {
+      name: column.name,
+      editName: column.editName,
+      children: column.children.map((child) => child.name),
+      columnRef: column,
+      isSelected: false,
+      hasSelectedChildren: false,
+      expanded: column.expanded,
+      show: column.show,
+      enableTitle: column.enableTitle,
+      columnDisplayType: column.columnDisplayType,
+      width: column.width,
+      rgb: column.rgb,
+      fontsInfo: column.fontsInfo,
+      fontOptions: column.fontOptions,
+      columnSpecificSettings: column.columnSpecificSettings,
+      popup: column.popup,
+      on: column.on,
+      parent: column.parent,
+      subInfo: column.subInfo,
+      minAge: column.minAge,
+      maxAge: column.maxAge,
+      units: column.units
+    },
+    { columnRef: false, name: false, columnDisplayType: false, minAge: false, maxAge: false, units: false }
+  );
   addReactionToRenderColumnInfo(column, renderColumn);
   return renderColumn;
 }
@@ -533,7 +536,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       on: renderColumn.on,
       expanded: renderColumn.expanded,
       show: renderColumn.show,
-      editname: renderColumn.editName,
+      editname: renderColumn.editName
     }),
     (updated) => {
       column.on = updated.on;
@@ -541,7 +544,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       column.show = updated.show;
       column.editName = updated.editname;
     }
-  )
+  );
   reaction(
     () => ({
       fontsInfo: toJS(renderColumn.fontsInfo),
@@ -738,6 +741,8 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
       await setExpansionOfAllChildren(columnInfo, false);
+      const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
+      if (hasMatchingChild) setExpanded(true, columnInfo);
       await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
         const parentColumnInfo = columnHashMap.get(parentName);
@@ -1080,7 +1085,6 @@ export const addDataMiningColumn = action(
     parent.children.splice(index + 1, 0, dataMiningColumnName);
     parent.columnRef.children.splice(index + 1, 0, dataMiningColumn);
     state.settingsTabs.columnHashMap.set(dataMiningColumnName, convertColumnInfoToRenderColumnInfo(dataMiningColumn));
-    console.log(parent.columnRef);
     return dataMiningColumnName;
   }
 );
@@ -1141,8 +1145,7 @@ export const addBlankColumn = action((renderColumn: RenderColumnInfo) => {
 
   column.children.push(blankColumn);
   state.settingsTabs.columnHashMap.get(column.name)?.children.push(blankColumnName);
-  const renderBlankColumn = convertColumnInfoToRenderColumnInfo(blankColumn);
-  state.settingsTabs.columnHashMap.set(blankColumnName, renderBlankColumn);
+  state.settingsTabs.columnHashMap.set(blankColumnName, convertColumnInfoToRenderColumnInfo(blankColumn));
 });
 export const addAgeColumn = action((renderColumn: RenderColumnInfo) => {
   if (renderColumn.children.length == 0) {
@@ -1181,8 +1184,7 @@ export const addAgeColumn = action((renderColumn: RenderColumnInfo) => {
   };
   column.children.push(ageColumn);
   state.settingsTabs.columnHashMap.get(column.name)?.children.push(ageColumnName);
-  const renderAgeColumn = convertColumnInfoToRenderColumnInfo(ageColumn);
-  state.settingsTabs.columnHashMap.set(ageColumnName, renderAgeColumn);
+  state.settingsTabs.columnHashMap.set(ageColumnName, convertColumnInfoToRenderColumnInfo(ageColumn));
 });
 export const makeColumnPath = action((name: string): string[] => {
   const columnPath: string[] = [];
@@ -1197,10 +1199,9 @@ export const makeColumnPath = action((name: string): string[] => {
   }
   return columnPath;
 });
-let searchEventsAbortController: AbortController | null = null;
+let currentSearchEventsToken = 0;
 export const searchEvents = action(async (searchTerm: string, counter = { count: 0 }) => {
-  if (searchEventsAbortController) searchEventsAbortController.abort();
-  searchEventsAbortController = new AbortController();
+  const thisToken = ++currentSearchEventsToken;
   setEventSearchTerm(searchTerm);
   let count = 0;
   if (state.settingsTabs.eventSearchTerm === "") return 0;
@@ -1211,6 +1212,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
   const results = new Map<string, EventSearchInfo[]>();
 
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    if (thisToken !== currentSearchEventsToken) return 0;
     await yieldControl(counter, 30);
     if (columnInfo.name === "Chart Root") {
       continue;
@@ -1235,6 +1237,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
         continue;
       }
       for (let i = 0; i < columnInfo.subInfo.length; i++) {
+        if (thisToken !== currentSearchEventsToken) return 0;
         const subInfo = columnInfo.subInfo[i];
         if ("label" in subInfo && subInfo.label) {
           if (regExp.test(subInfo.label)) {
@@ -1297,12 +1300,12 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
     }
   }
 
+  if (thisToken !== currentSearchEventsToken) return 0;
   const groupedEvents: GroupedEventSearchInfo[] = [];
   results.forEach((info: EventSearchInfo[], key: string) => {
     groupedEvents.push({ key: key, info: [...info] });
   });
   setGroupedEvents(groupedEvents);
-  searchEventsAbortController = null;
   return count;
 });
 
@@ -1336,22 +1339,20 @@ export const changeZoneColumnOrientation = action((column: RenderColumnInfo, new
   column.columnSpecificSettings.orientation = newOrientation;
 });
 
-export const setShowOfAllChildren  = action(
-  async (root: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
-    const stack: RenderColumnInfo[] = [root];
-    const columnHashMap = state.settingsTabs.columnHashMap;
+export const setShowOfAllChildren = action(async (root: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+  const stack: RenderColumnInfo[] = [root];
+  const columnHashMap = state.settingsTabs.columnHashMap;
 
-    while (stack.length > 0) {
-      const column = stack.pop()!;
-      column.show = isShown;
-      // await yieldControl(counter, 30);
+  while (stack.length > 0) {
+    const column = stack.pop()!;
+    column.show = isShown;
+    await yieldControl(counter, 30);
 
-      for (const child of getChildRenderColumns(column, columnHashMap)) {
-        stack.push(child);
-      }
+    for (const child of getChildRenderColumns(column, columnHashMap)) {
+      stack.push(child);
     }
   }
-);
+});
 
 export const setExpansionOfAllChildren = action(
   async (root: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
@@ -1366,7 +1367,6 @@ export const setExpansionOfAllChildren = action(
     }
   }
 );
-
 
 export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
