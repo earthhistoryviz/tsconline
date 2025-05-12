@@ -796,9 +796,6 @@ export const setSettingsTabsSelected = action((newtab: number | SettingsTabs) =>
     case 6:
       state.settingsTabs.selected = "datapacks";
       break;
-    case 7:
-      state.settingsTabs.selected = "loadsave";
-      break;
     default:
       console.log("WARNING: setSettingTabsSelected: received index number that is unknown: ", newtab);
       state.settingsTabs.selected = "time";
@@ -826,8 +823,6 @@ export function translateTabToIndex(tab: State["settingsTabs"]["selected"]) {
       return 5;
     case "datapacks":
       return 6;
-    case "loadsave":
-      return 7;
     default:
       console.log("WARNING: translateTabToIndex: received unknown tab name: ", tab);
       return 0;
