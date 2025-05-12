@@ -36,7 +36,7 @@ import {
   isDataMiningPointDataType,
   isEventFrequency
 } from "@tsconline/shared";
-import { cloneDeep } from "lodash";
+import { add, cloneDeep } from "lodash";
 import {
   DataMiningStatisticApproach,
   EventSearchInfo,
@@ -53,7 +53,6 @@ import {
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
 import {
-  convertColumnInfoToRenderColumnInfo,
   discardTscPrefix,
   findSerialNum,
   getChildRenderColumns,
@@ -497,48 +496,64 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
     const renderColumn = convertColumnInfoToRenderColumnInfo(current);
     tempMap.set(renderColumn.name, renderColumn);
 
-    reaction(
-      () => ({
-        name: renderColumn.name,
-        editName: renderColumn.editName,
-        fontsInfo: renderColumn.fontsInfo,
-        fontOptions: renderColumn.fontOptions,
-        on: renderColumn.on,
-        popup: renderColumn.popup,
-        parent: renderColumn.parent,
-        subInfo: renderColumn.subInfo,
-        expanded: renderColumn.expanded,
-        show: renderColumn.show,
-        enableTitle: renderColumn.enableTitle,
-        columnDisplayType: renderColumn.columnDisplayType,
-        width: renderColumn.width,
-        rgb: renderColumn.rgb,
-        columnSpecificSettings: renderColumn.columnSpecificSettings
-      }),
-      (updated) => {
-        current.editName = updated.editName;
-        current.fontsInfo = updated.fontsInfo;
-        current.fontOptions = updated.fontOptions;
-        current.on = updated.on;
-        current.popup = updated.popup;
-        current.parent = updated.parent;
-        current.subInfo = updated.subInfo;
-        current.expanded = updated.expanded;
-        current.show = updated.show;
-        current.enableTitle = updated.enableTitle;
-        current.columnDisplayType = updated.columnDisplayType;
-        current.width = updated.width;
-        current.rgb = updated.rgb;
-        current.columnSpecificSettings = updated.columnSpecificSettings;
-      }
-    );
-
     for (const child of current.children) {
       stack.push(child);
     }
   }
   state.settingsTabs.columnHashMap = tempMap;
 });
+
+export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
+  const renderColumn: RenderColumnInfo = observable(
+    {
+      ...column,
+      columnRef: column,
+      children: column.children.map((child) => child.name)
+    },
+    { columnRef: false }
+  );
+  addReactionToRenderColumnInfo(column, renderColumn);
+  return renderColumn;
+}
+
+export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: RenderColumnInfo) {
+  reaction(
+    () => ({
+      name: renderColumn.name,
+      editName: renderColumn.editName,
+      fontsInfo: renderColumn.fontsInfo,
+      fontOptions: renderColumn.fontOptions,
+      on: renderColumn.on,
+      popup: renderColumn.popup,
+      parent: renderColumn.parent,
+      subInfo: renderColumn.subInfo,
+      expanded: renderColumn.expanded,
+      show: renderColumn.show,
+      enableTitle: renderColumn.enableTitle,
+      columnDisplayType: renderColumn.columnDisplayType,
+      width: renderColumn.width,
+      rgb: renderColumn.rgb,
+      columnSpecificSettings: renderColumn.columnSpecificSettings
+    }),
+    (updated) => {
+      column.editName = updated.editName;
+      column.fontsInfo = updated.fontsInfo;
+      column.fontOptions = updated.fontOptions;
+      column.on = updated.on;
+      column.popup = updated.popup;
+      column.parent = updated.parent;
+      column.subInfo = updated.subInfo;
+      column.expanded = updated.expanded;
+      column.show = updated.show;
+      column.enableTitle = updated.enableTitle;
+      column.columnDisplayType = updated.columnDisplayType;
+      column.width = updated.width;
+      column.rgb = updated.rgb;
+      column.columnSpecificSettings = updated.columnSpecificSettings;
+    }
+  );
+}
+
 
 /**
  * toggles the "on" state for a column that had its checkbox clicked

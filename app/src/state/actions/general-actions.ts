@@ -36,6 +36,7 @@ import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
+  convertColumnInfoToRenderColumnInfo,
   handleDataMiningColumns,
   handleDualColCompColumns,
   initializeColumnHashMap,
@@ -44,7 +45,7 @@ import {
 } from "./column-actions";
 import { xmlToJson } from "../parse-settings";
 import { displayServerError } from "./util-actions";
-import { compareStrings, convertColumnInfoToRenderColumnInfo } from "../../util/util";
+import { compareStrings } from "../../util/util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,

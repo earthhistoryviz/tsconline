@@ -25,7 +25,7 @@ import { Admin } from "./admin/Admin";
 import { GenerateExternalChart } from "./GenerateExternalChart";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { toJS } from "mobx";
+import { onReactionError, toJS } from "mobx";
 import { useTranslation } from "react-i18next";
 import { TSCDialogLoader } from "./components/TSCDialogLoader";
 import { Presets } from "./Presets";
@@ -39,6 +39,10 @@ import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
 import { PreviousLocationProvider } from "./providers/PreviousLocationProvider";
 import { ReportBug } from "./ReportBug";
+
+onReactionError((error) => {
+  console.warn("MobX reaction error:", error);
+});
 
 export default observer(function App() {
   const { state, actions } = useContext(context);
