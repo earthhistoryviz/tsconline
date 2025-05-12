@@ -54,8 +54,12 @@ export const TabWrapper = styled(Tab, { shouldForwardProp: (prop) => prop !== "s
     transition: "background-color 0.3s"
   }
 }));
-export const TabsWrapper = styled(Tabs)(() => ({
-  width: "180px",
+export const TabsWrapper = styled(Tabs, {
+  shouldForwardProp: (prop) => prop !== "width"
+})<{
+  width?: string;
+}>(({ width }) => ({
+  width: width ?? "180px",
   justifyContent: "flex-start",
   "& .MuiTabs-indicator": {
     display: "none"

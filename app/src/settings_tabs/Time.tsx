@@ -1,7 +1,7 @@
 import { Box, TextField, Typography } from "@mui/material";
 import { observer } from "mobx-react-lite";
 import { FormControl, InputLabel, Select, MenuItem } from "@mui/material";
-import { CustomDivider, TabWrapper, TabsWrapper } from "../components";
+import { CustomDivider } from "../components";
 import { useContext, useState } from "react";
 import { context } from "../state/index";
 import "./Time.css";
@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { toJS } from "mobx";
 import { TSCButton } from "../components";
 import { useNavigate, useLocation } from "react-router-dom";
+import { AnimatedTabs } from "../components/TSCAnimatedTabs";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -29,30 +30,27 @@ export const Time = observer(function Time() {
   if (state.isProcessingDatapacks) {
     return <Typography>Loading</Typography>;
   }
-  const allUnits = Object.keys(state.settings.timeSettings);
+  const allUnits = Object.keys(state.settings.timeSettings).sort((a, b) => {
+    // sort the units so that Ma is first
+    if (a === "Ma") {
+      return -1;
+    }
+    return a.localeCompare(b);
+  });
   return (
     <Box width="100%">
       <Box className="time-settings-header-and-settings">
-        <TabsWrapper
-          onChange={(_event, value) => {
-            if (value === null) {
-              return;
-            }
-            setUnits(value);
-          }}
-          value={units}
-          orientation="vertical">
-          {allUnits.map((unit) => (
-            <TabWrapper
-              key={unit}
-              label={unit}
-              value={unit}
-              onClick={() => {
-                setUnits(unit);
-              }}
-            />
-          ))}
-        </TabsWrapper>
+        <Box className="time-unit-settings-header">
+          <AnimatedTabs
+            tabs={allUnits.map((unit) => ({
+              id: unit,
+              label: unit
+            }))}
+            onChange={(id) => {
+              setUnits(id);
+            }}
+          />
+        </Box>
         <Box className="time-settings-container">
           <Box className="time-settings-age-container">
             <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
@@ -147,16 +145,16 @@ export const Time = observer(function Time() {
                 FormHelperTextProps={{ style: { fontSize: "13px" } }}
               />
             </FormControl>
-            <TextField
-              className="VerticalScale"
-              label={`${t("settings.time.interval.vertical-scale")} ${units}):`}
-              type="number"
-              size="small"
-              name="vertical-scale-text-field"
-              value={state.settings.timeSettings[units].unitsPerMY}
-              onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
-            />
           </Box>
+          <TextField
+            className="VerticalScale"
+            label={`${t("settings.time.interval.vertical-scale")} ${units}):`}
+            type="number"
+            size="small"
+            name="vertical-scale-text-field"
+            value={state.settings.timeSettings[units].unitsPerMY}
+            onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
+          />
           <div className="generate-button-container">
             <TSCButton
               buttonType="gradient"

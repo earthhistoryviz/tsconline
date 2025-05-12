@@ -6,6 +6,7 @@
   /* top | left and right | bottom */
   margin: 10px auto 10px;
   width: 100%;
+  gap: 15px;
 }
 .time-settings-container > * {
   width: 100%;
@@ -14,8 +15,6 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 12px;
-  margin: 10px 0px;
 }
 .IntervalLabel {
   margin-bottom: 2px;
@@ -66,9 +65,16 @@
 }
 .time-settings-header-and-settings {
   display: grid;
-  grid-template-columns: minmax(min-content, 100px) 1fr;
-  grid-template-rows: 1fr;
+  grid-template-rows: min-content 1fr;
+  grid-template-columns: 1fr;
   width: 100%;
+}
+.time-unit-settings-header {
+  display: flex;
+  flex-direction: column;
+  justify-self: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 @media screen and (max-width: 600px) {
   .time-settings-container {
