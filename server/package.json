@@ -84,7 +84,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "clean": "rm -rf ./dist",
     "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js",
-    "pull-supporting-files": "node dist/pull-supporting-files.js"
+    "pull-supporting-files": "node dist/pull-supporting-files.js",
+    "reset-markdown": "node dist/help/reset-markdown-files-to-template.js"
   },
   "type": "module"
 }

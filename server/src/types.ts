@@ -105,6 +105,8 @@ export type AssetConfig = {
   translationsDirectory: string;
   modelConversionCacheDirectory: string;
   autoPlotCacheDirectory: string;
+  helpDirectory: string;
+  templateMarkdownDirectory: string;
 };
 
 export type Colors = {
@@ -177,6 +179,9 @@ export function assertAssetConfig(o: any): asserts o is AssetConfig {
   if (typeof o.modelConversionCacheDirectory !== "string")
     throw 'AssetConfig must have a "modelConversionCacheDirectory" string';
   if (typeof o.autoPlotCacheDirectory !== "string") throw 'AssetConfig must have a "autoPlotCacheDirectory" string';
+  if (typeof o.helpDirectory !== "string") throw 'AssetConfig must have a "helpDirectory" string';
+  if (typeof o.templateMarkdownDirectory !== "string")
+    throw 'AssetConfig must have a "templateMarkdownDirectory" string';
 }
 
 export function isAccountType(o: any): o is AccountType {

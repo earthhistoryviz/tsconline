@@ -11,8 +11,8 @@ import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 
 //The Pages for the help
-import NewBreadcrumbs from "./HelpBreadcrumbsUpdated";
-import NewHelpDrawer from "./HelpDrawerUpdated";
+import NewBreadcrumbs from "./HelpBreadcrumbs";
+import NewHelpDrawer from "./HelpDrawer";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
