@@ -12,16 +12,17 @@ import {
 import styles from "./TSCComment.module.css";
 import PersonIcon from "@mui/icons-material/Person";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
 import { CommentType } from "./TSCDiscussion";
-import { context } from "../state";
 import { useTranslation } from "react-i18next";
 
 export type TSCCommentProps = CommentType & {
   handleDelete: (id: number) => void;
+  userSignedIn: boolean;
+  userIsAdmin: boolean;
 };
 
 export const Comment = ({
@@ -31,7 +32,9 @@ export const Comment = ({
   text,
   isSelf = false,
   isFlagged = false,
-  handleDelete
+  handleDelete,
+  userSignedIn,
+  userIsAdmin
 }: TSCCommentProps) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -40,9 +43,6 @@ export const Comment = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flagged, setFlagged] = useState(isFlagged);
-  const { state } = useContext(context);
-  const [isSignedIn] = useState(state.user !== null);
-  const [isAdmin] = useState(state.user.isAdmin);
   const formattedDate = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -89,7 +89,7 @@ export const Comment = ({
           <OutlinedFlagIcon sx={{ color: "text.primary" }} />
           <Typography color="text.primary">{t("general-actions.report")}</Typography>
         </MenuItem>
-        {((isSelf && isSignedIn) || isAdmin) && (
+        {((isSelf && userSignedIn) || userIsAdmin) && (
           <MenuItem onClick={() => handleDeleteComment()}>
             <DeleteIcon sx={{ color: "text.primary" }} />
             <Typography color="text.primary">{t("general-actions.delete")}</Typography>
@@ -116,7 +116,7 @@ export const Comment = ({
               <OutlinedFlagIcon sx={{ color: "text.primary" }} />
               <Typography color="text.primary">{t("general-actions.report")}</Typography>
             </MenuItem>
-            {((isSelf && isSignedIn) || isAdmin) && (
+            {((isSelf && userSignedIn) || userIsAdmin) && (
               <MenuItem onClick={() => handleDeleteComment()}>
                 <DeleteIcon sx={{ color: "text.primary" }} />
                 <Typography color="text.primary">{t("general-actions.delete")}</Typography>

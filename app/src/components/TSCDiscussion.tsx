@@ -4,7 +4,8 @@ import { CustomDivider } from "./TSCComponents";
 import PersonIcon from "@mui/icons-material/Person";
 import SendIcon from "@mui/icons-material/Send";
 import { Comment } from "./TSCComment";
-import { useState } from "react";
+import { useContext, useState } from "react";
+import { context } from "../state";
 
 export type CommentType = {
   id: number;
@@ -16,6 +17,7 @@ export type CommentType = {
 };
 
 export const Discussion = () => {
+  const { state } = useContext(context);
   const [comments, setComments] = useState<CommentType[]>([
     {
       id: 0,
@@ -35,8 +37,7 @@ export const Discussion = () => {
       username: "Username",
       date: new Date("May 1, 2025"),
       text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel  molestie metus, quis pellentesque odio. Morbi mattis rutrum  pellentesque. Aenean.",
-      isFlagged: true,
-      isSelf: true
+      isFlagged: true
     }
   ]);
   const [input, setInput] = useState("");
@@ -98,6 +99,8 @@ export const Discussion = () => {
                 isSelf={comment?.isSelf}
                 isFlagged={comment?.isFlagged}
                 handleDelete={() => deleteComment(comment.id)}
+                userSignedIn={state.user !== null}
+                userIsAdmin={state.user.isAdmin}
               />
             ))}
           </div>
