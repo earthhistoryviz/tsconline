@@ -5,225 +5,54 @@ import { PageNotFound } from "./PageNotFound";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
 import { generatePath } from "./state/non-action-util";
+import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile } from "@tsconline/shared";
 
-interface LinkPath {
-  title: string;
-  content: string;
-  children: LinkPath[];
-}
 
-interface Breadcrumb {
+type Breadcrumb = {
   to: string;
-  label: string;
-  content?: string;
+  title: string;
+}
+type BreadCrumbsWrapperProps = {
+  markdownTree: MarkdownTree;
 }
 
-// New interface here so as to not double map
-interface PathEntry {
-  link: LinkPath;
-  fullPath: string;
-  parentPath?: string;
-}
-
-const links: LinkPath[] = [
-  {
-    title: "Presets",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Datapacks",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Chart",
-    content: "Insert md file",
-    children: [
-      {
-        title: "What is a Chart?",
-        content: "Insert md file",
-        children: []
-      },
-      {
-        title: "Column Variants",
-        content: "Insert md file",
-        children: [
-          {
-            title: "Block Columns",
-            content: "Insert md file",
-            children: []
-          },
-          {
-            title: "Point Columns",
-            content: "Insert md file",
-            children: []
-          },
-          {
-            title: "Event columns",
-            content: "Insert md file",
-            children: [
-              {
-                title: "Dual column comparison",
-                content: "Insert md file",
-                children: []
-              },
-              {
-                title: "Data Mining",
-                content: "Insert md file",
-                children: []
-              }
-            ]
-          },
-          {
-            title: "Freehand Columns",
-            content: "Insert md file",
-            children: []
-          }
-        ]
-      },
-      {
-        title: "Saving a Chart",
-        content: "Insert md file",
-        children: []
-      }
-    ]
-  },
-  {
-    title: "Settings",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Help",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Workshops",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Options",
-    content: "Insert md file",
-    children: []
-  }
-];
-
-export const normalizeForComparison = (path: string): string => {
-  return decodeURIComponent(path)
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
-};
-
-// moved this up
-const getAllPaths = (
-  links: LinkPath[],
-  parentFullPath = "/help",
-  parentNormalizedPath = ""
-): Record<string, PathEntry> => {
-  const result: Record<string, PathEntry> = {};
-
-  links.forEach((link) => {
-    const fullPath = generatePath(link.title, parentFullPath);
-    const normalizedPath = normalizeForComparison(fullPath);
-
-    result[normalizedPath] = {
-      link,
-      fullPath,
-      parentPath: parentNormalizedPath || undefined
-    };
-
-    if (link.children?.length > 0) {
-      const childPaths = getAllPaths(link.children, fullPath, normalizedPath);
-      Object.assign(result, childPaths);
-    }
-  });
-
-  return result;
-};
-
-const buildBreadcrumbsForPath = (path: string, allPaths: Record<string, PathEntry>): Breadcrumb[] => {
-  const fullPath = path.startsWith("/help") ? path : "/help" + path;
-  const normalizedSearchPath = normalizeForComparison(fullPath);
-  const breadcrumbs: Breadcrumb[] = [];
-  let currentPath = normalizedSearchPath;
-
-  while (currentPath && allPaths[currentPath]) {
-    const entry = allPaths[currentPath];
-    breadcrumbs.unshift({
-      to: entry.fullPath.substring(5),
-      label: entry.link.title,
-      content: entry.link.content
-    });
-    currentPath = entry.parentPath || "";
-  }
-
-  return breadcrumbs;
-};
-
-const isLinkValid = (path: string, allPaths: Record<string, PathEntry>): boolean => {
-  const fullPath = path.startsWith("/help") ? path : "/help" + path;
-  const normalizedSearchPath = normalizeForComparison(fullPath);
-  return normalizedSearchPath in allPaths;
-};
-
-export default function NewBreadcrumbs() {
-  const [notFound, setNotFound] = useState(false);
-  const [fetchedData, setFetchedData] = useState<LinkPath[]>(links);
+export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> =  ({
+  markdownTree
+}) =>  {
   const theme = useTheme();
 
   const currentPath = useLocation().pathname;
   const navigate = useNavigate();
+  const keys = currentPath.split("/help/")[1].split("/");
+  let markdownTreePointer: MarkdownTree | MarkdownFile = markdownTree;
+  let fullPath = "";
+  const pathBreadcrumbs: Breadcrumb[] = [];
+  for (const [index, key] of keys.entries()) {
+    if (!markdownTree[key]) {
+      // not valid
+      break;
+    }
+    // cast because we know it can't be MarkdownFile
+    fullPath += `/${key}`;
+    markdownTreePointer = (markdownTreePointer as MarkdownTree)[key];
+    if (isMarkdownFile(markdownTreePointer)) {
+      pathBreadcrumbs.push({
+        to: fullPath += `/${markdownTreePointer.pathname}`,
+        title: markdownTreePointer.title
+      });
+    }
+  }
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const response = await fetcher("/help-menu-json");
 
-        if (!response.ok) {
-          throw new Error(`Failed to load data. Status: ${response.status}`);
-        }
+  const breadcrumbs: Breadcrumb[] = [{ to: "", title: "All Categories" }, ...pathBreadcrumbs];
 
-        const contentType = response.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Expected JSON response, but got something else.");
-        }
-
-        const data = await response.json();
-
-        if (Array.isArray(data.links)) {
-          setFetchedData(data.links);
-        } else {
-          throw new Error("Invalid data structure, expected 'links' array.");
-        }
-      } catch (error) {
-        console.error("Error loading data:", error);
-        setFetchedData(links);
-      }
-    };
-
-    loadData();
-  }, []);
-
-  const allPaths = getAllPaths(fetchedData);
-  const pathBreadcrumbs = buildBreadcrumbsForPath(currentPath, allPaths);
-  const breadcrumbs: Breadcrumb[] = [{ to: "", label: "All Categories" }, ...pathBreadcrumbs];
-  const isValidPath = isLinkValid(currentPath, allPaths);
-
-  useEffect(() => {
-    setNotFound(!isValidPath && currentPath !== "/help");
-  }, [isValidPath, currentPath]);
 
   const handleBreadcrumbClick = (breadcrumbPath: string, event: React.MouseEvent) => {
     event.preventDefault();
     navigate(`/help${breadcrumbPath}`);
   };
 
-  if (notFound) {
+  if (Object.keys(markdownTree).length === 0) {
     return <PageNotFound />;
   }
 
@@ -240,7 +69,7 @@ export default function NewBreadcrumbs() {
               onClick={(e) => handleBreadcrumbClick(breadcrumb.to, e)}
               underline="always"
               sx={{ color: theme.palette.button.main }}>
-              {breadcrumb.label}
+              {breadcrumb.title}
             </Link>
           ))}
         </Breadcrumbs>
@@ -248,8 +77,7 @@ export default function NewBreadcrumbs() {
 
       {breadcrumbs.length > 0 && (
         <div>
-          <Typography variant="h4">{breadcrumbs[breadcrumbs.length - 1].label}</Typography>
-          <Typography variant="body1">{breadcrumbs[breadcrumbs.length - 1].content}</Typography>
+          <Typography variant="h4">{breadcrumbs[breadcrumbs.length - 1].title}</Typography>
         </div>
       )}
     </Stack>

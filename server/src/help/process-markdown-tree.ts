@@ -9,7 +9,7 @@ export const processMarkdownTree = async () => {
         throw new Error("Markdown directory is not a valid path");
     }
     const tree: MarkdownTree = {};
-    const addToTree = async (path: string, tree: MarkdownTree, prefix?: string) => {
+    const addToTree = async (path: string, tree: MarkdownTree) => {
         const files = await readdir(path, { withFileTypes: true });
         for (const file of files) {
             const filePath = `${path}/${file.name}`;
@@ -22,7 +22,6 @@ export const processMarkdownTree = async () => {
                 const parsed = matter(content);
                 const { data, content: body} = parsed;
                 assertMarkdownFileMetadata(data);
-                console.log("path: ", filePath);
                 tree[data.pathname] = {
                     ...data,
                     markdown: body
