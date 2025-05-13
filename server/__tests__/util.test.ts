@@ -19,9 +19,29 @@ import {
   grabFilepaths,
   setCommonProperties,
   capitalizeFirstLetter,
-  checkHeader
+  checkHeader,
+  verifySymlink
 } from "../src/util";
 import * as fsModule from "fs";
+import * as fsPromises from "fs/promises";
+import path from "path";
+vi.mock("path", async (importOriginal) => {
+  const actual = await importOriginal<typeof path>();
+  return {
+    ...actual,
+    resolve: vi.fn().mockImplementation((...args) => {
+      const resolvedPath = args.join("/");
+      return resolvedPath;
+    })
+  };
+});
+vi.mock("fs/promises", async () => {
+  return {
+    lstat: vi.fn().mockResolvedValue({ isSymbolicLink: () => true }),
+    readir: vi.fn().mockResolvedValue(["1", "2"]),
+    realpath: vi.fn().mockResolvedValue("/resolved")
+  };
+});
 vi.mock("fs", async (importOriginal) => {
   const actual = await importOriginal<typeof fsModule>();
   return {
@@ -53,6 +73,31 @@ describe("grabFilepaths", () => {
   });
   test('grabFilepaths(["nonExistentFile1.txt", "nonExistentFile2.txt"], "/top/directory", "bot") returns []', async () => {
     expect(await grabFilepaths(["nonExistentFile1.txt", "nonExistentFile2.txt"], "/top/directory", "bot")).toEqual([]);
+  });
+});
+
+describe("verifySymlink", () => {
+  test("returns true for valid symlink", async () => {
+    vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as fsModule.Stats);
+    vi.spyOn(process, "cwd").mockReturnValueOnce("/top/directory");
+    expect(await verifySymlink("/top/directory/some/symlink")).toBe(true);
+  });
+
+  test("returns false for non-symlink", async () => {
+    vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => false } as fsModule.Stats);
+    expect(await verifySymlink("/some/file")).toBe(false);
+  });
+
+  test("returns false if realpath fails", async () => {
+    vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as fsModule.Stats);
+    vi.spyOn(fsPromises, "realpath").mockRejectedValueOnce(new Error("not found"));
+    expect(await verifySymlink("/bad/symlink")).toBe(false);
+  });
+  test("returns false if symlink does not start with root directory", async () => {
+    vi.spyOn(process, "cwd").mockReturnValueOnce("/top/directory");
+    vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as fsModule.Stats);
+    vi.spyOn(fsPromises, "realpath").mockResolvedValueOnce("/resolved");
+    expect(await verifySymlink("/directory/bad/symlink")).toBe(false);
   });
 });
 
