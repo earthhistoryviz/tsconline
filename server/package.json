@@ -24,6 +24,7 @@
     "fastify": "^4.27.0",
     "glob": "^10.3.10",
     "google-auth-library": "^9.8.0",
+    "gray-matter": "^4.0.3",
     "js-levenshtein": "^1.1.6",
     "jsdom": "^24.0.0",
     "kysely": "^0.27.3",
@@ -85,7 +86,8 @@
     "clean": "rm -rf ./dist",
     "london": "node dist/db/london/dump-to-json.js && node dist/db/london/json-to-txt.js",
     "pull-supporting-files": "node dist/pull-supporting-files.js",
-    "reset-markdown": "node dist/help/reset-markdown-files-to-template.js"
+    "reset-markdown": "node dist/help/reset-markdown-files-to-template.js",
+    "process-markdown": "node dist/help/process-markdown-tree.js"
   },
   "type": "module"
 }
