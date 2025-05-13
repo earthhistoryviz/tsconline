@@ -1,4 +1,4 @@
-import { AccordionSummary, Typography, AccordionDetails, Divider } from "@mui/material";
+import { AccordionSummary, Typography, AccordionDetails, Divider, Box, Link } from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -13,10 +13,35 @@ import { StyledScrollbar } from "./components";
 //The Pages for the help
 import { HelpDrawer } from "./HelpDrawer";
 import { fetcher } from "./util";
-import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile } from "@tsconline/shared";
+import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 import { BreadcrumbsWrapper } from "./HelpBreadcrumbs";
 import { PageNotFound } from "./PageNotFound";
 import ReactMarkdown from "react-markdown";
+import { getHelpKeysFromPath } from "./state/non-action-util";
+
+const getMarkdownTreeEntryFromPath = (
+  markdownTree: MarkdownTree,
+  keys: string[]
+): MarkdownFile | MarkdownTree | null => {
+  if (keys.length === 0) {
+    return markdownTree;
+  }
+  let pointer = markdownTree;
+  let markdownContent: MarkdownFile | null = null;
+  for (const [index, key] of keys.entries()) {
+    if (!pointer[key]) {
+      return null;
+    }
+    if (isMarkdownFile(pointer[key])) {
+      markdownContent = pointer[key] as MarkdownFile;
+      break;
+    } else if (index === keys.length - 1) {
+      return pointer[key] as MarkdownTree;
+    }
+    pointer = pointer[key] as MarkdownTree;
+  }
+  return markdownContent;
+};
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
@@ -24,7 +49,7 @@ export const Help = observer(function Help() {
   const navigate = useNavigate();
   const [markdownTree, setMarkdownTree] = useState<MarkdownTree>({});
   const currentPath = useLocation().pathname;
-  const keys = currentPath.split("/help/")[1].split("/");
+  const keys = getHelpKeysFromPath(currentPath);
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -56,17 +81,9 @@ export const Help = observer(function Help() {
     loadData();
   }, []);
   const background = { bgcolor: "secondaryBackground.main" };
-  let pointer = markdownTree;
-  let markdownContent: MarkdownFile | undefined = undefined;
-  for (const key of keys) {
-    if (!pointer[key]) {
-      return <PageNotFound />;
-    }
-    if (isMarkdownFile(pointer[key])) {
-      markdownContent = pointer[key] as MarkdownFile;
-      break;
-    }
-    pointer = pointer[key] as MarkdownTree;
+  const markdownContent = getMarkdownTreeEntryFromPath(markdownTree, keys);
+  if (!markdownContent) {
+    return <PageNotFound />;
   }
 
   function runTour(tourName: string) {
@@ -205,7 +222,6 @@ export const Help = observer(function Help() {
          *    - Include past contributors who have made significant contributions. */}
       </div>
 
-      {/* The Actual breadcrumb */}
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <StyledScrollbar>
@@ -215,14 +231,54 @@ export const Help = observer(function Help() {
         <Grid item sx={background}>
           <BreadcrumbsWrapper markdownTree={markdownTree} />
           <StyledScrollbar>
-            <ReactMarkdown>
-              {markdownContent?.markdown || ""}
-            </ReactMarkdown>
+            {isMarkdownFile(markdownContent) ? (
+              <ReactMarkdown>{markdownContent.markdown}</ReactMarkdown>
+            ) : (
+              <MarkdownParentComponent markdownTree={markdownContent} />
+            )}
           </StyledScrollbar>
         </Grid>
       </Grid>
     </div>
   );
 });
+
+// this is the component that renders the children of the markdown tree
+// can only be accessed through breadcrumbs
+const MarkdownParentComponent: React.FC<{
+  markdownTree: MarkdownTree;
+}> = ({ markdownTree }) => {
+  const navigate = useNavigate();
+  const pathname = useLocation().pathname;
+  if (!isMarkdownParent(markdownTree)) {
+    return null;
+  }
+  return (
+    <Box display="flex" flexDirection="column" gap="20px" paddingTop="10px">
+      {Object.entries(markdownTree).map(([key, child]) => {
+        const handleClick = () => {
+          if (isMarkdownFile(child)) {
+            navigate(`${pathname}/${child.pathname}`);
+          } else {
+            navigate(`${pathname}/${key}`);
+          }
+        };
+        if (isMarkdownFile(child)) {
+          return (
+            <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
+              {child.title}
+            </Link>
+          );
+        } else {
+          return (
+            <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
+              {key}
+            </Link>
+          );
+        }
+      })}
+    </Box>
+  );
+};
 
 export default Help;

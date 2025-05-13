@@ -674,19 +674,19 @@ export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
 export type MarkdownFile = {
-        markdown: string;
+  markdown: string;
 } & MarkdownFileMetadata;
 export type MarkdownFileMetadata = {
-        authoredBy: string;
-        lastUpdated: string;
-        title: string;
-        pathname: string;
-}
+  authoredBy: string;
+  lastUpdated: string;
+  title: string;
+  pathname: string;
+};
 export type MarkdownParent = MarkdownTree;
 
 export type MarkdownTree = {
-    [key: string]: MarkdownFile | MarkdownParent;
-}
+  [key: string]: MarkdownFile | MarkdownParent;
+};
 
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
@@ -702,12 +702,12 @@ export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMet
 export function isMarkdownParent(o: any): o is MarkdownParent {
   if (!o || typeof o !== "object") return false;
   for (const key in o) {
-    if (o.hasOwnProperty(key)) {
+    if (key in o) {
       const value = o[key];
       if (typeof value === "object") {
-        if (value.hasOwnProperty("markdown")) {
+        if ("markdown" in value && typeof value.markdown === "string") {
           try {
-          assertMarkdownFileMetadata(value);
+            assertMarkdownFileMetadata(value);
           } catch (e) {
             return false;
           }
@@ -736,10 +736,10 @@ export function isMarkdownFile(o: any): o is MarkdownFile {
 export function assertMarkdownTree(o: any): asserts o is MarkdownTree {
   if (!o || typeof o !== "object") throw new Error("MarkdownTree must be a non-null object");
   for (const key in o) {
-    if (o.hasOwnProperty(key)) {
+    if (key in o) {
       const value = o[key];
       if (typeof value === "object") {
-        if (value.hasOwnProperty("markdown")) {
+        if ("markdown" in value && typeof value.markdown === "string") {
           assertMarkdownFileMetadata(value);
         } else {
           assertMarkdownTree(value);
@@ -749,9 +749,7 @@ export function assertMarkdownTree(o: any): asserts o is MarkdownTree {
       }
     }
   }
-
 }
-
 
 export function getMarkerTypeFromNum(num: number): Marker["type"] {
   if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {

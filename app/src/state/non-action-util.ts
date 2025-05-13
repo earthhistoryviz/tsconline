@@ -254,3 +254,8 @@ export const generatePath = (title: string, parentPath = ""): string => {
 export function getWorkshopCoverImage(workshopId: number) {
   return devSafeUrl(`/workshop-images/${workshopId}`);
 }
+
+export function getHelpKeysFromPath(path: string) {
+  const keys = path.split("/help/")[1]?.split("/") || [];
+  return keys;
+}
