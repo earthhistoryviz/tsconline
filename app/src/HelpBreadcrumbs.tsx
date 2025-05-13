@@ -1,60 +1,57 @@
-import { useState, useEffect } from "react";
 import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
-import { fetcher } from "./util";
-import { PageNotFound } from "./PageNotFound";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
-import { generatePath } from "./state/non-action-util";
-import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile } from "@tsconline/shared";
-
+import { getHelpKeysFromPath } from "./state/non-action-util";
+import { MarkdownFile, MarkdownTree, isMarkdownFile } from "@tsconline/shared";
 
 type Breadcrumb = {
   to: string;
   title: string;
-}
+};
 type BreadCrumbsWrapperProps = {
   markdownTree: MarkdownTree;
-}
+};
 
-export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> =  ({
-  markdownTree
-}) =>  {
+const compileBreadcrumbs = (markdownTree: MarkdownTree | MarkdownFile, keys: string[]) => {
+  const pathBreadcrumbs: Breadcrumb[] = [];
+  let fullPath = "";
+  for (const key of keys) {
+    // cast because we know it can't be MarkdownFile
+    if (!(markdownTree as MarkdownTree)[key]) {
+      // not valid
+      break;
+    }
+    fullPath += `/${key}`;
+    markdownTree = (markdownTree as MarkdownTree)[key];
+    if (isMarkdownFile(markdownTree)) {
+      pathBreadcrumbs.push({
+        to: (fullPath += `/${markdownTree.pathname}`),
+        title: markdownTree.title
+      });
+    } else {
+      pathBreadcrumbs.push({
+        to: fullPath,
+        title: key
+      });
+    }
+  }
+  return pathBreadcrumbs;
+};
+
+export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdownTree }) => {
   const theme = useTheme();
 
   const currentPath = useLocation().pathname;
   const navigate = useNavigate();
-  const keys = currentPath.split("/help/")[1].split("/");
-  let markdownTreePointer: MarkdownTree | MarkdownFile = markdownTree;
-  let fullPath = "";
-  const pathBreadcrumbs: Breadcrumb[] = [];
-  for (const [index, key] of keys.entries()) {
-    if (!markdownTree[key]) {
-      // not valid
-      break;
-    }
-    // cast because we know it can't be MarkdownFile
-    fullPath += `/${key}`;
-    markdownTreePointer = (markdownTreePointer as MarkdownTree)[key];
-    if (isMarkdownFile(markdownTreePointer)) {
-      pathBreadcrumbs.push({
-        to: fullPath += `/${markdownTreePointer.pathname}`,
-        title: markdownTreePointer.title
-      });
-    }
-  }
-
+  const keys = getHelpKeysFromPath(currentPath);
+  const pathBreadcrumbs: Breadcrumb[] = compileBreadcrumbs(markdownTree, keys);
 
   const breadcrumbs: Breadcrumb[] = [{ to: "", title: "All Categories" }, ...pathBreadcrumbs];
-
 
   const handleBreadcrumbClick = (breadcrumbPath: string, event: React.MouseEvent) => {
     event.preventDefault();
     navigate(`/help${breadcrumbPath}`);
   };
-
-  if (Object.keys(markdownTree).length === 0) {
-    return <PageNotFound />;
-  }
 
   return (
     <Stack spacing={2}>
@@ -82,4 +79,4 @@ export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> =  ({
       )}
     </Stack>
   );
-}
+};

@@ -7,16 +7,21 @@ import "./HelpDrawer.css";
 import { generatePath } from "./state/non-action-util";
 import { MarkdownFile, MarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 
-
-
-function NavItem({ markdownTree, pathname, parentPath = "" }: { markdownTree: MarkdownTree | MarkdownFile; pathname: string; parentPath?: string }) {
+function NavItem({
+  markdownTree,
+  pathname,
+  parentPath = ""
+}: {
+  markdownTree: MarkdownTree | MarkdownFile;
+  pathname: string;
+  parentPath?: string;
+}) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
   const formattedPath = generatePath(pathname, parentPath);
-
 
   const handleClick = () => {
     if (isMarkdownParent(markdownTree)) {
@@ -29,13 +34,14 @@ function NavItem({ markdownTree, pathname, parentPath = "" }: { markdownTree: Ma
     <>
       <ListItem disablePadding>
         <ListItemButton onClick={handleClick} className="help-list-item-button">
-          <ListItemText primary={<Typography onClick={handleClick}>
-            {isMarkdownFile(markdownTree) ? 
-              (markdownTree as MarkdownFile).title
-             : (
-              pathname
-            )}
-          </Typography>} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
+          <ListItemText
+            primary={
+              <Typography onClick={handleClick}>
+                {isMarkdownFile(markdownTree) ? (markdownTree as MarkdownFile).title : pathname}
+              </Typography>
+            }
+            sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }}
+          />
           {isMarkdownParent(markdownTree) && (
             <ExpandLess
               sx={{
@@ -62,7 +68,14 @@ function NavItem({ markdownTree, pathname, parentPath = "" }: { markdownTree: Ma
               borderLeft: `1px solid ${theme.palette.accordionLine.main}`
             }}>
             {isMarkdownParent(markdownTree) &&
-              Object.entries(markdownTree).map(([key, child]) => <NavItem pathname={isMarkdownFile(child) ? child.pathname : key} key={key} markdownTree={child} parentPath={formattedPath} />)}
+              Object.entries(markdownTree).map(([key, child]) => (
+                <NavItem
+                  pathname={isMarkdownFile(child) ? child.pathname : key}
+                  key={key}
+                  markdownTree={child}
+                  parentPath={formattedPath}
+                />
+              ))}
           </List>
         </Collapse>
       )}
@@ -76,9 +89,9 @@ type HelpDrawerProps = {
 export const HelpDrawer: React.FC<HelpDrawerProps> = ({ markdownTree }) => {
   return (
     <List disablePadding className="new-help-drawer-list">
-{ 
-              Object.entries(markdownTree).map(([key, child]) => <NavItem pathname={key} key={key} markdownTree={child} />)
- }
+      {Object.entries(markdownTree).map(([key, child]) => (
+        <NavItem pathname={key} key={key} markdownTree={child} />
+      ))}
     </List>
   );
-}
+};

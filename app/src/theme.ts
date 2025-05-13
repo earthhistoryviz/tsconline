@@ -26,6 +26,7 @@ declare module "@mui/material/styles" {
     cardBackground: Palette["primary"];
     calendarCurrentDay: Palette["primary"];
     hover: Palette["primary"];
+    link: Palette["primary"];
   }
 
   interface PaletteOptions {
@@ -51,6 +52,7 @@ declare module "@mui/material/styles" {
     accordionLine?: PaletteOptions["primary"];
     cardBackground?: PaletteOptions["primary"];
     hover?: PaletteOptions["primary"];
+    link?: PaletteOptions["primary"];
   }
   interface PaletteColor {
     divider?: string;
@@ -71,6 +73,11 @@ declare module "@mui/material/SvgIcon" {
   interface SvgIconPropsColorOverrides {
     icon: true;
     button: true;
+  }
+}
+declare module "@mui/material/Typography" {
+  interface TypographyPropsColorOverrides {
+    link: true;
   }
 }
 
@@ -99,7 +106,13 @@ function createThemeOverrides(theme: Theme, primary: string) {
       MuiLink: {
         styleOverrides: {
           root: {
-            color: theme.palette.text.primary
+            color: theme.palette.button.main,
+            textDecorationColor: theme.palette.button.main,
+            "&:hover": {
+              textDecoration: "underline",
+              textDecorationColor: theme.palette.button.light,
+              color: theme.palette.button.light
+            }
           }
         }
       },
@@ -320,6 +333,15 @@ baseTheme = createTheme(baseTheme, {
         name: "dark"
       }),
       divider: "#505c71"
+    },
+    link: {
+      ...baseTheme.palette.augmentColor({
+        color: {
+          main: "#1e88e5"
+        },
+        name: "link"
+      }),
+      contrastText: "#ffffff"
     }
   }
 });
