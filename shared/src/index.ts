@@ -673,9 +673,32 @@ export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
 export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
+export type MarkdownFile = {
+        markdown: string;
+} & MarkdownFileMetadata;
+export type MarkdownFileMetadata = {
+        authoredBy: string;
+        lastUpdated: string;
+        title: string;
+        pathname: string;
+}
+export type MarkdownParent = MarkdownTree;
+
+export type MarkdownTree = {
+    [key: string]: MarkdownFile | MarkdownParent;
+}
 
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
+
+export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
+  if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
+  if (typeof o.authoredBy !== "string") throwError("MarkdownFileMetadata", "authoredBy", "string", o.authoredBy);
+  if (typeof o.lastUpdated !== "string") throwError("MarkdownFileMetadata", "lastUpdated", "string", o.lastUpdated);
+  if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);
+  if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
+}
+
 
 export function getMarkerTypeFromNum(num: number): Marker["type"] {
   if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {
