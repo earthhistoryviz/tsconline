@@ -1,129 +1,42 @@
 import { useNavigate } from "react-router-dom";
-import { Collapse, List, ListItem, ListItemButton, ListItemText } from "@mui/material";
+import { Collapse, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
 import { useState } from "react";
 import { ExpandLess } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import "./HelpDrawer.css";
 import { generatePath } from "./state/non-action-util";
+import { MarkdownFile, MarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 
-interface LinkPath {
-  title: string;
-  content: string;
-  children?: LinkPath[];
-}
 
-const links = [
-  {
-    title: "Presets",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Datapacks",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Chart",
-    content: "Insert md file",
-    children: [
-      {
-        title: "What is a Chart?",
-        content: "Insert md file",
-        children: []
-      },
-      {
-        title: "Column Variants",
-        content: "Insert md file",
-        children: [
-          {
-            title: "Block Columns",
-            content: "Insert md file",
-            children: []
-          },
-          {
-            title: "Point Columns",
-            content: "Insert md file",
-            children: []
-          },
-          {
-            title: "Event columns",
-            content: "Insert md file",
-            children: [
-              {
-                title: "Dual column comparison",
-                content: "Insert md file",
-                children: []
-              },
-              {
-                title: "Data Mining",
-                content: "Insert md file",
-                children: []
-              }
-            ]
-          },
-          {
-            title: "Freehand Columns",
-            content: "Insert md file",
-            children: []
-          }
-        ]
-      },
-      {
-        title: "Saving a Chart",
-        content: "Insert md file",
-        children: []
-      }
-    ]
-  },
-  {
-    title: "Settings",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Help",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Workshops",
-    content: "Insert md file",
-    children: []
-  },
-  {
-    title: "Options",
-    content: "Insert md file",
-    children: []
-  }
-];
 
-function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: string }) {
+function NavItem({ markdownTree, pathname, parentPath = "" }: { markdownTree: MarkdownTree | MarkdownFile; pathname: string; parentPath?: string }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
-  const formattedPath = generatePath(link.title, parentPath);
+  const formattedPath = generatePath(pathname, parentPath);
 
-  const hasChildren = (link: LinkPath): boolean => {
-    return (link.children?.length || 0) > 0;
-  };
 
   const handleClick = () => {
-    if (hasChildren(link)) {
+    if (isMarkdownParent(markdownTree)) {
       setOpen(!open);
     } else {
       navigate(`/help${formattedPath}`);
     }
   };
-
   return (
     <>
       <ListItem disablePadding>
         <ListItemButton onClick={handleClick} className="help-list-item-button">
-          <ListItemText primary={link.title} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
-          {hasChildren(link) && (
+          <ListItemText primary={<Typography onClick={handleClick}>
+            {isMarkdownFile(markdownTree) ? 
+              (markdownTree as MarkdownFile).title
+             : (
+              pathname
+            )}
+          </Typography>} sx={{ "& .MuiListItemText-primary": { fontSize: "0.875rem" } }} />
+          {isMarkdownParent(markdownTree) && (
             <ExpandLess
               sx={{
                 transform: !open ? "rotate(90deg)" : "rotate(180deg)",
@@ -138,7 +51,7 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
       </ListItem>
 
       {/* Render children if applicable */}
-      {hasChildren(link) && (
+      {isMarkdownParent(markdownTree) && (
         <Collapse in={open} timeout="auto" unmountOnExit>
           <List
             component="div"
@@ -148,8 +61,8 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
               // Can't directly feed theme.palette.divider into the css file
               borderLeft: `1px solid ${theme.palette.accordionLine.main}`
             }}>
-            {link.children &&
-              link.children.map((child, index) => <NavItem key={index} link={child} parentPath={formattedPath} />)}
+            {isMarkdownParent(markdownTree) &&
+              Object.entries(markdownTree).map(([key, child]) => <NavItem pathname={isMarkdownFile(child) ? child.pathname : key} key={key} markdownTree={child} parentPath={formattedPath} />)}
           </List>
         </Collapse>
       )}
@@ -157,14 +70,15 @@ function NavItem({ link, parentPath = "" }: { link: LinkPath; parentPath?: strin
   );
 }
 
-function NewHelpDrawer() {
+type HelpDrawerProps = {
+  markdownTree: MarkdownTree;
+};
+export const HelpDrawer: React.FC<HelpDrawerProps> = ({ markdownTree }) => {
   return (
     <List disablePadding className="new-help-drawer-list">
-      {links.map((link, index) => (
-        <NavItem key={index} link={link} />
-      ))}
+{ 
+              Object.entries(markdownTree).map(([key, child]) => <NavItem pathname={key} key={key} markdownTree={child} />)
+ }
     </List>
   );
 }
-
-export default NewHelpDrawer;

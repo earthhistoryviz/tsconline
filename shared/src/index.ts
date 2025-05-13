@@ -699,6 +699,59 @@ export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMet
   if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
 }
 
+export function isMarkdownParent(o: any): o is MarkdownParent {
+  if (!o || typeof o !== "object") return false;
+  for (const key in o) {
+    if (o.hasOwnProperty(key)) {
+      const value = o[key];
+      if (typeof value === "object") {
+        if (value.hasOwnProperty("markdown")) {
+          try {
+          assertMarkdownFileMetadata(value);
+          } catch (e) {
+            return false;
+          }
+        } else {
+          return isMarkdownParent(value);
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function isMarkdownFile(o: any): o is MarkdownFile {
+  if (!o || typeof o !== "object") return false;
+  try {
+    if (typeof o.markdown !== "string") return false;
+    assertMarkdownFileMetadata(o);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function assertMarkdownTree(o: any): asserts o is MarkdownTree {
+  if (!o || typeof o !== "object") throw new Error("MarkdownTree must be a non-null object");
+  for (const key in o) {
+    if (o.hasOwnProperty(key)) {
+      const value = o[key];
+      if (typeof value === "object") {
+        if (value.hasOwnProperty("markdown")) {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownTree(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownTree structure at key: ${key}`);
+      }
+    }
+  }
+
+}
+
 
 export function getMarkerTypeFromNum(num: number): Marker["type"] {
   if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {

@@ -3,22 +3,71 @@ import Accordion from "@mui/material/Accordion";
 import { observer } from "mobx-react-lite";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TSCButton } from "./components";
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 
 //The Pages for the help
-import NewBreadcrumbs from "./HelpBreadcrumbs";
-import NewHelpDrawer from "./HelpDrawer";
+import { HelpDrawer } from "./HelpDrawer";
+import { fetcher } from "./util";
+import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile } from "@tsconline/shared";
+import { BreadcrumbsWrapper } from "./HelpBreadcrumbs";
+import { PageNotFound } from "./PageNotFound";
+import ReactMarkdown from "react-markdown";
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [markdownTree, setMarkdownTree] = useState<MarkdownTree>({});
+  const currentPath = useLocation().pathname;
+  const keys = currentPath.split("/help/")[1].split("/");
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const response = await fetcher("/markdown-tree", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json"
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to load data. Status: ${response.status}`);
+        }
+
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Expected JSON response, but got something else.");
+        }
+
+        const data = await response.json();
+        assertMarkdownTree(data);
+        setMarkdownTree(data);
+      } catch (error) {
+        console.error("Error loading markdown tree:", error);
+      }
+    };
+
+    loadData();
+  }, []);
   const background = { bgcolor: "secondaryBackground.main" };
+  let pointer = markdownTree;
+  let markdownContent: MarkdownFile | undefined = undefined;
+  for (const key of keys) {
+    if (!pointer[key]) {
+      return <PageNotFound />;
+    }
+    if (isMarkdownFile(pointer[key])) {
+      markdownContent = pointer[key] as MarkdownFile;
+      break;
+    }
+    pointer = pointer[key] as MarkdownTree;
+  }
 
   function runTour(tourName: string) {
     actions.setTourOpen(true, tourName);
@@ -160,11 +209,16 @@ export const Help = observer(function Help() {
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <StyledScrollbar>
-            <NewHelpDrawer />
+            <HelpDrawer markdownTree={markdownTree} />
           </StyledScrollbar>
         </Grid>
         <Grid item sx={background}>
-          <NewBreadcrumbs />
+          <BreadcrumbsWrapper markdownTree={markdownTree} />
+          <StyledScrollbar>
+            <ReactMarkdown>
+              {markdownContent?.markdown || ""}
+            </ReactMarkdown>
+          </StyledScrollbar>
         </Grid>
       </Grid>
     </div>
