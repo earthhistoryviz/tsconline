@@ -295,6 +295,9 @@ jobs:
           #   echo "No coverage errors found."
           # fi
 
+          echo "Listing all files in the assets directory:"
+          ls -R ${{ github.workspace }}/server/assets
+
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
@@ -318,8 +321,6 @@ jobs:
         id: run_tests_exclude_encryption
         if: github.event.pull_request.user.login == 'dependabot[bot]'
         run: |
-          echo "Contents of the assets folder:"
-          ls -R ${{ github.workspace }}/server/assets
 
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
