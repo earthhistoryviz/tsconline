@@ -99,7 +99,7 @@ export const Discussion = () => {
                 isSelf={comment?.isSelf}
                 isFlagged={comment?.isFlagged}
                 handleDelete={() => deleteComment(comment.id)}
-                userSignedIn={state.user !== null}
+                userLoggedIn={state.isLoggedIn}
                 userIsAdmin={state.user.isAdmin}
               />
             ))}

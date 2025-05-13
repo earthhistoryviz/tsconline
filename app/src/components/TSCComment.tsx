@@ -21,7 +21,7 @@ import { useTranslation } from "react-i18next";
 
 export type TSCCommentProps = CommentType & {
   handleDelete: (id: number) => void;
-  userSignedIn: boolean;
+  userLoggedIn: boolean;
   userIsAdmin: boolean;
 };
 
@@ -33,7 +33,7 @@ export const Comment = ({
   isSelf = false,
   isFlagged = false,
   handleDelete,
-  userSignedIn,
+  userLoggedIn,
   userIsAdmin
 }: TSCCommentProps) => {
   const { t } = useTranslation();
@@ -89,7 +89,7 @@ export const Comment = ({
           <OutlinedFlagIcon sx={{ color: "text.primary" }} />
           <Typography color="text.primary">{t("general-actions.report")}</Typography>
         </MenuItem>
-        {((isSelf && userSignedIn) || userIsAdmin) && (
+        {((isSelf && userLoggedIn) || userIsAdmin) && (
           <MenuItem onClick={() => handleDeleteComment()}>
             <DeleteIcon sx={{ color: "text.primary" }} />
             <Typography color="text.primary">{t("general-actions.delete")}</Typography>
@@ -116,7 +116,7 @@ export const Comment = ({
               <OutlinedFlagIcon sx={{ color: "text.primary" }} />
               <Typography color="text.primary">{t("general-actions.report")}</Typography>
             </MenuItem>
-            {((isSelf && userSignedIn) || userIsAdmin) && (
+            {((isSelf && userLoggedIn) || userIsAdmin) && (
               <MenuItem onClick={() => handleDeleteComment()}>
                 <DeleteIcon sx={{ color: "text.primary" }} />
                 <Typography color="text.primary">{t("general-actions.delete")}</Typography>
