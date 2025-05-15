@@ -375,8 +375,8 @@ export const sendCrossPlotConversionRequest = action(
         pushError(ErrorCodes.NO_MODELS);
         return;
       }
-      assertColumnInfoRoot(state.crossPlot.chartY);
-      const datapacks = state.crossPlot.chartY.datapackUniqueIdentifiers.map((id) =>
+      assertColumnInfoRoot(state.crossPlot.chartY.columnRef);
+      const datapacks = state.crossPlot.chartY.columnRef.datapackUniqueIdentifiers.map((id) =>
         getDatapackFromArray(id, state.datapacks)
       );
       if (datapacks.length === 0 || datapacks.some((datapack) => !datapack)) {
@@ -396,7 +396,7 @@ export const sendCrossPlotConversionRequest = action(
       const chartSettingsCopy = cloneDeep(state.settings);
       const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
       const body: ConvertCrossPlotRequest = {
-        datapackUniqueIdentifiers: state.crossPlot.chartY.datapackUniqueIdentifiers,
+        datapackUniqueIdentifiers: state.crossPlot.chartY.columnRef.datapackUniqueIdentifiers,
         models: state.crossPlot.models
           .map((model) => `${model.x}\t${model.y}\t${model.age}\t${model.depth}\t${model.color}\t${model.comment}`)
           .join("\n"),
@@ -458,7 +458,8 @@ export const setCrossPlotChartMatchesSettings = action((matchesSettings: boolean
       chartXTimeSettings: state.crossPlot.chartXTimeSettings,
       chartYTimeSettings: state.crossPlot.chartYTimeSettings,
       columnHashMap: state.crossPlot.columnHashMap,
-      columns: state.crossPlot.columns
+      columns: state.crossPlot.columns,
+      renderColumns: state.crossPlot.renderColumns
     });
   }
   state.crossPlot.state.matchesSettings = matchesSettings;
@@ -477,6 +478,7 @@ export const revertCrossPlot = action(() => {
   state.crossPlot.chartYTimeSettings = state.crossPlot.previousSettings.chartYTimeSettings;
   state.crossPlot.columnHashMap = state.crossPlot.previousSettings.columnHashMap;
   state.crossPlot.columns = state.crossPlot.previousSettings.columns;
+  state.crossPlot.renderColumns = state.crossPlot.previousSettings.renderColumns;
   state.crossPlot.state.matchesSettings = true;
 });
 export const setCrossPlotChartYTimeSettings = action((timeSettings: Partial<CrossPlotTimeSettings>) => {
@@ -749,11 +751,13 @@ export const autoPlotCrossPlot = action(async () => {
       pushError(ErrorCodes.INVALID_CROSSPLOT_UNITS);
       return;
     }
-    assertColumnInfoRoot(state.crossPlot.chartY);
-    assertColumnInfoRoot(state.crossPlot.chartX);
+    const chartY = state.crossPlot.chartY.columnRef;
+    const chartX = state.crossPlot.chartX?.columnRef;
+    assertColumnInfoRoot(chartY);
+    assertColumnInfoRoot(chartX);
     const datapacks = [
-      ...state.crossPlot.chartY.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks)),
-      ...state.crossPlot.chartX.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks))
+      ...chartY.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks)),
+      ...chartX.datapackUniqueIdentifiers.map((id) => getDatapackFromArray(id, state.datapacks))
     ];
     if (datapacks.length === 0 || datapacks.some((datapack) => !datapack)) {
       pushError(ErrorCodes.INVALID_CROSSPLOT_CONVERSION);
@@ -761,7 +765,7 @@ export const autoPlotCrossPlot = action(async () => {
     }
     assertDatapackArray(datapacks);
     const columnRoot = cloneDeep(defaultColumnRoot);
-    columnRoot.children = [state.crossPlot.chartX, state.crossPlot.chartY];
+    columnRoot.children = [chartX, chartY];
     const columnCopy = cloneDeep(columnRoot);
     const chartSettingsCopy = cloneDeep(
       createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
@@ -769,8 +773,8 @@ export const autoPlotCrossPlot = action(async () => {
     const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
     const body: AutoPlotRequest = {
       datapackUniqueIdentifiers: [
-        ...state.crossPlot.chartY.datapackUniqueIdentifiers,
-        ...state.crossPlot.chartX.datapackUniqueIdentifiers
+        ...chartY.datapackUniqueIdentifiers,
+        ...chartX.datapackUniqueIdentifiers
       ],
       settings: xmlSettings
     };
@@ -821,22 +825,23 @@ export const autoPlotCrossPlot = action(async () => {
 export const setCrossPlotDatapackConfig = action(
   "setCrossPlotDatapackConfig",
   async (message: SetDatapackConfigReturnValue) => {
-    await runInAction(async () => {
-      state.crossPlot.columns = message.columnRoot;
-      state.crossPlot.renderColumns = convertColumnInfoToRenderColumnInfo(message.columnRoot);
-      state.crossPlot.datapacks = message.datapacks;
-      await initializeColumnHashMap(message.columnRoot);
-    });
-    for (const child of state.crossPlot.columns!.children) {
-      if (child.units.toLowerCase() === "ma") {
-        state.crossPlot.chartX = state.crossPlot.columnHashMap.get(child.name);
-        break;
+    state.crossPlot.columns = message.columnRoot;
+    state.crossPlot.renderColumns = convertColumnInfoToRenderColumnInfo(message.columnRoot);
+    state.crossPlot.datapacks = message.datapacks;
+    await initializeColumnHashMap(message.columnRoot);
+
+    runInAction(() => {
+      for (const child of state.crossPlot.columns!.children) {
+        if (child.units.toLowerCase() === "ma") {
+          state.crossPlot.chartX = state.crossPlot.columnHashMap.get(child.name);
+          break;
+        }
       }
-    }
-    if (!state.crossPlot.chartX)
-      state.crossPlot.chartX = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
-    state.crossPlot.chartY = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
-    state.crossPlot.state.matchesSettings = true;
+      if (!state.crossPlot.chartX)
+        state.crossPlot.chartX = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
+      state.crossPlot.chartY = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
+      state.crossPlot.state.matchesSettings = true;
+    });
   }
 );
 const initializeColumnHashMap = action("initializeColumnHashmap", async (root: ColumnInfo) => {
@@ -857,5 +862,15 @@ const initializeColumnHashMap = action("initializeColumnHashmap", async (root: C
 });
 
 export const setCrossPlotColumnSelected = action((column: string | null) => {
+  const previouslySelectedColumn = state.crossPlot.columnSelected
+    ? state.crossPlot.columnHashMap.get(state.crossPlot.columnSelected)
+    : null;
+  if (previouslySelectedColumn) {
+    previouslySelectedColumn.isSelected = false;
+    const parentColumn = previouslySelectedColumn.parent
+      ? state.crossPlot.columnHashMap.get(previouslySelectedColumn.parent)
+      : null;
+    if (parentColumn) parentColumn.hasSelectedChildren = false;
+  }
   state.crossPlot.columnSelected = column;
 });
