@@ -230,11 +230,12 @@ export function findSerialNum(name: string) {
 }
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
+  const { children, ...rest } = column;
   const renderColumn: RenderColumnInfo = observable(
     {
-      ...column,
+      ...rest,
       columnRef: column,
-      children: column.children.map((child) => child.name),
+      children: children.map((child) => child.name),
       isSelected: false,
       hasSelectedChildren: false
     },

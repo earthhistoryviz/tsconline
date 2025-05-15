@@ -1,4 +1,4 @@
-import { action, isObservable, observable, runInAction } from "mobx";
+import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
   ChartSettings,
   CrossPlotBounds,
@@ -452,7 +452,7 @@ export const setCrossPlotChartY = action((chart?: RenderColumnInfo) => {
 // set this before you set the actual changes so it remembers the previous settings
 export const setCrossPlotChartMatchesSettings = action((matchesSettings: boolean) => {
   if (state.crossPlot.state.matchesSettings) {
-    state.crossPlot.previousSettings = cloneDeep({
+    state.crossPlot.previousSettings = toJS({
       chartX: state.crossPlot.chartX,
       chartY: state.crossPlot.chartY,
       chartXTimeSettings: state.crossPlot.chartXTimeSettings,
@@ -476,7 +476,7 @@ export const revertCrossPlot = action(() => {
   state.crossPlot.chartY = state.crossPlot.previousSettings.chartY;
   state.crossPlot.chartXTimeSettings = state.crossPlot.previousSettings.chartXTimeSettings;
   state.crossPlot.chartYTimeSettings = state.crossPlot.previousSettings.chartYTimeSettings;
-  state.crossPlot.columnHashMap = state.crossPlot.previousSettings.columnHashMap;
+  state.crossPlot.columnHashMap = observable.map(state.crossPlot.previousSettings.columnHashMap);
   state.crossPlot.columns = state.crossPlot.previousSettings.columns;
   state.crossPlot.renderColumns = state.crossPlot.previousSettings.renderColumns;
   state.crossPlot.state.matchesSettings = true;
@@ -772,10 +772,7 @@ export const autoPlotCrossPlot = action(async () => {
     );
     const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
     const body: AutoPlotRequest = {
-      datapackUniqueIdentifiers: [
-        ...chartY.datapackUniqueIdentifiers,
-        ...chartX.datapackUniqueIdentifiers
-      ],
+      datapackUniqueIdentifiers: [...chartY.datapackUniqueIdentifiers, ...chartX.datapackUniqueIdentifiers],
       settings: xmlSettings
     };
     const response = await fetcher("/crossplot/autoplot", {

@@ -201,23 +201,19 @@ export const state = observable<State>({
       datapacks: [],
       columnHashMap: new Map<string, RenderColumnInfo>(),
       columnSelected: null,
-      previousSettings: observable(
-        {
-          chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-          chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-          chartX: undefined,
-          chartY: undefined,
-          columnHashMap: new Map<string, RenderColumnInfo>(),
-          columns: undefined,
-          renderColumns: undefined
-        }, 
-        {
-          columns: false
-        }
-      )
+      previousSettings: {
+        chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+        chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+        chartX: undefined,
+        chartY: undefined,
+        columnHashMap: new Map<string, RenderColumnInfo>(),
+        columns: undefined,
+        renderColumns: undefined
+      }
     },
     {
-      columns: false
+      columns: false,
+      previousSettings: false
     }
   ),
   loadSaveFilename: "settings", //name without extension (.tsc)

@@ -709,54 +709,56 @@ export const setColumnMenuTabValue = action((tabValue: number) => {
 });
 
 let currentSearchToken = 0;
-export const searchColumns = action(async (searchTerm: string, columnHashMap: Map<string, RenderColumnInfo>, counter = { count: 0 }) => {
-  if (!columnHashMap) return;
-  const thisToken = ++currentSearchToken;
-  setColumnSearchTerm(searchTerm);
-  if (searchTerm === "") {
-    columnHashMap.forEach((columnInfo) => {
-      setExpanded(false, columnInfo);
-      setShow(true, columnInfo);
-    });
-    if (!state.settingsTabs.columns) return;
-    for (const child of getChildRenderColumns(columnHashMap.get(state.settingsTabs.columns.name)!, columnHashMap)) {
-      setExpanded(true, child);
+export const searchColumns = action(
+  async (searchTerm: string, columnHashMap: Map<string, RenderColumnInfo>, counter = { count: 0 }) => {
+    if (!columnHashMap) return;
+    const thisToken = ++currentSearchToken;
+    setColumnSearchTerm(searchTerm);
+    if (searchTerm === "") {
+      columnHashMap.forEach((columnInfo) => {
+        setExpanded(false, columnInfo);
+        setShow(true, columnInfo);
+      });
+      if (!state.settingsTabs.columns) return;
+      for (const child of getChildRenderColumns(columnHashMap.get(state.settingsTabs.columns.name)!, columnHashMap)) {
+        setExpanded(true, child);
+      }
+      return;
     }
-    return;
-  }
-  for (const columnInfo of columnHashMap.values()) {
-    if (thisToken !== currentSearchToken) return;
-    await yieldControl(counter, 30);
-    setShow(false, columnInfo);
-    setExpanded(false, columnInfo);
-  }
+    for (const columnInfo of columnHashMap.values()) {
+      if (thisToken !== currentSearchToken) return;
+      await yieldControl(counter, 30);
+      setShow(false, columnInfo);
+      setExpanded(false, columnInfo);
+    }
 
-  const regExp = getRegex(searchTerm);
+    const regExp = getRegex(searchTerm);
 
-  for (const columnInfo of columnHashMap.values()) {
-    if (thisToken !== currentSearchToken) return;
-    await yieldControl(counter, 30);
-    if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
-      setShow(true, columnInfo);
-      setExpanded(true, columnInfo);
-      let parentName = columnInfo.parent;
-      await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
-      const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
-      if (hasMatchingChild) setExpanded(true, columnInfo);
-      await setShowOfAllChildren(columnInfo, columnHashMap, true);
-      while (parentName) {
-        const parentColumnInfo = columnHashMap.get(parentName);
-        if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
-          setShow(true, parentColumnInfo);
-          setExpanded(true, parentColumnInfo);
-          parentName = parentColumnInfo.parent;
-        } else {
-          break;
+    for (const columnInfo of columnHashMap.values()) {
+      if (thisToken !== currentSearchToken) return;
+      await yieldControl(counter, 30);
+      if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
+        setShow(true, columnInfo);
+        setExpanded(true, columnInfo);
+        let parentName = columnInfo.parent;
+        await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
+        const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
+        if (hasMatchingChild) setExpanded(true, columnInfo);
+        await setShowOfAllChildren(columnInfo, columnHashMap, true);
+        while (parentName) {
+          const parentColumnInfo = columnHashMap.get(parentName);
+          if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
+            setShow(true, parentColumnInfo);
+            setExpanded(true, parentColumnInfo);
+            parentName = parentColumnInfo.parent;
+          } else {
+            break;
+          }
         }
       }
     }
   }
-});
+);
 
 export const setDrawDualColCompColumn = action((baseColumn: RenderColumnInfo, overlayColumn: RenderColumnInfo) => {
   if (baseColumn.columnDisplayType === "Point") {
@@ -1339,22 +1341,34 @@ export const changeZoneColumnOrientation = action((column: RenderColumnInfo, new
   column.columnSpecificSettings.orientation = newOrientation;
 });
 
-export const setShowOfAllChildren = action(async (root: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>, isShown: boolean, counter = { count: 0 }) => {
-  const stack: RenderColumnInfo[] = [root];
+export const setShowOfAllChildren = action(
+  async (
+    root: RenderColumnInfo,
+    columnHashMap: Map<string, RenderColumnInfo>,
+    isShown: boolean,
+    counter = { count: 0 }
+  ) => {
+    const stack: RenderColumnInfo[] = [root];
 
-  while (stack.length > 0) {
-    const column = stack.pop()!;
-    column.show = isShown;
-    await yieldControl(counter, 30);
+    while (stack.length > 0) {
+      const column = stack.pop()!;
+      column.show = isShown;
+      await yieldControl(counter, 30);
 
-    for (const child of getChildRenderColumns(column, columnHashMap)) {
-      stack.push(child);
+      for (const child of getChildRenderColumns(column, columnHashMap)) {
+        stack.push(child);
+      }
     }
   }
-});
+);
 
 export const setExpansionOfAllChildren = action(
-  async (root: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>, isExpanded: boolean, counter = { count: 0 }) => {
+  async (
+    root: RenderColumnInfo,
+    columnHashMap: Map<string, RenderColumnInfo>,
+    isExpanded: boolean,
+    counter = { count: 0 }
+  ) => {
     const queue: RenderColumnInfo[] = [root];
 
     while (queue.length > 0) {
