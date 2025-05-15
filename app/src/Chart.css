@@ -109,3 +109,107 @@
   transform: translateY(-50%);
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
 }
+
+.history-entry-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
+  transform: rotate(90deg);
+  display: flex;
+  order: -1;
+}
+.history-entry-summary > .MuiAccordionSummary-expandIconWrapper {
+  order: -1;
+}
+.Mui-focusVisible.history-entry-summary,
+.history-entry-summary:focus-visible {
+  outline: none;
+  background-color: rgba(171, 171, 171, 0.1);
+}
+.history-entry-summary > .MuiAccordionSummary-content.Mui-expanded {
+  padding: 0;
+  margin: 0;
+}
+.history-entry-accordion.Mui-expanded {
+  margin: 0;
+  padding: 0;
+}
+.history-entry-accordion:not(:last-child) {
+  border-bottom: 0;
+}
+.history-entry-accordion:before {
+  display: none;
+}
+.history-entry-accordion:last-child {
+  padding-bottom: 10px;
+}
+.history-entry-summary {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 70px;
+  height: 70px;
+  gap: 20px;
+  width: 100%;
+}
+.history-entry-details {
+  padding: 0 0 0 19px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.history-entry-svg-display {
+  width: 40px;
+  height: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.history-divider {
+  width: 70%;
+}
+
+.history-entry-summary-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+.history-entry-summary-display-date {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+  gap: 15px;
+}
+.history-entry-summary:hover
+  > .MuiAccordionSummary-content
+  > .history-entry-summary-container
+  > .history-entry-summary-delete-button,
+.history-entry-summary
+  > .MuiAccordionSummary-content.Mui-expanded
+  > .history-entry-summary-container
+  > .history-entry-summary-delete-button {
+  display: block;
+}
+.history-entry-summary-delete-button {
+  display: none;
+}
+
+.timeline-line {
+  position: absolute;
+  top: 8px;
+  left: 4px;
+  width: 2px;
+  height: calc(100% + 10px);
+  background-color: gray;
+  z-index: 1;
+}
+
+.timeline-dot {
+  margin-top: 8px;
+  width: 10px;
+  height: 10px;
+  background-color: gray;
+  border-radius: 50%;
+  position: relative;
+  z-index: 2;
+  margin-right: 12px;
+}

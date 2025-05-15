@@ -1,20 +1,36 @@
-import { readFileSync } from "fs";
+import { readFileSync, existsSync } from "fs";
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import { printUnifiedDiff } from "print-diff";
 import path from "path";
 try {
+  let verify = true;
   if (!checkKeysExistInEnglish()) {
     console.error("Some keys are missing English translations.");
-    process.exit(1);
-  } else if (!(await checkTranslationSync())) {
-    console.error("Translation JSON and CSV are not equivalent.");
-    process.exit(1);
-  } else {
-    console.log("verified translations.");
-    process.exit(0);
+    verify = false;
   }
+  if (!(await checkTranslationSync())) {
+    console.error("Translation JSON and CSV are not equivalent.");
+    verify = false;
+  }
+  if (!checkDevFileRemoved()) {
+    console.error("Dev Translation JSON not removed, please delete it");
+    verify = false;
+  }
+  if (!verify) {
+    process.exit(1);
+  }
+  console.log("verified translations.");
+  process.exit(0);
 } catch (e) {
   console.error("failed to verify translations");
+}
+
+function checkDevFileRemoved() {
+  const devTranslationJson = path.join("..", "shared", "translations", "dev-translation-en.json");
+  if (existsSync(devTranslationJson)) {
+    return false;
+  }
+  return true;
 }
 
 //check that static JSON and translation CSV are equivalent

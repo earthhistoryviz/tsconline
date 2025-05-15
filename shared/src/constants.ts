@@ -451,6 +451,11 @@ export const defaultPoint: Partial<Point> = {
   upperRange: 0,
   smoothed: true,
   drawLine: false,
+  lineColor: {
+    r: 0,
+    g: 0,
+    b: 0
+  },
   pointShape: "rect",
   drawFill: true,
   fill: {
