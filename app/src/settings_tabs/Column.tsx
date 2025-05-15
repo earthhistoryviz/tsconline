@@ -137,7 +137,7 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, true);
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
             }}>
             <ExpandIcon />
           </IconButton>
@@ -148,7 +148,7 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, false);
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
             }}>
             <CompressIcon />
           </IconButton>
@@ -301,7 +301,7 @@ const ColumnSearchBar = observer(() => {
   const { actions: globalActions } = useContext(context);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    globalActions.searchColumns(term);
+    globalActions.searchColumns(term, state.columnHashMap);
   };
   const { t } = useTranslation();
   return (

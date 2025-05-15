@@ -709,10 +709,10 @@ export const setColumnMenuTabValue = action((tabValue: number) => {
 });
 
 let currentSearchToken = 0;
-export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+export const searchColumns = action(async (searchTerm: string, columnHashMap: Map<string, RenderColumnInfo>, counter = { count: 0 }) => {
+  if (!columnHashMap) return;
   const thisToken = ++currentSearchToken;
   setColumnSearchTerm(searchTerm);
-  const columnHashMap = state.settingsTabs.columnHashMap;
   if (searchTerm === "") {
     columnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
@@ -740,10 +740,10 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
-      await setExpansionOfAllChildren(columnInfo, false);
+      await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
       const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
       if (hasMatchingChild) setExpanded(true, columnInfo);
-      await setShowOfAllChildren(columnInfo, true);
+      await setShowOfAllChildren(columnInfo, columnHashMap, true);
       while (parentName) {
         const parentColumnInfo = columnHashMap.get(parentName);
         if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
@@ -1339,9 +1339,8 @@ export const changeZoneColumnOrientation = action((column: RenderColumnInfo, new
   column.columnSpecificSettings.orientation = newOrientation;
 });
 
-export const setShowOfAllChildren = action(async (root: RenderColumnInfo, isShown: boolean, counter = { count: 0 }) => {
+export const setShowOfAllChildren = action(async (root: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>, isShown: boolean, counter = { count: 0 }) => {
   const stack: RenderColumnInfo[] = [root];
-  const columnHashMap = state.settingsTabs.columnHashMap;
 
   while (stack.length > 0) {
     const column = stack.pop()!;
@@ -1355,9 +1354,8 @@ export const setShowOfAllChildren = action(async (root: RenderColumnInfo, isShow
 });
 
 export const setExpansionOfAllChildren = action(
-  async (root: RenderColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
+  async (root: RenderColumnInfo, columnHashMap: Map<string, RenderColumnInfo>, isExpanded: boolean, counter = { count: 0 }) => {
     const queue: RenderColumnInfo[] = [root];
-    const columnHashMap = state.settingsTabs.columnHashMap;
 
     while (queue.length > 0) {
       const column = queue.shift()!;
