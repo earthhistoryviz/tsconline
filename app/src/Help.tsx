@@ -11,7 +11,7 @@ import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 
 //The Pages for the help
-import { HelpDrawer } from "./HelpDrawer";
+import { HelpDrawer, HelpDrawerContext } from "./HelpDrawer";
 import { fetcher } from "./util";
 import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 import { BreadcrumbsWrapper } from "./HelpBreadcrumbs";
@@ -19,7 +19,7 @@ import { PageNotFound } from "./PageNotFound";
 import ReactMarkdown from "react-markdown";
 import { getHelpKeysFromPath } from "./state/non-action-util";
 
-const getMarkdownTreeEntryFromPath = (
+export const getMarkdownTreeEntryFromPath = (
   markdownTree: MarkdownTree,
   keys: string[]
 ): MarkdownFile | MarkdownTree | null => {
@@ -225,7 +225,11 @@ export const Help = observer(function Help() {
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <StyledScrollbar>
-            <HelpDrawer markdownTree={markdownTree} />
+            <HelpDrawerContext.Provider value={{
+              selectedMarkdown: isMarkdownFile(markdownContent) ? markdownContent : undefined
+            }}>
+              <HelpDrawer markdownTree={markdownTree} />
+            </HelpDrawerContext.Provider>
           </StyledScrollbar>
         </Grid>
         <Grid item sx={background}>

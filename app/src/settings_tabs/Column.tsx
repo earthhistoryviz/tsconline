@@ -98,7 +98,6 @@ export const ColumnDisplay = observer(() => {
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  console.log("state.columnSelected", state.columnSelected);
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {

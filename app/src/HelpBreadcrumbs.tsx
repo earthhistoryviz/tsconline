@@ -38,6 +38,7 @@ const compileBreadcrumbs = (markdownTree: MarkdownTree | MarkdownFile, keys: str
   return pathBreadcrumbs;
 };
 
+
 export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdownTree }) => {
   const theme = useTheme();
 
