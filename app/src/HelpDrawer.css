@@ -7,12 +7,14 @@
   margin-bottom: 0;
   height: 24px;
   width: 300px;
+  padding-left: 0;
 }
 
 /* Theme palette divider: */
 .menu-item {
   padding-left: 8px;
-  margin-left: 27.5px;
+  margin-left: 12px;
+  border: none;
 }
 
 .menu-item.child {
@@ -26,4 +28,11 @@
 /* New Help Drawer List*/
 .new-help-drawer-list .MuiListItem-root {
   margin: 0;
+}
+
+.help-nav-item-indent {
+  padding-left: 24px;
+}
+.help-nav-item-text .MuiListItemText-primary {
+  font-size: 0.875rem;
 }
