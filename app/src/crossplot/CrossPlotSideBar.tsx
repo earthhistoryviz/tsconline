@@ -7,13 +7,14 @@ import { Box, FormControl, MenuItem, Select, TextField, Tooltip, Typography, use
 import Color from "color";
 import { ColumnContext, ColumnDisplay } from "../settings_tabs/Column";
 import { AccessTimeRounded, BookmarkRounded, TableChartRounded, Timeline } from "@mui/icons-material";
-import { CrossPlotTimeSettings } from "../types";
-import { ColumnInfo, Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
+import { CrossPlotTimeSettings, RenderColumnInfo } from "../types";
+import { Marker, Model, isMarkerType, isModelType, markerTypes, modelTypes } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
 import { FormLabel } from "react-bootstrap";
 import { CustomDivider, Lottie, StyledScrollbar, TSCCheckbox } from "../components";
 import TSCColorPicker from "../components/TSCColorPicker";
 import { ageToCoord } from "../components/TSCCrossPlotSVGComponent";
+import { getChildRenderColumns } from "../util/util";
 
 export const CrossPlotSideBar = observer(
   forwardRef<HTMLDivElement>(function CrossPlotSidebar(_, ref) {
@@ -117,7 +118,7 @@ const Time: React.FC = observer(() => {
   return (
     <Box className={styles.timeComponent}>
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.crossPlot.columns?.children}
+        possibleCharts={getChildRenderColumns(state.crossPlot.renderColumns, state.crossPlot.columnHashMap)}
         formLabel={t("crossPlot.time.xAxis")}
         disabled
         settings={state.crossPlot.chartXTimeSettings}
@@ -127,7 +128,7 @@ const Time: React.FC = observer(() => {
       />
       <CustomDivider />
       <CrossPlotTimeSettingsForm
-        possibleCharts={state.crossPlot.columns?.children}
+        possibleCharts={getChildRenderColumns(state.crossPlot.renderColumns, state.crossPlot.columnHashMap)}
         formLabel={t("crossPlot.time.yAxis")}
         settings={state.crossPlot.chartYTimeSettings}
         column={state.crossPlot.chartY}
@@ -139,11 +140,11 @@ const Time: React.FC = observer(() => {
 });
 
 type CrossPlotTimeProps = {
-  possibleCharts: ColumnInfo[] | undefined;
+  possibleCharts: RenderColumnInfo[] | undefined;
   settings: CrossPlotTimeSettings;
-  column: ColumnInfo | undefined;
+  column: RenderColumnInfo | undefined;
   setTimeSettings: (crossPlotSettings: Partial<CrossPlotTimeSettings>) => void;
-  setCrossPlotChart: (crossPlotSettings: ColumnInfo | undefined) => void;
+  setCrossPlotChart: (crossPlotSettings: RenderColumnInfo | undefined) => void;
   formLabel: string;
   disabled?: boolean;
 };
@@ -575,9 +576,9 @@ const CrossPlotColumns: React.FC = observer(() => {
     <ColumnContext.Provider
       value={{
         state: {
-          columns: state.crossPlot.columns,
+          columns: state.crossPlot.renderColumns,
           columnSearchTerm: "",
-          columnSelected: state.crossPlot.columnSelected,
+          columnHashMap: state.crossPlot.columnHashMap,
           timeSettings: {
             ...(state.crossPlot.chartX?.units && {
               [state.crossPlot.chartX.units]: state.crossPlot.chartXTimeSettings

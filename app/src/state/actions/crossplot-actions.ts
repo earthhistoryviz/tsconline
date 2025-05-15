@@ -3,6 +3,7 @@ import {
   ChartSettings,
   CrossPlotBounds,
   CrossPlotTimeSettings,
+  RenderColumnInfo,
   SetDatapackConfigReturnValue,
   assertColumnInfoRoot
 } from "../../types";
@@ -54,6 +55,8 @@ import {
 import { downloadFile, formatDateForDatapack, getDatapackFromArray, getDotSizeFromScale } from "../non-action-util";
 import { fetcher } from "../../util";
 import dayjs from "dayjs";
+import { getChildRenderColumns } from "../../util/util";
+import { convertColumnInfoToRenderColumnInfo } from "./column-actions";
 export const checkValidityOfNewModel = action((model: { x: number; y: number } | { age: number; depth: number }) => {
   const models = state.crossPlot.models;
   if (models.length === 0) {
@@ -438,11 +441,11 @@ export const removeCrossPlotMarker = action((marker: Marker) => {
   state.crossPlot.markers = state.crossPlot.markers.filter((m) => m !== marker);
 });
 
-export const setCrossPlotChartX = action((chart?: ColumnInfo) => {
+export const setCrossPlotChartX = action((chart?: RenderColumnInfo) => {
   setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartX = chart;
 });
-export const setCrossPlotChartY = action((chart?: ColumnInfo) => {
+export const setCrossPlotChartY = action((chart?: RenderColumnInfo) => {
   setCrossPlotChartMatchesSettings(false);
   state.crossPlot.chartY = chart;
 });
@@ -588,8 +591,8 @@ function areSettingsValidForGeneration() {
   removeError(ErrorCodes.IS_BAD_RANGE);
   // check if columns are selected
   if (
-    !state.crossPlot.chartX?.children.some((child) => child.on) ||
-    !state.crossPlot.chartY?.children.some((child) => child.on)
+    !getChildRenderColumns(state.crossPlot.chartX, state.crossPlot.columnHashMap).some((child) => child.on) ||
+    !getChildRenderColumns(state.crossPlot.chartY, state.crossPlot.columnHashMap).some((child) => child.on)
   ) {
     pushError(ErrorCodes.NO_COLUMNS_SELECTED);
     return false;
@@ -598,11 +601,9 @@ function areSettingsValidForGeneration() {
   return true;
 }
 
-const createColumnHashMap = (column: ColumnInfo, hash: Map<string, ColumnInfo>) => {
+const createColumnHashMap = (column: RenderColumnInfo, hash: Map<string, RenderColumnInfo>) => {
   hash.set(column.name, column);
-  if (column.children) {
-    column.children.forEach((child) => createColumnHashMap(child, hash));
-  }
+  getChildRenderColumns(column, state.crossPlot.columnHashMap).forEach((child) => createColumnHashMap(child, hash));
   return hash;
 };
 
@@ -629,7 +630,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       const crossPlotChartSettings = cloneDeep(
         createCrossPlotChartSettings(state.crossPlot.chartXTimeSettings, state.crossPlot.chartYTimeSettings)
       );
-      const json = jsonToXml(columnCopy, columnHashMap, crossPlotChartSettings);
+      const json = jsonToXml(columnCopy.columnRef, columnHashMap, crossPlotChartSettings);
 
       const crossPlotChartRequest: ChartRequest = {
         isCrossPlot: true,
@@ -717,21 +718,21 @@ const createCrossPlotChartSettings = (
 /**
  * Create a master columninfo with both columns
  */
-const combineCrossPlotColumns = action((columnOne: ColumnInfo, columnTwo: ColumnInfo) => {
+const combineCrossPlotColumns = action((columnOne: RenderColumnInfo, columnTwo: RenderColumnInfo) => {
   const columnRoot: ColumnInfo = cloneDeep(defaultColumnRoot);
   columnOne.parent = columnRoot.name;
-  columnRoot.children = [columnOne];
+  columnRoot.children = [columnOne.columnRef];
   columnRoot.fontOptions = columnOne.fontOptions;
   for (const opt in columnRoot.fontsInfo) {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
   if (columnOne.units === columnTwo.units) {
-    return columnRoot;
+    return convertColumnInfoToRenderColumnInfo(columnRoot);
   }
   columnTwo.parent = columnRoot.name;
-  columnRoot.children.push(columnTwo);
+  columnRoot.children.push(columnTwo.columnRef);
   columnRoot.fontOptions = Array.from(new Set([...columnOne.fontOptions, ...columnTwo.fontOptions]));
-  return columnRoot;
+  return convertColumnInfoToRenderColumnInfo(columnRoot);
 });
 
 export const autoPlotCrossPlot = action(async () => {
@@ -822,28 +823,37 @@ export const setCrossPlotDatapackConfig = action(
   async (message: SetDatapackConfigReturnValue) => {
     await runInAction(async () => {
       state.crossPlot.columns = message.columnRoot;
+      state.crossPlot.renderColumns = convertColumnInfoToRenderColumnInfo(message.columnRoot);
       state.crossPlot.datapacks = message.datapacks;
-      state.crossPlot.columnHashMap = new Map();
-      await initializeColumnHashMap(state.crossPlot.columns);
+      await initializeColumnHashMap(message.columnRoot);
     });
     for (const child of state.crossPlot.columns!.children) {
       if (child.units.toLowerCase() === "ma") {
-        state.crossPlot.chartX = child;
+        state.crossPlot.chartX = state.crossPlot.columnHashMap.get(child.name);
         break;
       }
     }
-    if (!state.crossPlot.chartX) state.crossPlot.chartX = state.crossPlot.columns!.children[0];
-    state.crossPlot.chartY = state.crossPlot.columns!.children[0];
+    if (!state.crossPlot.chartX)
+      state.crossPlot.chartX = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
+    state.crossPlot.chartY = state.crossPlot.columnHashMap.get(state.crossPlot.columns!.children[0].name);
     state.crossPlot.state.matchesSettings = true;
   }
 );
-const initializeColumnHashMap = action("initializeColumnHashmap", async (columnInfo: ColumnInfo) => {
-  state.crossPlot.columnHashMap.set(columnInfo.name, columnInfo);
-  if (columnInfo.children) {
-    for (const child of columnInfo.children) {
-      await initializeColumnHashMap(child);
+const initializeColumnHashMap = action("initializeColumnHashmap", async (root: ColumnInfo) => {
+  const tempMap = new Map<string, RenderColumnInfo>();
+  const stack: ColumnInfo[] = [root];
+
+  while (stack.length > 0) {
+    const current = stack.pop()!;
+    const renderColumn = convertColumnInfoToRenderColumnInfo(current);
+    tempMap.set(renderColumn.name, renderColumn);
+
+    for (const child of current.children) {
+      stack.push(child);
     }
   }
+
+  state.crossPlot.columnHashMap = tempMap;
 });
 
 export const setCrossPlotColumnSelected = action((column: string | null) => {
