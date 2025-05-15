@@ -67,7 +67,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
-  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
+  if ((!uuid || !user || !user[0]) && uuid !== "official") {
     return { code: 404, message: "Error finding user" };
   }
 
@@ -78,7 +78,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   }
   const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
-    if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && !isAdmin) {
+    if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && (!isAdmin && uuid !== "official")) {
       return { code: 401, message: "Only admins can upload official or workshop datapacks" };
     }
     // change the uuid to reflect where we are downloading the datapack to depending on the type of datapack
