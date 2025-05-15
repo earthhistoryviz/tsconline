@@ -544,7 +544,7 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   // we add Ma unit by default
   state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
 
-  searchColumns(state.settingsTabs.columnSearchTerm);
+  searchColumns(state.settingsTabs.columnSearchTerm, state.settingsTabs.columnHashMap);
   searchEvents(state.settingsTabs.eventSearchTerm);
   setUnsavedDatapackConfig([]);
 });
@@ -690,7 +690,8 @@ export const setDatapackConfig = action(
         }
       }
     }
-    if (state.settingsTabs.columnSearchTerm) searchColumns(state.settingsTabs.columnSearchTerm);
+    if (state.settingsTabs.columnSearchTerm)
+      searchColumns(state.settingsTabs.columnSearchTerm, state.settingsTabs.columnHashMap);
     if (state.settingsTabs.columnSearchTerm) searchEvents(state.settingsTabs.eventSearchTerm);
     return true;
   }
