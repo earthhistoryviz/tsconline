@@ -244,9 +244,10 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
 }
 
 export function getChildRenderColumns(
-  parent: RenderColumnInfo,
+  parent: RenderColumnInfo | undefined,
   columnHashMap: Map<string, RenderColumnInfo>
 ): RenderColumnInfo[] {
+  if (!parent) return [];
   return parent.children
     .map((child) => {
       const childColumn = columnHashMap.get(child);

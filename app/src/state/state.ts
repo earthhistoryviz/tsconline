@@ -57,6 +57,41 @@ const settingsTabs = observable(
   }
 );
 
+const crossPlot = observable(
+  {
+    lockX: false,
+    lockY: false,
+    markers: [],
+    markerMode: false,
+    modelMode: true,
+    models: [],
+    showTooltips: true,
+    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+    chartX: undefined,
+    chartY: undefined,
+    state: cloneDeep(defaultChartTabState),
+    crossPlotBounds: undefined,
+    loading: false,
+    columns: undefined,
+    renderColumns: undefined,
+    datapacks: [],
+    columnHashMap: new Map<string, RenderColumnInfo>(),
+    columnSelected: null,
+    previousSettings: {
+      chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+      chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+      chartX: undefined,
+      chartY: undefined,
+      columnHashMap: new Map<string, RenderColumnInfo>(),
+      columns: undefined
+    }
+  },
+  {
+    columns: false
+  }
+);
+
 export type State = {
   chartTab: {
     chartTimelineLocked: boolean;
@@ -72,21 +107,22 @@ export type State = {
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
-    chartX: ColumnInfo | undefined;
-    chartY: ColumnInfo | undefined;
+    chartX: RenderColumnInfo | undefined;
+    chartY: RenderColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
     loading: boolean;
     columns?: ColumnInfo;
+    renderColumns?: RenderColumnInfo;
     datapacks: DatapackConfigForChartRequest[];
-    columnHashMap: Map<string, ColumnInfo>;
+    columnHashMap: Map<string, RenderColumnInfo>;
     columnSelected: string | null;
     previousSettings: {
       chartXTimeSettings: CrossPlotTimeSettings;
       chartYTimeSettings: CrossPlotTimeSettings;
-      chartX: ColumnInfo | undefined;
-      chartY: ColumnInfo | undefined;
-      columnHashMap: Map<string, ColumnInfo>;
+      chartX: RenderColumnInfo | undefined;
+      chartY: RenderColumnInfo | undefined;
+      columnHashMap: Map<string, RenderColumnInfo>;
       columns: ColumnInfo | undefined;
     };
   };
@@ -194,33 +230,7 @@ export const state = observable<State>({
     chartTimelineLocked: false,
     state: cloneDeep(defaultChartTabState)
   },
-  crossPlot: {
-    lockX: false,
-    lockY: false,
-    markers: [],
-    markerMode: false,
-    modelMode: true,
-    models: [],
-    showTooltips: true,
-    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartX: undefined,
-    chartY: undefined,
-    state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined,
-    loading: false,
-    datapacks: [],
-    columnHashMap: new Map<string, ColumnInfo>(),
-    columnSelected: null,
-    previousSettings: {
-      chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-      chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-      chartX: undefined,
-      chartY: undefined,
-      columnHashMap: new Map<string, ColumnInfo>(),
-      columns: undefined
-    }
-  },
+  crossPlot,
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
   isLoggedIn: false,
