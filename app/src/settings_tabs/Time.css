@@ -60,13 +60,13 @@
 }
 .generate-button-container {
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   margin-bottom: 10px;
 }
 .time-settings-header-and-settings {
   display: grid;
   grid-template-rows: min-content 1fr;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 700px);
   width: 100%;
 }
 .time-unit-settings-header {
