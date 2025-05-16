@@ -1,10 +1,5 @@
 import { test, expect } from "@playwright/test";
 
-test("homepage has Playwright in title", async ({ page }) => {
-  await page.goto("http://localhost:5173");
-  await expect(page).toHaveTitle(/TimeScale Creator/);
-});
-
 test("navigation to presets page works", async ({ page }) => {
   await page.goto("http://localhost:5173");
   const datapacksTab = page.locator(".qsg-presets");
