@@ -4,6 +4,7 @@
   align-items: center;
   width: 100%;
   min-height: 100vh;
+  overflow-x: hidden !important;
 }
 
 .h {
@@ -118,6 +119,7 @@
   flex-direction: row;
   flex-wrap: wrap;
   justify-content: center;
+  justify-self: center;
 }
 .datapackDisplayContainer:not(.cards) {
   align-items: flex-start;

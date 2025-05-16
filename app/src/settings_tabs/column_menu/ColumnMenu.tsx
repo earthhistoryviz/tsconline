@@ -80,7 +80,7 @@ export const ColumnMenu = observer(() => {
           }}
           orientation="vertical-right"
           width={90}
-          tabs={state.columnMenu.tabs.map((val) => ({ id: val, tab: val }))}
+          tabs={state.columnMenu.tabs.map((val) => ({ id: val, tab: t(`settingsTabs.${val}`) }))}
         />
         <Box border={1} borderColor="divider" className="column-menu-content" bgcolor="secondaryBackground.main">
           {column && <ColumnContent tab={state.columnMenu.tabs[state.columnMenu.tabValue]} column={column} />}

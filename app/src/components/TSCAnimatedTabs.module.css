@@ -1,0 +1,27 @@
+.container {
+  display: flex;
+  gap: 0.25rem;
+  width: min-content;
+  border-radius: 9999px;
+}
+
+.button {
+  position: relative;
+  border-radius: 9999px;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background: "none";
+  border: "none";
+  cursor: pointer;
+}
+.indicator {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+}
+.label {
+  z-index: 2;
+  transition: color 0.3s;
+  font-size: 0.875rem;
+}

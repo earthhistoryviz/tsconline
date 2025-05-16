@@ -7,43 +7,59 @@ import { Font } from "./settings_tabs/Font";
 import { MapPoints } from "./settings_tabs/map_points/MapPoints";
 import { Datapacks } from "./settings_tabs/Datapack";
 import { useTheme } from "@mui/material/styles";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import "./Settings.css";
-import { CustomTabs } from "./components/TSCCustomTabs";
 import { SettingsMenuOptionLabels, SettingsTabs } from "./types";
 import { Search } from "./settings_tabs/Search";
-import { useTranslation } from "react-i18next";
 import { Preferences } from "./settings_tabs/Preferences";
-import LoadSave from "./settings_tabs/LoadSave";
+import { TabWrapper, TabsWrapper } from "./components";
+import LoadSettings from "./settings_tabs/LoadSettings";
+import SaveSettings from "./settings_tabs/SaveSettings";
+import { useTranslation } from "react-i18next";
 
 export const Settings = observer(function Settings() {
   const { state, actions } = useContext(context);
   const theme = useTheme();
-  const SettingsHeader = () => {
-    const { t } = useTranslation();
-    return (
-      <div className="settings-header">
-        <Typography className="settings-header-title" variant="h3">
-          {t("title.settings")}
-        </Typography>
-      </div>
-    );
-  };
-  const tabs = Object.values(SettingsMenuOptionLabels).map((val) => ({ id: val, tab: val }));
+  const { t } = useTranslation();
+  const tabs = Object.entries(SettingsMenuOptionLabels).map(([key, val]) => ({
+    id: key,
+    tab: val.label,
+    icon: val.icon
+  }));
   const tabKeys = Object.keys(SettingsMenuOptionLabels);
   const tabIndex = tabKeys.indexOf(state.settingsTabs.selected);
 
   return (
     <div className="settings-container" style={{ background: theme.palette.backgroundColor.main }}>
-      <SettingsHeader />
-      <CustomTabs
-        tabs={tabs}
-        value={tabIndex}
-        onChange={actions.setSettingsTabsSelected}
-        tabIndicatorLength={70}
-        centered
-        className="main-settings-tabs"
-      />
+      <Box bgcolor="dark.main" className="settings-tabs-side-bar">
+        <Box>
+          <Typography className="settings-header-title" variant="h5" paddingTop="10px" paddingBottom="10px">
+            {t("settings.header")}
+          </Typography>
+          <TabsWrapper
+            onChange={(_, val) => {
+              actions.setSettingsTabsSelected(tabKeys[val] as SettingsTabs);
+            }}
+            value={tabIndex}
+            orientation="vertical">
+            {tabs.map((tab) => {
+              return (
+                <TabWrapper
+                  showIndicator={state.settingsTabs.selected === tab.id}
+                  key={tab.id}
+                  label={tab.tab}
+                  icon={<tab.icon />}
+                  iconPosition="start"
+                />
+              );
+            })}
+          </TabsWrapper>
+        </Box>
+        <Box className="load-save-settings-sidebar">
+          <LoadSettings />
+          <SaveSettings />
+        </Box>
+      </Box>
       <SettingsTab tab={state.settingsTabs.selected} />
     </div>
   );
@@ -82,7 +98,5 @@ const SettingsTab = observer(function SettingsTab({ tab }: { tab: SettingsTabs }
       return <MapPoints />;
     case "datapacks":
       return <Datapacks />;
-    case "loadsave":
-      return <LoadSave />;
   }
 });
