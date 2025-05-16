@@ -350,8 +350,7 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   reply.status(200).send({ message: "Datapack deleted" });
 };
 
-// Title of the datapack from treatise is a hash generated on Treatise side
-export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
+export const uploadExternalDatapack = async function uploadExternalDatapack(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
@@ -378,10 +377,10 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
       reply.status(403).send({ error: "Token mismatch" });
       return;
     }
-    const phylum = request.headers["phylum"];
-    if (!phylum) {
-      console.error("Phylum missing");
-      reply.status(401).send({ error: "Phylum missing" });
+    const datapackTitle = request.headers["datapacktitle"]; // This would be the phylum name for Treatise, and formation for Lexicons/OneStrat
+    if (!datapackTitle) {
+      console.error("Datapack requires datapackTitle field in header");
+      reply.status(401).send({ error: "Datapack requires datapackTitle field in header" });
       return;
     }
     const datapackHash = request.headers["datapackhash"];
@@ -389,27 +388,26 @@ export const uploadTreatiseDatapack = async function uploadTreatiseDatapack(
       reply.status(401).send({ error: "DatapackHash missing" });
       return;
     }
-    const treatiseUUID = "treatise";
     const parts = request.parts();
 
-    // If phylum exist and the exact file exists, send it
-    const treatiseDatapacks = await fetchAllUsersDatapacks(treatiseUUID);
-    for (const datapack of treatiseDatapacks) {
-      if (datapack.title === phylum.toString()) {
+    // If the title exist and the exact file exists, send it
+    const officialDatapacks = await fetchAllUsersDatapacks("official");
+    for (const datapack of officialDatapacks) {
+      if (datapack.title === datapackTitle.toString()) {
         if (datapack.originalFileName === datapackHash + ".txt") {
-          reply.status(200).send({ phylum: datapack.title });
+          reply.status(200).send({ datapackTitle: datapack.title });
           return;
         } else {
-          await deleteUserDatapack(treatiseUUID, phylum.toString());
+          await deleteUserDatapack("official", datapackTitle.toString());
           break;
         }
       }
     }
 
     // does not exist, upload normally
-    const result = await processAndUploadDatapack(treatiseUUID, parts);
+    const result = await processAndUploadDatapack("official", parts);
     if (result.code === 200) {
-      reply.status(200).send({ phylum: phylum.toString() });
+      reply.status(200).send({ datapackTitle: datapackTitle.toString() });
     } else {
       reply.status(result.code).send({ error: result.message });
     }

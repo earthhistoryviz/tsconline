@@ -34,7 +34,6 @@ import {
   getPrivateOfficialDatapackMetadatas,
   getPublicDatapacksMetadataWithoutCurrentUser,
   getPublicOfficialDatapacksMetadata,
-  getTreatuseDatapackMetadata,
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
@@ -135,14 +134,16 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
-        {getTreatuseDatapackMetadata(state.datapackMetadata).length !== 0 && (
-          <DatapackGroupDisplay
-            datapacks={getTreatuseDatapackMetadata(state.datapackMetadata)}
-            header={t("settings.datapacks.title.treatise")}
-            HeaderIcon={Terrain}
-            loading={state.skeletonStates.treatiseDatapackLoading}
-          />
-        )}
+        <DatapackGroupDisplay
+          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+            item.tags.includes("Treatise")
+          )}
+          header={t("settings.datapacks.title.treatise")}
+          HeaderIcon={Terrain}
+          loading={state.skeletonStates.publicOfficialDatapacksLoading}
+        />
+        {/* TODO: The above loading originally had a treatise loading, but treatise is no longer a tpye of datapack, and it is public official, im thinking i should use the above instead? if so,
+        I need to go back and delete that treatise loadingf from state */}
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (

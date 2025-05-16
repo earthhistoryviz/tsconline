@@ -22,7 +22,7 @@ export async function loadPublicUserDatapacks() {
     const datapacks: Datapack[] = [];
     const uuids = await getDirectories(assetconfigs.publicDatapacksDirectory);
     for (const uuid of uuids) {
-      if (isUUIDFolderAWorkshopFolder(uuid) || uuid === "treatise" || uuid === "temp") continue;
+      if (isUUIDFolderAWorkshopFolder(uuid) || uuid === "temp") continue; // TODO might need to add offical if bugging
       try {
         const datapackDirs = await getDirectories(await getUsersPublicDatapacksDirectoryFromUUID(uuid));
         for (const datapack of datapackDirs) {
