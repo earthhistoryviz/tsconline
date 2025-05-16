@@ -8,8 +8,7 @@ import {
   SharedWorkshop,
   isOfficialDatapack,
   isUserDatapack,
-  isWorkshopDatapack,
-  isTreatiseDatapack
+  isWorkshopDatapack
 } from "@tsconline/shared";
 import { devSafeUrl } from "../util";
 import dayjs, { Dayjs } from "dayjs";
@@ -78,9 +77,6 @@ export function getPublicOfficialDatapacksMetadata(datapacks: DatapackMetadata[]
 }
 export function getPrivateOfficialDatapackMetadatas(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isOfficialDatapack(d) && !d.isPublic);
-}
-export function getTreatuseDatapackMetadata(datapacks: DatapackMetadata[]) {
-  return datapacks.filter((d) => isTreatiseDatapack(d));
 }
 export function getWorkshopDatapacksMetadata(datapacks: DatapackMetadata[]) {
   return datapacks.filter((d) => isWorkshopDatapack(d));

@@ -245,7 +245,6 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
-server.get("/treatise/datapack/:datapack", routes.fetchTreatiseDatapack);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
