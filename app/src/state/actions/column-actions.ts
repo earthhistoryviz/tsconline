@@ -1,4 +1,4 @@
-import { action, observable, reaction, toJS } from "mobx";
+import { action, observable, reaction, runInAction, toJS } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -499,30 +499,14 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
 });
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const renderColumn: RenderColumnInfo = observable(
+  const { children, ...rest } = column;
+  const renderColumn: RenderColumnInfo = observable.object(
     {
-      name: column.name,
-      editName: column.editName,
-      children: column.children.map((child) => child.name),
+      ...rest,
       columnRef: column,
+      children: children.map((child) => child.name),
       isSelected: false,
-      hasSelectedChildren: false,
-      expanded: column.expanded,
-      show: column.show,
-      enableTitle: column.enableTitle,
-      columnDisplayType: column.columnDisplayType,
-      width: column.width,
-      rgb: column.rgb,
-      fontsInfo: column.fontsInfo,
-      fontOptions: column.fontOptions,
-      columnSpecificSettings: column.columnSpecificSettings,
-      popup: column.popup,
-      on: column.on,
-      parent: column.parent,
-      subInfo: column.subInfo,
-      minAge: column.minAge,
-      maxAge: column.maxAge,
-      units: column.units
+      hasSelectedChildren: false
     },
     { columnRef: false, name: false, columnDisplayType: false, minAge: false, maxAge: false, units: false }
   );
@@ -1352,7 +1336,9 @@ export const setShowOfAllChildren = action(
 
     while (stack.length > 0) {
       const column = stack.pop()!;
-      column.show = isShown;
+      runInAction(() => {
+        column.show = isShown;
+      });
       await yieldControl(counter, 30);
 
       for (const child of getChildRenderColumns(column, columnHashMap)) {
@@ -1373,7 +1359,9 @@ export const setExpansionOfAllChildren = action(
 
     while (queue.length > 0) {
       const column = queue.shift()!;
-      column.expanded = isExpanded;
+      runInAction(() => {
+        column.show = isExpanded;
+      });
       await yieldControl(counter, 30);
       for (const child of getChildRenderColumns(column, columnHashMap)) queue.push(child);
     }
@@ -1446,41 +1434,51 @@ export const setEventSearchTerm = action((term: string) => {
 export const incrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column.name);
-  if (index > 0) {
-    // If it's not the first element, swap with the previous one
-    [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
-    [parent.columnRef.children[index], parent.columnRef.children[index - 1]] = [
-      parent.columnRef.children[index - 1],
-      parent.columnRef.children[index]
-    ];
-  } else if (index === 0) {
-    const firstElement = parent.children.shift();
-    const firstElementColumn = parent.columnRef.children.shift();
-    if (firstElement && firstElementColumn) {
-      parent.children.push(firstElement);
-      parent.columnRef.children.push(firstElementColumn);
+
+  const renderChildren = parent.children;
+  const children = parent.columnRef.children;
+  const index = renderChildren.indexOf(column.name);
+
+  if (index === -1) return;
+
+  for (let i = index - 1; i >= 0; i--) {
+    const targetColumn = state.settingsTabs.columnHashMap.get(renderChildren[i]);
+    if (targetColumn?.show) {
+      [renderChildren[index], renderChildren[i]] = [renderChildren[i], renderChildren[index]];
+      [children[index], children[i]] = [children[i], children[index]];
+      return;
     }
   }
+
+  // wrap around
+  const [movedChild] = renderChildren.splice(index, 1);
+  const [movedColumn] = children.splice(index, 1);
+  renderChildren.push(movedChild);
+  children.push(movedColumn);
 });
 
 export const decrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column.name);
-  if (index < parent.children.length - 1 && index !== -1) {
-    // If it's not the last element, swap with the next one
-    [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
-    [parent.columnRef.children[index], parent.columnRef.children[index + 1]] = [
-      parent.columnRef.children[index + 1],
-      parent.columnRef.children[index]
-    ];
-  } else if (index === parent.children.length - 1) {
-    const lastElement = parent.children.pop();
-    const lastElementColumn = parent.columnRef.children.pop();
-    if (lastElement && lastElementColumn) {
-      parent.children.unshift(lastElement);
-      parent.columnRef.children.unshift(lastElementColumn);
+
+  const renderChildren = parent.children;
+  const children = parent.columnRef.children;
+  const index = renderChildren.indexOf(column.name);
+
+  if (index === -1) return;
+
+  for (let i = index + 1; i < renderChildren.length; i++) {
+    const targetColumn = state.settingsTabs.columnHashMap.get(renderChildren[i]);
+    if (targetColumn?.show) {
+      [renderChildren[index], renderChildren[i]] = [renderChildren[i], renderChildren[index]];
+      [children[index], children[i]] = [children[i], children[index]];
+      return;
     }
   }
+
+  // wrap around
+  const [movedChild] = renderChildren.splice(index, 1);
+  const [movedColumn] = children.splice(index, 1);
+  renderChildren.unshift(movedChild);
+  children.unshift(movedColumn);
 });

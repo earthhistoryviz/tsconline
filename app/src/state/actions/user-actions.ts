@@ -173,7 +173,9 @@ export const fetchUserHistoryMetadata = action(async () => {
     if (response.ok) {
       const historyEntries = await response.json();
       assertHistoryEntryArray(historyEntries);
-      state.user.historyEntries = historyEntries;
+      runInAction(() => {
+        state.user.historyEntries = historyEntries;
+      });
     } else {
       displayServerError(
         response.statusText,

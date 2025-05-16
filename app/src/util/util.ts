@@ -229,21 +229,6 @@ export function findSerialNum(name: string) {
   return serialNumber;
 }
 
-export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const { children, ...rest } = column;
-  const renderColumn: RenderColumnInfo = observable(
-    {
-      ...rest,
-      columnRef: column,
-      children: children.map((child) => child.name),
-      isSelected: false,
-      hasSelectedChildren: false
-    },
-    { columnRef: false }
-  );
-  return renderColumn;
-}
-
 export function getChildRenderColumns(
   parent: RenderColumnInfo | undefined,
   columnHashMap: Map<string, RenderColumnInfo>
