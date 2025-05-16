@@ -13,7 +13,14 @@ import { AnimatedTabs } from "../components/TSCAnimatedTabs";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
-  const [units, setUnits] = useState<string>(Object.keys(state.settings.timeSettings)[0]);
+  const allUnits = Object.keys(state.settings.timeSettings).sort((a, b) => {
+    // sort the units so that Ma is first
+    if (a.toLowerCase() === "ma") {
+      return -1;
+    }
+    return a.localeCompare(b);
+  });
+  const [units, setUnits] = useState<string>(allUnits[0]);
 
   if (units === null || units === undefined) {
     throw new Error("There must be a unit used in the config");
@@ -30,13 +37,6 @@ export const Time = observer(function Time() {
   if (state.isProcessingDatapacks) {
     return <Typography>{t("general-actions.loading")}</Typography>;
   }
-  const allUnits = Object.keys(state.settings.timeSettings).sort((a, b) => {
-    // sort the units so that Ma is first
-    if (a.toLowerCase() === "ma") {
-      return -1;
-    }
-    return a.localeCompare(b);
-  });
   return (
     <Box width="100%">
       <Box className="time-settings-header-and-settings">
@@ -56,28 +56,32 @@ export const Time = observer(function Time() {
             <Typography className="IntervalLabel">{t("settings.time.interval.top")}</Typography>
             <CustomDivider className="time-form-divider" />
             <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
-              <InputLabel>
-                {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.top-name")}
-              </InputLabel>
-              <Select
-                className="SelectTop"
-                inputProps={{ id: "top-age-selector" }}
-                name="top-age-stage-name"
-                MenuProps={{ sx: { maxHeight: "400px" } }}
-                label="Top Age/Stage Name"
-                disabled={disabled}
-                value={state.settings.timeSettings[units].topStageKey}
-                onChange={(event) => {
-                  const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
-                  if (!age) return;
-                  actions.setTopStageAge(age.value, units);
-                }}>
-                {state.geologicalTopStageAges.map((item) => (
-                  <MenuItem key={item.key} value={item.key}>
-                    {item.key} ({item.value} Ma)
-                  </MenuItem>
-                ))}
-              </Select>
+              {!disabled && (
+                <>
+                  <InputLabel id="top-age-selector-label" className="SelectLabel">
+                    {t("settings.time.interval.top-name")}
+                  </InputLabel>
+                  <Select
+                    className="SelectTop"
+                    inputProps={{ id: "top-age-selector" }}
+                    name="top-age-stage-name"
+                    MenuProps={{ sx: { maxHeight: "400px" } }}
+                    label="Top Age/Stage Name"
+                    disabled={disabled}
+                    value={state.settings.timeSettings[units].topStageKey}
+                    onChange={(event) => {
+                      const age = state.geologicalTopStageAges.find((item) => item.key === event.target.value);
+                      if (!age) return;
+                      actions.setTopStageAge(age.value, units);
+                    }}>
+                    {state.geologicalTopStageAges.map((item) => (
+                      <MenuItem key={item.key} value={item.key}>
+                        {item.key} ({item.value} Ma)
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </>
+              )}
               <TextField
                 size="small"
                 className="UnitTextField"
@@ -102,30 +106,34 @@ export const Time = observer(function Time() {
             <Typography className="IntervalLabel">{t("settings.time.interval.base")}</Typography>
             <CustomDivider className="time-form-divider" />
             <FormControl className="FormControlIntervals" size="small" error={checkAgeRange()}>
-              <InputLabel htmlFor="base-age-selector">
-                {disabled ? t("settings.time.interval.not-avaliable") : t("settings.time.interval.base-name")}
-              </InputLabel>
-              <Select
-                className="SelectBase"
-                inputProps={{ id: "base-age-selector" }}
-                disabled={disabled}
-                name="base-age-stage-name"
-                label="Base Age/Stage Name"
-                value={state.settings.timeSettings[units].baseStageKey}
-                MenuProps={{ sx: { maxHeight: "400px" } }}
-                onChange={(event) => {
-                  const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
-                  if (!age) return;
-                  actions.setBaseStageAge(age.value, units);
-                }}>
-                {state.geologicalBaseStageAges
-                  .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
-                  .map((item) => (
-                    <MenuItem key={item.key} value={item.key}>
-                      {item.key} ({item.value} Ma)
-                    </MenuItem>
-                  ))}
-              </Select>
+              {!disabled && (
+                <>
+                  <InputLabel id="base-age-selector-label" className="SelectLabel">
+                    {t("settings.time.interval.base-name")}
+                  </InputLabel>
+                  <Select
+                    className="SelectBase"
+                    inputProps={{ id: "base-age-selector" }}
+                    disabled={disabled}
+                    name="base-age-stage-name"
+                    label="Base Age/Stage Name"
+                    value={state.settings.timeSettings[units].baseStageKey}
+                    MenuProps={{ sx: { maxHeight: "400px" } }}
+                    onChange={(event) => {
+                      const age = state.geologicalBaseStageAges.find((item) => item.key === event.target.value);
+                      if (!age) return;
+                      actions.setBaseStageAge(age.value, units);
+                    }}>
+                    {state.geologicalBaseStageAges
+                      .filter((item) => item.value >= state.settings.timeSettings[units].topStageAge)
+                      .map((item) => (
+                        <MenuItem key={item.key} value={item.key}>
+                          {item.key} ({item.value} Ma)
+                        </MenuItem>
+                      ))}
+                  </Select>
+                </>
+              )}
               <TextField
                 size="small"
                 className="UnitTextField"
