@@ -247,8 +247,7 @@ export function attachTscPrefixToName(name: string, displayType: DisplayedColumn
 }
 
 export const generatePath = (title: string, parentPath = ""): string => {
-  const encoded = encodeURIComponent(title);
-  return `${parentPath}/${encoded}`;
+  return `${parentPath}/${title}`;
 };
 
 export function getWorkshopCoverImage(workshopId: number) {
@@ -256,6 +255,7 @@ export function getWorkshopCoverImage(workshopId: number) {
 }
 
 export function getHelpKeysFromPath(path: string) {
+  path = decodeURIComponent(path)
   const keys = path.split("/help/")[1]?.split("/") || [];
   return keys;
 }
