@@ -56,6 +56,13 @@ vi.mock("../src/types", async (importOriginal) => {
     isOperationResult: actual.isOperationResult
   };
 });
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
 const user = {
   isAdmin: 1
 };
