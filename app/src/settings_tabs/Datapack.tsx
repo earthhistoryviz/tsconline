@@ -136,7 +136,7 @@ export const Datapacks = observer(function Datapacks() {
         />
         <DatapackGroupDisplay
           datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
-            item.tags.includes("treatise")
+            item.tags.includes("Treatise")
           )}
           header={t("settings.datapacks.title.treatise")}
           HeaderIcon={Terrain}
