@@ -3,8 +3,6 @@
         "general-actions": {
             "save": "Save",
             "cancel": "Cancel",
-            "report": "Report",
-            "delete": "Delete",
             "loading": "Loading"
         },
         "landing-page": {
@@ -298,7 +296,6 @@
                     "base": "Base of Interval",
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
-                    "not-avaliable": "Not Available for this Unit",
                     "vertical-scale": "Vertical Scale (cm per 1",
                     "helper-text": "Base age should be older than top age",
                     "vertical-scale-header": "Vertical Scale"
@@ -494,8 +491,7 @@
                     "notes-placeholder": "Enter notes for the datapack here",
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
                 },
-                "pdf-upload": "PDF Upload",
-                "comment-flagged": "This comment has been flagged."
+                "pdf-upload": "PDF Upload"
             }
         },
         "chart": {

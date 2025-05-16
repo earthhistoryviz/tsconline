@@ -1,7 +1,5 @@
 translation.general-actions.save,Save
 translation.general-actions.cancel,Cancel
-translation.general-actions.report,Report
-translation.general-actions.delete,Delete
 translation.general-actions.loading,Loading
 translation.landing-page.get-started,Get Started
 translation.landing-page.welcome,Welcome to TimeScale Creator!
@@ -193,7 +191,6 @@ translation.settings.time.interval.top,Top of Interval
 translation.settings.time.interval.base,Base of Interval
 translation.settings.time.interval.top-name,Top Age/Stage Name
 translation.settings.time.interval.base-name,Base Age/Stage Name
-translation.settings.time.interval.not-avaliable,Not Available for this Unit
 translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
@@ -337,7 +334,6 @@ translation.settings.datapacks.upload-form.notes,Notes
 translation.settings.datapacks.upload-form.notes-placeholder,Enter notes for the datapack here
 translation.settings.datapacks.upload-form.notes-helper-text,(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently
 translation.settings.datapacks.pdf-upload,PDF Upload
-translation.settings.datapacks.comment-flagged,This comment has been flagged.
 translation.chart.no-chart-yet,You have not made a chart yet
 translation.chart.save,Save
 translation.dialogs.confirm-datapack-change.title,Confirm Datapack Selection Change
