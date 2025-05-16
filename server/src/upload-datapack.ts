@@ -78,7 +78,11 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   }
   const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
-    if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && (!isAdmin && uuid !== "official")) {
+    if (
+      (isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) &&
+      !isAdmin &&
+      uuid !== "official"
+    ) {
       return { code: 401, message: "Only admins can upload official or workshop datapacks" };
     }
     // change the uuid to reflect where we are downloading the datapack to depending on the type of datapack

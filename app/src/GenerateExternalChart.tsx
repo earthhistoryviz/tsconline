@@ -65,7 +65,6 @@ export const GenerateExternalChart: React.FC = () => {
           type: "official"
         };
 
-
         await actions.processDatapackConfig([internalDatapackConfig, externalDatapackConfig]);
 
         actions.toggleSettingsTabColumn("Geomagnetic Polarity");
