@@ -310,6 +310,19 @@ jobs:
             exit 1
           fi
 
+          # Delete the decryption jar after tests
+          DECRYPTION_NAME=$(jq -r '.decryptionJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          if [ -n "$DECRYPTION_NAME" ] && [ -f "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME" ]; then
+            rm "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+            echo "Deleted decryption jar: $DECRYPTION_NAME"
+          fi
+
+            # Delete the datapacks files after tests, but keep the folder
+            if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
+            find "${{ github.workspace }}/server/assets/datapacks" -type f -delete
+            echo "Deleted datapacks files"
+            fi
+
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
