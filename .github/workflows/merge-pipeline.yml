@@ -201,6 +201,9 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
+          
+          echo "Contents of the assets folder:"
+          ls -R ${{ github.workspace }}/server/assets
 
       - name: Move TSCreator Jar for e2e
         id: move_jar
