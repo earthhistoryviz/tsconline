@@ -205,6 +205,52 @@ jobs:
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
+      - name: Run Tests
+        id: run_tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+
+      - name: Run Tests and Coverage (Exclude Encryption)
+        id: run_tests_exclude_encryption
+        if: github.event.pull_request.user.login == 'dependabot[bot]'
+        run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Post Coverage Comment
+        if: steps.run_tests.outputs.coverage_failed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const log = fs.readFileSync('test_output.log', 'utf8');
+            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
+
+            const commentBody = `
+            ## :x: Coverage Thresholds Not Met
+
+            The following coverage thresholds were not met:
+
+            \`\`\`
+            ${coverageErrors.join('\n')}
+            \`\`\`
+
+            Please review the coverage report and improve the tests to meet the thresholds.
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: commentBody
+            });
+
       - name: Move TSCreator Jar for e2e
         id: move_jar
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -286,19 +332,13 @@ jobs:
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
-      - name: Run Tests
-        id: run_tests
+      - name: e2e Tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
+        id: e2e_tests
         run: |
-          yarn test:charts:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-          if grep -q 'ERROR: Coverage' test_output.log; then
-            echo "Coverage errors found."
-            echo "coverage_failed=true" >> $GITHUB_OUTPUT
-          else
-            echo "No coverage errors found."
-          fi
+          yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
-          pr_jar=${{ steps.move_jar.outputs.pr_jar }}
+          pr_jar=${{ steps.move_jar.outputs.pr_jar }}4
           if [ -z "$pr_jar" ]; then
             echo "Error: pr_jar is empty. Check config.json format."
             exit 1
@@ -341,58 +381,18 @@ jobs:
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-
-      - name: Run Tests and Coverage (Exclude Encryption)
-        id: run_tests_exclude_encryption
-        if: github.event.pull_request.user.login == 'dependabot[bot]'
-        run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
-          yarn coverage:ci:exclude-encryption > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
-
-      - name: Post Coverage Comment
-        if: steps.run_tests.outputs.coverage_failed == 'true'
-        uses: actions/github-script@v6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const fs = require('fs');
-            const log = fs.readFileSync('test_output.log', 'utf8');
-            const coverageErrors = log.split('\n').filter(line => line.includes('ERROR: Coverage'));
-
-            const commentBody = `
-            ## :x: Coverage Thresholds Not Met
-
-            The following coverage thresholds were not met:
-
-            \`\`\`
-            ${coverageErrors.join('\n')}
-            \`\`\`
-
-            Please review the coverage report and improve the tests to meet the thresholds.
-            `;
-
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: commentBody
-            });
-
       - name: Report Test Errors
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
             const fs = require('fs');
             const testLog = fs.readFileSync('test_output.log', 'utf8');
+            const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
+            const vitest_e2e_log = testLog + (e2eLog ? '\n\n--- e2e_output.log ---\n' + e2eLog : '');
             const prNumber = context.payload.pull_request?.number;
             if (prNumber) {
-              const message = `🚨 Vitest tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
+              const message = `🚨 Vitest tests or E2E tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
               github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: prNumber,
@@ -402,7 +402,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
         run: exit 1
 
       - name: Parse JAR Names
