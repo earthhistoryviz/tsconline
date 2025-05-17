@@ -201,7 +201,7 @@ jobs:
             echo "Failed to make jar."
             exit 1
           fi
-          
+
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
@@ -276,15 +276,15 @@ jobs:
             echo "Error: Failed to download datapacks folder."
             exit 1
           fi
-          unzip -q "${{ github.workspace }}/datapacks.zip" -d "${{ github.workspace }}/server/assets/datapacks"
+          unzip -q "${{ github.workspace }}/datapacks.zip" -d "${{ github.workspace }}/server/assets"
           rm "${{ github.workspace }}/datapacks.zip"
           if [ ! -d "${{ github.workspace }}/server/assets/datapacks" ]; then
             echo "Error: Failed to extract datapacks folder."
             exit 1
           fi
           echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
-            echo "Contents of the assets folder:"
-            ls -R ${{ github.workspace }}/server/assets
+          echo "Contents of the assets folder:"
+          ls -R ${{ github.workspace }}/server/assets
 
       - name: Run Tests
         id: run_tests
@@ -320,11 +320,14 @@ jobs:
             echo "Deleted decryption jar: $DECRYPTION_NAME"
           fi
 
-            # Delete the datapacks files after tests, but keep the folder
-            if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
-            find "${{ github.workspace }}/server/assets/datapacks" -type f -delete
-            echo "Deleted datapacks files"
-            fi
+          # Delete the entire datapacks folder after tests
+          if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
+          rm -rf "${{ github.workspace }}/server/assets/datapacks"
+          echo "Deleted datapacks folder"
+          fi
+
+          echo "Contents of the assets folder:"
+          ls -R ${{ github.workspace }}/server/assets
 
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1

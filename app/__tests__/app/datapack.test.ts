@@ -58,7 +58,6 @@ test("check if confirm selection works", async ({ page }) => {
   await expect(confirmButton).toBeVisible();
   await confirmButton.click();
 
-  await (expect(page.locator("text=Loading Datapacks")).toBeHidden());
-  await page.waitForSelector('text=Datapack Config Updated', { timeout: 5000 });
+  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
+  await page.waitForSelector("text=Datapack Config Updated", { timeout: 5000 });
 });
-
