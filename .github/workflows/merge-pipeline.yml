@@ -332,6 +332,12 @@ jobs:
             echo "Deleted uploads folder"
           fi
 
+          # Delete file-metadata.json after tests
+          if [ -f "${{ github.workspace }}/server/assets/file-metadata.json" ]; then
+            rm "${{ github.workspace }}/server/assets/file-metadata.json"
+            echo "Deleted file-metadata.json"
+          fi
+
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
