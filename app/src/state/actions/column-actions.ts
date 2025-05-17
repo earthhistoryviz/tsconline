@@ -499,16 +499,39 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
 });
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
-  const { children, ...rest } = column;
   const renderColumn: RenderColumnInfo = observable.object(
     {
-      ...rest,
       columnRef: column,
-      children: children.map((child) => child.name),
+      parent: column.parent,
+      children: column.children.map((child) => child.name),
+      on: column.on,
+      expanded: column.expanded,
+      show: column.show,
+      editName: column.editName,
+      name: column.name,
+      fontsInfo: column.fontsInfo,
+      fontOptions: column.fontOptions,
+      popup: column.popup,
+      width: column.width,
+      rgb: column.rgb,
+      columnSpecificSettings: column.columnSpecificSettings,
+      enableTitle: column.enableTitle,
+      columnDisplayType: column.columnDisplayType,
+      minAge: column.minAge,
+      maxAge: column.maxAge,
+      units: column.units,
       isSelected: false,
       hasSelectedChildren: false
     },
-    { columnRef: false, name: false, columnDisplayType: false, minAge: false, maxAge: false, units: false }
+    {
+      columnRef: false,
+      name: false,
+      columnDisplayType: false,
+      fontOptions: false,
+      minAge: false,
+      maxAge: false,
+      units: false
+    }
   );
   addReactionToRenderColumnInfo(column, renderColumn);
   return renderColumn;
@@ -532,10 +555,8 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
   reaction(
     () => ({
       fontsInfo: toJS(renderColumn.fontsInfo),
-      fontOptions: toJS(renderColumn.fontOptions),
       popup: renderColumn.popup,
       parent: renderColumn.parent,
-      subInfo: toJS(renderColumn.subInfo),
       enableTitle: renderColumn.enableTitle,
       width: renderColumn.width,
       rgb: toJS(renderColumn.rgb),
@@ -543,10 +564,8 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
     }),
     (updated) => {
       column.fontsInfo = updated.fontsInfo;
-      column.fontOptions = updated.fontOptions;
       column.popup = updated.popup;
       column.parent = updated.parent;
-      column.subInfo = updated.subInfo;
       column.enableTitle = updated.enableTitle;
       column.width = updated.width;
       column.rgb = updated.rgb;

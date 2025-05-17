@@ -1,8 +1,7 @@
-import { ColumnInfo, RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
+import { RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import Color from "color";
 import { dualColCompPrefix } from "./constant";
 import { RenderColumnInfo } from "../types";
-import { observable } from "mobx";
 
 /**
  * removes the prefix of a column id in the tsc format
