@@ -326,6 +326,12 @@ jobs:
           echo "Deleted datapacks folder"
           fi
 
+          # Delete the uploads folder after tests
+          if [ -d "${{ github.workspace }}/server/assets/uploads" ]; then
+            rm -rf "${{ github.workspace }}/server/assets/uploads"
+            echo "Deleted uploads folder"
+          fi
+
           echo "Contents of the assets folder:"
           ls -R ${{ github.workspace }}/server/assets
 
