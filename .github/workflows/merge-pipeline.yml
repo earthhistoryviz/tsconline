@@ -338,7 +338,7 @@ jobs:
         run: |
           yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
-          pr_jar=${{ steps.move_jar.outputs.pr_jar }}4
+          pr_jar=${{ steps.move_jar.outputs.pr_jar }}
           if [ -z "$pr_jar" ]; then
             echo "Error: pr_jar is empty. Check config.json format."
             exit 1
