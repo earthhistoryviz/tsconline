@@ -226,7 +226,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {getChildRenderColumns(details, state.columnHashMap).map((column) => {
+          {details.expanded && getChildRenderColumns(details, state.columnHashMap).map((column) => {
             return <ColumnAccordion key={column.name} details={column} />;
           })}
         </MuiAccordionDetails>

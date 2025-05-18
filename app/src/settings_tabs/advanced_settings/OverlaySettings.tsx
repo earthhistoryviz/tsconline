@@ -118,7 +118,7 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
           </ColumnContainer>
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {getChildRenderColumns(column, localState.columnHashMap).map((childColumn) => (
+          {expanded && getChildRenderColumns(column, localState.columnHashMap).map((childColumn) => (
             <ColumnAccordion key={childColumn.name} column={childColumn} onColumnClick={onColumnClick} />
           ))}
         </MuiAccordionDetails>

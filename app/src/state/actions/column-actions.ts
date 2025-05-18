@@ -1379,7 +1379,7 @@ export const setExpansionOfAllChildren = action(
     while (queue.length > 0) {
       const column = queue.shift()!;
       runInAction(() => {
-        column.show = isExpanded;
+        column.expanded = isExpanded;
       });
       await yieldControl(counter, 30);
       for (const child of getChildRenderColumns(column, columnHashMap)) queue.push(child);
