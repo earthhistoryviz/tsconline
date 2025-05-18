@@ -495,42 +495,46 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
       stack.push(child);
     }
   }
-  state.settingsTabs.columnHashMap = tempMap;
+  runInAction(() => {
+    state.settingsTabs.columnHashMap = tempMap;
+  });
 });
 
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
   const renderColumn: RenderColumnInfo = observable.object(
     {
-      columnRef: column,
-      parent: column.parent,
-      children: column.children.map((child) => child.name),
-      on: column.on,
-      expanded: column.expanded,
-      show: column.show,
-      editName: column.editName,
       name: column.name,
+      editName: column.editName,
       fontsInfo: column.fontsInfo,
       fontOptions: column.fontOptions,
+      on: column.on,
       popup: column.popup,
-      width: column.width,
-      rgb: column.rgb,
-      columnSpecificSettings: column.columnSpecificSettings,
-      enableTitle: column.enableTitle,
-      columnDisplayType: column.columnDisplayType,
+      children: column.children.map((child) => child.name),
+      parent: column.parent,
       minAge: column.minAge,
       maxAge: column.maxAge,
+      show: column.show,
+      expanded: column.expanded,
+      enableTitle: column.enableTitle,
+      columnDisplayType: column.columnDisplayType,
+      columnSpecificSettings: column.columnSpecificSettings,
+      rgb: column.rgb,
+      width: column.width,
       units: column.units,
+      showAgeLabels: column.showAgeLabels,
+      showUncertaintyLabels: column.showUncertaintyLabels,
+      columnRef: column,
       isSelected: false,
       hasSelectedChildren: false
     },
     {
-      columnRef: false,
       name: false,
-      columnDisplayType: false,
       fontOptions: false,
+      columnDisplayType: false,
       minAge: false,
       maxAge: false,
-      units: false
+      units: false,
+      columnRef: false
     }
   );
   addReactionToRenderColumnInfo(column, renderColumn);
@@ -560,7 +564,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       enableTitle: renderColumn.enableTitle,
       width: renderColumn.width,
       rgb: toJS(renderColumn.rgb),
-      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings)
+      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings),
     }),
     (updated) => {
       column.fontsInfo = updated.fontsInfo;
@@ -712,65 +716,63 @@ export const setColumnMenuTabValue = action((tabValue: number) => {
 });
 
 let currentSearchToken = 0;
-export const searchColumns = action(
-  async (searchTerm: string, counter = { count: 0 }) => {
-    const thisToken = ++currentSearchToken;
-    const columnHashMap = state.settingsTabs.columnHashMap;
-    setColumnSearchTerm(searchTerm);
-    if (searchTerm === "") {
-      columnHashMap.forEach((columnInfo) => {
-        setExpanded(false, columnInfo);
-        setShow(true, columnInfo);
-      });
-      if (!state.settingsTabs.columns) return;
-      for (const child of getChildRenderColumns(state.settingsTabs.renderColumns, columnHashMap)) {
-        setExpanded(true, child);
-      }
-      return;
-    }
-    for (const columnInfo of columnHashMap.values()) {
-      if (thisToken !== currentSearchToken) return;
-      await yieldControl(counter, 30);
-      setShow(false, columnInfo);
+export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
+  const thisToken = ++currentSearchToken;
+  const columnHashMap = state.settingsTabs.columnHashMap;
+  setColumnSearchTerm(searchTerm);
+  if (searchTerm === "") {
+    columnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
+      setShow(true, columnInfo);
+    });
+    if (!state.settingsTabs.columns) return;
+    for (const child of getChildRenderColumns(state.settingsTabs.renderColumns, columnHashMap)) {
+      setExpanded(true, child);
     }
+    return;
+  }
+  for (const columnInfo of columnHashMap.values()) {
+    if (thisToken !== currentSearchToken) return;
+    await yieldControl(counter, 30);
+    setShow(false, columnInfo);
+    setExpanded(false, columnInfo);
+  }
 
-    const regExp = getRegex(searchTerm);
+  const regExp = getRegex(searchTerm);
 
-    const root = state.settingsTabs.renderColumns;
-    const stack = [root];
-    
-    while (stack.length > 0) {
-      if (thisToken !== currentSearchToken) return;
-      const columnInfo = stack.pop()!;
-      
-      if (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName)) {
-        setShow(true, columnInfo);
-        setExpanded(true, columnInfo);
-        await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
-        const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
-        if (hasMatchingChild) setExpanded(true, columnInfo);
-        await setShowOfAllChildren(columnInfo, columnHashMap, true);
-    
-        let parentName = columnInfo.parent;
-        while (parentName) {
-          const parentColumnInfo = columnHashMap.get(parentName);
-          if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
-            setShow(true, parentColumnInfo);
-            setExpanded(true, parentColumnInfo);
-            parentName = parentColumnInfo.parent;
-          } else {
-            break;
-          }
+  const root = state.settingsTabs.renderColumns;
+  const stack = [root];
+
+  while (stack.length > 0) {
+    if (thisToken !== currentSearchToken) return;
+    const columnInfo = stack.pop()!;
+
+    if (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName)) {
+      setShow(true, columnInfo);
+      setExpanded(true, columnInfo);
+      await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
+      const hasMatchingChild = columnInfo.children.some((child) => regExp.test(child));
+      if (hasMatchingChild) setExpanded(true, columnInfo);
+      await setShowOfAllChildren(columnInfo, columnHashMap, true);
+
+      let parentName = columnInfo.parent;
+      while (parentName) {
+        const parentColumnInfo = columnHashMap.get(parentName);
+        if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
+          setShow(true, parentColumnInfo);
+          setExpanded(true, parentColumnInfo);
+          parentName = parentColumnInfo.parent;
+        } else {
+          break;
         }
       }
-      for (let i = columnInfo.children.length - 1; i >= 0; i--) {
-        const child = columnHashMap.get(columnInfo.children[i]);
-        if (child) stack.push(child);
-      }
+    }
+    for (let i = columnInfo.children.length - 1; i >= 0; i--) {
+      const child = columnHashMap.get(columnInfo.children[i]);
+      if (child) stack.push(child);
     }
   }
-);
+});
 
 export const setDrawDualColCompColumn = action((baseColumn: RenderColumnInfo, overlayColumn: RenderColumnInfo) => {
   if (baseColumn.columnDisplayType === "Point") {
@@ -922,16 +924,17 @@ export const addDataMiningColumn = action(
     let fill: RGB = cloneDeep(defaultPointSettings.fill);
     let windowStats: WindowStats[] = [];
     let stat: DataMiningStatisticApproach;
+    const subInfo = column.columnRef.subInfo;
     switch (column.columnDisplayType) {
       case "Event": {
         assertEventSettings(column.columnSpecificSettings);
-        assertSubEventInfoArray(column.subInfo);
+        assertSubEventInfoArray(subInfo);
         if (!isEventFrequency(type)) {
           console.log("WARNING: unknown event frequency associated with an event", type);
           return;
         }
         //in order to make the result the same as the jar, we need to have filtered data for events
-        const eventData = column.subInfo
+        const eventData = subInfo
           .filter((subEvent) => {
             if (type === "Combined Events") return true;
             else return subEvent.subEventType === type;
@@ -977,13 +980,13 @@ export const addDataMiningColumn = action(
 
       case "Point": {
         assertPointSettings(column.columnSpecificSettings);
-        assertSubPointInfoArray(column.subInfo);
+        assertSubPointInfoArray(subInfo);
         if (!isDataMiningPointDataType(type)) {
           console.log("WARNING: unknown data mining type associated with a point", type);
           return;
         }
         //in order to make the result the same as the jar, we do not filter data for points, instead we remove the first and the last data point.
-        const pointData = column.subInfo.map((subPoint) => {
+        const pointData = subInfo.map((subPoint) => {
           return { age: subPoint.age, value: subPoint.xVal };
         });
         pointData.shift();
@@ -1037,7 +1040,7 @@ export const addDataMiningColumn = action(
 
       case "Chron": {
         assertChronSettings(column.columnSpecificSettings);
-        assertSubChronInfoArray(column.subInfo);
+        assertSubChronInfoArray(subInfo);
         if (!isDataMiningChronDataType(type)) {
           console.log("WARNING: unknown data mining type associated with a chron column", type);
           return;
@@ -1048,7 +1051,7 @@ export const addDataMiningColumn = action(
           b: 201
         };
         //in order to make the result the same as the jar, we do not filter data for chrons, instead we remove the first and the last data point.
-        const chronData = column.subInfo.map((subChron) => subChron.age);
+        const chronData = subInfo.map((subChron) => subChron.age);
         chronData.shift();
         chronData.pop();
         windowStats = computeWindowStatistics(
@@ -1245,14 +1248,14 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
       });
       count++;
     }
-    if (columnInfo.subInfo) {
+    if (columnInfo.columnRef.subInfo) {
       //skip since subInfo is not associated with this but the app does it for map points
       if (columnInfo.columnDisplayType === "MetaColumn") {
         continue;
       }
-      for (let i = 0; i < columnInfo.subInfo.length; i++) {
+      for (let i = 0; i < columnInfo.columnRef.subInfo.length; i++) {
         if (thisToken !== currentSearchEventsToken) return 0;
-        const subInfo = columnInfo.subInfo[i];
+        const subInfo = columnInfo.columnRef.subInfo[i];
         if ("label" in subInfo && subInfo.label) {
           if (regExp.test(subInfo.label)) {
             const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
@@ -1284,7 +1287,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
               //facies and chron label show up as block, so find ranges for them too
               if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                 if (i > 0) {
-                  const nextBlock = columnInfo.subInfo[i - 1];
+                  const nextBlock = columnInfo.columnRef.subInfo[i - 1];
                   if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
                 } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
               } else {
@@ -1468,7 +1471,6 @@ export const incrementColumnPosition = action((column: RenderColumnInfo) => {
   const renderChildren = parent.children;
   const children = parent.columnRef.children;
   const index = renderChildren.indexOf(column.name);
-
   if (index === -1) return;
 
   for (let i = index - 1; i >= 0; i--) {
@@ -1494,7 +1496,6 @@ export const decrementColumnPosition = action((column: RenderColumnInfo) => {
   const renderChildren = parent.children;
   const children = parent.columnRef.children;
   const index = renderChildren.indexOf(column.name);
-
   if (index === -1) return;
 
   for (let i = index + 1; i < renderChildren.length; i++) {
