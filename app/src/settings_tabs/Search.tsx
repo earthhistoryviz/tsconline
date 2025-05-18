@@ -7,6 +7,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Typography,
   useTheme
 } from "@mui/material";
 import { observer } from "mobx-react-lite";
@@ -72,11 +73,11 @@ export const Search = observer(function Search() {
   });
 
   return (
-    <div className="search-container">
+    <div className="settings-search-container">
       <div className="search-header-container">
         <div className="search-and-options">
           <TextField
-            className="search-bar"
+            className="settings-search-bar"
             label={t("settings.search.search-bar")}
             variant="outlined"
             size="small"
@@ -86,7 +87,7 @@ export const Search = observer(function Search() {
             }}
             value={state.settingsTabs.eventSearchTerm}
           />
-          <div>{t("settings.search.found-result", { count })}</div>
+          <Typography paddingLeft="20px">{t("settings.search.found-result", { count })}</Typography>
         </div>
         <TimeDisplay />
       </div>

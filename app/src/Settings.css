@@ -6,18 +6,43 @@
   align-items: center;
 }
 .settings-header-title {
-  text-align: center;
-  font-size: 48;
-  margin-top: 1vh;
+  text-align: flex-start;
+  font-weight: 600;
+  margin-left: 20px;
 }
 
-.main-settings-tabs {
-  align-self: center;
-}
 .settings-container {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   word-spacing: 1;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  grid-template-rows: calc(100vh - var(--nav-bar-height));
+  max-height: calc(100vh - var(--nav-bar-height));
+  gap: 30px;
+}
+.settings-tabs-side-bar {
+  width: 190px;
   display: flex;
+  height: 100%;
   flex-direction: column;
+}
+.settings-container > :not(.settings-tabs-side-bar) {
+  padding: 20px 10px 0px 10px;
+  display: flex;
+  justify-content: flex-start;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+}
+.settings-container > :not(.settings-tabs-side-bar) .datapack-display-container {
+  width: 100%;
+}
+.load-save-settings-sidebar {
+  display: flex;
+  padding-top: 20px;
+  flex-direction: column;
+  gap: 10px;
+  justify-self: center;
+  align-self: center;
+  width: 70%;
 }

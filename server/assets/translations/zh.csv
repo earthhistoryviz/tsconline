@@ -92,7 +92,6 @@ translation.settings.time.interval.top,区间顶部
 translation.settings.time.interval.base,区间底部
 translation.settings.time.interval.top-name,年代/阶段 名称
 translation.settings.time.interval.base-name,年代/阶段 名称
-translation.settings.time.interval.not-avaliable,该时间单位无可选年代
 translation.settings.time.interval.vertical-scale,垂直比例（厘米 每 1
 translation.settings.time.interval.helper-text,区间底部年代应大于区间顶部年代
 translation.settings.preferences.checkboxs.skip-empty-columns,在已选时间段内没有数据的列将不会被画出
