@@ -301,7 +301,7 @@ const ColumnSearchBar = observer(() => {
   const { actions: globalActions } = useContext(context);
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const term = event.target.value;
-    globalActions.searchColumns(term, state.columnHashMap);
+    globalActions.searchColumns(term);
   };
   const { t } = useTranslation();
   return (

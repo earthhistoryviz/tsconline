@@ -268,7 +268,7 @@ export const state = observable<State>({
   },
   settingsTabs: observable(
     {
-      selected: "time" as SettingsTabs,
+      selected: "column" as SettingsTabs,
       columns: undefined,
       renderColumns: undefined,
       columnHashMap: new Map<string, RenderColumnInfo>(),

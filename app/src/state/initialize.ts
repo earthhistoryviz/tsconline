@@ -1,3 +1,4 @@
+import { extractDatapackType } from "@tsconline/shared";
 import { actions } from "./index";
 
 export async function initialize() {
