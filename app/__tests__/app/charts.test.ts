@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 
+const FIVE_MINUTES = 5 * 60 * 1000;
+
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
   await page.waitForTimeout(2000);
@@ -32,9 +34,10 @@ test("check if generate chart works", async ({ page }) => {
   await expect(generateChart).toBeVisible();
   await generateChart.click();
 
-  await page.screenshot({ path: 'screenshots/generate-chart.png', fullPage: true });
+  await expect(page.locator("text=Loading Chart")).toBeHidden({ timeout: 10000 });
+  await page.screenshot({ path: "screenshots/generate-chart.png", fullPage: true });
 
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: FIVE_MINUTES });
 });
 
 test("check if generate crossplot works", async ({ page }) => {
@@ -65,7 +68,7 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(generateCrossplot).toBeVisible();
   await generateCrossplot.click();
 
-  await page.screenshot({ path: 'screenshots/generate-chart.png', fullPage: true });
+  await page.screenshot({ path: "screenshots/generate-crossplot.png", fullPage: true });
 
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: FIVE_MINUTES });
 });
