@@ -32,6 +32,8 @@ test("check if generate chart works", async ({ page }) => {
   await expect(generateChart).toBeVisible();
   await generateChart.click();
 
+  await page.screenshot({ path: 'screenshots/generate-chart.png', fullPage: true });
+
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
 });
 
@@ -62,6 +64,8 @@ test("check if generate crossplot works", async ({ page }) => {
   const generateCrossplot = page.locator("text=Generate Crossplot");
   await expect(generateCrossplot).toBeVisible();
   await generateCrossplot.click();
+
+  await page.screenshot({ path: 'screenshots/generate-chart.png', fullPage: true });
 
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
 });
