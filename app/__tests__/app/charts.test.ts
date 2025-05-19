@@ -24,7 +24,7 @@ test("check if generate chart works", async ({ page }) => {
   await expect(loading).toBeHidden();
 
   const configMessage = page.locator("text=Datapack Config Updated");
-  await configMessage.waitFor({ state: "visible"}).catch(() => {
+  await configMessage.waitFor({ state: "visible" }).catch(() => {
     console.warn("Datapack Config Updated message not shown");
   });
 
@@ -65,4 +65,3 @@ test("check if generate crossplot works", async ({ page }) => {
 
   await expect(page.locator("text=Successfully generated chart")).toBeVisible();
 });
-

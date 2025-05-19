@@ -3,8 +3,7 @@ import { test, expect } from "@playwright/test";
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
   await page.waitForTimeout(2000); // Wait for 2 seconds to ensure the page is fully loaded
-}
-);
+});
 
 test("navigation to presets page works", async ({ page }) => {
   const datapacksTab = page.locator(".qsg-presets");
@@ -60,8 +59,8 @@ test("login is functional", async ({ page }) => {
 
   await expect(page).toHaveURL(/.*\/login/);
 
-  const usernameInput = page.locator('#username');
-  const passwordInput = page.locator('#password');
+  const usernameInput = page.locator("#username");
+  const passwordInput = page.locator("#password");
   const signInButton = page.locator('[data-testid="LoginIcon"]');
 
   await expect(usernameInput).toBeVisible();
