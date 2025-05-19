@@ -18,6 +18,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
 import { CommentType } from "./TSCDiscussion";
 import { useTranslation } from "react-i18next";
+import { executeRecaptcha, fetcher } from "../util";
+import { actions } from "../state";
+import { ErrorCodes } from "../util/error-codes";
 
 export type TSCCommentProps = CommentType & {
   handleDelete: (id: number) => void;
@@ -58,12 +61,37 @@ export const Comment = ({
     setMobileOpen(false);
   };
 
-  const handleReport = () => {
+  const handleReport = async () => {
     setFlagged(true);
+    try {
+      const recaptchaToken: string = await executeRecaptcha("updateComment");
+      if (!recaptchaToken) {
+        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        return;
+      }
+      const response = await fetcher(`/user/datapack/comments/report/${id}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "recaptcha-token": recaptchaToken
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          flagged: 1
+        })
+      });
+      if (response.ok) {
+        actions.removeAllErrors();
+      } else {
+        console.log("error", response);
+      }
+    } catch (e) {
+      console.log("error", e);
+    }
     handleClose();
   };
 
-  const handleDeleteComment = () => {
+  const handleDeleteComment = async () => {
     handleDelete(id);
     handleClose();
   };

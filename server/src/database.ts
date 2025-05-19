@@ -9,7 +9,10 @@ import {
   NewUsersWorkshops,
   Workshop,
   UpdatedWorkshop,
-  UsersWorkshops
+  UsersWorkshops,
+  NewDatapackComment,
+  DatapackComment,
+  UpdatedDatapackComment
 } from "./types.js";
 import BetterSqlite3 from "better-sqlite3";
 import { Kysely, SqliteDialect } from "kysely";
@@ -60,6 +63,14 @@ Database Schema Details (Post-Migration):
 - usersWorkshops Table:
   - workshopId (integer): Non-nullable, links to the workshop table.
   - userId (integer): Non-nullable, links to the users table.
+
+- datapackComments Table:
+  - id (integer):  Primary key, auto-increment.
+  - userId (integer): Non-nullable, links to the users table.
+  - datapackName (text): Non-nullable, references datapack that comment is attached to.
+  - commentText (text): Non-nullable, text content of comment.
+  - dateCreated (datetime): Non-nullable, the date/time of when the comment is created.
+  - flagged (boolean): Non-nullable, defaults to false, signifies if the comment is flagged.
 
 Important Note on Schema Changes:
 To ensure data consistency and minimize manual interventions on the development server, you should not modify the schema commands below.
@@ -387,4 +398,48 @@ export async function isUserInWorkshopAndWorkshopIsActive(userId: number, worksh
 export async function isUserInWorkshop(userId: number, workshopId: number): Promise<boolean> {
   const usersWorkshops = await findUsersWorkshops({ userId, workshopId });
   return usersWorkshops.length > 0;
+}
+
+export async function createDatapackComment(newDatapackComment: NewDatapackComment) {
+  try {
+    return await db.insertInto("comments").values(newDatapackComment).execute();
+  } catch (error) {
+    console.error("Error creating datapack comment:", error);
+    throw error;
+  }
+}
+
+export async function findDatapackComment(criteria: Partial<DatapackComment>) {
+  let query = db.selectFrom("comments");
+  if (criteria.uuid) query = query.where("uuid", "=", criteria.uuid);
+  if (criteria.commentText) query = query.where("commentText", "=", criteria.commentText);
+  if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
+  if (criteria.dateCreated) query = query.where("dateCreated", "=", criteria.dateCreated);
+  return await query.selectAll().execute();
+}
+
+export async function findCurrentDatapackComments(criteria: Partial<DatapackComment>) {
+  try {
+    let query = db.selectFrom("comments");
+    if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
+    return await query.selectAll().execute();
+  } catch (e) {
+    console.error("Error creating datapack comment:", e);
+    throw e;
+  }
+}
+
+export async function updateComment(
+  criteria: Partial<DatapackComment>,
+  updatedDatapackComment: UpdatedDatapackComment
+) {
+  let query = db.updateTable("comments").set(updatedDatapackComment);
+  if (criteria.id) query = query.where("id", "=", criteria.id);
+  return await query.execute();
+}
+
+export async function deleteComment(criteria: Partial<DatapackComment>) {
+  let query = db.deleteFrom("comments");
+  if (criteria.id) query = query.where("id", "=", criteria.id);
+  return await query.execute();
 }

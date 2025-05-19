@@ -7,6 +7,7 @@ export interface Database {
   ip: IpTable;
   workshop: WorkshopTable;
   usersWorkshops: UsersWorkshopsTable;
+  comments: CommentsTable;
 }
 
 export type AccountType = "pro" | "default";
@@ -57,6 +58,16 @@ export interface UsersWorkshopsTable {
   userId: number;
 }
 
+export interface CommentsTable {
+  id: Generated<number>;
+  uuid: string;
+  commentText: string;
+  datapackTitle: string;
+  dateCreated: string;
+  flagged: number;
+  username: string;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
@@ -74,6 +85,10 @@ export type UpdatedIp = Updateable<IpTable>;
 export type Workshop = Selectable<WorkshopTable>;
 export type NewWorkshop = Insertable<WorkshopTable>;
 export type UpdatedWorkshop = Updateable<WorkshopTable>;
+
+export type DatapackComment = Selectable<CommentsTable>;
+export type NewDatapackComment = Insertable<CommentsTable>;
+export type UpdatedDatapackComment = Updateable<CommentsTable>;
 
 export type Email = {
   from: string;
