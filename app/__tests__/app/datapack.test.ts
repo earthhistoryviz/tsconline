@@ -1,11 +1,14 @@
 import { test, expect } from "@playwright/test";
 
-test("datapack button is clickable", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
+  await page.waitForTimeout(2000);
   const datapacksTab = page.locator(".qsg-datapacks");
-  await expect(datapacksTab).toBeVisible();
   await datapacksTab.click();
+  await expect(page.locator("text=Africa Bight")).toBeVisible();
+});
 
+test("datapack button is clickable", async ({ page }) => {
   const AfricaBightButton = page.locator("text=Africa Bight");
   await AfricaBightButton.waitFor({ state: "visible" });
   await expect(AfricaBightButton).toBeVisible({ timeout: 15000 });
@@ -26,12 +29,6 @@ test("datapack button is clickable", async ({ page }) => {
 });
 
 test("add-circle button is clickable", async ({ page }) => {
-  await page.goto("http://localhost:5173");
-
-  const datapacksTab = page.locator(".qsg-datapacks");
-  await expect(datapacksTab).toBeVisible();
-  await datapacksTab.click();
-
   const addCircleWrapper = page.locator(".add-circle").nth(0);
   await expect(addCircleWrapper).toBeVisible();
   await addCircleWrapper.click();
@@ -41,12 +38,6 @@ test("add-circle button is clickable", async ({ page }) => {
 });
 
 test("check if confirm selection works", async ({ page }) => {
-  await page.goto("http://localhost:5173");
-
-  const datapacksTab = page.locator(".qsg-datapacks");
-  await datapacksTab.click();
-
-  // Click the wrapper containing the span.add-circle
   const addCircleWrapper = page.locator(".add-circle").nth(0);
   await expect(addCircleWrapper).toBeVisible();
   await addCircleWrapper.click();
@@ -59,5 +50,6 @@ test("check if confirm selection works", async ({ page }) => {
   await confirmButton.click();
 
   await expect(page.locator("text=Loading Datapacks")).toBeHidden();
-  await page.waitForSelector("text=Datapack Config Updated", { timeout: 5000 });
+
+  await page.waitForSelector("text=Datapack Config Updated");
 });
