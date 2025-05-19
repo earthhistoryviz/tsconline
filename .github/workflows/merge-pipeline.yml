@@ -382,17 +382,33 @@ jobs:
           ls -R ${{ github.workspace }}/server/assets
 
       - name: Report Test Errors
-        if: steps.run_tests.outputs.test_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
             const fs = require('fs');
             const testLog = fs.readFileSync('test_output.log', 'utf8');
-            const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
-            const vitest_e2e_log = testLog + "\n" + e2eLog;
             const prNumber = context.payload.pull_request?.number;
             if (prNumber) {
-              const message = `🚨 Vitest tests or E2E tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
+              const message = `🚨 Vitest tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
+              github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: message,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report E2E Test Errors
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              const message = `🚨 E2E tests have failed. Please check the E2E test logs for more information.\n\n\`\`\`\n${e2eLog}\n\`\`\``;
               github.rest.issues.createComment({
                 ...context.repo,
                 issue_number: prNumber,
