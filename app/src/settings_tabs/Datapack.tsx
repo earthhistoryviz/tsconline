@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { observer } from "mobx-react-lite";
-import { DatapackUploadForm, TSCButton, CustomTooltip, CustomDivider } from "../components";
+import { DatapackUploadForm, TSCButton, CustomTooltip, CustomDivider, StyledScrollbar } from "../components";
 import { context } from "../state";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
@@ -57,7 +57,7 @@ export const Datapacks = observer(function Datapacks() {
   }, [shouldLoadRecaptcha]);
 
   return (
-    <div className={styles.dc}>
+    <StyledScrollbar className={styles.dc + " settings-datapack-container"}>
       <div className={styles.hdc}>
         <CustomTooltip title="Deselect All" placement="top">
           <IconButton
@@ -97,7 +97,7 @@ export const Datapacks = observer(function Datapacks() {
         </ToggleButtonGroup>
       </div>
       <Box
-        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards}`}>
+        className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} datapack-display-container`}>
         <DatapackGroupDisplay
           datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
             (item) => !item.tags.includes("Treatise")
@@ -167,24 +167,25 @@ export const Datapacks = observer(function Datapacks() {
           {t("button.confirm-selection")}
         </TSCButton>
       </Box>
-
-      <TSCButton
-        onClick={() => {
-          navigate("/crossplot");
-          actions.setTab(0);
-          for (const datapack of state.unsavedDatapackConfig) {
-            if (isTempDatapack(datapack)) {
-              // continue to crossplot, this assumes the user just made a converted datapack and is returning the crossplot page
-              return;
+      <Box display="flex" justifyContent="center" alignItems="center" width="100%">
+        <TSCButton
+          onClick={() => {
+            navigate("/crossplot");
+            actions.setTab(0);
+            for (const datapack of state.unsavedDatapackConfig) {
+              if (isTempDatapack(datapack)) {
+                // continue to crossplot, this assumes the user just made a converted datapack and is returning the crossplot page
+                return;
+              }
             }
-          }
-          actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
-            setter: actions.setCrossPlotDatapackConfig,
-            currentConfig: state.crossPlot.datapacks
-          });
-        }}>
-        {t("crossPlot.create-datapack")}
-      </TSCButton>
+            actions.processDatapackConfig(toJS(state.unsavedDatapackConfig), {
+              setter: actions.setCrossPlotDatapackConfig,
+              currentConfig: state.crossPlot.datapacks
+            });
+          }}>
+          {t("crossPlot.create-datapack")}
+        </TSCButton>
+      </Box>
       <Dialog classes={{ paper: styles.dd }} open={formOpen} onClose={() => setFormOpen(false)}>
         <DatapackUploadForm
           close={() => setFormOpen(false)}
@@ -195,7 +196,7 @@ export const Datapacks = observer(function Datapacks() {
           }}
         />
       </Dialog>
-    </div>
+    </StyledScrollbar>
   );
 });
 type DatapackMenuProps = {

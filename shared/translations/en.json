@@ -2,7 +2,8 @@
     "translation": {
         "general-actions": {
             "save": "Save",
-            "cancel": "Cancel"
+            "cancel": "Cancel",
+            "loading": "Loading"
         },
         "landing-page": {
             "get-started": "Get Started",
@@ -288,13 +289,13 @@
             "yAxis": "Y Axis (Age/Depth)"
         },
         "settings": {
+            "header": "Settings",
             "time": {
                 "interval": {
                     "top": "Top of Interval",
                     "base": "Base of Interval",
                     "top-name": "Top Age/Stage Name",
                     "base-name": "Base Age/Stage Name",
-                    "not-avaliable": "Not Available for this Unit",
                     "vertical-scale": "Vertical Scale (cm per 1",
                     "helper-text": "Base age should be older than top age",
                     "vertical-scale-header": "Vertical Scale"
@@ -446,6 +447,7 @@
                 "notes3": "NOTE: These fonts can be changed on a column by column basis by using the Font button for each column"
             },
             "map-points": {
+                "included": "Included Maps",
                 "not-avaliable": "No Map Points available for this datapack"
             },
             "datapacks": {

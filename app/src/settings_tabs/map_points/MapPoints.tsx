@@ -37,7 +37,12 @@ export const MapPoints = observer(function MapPoint() {
           </Typography>
         </div>
       ) : (
-        <MapList mapInfo={state.mapState.mapInfo} />
+        <Box width="100%">
+          <Typography variant="h5" fontWeight={700}>
+            {t("settings.map-points.included")}
+          </Typography>
+          <MapList mapInfo={state.mapState.mapInfo} />
+        </Box>
       )}
     </div>
   );
@@ -76,7 +81,7 @@ const MapList: React.FC<MapRowComponentProps> = observer(({ mapInfo }) => {
   }
   const sortedMapInfoObj: MapInfo = Object.fromEntries(sortedMapEntries);
   return (
-    <div className="map=list">
+    <div className="map-list">
       <Box>
         <List>
           {Object.entries(sortedMapInfoObj).map(([name, map]) => {
