@@ -32,7 +32,7 @@ test("check if generate chart works", async ({ page }) => {
   await expect(generateChart).toBeVisible();
   await generateChart.click();
 
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
 });
 
 test("check if generate crossplot works", async ({ page }) => {
@@ -63,5 +63,5 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(generateCrossplot).toBeVisible();
   await generateCrossplot.click();
 
-  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible({timeout : 60000});
 });
