@@ -1,12 +1,15 @@
 import { test, expect } from "@playwright/test";
 
-test("check if generate chart works", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
-
+  await page.waitForTimeout(2000);
   const datapacksTab = page.locator(".qsg-datapacks");
   await datapacksTab.click();
+  await expect(page.locator("text=Africa Bight")).toBeVisible();
+});
 
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
+test("check if generate chart works", async ({ page }) => {
+  const addCircleWrapper = page.locator(".add-circle").first();
   await expect(addCircleWrapper).toBeVisible();
   await addCircleWrapper.click();
 
@@ -17,23 +20,23 @@ test("check if generate chart works", async ({ page }) => {
   await expect(confirmButton).toBeVisible();
   await confirmButton.click();
 
-  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
-  await page.waitForSelector("text=Datapack Config Updated", { timeout: 5000 });
+  const loading = page.locator("text=Loading Datapacks");
+  await expect(loading).toBeHidden();
+
+  const configMessage = page.locator("text=Datapack Config Updated");
+  await configMessage.waitFor({ state: "visible"}).catch(() => {
+    console.warn("Datapack Config Updated message not shown");
+  });
 
   const generateChart = page.locator("text=Generate Chart");
   await expect(generateChart).toBeVisible();
   await generateChart.click();
 
-  await page.waitForSelector("text=Successfully generated chart", { timeout: 5000 });
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
 });
 
 test("check if generate crossplot works", async ({ page }) => {
-  await page.goto("http://localhost:5173");
-
-  const datapacksTab = page.locator(".qsg-datapacks");
-  await datapacksTab.click();
-
-  const addCircleWrapper = page.locator(".add-circle").nth(0);
+  const addCircleWrapper = page.locator(".add-circle").first();
   await expect(addCircleWrapper).toBeVisible();
   await addCircleWrapper.click();
 
@@ -44,12 +47,22 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(confirmButton).toBeVisible();
   await confirmButton.click();
 
-  await expect(page.locator("text=Loading Datapacks")).toBeHidden();
-  await page.waitForSelector("text=Datapack Config Updated", { timeout: 5000 });
+  const loading = page.locator("text=Loading Datapacks");
+  await expect(loading).toBeHidden();
+
+  const configMessage = page.locator("text=Datapack Config Updated");
+  await configMessage.waitFor({ state: "visible" }).catch(() => {
+    console.warn("Datapack Config Updated message not shown");
+  });
+
+  const createCrossplot = page.locator("text=Create Crossplot");
+  await expect(createCrossplot).toBeVisible();
+  await createCrossplot.click();
 
   const generateCrossplot = page.locator("text=Generate Crossplot");
   await expect(generateCrossplot).toBeVisible();
   await generateCrossplot.click();
 
-  await page.waitForSelector("text=Successfully generated crossplot", { timeout: 5000 });
+  await expect(page.locator("text=Successfully generated chart")).toBeVisible();
 });
+

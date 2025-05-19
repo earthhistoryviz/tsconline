@@ -251,146 +251,145 @@ jobs:
               body: commentBody
             });
 
-      # - name: Move TSCreator Jar for e2e
-      #   id: move_jar
-      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
-      #   run: |
-      #     if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
-      #       echo "Jar file found."
-      #     else
-      #       echo "Jar file not found."
-      #       exit 1
-      #     fi
-      #     pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-      #     if [ -z pr_jar ]; then
-      #       echo "Error: activeJar not found in config.json"
-      #       exit 1
-      #     fi
-      #     mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/server/assets/jars/$pr_jar
-      #     if [ ! -f "${{ github.workspace }}/server/assets/jars/$pr_jar" ]; then
-      #       echo "Error: Failed to rename jar."
-      #       exit 1
-      #     fi
-      #     echo "Successfully renamed jar to $pr_jar"
-      #     echo "pr_jar=$pr_jar" >> $GITHUB_OUTPUT
+      - name: Move TSCreator Jar for e2e
+        id: move_jar
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
+            echo "Jar file found."
+          else
+            echo "Jar file not found."
+            exit 1
+          fi
+          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          if [ -z pr_jar ]; then
+            echo "Error: activeJar not found in config.json"
+            exit 1
+          fi
+          mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/server/assets/jars/$pr_jar
+          if [ ! -f "${{ github.workspace }}/server/assets/jars/$pr_jar" ]; then
+            echo "Error: Failed to rename jar."
+            exit 1
+          fi
+          echo "Successfully renamed jar to $pr_jar"
+          echo "pr_jar=$pr_jar" >> $GITHUB_OUTPUT
 
-      # - name: Set up Decryption Jar and Datapacks
-      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
-      #   run: |
-      #     ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
-      #     DECRYPTION_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
-      #     if [ -z "$DECRYPTION_NAME" ]; then
-      #       echo "Error: decryptionJar not found in config.json"
-      #       exit 1
-      #     fi
-      #     DROPBOX_FOLDER_PATH="${{ secrets.DROPBOX_PATH }}"
+      - name: Set up Decryption Jar and Datapacks
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+          DECRYPTION_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          if [ -z "$DECRYPTION_NAME" ]; then
+            echo "Error: decryptionJar not found in config.json"
+            exit 1
+          fi
+          DROPBOX_FOLDER_PATH="${{ secrets.DROPBOX_PATH }}"
 
-      #     LIST_RESPONSE=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
-      #     --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #     --header "Content-Type: application/json" \
-      #     --data "{\"path\": \"$DROPBOX_FOLDER_PATH\"}")
+          LIST_RESPONSE=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"path\": \"$DROPBOX_FOLDER_PATH\"}")
 
-      #     DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower')
-      #     if [ -z "$DECRYPTION_PATH" ]; then
-      #       echo "Error: Decryption jar not found."
-      #       exit 1
-      #     fi
-      #     DATAPACKS_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DATA_PACKS_NAME "datapacks" '.entries[] | select(.name == $DATA_PACKS_NAME) | .path_lower')
-      #     if [ -z "$DATAPACKS_PATH" ]; then
-      #       echo "Error: Datapacks folder not found."
-      #       exit 1
-      #     fi
+          DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower')
+          if [ -z "$DECRYPTION_PATH" ]; then
+            echo "Error: Decryption jar not found."
+            exit 1
+          fi
+          DATAPACKS_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DATA_PACKS_NAME "datapacks" '.entries[] | select(.name == $DATA_PACKS_NAME) | .path_lower')
+          if [ -z "$DATAPACKS_PATH" ]; then
+            echo "Error: Datapacks folder not found."
+            exit 1
+          fi
 
-      #     curl -s -X POST "https://content.dropboxapi.com/2/files/download" \
-      #     --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #     --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
-      #     --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+          curl -s -X POST "https://content.dropboxapi.com/2/files/download" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
+          --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
 
-      #     DECRYPTION_JAR="${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
-      #     if [ ! -f "$DECRYPTION_JAR" ]; then
-      #       echo "Error: Failed to download decryption jar."
-      #       exit 1
-      #     fi
-      #     echo "Successfully downloaded decryption jar."
+          DECRYPTION_JAR="${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+          if [ ! -f "$DECRYPTION_JAR" ]; then
+            echo "Error: Failed to download decryption jar."
+            exit 1
+          fi
+          echo "Successfully downloaded decryption jar."
 
-      #     curl -s -X POST "https://content.dropboxapi.com/2/files/download_zip" \
-      #     --header "Authorization: Bearer $ACCESS_TOKEN" \
-      #     --header "Dropbox-API-Arg: {\"path\": \"$DATAPACKS_PATH\"}" \
-      #     --output "${{ github.workspace }}/datapacks.zip"
+          curl -s -X POST "https://content.dropboxapi.com/2/files/download_zip" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Dropbox-API-Arg: {\"path\": \"$DATAPACKS_PATH\"}" \
+          --output "${{ github.workspace }}/datapacks.zip"
 
-      #     if [ ! -f "${{ github.workspace }}/datapacks.zip" ]; then
-      #       echo "Error: Failed to download datapacks folder."
-      #       exit 1
-      #     fi
-      #     unzip -q "${{ github.workspace }}/datapacks.zip" -d "${{ github.workspace }}/server/assets"
-      #     rm "${{ github.workspace }}/datapacks.zip"
-      #     if [ ! -d "${{ github.workspace }}/server/assets/datapacks" ]; then
-      #       echo "Error: Failed to extract datapacks folder."
-      #       exit 1
-      #     fi
-      #     echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
-      #     echo "Contents of the assets folder:"
-      #     ls -R ${{ github.workspace }}/server/assets
+          if [ ! -f "${{ github.workspace }}/datapacks.zip" ]; then
+            echo "Error: Failed to download datapacks folder."
+            exit 1
+          fi
+          unzip -q "${{ github.workspace }}/datapacks.zip" -d "${{ github.workspace }}/server/assets"
+          rm "${{ github.workspace }}/datapacks.zip"
+          if [ ! -d "${{ github.workspace }}/server/assets/datapacks" ]; then
+            echo "Error: Failed to extract datapacks folder."
+            exit 1
+          fi
+          echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
+          echo "Contents of the assets folder:"
+          ls -R ${{ github.workspace }}/server/assets
 
-      # - name: e2e Tests
-      #   if: github.event.pull_request.user.login != 'dependabot[bot]'
-      #   id: e2e_tests
-      #   run: |
-      #     yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
+      - name: e2e Tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        id: e2e_tests
+        run: |
+          yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
-      #     pr_jar=${{ steps.move_jar.outputs.pr_jar }}
-      #     if [ -z "$pr_jar" ]; then
-      #       echo "Error: pr_jar is empty. Check config.json format."
-      #       exit 1
-      #     fi
+          pr_jar=${{ steps.move_jar.outputs.pr_jar }}
+          if [ -z "$pr_jar" ]; then
+            echo "Error: pr_jar is empty. Check config.json format."
+            exit 1
+          fi
 
-      #     mv ${{ github.workspace }}/server/assets/jars/$pr_jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
+          mv ${{ github.workspace }}/server/assets/jars/$pr_jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
 
-      #     if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
-      #       echo "Successfully renamed jar back to testUsageJar.jar."
-      #     else
-      #       echo "Failed to rename jar back to testUsageJar.jar."
-      #       exit 1
-      #     fi
+          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
+            echo "Successfully renamed jar back to testUsageJar.jar."
+          else
+            echo "Failed to rename jar back to testUsageJar.jar."
+            exit 1
+          fi
 
-      #     # Delete the decryption jar after tests
-      #     DECRYPTION_NAME=$(jq -r '.decryptionJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-      #     if [ -n "$DECRYPTION_NAME" ] && [ -f "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME" ]; then
-      #       rm "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
-      #       echo "Deleted decryption jar: $DECRYPTION_NAME"
-      #     fi
+          # Delete the decryption jar after tests
+          DECRYPTION_NAME=$(jq -r '.decryptionJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          if [ -n "$DECRYPTION_NAME" ] && [ -f "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME" ]; then
+            rm "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+            echo "Deleted decryption jar: $DECRYPTION_NAME"
+          fi
 
-      #     # Delete the entire datapacks folder after tests
-      #     if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
-      #     rm -rf "${{ github.workspace }}/server/assets/datapacks"
-      #     echo "Deleted datapacks folder"
-      #     fi
+          # Delete the entire datapacks folder after tests
+          if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
+          rm -rf "${{ github.workspace }}/server/assets/datapacks"
+          echo "Deleted datapacks folder"
+          fi
 
-      #     # Delete the uploads folder after tests
-      #     if [ -d "${{ github.workspace }}/server/assets/uploads" ]; then
-      #       rm -rf "${{ github.workspace }}/server/assets/uploads"
-      #       echo "Deleted uploads folder"
-      #     fi
+          # Delete the uploads folder after tests
+          if [ -d "${{ github.workspace }}/server/assets/uploads" ]; then
+            rm -rf "${{ github.workspace }}/server/assets/uploads"
+            echo "Deleted uploads folder"
+          fi
 
-      #     # Delete file-metadata.json after tests
-      #     if [ -f "${{ github.workspace }}/server/assets/file-metadata.json" ]; then
-      #       rm "${{ github.workspace }}/server/assets/file-metadata.json"
-      #       echo "Deleted file-metadata.json"
-      #     fi
+          # Delete file-metadata.json after tests
+          if [ -f "${{ github.workspace }}/server/assets/file-metadata.json" ]; then
+            rm "${{ github.workspace }}/server/assets/file-metadata.json"
+            echo "Deleted file-metadata.json"
+          fi
 
-      #     echo "Contents of the assets folder:"
-      #     ls -R ${{ github.workspace }}/server/assets
+          echo "Contents of the assets folder:"
+          ls -R ${{ github.workspace }}/server/assets
 
       - name: Report Test Errors
-        # if: steps.run_tests.outputs.test_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
-        if: steps.run_tests.outputs.test_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/github-script@v5
         with:
           script: |
             const fs = require('fs');
             const testLog = fs.readFileSync('test_output.log', 'utf8');
-            # const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
-            const vitest_e2e_log = testLog;
+            const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
+            const vitest_e2e_log = testLog + "\n" + e2eLog;
             const prNumber = context.payload.pull_request?.number;
             if (prNumber) {
               const message = `🚨 Vitest tests or E2E tests have failed. Please check the test logs for more information.\n\n\`\`\`\n${testLog}\n\`\`\``;
