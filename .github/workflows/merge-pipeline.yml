@@ -130,6 +130,16 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          restore-keys: |
+            playwright-browsers-${{ runner.os }}-
+            playwright-browsers-
+
       - name: Install Playwright Dependencies
         run: yarn playwright install --with-deps
 
