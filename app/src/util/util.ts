@@ -232,15 +232,15 @@ export function getChildRenderColumns(
   parent: RenderColumnInfo | undefined,
   columnHashMap: Map<string, RenderColumnInfo>
 ): RenderColumnInfo[] {
-  if (!parent) return [];
-  return parent.children
-    .map((child) => {
-      const childColumn = columnHashMap.get(child);
-      if (!childColumn) {
-        console.error("Failed to find child column", child, "in columnHashMap");
-        return null;
-      }
-      return childColumn;
-    })
-    .filter((child): child is RenderColumnInfo => child !== null);
+  const result: RenderColumnInfo[] = [];
+  if (!parent) return result;
+  for (const childId of parent.children) {
+    const child = columnHashMap.get(childId);
+    if (child) {
+      result.push(child);
+    } else {
+      // console.error("Missing child column:", childId);
+    }
+  }
+  return result;
 }

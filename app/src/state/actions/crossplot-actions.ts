@@ -393,7 +393,35 @@ export const sendCrossPlotConversionRequest = action(
         columnRoot.children.push(datapack.columnInfo);
       }
       const columnCopy = cloneDeep(columnRoot);
-      const chartSettingsCopy = cloneDeep(state.settings);
+      const chartSettingsCopy: ChartSettings = cloneDeep({
+        timeSettings: {
+          [state.crossPlot.chartX!.units]: {
+            selectedStage: "",
+            topStageAge: state.crossPlot.chartXTimeSettings.topStageAge,
+            topStageKey: "",
+            baseStageAge: state.crossPlot.chartXTimeSettings.baseStageAge,
+            baseStageKey: "",
+            unitsPerMY: state.crossPlot.chartXTimeSettings.unitsPerMY,
+            skipEmptyColumns: true
+          },
+          [state.crossPlot.chartY!.units]: {
+            selectedStage: "",
+            topStageAge: state.crossPlot.chartYTimeSettings.topStageAge,
+            topStageKey: "",
+            baseStageAge: state.crossPlot.chartYTimeSettings.baseStageAge,
+            baseStageKey: "",
+            unitsPerMY: state.crossPlot.chartYTimeSettings.unitsPerMY,
+            skipEmptyColumns: true
+          }
+        },
+        noIndentPattern: false,
+        enableColumnBackground: false,
+        enableChartLegend: false,
+        enablePriority: false,
+        enableHideBlockLabel: false,
+        mouseOverPopupsEnabled: false,
+        datapackContainsSuggAge: false
+      });
       const xmlSettings = jsonToXml(columnCopy, state.crossPlot.columnHashMap, chartSettingsCopy);
       const body: ConvertCrossPlotRequest = {
         datapackUniqueIdentifiers: state.crossPlot.chartY.columnRef.datapackUniqueIdentifiers,

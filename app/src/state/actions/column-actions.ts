@@ -564,7 +564,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       enableTitle: renderColumn.enableTitle,
       width: renderColumn.width,
       rgb: toJS(renderColumn.rgb),
-      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings),
+      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings)
     }),
     (updated) => {
       column.fontsInfo = updated.fontsInfo;
@@ -1358,45 +1358,30 @@ export const changeZoneColumnOrientation = action((column: RenderColumnInfo, new
 
 export const setShowOfAllChildren = action(
   async (
-    root: RenderColumnInfo,
+    column: RenderColumnInfo,
     columnHashMap: Map<string, RenderColumnInfo>,
     isShown: boolean,
     counter = { count: 0 }
   ) => {
-    const stack: RenderColumnInfo[] = [root];
-
-    while (stack.length > 0) {
-      const column = stack.pop()!;
-      runInAction(() => {
-        column.show = isShown;
-      });
-      await yieldControl(counter, 30);
-
-      for (const child of getChildRenderColumns(column, columnHashMap)) {
-        stack.push(child);
-      }
+    column.show = isShown;
+    await yieldControl(counter, 30);
+    for (const child of getChildRenderColumns(column, columnHashMap)) {
+      await setShowOfAllChildren(child, columnHashMap, isShown, counter);
     }
   }
 );
 
 export const setExpansionOfAllChildren = action(
   async (
-    root: RenderColumnInfo,
+    column: RenderColumnInfo,
     columnHashMap: Map<string, RenderColumnInfo>,
     isExpanded: boolean,
     counter = { count: 0 }
   ) => {
-    const stack: RenderColumnInfo[] = [root];
-
-    while (stack.length > 0) {
-      const column = stack.pop()!;
-      runInAction(() => {
-        column.expanded = isExpanded;
-      });
-      await yieldControl(counter, 5);
-      for (const child of getChildRenderColumns(column, columnHashMap).reverse()) {
-        stack.push(child);
-      }
+    column.expanded = isExpanded;
+    await yieldControl(counter, 5);
+    for (const child of getChildRenderColumns(column, columnHashMap)) {
+      await setExpansionOfAllChildren(child, columnHashMap, isExpanded, counter);
     }
   }
 );
