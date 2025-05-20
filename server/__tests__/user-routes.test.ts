@@ -10,7 +10,7 @@ import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
 import {
   fetchPublicUserDatapack,
-  uploadTreatiseDatapack,
+  uploadExternalDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata,
   deleteUserHistory
@@ -214,7 +214,7 @@ beforeAll(async () => {
   });
   await app.register(userRoutes, { prefix: "/user" });
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
-  app.post("/external-chart", uploadTreatiseDatapack);
+  app.post("/external-chart", uploadExternalDatapack);
   app.get("/user/history", fetchUserHistoryMetadata);
   app.get("/user/history/:timestamp", fetchUserHistory);
   app.delete("/user/history/:timestamp", deleteUserHistory);
@@ -950,7 +950,7 @@ describe("uploadDatapack tests", () => {
   });
 });
 
-describe("uploadTreatiseDatapack", () => {
+describe("uploadExternalDatapack", () => {
   it("should return 401 if authorization header is missing", async () => {
     const response = await app.inject({
       method: "POST",
@@ -1046,7 +1046,7 @@ describe("uploadTreatiseDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      headers: { Authorization: "Bearer correct_token", datapacktitle: "test", datapackHash: "test" },
       payload: {
         datapack: {
           value: Buffer.from("test"),
@@ -1068,7 +1068,7 @@ describe("uploadTreatiseDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token", Phylum: "test", datapackHash: "test" },
+      headers: { Authorization: "Bearer correct_token", datapacktitle: "test", datapackHash: "test" },
       payload: {
         datapack: {
           value: Buffer.from("test"),

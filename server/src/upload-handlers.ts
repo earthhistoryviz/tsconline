@@ -419,7 +419,7 @@ export async function processMultipartPartsForDatapackUpload(
     }
   }
   const user = await findUser({ uuid }).catch(() => []);
-  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
+  if ((!uuid || !user || !user[0]) && uuid !== "official") {
     return { code: 404, message: "User not found" };
   }
   const isProOrAdmin = user[0] && (user[0].isAdmin || user[0].accountType === "pro");

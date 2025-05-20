@@ -5,7 +5,7 @@ import { useContext, useRef, useState } from "react";
 import { context } from "../state";
 import { ColDef, RowDragEndEvent, ValueSetterParams } from "ag-grid-community";
 import { TSCButton, DatapackUploadForm } from "../components";
-import { Datapack, DatapackPriorityChangeRequest, assertDatapack } from "@tsconline/shared";
+import { Datapack, DatapackPriorityChangeRequest, assertDatapackMetadata } from "@tsconline/shared";
 import { compareExistingDatapacks } from "../state/non-action-util";
 import { pushError } from "../state/actions";
 import { ErrorCodes } from "../util/error-codes";
@@ -58,10 +58,8 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
       checkboxSelection: true
     },
     { headerName: "File Name", field: "originalFileName", flex: 1, sortable: true, filter: true },
-    { headerName: "Age Units", field: "ageUnits", flex: 0.5 },
     { headerName: "Description", field: "description", flex: 1 },
-    { headerName: "Size", field: "size", flex: 0.5 },
-    { headerName: "Format Version", field: "formatVersion", flex: 0.8 }
+    { headerName: "Size", field: "size", flex: 0.5 }
   ];
   // delete selected datapacks
   const deleteDatapacks = async () => {
@@ -69,7 +67,7 @@ export const AdminDatapackConfig = observer(function AdminDatapackConfig() {
     if (!selectedNodes || !selectedNodes.length) return;
     try {
       const datapacks = selectedNodes.map((node) => {
-        assertDatapack(node.data);
+        assertDatapackMetadata(node.data);
         return node.data;
       });
       await actions.adminDeleteOfficialDatapacks(datapacks);
