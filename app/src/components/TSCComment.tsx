@@ -89,6 +89,8 @@ export const Comment = ({
       } else {
         if (response.status === 500) {
           actions.pushError(ErrorCodes.DATAPACK_COMMENT_REPORT_FAILED);
+        } else if (response.status === 404) {
+          actions.pushError(ErrorCodes.DATAPACK_COMMENT_NOT_FOUND);
         }
       }
       handleClose();

@@ -18,7 +18,8 @@ import {
   adminUploadDatapack,
   adminUploadFilesToWorkshop,
   adminUploadCoverPictureToWorkshop,
-  adminFetchSingleOfficialDatapack
+  adminFetchSingleOfficialDatapack,
+  adminDeleteDatapackComment
 } from "./admin-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
@@ -184,6 +185,13 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["workshopId"]
   };
+  const deleteDatapackCommentParams = {
+    type: "object",
+    properties: {
+      commentId: { type: "number" }
+    },
+    required: ["commentId"]
+  };
 
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);
@@ -298,5 +306,10 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop/cover/:workshopId",
     { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopCoverParams } },
     adminUploadCoverPictureToWorkshop
+  );
+  fastify.delete(
+    "/datapack/comment/:commentId",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: deleteDatapackCommentParams } },
+    adminDeleteDatapackComment
   );
 };

@@ -176,8 +176,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     updateDatapackComment
   );
-  fastify.post(
-    "/datapack/comments/delete/:commentId",
+  fastify.delete(
+    "/datapack/comments/:commentId",
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: deleteDatapackCommentParams }

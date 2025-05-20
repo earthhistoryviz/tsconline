@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { state } from "..";
+import { actions, state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -960,6 +960,39 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
         case 415:
           errorCode = ErrorCodes.INVALID_FILE_FORMAT;
           break;
+      }
+      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+    }
+  } catch (error) {
+    console.error(error);
+    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
+/**
+ * Delete datapack comment
+ * @param commentId ID of comment to be deleted
+ * @returns Whether the operation was successful
+ */
+
+export const adminDeleteDatapackComment = action(async (commentId: number) => {
+  const recaptchaToken = await getRecaptchaToken("adminDeleteDatapackComment");
+  if (!recaptchaToken) return;
+  try {
+    const response = await fetcher(`/admin/datapack/comment/${commentId}`, {
+      method: "DELETE",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+
+    if (response.ok) {
+      return true;
+    } else {
+      let errorCode = ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED;
+      if (response.status === 404) {
+        errorCode = ErrorCodes.DATAPACK_COMMENT_NOT_FOUND;
       }
       displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
     }

@@ -29,8 +29,10 @@ export const Discussion = ({ state }: DiscussionProps) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [input, setInput] = useState("");
   const { uuid, username } = state.user;
+
   useEffect(() => {
     if (!id) return;
+    // fetches datapack comments
     async function fetchComments() {
       if (!id) {
         return;
@@ -72,6 +74,7 @@ export const Discussion = ({ state }: DiscussionProps) => {
     if (!id || input === "") {
       return;
     }
+
     try {
       const recaptchaToken: string = await executeRecaptcha("addComment");
       if (!recaptchaToken) {
@@ -124,15 +127,23 @@ export const Discussion = ({ state }: DiscussionProps) => {
     }
   };
 
-  const deleteComment = async (id: number, uuid: string) => {
+  const deleteComment = async (id: number) => {
+    if (state.user.isAdmin) {
+      const response = await actions.adminDeleteDatapackComment(id);
+      if (!response) {
+        actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
+      }
+      actions.pushSnackbar("Comment deleted.", "success");
+      return;
+    }
     try {
       const recaptchaToken: string = await executeRecaptcha("deleteComment");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         return;
       }
-      const response = await fetcher(`/user/datapack/comments/delete/${id}`, {
-        method: "POST",
+      const response = await fetcher(`/user/datapack/comments/${id}`, {
+        method: "DELETE",
         headers: {
           "recaptcha-token": recaptchaToken
         },
@@ -145,6 +156,8 @@ export const Discussion = ({ state }: DiscussionProps) => {
       } else {
         if (response.status === 500) {
           actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
+        } else if (response.status === 404) {
+          actions.pushError(ErrorCodes.DATAPACK_COMMENT_NOT_FOUND);
         }
       }
     } catch (e) {
@@ -189,14 +202,14 @@ export const Discussion = ({ state }: DiscussionProps) => {
           <div className={styles.commentsContainer}>
             {comments.map((comment) => (
               <Comment
-                key={comment.id}
+                key={`${comment.id}${comment.uuid}`}
                 id={comment.id}
                 username={comment.username}
                 dateCreated={comment.dateCreated}
                 text={comment.text}
                 isSelf={comment.uuid === uuid}
                 isFlagged={comment.isFlagged}
-                handleDelete={() => deleteComment(comment.id, comment.uuid)}
+                handleDelete={() => deleteComment(comment.id)}
                 userLoggedIn={state.isLoggedIn}
                 userIsAdmin={state.user.isAdmin}
                 uuid={uuid}
