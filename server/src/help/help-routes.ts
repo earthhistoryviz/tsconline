@@ -6,6 +6,7 @@ export const fetchMarkdownFiles = async function fetchMarkdownFiles(_request: Fa
     const tree = await processMarkdownTree();
     return reply.status(200).send(tree);
   } catch (e) {
+    console.error("Error fetching markdown files:", e);
     return reply.status(500).send({ error: "Failed to fetch markdown files" });
   }
 };

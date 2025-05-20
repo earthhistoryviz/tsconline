@@ -13,7 +13,7 @@ export const processMarkdownTree = async () => {
     const files = await readdir(path, { withFileTypes: true });
     for (const file of files) {
       const filePath = `${path}/${file.name}`;
-      if (file.isDirectory()) {
+      if (file.isDirectory() && file.name !== ".git") {
         const child: MarkdownTree = {};
         tree[file.name] = child;
         await addToTree(filePath, child);
@@ -26,8 +26,6 @@ export const processMarkdownTree = async () => {
           ...data,
           markdown: body
         };
-      } else {
-        throw new Error(`File ${filePath} is not a markdown file or directory`);
       }
     }
   };
