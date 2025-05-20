@@ -326,13 +326,14 @@ type DatapackProfileContentProps = {
   datapack: Datapack;
 };
 const DatapackProfileContent: React.FC<DatapackProfileContentProps> = ({ index, datapack }) => {
+  const { state } = useContext(context);
   switch (index) {
     case 0:
       return <About datapack={datapack} />;
     case 1:
       return <ViewData datapack={datapack} />;
     case 2:
-      return <Discussion />;
+      return <Discussion state={state} />;
     case 3:
       return (
         datapack.warnings &&

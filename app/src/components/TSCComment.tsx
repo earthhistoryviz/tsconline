@@ -26,12 +26,13 @@ export type TSCCommentProps = CommentType & {
   handleDelete: (id: number) => void;
   userLoggedIn: boolean;
   userIsAdmin: boolean;
+  isSelf: boolean;
 };
 
 export const Comment = ({
   id,
   username,
-  date,
+  dateCreated,
   text,
   isSelf = false,
   isFlagged = false,
@@ -46,7 +47,7 @@ export const Comment = ({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [flagged, setFlagged] = useState(isFlagged);
-  const formattedDate = date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+  const formattedDate = dateCreated.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     if (isMobile) {
@@ -62,11 +63,11 @@ export const Comment = ({
   };
 
   const handleReport = async () => {
-    setFlagged(true);
     try {
       const recaptchaToken: string = await executeRecaptcha("updateComment");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
+        handleClose();
         return;
       }
       const response = await fetcher(`/user/datapack/comments/report/${id}`, {
@@ -81,14 +82,19 @@ export const Comment = ({
         })
       });
       if (response.ok) {
+        setFlagged(true);
+        actions.pushSnackbar("Comment reported.", "success");
+
         actions.removeAllErrors();
       } else {
-        console.log("error", response);
+        if (response.status === 500) {
+          actions.pushError(ErrorCodes.DATAPACK_COMMENT_REPORT_FAILED);
+        }
       }
+      handleClose();
     } catch (e) {
       console.log("error", e);
     }
-    handleClose();
   };
 
   const handleDeleteComment = async () => {
@@ -113,7 +119,7 @@ export const Comment = ({
           vertical: isMobile ? "bottom" : "top",
           horizontal: isMobile ? "center" : "left"
         }}>
-        <MenuItem onClick={() => handleReport()}>
+        <MenuItem onClick={() => handleReport()} disabled={!userLoggedIn}>
           <OutlinedFlagIcon sx={{ color: "text.primary" }} />
           <Typography color="text.primary">{t("general-actions.report")}</Typography>
         </MenuItem>
@@ -140,10 +146,15 @@ export const Comment = ({
         }}>
         <DialogContent sx={{ p: 2 }}>
           <Box>
-            <MenuItem onClick={() => handleReport()}>
+            <MenuItem
+              onClick={handleReport}
+              disabled={!userLoggedIn}
+              sx={{ pointerEvents: !userLoggedIn ? "auto" : "initial" }} // Ensures tooltip still shows
+            >
               <OutlinedFlagIcon sx={{ color: "text.primary" }} />
               <Typography color="text.primary">{t("general-actions.report")}</Typography>
             </MenuItem>
+
             {((isSelf && userLoggedIn) || userIsAdmin) && (
               <MenuItem onClick={() => handleDeleteComment()}>
                 <DeleteIcon sx={{ color: "text.primary" }} />

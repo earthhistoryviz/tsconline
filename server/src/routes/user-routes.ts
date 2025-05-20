@@ -655,6 +655,17 @@ export const deleteDatapackComment = async function deleteDatapackComment(
   const { commentId } = request.params;
 
   try {
+    const comment = await findDatapackComment({ id: commentId });
+    // check that user deleting comment is same user that posted comment
+    if (comment.length && comment[0]?.uuid !== uuid) {
+      reply.status(500).send({ error: "Cannot delete other's comments." });
+    }
+    reply.send({ message: "Datapack comment deleted." });
+  } catch (e) {
+    reply.status(500).send({ error: "Error deleting datapack comment" });
+  }
+
+  try {
     await deleteComment({ id: commentId });
     reply.send({ message: "Datapack comment deleted." });
   } catch (e) {

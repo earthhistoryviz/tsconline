@@ -4,29 +4,33 @@ import { CustomDivider } from "./TSCComponents";
 import PersonIcon from "@mui/icons-material/Person";
 import SendIcon from "@mui/icons-material/Send";
 import { Comment } from "./TSCComment";
-import { useContext, useEffect, useState } from "react";
-import { actions, context } from "../state";
+import { useEffect, useState } from "react";
+import { actions, State } from "../state";
 import { executeRecaptcha, fetcher } from "../util";
 import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
+
+type DiscussionProps = {
+  state: State;
+};
 
 export type CommentType = {
   id: number;
   username: string;
   uuid: string;
-  date: Date;
+  dateCreated: Date;
   text: string;
   isSelf?: boolean;
   isFlagged?: boolean;
 };
 
-export const Discussion = () => {
-  const { state } = useContext(context);
+export const Discussion = ({ state }: DiscussionProps) => {
   const { id } = useParams();
   const [comments, setComments] = useState<CommentType[]>([]);
   const [input, setInput] = useState("");
-
+  const { uuid, username } = state.user;
   useEffect(() => {
+    if (!id) return;
     async function fetchComments() {
       if (!id) {
         return;
@@ -42,17 +46,20 @@ export const Discussion = () => {
           for (const com of commentsArray) {
             const loadedComment: CommentType = {
               ...com,
-              date: new Date(com.dateCreated),
+              dateCreated: new Date(com.dateCreated),
               isFlagged: Boolean(com.flagged),
-              text: com.commentText,
-              isSelf: com.uuid === state.user.uuid
+              isSelf: com.uuid === uuid,
+              text: com.commentText
             };
             loadedComments.push(loadedComment);
           }
+          loadedComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
           setComments(loadedComments);
           actions.removeAllErrors();
         } else {
-          console.log("error", response);
+          if (response.status === 500) {
+            actions.pushError(ErrorCodes.DATAPACK_COMMENT_FETCH_FAILED);
+          }
         }
       } catch (e) {
         console.log("error", e);
@@ -62,13 +69,9 @@ export const Discussion = () => {
   }, [id]);
 
   const addComment = async () => {
-    if (input === "") {
+    if (!id || input === "") {
       return;
     }
-    if (!id) {
-      return;
-    }
-    const date = new Date();
     try {
       const recaptchaToken: string = await executeRecaptcha("addComment");
       if (!recaptchaToken) {
@@ -90,29 +93,35 @@ export const Discussion = () => {
       if (response.ok) {
         const data = await response.json();
         const newCommentId = data.id;
+        const date = new Date();
         setComments((prevState) => {
           const newComments = [
             {
-              username: state.user.username,
-              date,
+              username: username,
+              dateCreated: date,
               text: input,
               isSelf: true,
               id: newCommentId,
-              uuid: state.user.uuid
+              uuid: uuid,
+              isFlagged: false
             },
             ...prevState
           ];
-          newComments.sort((a, b) => b.date.getTime() - a.date.getTime());
+          newComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+          setInput("");
           return newComments;
         });
         actions.removeAllErrors();
       } else {
-        console.log("error", response);
+        if (response.status === 401) {
+          actions.pushError(ErrorCodes.NOT_LOGGED_IN);
+        } else if (response.status === 500) {
+          actions.pushError(ErrorCodes.DATAPACK_COMMENT_CREATION_FAILED);
+        }
       }
     } catch (e) {
       console.log("error", e);
     }
-    setInput("");
   };
 
   const deleteComment = async (id: number, uuid: string) => {
@@ -120,10 +129,6 @@ export const Discussion = () => {
       const recaptchaToken: string = await executeRecaptcha("deleteComment");
       if (!recaptchaToken) {
         actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
-        return;
-      }
-      if (state.user.uuid !== uuid) {
-        actions.pushError(ErrorCodes.UNABLE_TO_VERIFY_ACCOUNT);
         return;
       }
       const response = await fetcher(`/user/datapack/comments/delete/${id}`, {
@@ -135,9 +140,12 @@ export const Discussion = () => {
       });
       if (response.ok) {
         setComments((prevState) => prevState.filter((comment) => comment.id !== id));
+        actions.pushSnackbar("Comment deleted.", "success");
         actions.removeAllErrors();
       } else {
-        console.log("error", response);
+        if (response.status === 500) {
+          actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
+        }
       }
     } catch (e) {
       console.log("error", e);
@@ -159,11 +167,12 @@ export const Discussion = () => {
           placeholder="Write your comment here"
           size="small"
           value={input}
+          disabled={!state.isLoggedIn}
           onChange={(e) => setInput(e.target.value)}
           inputProps={{ className: styles.userinput }}
           InputProps={{ classes: { notchedOutline: styles.notchedOutline }, className: styles.userInput }}
         />
-        <IconButton className={styles.send} onClick={addComment}>
+        <IconButton className={styles.send} onClick={addComment} disabled={!state.isLoggedIn}>
           <SendIcon />
         </IconButton>
       </div>
@@ -178,19 +187,19 @@ export const Discussion = () => {
           </>
         ) : (
           <div className={styles.commentsContainer}>
-            {comments.map((comment, index) => (
+            {comments.map((comment) => (
               <Comment
-                key={index}
+                key={comment.id}
                 id={comment.id}
                 username={comment.username}
-                date={comment.date}
+                dateCreated={comment.dateCreated}
                 text={comment.text}
-                isSelf={comment?.isSelf}
+                isSelf={comment.uuid === uuid}
                 isFlagged={comment.isFlagged}
                 handleDelete={() => deleteComment(comment.id, comment.uuid)}
                 userLoggedIn={state.isLoggedIn}
                 userIsAdmin={state.user.isAdmin}
-                uuid={state.user.uuid}
+                uuid={uuid}
               />
             ))}
           </div>

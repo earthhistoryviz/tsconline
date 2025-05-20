@@ -412,6 +412,7 @@ export async function createDatapackComment(newDatapackComment: NewDatapackComme
 export async function findDatapackComment(criteria: Partial<DatapackComment>) {
   let query = db.selectFrom("comments");
   if (criteria.uuid) query = query.where("uuid", "=", criteria.uuid);
+  if (criteria.id) query = query.where("id", "=", criteria.id);
   if (criteria.commentText) query = query.where("commentText", "=", criteria.commentText);
   if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
   if (criteria.dateCreated) query = query.where("dateCreated", "=", criteria.dateCreated);
