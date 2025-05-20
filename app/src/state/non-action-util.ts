@@ -255,7 +255,7 @@ export function getWorkshopCoverImage(workshopId: number) {
 }
 
 export function getHelpKeysFromPath(path: string) {
-  path = decodeURIComponent(path)
+  path = decodeURIComponent(path);
   const keys = path.split("/help/")[1]?.split("/") || [];
   return keys;
 }

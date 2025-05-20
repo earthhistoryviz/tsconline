@@ -1,20 +1,18 @@
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Box, Collapse, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
 import { createContext, useContext, useState } from "react";
 import { ExpandLess } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import "./HelpDrawer.css";
-import { generatePath, getHelpKeysFromPath } from "./state/non-action-util";
+import { generatePath } from "./state/non-action-util";
 import { MarkdownFile, MarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
-import { getMarkdownTreeEntryFromPath } from "./Help";
 
 type HelpDrawerContextType = {
   selectedMarkdown: MarkdownFile | undefined;
-}
+};
 export const HelpDrawerContext = createContext<HelpDrawerContextType>({
   selectedMarkdown: undefined
-})
-
+});
 
 function doesMarkdownTreeContainFile(markdownFile: MarkdownTree, target: MarkdownFile) {
   for (const value of Object.values(markdownFile)) {
@@ -34,7 +32,7 @@ function NavItem({
 }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const { selectedMarkdown } = useContext(HelpDrawerContext)
+  const { selectedMarkdown } = useContext(HelpDrawerContext);
   const isSelected = selectedMarkdown === markdownTree ? "selected-column" : "";
   const theme = useTheme(); // Moved inside the component
 
@@ -48,10 +46,9 @@ function NavItem({
       navigate(`/help${formattedPath}`);
     }
   };
-  const isParent = isMarkdownParent(markdownTree)
-  const containsSelectedChild = selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownTree, selectedMarkdown)
-    ? { opacity: 1 }
-    : {};
+  const isParent = isMarkdownParent(markdownTree);
+  const containsSelectedChild =
+    selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownTree, selectedMarkdown) ? { opacity: 1 } : {};
   return (
     <>
       <ListItem disablePadding>

@@ -225,9 +225,10 @@ export const Help = observer(function Help() {
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
           <StyledScrollbar>
-            <HelpDrawerContext.Provider value={{
-              selectedMarkdown: isMarkdownFile(markdownContent) ? markdownContent : undefined
-            }}>
+            <HelpDrawerContext.Provider
+              value={{
+                selectedMarkdown: isMarkdownFile(markdownContent) ? markdownContent : undefined
+              }}>
               <HelpDrawer markdownTree={markdownTree} />
             </HelpDrawerContext.Provider>
           </StyledScrollbar>
