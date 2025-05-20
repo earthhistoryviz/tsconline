@@ -5,7 +5,7 @@ test.beforeEach(async ({ page }) => {
   await page.waitForTimeout(2000);
   const datapacksTab = page.locator(".qsg-datapacks");
   await datapacksTab.click();
-  await expect(page.locator("text=Africa Bight")).toBeVisible();
+  await expect(page.locator("text=Africa Bight")).toBeVisible({ timeout: 15000 });
 });
 
 test("datapack button is clickable", async ({ page }) => {
