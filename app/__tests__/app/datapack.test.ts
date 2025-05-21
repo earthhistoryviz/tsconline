@@ -26,6 +26,8 @@ test("datapack button is clickable", async ({ page }) => {
   await expect(page.locator("text=View Data")).toBeVisible();
   await expect(page.locator("text=Discussion")).toBeVisible();
   await expect(page.locator("text=Warnings")).toBeVisible();
+
+  await expect(page.locator("text=poop")).toBeVisible();
 });
 
 test("add-circle button is clickable", async ({ page }) => {
