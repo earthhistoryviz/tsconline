@@ -431,12 +431,12 @@ export async function findCurrentDatapackComments(criteria: Partial<DatapackComm
           "comments.commentText",
           "comments.dateCreated",
           "comments.uuid",
+          "comments.flagged",
           "users.username",
           "users.pictureUrl"
         ])
         .where("comments.datapackTitle", "=", criteria.datapackTitle)
         .orderBy("comments.dateCreated", "desc");
-      // if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
       return await query.execute();
     }
   } catch (e) {

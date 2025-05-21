@@ -308,7 +308,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     adminUploadCoverPictureToWorkshop
   );
   fastify.delete(
-    "/datapack/comment/:commentId",
+    "/datapack/comments/:commentId",
     { config: { rateLimit: moderateRateLimit }, schema: { params: deleteDatapackCommentParams } },
     adminDeleteDatapackComment
   );

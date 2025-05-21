@@ -913,12 +913,12 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
   try {
     const comment = await findDatapackComment({ id: commentId });
     if (!comment || comment.length < 1 || !comment[0]) {
-      reply.status(404).send({ error: "Datapack comment not found" });
+      reply.status(404).send({ error: "Requested comment not found." });
       return;
     }
     await deleteComment({ id: commentId });
   } catch (error) {
-    reply.status(500).send({ error: "Unknown error" });
+    reply.status(500).send({ error: "Error deleting datapack comment" });
     return;
   }
   reply.send({ message: "Datapack comment deleted" });

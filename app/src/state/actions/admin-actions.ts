@@ -979,7 +979,7 @@ export const adminDeleteDatapackComment = action(async (commentId: number) => {
   const recaptchaToken = await getRecaptchaToken("adminDeleteDatapackComment");
   if (!recaptchaToken) return;
   try {
-    const response = await fetcher(`/admin/datapack/comment/${commentId}`, {
+    const response = await fetcher(`/admin/datapack/comments/${commentId}`, {
       method: "DELETE",
       credentials: "include",
       headers: {

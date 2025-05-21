@@ -22,14 +22,14 @@ export type CommentType = {
   text: string;
   isSelf?: boolean;
   isFlagged?: boolean;
-  pictureUrl?: string;
+  pictureUrl?: string | null;
 };
 
 export const Discussion = ({ state }: DiscussionProps) => {
   const { id } = useParams();
   const [comments, setComments] = useState<CommentType[]>([]);
   const [input, setInput] = useState("");
-  const { uuid, username } = state.user;
+  const { uuid, username, pictureUrl } = state.user;
 
   useEffect(() => {
     if (!id) return;
@@ -48,7 +48,10 @@ export const Discussion = ({ state }: DiscussionProps) => {
           const loadedComments: CommentType[] = [];
           for (const com of commentsArray) {
             const loadedComment: CommentType = {
-              ...com,
+              id: com.id,
+              username: com.username,
+              uuid: com.uuid,
+              pictureUrl: com.pictureUrl,
               dateCreated: new Date(com.dateCreated),
               isFlagged: Boolean(com.flagged),
               isSelf: com.uuid === uuid,
@@ -107,7 +110,8 @@ export const Discussion = ({ state }: DiscussionProps) => {
               isSelf: true,
               id: newCommentId,
               uuid: uuid,
-              isFlagged: false
+              isFlagged: false,
+              pictureUrl: pictureUrl ?? null
             },
             ...prevState
           ];
@@ -115,6 +119,7 @@ export const Discussion = ({ state }: DiscussionProps) => {
           setInput("");
           return newComments;
         });
+        actions.pushSnackbar("Comment added.", "success");
         actions.removeAllErrors();
       } else {
         if (response.status === 401) {
