@@ -130,17 +130,23 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          version=$(node -p "require('./package.json').dependencies['@playwright/test'] || require('./package.json').devDependencies['@playwright/test']")
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
       - name: Cache Playwright Browsers
         uses: actions/cache@v4
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-browsers-${{ runner.os }}-${{ hashFiles('**/package-lock.json', '**/yarn.lock') }}
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
           restore-keys: |
-            playwright-browsers-${{ runner.os }}-
-            playwright-browsers-
+            ${{ runner.os }}-playwright-
 
-      - name: Install Playwright Dependencies
+      - name: Install Playwright Browsers (if not cached)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: yarn playwright install --with-deps
 
       - name: Build the project
@@ -219,9 +225,9 @@ jobs:
         id: run_tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
-            # Xvfb :1 -screen 0 1024x768x16 &
-            # export DISPLAY=:1
-            # yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
+          # Xvfb :1 -screen 0 1024x768x16 &
+          # export DISPLAY=:1
+          # yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
 
       - name: Run Tests and Coverage (Exclude Encryption)
         id: run_tests_exclude_encryption
@@ -346,6 +352,8 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: e2e_tests
         run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
           yarn test:charts:ci charts.test.ts > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
           pr_jar=${{ steps.move_jar.outputs.pr_jar }}
