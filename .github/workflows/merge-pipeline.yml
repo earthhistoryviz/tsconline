@@ -352,8 +352,8 @@ jobs:
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: e2e_tests
         run: |
-          Xvfb :1 -screen 0 1024x768x16 &
-          export DISPLAY=:1
+          # Xvfb :1 -screen 0 1024x768x16 &
+          # export DISPLAY=:1
           yarn test:charts:ci charts.test.ts > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
           pr_jar=${{ steps.move_jar.outputs.pr_jar }}
@@ -417,14 +417,6 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload E2E Screenshots
-        if: steps.e2e_tests.outputs.e2e_failed == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-screenshots-${{ github.run_id }}
-          path: screenshots/
-          retention-days: 7
-
       - name: Report E2E Test Errors
         if: steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/github-script@v5
@@ -443,7 +435,15 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Comment E2E Screenshot Link
+      - name: Upload E2E Traces
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-traces-${{ github.run_id }}
+          path: traces/
+          retention-days: 7
+
+      - name: Comment E2E Trace Link
         if: steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/github-script@v6
         with:
@@ -456,7 +456,7 @@ jobs:
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `🖼️ Screenshots for failed E2E tests are available in the [Artifacts tab](https://github.com/${{ github.repository }}/actions/runs/${runId})`
+                body: `🧩 Playwright traces for failed E2E tests are available in the [Artifacts tab](https://github.com/${{ github.repository }}/actions/runs/${runId})`
               });
             }
 
