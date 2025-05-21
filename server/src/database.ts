@@ -66,7 +66,8 @@ Database Schema Details (Post-Migration):
 
 - datapackComments Table:
   - id (integer):  Primary key, auto-increment.
-  - userId (integer): Non-nullable, links to the users table.
+  - uuid (text): Non-nullable, the author's uuid.
+  - username (text): Non-nullable, the author's username.
   - datapackName (text): Non-nullable, references datapack that comment is attached to.
   - commentText (text): Non-nullable, text content of comment.
   - dateCreated (datetime): Non-nullable, the date/time of when the comment is created.
