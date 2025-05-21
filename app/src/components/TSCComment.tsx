@@ -31,7 +31,7 @@ export type TSCCommentProps = {
 };
 
 export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, userIsAdmin }: TSCCommentProps) => {
-  const { id, username, dateCreated, text, isFlagged, pictureUrl, uuid } = comment;
+  const { id, username, dateCreated, text, isFlagged, pictureUrl } = comment;
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
