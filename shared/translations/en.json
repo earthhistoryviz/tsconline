@@ -3,7 +3,9 @@
         "general-actions": {
             "save": "Save",
             "cancel": "Cancel",
-            "loading": "Loading"
+            "loading": "Loading",
+            "delete": "Delete",
+            "report": "Report"
         },
         "landing-page": {
             "get-started": "Get Started",
@@ -491,7 +493,8 @@
                     "notes-placeholder": "Enter notes for the datapack here",
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
                 },
-                "pdf-upload": "PDF Upload"
+                "pdf-upload": "PDF Upload",
+                "comment-flagged": "This comment has been flagged."
             }
         },
         "chart": {
