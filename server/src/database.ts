@@ -421,13 +421,29 @@ export async function findDatapackComment(criteria: Partial<DatapackComment>) {
 
 export async function findCurrentDatapackComments(criteria: Partial<DatapackComment>) {
   try {
-    let query = db.selectFrom("comments");
-    if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
-    return await query.selectAll().execute();
+    if (criteria.datapackTitle) {
+      // join with users table with uuid to get profile picture url's
+      const query = db
+        .selectFrom("comments")
+        .innerJoin("users", "comments.uuid", "users.uuid")
+        .select([
+          "comments.id",
+          "comments.commentText",
+          "comments.dateCreated",
+          "comments.uuid",
+          "users.username",
+          "users.pictureUrl"
+        ])
+        .where("comments.datapackTitle", "=", criteria.datapackTitle)
+        .orderBy("comments.dateCreated", "desc");
+      // if (criteria.datapackTitle) query = query.where("datapackTitle", "=", criteria.datapackTitle);
+      return await query.execute();
+    }
   } catch (e) {
     console.error("Error creating datapack comment:", e);
     throw e;
   }
+  return [];
 }
 
 export async function updateComment(

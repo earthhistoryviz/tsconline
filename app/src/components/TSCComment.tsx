@@ -22,24 +22,16 @@ import { executeRecaptcha, fetcher } from "../util";
 import { actions } from "../state";
 import { ErrorCodes } from "../util/error-codes";
 
-export type TSCCommentProps = CommentType & {
+export type TSCCommentProps = {
   handleDelete: (id: number) => void;
   userLoggedIn: boolean;
   userIsAdmin: boolean;
   isSelf: boolean;
+  comment: CommentType;
 };
 
-export const Comment = ({
-  id,
-  username,
-  dateCreated,
-  text,
-  isSelf = false,
-  isFlagged = false,
-  handleDelete,
-  userLoggedIn,
-  userIsAdmin
-}: TSCCommentProps) => {
+export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, userIsAdmin }: TSCCommentProps) => {
+  const { id, username, dateCreated, text, isFlagged, pictureUrl, uuid } = comment;
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -166,9 +158,13 @@ export const Comment = ({
           </Box>
         </DialogContent>
       </Dialog>
-      <Avatar>
-        <PersonIcon />
-      </Avatar>
+      {pictureUrl ? (
+        <Avatar src={pictureUrl} sx={{ border: "2px solid", borderColor: "gray" }} />
+      ) : (
+        <Avatar sx={{ border: "2px solid", borderColor: "gray" }}>
+          <PersonIcon />
+        </Avatar>
+      )}
       <div className={styles.textContainer}>
         <div className={styles.topTextContainer}>
           <Typography className={styles.usernameText}>{username}</Typography>

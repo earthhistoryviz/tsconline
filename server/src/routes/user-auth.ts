@@ -8,7 +8,6 @@ import {
   fetchWorkshopDatapack,
   downloadDatapackFilesZip,
   uploadDatapackComment,
-  fetchDatapackComments,
   updateDatapackComment,
   deleteDatapackComment
 } from "./user-routes.js";

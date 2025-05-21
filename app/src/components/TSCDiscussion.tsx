@@ -22,6 +22,7 @@ export type CommentType = {
   text: string;
   isSelf?: boolean;
   isFlagged?: boolean;
+  pictureUrl?: string;
 };
 
 export const Discussion = ({ state }: DiscussionProps) => {
@@ -203,16 +204,11 @@ export const Discussion = ({ state }: DiscussionProps) => {
             {comments.map((comment) => (
               <Comment
                 key={`${comment.id}${comment.uuid}`}
-                id={comment.id}
-                username={comment.username}
-                dateCreated={comment.dateCreated}
-                text={comment.text}
+                comment={comment}
                 isSelf={comment.uuid === uuid}
-                isFlagged={comment.isFlagged}
                 handleDelete={() => deleteComment(comment.id)}
                 userLoggedIn={state.isLoggedIn}
                 userIsAdmin={state.user.isAdmin}
-                uuid={uuid}
               />
             ))}
           </div>
