@@ -354,7 +354,7 @@ jobs:
         run: |
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
-          yarn test:charts:ci charts.test.ts > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
+          yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
 
           pr_jar=${{ steps.move_jar.outputs.pr_jar }}
           if [ -z "$pr_jar" ]; then
