@@ -569,7 +569,9 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       enableTitle: renderColumn.enableTitle,
       width: renderColumn.width,
       rgb: toJS(renderColumn.rgb),
-      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings)
+      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings),
+      showAgeLabels: renderColumn.showAgeLabels,
+      showUncertaintyLabels: renderColumn.showUncertaintyLabels
     }),
     (updated) => {
       column.fontsInfo = updated.fontsInfo;
@@ -579,6 +581,8 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       column.width = updated.width;
       column.rgb = updated.rgb;
       column.columnSpecificSettings = updated.columnSpecificSettings;
+      column.showAgeLabels = updated.showAgeLabels;
+      column.showUncertaintyLabels = updated.showUncertaintyLabels;
     }
   );
   renderColumn.dispose = () => {
@@ -755,7 +759,7 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
     if (thisToken !== currentSearchToken) return;
     const columnInfo = stack.pop()!;
 
-    if (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName)) {
+    if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
       setExpanded(true, columnInfo);
       await setExpansionOfAllChildren(columnInfo, columnHashMap, false);
