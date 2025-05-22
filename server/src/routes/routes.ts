@@ -32,21 +32,98 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
+import "dotenv/config";
+import { sendEmail } from "../send-email.js";
 
-export const submitBugReport = async function submitBugReport(
-  request: FastifyRequest<{ Body: { title: string; description: string } }>,
-  reply: FastifyReply
-) {
-  const { title, description } = request.body;
-  const response = await fetch("https://api.github.com/repos/earthhistoryviz/tsconline/issues", {
+export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
+  const parts = request.parts();
+  let title = "";
+  let description = "";
+  const files: { filename: string; buffer: Buffer }[] = [];
+  const owner = "earthhistoryviz";
+  const githubAPIUrl = `https://api.github.com/repos/${owner}`;
+  const bugReportRepo = "tsconline-bug-reports";
+  const uploadUrl = `${githubAPIUrl}/${bugReportRepo}/contents`;
+  const issuesUrl = `${githubAPIUrl}/tsconline/issues`;
+
+  const allowedExtensions = /\.(png|jpe?g|gif|svg|txt|log|json|csv)$/i;
+  const allowedMimeTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/svg+xml",
+    "text/plain",
+    "application/json",
+    "text/csv"
+  ];
+  for await (const part of parts) {
+    if (part.type === "file") {
+      const { filename, mimetype } = part;
+      if (!allowedExtensions.test(filename)) {
+        reply.status(400).send({ error: `Unsupported file extension: ${filename}` });
+        return;
+      }
+      if (!allowedMimeTypes.includes(mimetype)) {
+        reply.status(400).send({ error: `Unsupported MIME type: ${mimetype}` });
+        return;
+      }
+      const buffer = await part.toBuffer();
+      files.push({ filename, buffer });
+    } else if (part.type === "field") {
+      if (part.fieldname === "title") title = (part.value as string).trim();
+      else if (part.fieldname === "description") description = (part.value as string).trim();
+    }
+  }
+  if (!title || !description) {
+    reply.status(400).send({ error: "Title and description are required" });
+    return;
+  }
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const baseUploadPath = `bug-reports/${timestamp}-${Math.random().toString(36).slice(2, 4)}`;
+  const uploadedFileLinks: string[] = [];
+  for (const { filename, buffer } of files) {
+    const uploadPath = `${baseUploadPath}/${filename}`;
+    const uploadResponse = await fetch(`${uploadUrl}/${uploadPath}`, {
+      method: "PUT",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${process.env.GH_UPLOAD_TOKEN}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        message: `Upload ${filename} for bug report`,
+        content: buffer.toString("base64")
+      })
+    });
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      console.error("Error uploading file:", errorText);
+      reply.status(500).send({ error: "Failed to upload file" });
+      return;
+    }
+    const encodedFilename = encodeURIComponent(filename);
+    const rawUrl = `https://github.com/${owner}/${bugReportRepo}/raw/main/${baseUploadPath}/${encodedFilename}`;
+    const isImage = /\.(png|jpe?g|gif|svg)$/i.test(filename);
+    uploadedFileLinks.push(isImage ? `![${filename}](${rawUrl})` : `- [${filename}](${rawUrl})`);
+  }
+
+  const issueTitle = `Bug Report: ${title}`;
+  const issueBody = [
+    "## Description",
+    description,
+    uploadedFileLinks.length > 0 ? `## Attachments\n\n${uploadedFileLinks.join("\n")}` : ""
+  ].join("\n\n");
+  const response = await fetch(issuesUrl, {
     method: "POST",
     headers: {
       Accept: "application/vnd.github+json",
-      Authorization: `Bearer ${process.env.GITHUB_ISSUES_TOKEN}`,
+      Authorization: `Bearer ${process.env.GH_ISSUES_TOKEN}`
     },
     body: JSON.stringify({
-      title,
-      body: description
+      title: issueTitle,
+      body: issueBody,
+      labels: ["bug", "user-report"]
     })
   });
   if (!response.ok) {
@@ -54,6 +131,28 @@ export const submitBugReport = async function submitBugReport(
     console.error("Error submitting bug report:", errorText);
     reply.status(500).send({ error: "Failed to submit bug report" });
     return;
+  }
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    try {
+      const emailRecipients = process.env.BUG_REPORT_EMAILS?.split(",") || [];
+      const issueData = await response.json();
+      const issueUrl = issueData.html_url;
+      for (const to of emailRecipients) {
+        await sendEmail({
+          from: process.env.EMAIL_USER,
+          to,
+          subject: `New Bug Report: ${title}`,
+          preHeader: `A new bug report was submitted via the TSC Online site.`,
+          title: issueTitle,
+          message: `A new bug has been submitted.`,
+          action: "reporting a bug",
+          link: issueUrl,
+          buttonText: "View Issue"
+        });
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+    }
   }
   reply.send({ message: "Bug report submitted successfully" });
 };

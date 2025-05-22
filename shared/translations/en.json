@@ -672,7 +672,8 @@
             "title": "Error",
             "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
             "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further.",
-            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report."
+            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report.",
+            "INVALID_BUG_REPORT_FILE": "Attached files must be one of the following types: .png, .jpg, .jpeg, .gif, .svg, .txt, .log, .json, or .csv."
         },
         "button": {
             "generate": "Generate",

@@ -80,13 +80,32 @@ export const ReportBug: React.FC = () => {
       setDescriptionError(false);
     }
 
+    const allowedExtensions = /\.(png|jpe?g|gif|svg|txt|log|json|csv)$/i;
+    const allowedMimeTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/svg+xml",
+      "text/plain",
+      "application/json",
+      "text/csv"
+    ];
+    const invalidFile = (files || []).find(
+      (file) => !allowedExtensions.test(file.name) || !allowedMimeTypes.includes(file.type)
+    );
+
+    if (invalidFile) {
+      actions.pushError(ErrorCodes.INVALID_BUG_REPORT_FILE);
+      hasError = true;
+    }
+
     if (hasError) {
       return;
     }
 
     setLoading(true);
     try {
-      const success = await actions.submitBugReport(title, description)
+      const success = await actions.submitBugReport(title, description, files || []);
       if (!success) return;
       setIsSubmitted(true);
       const timer = setInterval(() => {
