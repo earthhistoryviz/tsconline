@@ -70,6 +70,36 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
+export const submitBugReport = action("submitBugReport", async (title: string, description: string, files: File[]) => {
+  try {
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("description", description);
+    for (const file of files) {
+      formData.append("files", file);
+    }
+    const response = await fetcher("/bug-report", {
+      method: "POST",
+      body: formData
+    });
+    const data = await response.json();
+    if (response.ok) {
+      pushSnackbar("Successfully submitted bug report", "success");
+      return true;
+    } else {
+      displayServerError(
+        data,
+        ErrorCodes.USER_SUBMIT_BUG_REPORT_FAILED,
+        ErrorMessages[ErrorCodes.USER_SUBMIT_BUG_REPORT_FAILED]
+      );
+    }
+  } catch (e) {
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+  return false;
+});
+
 /**
  * Fetches datapacks of any type from the server. If used to fetch private user/official datapacks or workshop datapacks, it requires recaptcha to be loaded.
  * @param metadata
