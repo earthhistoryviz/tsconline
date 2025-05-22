@@ -86,8 +86,8 @@ export const ReportBug: React.FC = () => {
 
     setLoading(true);
     try {
-      // TODO: add backend stuff. This is just a mock
-      await mockSubmitBugReport();
+      const success = await actions.submitBugReport(title, description)
+      if (!success) return;
       setIsSubmitted(true);
       const timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -97,16 +97,9 @@ export const ReportBug: React.FC = () => {
         clearInterval(timer);
         navigate("/");
       }, 5000);
-    } catch (error) {
-      actions.pushError(ErrorCodes.USER_SUBMIT_BUG_REPORT_FAILED);
     } finally {
       setLoading(false);
     }
-  };
-
-  // TODO: add backend stuff. This is just a mock
-  const mockSubmitBugReport = async (): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, 2000));
   };
 
   return (
@@ -216,7 +209,7 @@ export const ReportBug: React.FC = () => {
           </Typography>
 
           <Typography variant="h6" color="text.secondary" marginTop={2}>
-            {t("report-bug.redirect")}
+            {t("report-bug.redirect")}&nbsp;
             {countdown} {t("report-bug.second")}
             {countdown !== 1 && "s"}...
           </Typography>

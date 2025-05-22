@@ -33,6 +33,31 @@ import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 
+export const submitBugReport = async function submitBugReport(
+  request: FastifyRequest<{ Body: { title: string; description: string } }>,
+  reply: FastifyReply
+) {
+  const { title, description } = request.body;
+  const response = await fetch("https://api.github.com/repos/earthhistoryviz/tsconline/issues", {
+    method: "POST",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${process.env.GITHUB_ISSUES_TOKEN}`,
+    },
+    body: JSON.stringify({
+      title,
+      body: description
+    })
+  });
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Error submitting bug report:", errorText);
+    reply.status(500).send({ error: "Failed to submit bug report" });
+    return;
+  }
+  reply.send({ message: "Bug report submitted successfully" });
+};
+
 /**
  * Fetches the official datapack with the given name if it is public
  * @param request
