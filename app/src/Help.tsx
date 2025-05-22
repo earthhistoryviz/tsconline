@@ -5,6 +5,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { TSCButton } from "./components";
 import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
+import { useTheme } from "@mui/material/styles";
 import { useLocation, useNavigate } from "react-router";
 import { useTranslation } from "react-i18next";
 import Grid from "@mui/material/Grid";
@@ -27,20 +28,18 @@ export const getMarkdownTreeEntryFromPath = (
     return markdownTree;
   }
   let pointer = markdownTree;
-  let markdownContent: MarkdownFile | null = null;
   for (const [index, key] of keys.entries()) {
     if (!pointer[key]) {
       return null;
     }
-    if (isMarkdownFile(pointer[key])) {
-      markdownContent = pointer[key] as MarkdownFile;
-      break;
-    } else if (index === keys.length - 1) {
-      return pointer[key] as MarkdownTree;
+    if (index === keys.length - 1) {
+      return pointer[key];
+    } else {
+      if (isMarkdownFile(pointer[key])) return null;
+      pointer = pointer[key] as MarkdownTree;
     }
-    pointer = pointer[key] as MarkdownTree;
   }
-  return markdownContent;
+  return null;
 };
 
 export const Help = observer(function Help() {
@@ -49,6 +48,7 @@ export const Help = observer(function Help() {
   const navigate = useNavigate();
   const [markdownTree, setMarkdownTree] = useState<MarkdownTree>({});
   const currentPath = useLocation().pathname;
+  const theme = useTheme();
   const keys = getHelpKeysFromPath(currentPath);
   useEffect(() => {
     const loadData = async () => {
@@ -224,16 +224,16 @@ export const Help = observer(function Help() {
 
       <Grid container sx={{ display: "grid", gridTemplateColumns: "406px auto", height: "100vh" }}>
         <Grid item sx={background}>
-          <StyledScrollbar>
+          <StyledScrollbar style={{ borderRight: `1px solid ${theme.palette.divider}` }}>
             <HelpDrawerContext.Provider
               value={{
-                selectedMarkdown: isMarkdownFile(markdownContent) ? markdownContent : undefined
+                selectedMarkdown: markdownContent
               }}>
               <HelpDrawer markdownTree={markdownTree} />
             </HelpDrawerContext.Provider>
           </StyledScrollbar>
         </Grid>
-        <Grid item sx={background}>
+        <Grid item sx={background} paddingLeft="20px">
           <BreadcrumbsWrapper markdownTree={markdownTree} />
           <StyledScrollbar>
             {isMarkdownFile(markdownContent) ? (

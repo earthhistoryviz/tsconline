@@ -1,20 +1,20 @@
 import { useNavigate } from "react-router-dom";
-import { Box, Collapse, List, ListItem, ListItemButton, ListItemText, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Box, List, Typography } from "@mui/material";
 import { createContext, useContext, useState } from "react";
-import { ExpandLess } from "@mui/icons-material";
+import { ArrowForwardIosSharp } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import "./HelpDrawer.css";
 import { generatePath } from "./state/non-action-util";
 import { MarkdownFile, MarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 
 type HelpDrawerContextType = {
-  selectedMarkdown: MarkdownFile | undefined;
+  selectedMarkdown: MarkdownFile | MarkdownTree | undefined;
 };
 export const HelpDrawerContext = createContext<HelpDrawerContextType>({
   selectedMarkdown: undefined
 });
 
-function doesMarkdownTreeContainFile(markdownFile: MarkdownTree, target: MarkdownFile) {
+function doesMarkdownTreeContainFile(markdownFile: MarkdownTree, target: MarkdownTree | MarkdownFile) {
   for (const value of Object.values(markdownFile)) {
     if (value === target) return true;
   }
@@ -33,73 +33,77 @@ function NavItem({
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { selectedMarkdown } = useContext(HelpDrawerContext);
-  const isSelected = selectedMarkdown === markdownTree ? "selected-column" : "";
+  const isSelected = selectedMarkdown === markdownTree ? "selected-help-accordion" : "";
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
   const formattedPath = generatePath(pathname, parentPath);
 
+  const parentHandleClick = () => {
+    setOpen(!open);
+  };
   const handleClick = () => {
-    if (isMarkdownParent(markdownTree)) {
-      setOpen(!open);
-    } else {
-      navigate(`/help${formattedPath}`);
-    }
+    navigate(`/help${formattedPath}`);
   };
   const isParent = isMarkdownParent(markdownTree);
   const containsSelectedChild =
     selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownTree, selectedMarkdown) ? { opacity: 1 } : {};
   return (
-    <>
-      <ListItem disablePadding>
-        <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />
-        <ListItemButton onClick={handleClick} className={`help-list-item-button ${isSelected}`}>
-          <ListItemText
-            primary={
-              <Typography onClick={handleClick}>
-                {isMarkdownFile(markdownTree) ? (markdownTree as MarkdownFile).title : pathname}
-              </Typography>
-            }
-            className={`help-nav-item-text ${!isParent ? "help-nav-item-indent" : ""}`}
-          />
-          {isParent && (
-            <ExpandLess
+    <Box className="help-accordion-container">
+      {open && <Box className="accordion-help-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
+      {/* Render children if applicable */}
+      <Accordion
+        expanded={open}
+        elevation={0}
+        className="help-accordion"
+        square
+        disableGutters={true}
+        slotProps={{
+          transition: {
+            timeout: 500,
+            unmountOnExit: true
+          }
+        }}>
+        <AccordionSummary
+          className={`help-accordion-summary ${isSelected}`}
+          onClick={handleClick}
+          expandIcon={
+            <ArrowForwardIosSharp
+              color="icon"
+              onClick={(e) => {
+                e.stopPropagation();
+                parentHandleClick();
+              }}
               sx={{
-                transform: !open ? "rotate(90deg)" : "rotate(180deg)",
-                color: theme.palette.button.main,
-                transition: "transform 0.1s ease-in-out",
-                height: "24px",
-                width: "24px"
+                fontSize: "0.9rem",
+                display: isParent ? "block" : "none"
               }}
             />
-          )}
-        </ListItemButton>
-      </ListItem>
-
-      {/* Render children if applicable */}
-      {isMarkdownParent(markdownTree) && (
-        <Collapse in={open} timeout="auto" unmountOnExit>
-          <List
-            component="div"
-            disablePadding
-            className="menu-item"
-            sx={{
-              // Can't directly feed theme.palette.divider into the css file
-              borderLeft: `1px solid ${theme.palette.accordionLine.main}`
-            }}>
-            {isMarkdownParent(markdownTree) &&
-              Object.entries(markdownTree).map(([key, child]) => (
-                <NavItem
-                  pathname={isMarkdownFile(child) ? child.pathname : key}
-                  key={key}
-                  markdownTree={child}
-                  parentPath={formattedPath}
-                />
-              ))}
-          </List>
-        </Collapse>
-      )}
-    </>
+          }>
+          <Typography
+            onClick={handleClick}
+            className={`help-accordion-summary-text ${!isParent ? "help-accordion-leaf" : ""}`}>
+            {isMarkdownFile(markdownTree) ? (markdownTree as MarkdownFile).title : pathname}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails
+          className="accordion-help-details"
+          sx={{
+            // Can't directly feed theme.palette.divider into the css file
+            borderLeft: `1px solid ${theme.palette.accordionLine.main}`
+          }}>
+          {isMarkdownParent(markdownTree) &&
+            Object.entries(markdownTree).map(([key, child]) => (
+              <NavItem
+                pathname={isMarkdownFile(child) ? child.pathname : key}
+                key={key}
+                markdownTree={child}
+                parentPath={formattedPath}
+              />
+            ))}
+        </AccordionDetails>
+      </Accordion>
+    </Box>
   );
 }
 
