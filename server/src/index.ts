@@ -318,7 +318,7 @@ server.get<{ Params: { workshopId: number } }>(
   fetchWorkshopCoverImage
 );
 
-server.post("/bug-report", moderateRateLimit, routes.submitBugReport);
+server.post("/bug-report", strictRateLimit, routes.submitBugReport);
 
 server.register(adminRoutes, { prefix: "/admin" });
 server.register(crossPlotRoutes, { prefix: "/crossplot" });
