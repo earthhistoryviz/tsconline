@@ -1,4 +1,4 @@
-import { ColumnInfo, assertEventSettings, isEventType, isRangeSort } from "@tsconline/shared";
+import { assertEventSettings, isEventType, isRangeSort } from "@tsconline/shared";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import EventLogo from "../../assets/settings_icons/col_icon_event.png";
 import RangeLogo from "../../assets/settings_icons/col_icon_range.png";
@@ -8,9 +8,10 @@ import { context } from "../../state";
 import "./EventSpecificSettings.css";
 import { Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 type EventSpecificSettingsProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 export const EventSpecificSettings: React.FC<EventSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);

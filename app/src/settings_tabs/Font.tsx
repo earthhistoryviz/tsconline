@@ -6,10 +6,11 @@ import { useContext } from "react";
 import { LeafColumnFontMenu } from "./FontMenu";
 import "./Font.css";
 import { useTranslation } from "react-i18next";
+
 export const Font = observer(function Font() {
   const theme = useTheme();
   const { state } = useContext(context);
-  const rootColumn = state.settingsTabs.columns;
+  const rootColumn = state.settingsTabs.renderColumns;
   const { t } = useTranslation();
   return (
     <>

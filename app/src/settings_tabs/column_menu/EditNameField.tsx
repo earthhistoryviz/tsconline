@@ -3,11 +3,11 @@ import { useContext } from "react";
 import { context } from "../../state";
 import { TextField, Typography } from "@mui/material";
 import "./ColumnMenu.css";
-import { ColumnInfo } from "@tsconline/shared";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 export const EditNameField: React.FC<{
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 }> = observer(({ column }) => {
   const { actions } = useContext(context);
   const { t } = useTranslation();

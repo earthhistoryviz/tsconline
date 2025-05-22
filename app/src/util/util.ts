@@ -1,6 +1,7 @@
-import { ColumnInfo, RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
+import { RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared";
 import Color from "color";
 import { dualColCompPrefix } from "./constant";
+import { RenderColumnInfo } from "../types";
 
 /**
  * removes the prefix of a column id in the tsc format
@@ -48,7 +49,7 @@ export function checkIfDataIsInRange(minDataAge: number, maxDataAge: number, use
   return (minDataAge > userTopAge && minDataAge < userBaseAge) || (maxDataAge < userBaseAge && maxDataAge > userTopAge);
 }
 
-export function checkIfDccColumn(column: ColumnInfo) {
+export function checkIfDccColumn(column: RenderColumnInfo) {
   if (column.columnDisplayType === "Event") {
     assertEventSettings(column.columnSpecificSettings);
   } else if (column.columnDisplayType === "Point") {
@@ -61,7 +62,10 @@ export function checkIfDccColumn(column: ColumnInfo) {
   }
 }
 
-export const willColumnBeVisibleOnChart = (column: ColumnInfo, columnHashMap: Map<string, ColumnInfo>): boolean => {
+export const willColumnBeVisibleOnChart = (
+  column: RenderColumnInfo,
+  columnHashMap: Map<string, RenderColumnInfo>
+): boolean => {
   if (!column.on) return false;
   // reached the top, so it will be visible
   if (!column.parent) return true;
@@ -222,4 +226,21 @@ export function findSerialNum(name: string) {
     return 0;
   }
   return serialNumber;
+}
+
+export function getChildRenderColumns(
+  parent: RenderColumnInfo | undefined,
+  columnHashMap: Map<string, RenderColumnInfo>
+): RenderColumnInfo[] {
+  const result: RenderColumnInfo[] = [];
+  if (!parent) return result;
+  for (const childId of parent.children) {
+    const child = columnHashMap.get(childId);
+    if (child) {
+      result.push(child);
+    } else {
+      // console.error("Missing child column:", childId);
+    }
+  }
+  return result;
 }

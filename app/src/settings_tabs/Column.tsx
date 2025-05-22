@@ -1,7 +1,6 @@
 import { observer } from "mobx-react-lite";
 import React, { useContext, useState, useEffect, useRef, createContext } from "react";
 import Typography from "@mui/material/Typography";
-import { ColumnInfo } from "@tsconline/shared";
 import { Box, Button, IconButton, TextField } from "@mui/material";
 import MuiAccordionSummary from "@mui/material/AccordionSummary";
 import { ColumnContainer, TSCCheckbox, Accordion, CustomTooltip, Lottie, StyledScrollbar } from "../components";
@@ -11,7 +10,7 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { useTheme } from "@mui/material/styles";
 import { Tooltip } from "@mui/material";
 import "./Column.css";
-import { checkIfDataIsInRange, checkIfDccColumn } from "../util/util";
+import { checkIfDataIsInRange, checkIfDccColumn, getChildRenderColumns } from "../util/util";
 import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ExpandIcon from "@mui/icons-material/Expand";
 import CompressIcon from "@mui/icons-material/Compress";
@@ -19,16 +18,16 @@ import DarkArrowUpIcon from "../assets/icons/dark-arrow-up.json";
 import LightArrowUpIcon from "../assets/icons/light-arrow-up.json";
 import { useTranslation } from "react-i18next";
 import { checkIfDccDataIsInRange } from "../state/actions/util-actions";
-import { CrossPlotTimeSettings, TimeSettings } from "../types";
+import { CrossPlotTimeSettings, RenderColumnInfo, TimeSettings } from "../types";
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
 import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
 
 type ColumnContextType = {
   state: {
-    columns: ColumnInfo | undefined;
+    columns: RenderColumnInfo | undefined;
+    columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
-    columnSelected: string | null;
     timeSettings:
       | {
           [unit: string]: CrossPlotTimeSettings;
@@ -37,14 +36,14 @@ type ColumnContextType = {
   };
   actions: {
     setColumnSelected: (name: string) => void;
-    toggleSettingsTabColumn: (column: ColumnInfo) => void;
+    toggleSettingsTabColumn: (column: RenderColumnInfo) => void;
   };
 };
 export const ColumnContext = createContext<ColumnContextType>({
   state: {
     columns: undefined,
+    columnHashMap: new Map<string, RenderColumnInfo>(),
     columnSearchTerm: "",
-    columnSelected: "",
     timeSettings: {} as TimeSettings
   },
   actions: {
@@ -56,6 +55,7 @@ export const ColumnContext = createContext<ColumnContextType>({
 // column with generate button, and accordion columns
 export const Column = observer(function Column() {
   const { state, actions } = useContext(context);
+  const { state: columnState } = useContext(ColumnContext);
   const { t } = useTranslation();
 
   return (
@@ -82,10 +82,7 @@ export const Column = observer(function Column() {
       </div>
       {state.addCustomColumnMenu.open && (
         <StyledScrollbar>
-          <AddCustomColumnMenu
-            onClose={() => actions.setCustomColumnMenuOpen(false)}
-            column={state.settingsTabs.columns}
-          />
+          <AddCustomColumnMenu onClose={() => actions.setCustomColumnMenuOpen(false)} column={columnState.columns} />
         </StyledScrollbar>
       )}
     </>
@@ -98,7 +95,6 @@ export const ColumnDisplay = observer(() => {
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
-  console.log("state.columnSelected", state.columnSelected);
   // Below scroll features refers to code for button that scrolls to top of settings page when it is clicked
   const handleScroll = () => {
     if (scrollRef.current && scrollRef.current.scrollTop > 200) {
@@ -141,7 +137,7 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, true);
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
             }}>
             <ExpandIcon />
           </IconButton>
@@ -152,15 +148,15 @@ export const ColumnDisplay = observer(() => {
             className="expand-collapse-column-buttons"
             onClick={() => {
               if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, false);
+              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
             }}>
             <CompressIcon />
           </IconButton>
         </CustomTooltip>
       </div>
       {state.columns &&
-        Object.entries(state.columns.children).map(([childName, childDetails]) => (
-          <ColumnAccordion key={childName} details={childDetails} />
+        getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
+          <ColumnAccordion key={column.name} details={column} />
         ))}
       {/* Button to take users to top of column menu when scrolling */}
 
@@ -177,7 +173,7 @@ export const ColumnDisplay = observer(() => {
 });
 
 type ColumnAccordionProps = {
-  details: ColumnInfo;
+  details: RenderColumnInfo;
 };
 
 const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) => {
@@ -186,7 +182,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   if (!details.show) {
     return null;
   }
-  const selectedClass = details.name === state.columnSelected ? "selected-column" : "";
+  const selectedClass = details.isSelected ? "selected-column" : "";
   // if there are no children, don't make an accordion
   if (details.children.length == 0) {
     return (
@@ -200,9 +196,7 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
   }
 
   // for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = details.children.some((column) => column.name === state.columnSelected)
-    ? { opacity: 1 }
-    : {};
+  const containsSelectedChild = details.hasSelectedChildren ? { opacity: 1 } : {};
   return (
     <div className="column-accordion-container">
       {details.expanded && (
@@ -232,17 +226,17 @@ const ColumnAccordion: React.FC<ColumnAccordionProps> = observer(({ details }) =
           <ColumnIcon column={details} />
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {details.children &&
-            Object.entries(details.children).map(([childName, childDetails]) => (
-              <ColumnAccordion key={childName} details={childDetails} />
-            ))}
+          {details.expanded &&
+            getChildRenderColumns(details, state.columnHashMap).map((column) => {
+              return <ColumnAccordion key={column.name} details={column} />;
+            })}
         </MuiAccordionDetails>
       </Accordion>
     </div>
   );
 });
 
-const ColumnIcon = observer(({ column }: { column: ColumnInfo }) => {
+const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
   const { state, actions } = useContext(ColumnContext);
   const { t } = useTranslation();
   const theme = useTheme();
