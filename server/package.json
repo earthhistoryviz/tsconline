@@ -73,7 +73,8 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc -b",
-    "dev": "tsc -b -w && ./pull-markdown.sh",
+    "dev": "tsc -b -w",
+    "pull-help": "./pull-markdown.sh",
     "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch ./public/presets dist/index.js",
     "modify-translations": "node dist/translations/modify-translations.js",
     "init-translations": "node dist/translations/warn-modify-translations.js && node dist/translations/create-translations-from-csv.js",
