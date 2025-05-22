@@ -146,8 +146,7 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright Browsers (if not cached)
-        # if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: yarn playwright install --with-deps
+        run: yarn playwright install webkit --with-deps
 
       - name: Build the project
         id: build
@@ -371,34 +370,6 @@ jobs:
             exit 1
           fi
 
-          # Delete the decryption jar after tests
-          DECRYPTION_NAME=$(jq -r '.decryptionJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-          if [ -n "$DECRYPTION_NAME" ] && [ -f "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME" ]; then
-            rm "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
-            echo "Deleted decryption jar: $DECRYPTION_NAME"
-          fi
-
-          # Delete the entire datapacks folder after tests
-          if [ -d "${{ github.workspace }}/server/assets/datapacks" ]; then
-          rm -rf "${{ github.workspace }}/server/assets/datapacks"
-          echo "Deleted datapacks folder"
-          fi
-
-          # Delete the uploads folder after tests
-          if [ -d "${{ github.workspace }}/server/assets/uploads" ]; then
-            rm -rf "${{ github.workspace }}/server/assets/uploads"
-            echo "Deleted uploads folder"
-          fi
-
-          # Delete file-metadata.json after tests
-          if [ -f "${{ github.workspace }}/server/assets/file-metadata.json" ]; then
-            rm "${{ github.workspace }}/server/assets/file-metadata.json"
-            echo "Deleted file-metadata.json"
-          fi
-
-          echo "Contents of the assets folder:"
-          ls -R ${{ github.workspace }}/server/assets
-
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
@@ -443,7 +414,7 @@ jobs:
           path: test-results/**/trace.zip
           retention-days: 7
 
-      - name: Comment E2E Screenshot Link
+      - name: Comment E2E Trace Link
         if: steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/github-script@v6
         with:
@@ -456,7 +427,7 @@ jobs:
                 issue_number: prNumber,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: `🖼️ Screenshots for failed E2E tests are available in the [Artifacts tab](https://github.com/${{ github.repository }}/actions/runs/${runId})`
+                body: `🖼️ Traces for failed E2E tests are available in the [Artifacts tab](https://github.com/${{ github.repository }}/actions/runs/${runId}) view them at [Trace Viewer](https://trace.playwright.dev/)`
               });
             }
 
