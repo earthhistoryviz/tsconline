@@ -495,6 +495,9 @@ export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
       stack.push(child);
     }
   }
+  for (const column of state.settingsTabs.columnHashMap.values()) {
+    column.dispose();
+  }
   runInAction(() => {
     state.settingsTabs.columnHashMap = tempMap;
   });
@@ -525,7 +528,8 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
       showUncertaintyLabels: column.showUncertaintyLabels,
       columnRef: column,
       isSelected: false,
-      hasSelectedChildren: false
+      hasSelectedChildren: false,
+      dispose: () => {}
     },
     {
       name: false,
@@ -534,7 +538,8 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
       minAge: false,
       maxAge: false,
       units: false,
-      columnRef: false
+      columnRef: false,
+      dispose: false
     }
   );
   addReactionToRenderColumnInfo(column, renderColumn);
@@ -542,7 +547,7 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
 }
 
 export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: RenderColumnInfo) {
-  reaction(
+  const dispose = reaction(
     () => ({
       on: renderColumn.on,
       expanded: renderColumn.expanded,
@@ -556,7 +561,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       column.editName = updated.editname;
     }
   );
-  reaction(
+  const dispose1 = reaction(
     () => ({
       fontsInfo: toJS(renderColumn.fontsInfo),
       popup: renderColumn.popup,
@@ -576,6 +581,10 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
       column.columnSpecificSettings = updated.columnSpecificSettings;
     }
   );
+  renderColumn.dispose = () => {
+    dispose();
+    dispose1();
+  };
 }
 
 /**
@@ -739,7 +748,6 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
   }
 
   const regExp = getRegex(searchTerm);
-
   const root = state.settingsTabs.renderColumns;
   const stack = [root];
 

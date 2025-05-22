@@ -23,6 +23,7 @@ export type RenderColumnInfo = {
   columnRef: ColumnInfo;
   isSelected: boolean;
   hasSelectedChildren: boolean;
+  dispose: () => void;
 } & Omit<ColumnInfo, "children" | "subInfo">;
 
 export type DatapackFetchParams = {

@@ -502,12 +502,16 @@ function getRockTypeForAge(
   setSelectedMapAgeRange: (min: number, max: number) => void,
   pushPresentRockType: (rockType: string) => void
 ) {
-  if (!column.subInfo || !isSubFaciesInfoArray(column.subInfo) || column.subInfo.length === 0) {
+  if (
+    !column.columnRef.subInfo ||
+    !isSubFaciesInfoArray(column.columnRef.subInfo) ||
+    column.columnRef.subInfo.length === 0
+  ) {
     return "TOP"; // Return "TOP" if there's no subFaciesInfo or it's empty
   }
   setSelectedMapAgeRange(column.minAge, column.maxAge);
   // Find the nearest time block that does not exceed the current age
-  const suitableBlock = column.subInfo.find((timeBlock) => timeBlock.age >= currentAge);
+  const suitableBlock = column.columnRef.subInfo.find((timeBlock) => timeBlock.age >= currentAge);
 
   if (!suitableBlock) {
     return "TOP";

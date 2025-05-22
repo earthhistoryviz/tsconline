@@ -882,7 +882,9 @@ const initializeColumnHashMap = action("initializeColumnHashmap", async (root: C
       stack.push(child);
     }
   }
-
+  for (const column of state.settingsTabs.columnHashMap.values()) {
+    column.dispose();
+  }
   state.crossPlot.columnHashMap = tempMap;
 });
 

@@ -529,17 +529,17 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
   const renderColumnRoot = convertColumnInfoToRenderColumnInfo(columnRoot);
-  // throws warning if this isn't in its own action.
-  runInAction(() => {
-    state.settingsTabs.columns = columnRoot;
-    state.settingsTabs.renderColumns = renderColumnRoot;
-    state.settings.datapackContainsSuggAge = false;
-    state.mapState.mapHierarchy = {};
-    state.mapState.mapInfo = {};
-    state.settingsTabs.columnHashMap = new Map();
-    state.config.datapacks = [];
-    state.settingsTabs.columnHashMap.set(renderColumnRoot.name, renderColumnRoot);
-  });
+  state.settingsTabs.columns = columnRoot;
+  state.settingsTabs.renderColumns = renderColumnRoot;
+  state.settings.datapackContainsSuggAge = false;
+  state.mapState.mapHierarchy = {};
+  state.mapState.mapInfo = {};
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    if (columnInfo.dispose) columnInfo.dispose();
+  }
+  state.settingsTabs.columnHashMap = new Map();
+  state.config.datapacks = [];
+  state.settingsTabs.columnHashMap.set(renderColumnRoot.name, renderColumnRoot);
 
   // we add Ma unit by default
   state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
