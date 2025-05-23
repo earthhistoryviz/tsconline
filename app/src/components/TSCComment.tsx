@@ -16,11 +16,11 @@ import React, { useContext, useState } from "react";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
-import { CommentType } from "./TSCDiscussion";
 import { useTranslation } from "react-i18next";
 import { executeRecaptcha, fetcher } from "../util";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
+import { CommentType } from "../types";
 
 export type TSCCommentProps = {
   handleDelete: (id: number) => void;
@@ -31,7 +31,7 @@ export type TSCCommentProps = {
 };
 
 export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, userIsAdmin }: TSCCommentProps) => {
-  const { id, username, dateCreated, text, isFlagged, pictureUrl } = comment;
+  const { id, username, dateCreated, commentText, flagged, pictureUrl } = comment;
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -39,7 +39,7 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [flagged, setFlagged] = useState(isFlagged);
+  const [isFlagged, setIsFlagged] = useState(flagged);
   const formattedDate = dateCreated.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
@@ -75,7 +75,7 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
         })
       });
       if (response.ok) {
-        setFlagged(true);
+        setIsFlagged(true);
         actions.pushSnackbar("Comment reported.", "success");
         actions.removeAllErrors();
       } else {
@@ -171,8 +171,8 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
           <Typography className={styles.usernameText}>{username}</Typography>
           <Typography className={styles.dateText}>{formattedDate}</Typography>
         </div>
-        <Typography className={styles.commentText}>{text}</Typography>
-        {flagged && (
+        <Typography className={styles.commentText}>{commentText}</Typography>
+        {isFlagged && (
           <Typography className={styles.flaggedText} style={{ color: theme.palette.error.main }}>
             {t("settings.datapacks.comment-flagged")}
           </Typography>

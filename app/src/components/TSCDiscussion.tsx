@@ -9,23 +9,13 @@ import { executeRecaptcha, fetcher } from "../util";
 import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
+import { observer } from "mobx-react-lite";
+import { assertCommentType, CommentType } from "../types";
 
-export type CommentType = {
-  id: number;
-  username: string;
-  uuid: string;
-  dateCreated: Date;
-  text: string;
-  isSelf?: boolean;
-  isFlagged?: boolean;
-  pictureUrl?: string | null;
-};
-
-export const Discussion = () => {
+export const Discussion = observer(() => {
   const { id } = useParams();
   const { state, actions } = useContext(context);
   const [comments, setComments] = useState<CommentType[]>([]);
-  const [input, setInput] = useState("");
   const { uuid, username, pictureUrl } = state.user;
 
   useEffect(() => {
@@ -44,15 +34,16 @@ export const Discussion = () => {
           const commentsArray = await response.json();
           const loadedComments: CommentType[] = [];
           for (const com of commentsArray) {
+            assertCommentType(com);
             const loadedComment: CommentType = {
               id: com.id,
               username: com.username,
               uuid: com.uuid,
               pictureUrl: com.pictureUrl,
               dateCreated: new Date(com.dateCreated),
-              isFlagged: Boolean(com.flagged),
+              flagged: Boolean(com.flagged),
               isSelf: com.uuid === uuid,
-              text: com.commentText
+              commentText: com.commentText
             };
             loadedComments.push(loadedComment);
           }
@@ -73,7 +64,7 @@ export const Discussion = () => {
   }, []);
 
   const addComment = async () => {
-    if (!id || input === "") {
+    if (!id || state.commentInput === "") {
       return;
     }
 
@@ -96,7 +87,7 @@ export const Discussion = () => {
         },
         credentials: "include",
         body: JSON.stringify({
-          commentText: input,
+          commentText: state.commentInput,
           datapackTitle: id
         })
       });
@@ -109,17 +100,17 @@ export const Discussion = () => {
             {
               username: username,
               dateCreated: date,
-              text: input,
+              commentText: state.commentInput,
               isSelf: true,
               id: newCommentId,
               uuid: uuid,
-              isFlagged: false,
+              flagged: false,
               pictureUrl: pictureUrl ?? null
             },
             ...prevState
           ];
           newComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
-          setInput("");
+          actions.setCommentInput("");
           return newComments;
         });
         actions.pushSnackbar("Comment added.", "success");
@@ -192,8 +183,8 @@ export const Discussion = () => {
           multiline
           placeholder="Write your comment here"
           size="small"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
+          value={state.commentInput}
+          onChange={(e) => actions.setCommentInput(e.target.value)}
           inputProps={{ className: styles.userinput }}
           InputProps={{ classes: { notchedOutline: styles.notchedOutline }, className: styles.userInput }}
         />
@@ -227,4 +218,4 @@ export const Discussion = () => {
       </div>
     </div>
   );
-};
+});

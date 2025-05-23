@@ -169,6 +169,7 @@ export type State = {
     isSettingsTourOpen: boolean;
     isWorkshopsTourOpen: boolean;
   };
+  commentInput: string;
 };
 
 export const state = observable<State>({
@@ -325,7 +326,8 @@ export const state = observable<State>({
     isDatapacksTourOpen: false,
     isSettingsTourOpen: false,
     isWorkshopsTourOpen: false
-  }
+  },
+  commentInput: ""
 });
 
 reaction(
