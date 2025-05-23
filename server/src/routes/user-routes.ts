@@ -29,7 +29,7 @@ import {
 } from "../user/fetch-user-files.js";
 import path from "path";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
-import { NewDatapackComment } from "../types";
+import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -613,6 +613,9 @@ export const fetchDatapackComments = async function fetchDatapackComments(
   }
   try {
     const datapackComments = await findCurrentDatapackComments({ datapackTitle: datapackTitle });
+    for (const comment of datapackComments) {
+      assertDatapackCommentWithProfilePicture(comment);
+    }
     reply.send(datapackComments);
   } catch (e) {
     reply.status(500).send({ error: "Error fetching datapack comments" });

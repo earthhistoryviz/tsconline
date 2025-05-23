@@ -4,15 +4,11 @@ import { CustomDivider } from "./TSCComponents";
 import PersonIcon from "@mui/icons-material/Person";
 import SendIcon from "@mui/icons-material/Send";
 import { Comment } from "./TSCComment";
-import { useEffect, useState } from "react";
-import { actions, State } from "../state";
+import { useContext, useEffect, useState } from "react";
 import { executeRecaptcha, fetcher } from "../util";
 import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
-
-type DiscussionProps = {
-  state: State;
-};
+import { context } from "../state";
 
 export type CommentType = {
   id: number;
@@ -25,8 +21,9 @@ export type CommentType = {
   pictureUrl?: string | null;
 };
 
-export const Discussion = ({ state }: DiscussionProps) => {
+export const Discussion = () => {
   const { id } = useParams();
+  const { state, actions } = useContext(context);
   const [comments, setComments] = useState<CommentType[]>([]);
   const [input, setInput] = useState("");
   const { uuid, username, pictureUrl } = state.user;
@@ -68,14 +65,20 @@ export const Discussion = ({ state }: DiscussionProps) => {
           }
         }
       } catch (e) {
-        console.log("error", e);
+        console.error(e);
+        actions.pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
       }
     }
     fetchComments();
-  }, [id]);
+  }, []);
 
   const addComment = async () => {
     if (!id || input === "") {
+      return;
+    }
+
+    if (!state.isLoggedIn) {
+      actions.pushSnackbar("You must be logged in to post a comment.", "warning");
       return;
     }
 
@@ -129,7 +132,8 @@ export const Discussion = ({ state }: DiscussionProps) => {
         }
       }
     } catch (e) {
-      console.log("error", e);
+      console.error(e);
+      actions.pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
   };
 
@@ -139,7 +143,9 @@ export const Discussion = ({ state }: DiscussionProps) => {
       if (!response) {
         actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
       }
+      setComments((prevState) => prevState.filter((comment) => comment.id !== id));
       actions.pushSnackbar("Comment deleted.", "success");
+      actions.removeAllErrors();
       return;
     }
     try {
@@ -167,7 +173,8 @@ export const Discussion = ({ state }: DiscussionProps) => {
         }
       }
     } catch (e) {
-      console.log("error", e);
+      console.error(e);
+      actions.pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
   };
 
@@ -186,12 +193,11 @@ export const Discussion = ({ state }: DiscussionProps) => {
           placeholder="Write your comment here"
           size="small"
           value={input}
-          disabled={!state.isLoggedIn}
           onChange={(e) => setInput(e.target.value)}
           inputProps={{ className: styles.userinput }}
           InputProps={{ classes: { notchedOutline: styles.notchedOutline }, className: styles.userInput }}
         />
-        <IconButton className={styles.send} onClick={addComment} disabled={!state.isLoggedIn}>
+        <IconButton className={styles.send} onClick={addComment}>
           <SendIcon />
         </IconButton>
       </div>

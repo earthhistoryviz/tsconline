@@ -12,15 +12,15 @@ import {
 import styles from "./TSCComment.module.css";
 import PersonIcon from "@mui/icons-material/Person";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
 import { CommentType } from "./TSCDiscussion";
 import { useTranslation } from "react-i18next";
 import { executeRecaptcha, fetcher } from "../util";
-import { actions } from "../state";
 import { ErrorCodes } from "../util/error-codes";
+import { context } from "../state";
 
 export type TSCCommentProps = {
   handleDelete: (id: number) => void;
@@ -32,6 +32,7 @@ export type TSCCommentProps = {
 
 export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, userIsAdmin }: TSCCommentProps) => {
   const { id, username, dateCreated, text, isFlagged, pictureUrl } = comment;
+  const { actions } = useContext(context);
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -76,7 +77,6 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
       if (response.ok) {
         setFlagged(true);
         actions.pushSnackbar("Comment reported.", "success");
-
         actions.removeAllErrors();
       } else {
         if (response.status === 500) {
@@ -87,7 +87,8 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
       }
       handleClose();
     } catch (e) {
-      console.log("error", e);
+      console.error(e);
+      actions.pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
     }
   };
 

@@ -433,6 +433,7 @@ export async function findCurrentDatapackComments(criteria: Partial<DatapackComm
           "comments.dateCreated",
           "comments.uuid",
           "comments.flagged",
+          "comments.datapackTitle",
           "users.username",
           "users.pictureUrl"
         ])
