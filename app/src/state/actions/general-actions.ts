@@ -1383,3 +1383,7 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isWorkshopsTourOpen = false;
   }
 });
+
+export const setCommentInput = action((updatedComment: string) => {
+  state.commentInput = updatedComment;
+});

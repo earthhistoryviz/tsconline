@@ -275,6 +275,17 @@ export type CrossPlotBounds = {
   topAgeY: number;
 };
 
+export type CommentType = {
+  id: number;
+  username: string;
+  uuid: string;
+  dateCreated: Date;
+  commentText: string;
+  isSelf?: boolean;
+  flagged?: boolean;
+  pictureUrl?: string | null;
+};
+
 export function assertColumnInfoRoot(o: any): asserts o is ColumnInfoRoot {
   if (!o || typeof o !== "object") throw new Error("ColumnInfoRoot must be a non-null object");
   for (const datapackUniqueIdentifier of o.datapackUniqueIdentifiers) {
@@ -368,4 +379,21 @@ export function assertSettingsTabs(value: string): asserts value is SettingsTabs
   if (!(value in SettingsMenuOptionLabels)) {
     throw new Error(`Invalid settings tab: ${value}`);
   }
+}
+
+// need to check for profile picture too because of join with user table when fetching comments
+export function assertCommentType(o: any): asserts o is CommentType {
+  if (typeof o !== "object" || !o) throw "CommentType must be an object";
+  if (typeof o.id !== "number") throwError("CommentType", "id", "number", o.id);
+  if (typeof o.uuid !== "string") throwError("CommentType", "uuid", "string", o.uuid);
+  if (typeof o.commentText !== "string") throwError("CommentType", "commentText", "string", o.commentText);
+  if (typeof o.datapackTitle !== "string") throwError("CommentType", "datapackTitle", "string", o.datapackTitle);
+  if (!(o.dateCreated instanceof Date) && typeof o.dateCreated !== "string") {
+    throwError("CommentType", "dateCreated", "Date or ISO string", o.dateCreated);
+  }
+  if (o.flagged !== undefined && typeof o.flagged !== "number")
+    throwError("CommentType", "flagged", "number", o.flagged);
+  if (typeof o.username !== "string") throwError("CommentType", "username", "string", o.username);
+  if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("CommentType", "pictureUrl", "string", o.pictureUrl);
+  if (o.isSelf && typeof o.isSelf !== "boolean") throwError("CommentType", "isSelf", "boolean", o.isSelf);
 }

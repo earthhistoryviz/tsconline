@@ -3,7 +3,9 @@
         "general-actions": {
             "save": "Save",
             "cancel": "Cancel",
-            "loading": "Loading"
+            "loading": "Loading",
+            "delete": "Delete",
+            "report": "Report"
         },
         "landing-page": {
             "get-started": "Get Started",
@@ -491,7 +493,8 @@
                     "notes-placeholder": "Enter notes for the datapack here",
                     "notes-helper-text": "(OPTIONAL) Generally notes are settings recommendations/How to use your datapack most efficiently"
                 },
-                "pdf-upload": "PDF Upload"
+                "pdf-upload": "PDF Upload",
+                "comment-flagged": "This comment has been flagged."
             }
         },
         "chart": {
@@ -672,7 +675,12 @@
             "title": "Error",
             "USER_WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD": "The workshop file requested was not found on the server. Please try again later or contact our support team.",
             "LOGIN_TO_GENERATE_CUSTOM_CONVERTED_DATAPACK": "Please login to upload and customize this datapack further.",
-            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report."
+            "USER_SUBMIT_BUG_REPORT_FAILED": "Something went wrong while submitting the bug report.",
+            "DATAPACK_COMMENT_FETCH_FAILED": "Something went wrong while fetching datapack comments.",
+            "DATAPACK_COMMENT_CREATION_FAILED": "Something went wrong while creating a datapack comment.",
+            "DATAPACK_COMMENT_DELETE_FAILED": "Something went wrong while deleting the datpack comment.",
+            "DATAPACK_COMMENT_REPORT_FAILED": "Something went wrong while reporting the datapack comment.",
+            "DATAPACK_COMMENT_NOT_FOUND": "Datapack comment not found."
         },
         "button": {
             "generate": "Generate",

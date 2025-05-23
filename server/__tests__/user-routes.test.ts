@@ -13,7 +13,8 @@ import {
   uploadTreatiseDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata,
-  deleteUserHistory
+  deleteUserHistory,
+  fetchDatapackComments
 } from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
@@ -74,7 +75,12 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testUser])),
-    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true)
+    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true),
+    findCurrentDatapackComments: vi.fn(() => Promise.resolve([testComment])),
+    createDatapackComment: vi.fn().mockResolvedValue({}),
+    updateComment: vi.fn().mockResolvedValue({}),
+    deleteComment: vi.fn().mockResolvedValue({}),
+    findDatapackComment: vi.fn(() => Promise.resolve([testComment]))
   };
 });
 
@@ -218,6 +224,7 @@ beforeAll(async () => {
   app.get("/user/history", fetchUserHistoryMetadata);
   app.get("/user/history/:timestamp", fetchUserHistory);
   app.delete("/user/history/:timestamp", deleteUserHistory);
+  app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
   vi.spyOn(console, "error").mockImplementation(() => undefined);
   vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
@@ -249,6 +256,17 @@ const testHistory = {
   datapacks: [{ title: "test" } as shared.Datapack],
   chartContent: "test",
   chartHash: "test"
+};
+const mockDate = new Date("2024-08-20T00:00:00Z");
+const testComment = {
+  id: 1,
+  username: "test@example.com",
+  uuid,
+  dateCreated: mockDate.toISOString(),
+  pictureUrl: null,
+  commentText: "test",
+  flagged: 0,
+  datapackTitle: "test"
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -1393,5 +1411,288 @@ describe("fetchDatapacksFiles tests", () => {
     });
 
     expect(response.statusCode).toBe(500);
+  });
+});
+
+describe("fetchDatapackComments tests", () => {
+  const findCurrentDatapackComments = vi.spyOn(database, "findCurrentDatapackComments");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should return 400 if datapack title is missing", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/comments/`
+    });
+    expect(response.statusCode).toBe(400);
+    expect(findCurrentDatapackComments).not.toHaveBeenCalledOnce();
+    expect(await response.json()).toEqual({ error: "Missing or invalid datapack title" });
+  });
+  it("should reply 500 if an error occurred in findCurrentDatapackComments", async () => {
+    findCurrentDatapackComments.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/datapack/comments/test"
+    });
+    expect(findCurrentDatapackComments).toHaveBeenCalledOnce();
+    expect(findCurrentDatapackComments).toHaveBeenCalledWith({ datapackTitle: "test" });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error fetching datapack comments" });
+  });
+});
+
+describe("uploadDatapackComment tests", () => {
+  const createDatapackComment = vi.spyOn(database, "createDatapackComment");
+  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is unauthorized", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers: { "mock-uuid": "" }
+    });
+    expect(createDatapackComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 400 if datapack title is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/",
+      headers,
+      payload: {
+        commentText: "test"
+      }
+    });
+    expect(createDatapackComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing datapack title" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment text is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers,
+      payload: {
+        commentText: ""
+      }
+    });
+    expect(createDatapackComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing comment text" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 200 if successful", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers,
+      payload: {
+        commentText: "test"
+      }
+    });
+    expect(createDatapackComment).toHaveBeenCalled();
+    expect(findDatapackComment).toHaveBeenCalled();
+    expect(await response.json()).toEqual({ message: "Datapack comment creation successful", id: testComment.id });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should reply 500 if an error occurred in createDatapackComment", async () => {
+    createDatapackComment.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers,
+      payload: {
+        commentText: "test"
+      }
+    });
+    expect(createDatapackComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error uploading datapack comment" });
+  });
+});
+
+describe("updateDatapackComment tests", () => {
+  const updateComment = vi.spyOn(database, "updateComment");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is unauthorized", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers: { "mock-uuid": "" },
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 400 if comment ID is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment ID is invalid", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/a",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if body is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers,
+      payload: {
+        flagged: undefined
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Missing flagged in body" });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 404 if comment is not found", async () => {
+    updateComment.mockResolvedValue([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/2",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Datapack comment not found." });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 200 if comment is successfully updated", async () => {
+    updateComment.mockResolvedValue([{ numUpdatedRows: 1n }]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).toHaveBeenCalled();
+    expect(updateComment).toHaveBeenCalledWith({ id: 1 }, { flagged: 1 });
+    expect(await response.json()).toEqual({ message: "Datapack comment modified." });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should reply 500 if an error occurred in updateComment", async () => {
+    updateComment.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error updating datapack comment" });
+  });
+});
+
+describe("deleteDatapackComment tests", () => {
+  const deleteComment = vi.spyOn(database, "deleteComment");
+  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is unauthorized", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/1",
+      headers: { "mock-uuid": "" }
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 400 if comment ID is missing", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment ID is invalid", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/a",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 200 if comment is successfully deleted", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/1",
+      headers
+    });
+    expect(deleteComment).toHaveBeenCalled();
+    expect(deleteComment).toHaveBeenCalledWith({ id: 1 });
+    expect(await response.json()).toEqual({ message: "Datapack comment deleted." });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 404 if comment is not found", async () => {
+    findDatapackComment.mockResolvedValue([]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/2",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Requested comment not found." });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 403 if user requesting deletion is not user who created comment", async () => {
+    findDatapackComment.mockResolvedValue([{ ...testComment, uuid: "" }]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/2",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Cannot delete other's comments." });
+    expect(response.statusCode).toBe(403);
+  });
+
+  it("should reply 500 if an error occurred in updateComment", async () => {
+    findDatapackComment.mockResolvedValue([{ ...testComment }]);
+    deleteComment.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/1",
+      headers
+    });
+    expect(deleteComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error deleting datapack comment" });
   });
 });
