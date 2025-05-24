@@ -1,7 +1,6 @@
 import { readFile, readdir } from "fs/promises";
-import { assetconfigs, loadAssetConfigs, verifyFilepath } from "../util.js";
-import matter from "gray-matter";
-import { MarkdownTree, assertMarkdownFileMetadata } from "@tsconline/shared";
+import { assetconfigs, convertTitleToUrlPath, loadAssetConfigs, verifyFilepath } from "../util.js";
+import { MarkdownTree} from "@tsconline/shared";
 export const processMarkdownTree = async () => {
   await loadAssetConfigs();
   const markdownDirectory = assetconfigs.helpDirectory;
@@ -19,12 +18,12 @@ export const processMarkdownTree = async () => {
         await addToTree(filePath, child);
       } else if (file.isFile() && file.name.endsWith(".md")) {
         const content = await readFile(filePath, "utf-8");
-        const parsed = matter(content);
-        const { data, content: body } = parsed;
-        assertMarkdownFileMetadata(data);
-        tree[data.pathname] = {
-          ...data,
-          markdown: body
+        const fileName = file.name.replace(/\.md$/, "");
+        const pathname = convertTitleToUrlPath(fileName);
+        tree[pathname] = {
+          title: fileName,
+          pathname,
+          markdown: content
         };
       }
     }

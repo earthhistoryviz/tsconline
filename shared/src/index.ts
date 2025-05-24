@@ -677,8 +677,6 @@ export type MarkdownFile = {
   markdown: string;
 } & MarkdownFileMetadata;
 export type MarkdownFileMetadata = {
-  authoredBy: string;
-  lastUpdated: string;
   title: string;
   pathname: string;
 };
@@ -693,8 +691,6 @@ export const modelTypes = ["Rect", "Circle"];
 
 export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
   if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
-  if (typeof o.authoredBy !== "string") throwError("MarkdownFileMetadata", "authoredBy", "string", o.authoredBy);
-  if (typeof o.lastUpdated !== "string") throwError("MarkdownFileMetadata", "lastUpdated", "string", o.lastUpdated);
   if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);
   if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
 }
