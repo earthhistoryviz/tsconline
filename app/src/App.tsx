@@ -33,7 +33,6 @@ import { Workshops } from "./Workshops";
 import WorkshopDetails from "./WorkshopDetails";
 import Joyride, { CallBackProps, ACTIONS, ORIGIN, EVENTS } from "react-joyride";
 import { enDpTour, zhDpTour, enQsg, zhQsg, enSetTour, zhSetTour } from "./tours";
-import { FileFormatInfo } from "./FileFormatInfo";
 import i18n from "../i18n";
 import { CrossPlotChart } from "./crossplot/CrossPlotChart";
 import { isDDEServer } from "./constants";
@@ -165,7 +164,6 @@ export default observer(function App() {
               <Route path="/presets" element={<Presets />} />
               <Route path="/workshops" element={<Workshops />} />
               <Route path="/generate-external-chart" element={<GenerateExternalChart />} />
-              <Route path="/file-format-info" element={<FileFormatInfo />} />
               <Route path="/workshops/:id" element={<WorkshopDetails />} />
               <Route path="/crossplot" element={<CrossPlotChart />} />
               <Route path="/report-bug" element={<ReportBug />} />

@@ -47,6 +47,7 @@
     "react-router-dom": "^6.8.1",
     "react-virtuoso": "^4.7.11",
     "react-zoom-pan-pinch": "^3.3.0",
+    "rehype-raw": "^7.0.0",
     "simplebar-core": "^1.2.4",
     "simplebar-react": "^3.2.4",
     "valid-filename": "^4.0.0",
