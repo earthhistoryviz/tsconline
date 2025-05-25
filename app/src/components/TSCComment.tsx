@@ -17,10 +17,11 @@ import OutlinedFlagIcon from "@mui/icons-material/OutlinedFlag";
 import DeleteIcon from "@mui/icons-material/Delete";
 import MenuItem from "@mui/material/MenuItem";
 import { useTranslation } from "react-i18next";
-import { executeRecaptcha, fetcher } from "../util";
+import { fetcher } from "../util";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { CommentType } from "../types";
+import { getRecaptchaToken } from "../state/actions";
 
 export type TSCCommentProps = {
   handleDelete: (id: number) => void;
@@ -57,9 +58,8 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
 
   const handleReport = async () => {
     try {
-      const recaptchaToken: string = await executeRecaptcha("updateComment");
+      const recaptchaToken = await getRecaptchaToken("updateComment");
       if (!recaptchaToken) {
-        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
         handleClose();
         return;
       }

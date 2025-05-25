@@ -4,18 +4,18 @@ import { CustomDivider } from "./TSCComponents";
 import PersonIcon from "@mui/icons-material/Person";
 import SendIcon from "@mui/icons-material/Send";
 import { Comment } from "./TSCComment";
-import { useContext, useEffect, useState } from "react";
-import { executeRecaptcha, fetcher } from "../util";
+import { useContext, useEffect } from "react";
+import { fetcher } from "../util";
 import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { assertCommentType, CommentType } from "../types";
+import { getRecaptchaToken } from "../state/actions";
 
 export const Discussion = observer(() => {
   const { id } = useParams();
   const { state, actions } = useContext(context);
-  const [comments, setComments] = useState<CommentType[]>([]);
   const { uuid, username, pictureUrl } = state.user;
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const Discussion = observer(() => {
             loadedComments.push(loadedComment);
           }
           loadedComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
-          setComments(loadedComments);
+          actions.setDatapackProfileComments(loadedComments);
           actions.removeAllErrors();
         } else {
           if (response.status === 500) {
@@ -74,11 +74,8 @@ export const Discussion = observer(() => {
     }
 
     try {
-      const recaptchaToken: string = await executeRecaptcha("addComment");
-      if (!recaptchaToken) {
-        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
-        return;
-      }
+      const recaptchaToken = await getRecaptchaToken("addComment");
+      if (!recaptchaToken) return;
       const response = await fetcher(`/user/datapack/addComment/${encodeURIComponent(id)}`, {
         method: "POST",
         headers: {
@@ -95,24 +92,18 @@ export const Discussion = observer(() => {
         const data = await response.json();
         const newCommentId = data.id;
         const date = new Date();
-        setComments((prevState) => {
-          const newComments = [
-            {
-              username: username,
-              dateCreated: date,
-              commentText: state.commentInput,
-              isSelf: true,
-              id: newCommentId,
-              uuid: uuid,
-              flagged: false,
-              pictureUrl: pictureUrl ?? null
-            },
-            ...prevState
-          ];
-          newComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
-          actions.setCommentInput("");
-          return newComments;
-        });
+        const newComment = {
+          username: username,
+          dateCreated: date,
+          commentText: state.commentInput,
+          isSelf: true,
+          id: newCommentId,
+          uuid: uuid,
+          flagged: false,
+          pictureUrl: pictureUrl ?? null
+        };
+        actions.addDatapackProfileComment(newComment);
+        actions.setCommentInput("");
         actions.pushSnackbar("Comment added.", "success");
         actions.removeAllErrors();
       } else {
@@ -133,18 +124,16 @@ export const Discussion = observer(() => {
       const response = await actions.adminDeleteDatapackComment(id);
       if (!response) {
         actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
+        return;
       }
-      setComments((prevState) => prevState.filter((comment) => comment.id !== id));
+      actions.deleteDatapackProfileComment(id);
       actions.pushSnackbar("Comment deleted.", "success");
       actions.removeAllErrors();
       return;
     }
     try {
-      const recaptchaToken: string = await executeRecaptcha("deleteComment");
-      if (!recaptchaToken) {
-        actions.pushError(ErrorCodes.RECAPTCHA_FAILED);
-        return;
-      }
+      const recaptchaToken = await getRecaptchaToken("deleteComment");
+      if (!recaptchaToken) return;
       const response = await fetcher(`/user/datapack/comments/${id}`, {
         method: "DELETE",
         headers: {
@@ -153,7 +142,7 @@ export const Discussion = observer(() => {
         credentials: "include"
       });
       if (response.ok) {
-        setComments((prevState) => prevState.filter((comment) => comment.id !== id));
+        actions.deleteDatapackProfileComment(id);
         actions.pushSnackbar("Comment deleted.", "success");
         actions.removeAllErrors();
       } else {
@@ -194,7 +183,7 @@ export const Discussion = observer(() => {
       </div>
       <CustomDivider />
       <div className={styles.dc}>
-        {comments.length === 0 ? (
+        {state.datapackProfilePage.comments.length === 0 ? (
           <>
             <Typography className={styles.dt}>No discussions yet</Typography>
             <Typography className={styles.description}>
@@ -203,7 +192,7 @@ export const Discussion = observer(() => {
           </>
         ) : (
           <div className={styles.commentsContainer}>
-            {comments.map((comment) => (
+            {state.datapackProfilePage.comments.map((comment) => (
               <Comment
                 key={`${comment.id}${comment.uuid}`}
                 comment={comment}

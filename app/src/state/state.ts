@@ -13,7 +13,8 @@ import {
   EditableDatapackMetadata,
   CrossPlotTimeSettings,
   ChartTabState,
-  CrossPlotBounds
+  CrossPlotBounds,
+  CommentType
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -117,6 +118,7 @@ export type State = {
     unsavedChanges: boolean;
     editRequestInProgress: boolean;
     datapackImageVersion: number;
+    comments: CommentType[];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -237,7 +239,8 @@ export const state = observable<State>({
     editableDatapackMetadata: null,
     unsavedChanges: false,
     editRequestInProgress: false,
-    datapackImageVersion: 0
+    datapackImageVersion: 0,
+    comments: []
   },
   tab: 0,
   showSuggestedAgePopup: false,
