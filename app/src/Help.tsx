@@ -56,7 +56,7 @@ export const Help = observer(function Help() {
   const navigate = useNavigate();
   const [markdownParent, setMarkdownParent] = useState<MarkdownParent>({
     children: {},
-    title: t("help.all-categories"),
+    title: "All Categories",
     pathname: "all-categories"
   } as MarkdownParent);
   const currentPath = useLocation().pathname;
