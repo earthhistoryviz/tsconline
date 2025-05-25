@@ -54,6 +54,8 @@ export const getMarkdownTreeEntryFromPath = (
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
+  const query = new URLSearchParams(useLocation().search);
+  const tourName = query.get("tour");
   const navigate = useNavigate();
   const [markdownParent, setMarkdownParent] = useState<MarkdownParent>({
     children: {},
@@ -63,6 +65,11 @@ export const Help = observer(function Help() {
   const currentPath = useLocation().pathname;
   const theme = useTheme();
   const keys = getHelpKeysFromPath(currentPath);
+  useEffect(() => {
+    if (tourName) {
+      runTour(tourName);
+    }
+  }, [tourName]);
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -110,9 +117,14 @@ export const Help = observer(function Help() {
         navigate("/settings");
         actions.setTab(4);
         break;
-      default:
+      case "qsg":
+      case "workshops":
         navigate("/help");
         actions.setTab(5);
+        break;
+      default:
+        console.warn(`Unknown tour name: ${tourName}`);
+        break;
     }
   }
   return (
