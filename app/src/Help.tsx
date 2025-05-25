@@ -4,7 +4,6 @@ import { useContext, useEffect, useState } from "react";
 import { context } from "./state";
 import { useTheme } from "@mui/material/styles";
 import { useLocation, useNavigate } from "react-router";
-import { useTranslation } from "react-i18next";
 import Grid from "@mui/material/Grid";
 import { StyledScrollbar } from "./components";
 import rehypeRaw from "rehype-raw";
@@ -50,7 +49,6 @@ export const getMarkdownTreeEntryFromPath = (
 
 export const Help = observer(function Help() {
   const { actions } = useContext(context);
-  const { t } = useTranslation();
   const query = new URLSearchParams(useLocation().search);
   const tourName = query.get("tour");
   const navigate = useNavigate();
