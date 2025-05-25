@@ -17,12 +17,14 @@ export const processMarkdownTree = async () => {
     for (const file of files) {
       const filePath = `${path}/${file.name}`;
       if (file.isDirectory() && file.name !== ".git") {
+        const pathname = convertTitleToUrlPath(file.name);
+        const fileName = file.name.replace(/\.md$/, "");
         const child: MarkdownParent = {
           children: {},
-          title: file.name,
-          pathname: convertTitleToUrlPath(file.name)
+          title: fileName,
+          pathname
         };
-        tree.children[file.name] = child;
+        tree.children[pathname] = child;
         await addToTree(filePath, child);
       } else if (file.isFile() && file.name.endsWith(".md")) {
         const content = await readFile(filePath, "utf-8");

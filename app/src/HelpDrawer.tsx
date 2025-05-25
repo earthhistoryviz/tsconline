@@ -5,7 +5,7 @@ import { ArrowForwardIosSharp } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import "./HelpDrawer.css";
 import { generatePath } from "./state/non-action-util";
-import { MarkdownFile, MarkdownParent, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
+import { MarkdownFile, MarkdownParent, isMarkdownParent } from "@tsconline/shared";
 
 type HelpDrawerContextType = {
   selectedMarkdown: MarkdownFile | MarkdownParent | undefined;
@@ -46,7 +46,6 @@ function NavItem({
     navigate(`/help${formattedPath}`);
   };
   const isParent = isMarkdownParent(markdownParent);
-  console.log("isParent", isParent, "markdownParent", markdownParent);
   const containsSelectedChild =
     selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownParent, selectedMarkdown) ? { opacity: 1 } : {};
   return (
@@ -84,7 +83,7 @@ function NavItem({
           <Typography
             onClick={handleClick}
             className={`help-accordion-summary-text ${!isParent ? "help-accordion-leaf" : ""}`}>
-            {isMarkdownFile(markdownParent) ? (markdownParent as MarkdownFile).title : pathname}
+            {markdownParent.title}
           </Typography>
         </AccordionSummary>
         <AccordionDetails
@@ -95,12 +94,7 @@ function NavItem({
           }}>
           {isMarkdownParent(markdownParent) &&
             Object.entries(markdownParent.children).map(([key, child]) => (
-              <NavItem
-                pathname={isMarkdownFile(child) ? child.pathname : key}
-                key={key}
-                markdownParent={child}
-                parentPath={formattedPath}
-              />
+              <NavItem pathname={child.pathname} key={key} markdownParent={child} parentPath={formattedPath} />
             ))}
         </AccordionDetails>
       </Accordion>

@@ -177,19 +177,11 @@ const MarkdownParentComponent: React.FC<{
               navigate(`${pathname}/${key}`);
             }
           };
-          if (isMarkdownFile(child)) {
-            return (
-              <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
-                {child.title}
-              </Link>
-            );
-          } else {
-            return (
-              <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
-                {key}
-              </Link>
-            );
-          }
+          return (
+            <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
+              {child.title}
+            </Link>
+          );
         })
       ) : (
         <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownParent.markdown}</ReactMarkdown>

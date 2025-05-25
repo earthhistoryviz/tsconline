@@ -2,7 +2,7 @@ import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
 import { getHelpKeysFromPath } from "./state/non-action-util";
-import { MarkdownFile, MarkdownParent, isMarkdownFile } from "@tsconline/shared";
+import { MarkdownFile, MarkdownParent } from "@tsconline/shared";
 
 type Breadcrumb = {
   to: string;
@@ -23,17 +23,10 @@ const compileBreadcrumbs = (markdownParent: MarkdownParent | MarkdownFile, keys:
     }
     fullPath += `/${key}`;
     markdownParent = (markdownParent as MarkdownParent).children[key];
-    if (isMarkdownFile(markdownParent)) {
-      pathBreadcrumbs.push({
-        to: (fullPath += `/${markdownParent.pathname}`),
-        title: markdownParent.title
-      });
-    } else {
-      pathBreadcrumbs.push({
-        to: fullPath,
-        title: key
-      });
-    }
+    pathBreadcrumbs.push({
+      to: (fullPath += `/${markdownParent.pathname}`),
+      title: markdownParent.title
+    });
   }
   return pathBreadcrumbs;
 };
