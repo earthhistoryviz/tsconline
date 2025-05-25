@@ -1,11 +1,10 @@
 import { test, expect, Page } from "@playwright/test";
-import fs from 'fs/promises';
+import fs from "fs/promises";
 import path from "path";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
+const filename = fileURLToPath(import.meta.url);
+const dirname = path.dirname(filename);
 
 async function generateBasicChart(page: Page) {
   const addCircleWrapper = page.locator(".add-circle").first();
@@ -42,7 +41,6 @@ test.beforeEach(async ({ page }) => {
   await page.locator(".qsg-datapacks").click();
   await expect(page.locator("text=Africa Bight")).toBeVisible({ timeout: 15000 });
 });
-
 
 test("datapack button is clickable", async ({ page }) => {
   const AfricaBightButton = page.locator("text=Africa Bight");
@@ -93,38 +91,29 @@ test("check if confirm selection works", async ({ page }) => {
 test("check if generate chart and save chart works", async ({ page }) => {
   await generateBasicChart(page);
 
-  const chartSvg = page.locator('.react-transform-component svg');
-  await expect(chartSvg).toHaveScreenshot('charts.test.ts-snapshots/basic-chart.png', {
-    maxDiffPixelRatio: 0.1,
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
+    maxDiffPixelRatio: 0.1
   });
 
-  await page.locator('text=Save').nth(0).click();
-  const [downloadSvg] = await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('text=Save').nth(2).click(),
-  ]);
+  await page.locator("text=Save").nth(0).click();
+  const [downloadSvg] = await Promise.all([page.waitForEvent("download"), page.locator("text=Save").nth(2).click()]);
 
-  await page.locator('text=Save').nth(0).click();
+  await page.locator("text=Save").nth(0).click();
   await page.locator("text=.svg").click();
   await page.locator("text=.pdf").click();
-  await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('text=Save').last().click(),
-  ]);
+  await Promise.all([page.waitForEvent("download"), page.locator("text=Save").last().click()]);
 
-  await page.locator('text=Save').nth(0).click();
+  await page.locator("text=Save").nth(0).click();
   await page.locator("text=.pdf").click();
   await page.locator("text=.png").click();
-  await Promise.all([
-    page.waitForEvent('download'),
-    page.locator('text=Save').last().click(),
-  ]);
+  await Promise.all([page.waitForEvent("download"), page.locator("text=Save").last().click()]);
 
   const downloadSvgPath = await downloadSvg.path();
-  if (!downloadSvgPath) throw new Error('Download path not found');
+  if (!downloadSvgPath) throw new Error("Download path not found");
 
-  const referenceSvg = await fs.readFile(path.resolve(__dirname, 'charts.test.ts-snapshots/chart.svg'), 'utf-8');
-  const downloadedSvg = await fs.readFile(downloadSvgPath, 'utf-8');
+  const referenceSvg = await fs.readFile(path.resolve(dirname, "charts.test.ts-snapshots/chart.svg"), "utf-8");
+  const downloadedSvg = await fs.readFile(downloadSvgPath, "utf-8");
   expect(downloadedSvg).toBe(referenceSvg);
 });
 
@@ -136,8 +125,8 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await page.locator('input[value="2"]').fill("1");
 
   await page.locator("text=Column").nth(1).click();
-  await page.locator('data-testid=ArrowForwardIosSharpIcon').nth(1).click();
-  await page.locator('data-testid=CheckBoxIcon').nth(4).click();
+  await page.locator("data-testid=ArrowForwardIosSharpIcon").nth(1).click();
+  await page.locator("data-testid=CheckBoxIcon").nth(4).click();
 
   await page.locator("text=Generate Chart").click();
 
@@ -145,9 +134,9 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: 30000 });
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 30000 });
 
-  const chartSvg = page.locator('.react-transform-component svg');
-  await expect(chartSvg).toHaveScreenshot('charts.test.ts-snapshots/settings-chart.png', {
-    maxDiffPixelRatio: 0.01,
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/settings-chart.png", {
+    maxDiffPixelRatio: 0.01
   });
 });
 
@@ -157,13 +146,15 @@ test("Load Basic Settings", async ({ page }) => {
 
   const fileChooserPromise = page.waitForEvent("filechooser");
 
-  await page.locator('text=load').nth(2).click();
+  await page.locator("text=load").nth(2).click();
 
   const fileChooser = await fileChooserPromise;
-  const settingsPath = path.resolve(__dirname, "charts.test.ts-snapshots", "basicSettings.tsc");
+  const settingsPath = path.resolve(dirname, "charts.test.ts-snapshots", "basicSettings.tsc");
   await fileChooser.setFiles(settingsPath);
 
-  await expect(page.locator("text=Successfully loaded settings from basicSettings.tsc!")).toBeVisible({ timeout: 10000 });
+  await expect(page.locator("text=Successfully loaded settings from basicSettings.tsc!")).toBeVisible({
+    timeout: 10000
+  });
 });
 
 test("check if generate crossplot works", async ({ page }) => {
@@ -199,18 +190,18 @@ test("check if generate crossplot works", async ({ page }) => {
 
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: 30000 });
 
-  const chartSvg = page.locator('.react-transform-component svg');
-  await expect(chartSvg).toHaveScreenshot('charts.test.ts-snapshots/crossplot-chart.png', {
-    maxDiffPixelRatio: 0.01,
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/crossplot-chart.png", {
+    maxDiffPixelRatio: 0.01
   });
 });
 
 test("check if Map Points Functional", async ({ page }) => {
   await generateBasicChart(page);
 
-  const chartSvg = page.locator('.react-transform-component svg');
-  await expect(chartSvg).toHaveScreenshot('charts.test.ts-snapshots/basic-chart.png', {
-    maxDiffPixelRatio: 0.1,
+  const chartSvg = page.locator(".react-transform-component svg");
+  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
+    maxDiffPixelRatio: 0.1
   });
 
   await page.locator("text=Settings").click();
