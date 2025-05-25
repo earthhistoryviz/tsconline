@@ -2,31 +2,31 @@ import { Breadcrumbs, Link, Stack, Typography } from "@mui/material";
 import { useLocation, useNavigate } from "react-router";
 import { useTheme } from "@mui/material/styles";
 import { getHelpKeysFromPath } from "./state/non-action-util";
-import { MarkdownFile, MarkdownTree, isMarkdownFile } from "@tsconline/shared";
+import { MarkdownFile, MarkdownParent, isMarkdownFile } from "@tsconline/shared";
 
 type Breadcrumb = {
   to: string;
   title: string;
 };
 type BreadCrumbsWrapperProps = {
-  markdownTree: MarkdownTree;
+  markdownParent: MarkdownParent;
 };
 
-const compileBreadcrumbs = (markdownTree: MarkdownTree | MarkdownFile, keys: string[]) => {
+const compileBreadcrumbs = (markdownParent: MarkdownParent | MarkdownFile, keys: string[]) => {
   const pathBreadcrumbs: Breadcrumb[] = [];
   let fullPath = "";
   for (const key of keys) {
     // cast because we know it can't be MarkdownFile
-    if (!(markdownTree as MarkdownTree)[key]) {
+    if (!(markdownParent as MarkdownParent).children[key]) {
       // not valid
       break;
     }
     fullPath += `/${key}`;
-    markdownTree = (markdownTree as MarkdownTree)[key];
-    if (isMarkdownFile(markdownTree)) {
+    markdownParent = (markdownParent as MarkdownParent).children[key];
+    if (isMarkdownFile(markdownParent)) {
       pathBreadcrumbs.push({
-        to: (fullPath += `/${markdownTree.pathname}`),
-        title: markdownTree.title
+        to: (fullPath += `/${markdownParent.pathname}`),
+        title: markdownParent.title
       });
     } else {
       pathBreadcrumbs.push({
@@ -38,13 +38,13 @@ const compileBreadcrumbs = (markdownTree: MarkdownTree | MarkdownFile, keys: str
   return pathBreadcrumbs;
 };
 
-export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdownTree }) => {
+export const BreadcrumbsWrapper: React.FC<BreadCrumbsWrapperProps> = ({ markdownParent }) => {
   const theme = useTheme();
 
   const currentPath = useLocation().pathname;
   const navigate = useNavigate();
   const keys = getHelpKeysFromPath(currentPath);
-  const pathBreadcrumbs: Breadcrumb[] = compileBreadcrumbs(markdownTree, keys);
+  const pathBreadcrumbs: Breadcrumb[] = compileBreadcrumbs(markdownParent, keys);
 
   const breadcrumbs: Breadcrumb[] = [{ to: "", title: "All Categories" }, ...pathBreadcrumbs];
 

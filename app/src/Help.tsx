@@ -15,29 +15,37 @@ import rehypeRaw from "rehype-raw";
 //The Pages for the help
 import { HelpDrawer, HelpDrawerContext } from "./HelpDrawer";
 import { fetcher } from "./util";
-import { MarkdownFile, MarkdownTree, assertMarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
+import {
+  MarkdownFile,
+  MarkdownParent,
+  assertMarkdownParent,
+  isMarkdownFile,
+  isMarkdownParent
+} from "@tsconline/shared";
 import { BreadcrumbsWrapper } from "./HelpBreadcrumbs";
 import { PageNotFound } from "./PageNotFound";
 import ReactMarkdown from "react-markdown";
 import { getHelpKeysFromPath } from "./state/non-action-util";
 
 export const getMarkdownTreeEntryFromPath = (
-  markdownTree: MarkdownTree,
+  markdownParent: MarkdownParent,
   keys: string[]
-): MarkdownFile | MarkdownTree | null => {
+): MarkdownParent | MarkdownFile | null => {
   if (keys.length === 0) {
-    return markdownTree;
+    return markdownParent;
   }
-  let pointer = markdownTree;
+  let pointer = markdownParent;
   for (const [index, key] of keys.entries()) {
-    if (!pointer[key]) {
+    if (!pointer.children[key]) {
       return null;
     }
     if (index === keys.length - 1) {
-      return pointer[key];
+      return pointer.children[key];
     } else {
-      if (isMarkdownFile(pointer[key])) return null;
-      pointer = pointer[key] as MarkdownTree;
+      if (!isMarkdownParent(pointer.children[key])) {
+        return null;
+      }
+      pointer = pointer.children[key] as MarkdownParent;
     }
   }
   return null;
@@ -47,7 +55,11 @@ export const Help = observer(function Help() {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [markdownTree, setMarkdownTree] = useState<MarkdownTree>({});
+  const [markdownParent, setMarkdownParent] = useState<MarkdownParent>({
+    children: {},
+    title: t("help.all-categories"),
+    pathname: "all-categories"
+  } as MarkdownParent);
   const currentPath = useLocation().pathname;
   const theme = useTheme();
   const keys = getHelpKeysFromPath(currentPath);
@@ -72,8 +84,8 @@ export const Help = observer(function Help() {
         }
 
         const data = await response.json();
-        assertMarkdownTree(data);
-        setMarkdownTree(data);
+        assertMarkdownParent(data);
+        setMarkdownParent(data);
       } catch (error) {
         console.error("Error loading markdown tree:", error);
       }
@@ -82,7 +94,7 @@ export const Help = observer(function Help() {
     loadData();
   }, []);
   const background = { bgcolor: "secondaryBackground.main" };
-  const markdownContent = getMarkdownTreeEntryFromPath(markdownTree, keys);
+  const markdownContent = getMarkdownTreeEntryFromPath(markdownParent, keys);
   if (!markdownContent) {
     return <PageNotFound />;
   }
@@ -173,17 +185,17 @@ export const Help = observer(function Help() {
               value={{
                 selectedMarkdown: markdownContent
               }}>
-              <HelpDrawer markdownTree={markdownTree} />
+              <HelpDrawer markdownParent={markdownParent} />
             </HelpDrawerContext.Provider>
           </StyledScrollbar>
         </Grid>
         <Grid item sx={background} paddingLeft="20px">
-          <BreadcrumbsWrapper markdownTree={markdownTree} />
+          <BreadcrumbsWrapper markdownParent={markdownParent} />
           <StyledScrollbar>
             {isMarkdownFile(markdownContent) ? (
               <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownContent.markdown}</ReactMarkdown>
             ) : (
-              <MarkdownParentComponent markdownTree={markdownContent} />
+              <MarkdownParentComponent markdownParent={markdownContent} />
             )}
           </StyledScrollbar>
         </Grid>
@@ -195,37 +207,41 @@ export const Help = observer(function Help() {
 // this is the component that renders the children of the markdown tree
 // can only be accessed through breadcrumbs
 const MarkdownParentComponent: React.FC<{
-  markdownTree: MarkdownTree;
-}> = ({ markdownTree }) => {
+  markdownParent: MarkdownParent;
+}> = ({ markdownParent }) => {
   const navigate = useNavigate();
   const pathname = useLocation().pathname;
-  if (!isMarkdownParent(markdownTree)) {
+  if (!isMarkdownParent(markdownParent)) {
     return null;
   }
   return (
     <Box display="flex" flexDirection="column" gap="20px" paddingTop="10px">
-      {Object.entries(markdownTree).map(([key, child]) => {
-        const handleClick = () => {
+      {!markdownParent.markdown ? (
+        Object.entries(markdownParent.children).map(([key, child]) => {
+          const handleClick = () => {
+            if (isMarkdownFile(child)) {
+              navigate(`${pathname}/${child.pathname}`);
+            } else {
+              navigate(`${pathname}/${key}`);
+            }
+          };
           if (isMarkdownFile(child)) {
-            navigate(`${pathname}/${child.pathname}`);
+            return (
+              <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
+                {child.title}
+              </Link>
+            );
           } else {
-            navigate(`${pathname}/${key}`);
+            return (
+              <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
+                {key}
+              </Link>
+            );
           }
-        };
-        if (isMarkdownFile(child)) {
-          return (
-            <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
-              {child.title}
-            </Link>
-          );
-        } else {
-          return (
-            <Link key={key} onClick={handleClick} sx={{ cursor: "pointer" }}>
-              {key}
-            </Link>
-          );
-        }
-      })}
+        })
+      ) : (
+        <ReactMarkdown rehypePlugins={[rehypeRaw]}>{markdownParent.markdown}</ReactMarkdown>
+      )}
     </Box>
   );
 };

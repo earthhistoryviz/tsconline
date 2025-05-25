@@ -5,35 +5,35 @@ import { ArrowForwardIosSharp } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
 import "./HelpDrawer.css";
 import { generatePath } from "./state/non-action-util";
-import { MarkdownFile, MarkdownTree, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
+import { MarkdownFile, MarkdownParent, isMarkdownFile, isMarkdownParent } from "@tsconline/shared";
 
 type HelpDrawerContextType = {
-  selectedMarkdown: MarkdownFile | MarkdownTree | undefined;
+  selectedMarkdown: MarkdownFile | MarkdownParent | undefined;
 };
 export const HelpDrawerContext = createContext<HelpDrawerContextType>({
   selectedMarkdown: undefined
 });
 
-function doesMarkdownTreeContainFile(markdownFile: MarkdownTree, target: MarkdownTree | MarkdownFile) {
-  for (const value of Object.values(markdownFile)) {
+function doesMarkdownTreeContainFile(markdownFile: MarkdownParent, target: MarkdownParent | MarkdownFile) {
+  for (const value of Object.values(markdownFile.children)) {
     if (value === target) return true;
   }
   return false;
 }
 
 function NavItem({
-  markdownTree,
+  markdownParent,
   pathname,
   parentPath = ""
 }: {
-  markdownTree: MarkdownTree | MarkdownFile;
+  markdownParent: MarkdownParent | MarkdownFile;
   pathname: string;
   parentPath?: string;
 }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
   const { selectedMarkdown } = useContext(HelpDrawerContext);
-  const isSelected = selectedMarkdown === markdownTree ? "selected-help-accordion" : "";
+  const isSelected = selectedMarkdown === markdownParent ? "selected-help-accordion" : "";
   const theme = useTheme(); // Moved inside the component
 
   // Construct full path for navigation
@@ -45,9 +45,10 @@ function NavItem({
   const handleClick = () => {
     navigate(`/help${formattedPath}`);
   };
-  const isParent = isMarkdownParent(markdownTree);
+  const isParent = isMarkdownParent(markdownParent);
+  console.log("isParent", isParent, "markdownParent", markdownParent);
   const containsSelectedChild =
-    selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownTree, selectedMarkdown) ? { opacity: 1 } : {};
+    selectedMarkdown && isParent && doesMarkdownTreeContainFile(markdownParent, selectedMarkdown) ? { opacity: 1 } : {};
   return (
     <Box className="help-accordion-container">
       {open && <Box className="accordion-help-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
@@ -83,7 +84,7 @@ function NavItem({
           <Typography
             onClick={handleClick}
             className={`help-accordion-summary-text ${!isParent ? "help-accordion-leaf" : ""}`}>
-            {isMarkdownFile(markdownTree) ? (markdownTree as MarkdownFile).title : pathname}
+            {isMarkdownFile(markdownParent) ? (markdownParent as MarkdownFile).title : pathname}
           </Typography>
         </AccordionSummary>
         <AccordionDetails
@@ -92,12 +93,12 @@ function NavItem({
             // Can't directly feed theme.palette.divider into the css file
             borderLeft: `1px solid ${theme.palette.accordionLine.main}`
           }}>
-          {isMarkdownParent(markdownTree) &&
-            Object.entries(markdownTree).map(([key, child]) => (
+          {isMarkdownParent(markdownParent) &&
+            Object.entries(markdownParent.children).map(([key, child]) => (
               <NavItem
                 pathname={isMarkdownFile(child) ? child.pathname : key}
                 key={key}
-                markdownTree={child}
+                markdownParent={child}
                 parentPath={formattedPath}
               />
             ))}
@@ -108,13 +109,13 @@ function NavItem({
 }
 
 type HelpDrawerProps = {
-  markdownTree: MarkdownTree;
+  markdownParent: MarkdownParent;
 };
-export const HelpDrawer: React.FC<HelpDrawerProps> = ({ markdownTree }) => {
+export const HelpDrawer: React.FC<HelpDrawerProps> = ({ markdownParent }) => {
   return (
     <List disablePadding className="new-help-drawer-list">
-      {Object.entries(markdownTree).map(([key, child]) => (
-        <NavItem pathname={key} key={key} markdownTree={child} />
+      {Object.entries(markdownParent.children).map(([key, child]) => (
+        <NavItem pathname={key} key={key} markdownParent={child} />
       ))}
     </List>
   );

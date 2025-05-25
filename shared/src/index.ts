@@ -680,7 +680,10 @@ export type MarkdownFileMetadata = {
   title: string;
   pathname: string;
 };
-export type MarkdownParent = MarkdownTree;
+export type MarkdownParent = {
+  markdown?: string; // optional markdown content for the parent
+  children: MarkdownTree;
+} & MarkdownFileMetadata;
 
 export type MarkdownTree = {
   [key: string]: MarkdownFile | MarkdownParent;
@@ -695,11 +698,34 @@ export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMet
   if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
 }
 
+export function assertMarkdownParent(o: any): asserts o is MarkdownParent {
+  if (!o || typeof o !== "object") throw new Error("MarkdownParent must be a non-null object");
+  if (o.markdown && typeof o.markdown !== "string") throwError("MarkdownParent", "markdown", "string", o.markdown);
+  if (!o.children || typeof o.children !== "object") throw new Error("MarkdownParent must have children");
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownParent(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownParent structure at key: ${key}`);
+      }
+    }
+  }
+  assertMarkdownFileMetadata(o);
+}
+
 export function isMarkdownParent(o: any): o is MarkdownParent {
   if (!o || typeof o !== "object") return false;
-  for (const key in o) {
-    if (key in o) {
-      const value = o[key];
+  if ("markdown" in o && typeof o.markdown !== "string") return false;
+  if (!Array.isArray(o.children) && typeof o.children !== "object") return false;
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
       if (typeof value === "object") {
         if ("markdown" in value && typeof value.markdown === "string") {
           try {
