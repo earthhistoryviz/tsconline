@@ -1,7 +1,7 @@
 // If you are running in dev mode, prefix URL's with the dev server URL:
 
 export function devSafeUrl(url: string) {
-  if (!url.match(/^\//)) {
+  if (url !== "" && !url.match(/^\//)) {
     throw new Error(
       `WARNING: You did not use an absolute path for your URL in a request to fetcher (i.e., one starting with a /).
         The url you passed to fetcher is: ${url}

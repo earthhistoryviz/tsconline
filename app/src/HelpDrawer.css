@@ -3,6 +3,40 @@
   display: flex;
   order: -1;
 }
+.help-container {
+  max-height: calc(100vh - var(--nav-bar-height));
+  min-height: calc(100vh - var(--nav-bar-height));
+  grid-template-rows: calc(100vh - var(--nav-bar-height));
+  display: grid;
+  grid-template-columns: 250px auto;
+}
+.help-container > * {
+  padding-top: 10px;
+}
+.markdown-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  word-wrap: break-word;
+}
+.markdown-wrapper pre,
+.markdown-wrapper code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.markdown-wrapper table {
+  border-collapse: collapse;
+}
+
+.markdown-wrapper img,
+.markdown-wrapper table,
+.markdown-wrapper pre {
+  max-width: 100%;
+  width: max-content;
+  overflow-x: auto;
+  display: block;
+}
+
 .new-help-drawer-list:hover .accordion-help-line {
   opacity: 1;
 }
