@@ -25,7 +25,8 @@ vi.mock("../src/util", async () => {
       helpDirectory: "test-directory"
     },
     loadAssetConfigs: vi.fn().mockResolvedValue({}),
-    verifyFilepath: vi.fn().mockResolvedValue(true)
+    verifyFilepath: vi.fn().mockResolvedValue(true),
+    convertTitleToUrlPath: vi.fn().mockImplementation((title) => title.toLowerCase().replace(/\s+/g, "-"))
   };
 });
 vi.mock("@tsconline/shared", async () => {
@@ -66,20 +67,29 @@ describe("processMarkdownTree", () => {
       ] as unknown as Dirent[]);
     const tree = await processMarkdownTree();
     expect(tree).toEqual({
-      "test-pathname": {
-        pathname: "test-pathname",
-        title: "Test Title",
-        description: "Test Description",
-        tags: ["tag1", "tag2"],
-        markdown: "Test content"
-      },
-      dir1: {
-        "test-pathname": {
-          pathname: "test-pathname",
-          title: "Test Title",
-          description: "Test Description",
-          tags: ["tag1", "tag2"],
+      title: "All Categories",
+      pathname: "all-categories",
+      children: {
+        file1: {
+          pathname: "file1",
+          markdown: "Test content",
+          title: "file1"
+        },
+        file2: {
+          pathname: "file2",
+          title: "file2",
           markdown: "Test content"
+        },
+        dir1: {
+          title: "dir1",
+          pathname: "dir1",
+          children: {
+            file1: {
+              pathname: "file1",
+              title: "file1",
+              markdown: "Test content"
+            }
+          }
         }
       }
     });
