@@ -22,6 +22,7 @@ import { CrossPlotTimeSettings, RenderColumnInfo, TimeSettings } from "../types"
 import { context } from "../state";
 import AddIcon from "@mui/icons-material/Add";
 import { AddCustomColumnMenu } from "./column_menu/AddCustomColumnMenu";
+import loader from "../assets/icons/loading.json";
 
 type ColumnContextType = {
   state: {
@@ -91,7 +92,7 @@ export const Column = observer(function Column() {
 
 export const ColumnDisplay = observer(() => {
   const { state } = useContext(ColumnContext);
-  const { actions: globalActions } = useContext(context);
+  const { state: globalState, actions: globalActions } = useContext(context);
   const [showScroll, setShowScroll] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const theme = useTheme();
@@ -121,6 +122,7 @@ export const ColumnDisplay = observer(() => {
       }
     };
   }, []);
+  const isLoading = globalState.settingsTabs.showColumnSearchLoader;
   return (
     <Box
       id="ResizableColumnAccordionWrapper"
@@ -129,45 +131,52 @@ export const ColumnDisplay = observer(() => {
       borderColor="divider"
       bgcolor="secondaryBackground.main"
       className={`hide-scrollbar column-accordion-wrapper ${state.columnSearchTerm ? "filtered-border" : ""}`}
-      position="relative">
-      <div className="column-filter-buttons">
-        <CustomTooltip title="Expand All" placement="top">
-          <IconButton
-            disableRipple
-            className="expand-collapse-column-buttons"
-            onClick={() => {
-              if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
-            }}>
-            <ExpandIcon />
-          </IconButton>
-        </CustomTooltip>
-        <CustomTooltip title="Collapse All" placement="top">
-          <IconButton
-            disableRipple
-            className="expand-collapse-column-buttons"
-            onClick={() => {
-              if (!state.columns) return;
-              globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
-            }}>
-            <CompressIcon />
-          </IconButton>
-        </CustomTooltip>
-      </div>
-      {state.columns &&
-        getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
-          <ColumnAccordion key={column.name} details={column} />
-        ))}
-      {/* Button to take users to top of column menu when scrolling */}
+      position="relative"
+      display={isLoading ? "flex" : undefined}
+      justifyContent={isLoading ? "center" : undefined}
+      alignItems={isLoading ? "center" : undefined}>
+      {isLoading && <Lottie animationData={loader} autoplay loop width={200} height={200} speed={0.7} />}
+      {/* keep accordion in DOM to avoid lag when remounting after loading */}
+      <div style={{ display: isLoading ? "none" : "block" }}>
+        <div className="column-filter-buttons">
+          <CustomTooltip title="Expand All" placement="top">
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.columns) return;
+                globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, true);
+              }}>
+              <ExpandIcon />
+            </IconButton>
+          </CustomTooltip>
+          <CustomTooltip title="Collapse All" placement="top">
+            <IconButton
+              disableRipple
+              className="expand-collapse-column-buttons"
+              onClick={() => {
+                if (!state.columns) return;
+                globalActions.setExpansionOfAllChildren(state.columns, state.columnHashMap, false);
+              }}>
+              <CompressIcon />
+            </IconButton>
+          </CustomTooltip>
+        </div>
+        {state.columns &&
+          getChildRenderColumns(state.columns, state.columnHashMap).map((column) => (
+            <ColumnAccordion key={column.name} details={column} />
+          ))}
+        {/* Button to take users to top of column menu when scrolling */}
 
-      <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
-        <Lottie
-          key="settings-arrow-up"
-          style={{ width: "28px", height: "28px" }}
-          animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
-          playOnClick
-        />
-      </IconButton>
+        <IconButton onClick={scrollToTop} className={`scroll-to-top-button ${showScroll ? "show" : ""}`}>
+          <Lottie
+            key="settings-arrow-up"
+            style={{ width: "28px", height: "28px" }}
+            animationData={theme.palette.mode === "light" ? DarkArrowUpIcon : LightArrowUpIcon}
+            playOnClick
+          />
+        </IconButton>
+      </div>
     </Box>
   );
 });
@@ -315,6 +324,7 @@ const ColumnSearchBar = observer(() => {
         fullWidth
         onChange={handleSearch}
         value={state.columnSearchTerm}
+        autoComplete="off"
       />
       <FilterHelperText helperText={state.columnSearchTerm} />
     </div>
