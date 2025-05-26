@@ -124,11 +124,7 @@ export const Discussion = observer(() => {
       const response = await actions.adminDeleteDatapackComment(id);
       if (!response) {
         actions.pushError(ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED);
-        return;
       }
-      actions.deleteDatapackProfileComment(id);
-      actions.pushSnackbar("Comment deleted.", "success");
-      actions.removeAllErrors();
       return;
     }
     try {

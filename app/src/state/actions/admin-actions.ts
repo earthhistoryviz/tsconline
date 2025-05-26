@@ -23,6 +23,7 @@ import {
 import { displayServerError } from "./util-actions";
 import {
   addDatapack,
+  deleteDatapackProfileComment,
   getRecaptchaToken,
   pushError,
   pushSnackbar,
@@ -988,6 +989,9 @@ export const adminDeleteDatapackComment = action(async (commentId: number) => {
     });
 
     if (response.ok) {
+      deleteDatapackProfileComment(commentId);
+      pushSnackbar("Comment deleted.", "success");
+      removeAllErrors();
       return true;
     } else {
       let errorCode = ErrorCodes.DATAPACK_COMMENT_DELETE_FAILED;
