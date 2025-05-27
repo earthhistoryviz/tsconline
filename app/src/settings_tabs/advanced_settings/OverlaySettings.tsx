@@ -1,4 +1,3 @@
-import { ColumnInfo } from "@tsconline/shared";
 import { ColumnContainer, Accordion } from "../../components";
 import { Box, Typography } from "@mui/material";
 import { useContext, useState, createContext } from "react";
@@ -9,24 +8,27 @@ import MuiAccordionDetails from "@mui/material/AccordionDetails";
 import ArrowForwardIosSharpIcon from "@mui/icons-material/ArrowForwardIosSharp";
 import { CustomTooltip } from "../../components";
 import { context } from "../../state";
+import { RenderColumnInfo } from "../../types";
+import { getChildRenderColumns } from "../../util/util";
 import "./OverlaySettings.css";
 import "../Column.css";
+import { ColumnContext } from "../Column";
 
 const OverlayColumnContext = createContext<{
-  selectedColumn: ColumnInfo | null;
-  setSelectedColumn: (column: ColumnInfo) => void;
+  selectedColumn: RenderColumnInfo | null;
+  setSelectedColumn: (column: RenderColumnInfo) => void;
 }>({
   selectedColumn: null,
   setSelectedColumn: () => {}
 });
 
 type OverlayColumnAccordionProps = {
-  column: ColumnInfo;
-  onColumnClick: (column: ColumnInfo) => void;
+  column: RenderColumnInfo;
+  onColumnClick: (column: RenderColumnInfo) => void;
 };
 
 export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
-  const [selectedColumn, setSelectedColumn] = useState<ColumnInfo | null>(null);
+  const [selectedColumn, setSelectedColumn] = useState<RenderColumnInfo | null>(null);
 
   return (
     <div className="column-accordion-wrapper overlay-wrapper">
@@ -39,6 +41,7 @@ export const OverlayColumnAccordion: React.FC<OverlayColumnAccordionProps> = obs
 
 const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ column, onColumnClick }) => {
   const { state } = useContext(context);
+  const { state: localState } = useContext(ColumnContext);
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(column.expanded);
   const { selectedColumn, setSelectedColumn } = useContext(OverlayColumnContext);
@@ -93,9 +96,7 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
     );
   }
   //for keeping the selected column hierarchy line highlighted
-  const containsSelectedChild = column.children.some((column) => column.name === selectedColumn?.name)
-    ? { opacity: 1 }
-    : {};
+  const containsSelectedChild = column.children.some((column) => column === selectedColumn?.name) ? { opacity: 1 } : {};
   return (
     <div className="dcc-accordion-container">
       {expanded && <Box className="accordion-line" style={containsSelectedChild} bgcolor="accordionLine.main" />}
@@ -117,9 +118,9 @@ const ColumnAccordion: React.FC<OverlayColumnAccordionProps> = observer(({ colum
           </ColumnContainer>
         </MuiAccordionSummary>
         <MuiAccordionDetails className="column-accordion-details">
-          {column.children &&
-            Object.entries(column.children).map(([childName, childColumn]) => (
-              <ColumnAccordion key={childName} column={childColumn} onColumnClick={onColumnClick} />
+          {expanded &&
+            getChildRenderColumns(column, localState.columnHashMap).map((childColumn) => (
+              <ColumnAccordion key={childColumn.name} column={childColumn} onColumnClick={onColumnClick} />
             ))}
         </MuiAccordionDetails>
       </Accordion>

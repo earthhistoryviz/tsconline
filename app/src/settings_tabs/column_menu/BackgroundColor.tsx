@@ -4,12 +4,12 @@ import { FormLabel } from "@mui/material";
 import TSCColorPicker from "../../components/TSCColorPicker";
 import "./BackgroundColor.css";
 import { convertHexToRGB } from "../../util/util";
-import { ColumnInfo } from "@tsconline/shared";
 import { context } from "../../state";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 interface ChangeBGColorProps {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 }
 export const ChangeBackgroundColor: React.FC<ChangeBGColorProps> = observer(({ column }) => {
   const { actions } = useContext(context);

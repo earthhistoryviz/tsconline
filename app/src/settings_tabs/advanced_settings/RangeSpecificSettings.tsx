@@ -1,12 +1,13 @@
-import { ColumnInfo, assertRangeSettings, isRangeSort } from "@tsconline/shared";
+import { assertRangeSettings, isRangeSort } from "@tsconline/shared";
 import { observer } from "mobx-react-lite";
 import { useContext } from "react";
 import { context } from "../../state";
 import { TSCRadioGroup } from "../../components/TSCRadioGroup";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 type RangeSpecificSettingsProps = {
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 export const RangeSpecificSettings: React.FC<RangeSpecificSettingsProps> = observer(({ column }) => {
   const { actions } = useContext(context);
