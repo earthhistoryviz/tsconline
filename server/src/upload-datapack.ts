@@ -63,7 +63,7 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 };
-export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>) => {
+export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>, options?: { bearerToken:string }) => {
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
@@ -80,11 +80,15 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   try {
     if (
       (isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) &&
-      !isAdmin &&
-      uuid !== "official"
+      !isAdmin
     ) {
       return { code: 401, message: "Only admins can upload official or workshop datapacks" };
     }
+
+    if (uuid === "official" && !isAdmin && options?.bearerToken !== process.env.BEARER_TOKEN) {
+      return { code: 401, message: "Invalid bearer token for official datapack upload" };
+    }
+
     // change the uuid to reflect where we are downloading the datapack to depending on the type of datapack
     const uuidDirectoryToDownloadTo = isOfficialDatapack(datapackMetadata)
       ? "official"

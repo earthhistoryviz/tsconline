@@ -146,6 +146,16 @@ export const Datapacks = observer(function Datapacks() {
             loading={state.skeletonStates.publicOfficialDatapacksLoading}
           />
         )}
+        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Lexicon Formations")) && (
+          <DatapackGroupDisplay
+            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+              item.tags.includes("Lexicon Formations")
+            )}
+            header={t("settings.datapacks.title.lexicon")}
+            HeaderIcon={Terrain}
+            loading={state.skeletonStates.publicOfficialDatapacksLoading}
+          />
+        )}
       </Box>
       <Box className={`${styles.container} ${styles.buttonContainer}`}>
         {state.isLoggedIn && (
