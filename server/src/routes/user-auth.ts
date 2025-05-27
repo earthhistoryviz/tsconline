@@ -6,7 +6,10 @@ import {
   uploadDatapack,
   userDeleteDatapack,
   fetchWorkshopDatapack,
-  downloadDatapackFilesZip
+  downloadDatapackFilesZip,
+  uploadDatapackComment,
+  updateDatapackComment,
+  deleteDatapackComment
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -87,6 +90,27 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };
+  const uploadDatapackCommentParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" }
+    },
+    required: ["datapackTitle"]
+  };
+  const updateDatapackCommentParams = {
+    type: "object",
+    properties: {
+      commentId: { type: "number" }
+    },
+    required: ["commentId"]
+  };
+  const deleteDatapackCommentParams = {
+    type: "object",
+    properties: {
+      commentId: { type: "number" }
+    },
+    required: ["commentId"]
+  };
   fastify.addHook("preHandler", verifySession);
   fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
@@ -134,5 +158,29 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: downloadDatapackFilesZipParams }
     },
     downloadDatapackFilesZip
+  );
+  fastify.post(
+    "/datapack/addComment/:datapackTitle",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: uploadDatapackCommentParams }
+    },
+    uploadDatapackComment
+  );
+  fastify.post(
+    "/datapack/comments/report/:commentId",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: updateDatapackCommentParams }
+    },
+    updateDatapackComment
+  );
+  fastify.delete(
+    "/datapack/comments/:commentId",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: deleteDatapackCommentParams }
+    },
+    deleteDatapackComment
   );
 };

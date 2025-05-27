@@ -7,6 +7,7 @@ export interface Database {
   ip: IpTable;
   workshop: WorkshopTable;
   usersWorkshops: UsersWorkshopsTable;
+  comments: CommentsTable;
 }
 
 export type AccountType = "pro" | "default";
@@ -57,6 +58,16 @@ export interface UsersWorkshopsTable {
   userId: number;
 }
 
+export interface CommentsTable {
+  id: Generated<number>;
+  uuid: string;
+  commentText: string;
+  datapackTitle: string;
+  dateCreated: string;
+  flagged: number;
+  username: string;
+}
+
 export type User = Selectable<UserTable>;
 export type NewUser = Insertable<UserTable>;
 export type UpdatedUser = Updateable<UserTable>;
@@ -74,6 +85,10 @@ export type UpdatedIp = Updateable<IpTable>;
 export type Workshop = Selectable<WorkshopTable>;
 export type NewWorkshop = Insertable<WorkshopTable>;
 export type UpdatedWorkshop = Updateable<WorkshopTable>;
+
+export type DatapackComment = Selectable<CommentsTable>;
+export type NewDatapackComment = Insertable<CommentsTable>;
+export type UpdatedDatapackComment = Updateable<CommentsTable>;
 
 export type Email = {
   from: string;
@@ -195,4 +210,20 @@ export function assertOperationResult(o: any): asserts o is OperationResult {
   if (typeof o !== "object" || !o) throw "OperationResult must be an object";
   if (typeof o.code !== "number") throwError("OperationResult", "code", "number", o.code);
   if (typeof o.message !== "string") throwError("OperationResult", "message", "string", o.message);
+}
+
+// need to check for profile picture too because of join with user table when fetching comments
+export function assertDatapackCommentWithProfilePicture(
+  o: any
+): asserts o is DatapackComment & { pictureUrl?: string } {
+  if (typeof o !== "object" || !o) throw "DatapackComment must be an object";
+  if (typeof o.id !== "number") throwError("DatapackComment", "id", "number", o.id);
+  if (typeof o.uuid !== "string") throwError("DatapackComment", "uuid", "string", o.uuid);
+  if (typeof o.commentText !== "string") throwError("DatapackComment", "commentText", "string", o.commentText);
+  if (typeof o.datapackTitle !== "string") throwError("DatapackComment", "datapackTitle", "string", o.datapackTitle);
+  if (typeof o.dateCreated !== "string") throwError("DatapackComment", "dateCreated", "string", o.dateCreated);
+  if (typeof o.flagged !== "number") throwError("DatapackComment", "flagged", "number", o.flagged);
+  if (typeof o.username !== "string") throwError("DatapackComment", "username", "string", o.username);
+  if (o.pictureUrl && typeof o.pictureUrl !== "string")
+    throwError("DatapackComment", "pictureUrl", "string", o.pictureUrl);
 }

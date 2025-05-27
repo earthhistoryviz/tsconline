@@ -12,7 +12,9 @@ import {
   checkWorkshopHasUser,
   createUsersWorkshops,
   findUsersWorkshops,
-  updateUser
+  updateUser,
+  findDatapackComment,
+  deleteComment
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -890,4 +892,34 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
     logger.error(error);
     reply.status(500).send({ error: "Error uploading cover picture to workshop" });
   }
+};
+
+/**
+ * Admin sends a request to delete a datapack comment
+ * TODO case where user is deleted, if user is still logged in, invalidate session or handle logic in login-routes
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const adminDeleteDatapackComment = async function adminDeleteDatapackComment(
+  request: FastifyRequest<{ Params: { commentId: number } }>,
+  reply: FastifyReply
+) {
+  const { commentId } = request.params;
+  if (commentId === undefined) {
+    reply.status(400).send({ error: "Missing comment ID" });
+    return;
+  }
+  try {
+    const comment = await findDatapackComment({ id: commentId });
+    if (!comment || comment.length < 1 || !comment[0]) {
+      reply.status(404).send({ error: "Requested comment not found." });
+      return;
+    }
+    await deleteComment({ id: commentId });
+  } catch (error) {
+    reply.status(500).send({ error: "Error deleting datapack comment" });
+    return;
+  }
+  reply.send({ message: "Datapack comment deleted" });
 };

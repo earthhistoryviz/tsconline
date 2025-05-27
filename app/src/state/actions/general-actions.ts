@@ -1,36 +1,33 @@
 import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
-  SharedUser,
+  assertChartInfoTSC,
+  assertDatapack,
+  assertDatapackMetadataArray,
+  assertOfficialDatapack,
+  assertPatterns,
+  assertPresets,
+  assertSharedUser,
+  assertSuccessfulServerResponse,
+  assertSVGStatus,
+  assertTreatiseDatapack,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  TimescaleItem,
-  assertSharedUser,
-  assertChartInfoTSC,
+  type ColumnInfo,
+  Datapack,
+  DatapackConfigForChartRequest,
   DatapackMetadata,
+  DatapackUniqueIdentifier,
   defaultColumnRoot,
   FontsInfo,
-  DatapackConfigForChartRequest,
-  isUserDatapack,
   isOfficialDatapack,
-  assertOfficialDatapack,
-  assertDatapack,
-  DatapackUniqueIdentifier,
+  isUserDatapack,
   isWorkshopDatapack,
-  Datapack,
-  assertDatapackMetadataArray,
-  assertTreatiseDatapack,
-  MarkdownFile
-} from "@tsconline/shared";
-
-import {
-  type MapInfo,
-  type ColumnInfo,
   type MapHierarchy,
-  assertSuccessfulServerResponse,
+  type MapInfo,
   Presets,
-  assertSVGStatus,
-  assertPresets,
-  assertPatterns
+  SharedUser,
+  TimescaleItem,
+  MarkdownFile
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
@@ -50,6 +47,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
   ChartZoomSettings,
+  CommentType,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -57,7 +55,7 @@ import {
   SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
-import { settings, defaultTimeSettings } from "../../constants";
+import { defaultTimeSettings, settings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
 import {
@@ -1383,6 +1381,24 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
+});
+
+export const setDatapackProfileComments = action((comments: CommentType[]) => {
+  state.datapackProfilePage.comments = comments;
+});
+
+export const addDatapackProfileComment = action((newComment: CommentType) => {
+  const updatedComments = [newComment, ...state.datapackProfilePage.comments];
+  updatedComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+  state.datapackProfilePage.comments = updatedComments;
+});
+
+export const deleteDatapackProfileComment = action((id: number) => {
+  state.datapackProfilePage.comments = state.datapackProfilePage.comments.filter((comment) => comment.id !== id);
+});
+
+export const setCommentInput = action((updatedComment: string) => {
+  state.commentInput = updatedComment;
 });
 
 export const replaceMarkdown = action("replaceMarkdown", (markdownFile: MarkdownFile) => {
