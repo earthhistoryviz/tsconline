@@ -1,4 +1,4 @@
-import { action, observable } from "mobx";
+import { action, observable, reaction, runInAction, toJS } from "mobx";
 import { state } from "../state";
 import {
   ChronSettings,
@@ -41,6 +41,7 @@ import {
   DataMiningStatisticApproach,
   EventSearchInfo,
   GroupedEventSearchInfo,
+  RenderColumnInfo,
   WindowStats,
   convertDataMiningPointDataTypeToDataMiningStatisticApproach
 } from "../../types";
@@ -51,7 +52,7 @@ import {
 } from "../../util/data-mining";
 import { getRegex, yieldControl } from "../../util";
 import { altUnitNamePrefix } from "../../util/constant";
-import { discardTscPrefix, findSerialNum, prependDualColCompColumnName } from "../../util/util";
+import { discardTscPrefix, findSerialNum, getChildRenderColumns, prependDualColCompColumnName } from "../../util/util";
 
 function extractName(text: string): string {
   return text.substring(text.indexOf(":") + 1, text.length);
@@ -60,7 +61,7 @@ function extractColumnType(text: string): string {
   return text.substring(text.indexOf(".") + 1, text.indexOf(":"));
 }
 
-function setColumnProperties(column: ColumnInfo, settings: ColumnInfoTSC) {
+function setColumnProperties(column: RenderColumnInfo, settings: ColumnInfoTSC) {
   setEditName(settings.title, column);
   setEnableTitle(settings.drawTitle, column);
   if ("showUncertaintyLabels" in column) setShowUncertaintyLabels(settings.drawUncertaintyLabel, column);
@@ -216,12 +217,13 @@ export function handleDualColCompColumns() {
     let index = 0;
     let numOfDcc = 0;
     while (index < parent.children.length) {
-      if (parent.children[index].name.localeCompare(dualColumnName) === 0) {
+      if (parent.children[index].localeCompare(dualColumnName) === 0) {
         numOfDcc++;
         //the "add dcc function" inserts the dcc right after the reference column, so we can check for the correct dcc
         //by checking if the previous column is the reference column (here we are checking the opposite to remove duplicate dcc)
-        if (index === 0 || (index > 0 && parent.children[index - 1].name.localeCompare(refCol.name) !== 0)) {
+        if (index === 0 || (index > 0 && parent.children[index - 1].localeCompare(refCol.name) !== 0)) {
           parent.children.splice(index, 1);
+          parent.columnRef.children.splice(index, 1);
           continue;
         }
       }
@@ -401,7 +403,7 @@ export function addColumnToDataMiningCache(settings: ColumnInfoTSC) {
 
 export const applyChartColumnSettings = action("applyChartColumnSettings", (settings: ColumnInfoTSC) => {
   const columnName = extractName(settings._id);
-  let curcol: ColumnInfo | undefined =
+  let curcol: RenderColumnInfo | undefined =
     state.settingsTabs.columnHashMap.get(columnName) ||
     state.settingsTabs.columnHashMap.get("Chart Title in " + columnName);
   if (curcol) {
@@ -435,7 +437,7 @@ export const applyChartColumnSettings = action("applyChartColumnSettings", (sett
 
 export const applyRowOrder = action(
   "applyRowOrder",
-  async (column: ColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
+  async (column: RenderColumnInfo | undefined, settings: ColumnInfoTSC, counter = { count: 0 }) => {
     if (!column) return;
     //needed since number of children in column and settings file could be different
     let columnIndex = 0;
@@ -457,7 +459,7 @@ export const applyRowOrder = action(
       }
       let indexOfMatch = -1;
       //column doesn't exist in the childrens of loaded column, so skip
-      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child.name === childName)) === -1) {
+      if ((indexOfMatch = column.children.slice(columnIndex).findIndex((child) => child === childName)) === -1) {
         continue;
       }
       indexOfMatch += columnIndex;
@@ -467,21 +469,127 @@ export const applyRowOrder = action(
           column.children[indexOfMatch],
           column.children[columnIndex]
         ];
+        [column.columnRef.children[columnIndex], column.columnRef.children[indexOfMatch]] = [
+          column.columnRef.children[indexOfMatch],
+          column.columnRef.children[columnIndex]
+        ];
       }
-      await applyRowOrder(column.children[columnIndex], settingsChild, counter);
+      await applyRowOrder(state.settingsTabs.columnHashMap.get(column.children[columnIndex]), settingsChild, counter);
       columnIndex++;
     }
   }
 );
 
-export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, counter = { count: 0 }) => {
-  await yieldControl(counter, 30);
+export const initializeColumnHashMap = action(async (root: ColumnInfo) => {
+  const tempMap = new Map<string, RenderColumnInfo>();
+  const stack: ColumnInfo[] = [root];
+  const counter = { count: 0 };
 
-  state.settingsTabs.columnHashMap.set(columnInfo.name, columnInfo);
-  for (const childColumn of columnInfo.children) {
-    await initializeColumnHashMap(childColumn, counter);
+  while (stack.length > 0) {
+    await yieldControl(counter, 30);
+    const current = stack.pop()!;
+    const renderColumn = convertColumnInfoToRenderColumnInfo(current);
+    tempMap.set(renderColumn.name, renderColumn);
+
+    for (const child of current.children) {
+      stack.push(child);
+    }
   }
+  for (const column of state.settingsTabs.columnHashMap.values()) {
+    column.dispose();
+  }
+  runInAction(() => {
+    state.settingsTabs.columnHashMap = tempMap;
+  });
 });
+
+export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
+  const renderColumn: RenderColumnInfo = observable.object(
+    {
+      name: column.name,
+      editName: column.editName,
+      fontsInfo: column.fontsInfo,
+      fontOptions: column.fontOptions,
+      on: column.on,
+      popup: column.popup,
+      children: column.children.map((child) => child.name),
+      parent: column.parent,
+      minAge: column.minAge,
+      maxAge: column.maxAge,
+      show: column.show,
+      expanded: column.expanded,
+      enableTitle: column.enableTitle,
+      columnDisplayType: column.columnDisplayType,
+      columnSpecificSettings: column.columnSpecificSettings,
+      rgb: column.rgb,
+      width: column.width,
+      units: column.units,
+      showAgeLabels: column.showAgeLabels,
+      showUncertaintyLabels: column.showUncertaintyLabels,
+      columnRef: column,
+      isSelected: false,
+      hasSelectedChildren: false,
+      dispose: () => {}
+    },
+    {
+      name: false,
+      fontOptions: false,
+      columnDisplayType: false,
+      minAge: false,
+      maxAge: false,
+      units: false,
+      columnRef: false,
+      dispose: false
+    }
+  );
+  addReactionToRenderColumnInfo(column, renderColumn);
+  return renderColumn;
+}
+
+export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: RenderColumnInfo) {
+  const dispose = reaction(
+    () => ({
+      on: renderColumn.on,
+      expanded: renderColumn.expanded,
+      show: renderColumn.show,
+      editname: renderColumn.editName
+    }),
+    (updated) => {
+      column.on = updated.on;
+      column.expanded = updated.expanded;
+      column.show = updated.show;
+      column.editName = updated.editname;
+    }
+  );
+  const dispose1 = reaction(
+    () => ({
+      fontsInfo: toJS(renderColumn.fontsInfo),
+      popup: renderColumn.popup,
+      parent: renderColumn.parent,
+      enableTitle: renderColumn.enableTitle,
+      width: renderColumn.width,
+      rgb: toJS(renderColumn.rgb),
+      columnSpecificSettings: toJS(renderColumn.columnSpecificSettings),
+      showAgeLabels: renderColumn.showAgeLabels,
+      showUncertaintyLabels: renderColumn.showUncertaintyLabels
+    }),
+    (updated) => {
+      column.fontsInfo = updated.fontsInfo;
+      column.popup = updated.popup;
+      column.parent = updated.parent;
+      column.enableTitle = updated.enableTitle;
+      column.width = updated.width;
+      column.rgb = updated.rgb;
+      column.columnSpecificSettings = updated.columnSpecificSettings;
+      column.showAgeLabels = updated.showAgeLabels;
+      column.showUncertaintyLabels = updated.showUncertaintyLabels;
+    }
+  );
+  renderColumn.dispose = () => {
+    dispose();
+    dispose1();
+  };
+}
 
 /**
  * toggles the "on" state for a column that had its checkbox clicked
@@ -490,13 +598,13 @@ export const initializeColumnHashMap = action(async (columnInfo: ColumnInfo, cou
  */
 export const toggleSettingsTabColumn = action(
   (
-    columnOrName: ColumnInfo | string,
+    columnOrName: RenderColumnInfo | string,
     options?: {
       expand?: boolean;
-      hashMap?: Map<string, ColumnInfo>;
+      hashMap?: Map<string, RenderColumnInfo>;
     }
   ) => {
-    let column: ColumnInfo | undefined;
+    let column: RenderColumnInfo | undefined;
     const columnHashMap = options?.hashMap || state.settingsTabs.columnHashMap;
     const expand = options?.expand || false;
     if (typeof columnOrName === "string") {
@@ -552,10 +660,10 @@ export const setPointColumnSettings = action((pointSettings: PointSettings, newS
 export const setRangeColumnSettings = action((rangeSettings: RangeSettings, newSettings: Partial<RangeSettings>) => {
   Object.assign(rangeSettings, newSettings);
 });
-export const setColumnOn = action((isOn: boolean, column: ColumnInfo) => {
+export const setColumnOn = action((isOn: boolean, column: RenderColumnInfo) => {
   column.on = isOn;
 });
-export const setEditName = action((newName: string, column: ColumnInfo) => {
+export const setEditName = action((newName: string, column: RenderColumnInfo) => {
   column.editName = newName;
 });
 
@@ -574,11 +682,21 @@ export const flipRange = action((pointSettings: PointSettings) => {
   pointSettings.flipScale = !pointSettings.flipScale;
 });
 
-export const setWidth = action((newWidth: number, column: ColumnInfo) => {
+export const setWidth = action((newWidth: number, column: RenderColumnInfo) => {
   column.width = newWidth;
 });
 
 export const setColumnSelected = action((name: string) => {
+  const previouslySelectedColumn = state.columnMenu.columnSelected
+    ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected)
+    : null;
+  if (previouslySelectedColumn) {
+    previouslySelectedColumn.isSelected = false;
+    const parentColumn = previouslySelectedColumn.parent
+      ? state.settingsTabs.columnHashMap.get(previouslySelectedColumn.parent)
+      : null;
+    if (parentColumn) parentColumn.hasSelectedChildren = false;
+  }
   state.columnMenu.columnSelected = name;
   const column = state.settingsTabs.columnHashMap.get(name);
   setColumnMenuTabValue(0);
@@ -597,6 +715,8 @@ export const setColumnSelected = action((name: string) => {
       default:
         setColumnMenuTabs(["General", "Font"]);
     }
+    column.isSelected = true;
+    if (column.parent) state.settingsTabs.columnHashMap.get(column.parent)!.hasSelectedChildren = true;
   } else {
     console.log("WARNING: state.settingsTabs.columnHashMap does not have", name);
   }
@@ -607,42 +727,50 @@ export const setColumnMenuTabs = action((tabs: string[]) => {
 export const setColumnMenuTabValue = action((tabValue: number) => {
   state.columnMenu.tabValue = tabValue;
 });
+export const setShowColumnSearchLoader = action((show: boolean) => {
+  state.settingsTabs.showColumnSearchLoader = show;
+});
 
-let searchColumnsAbortController: AbortController | null = null;
+let currentSearchToken = 0;
 export const searchColumns = action(async (searchTerm: string, counter = { count: 0 }) => {
-  if (searchColumnsAbortController) searchColumnsAbortController.abort();
-  searchColumnsAbortController = new AbortController();
+  const root = state.settingsTabs.renderColumns;
+  if (!root) return;
+
+  setShowColumnSearchLoader(true);
+  const thisToken = ++currentSearchToken;
+  const columnHashMap = state.settingsTabs.columnHashMap;
   setColumnSearchTerm(searchTerm);
   if (searchTerm === "") {
-    state.settingsTabs.columnHashMap.forEach((columnInfo) => {
+    columnHashMap.forEach((columnInfo) => {
       setExpanded(false, columnInfo);
       setShow(true, columnInfo);
     });
     if (!state.settingsTabs.columns) return;
-    for (const child of state.settingsTabs.columns.children) {
+    for (const child of getChildRenderColumns(state.settingsTabs.renderColumns, columnHashMap)) {
       setExpanded(true, child);
     }
+    setShowColumnSearchLoader(false);
     return;
   }
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-    await yieldControl(counter, 30);
+  for (const columnInfo of columnHashMap.values()) {
+    if (thisToken !== currentSearchToken) return;
     setShow(false, columnInfo);
     setExpanded(false, columnInfo);
   }
 
   const regExp = getRegex(searchTerm);
+  const stack = [root];
 
-  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
-    await yieldControl(counter, 30);
-    if (columnInfo.show != true && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
+  while (stack.length > 0) {
+    if (thisToken !== currentSearchToken) return;
+    const columnInfo = stack.pop()!;
+
+    if (!columnInfo.show && (regExp.test(columnInfo.name) || regExp.test(columnInfo.editName))) {
       setShow(true, columnInfo);
-      setExpanded(true, columnInfo);
       let parentName = columnInfo.parent;
-      await setExpansionOfAllChildren(columnInfo, false);
-      await setShowOfAllChildren(columnInfo, true);
       while (parentName) {
-        const parentColumnInfo = state.settingsTabs.columnHashMap.get(parentName);
-        if (parentColumnInfo && !parentColumnInfo.expanded && !parentColumnInfo.show) {
+        const parentColumnInfo = columnHashMap.get(parentName);
+        if (parentColumnInfo && (!parentColumnInfo.expanded || !parentColumnInfo.show)) {
           setShow(true, parentColumnInfo);
           setExpanded(true, parentColumnInfo);
           parentName = parentColumnInfo.parent;
@@ -651,11 +779,16 @@ export const searchColumns = action(async (searchTerm: string, counter = { count
         }
       }
     }
+    for (let i = columnInfo.children.length - 1; i >= 0; i--) {
+      const child = columnHashMap.get(columnInfo.children[i]);
+      if (child) stack.push(child);
+    }
+    await yieldControl(counter, 5);
   }
-  searchColumnsAbortController = null;
+  setShowColumnSearchLoader(false);
 });
 
-export const setDrawDualColCompColumn = action((baseColumn: ColumnInfo, overlayColumn: ColumnInfo) => {
+export const setDrawDualColCompColumn = action((baseColumn: RenderColumnInfo, overlayColumn: RenderColumnInfo) => {
   if (baseColumn.columnDisplayType === "Point") {
     assertPointSettings(baseColumn.columnSpecificSettings);
   } else if (baseColumn.columnDisplayType === "Event") {
@@ -672,7 +805,7 @@ export const setDrawDualColCompColumn = action((baseColumn: ColumnInfo, overlayC
  * the minAge and maxAge are set to the minAge and maxAge of the overlay for time checking purposes.
  */
 
-export const addDualColCompColumn = action((column: ColumnInfo) => {
+export const addDualColCompColumn = action((column: RenderColumnInfo) => {
   if (column.columnDisplayType === "Event") {
     assertEventSettings(column.columnSpecificSettings);
     if (column.columnSpecificSettings.drawDualColCompColumn === null) {
@@ -698,7 +831,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     console.warn("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
     return;
   }
-  const index = parent.children.findIndex((child) => child.name === column.name);
+  const index = parent.children.findIndex((child) => child === column.name);
   if (index === -1) {
     console.warn(
       "WARNING: ",
@@ -719,8 +852,8 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
     return;
   }
   const dualColCompColumnName = prependDualColCompColumnName(column.name);
-  const dualColCompColumn: ColumnInfo = observable({
-    ...cloneDeep(column),
+  const dualColCompColumn: ColumnInfo = {
+    ...cloneDeep(column.columnRef),
     name: dualColCompColumnName,
     editName: dualColCompColumnName,
     minAge: overlayColumn.minAge,
@@ -731,7 +864,7 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
       g: 255,
       b: 255
     }
-  });
+  };
   if (column.columnDisplayType === "Event") {
     dualColCompColumn.columnDisplayType = "Event";
     assertEventSettings(column.columnSpecificSettings);
@@ -749,12 +882,13 @@ export const addDualColCompColumn = action((column: ColumnInfo) => {
       dualColCompColumnRef: column.name
     };
   }
-  parent.children.splice(index + 1, 0, dualColCompColumn);
-  state.settingsTabs.columnHashMap.set(dualColCompColumnName, dualColCompColumn);
+  parent.children.splice(index + 1, 0, dualColCompColumnName);
+  parent.columnRef.children.splice(index + 1, 0, dualColCompColumn);
+  state.settingsTabs.columnHashMap.set(dualColCompColumnName, convertColumnInfoToRenderColumnInfo(dualColCompColumn));
   return dualColCompColumnName;
 });
 
-export const removeDualColCompColumn = action((column: ColumnInfo) => {
+export const removeDualColCompColumn = action((column: RenderColumnInfo) => {
   if (!column.parent) {
     console.log("WARNING: tried to remove a dual col comp column from a column with no parent");
     return;
@@ -765,16 +899,17 @@ export const removeDualColCompColumn = action((column: ColumnInfo) => {
     return;
   }
   const columnToRemove = prependDualColCompColumnName(column.name);
-  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  const index = parent.children.findIndex((child) => child === columnToRemove);
   if (index === -1) {
     return;
   }
   parent.children.splice(index, 1);
+  parent.columnRef.children.splice(index, 1);
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
 export const addDataMiningColumn = action(
-  (column: ColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
+  (column: RenderColumnInfo, type: EventFrequency | DataMiningPointDataType | DataMiningChronDataType) => {
     if (
       column.columnDisplayType !== "Event" &&
       column.columnDisplayType !== "Point" &&
@@ -794,7 +929,7 @@ export const addDataMiningColumn = action(
       console.log("WARNING: tried to get", column.parent, "in state.settingsTabs.columnHashMap, but is undefined");
       return;
     }
-    const index = parent.children.findIndex((child) => child.name === column.name);
+    const index = parent.children.findIndex((child) => child === column.name);
     if (index === -1) {
       console.log("WARNING: ", column.name, "not found in parent's children when attempting to add data mining column");
       return;
@@ -803,16 +938,17 @@ export const addDataMiningColumn = action(
     let fill: RGB = cloneDeep(defaultPointSettings.fill);
     let windowStats: WindowStats[] = [];
     let stat: DataMiningStatisticApproach;
+    const subInfo = column.columnRef.subInfo;
     switch (column.columnDisplayType) {
       case "Event": {
         assertEventSettings(column.columnSpecificSettings);
-        assertSubEventInfoArray(column.subInfo);
+        assertSubEventInfoArray(subInfo);
         if (!isEventFrequency(type)) {
           console.log("WARNING: unknown event frequency associated with an event", type);
           return;
         }
         //in order to make the result the same as the jar, we need to have filtered data for events
-        const eventData = column.subInfo
+        const eventData = subInfo
           .filter((subEvent) => {
             if (type === "Combined Events") return true;
             else return subEvent.subEventType === type;
@@ -858,13 +994,13 @@ export const addDataMiningColumn = action(
 
       case "Point": {
         assertPointSettings(column.columnSpecificSettings);
-        assertSubPointInfoArray(column.subInfo);
+        assertSubPointInfoArray(subInfo);
         if (!isDataMiningPointDataType(type)) {
           console.log("WARNING: unknown data mining type associated with a point", type);
           return;
         }
         //in order to make the result the same as the jar, we do not filter data for points, instead we remove the first and the last data point.
-        const pointData = column.subInfo.map((subPoint) => {
+        const pointData = subInfo.map((subPoint) => {
           return { age: subPoint.age, value: subPoint.xVal };
         });
         pointData.shift();
@@ -918,7 +1054,7 @@ export const addDataMiningColumn = action(
 
       case "Chron": {
         assertChronSettings(column.columnSpecificSettings);
-        assertSubChronInfoArray(column.subInfo);
+        assertSubChronInfoArray(subInfo);
         if (!isDataMiningChronDataType(type)) {
           console.log("WARNING: unknown data mining type associated with a chron column", type);
           return;
@@ -929,7 +1065,7 @@ export const addDataMiningColumn = action(
           b: 201
         };
         //in order to make the result the same as the jar, we do not filter data for chrons, instead we remove the first and the last data point.
-        const chronData = column.subInfo.map((subChron) => subChron.age);
+        const chronData = subInfo.map((subChron) => subChron.age);
         chronData.shift();
         chronData.pop();
         windowStats = computeWindowStatistics(
@@ -953,8 +1089,8 @@ export const addDataMiningColumn = action(
       stat
     );
     const { lowerRange, upperRange, scaleStep, scaleStart } = calculateAutoScale(min, max);
-    const dataMiningColumn: ColumnInfo = observable({
-      ...cloneDeep(column),
+    const dataMiningColumn: ColumnInfo = {
+      ...cloneDeep(column.columnRef),
       name: dataMiningColumnName,
       editName: dataMiningColumnName,
       enableTitle: true,
@@ -976,14 +1112,15 @@ export const addDataMiningColumn = action(
         scaleStart,
         isDataMiningColumn: true
       }
-    });
-    parent.children.splice(index + 1, 0, dataMiningColumn);
-    state.settingsTabs.columnHashMap.set(dataMiningColumnName, dataMiningColumn);
+    };
+    parent.children.splice(index + 1, 0, dataMiningColumnName);
+    parent.columnRef.children.splice(index + 1, 0, dataMiningColumn);
+    state.settingsTabs.columnHashMap.set(dataMiningColumnName, convertColumnInfoToRenderColumnInfo(dataMiningColumn));
     return dataMiningColumnName;
   }
 );
 
-export const removeDataMiningColumn = action((column: ColumnInfo, type: string) => {
+export const removeDataMiningColumn = action((column: RenderColumnInfo, type: string) => {
   if (!column.parent) {
     console.log("WARNING: tried to remove a data mining column from a column with no parent");
     return;
@@ -995,19 +1132,21 @@ export const removeDataMiningColumn = action((column: ColumnInfo, type: string) 
   }
   const columnToRemove =
     column.columnDisplayType !== "Chron" ? type + " for " + column.name : type + " for " + parent.name;
-  const index = parent.children.findIndex((child) => child.name === columnToRemove);
+  const index = parent.children.findIndex((child) => child === columnToRemove);
   if (index === -1) {
     return;
   }
   parent.children.splice(index, 1);
+  parent.columnRef.children.splice(index, 1);
   state.settingsTabs.columnHashMap.delete(columnToRemove);
 });
 
-export const addBlankColumn = action((column: ColumnInfo) => {
-  if (column.children.length == 0) {
+export const addBlankColumn = action((renderColumn: RenderColumnInfo) => {
+  if (renderColumn.children.length == 0) {
     console.log("WARNING: tried to add a blank column to a column with no children");
     return;
   }
+  const column = renderColumn.columnRef;
   let serialNumber = 1;
   const largestExistingSerialNum = column.children.findLastIndex(
     (child) => /^Blank \d+ for .+$/.test(child.name) && child.columnDisplayType === "Data"
@@ -1016,7 +1155,7 @@ export const addBlankColumn = action((column: ColumnInfo) => {
     serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const blankColumnName = "Blank " + `${serialNumber}` + " for " + column.name;
-  const blankColumn: ColumnInfo = observable({
+  const blankColumn: ColumnInfo = {
     ...cloneDeep(column),
     on: true,
     children: [],
@@ -1033,17 +1172,18 @@ export const addBlankColumn = action((column: ColumnInfo) => {
       g: 255,
       b: 255
     }
-  });
+  };
 
-  column.children.splice(column.children.length, 0, blankColumn);
-  state.settingsTabs.columnHashMap.set(blankColumnName, blankColumn);
+  column.children.push(blankColumn);
+  state.settingsTabs.columnHashMap.get(column.name)?.children.push(blankColumnName);
+  state.settingsTabs.columnHashMap.set(blankColumnName, convertColumnInfoToRenderColumnInfo(blankColumn));
 });
-export const addAgeColumn = action((column: ColumnInfo) => {
-  if (column.children.length == 0) {
+export const addAgeColumn = action((renderColumn: RenderColumnInfo) => {
+  if (renderColumn.children.length == 0) {
     console.log("WARNING: tried to add an age column to a column with no children");
     return;
   }
-
+  const column = renderColumn.columnRef;
   let serialNumber = 1;
   const largestExistingSerialNum = column.children.findLastIndex(
     (child) => /^Age \d+ for .+$/.test(child.name) && child.columnDisplayType === "Ruler"
@@ -1052,7 +1192,7 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     serialNumber = findSerialNum(column.children[largestExistingSerialNum].name) + 1;
   }
   const ageColumnName = "Age " + `${serialNumber}` + " for " + column.name;
-  const ageColumn: ColumnInfo = observable({
+  const ageColumn: ColumnInfo = {
     ...cloneDeep(column),
     on: true,
     children: [],
@@ -1072,9 +1212,10 @@ export const addAgeColumn = action((column: ColumnInfo) => {
     columnSpecificSettings: {
       justification: "left"
     }
-  });
-  column.children.splice(column.children.length, 0, ageColumn);
-  state.settingsTabs.columnHashMap.set(ageColumnName, ageColumn);
+  };
+  column.children.push(ageColumn);
+  state.settingsTabs.columnHashMap.get(column.name)?.children.push(ageColumnName);
+  state.settingsTabs.columnHashMap.set(ageColumnName, convertColumnInfoToRenderColumnInfo(ageColumn));
 });
 export const makeColumnPath = action((name: string): string[] => {
   const columnPath: string[] = [];
@@ -1089,10 +1230,9 @@ export const makeColumnPath = action((name: string): string[] => {
   }
   return columnPath;
 });
-let searchEventsAbortController: AbortController | null = null;
+let currentSearchEventsToken = 0;
 export const searchEvents = action(async (searchTerm: string, counter = { count: 0 }) => {
-  if (searchEventsAbortController) searchEventsAbortController.abort();
-  searchEventsAbortController = new AbortController();
+  const thisToken = ++currentSearchEventsToken;
   setEventSearchTerm(searchTerm);
   let count = 0;
   if (state.settingsTabs.eventSearchTerm === "") return 0;
@@ -1103,6 +1243,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
   const results = new Map<string, EventSearchInfo[]>();
 
   for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    if (thisToken !== currentSearchEventsToken) return 0;
     await yieldControl(counter, 30);
     if (columnInfo.name === "Chart Root") {
       continue;
@@ -1121,13 +1262,14 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
       });
       count++;
     }
-    if (columnInfo.subInfo) {
+    if (columnInfo.columnRef.subInfo) {
       //skip since subInfo is not associated with this but the app does it for map points
       if (columnInfo.columnDisplayType === "MetaColumn") {
         continue;
       }
-      for (let i = 0; i < columnInfo.subInfo.length; i++) {
-        const subInfo = columnInfo.subInfo[i];
+      for (let i = 0; i < columnInfo.columnRef.subInfo.length; i++) {
+        if (thisToken !== currentSearchEventsToken) return 0;
+        const subInfo = columnInfo.columnRef.subInfo[i];
         if ("label" in subInfo && subInfo.label) {
           if (regExp.test(subInfo.label)) {
             const resultType = columnInfo.columnDisplayType === "Zone" ? "Block" : columnInfo.columnDisplayType;
@@ -1159,7 +1301,7 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
               //facies and chron label show up as block, so find ranges for them too
               if (resultType === "Block" || columnInfo.columnDisplayType === "BlockSeriesMetaColumn") {
                 if (i > 0) {
-                  const nextBlock = columnInfo.subInfo[i - 1];
+                  const nextBlock = columnInfo.columnRef.subInfo[i - 1];
                   if ("age" in nextBlock) resInfo.age = { topAge: nextBlock.age, baseAge: subInfo.age };
                 } else resInfo.age = { topAge: subInfo.age, baseAge: subInfo.age };
               } else {
@@ -1189,12 +1331,12 @@ export const searchEvents = action(async (searchTerm: string, counter = { count:
     }
   }
 
+  if (thisToken !== currentSearchEventsToken) return 0;
   const groupedEvents: GroupedEventSearchInfo[] = [];
   results.forEach((info: EventSearchInfo[], key: string) => {
     groupedEvents.push({ key: key, info: [...info] });
   });
   setGroupedEvents(groupedEvents);
-  searchEventsAbortController = null;
   return count;
 });
 
@@ -1211,7 +1353,7 @@ export const setGroupedEvents = action((groupedEvents: GroupedEventSearchInfo[])
   state.settingsTabs.groupedEvents = groupedEvents;
 });
 
-export const changeAgeColumnJustification = action((column: ColumnInfo, newJustification: "left" | "right") => {
+export const changeAgeColumnJustification = action((column: RenderColumnInfo, newJustification: "left" | "right") => {
   if (column.columnDisplayType !== "Ruler" || !/^Age \d+ for .+$/.test(column.name)) {
     console.log("WARNING: tried to change justification on a column which is not Age");
     return;
@@ -1219,7 +1361,7 @@ export const changeAgeColumnJustification = action((column: ColumnInfo, newJusti
   assertRulerSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.justification = newJustification;
 });
-export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrientation: "normal" | "vertical") => {
+export const changeZoneColumnOrientation = action((column: RenderColumnInfo, newOrientation: "normal" | "vertical") => {
   if (column.columnDisplayType !== "Zone") {
     console.log("WARNING: tried to change orientation on a column which is not Zone");
     return;
@@ -1227,75 +1369,88 @@ export const changeZoneColumnOrientation = action((column: ColumnInfo, newOrient
   assertZoneSettings(column.columnSpecificSettings);
   column.columnSpecificSettings.orientation = newOrientation;
 });
-export const setShowOfAllChildren = action(async (column: ColumnInfo, isShown: boolean, counter = { count: 0 }) => {
-  column.show = isShown;
-  await yieldControl(counter, 30);
-  for (const child of column.children) {
-    await setShowOfAllChildren(child, isShown, counter);
-  }
-});
 
-export const setExpansionOfAllChildren = action(
-  async (column: ColumnInfo, isExpanded: boolean, counter = { count: 0 }) => {
-    column.expanded = isExpanded;
+export const setShowOfAllChildren = action(
+  async (
+    column: RenderColumnInfo,
+    columnHashMap: Map<string, RenderColumnInfo>,
+    isShown: boolean,
+    counter = { count: 0 }
+  ) => {
+    column.show = isShown;
     await yieldControl(counter, 30);
-    for (const child of column.children) {
-      await setExpansionOfAllChildren(child, isExpanded, counter);
+    for (const child of getChildRenderColumns(column, columnHashMap)) {
+      await setShowOfAllChildren(child, columnHashMap, isShown, counter);
     }
   }
 );
 
-export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: ColumnInfo) => {
+export const setExpansionOfAllChildren = action(
+  async (
+    column: RenderColumnInfo,
+    columnHashMap: Map<string, RenderColumnInfo>,
+    isExpanded: boolean,
+    counter = { count: 0 }
+  ) => {
+    column.expanded = isExpanded;
+    await yieldControl(counter, 5);
+    for (const child of getChildRenderColumns(column, columnHashMap)) {
+      await setExpansionOfAllChildren(child, columnHashMap, isExpanded, counter);
+    }
+  }
+);
+
+export const setInheritable = action((target: ValidFontOptions, isInheritable: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].inheritable = isInheritable;
 });
 
-export const setFontOptionOn = action((target: ValidFontOptions, isOn: boolean, column: ColumnInfo) => {
+export const setFontOptionOn = action((target: ValidFontOptions, isOn: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].on = isOn;
 });
 
 export const setFontFace = action(
-  (target: ValidFontOptions, face: "Arial" | "Courier" | "Verdana", column: ColumnInfo) => {
+  (target: ValidFontOptions, face: "Arial" | "Courier" | "Verdana", column: RenderColumnInfo) => {
     column.fontsInfo[target].fontFace = face;
   }
 );
 
-export const setFontSize = action((target: ValidFontOptions, fontSize: number, column: ColumnInfo) => {
+export const setFontSize = action((target: ValidFontOptions, fontSize: number, column: RenderColumnInfo) => {
   column.fontsInfo[target].size = fontSize;
 });
 
-export const setBold = action((target: ValidFontOptions, isBold: boolean, column: ColumnInfo) => {
+export const setBold = action((target: ValidFontOptions, isBold: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].bold = isBold;
 });
 
-export const setItalic = action((target: ValidFontOptions, isItalic: boolean, column: ColumnInfo) => {
+export const setItalic = action((target: ValidFontOptions, isItalic: boolean, column: RenderColumnInfo) => {
   column.fontsInfo[target].italic = isItalic;
 });
 
-export const setColor = action((target: ValidFontOptions, color: string, column: ColumnInfo) => {
+export const setColor = action((target: ValidFontOptions, color: string, column: RenderColumnInfo) => {
   column.fontsInfo[target].color = color;
 });
 
-export const setEnableTitle = action((isOn: boolean, column: ColumnInfo) => {
+export const setEnableTitle = action((isOn: boolean, column: RenderColumnInfo) => {
   column.enableTitle = isOn;
 });
 
-export const setRGB = action((color: RGB, column: ColumnInfo) => {
+export const setRGB = action((color: RGB, column: RenderColumnInfo) => {
   column.rgb = color;
 });
 
-export const setShow = action((show: boolean, column: ColumnInfo) => {
+export const setShow = action((show: boolean, column: RenderColumnInfo) => {
   column.show = show;
 });
 
-export const setExpanded = action((expanded: boolean, column: ColumnInfo) => {
+export const setExpanded = action((expanded: boolean, column: RenderColumnInfo) => {
   column.expanded = expanded;
 });
 
-export const setShowAgeLabels = action((isOn: boolean, column: ColumnInfo) => {
+export const setShowAgeLabels = action((isOn: boolean, column: RenderColumnInfo) => {
   column.showAgeLabels = isOn;
 });
 
-export const setShowUncertaintyLabels = action((isOn: boolean, column: ColumnInfo) => {
+export const setShowUncertaintyLabels = action((isOn: boolean, column: RenderColumnInfo) => {
   column.showUncertaintyLabels = isOn;
 });
 
@@ -1308,32 +1463,52 @@ export const setEventSearchTerm = action((term: string) => {
 });
 
 // The following settings should wrap around if it overflows. Ex: last element that gets decremeneted should go to the top
-export const incrementColumnPosition = action((column: ColumnInfo) => {
+export const incrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
-  if (index > 0) {
-    // If it's not the first element, swap with the previous one
-    [parent.children[index], parent.children[index - 1]] = [parent.children[index - 1], parent.children[index]];
-  } else if (index === 0) {
-    const firstElement = parent.children.shift();
-    if (firstElement) {
-      parent.children.push(firstElement);
+
+  const renderChildren = parent.children;
+  const children = parent.columnRef.children;
+  const index = renderChildren.indexOf(column.name);
+  if (index === -1) return;
+
+  for (let i = index - 1; i >= 0; i--) {
+    const targetColumn = state.settingsTabs.columnHashMap.get(renderChildren[i]);
+    if (targetColumn?.show) {
+      [renderChildren[index], renderChildren[i]] = [renderChildren[i], renderChildren[index]];
+      [children[index], children[i]] = [children[i], children[index]];
+      return;
     }
   }
+
+  // wrap around
+  const [movedChild] = renderChildren.splice(index, 1);
+  const [movedColumn] = children.splice(index, 1);
+  renderChildren.push(movedChild);
+  children.push(movedColumn);
 });
 
-export const decrementColumnPosition = action((column: ColumnInfo) => {
+export const decrementColumnPosition = action((column: RenderColumnInfo) => {
   const parent = state.settingsTabs.columnHashMap.get(column.parent!);
   if (!parent) return;
-  const index = parent.children.indexOf(column);
-  if (index < parent.children.length - 1 && index !== -1) {
-    // If it's not the last element, swap with the next one
-    [parent.children[index], parent.children[index + 1]] = [parent.children[index + 1], parent.children[index]];
-  } else if (index === parent.children.length - 1) {
-    const lastElement = parent.children.pop();
-    if (lastElement) {
-      parent.children.unshift(lastElement);
+
+  const renderChildren = parent.children;
+  const children = parent.columnRef.children;
+  const index = renderChildren.indexOf(column.name);
+  if (index === -1) return;
+
+  for (let i = index + 1; i < renderChildren.length; i++) {
+    const targetColumn = state.settingsTabs.columnHashMap.get(renderChildren[i]);
+    if (targetColumn?.show) {
+      [renderChildren[index], renderChildren[i]] = [renderChildren[i], renderChildren[index]];
+      [children[index], children[i]] = [children[i], children[index]];
+      return;
     }
   }
+
+  // wrap around
+  const [movedChild] = renderChildren.splice(index, 1);
+  const [movedColumn] = children.splice(index, 1);
+  renderChildren.unshift(movedChild);
+  children.unshift(movedColumn);
 });

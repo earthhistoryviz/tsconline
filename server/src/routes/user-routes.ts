@@ -8,7 +8,15 @@ import {
   verifyFilepath,
   verifyNonExistentFilepath
 } from "../util.js";
-import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
+import {
+  createDatapackComment,
+  deleteComment,
+  findCurrentDatapackComments,
+  findDatapackComment,
+  findUser,
+  getActiveWorkshopsUserIsIn,
+  updateComment
+} from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
 import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
@@ -21,6 +29,7 @@ import {
 } from "../user/fetch-user-files.js";
 import path from "path";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
+import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -535,5 +544,157 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
     } else {
       reply.status(500).send({ error: "An error occurred: " + e });
     }
+  }
+};
+
+export const uploadDatapackComment = async function uploadDatapackComment(
+  request: FastifyRequest<{ Params: { datapackTitle: string }; Body: { commentText: string } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  const user = await findUser({ uuid });
+  if (!user || user.length !== 1 || !user[0]) {
+    reply.status(401).send({ error: "Unauthorized access" });
+    return;
+  }
+  const { commentText } = request.body;
+  const { datapackTitle } = request.params;
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
+
+  if (!commentText || commentText.trim().length === 0) {
+    reply.status(400).send({ error: "Missing comment text" });
+    return;
+  }
+
+  try {
+    const newDatapackComment: NewDatapackComment = {
+      uuid: uuid,
+      commentText: commentText,
+      datapackTitle: datapackTitle,
+      dateCreated: new Date().toISOString(),
+      flagged: 0,
+      username: user[0].username
+    };
+
+    await createDatapackComment(newDatapackComment);
+
+    const insertedComment = (
+      await findDatapackComment({ uuid: uuid, datapackTitle: datapackTitle, commentText: commentText })
+    )[0];
+    if (!insertedComment) {
+      throw new Error("Datapack comment not inserted");
+    }
+
+    reply.send({ message: "Datapack comment creation successful", id: insertedComment.id });
+  } catch (e) {
+    reply.status(500).send({ error: "Error uploading datapack comment" });
+  }
+};
+
+export const fetchDatapackComments = async function fetchDatapackComments(
+  request: FastifyRequest<{ Params: { datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle } = request.params;
+
+  if (!datapackTitle || datapackTitle.trim() === "") {
+    reply.status(400).send({ error: "Missing or invalid datapack title" });
+    return;
+  }
+  try {
+    const datapackComments = await findCurrentDatapackComments({ datapackTitle: datapackTitle });
+    for (const comment of datapackComments) {
+      assertDatapackCommentWithProfilePicture(comment);
+    }
+    reply.send(datapackComments);
+  } catch (e) {
+    reply.status(500).send({ error: "Error fetching datapack comments" });
+  }
+};
+
+export const updateDatapackComment = async function updateDatapackComment(
+  request: FastifyRequest<{ Params: { commentId: number }; Body: { flagged: number } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  const user = await findUser({ uuid });
+  if (!user || user.length !== 1 || !user[0]) {
+    reply.status(401).send({ error: "Unauthorized access" });
+    return;
+  }
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { commentId } = request.params;
+  const { flagged } = request.body;
+
+  if (!commentId || isNaN(Number(commentId))) {
+    reply.status(400).send({ error: "Invalid or missing comment ID" });
+    return;
+  }
+  if (flagged === undefined) {
+    reply.status(400).send({ error: "Missing flagged in body" });
+    return;
+  }
+
+  const updateData: { flagged: number } = { flagged: flagged };
+  try {
+    const result = await updateComment({ id: commentId }, updateData);
+
+    // check that database entry was updated
+    if (result.length && result[0]?.numUpdatedRows) {
+      reply.send({ message: "Datapack comment modified." });
+    } else {
+      reply.status(404).send({ error: "Datapack comment not found." });
+    }
+  } catch (e) {
+    reply.status(500).send({ error: "Error updating datapack comment" });
+  }
+};
+
+export const deleteDatapackComment = async function deleteDatapackComment(
+  request: FastifyRequest<{ Params: { commentId: number } }>,
+  reply: FastifyReply
+) {
+  const uuid = request.session.get("uuid");
+  const user = await findUser({ uuid });
+  if (!user || user.length !== 1 || !user[0]) {
+    reply.status(401).send({ error: "Unauthorized access" });
+    return;
+  }
+  if (!uuid) {
+    reply.status(401).send({ error: "User not logged in" });
+    return;
+  }
+  const { commentId } = request.params;
+
+  if (commentId === undefined) {
+    reply.status(400).send({ error: "Missing or invalid comment ID." });
+    return;
+  }
+
+  try {
+    const comment = await findDatapackComment({ id: commentId });
+    // check that user deleting comment is same user that posted comment
+    if (!comment.length) {
+      reply.status(404).send({ error: "Requested comment not found." });
+      return;
+    } else if (comment[0]?.uuid !== uuid) {
+      reply.status(403).send({ error: "Cannot delete other's comments." });
+      return;
+    }
+    await deleteComment({ id: commentId });
+    reply.send({ message: "Datapack comment deleted." });
+  } catch (e) {
+    reply.status(500).send({ error: "Error deleting datapack comment" });
   }
 };

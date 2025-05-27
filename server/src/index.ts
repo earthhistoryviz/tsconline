@@ -30,7 +30,8 @@ import {
   fetchUserDatapacksMetadata,
   uploadExternalDatapack,
   fetchUserHistory,
-  fetchUserHistoryMetadata
+  fetchUserHistoryMetadata,
+  fetchDatapackComments
 } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
@@ -333,6 +334,7 @@ server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPubl
 server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
+server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);

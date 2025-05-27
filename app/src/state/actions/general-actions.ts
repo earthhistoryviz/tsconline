@@ -1,40 +1,44 @@
 import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
-  SharedUser,
+  assertChartInfoTSC,
+  assertDatapack,
+  assertDatapackMetadataArray,
+  assertOfficialDatapack,
+  assertPatterns,
+  assertPresets,
+  assertSharedUser,
+  assertSuccessfulServerResponse,
+  assertSVGStatus,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  TimescaleItem,
-  assertSharedUser,
-  assertChartInfoTSC,
+  type ColumnInfo,
+  Datapack,
+  DatapackConfigForChartRequest,
   DatapackMetadata,
+  DatapackUniqueIdentifier,
   defaultColumnRoot,
   FontsInfo,
-  DatapackConfigForChartRequest,
-  isUserDatapack,
   isOfficialDatapack,
-  assertOfficialDatapack,
-  assertDatapack,
-  DatapackUniqueIdentifier,
+  isUserDatapack,
   isWorkshopDatapack,
   Datapack,
   assertDatapackMetadataArray
 } from "@tsconline/shared";
 
 import {
-  type MapInfo,
   type ColumnInfo,
+  type MapInfo,
   type MapHierarchy,
-  assertSuccessfulServerResponse,
   Presets,
-  assertSVGStatus,
-  assertPresets,
-  assertPatterns
+  SharedUser,
+  TimescaleItem
 } from "@tsconline/shared";
 import { state, State } from "../state";
 import { executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
+  convertColumnInfoToRenderColumnInfo,
   handleDataMiningColumns,
   handleDualColCompColumns,
   initializeColumnHashMap,
@@ -48,6 +52,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
   ChartZoomSettings,
+  CommentType,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -55,7 +60,7 @@ import {
   SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
-import { settings, defaultTimeSettings } from "../../constants";
+import { defaultTimeSettings, settings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
 import {
@@ -409,7 +414,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
   handleDualColCompColumns();
-  await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
+  await applyRowOrder(state.settingsTabs.renderColumns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
@@ -499,16 +504,18 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   for (const opt in columnRoot.fontsInfo) {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
-  // throws warning if this isn't in its own action.
-  runInAction(() => {
-    state.settingsTabs.columns = columnRoot;
-    state.settings.datapackContainsSuggAge = false;
-    state.mapState.mapHierarchy = {};
-    state.mapState.mapInfo = {};
-    state.settingsTabs.columnHashMap = new Map();
-    state.config.datapacks = [];
-    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
-  });
+  const renderColumnRoot = convertColumnInfoToRenderColumnInfo(columnRoot);
+  state.settingsTabs.columns = columnRoot;
+  state.settingsTabs.renderColumns = renderColumnRoot;
+  state.settings.datapackContainsSuggAge = false;
+  state.mapState.mapHierarchy = {};
+  state.mapState.mapInfo = {};
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    if (columnInfo.dispose) columnInfo.dispose();
+  }
+  state.settingsTabs.columnHashMap = new Map();
+  state.config.datapacks = [];
+  state.settingsTabs.columnHashMap.set(renderColumnRoot.name, renderColumnRoot);
 
   // we add Ma unit by default
   state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
@@ -632,16 +639,13 @@ export const setDatapackConfig = action(
     chartSettings: ChartInfoTSC | null
   ): Promise<boolean> => {
     resetSettings();
-    // throws warning if this isn't in its own action. may have other fix but left as is
-    await runInAction(async () => {
-      state.settingsTabs.columns = columnRoot;
-      state.settings.datapackContainsSuggAge = foundDefaultAge;
-      state.mapState.mapHierarchy = mapHierarchy;
-      state.mapState.mapInfo = mapInfo;
-      state.settingsTabs.columnHashMap = new Map();
-      state.config.datapacks = datapacks;
-      await initializeColumnHashMap(state.settingsTabs.columns);
-    });
+    state.settingsTabs.columns = columnRoot;
+    state.settingsTabs.renderColumns = convertColumnInfoToRenderColumnInfo(columnRoot);
+    state.settings.datapackContainsSuggAge = foundDefaultAge;
+    state.mapState.mapHierarchy = mapHierarchy;
+    state.mapState.mapInfo = mapInfo;
+    state.config.datapacks = datapacks;
+    await initializeColumnHashMap(state.settingsTabs.columns);
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
@@ -662,8 +666,8 @@ export const setDatapackConfig = action(
         }
       }
     }
-    searchColumns(state.settingsTabs.columnSearchTerm);
-    searchEvents(state.settingsTabs.eventSearchTerm);
+    if (state.settingsTabs.columnSearchTerm) searchColumns(state.settingsTabs.columnSearchTerm);
+    if (state.settingsTabs.columnSearchTerm) searchEvents(state.settingsTabs.eventSearchTerm);
     return true;
   }
 );
@@ -1350,4 +1354,22 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
+});
+
+export const setDatapackProfileComments = action((comments: CommentType[]) => {
+  state.datapackProfilePage.comments = comments;
+});
+
+export const addDatapackProfileComment = action((newComment: CommentType) => {
+  const updatedComments = [newComment, ...state.datapackProfilePage.comments];
+  updatedComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+  state.datapackProfilePage.comments = updatedComments;
+});
+
+export const deleteDatapackProfileComment = action((id: number) => {
+  state.datapackProfilePage.comments = state.datapackProfilePage.comments.filter((comment) => comment.id !== id);
+});
+
+export const setCommentInput = action((updatedComment: string) => {
+  state.commentInput = updatedComment;
 });

@@ -36,7 +36,7 @@ import {
   defaultZoneColumnInfoTSC,
   isRGB
 } from "@tsconline/shared";
-import { ChartSettings, CrossPlotTimeSettings } from "../types";
+import { ChartSettings, CrossPlotTimeSettings, RenderColumnInfo } from "../types";
 import { convertRgbToString, convertTSCColorToRGB, findSerialNum } from "../util/util";
 import { cloneDeep, range } from "lodash";
 //for testing purposes
@@ -44,6 +44,7 @@ import { cloneDeep, range } from "lodash";
 import * as parseSettings from "./parse-settings";
 import { changeManuallyAddedColumns, normalizeColumnProperties } from "./actions/util-actions";
 import { attachTscPrefixToName } from "./non-action-util";
+import { toJS } from "mobx";
 /**
  * casts a string to a specified type
  * @param value a string that we want to cast to a type
@@ -687,7 +688,7 @@ export function columnInfoTSCToXml(column: ColumnInfoTSC, indent: string): strin
 
 export function jsonToXml(
   state: ColumnInfo,
-  hash: Map<string, ColumnInfo>,
+  hash: Map<string, RenderColumnInfo>,
   settings: ChartSettings,
   version: string = "PRO8.1"
 ): string {
