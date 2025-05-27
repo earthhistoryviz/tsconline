@@ -357,6 +357,9 @@ translation.report-bug.title,Report a Bug
 translation.report-bug.subtitle,Thank you for helping us improve our product! Please provide the details below to help us better understand the issue and resolve it as quickly as possible.
 translation.report-bug.name,Name/ID
 translation.report-bug.name-placeholder,Bug Title
+translation.report-bug.email,Email
+translation.report-bug.email-placeholder,Your Email
+translation.report-bug.email-helper-text,This field is optional, but if you provide your email, we can contact you for more information or to notify you when the issue is resolved.
 translation.report-bug.helper-text,This field is required.
 translation.report-bug.description,Please briefly describe the bug or issue you encountered.
 translation.report-bug.description-placeholder,Bug Description

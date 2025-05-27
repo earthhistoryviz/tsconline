@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Typography, TextField, useTheme } from "@mui/material";
 import { InputFileUpload, TSCButton, TSCDialogLoader } from "./components";
 import BugReportIcon from "@mui/icons-material/BugReport";
@@ -7,21 +7,29 @@ import { Link, useNavigate } from "react-router-dom";
 import { context } from "./state";
 import { useTranslation } from "react-i18next";
 import { ErrorCodes } from "./util/error-codes";
+import { observer } from "mobx-react-lite";
 
-export const ReportBug: React.FC = () => {
+export const ReportBug: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[] | null>(null);
+  const [email, setEmail] = useState("");
+  const [hasEditedEmail, setHasEditedEmail] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [titleError, setTitleError] = useState(false);
   const [descriptionError, setDescriptionError] = useState(false);
-  const { actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!hasEditedEmail && state.user.email) {
+      setEmail(state.user.email);
+    }
+  }, [state.user.email, hasEditedEmail]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
@@ -105,7 +113,7 @@ export const ReportBug: React.FC = () => {
 
     setLoading(true);
     try {
-      const success = await actions.submitBugReport(title, description, files || []);
+      const success = await actions.submitBugReport(title, email, description, files || []);
       if (!success) return;
       setIsSubmitted(true);
       const timer = setInterval(() => {
@@ -180,6 +188,27 @@ export const ReportBug: React.FC = () => {
             />
           </Box>
 
+          <Box mb={3}>
+            <Typography variant="h6" mb={1}>
+              {t("report-bug.email")}
+            </Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder={t("report-bug.email-placeholder")}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setHasEditedEmail(true);
+              }}
+              helperText={t("report-bug.email-helper-text")}
+              size="small"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+            />
+          </Box>
+
           <Box>
             <Typography variant="h6" mb={1}>
               {t("report-bug.description")}
@@ -216,6 +245,7 @@ export const ReportBug: React.FC = () => {
               onChange={handleFileUpload}
               startIcon={<AttachFileIcon />}
               multiple
+              accept=".png,.jpg,.jpeg,.gif,.svg,.txt,.log,.json,.csv"
             />
 
             <TSCButton onClick={handleSubmit}>{t("report-bug.send")}</TSCButton>
@@ -243,4 +273,4 @@ export const ReportBug: React.FC = () => {
       )}
     </Box>
   );
-};
+});
