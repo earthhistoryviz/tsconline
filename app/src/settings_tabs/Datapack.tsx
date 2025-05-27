@@ -100,7 +100,7 @@ export const Datapacks = observer(function Datapacks() {
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} datapack-display-container`}>
         <DatapackGroupDisplay
           datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
-            (item) => !item.tags.includes("Treatise")
+            (item) => !["Treatise", "Lexicon Formations"].some((tag) => item.tags.includes(tag))
           )}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}

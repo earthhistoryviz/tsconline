@@ -66,7 +66,7 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
 export const processAndUploadDatapack = async (
   uuid: string,
   parts: AsyncIterableIterator<Multipart>,
-  options?: { bearerToken: string }
+  options?: { bearerToken?: string }
 ) => {
   const user = await findUser({ uuid }).catch(() => {
     return [];
