@@ -100,11 +100,7 @@ export const Help = observer(function Help() {
     return <PageNotFound />;
   }
   if (isMarkdownFile(markdownContent)) {
-    const processedMarkdown = markdownContent.markdown.replace(
-      /\$\{serverURL\}/g,
-      devSafeUrl("/public/file_format_guide_images")
-    );
-    markdownContent.markdown = processedMarkdown;
+    actions.replaceMarkdown(markdownContent);
   }
 
   function runTour(tourName: string) {

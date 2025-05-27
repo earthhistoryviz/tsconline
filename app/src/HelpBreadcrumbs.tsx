@@ -21,7 +21,6 @@ const compileBreadcrumbs = (markdownParent: MarkdownParent | MarkdownFile, keys:
       // not valid
       break;
     }
-    fullPath += `/${key}`;
     markdownParent = (markdownParent as MarkdownParent).children[key];
     pathBreadcrumbs.push({
       to: (fullPath += `/${markdownParent.pathname}`),

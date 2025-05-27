@@ -18,7 +18,8 @@ import {
   isWorkshopDatapack,
   Datapack,
   assertDatapackMetadataArray,
-  assertTreatiseDatapack
+  assertTreatiseDatapack,
+  MarkdownFile
 } from "@tsconline/shared";
 
 import {
@@ -32,7 +33,7 @@ import {
   assertPatterns
 } from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher } from "../../util";
+import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -1382,4 +1383,14 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
+});
+
+export const replaceMarkdown = action(
+  "replaceMarkdown",
+  (markdownFile: MarkdownFile) => {
+    const processedMarkdown = markdownFile.markdown.replace(
+      /\$\{serverURL\}/g,
+      devSafeUrl("/public/file_format_guide_images")
+    );
+    markdownFile.markdown = processedMarkdown;
 });
