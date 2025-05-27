@@ -336,3 +336,10 @@ export function extractMetadataFromDatapack(datapack: Datapack) {
   assertDatapackMetadata(metadata);
   return metadata;
 }
+
+export function convertTitleToUrlPath(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}

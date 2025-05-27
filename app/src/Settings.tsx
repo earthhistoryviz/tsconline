@@ -48,6 +48,7 @@ export const Settings = observer(function Settings() {
                   showIndicator={state.settingsTabs.selected === tab.id}
                   key={tab.id}
                   label={tab.tab}
+                  setting-tour={`setting-tour-${tab.tab}-tab`}
                   icon={<tab.icon />}
                   iconPosition="start"
                 />

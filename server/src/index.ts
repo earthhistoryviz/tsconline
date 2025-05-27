@@ -39,6 +39,7 @@ import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
+import { fetchMarkdownFiles } from "./help/help-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -352,6 +353,7 @@ server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecove
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
 server.post("/external-chart", moderateRateLimit, uploadExternalDatapack);
+server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

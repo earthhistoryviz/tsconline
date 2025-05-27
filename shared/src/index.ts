@@ -670,9 +670,105 @@ export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
 export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
+export type MarkdownFile = {
+  markdown: string;
+} & MarkdownFileMetadata;
+export type MarkdownFileMetadata = {
+  title: string;
+  pathname: string;
+};
+export type MarkdownParent = {
+  markdown?: string; // optional markdown content for the parent
+  children: MarkdownTree;
+} & MarkdownFileMetadata;
+
+export type MarkdownTree = {
+  [key: string]: MarkdownFile | MarkdownParent;
+};
 
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
+
+export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
+  if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
+  if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);
+  if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
+}
+
+export function assertMarkdownParent(o: any): asserts o is MarkdownParent {
+  if (!o || typeof o !== "object") throw new Error("MarkdownParent must be a non-null object");
+  if (o.markdown && typeof o.markdown !== "string") throwError("MarkdownParent", "markdown", "string", o.markdown);
+  if (!o.children || typeof o.children !== "object") throw new Error("MarkdownParent must have children");
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownParent(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownParent structure at key: ${key}`);
+      }
+    }
+  }
+  assertMarkdownFileMetadata(o);
+}
+
+export function isMarkdownParent(o: any): o is MarkdownParent {
+  if (!o || typeof o !== "object") return false;
+  if ("markdown" in o && typeof o.markdown !== "string") return false;
+  if (!Array.isArray(o.children) && typeof o.children !== "object") return false;
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          try {
+            assertMarkdownFileMetadata(value);
+          } catch (e) {
+            return false;
+          }
+        } else {
+          return isMarkdownParent(value);
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function isMarkdownFile(o: any): o is MarkdownFile {
+  if (!o || typeof o !== "object") return false;
+  try {
+    if (typeof o.markdown !== "string") return false;
+    assertMarkdownFileMetadata(o);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function assertMarkdownTree(o: any): asserts o is MarkdownTree {
+  if (!o || typeof o !== "object") throw new Error("MarkdownTree must be a non-null object");
+  for (const key in o) {
+    if (key in o) {
+      const value = o[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownTree(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownTree structure at key: ${key}`);
+      }
+    }
+  }
+}
 
 export function getMarkerTypeFromNum(num: number): Marker["type"] {
   if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {

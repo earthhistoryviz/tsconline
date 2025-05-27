@@ -25,11 +25,12 @@ import {
   type MapHierarchy,
   Presets,
   SharedUser,
-  TimescaleItem
+  TimescaleItem,
+  MarkdownFile
 } from "@tsconline/shared";
 
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher } from "../../util";
+import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
@@ -1367,4 +1368,12 @@ export const deleteDatapackProfileComment = action((id: number) => {
 
 export const setCommentInput = action((updatedComment: string) => {
   state.commentInput = updatedComment;
+});
+
+export const replaceMarkdown = action("replaceMarkdown", (markdownFile: MarkdownFile) => {
+  const processedMarkdown = markdownFile.markdown.replace(
+    /\$\{serverURL\}/g,
+    devSafeUrl("/public/file_format_guide_images")
+  );
+  markdownFile.markdown = processedMarkdown;
 });
