@@ -63,7 +63,11 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 };
-export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>, options?: { bearerToken:string }) => {
+export const processAndUploadDatapack = async (
+  uuid: string,
+  parts: AsyncIterableIterator<Multipart>,
+  options?: { bearerToken: string }
+) => {
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
@@ -78,10 +82,7 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   }
   const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
-    if (
-      (isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) &&
-      !isAdmin
-    ) {
+    if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && !isAdmin) {
       return { code: 401, message: "Only admins can upload official or workshop datapacks" };
     }
 

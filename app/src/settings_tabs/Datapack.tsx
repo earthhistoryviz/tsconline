@@ -146,7 +146,9 @@ export const Datapacks = observer(function Datapacks() {
             loading={state.skeletonStates.publicOfficialDatapacksLoading}
           />
         )}
-        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Lexicon Formations")) && (
+        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) =>
+          item.tags.includes("Lexicon Formations")
+        ) && (
           <DatapackGroupDisplay
             datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
               item.tags.includes("Lexicon Formations")

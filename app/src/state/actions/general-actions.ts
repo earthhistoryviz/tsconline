@@ -21,18 +21,13 @@ import {
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack,
-  Datapack,
-  assertDatapackMetadataArray
-} from "@tsconline/shared";
-
-import {
-  type ColumnInfo,
   type MapInfo,
   type MapHierarchy,
   Presets,
   SharedUser,
   TimescaleItem
 } from "@tsconline/shared";
+
 import { state, State } from "../state";
 import { executeRecaptcha, fetcher } from "../../util";
 import {
