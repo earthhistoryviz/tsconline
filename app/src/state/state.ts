@@ -14,6 +14,7 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   CrossPlotBounds,
+  CommentType,
   RenderColumnInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
@@ -122,6 +123,7 @@ export type State = {
     unsavedChanges: boolean;
     editRequestInProgress: boolean;
     datapackImageVersion: number;
+    comments: CommentType[];
   };
   mapState: {
     mapInfo: MapInfo;
@@ -174,6 +176,7 @@ export type State = {
     isSettingsTourOpen: boolean;
     isWorkshopsTourOpen: boolean;
   };
+  commentInput: string;
 };
 
 export const state = observable<State>({
@@ -250,7 +253,8 @@ export const state = observable<State>({
     editableDatapackMetadata: null,
     unsavedChanges: false,
     editRequestInProgress: false,
-    datapackImageVersion: 0
+    datapackImageVersion: 0,
+    comments: []
   },
   tab: 0,
   showSuggestedAgePopup: false,
@@ -346,7 +350,8 @@ export const state = observable<State>({
     isDatapacksTourOpen: false,
     isSettingsTourOpen: false,
     isWorkshopsTourOpen: false
-  }
+  },
+  commentInput: ""
 });
 
 reaction(

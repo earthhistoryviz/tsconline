@@ -142,6 +142,7 @@ export const DatapackProfile = observer(() => {
   useEffect(() => {
     return () => {
       actions.setDatapackProfilePageEditMode(false);
+      actions.setDatapackProfileComments([]);
     };
   }, []);
   if (loading) return <TSCDialogLoader open={true} transparentBackground />;
