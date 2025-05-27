@@ -83,11 +83,9 @@ export const processAndUploadDatapack = async (
   const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
     if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && !isAdmin) {
-      return { code: 401, message: "Only admins can upload official or workshop datapacks" };
-    }
-
-    if (uuid === "official" && !isAdmin && options?.bearerToken !== process.env.BEARER_TOKEN) {
-      return { code: 401, message: "Invalid bearer token for official datapack upload" };
+      if (!(process.env.BEARER_TOKEN && options?.bearerToken === process.env.BEARER_TOKEN)) {
+        return { code: 401, message: "Only admins can upload official or workshop datapacks" };
+      }
     }
 
     // change the uuid to reflect where we are downloading the datapack to depending on the type of datapack

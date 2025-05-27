@@ -399,7 +399,7 @@ export const uploadExternalDatapack = async function uploadExternalDatapack(
     }
     const parts = request.parts();
 
-    // If the title exist and the exact file exists, send it
+    // If the title exist and the exact file exists, send it, otherwise delete the old file and upload the new one
     const officialDatapacks = await fetchAllUsersDatapacks("official");
     for (const datapack of officialDatapacks) {
       if (datapack.title === datapackTitle.toString()) {
@@ -414,7 +414,7 @@ export const uploadExternalDatapack = async function uploadExternalDatapack(
     }
 
     // does not exist, upload normally
-    const result = await processAndUploadDatapack("official", parts);
+    const result = await processAndUploadDatapack("official", parts, { bearerToken: token });
     if (result.code === 200) {
       reply.status(200).send({ datapackTitle: datapackTitle.toString() });
     } else {
