@@ -13,6 +13,55 @@ import {
 import { devSafeUrl } from "../util";
 import dayjs, { Dayjs } from "dayjs";
 import { State } from ".";
+import DOMPurify from "dompurify";
+export function purifyChartContent(
+  content: string,
+  options?: {
+    width?: string;
+    height?: string;
+    preserveAspectRatio?: string;
+  }
+) {
+  const domPurifyConfig = {
+    ADD_ATTR: [
+      "docbase",
+      "popuptext",
+      "minY",
+      "maxY",
+      "vertScale",
+      "topAge",
+      "baseAge",
+      "minX",
+      "maxX",
+      "baseLimit",
+      "topLimit",
+      "x1",
+      "y1"
+    ],
+    ADD_URI_SAFE_ATTR: ["docbase", "popuptext"]
+  };
+  const cleanContent = DOMPurify.sanitize(content, domPurifyConfig);
+  // for setting width, height and preserveAspectRatio if needed to display an svg
+  if (options) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(cleanContent, "image/svg+xml");
+    const svg = doc.querySelector("svg");
+
+    if (svg) {
+      if (options.width) {
+        svg.setAttribute("width", options.width);
+      }
+      if (options.height) {
+        svg.setAttribute("height", options.height);
+      }
+      if (options.preserveAspectRatio) {
+        svg.setAttribute("preserveAspectRatio", options.preserveAspectRatio);
+      }
+    }
+    return doc.documentElement.outerHTML;
+  }
+  return cleanContent;
+}
 export const getDotSizeFromScale = (size: number, scale: number) => {
   return Math.min(size * Math.pow(scale, -0.8), 3 * size);
 };

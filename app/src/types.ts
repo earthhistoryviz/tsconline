@@ -1,3 +1,4 @@
+import { AccessTime, Dataset, FontDownload, LocationOn, Search, Settings, ViewColumn } from "@mui/icons-material";
 import {
   ColumnInfo,
   DataMiningPointDataType,
@@ -190,14 +191,34 @@ export type ChartZoomSettings = {
 export type CrossPlotSettingsTabs = keyof typeof CrossPlotSettingsTabs;
 
 export const SettingsMenuOptionLabels = {
-  time: "Time",
-  preferences: "Preferences",
-  column: "Column",
-  search: "Search",
-  font: "Font",
-  mappoints: "Map Points",
-  datapacks: "Datapacks",
-  loadsave: "Load/Save"
+  time: {
+    label: "Time",
+    icon: AccessTime
+  },
+  preferences: {
+    label: "Preferences",
+    icon: Settings
+  },
+  column: {
+    label: "Column",
+    icon: ViewColumn
+  },
+  search: {
+    label: "Search",
+    icon: Search
+  },
+  font: {
+    label: "Font",
+    icon: FontDownload
+  },
+  mappoints: {
+    label: "Map Points",
+    icon: LocationOn
+  },
+  datapacks: {
+    label: "Datapacks",
+    icon: Dataset
+  }
 };
 
 export type SettingsTabs = keyof typeof SettingsMenuOptionLabels;

@@ -1,5 +1,6 @@
 translation.general-actions.save,Save
 translation.general-actions.cancel,Cancel
+translation.general-actions.loading,Loading
 translation.landing-page.get-started,Get Started
 translation.landing-page.welcome,Welcome to TimeScale Creator!
 translation.landing-page.welcome-desc,TimeScale Creator is an advanced online cloud service designed to help you explore and visualize the geologic time scale with ease. With access to a vast internal database of over 20,000 global and regional events—including biologic, geomagnetic, sea-level, and stable isotope data—TimeScale Creator is the ultimate tool for researchers, educators, and enthusiasts of Earth history.
@@ -185,11 +186,11 @@ translation.settingsTabs.Warnings,Warnings
 translation.settingsTabs.Load/Save,Load/Save
 translation.settingsTabs.xAxis,X Axis (Age-only)
 translation.settingsTabs.yAxis,Y Axis (Age/Depth)
+translation.settings.header,Settings
 translation.settings.time.interval.top,Top of Interval
 translation.settings.time.interval.base,Base of Interval
 translation.settings.time.interval.top-name,Top Age/Stage Name
 translation.settings.time.interval.base-name,Base Age/Stage Name
-translation.settings.time.interval.not-avaliable,Not Available for this Unit
 translation.settings.time.interval.vertical-scale,Vertical Scale (cm per 1
 translation.settings.time.interval.helper-text,Base age should be older than top age
 translation.settings.time.interval.vertical-scale-header,Vertical Scale
@@ -296,6 +297,7 @@ translation.settings.search.header.notes,Notes
 translation.settings.font.notes1,These are the default systemwide fonts.
 translation.settings.font.notes2,Changing one here will affect the entire chart.
 translation.settings.font.notes3,NOTE: These fonts can be changed on a column by column basis by using the Font button for each column
+translation.settings.map-points.included,Included Maps
 translation.settings.map-points.not-avaliable,No Map Points available for this datapack
 translation.settings.datapacks.see-info-guidance,Click a datapack to see more information!
 translation.settings.datapacks.add-datapack-guidance,Add a datapack by clicking the checkbox

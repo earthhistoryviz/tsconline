@@ -1,21 +1,42 @@
-import { vi, describe, beforeEach, it, expect } from "vitest";
+import { vi, describe, beforeEach, it, expect, afterEach } from "vitest";
 import {
   saveChartHistory,
   getChartHistoryMetadata,
   getChartHistory,
   deleteChartHistory,
-  isValidEpoch,
-  verifySymlink
+  isValidEpoch
 } from "../src/user/chart-history";
 import { join } from "path";
 import * as fs from "fs/promises";
 import * as utilsModule from "../src/util";
-import { Dirent, Stats } from "fs";
+import * as chartHistoryHelperFunctions from "../src/user/chart-history-helper-functions";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
+import { Dirent } from "fs";
 
-vi.mock("fs/promises", async (importOriginal) => {
-  const actual = await importOriginal<typeof fs>();
+vi.mock("../src/util", async () => {
   return {
-    ...actual,
+    verifySymlink: vi.fn().mockResolvedValue(true)
+  };
+});
+
+vi.mock("@tsconline/shared", async () => {
+  return {
+    extractDatapackMetadataFromDatapack: vi.fn().mockReturnValue({ title: "datapack" })
+  };
+});
+
+vi.mock("../src/user/chart-history-helper-functions", async () => {
+  return {
+    getUserHistoryRootFilePath: vi.fn().mockResolvedValue("/testdir/uploadDirectory"),
+    getSpecificUserHistoryRootFilePath: vi.fn().mockResolvedValue("/testdir/uploadDirectory"),
+    getHistoryEntryDatapacksPath: vi.fn().mockResolvedValue("/testdir/uploadDirectory"),
+    getChartContentFromChartHistoryTimeStamp: vi.fn().mockResolvedValue({ chartContent: "chart", chartHash: "hash" }),
+    getSettingsFromChartHistoryTimeStamp: vi.fn().mockResolvedValue("settings")
+  };
+});
+
+vi.mock("fs/promises", async () => {
+  return {
     lstat: vi.fn().mockResolvedValue({ isSymbolicLink: () => true }),
     realpath: vi.fn().mockResolvedValue("/resolved"),
     mkdir: vi.fn().mockResolvedValue({}),
@@ -25,16 +46,6 @@ vi.mock("fs/promises", async (importOriginal) => {
     symlink: vi.fn().mockResolvedValue({}),
     access: vi.fn().mockResolvedValue({}),
     readFile: vi.fn().mockResolvedValue("file-content")
-  };
-});
-
-vi.mock("../src/util", async (importOriginal) => {
-  const actual = await importOriginal<typeof utilsModule>();
-  return {
-    ...actual,
-    assetconfigs: {
-      uploadDirectory: "/testdir/uploadDirectory"
-    }
   };
 });
 
@@ -59,6 +70,7 @@ const mockTimestamp = "1234567890123";
 const historyEntryPath = join(baseHistoryPath, mockTimestamp);
 
 describe("chartHistory tests", () => {
+  const getUserHistoryRootFilePathSpy = vi.spyOn(chartHistoryHelperFunctions, "getUserHistoryRootFilePath");
   beforeEach(() => {
     vi.clearAllMocks();
     vi.setSystemTime(parseInt(mockTimestamp));
@@ -74,25 +86,13 @@ describe("chartHistory tests", () => {
     });
   });
 
-  describe("verifySymlink", () => {
-    it("returns true for valid symlink", async () => {
-      vi.spyOn(fs, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as Stats);
-      expect(await verifySymlink("/some/symlink")).toBe(true);
-    });
-
-    it("returns false for non-symlink", async () => {
-      vi.spyOn(fs, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => false } as Stats);
-      expect(await verifySymlink("/some/file")).toBe(false);
-    });
-
-    it("returns false if realpath fails", async () => {
-      vi.spyOn(fs, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as Stats);
-      vi.spyOn(fs, "realpath").mockRejectedValueOnce(new Error("not found"));
-      expect(await verifySymlink("/bad/symlink")).toBe(false);
-    });
-  });
-
   describe("saveChartHistory", () => {
+    beforeEach(() => {
+      getUserHistoryRootFilePathSpy.mockResolvedValueOnce(baseHistoryPath);
+    });
+    afterEach(() => {
+      expect(getUserHistoryRootFilePathSpy).toHaveBeenCalledWith(mockUUID);
+    });
     it("removes oldest entry if more than 10 exist", async () => {
       vi.spyOn(fs, "readdir").mockResolvedValueOnce([
         "1",
@@ -118,6 +118,7 @@ describe("chartHistory tests", () => {
       expect(fs.cp).toHaveBeenCalledWith("settings.tsc", join(historyEntryPath, "settings.tsc"));
       expect(fs.cp).toHaveBeenCalledWith("chart.svg", join(historyEntryPath, "hash.svg"));
       expect(fs.symlink).toHaveBeenCalled();
+      expect(fs.realpath).toHaveBeenCalledWith("/path/to/dp");
     });
 
     it("cleans up if something fails", async () => {
@@ -131,66 +132,107 @@ describe("chartHistory tests", () => {
   });
 
   describe("getChartHistoryMetadata", () => {
-    it("returns empty if folder doesn't exist", async () => {
-      vi.spyOn(fs, "access").mockRejectedValueOnce(Object.assign(new Error(), { code: "ENOENT" }));
-      expect(await getChartHistoryMetadata(mockUUID)).toEqual([]);
+    beforeEach(() => {
+      getUserHistoryRootFilePathSpy.mockResolvedValueOnce(baseHistoryPath);
+      vi.clearAllMocks();
     });
+    const verifySymlinkSpy = vi.spyOn(utilsModule, "verifySymlink");
+    const readdir = vi.spyOn(fs, "readdir");
+    const rm = vi.spyOn(fs, "rm");
 
     it("shouldn't return entry if symlink is invalid", async () => {
-      vi.spyOn(fs, "readdir").mockResolvedValueOnce([mockTimestamp] as unknown as Dirent[]);
-      vi.spyOn(fs, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as Stats);
-      vi.spyOn(fs, "realpath").mockRejectedValueOnce(new Error("not found"));
+      readdir.mockResolvedValueOnce([mockTimestamp] as unknown as Dirent[]);
+      verifySymlinkSpy.mockResolvedValueOnce(false);
 
       expect(await getChartHistoryMetadata(mockUUID)).toEqual([]);
+      expect(rm).toHaveBeenCalledWith(join(baseHistoryPath, mockTimestamp), { recursive: true });
     });
 
     it("removes invalid entries and returns valid ones", async () => {
-      vi.spyOn(fs, "readdir")
+      readdir
         .mockResolvedValueOnce(["badentry", mockTimestamp] as unknown as Dirent[])
-        .mockResolvedValueOnce(["datapack1", "badsymlink2"] as unknown as Dirent[]);
+        .mockResolvedValueOnce(["datapack1", "datapack2"] as unknown as Dirent[]);
 
       const result = await getChartHistoryMetadata(mockUUID);
-      expect(result).toEqual([{ timestamp: mockTimestamp }]);
-      expect(fs.rm).toHaveBeenCalledWith(join(baseHistoryPath, "badentry"), { recursive: true });
+      expect(verifySymlinkSpy).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "datapack1"));
+      expect(verifySymlinkSpy).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "datapack2"));
+      expect(rm).toHaveBeenNthCalledWith(1, join(baseHistoryPath, "badentry"), { recursive: true });
+      expect(readdir).toHaveBeenCalledTimes(2);
+      expect(result).toEqual([
+        {
+          chartContent: "chart",
+          datapacks: [
+            {
+              title: "datapack"
+            },
+            {
+              title: "datapack"
+            }
+          ],
+          timestamp: mockTimestamp
+        }
+      ]);
     });
   });
 
   describe("getChartHistory", () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+    const getCachedDatapackFromDirectory = vi.spyOn(fetchUserFiles, "getCachedDatapackFromDirectory");
+    const getSettingsFromChartHistoryTimeStamp = vi.spyOn(
+      chartHistoryHelperFunctions,
+      "getSettingsFromChartHistoryTimeStamp"
+    );
+    const verifySymlink = vi.spyOn(utilsModule, "verifySymlink");
+    const readdir = vi.spyOn(fs, "readdir");
+    const realpath = vi.spyOn(fs, "realpath");
+    const getChartContentFromChartHistoryTimeStamp = vi.spyOn(
+      chartHistoryHelperFunctions,
+      "getChartContentFromChartHistoryTimeStamp"
+    );
     it("throws if timestamp is invalid", async () => {
       await expect(getChartHistory(mockUUID, "abc")).rejects.toThrow("Invalid timestamp");
     });
 
     it("throws if chart is not found", async () => {
-      vi.spyOn(fs, "readdir").mockResolvedValueOnce([]);
+      getSettingsFromChartHistoryTimeStamp.mockImplementationOnce(() => {
+        throw new Error("Chart not found");
+      });
       await expect(getChartHistory(mockUUID, mockTimestamp)).rejects.toThrow("Chart not found");
     });
 
     it("throws if symlink is invalid", async () => {
-      vi.spyOn(fs, "readdir")
-        .mockResolvedValueOnce(["chart-hash.svg"] as unknown as Dirent[])
-        .mockResolvedValueOnce(["dp"] as unknown as Dirent[]);
-      vi.spyOn(fs, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as Stats);
-      vi.spyOn(fs, "realpath").mockRejectedValueOnce(new Error("not found"));
-
+      readdir.mockResolvedValueOnce(["dp"] as unknown as Dirent[]);
+      verifySymlink.mockResolvedValueOnce(false);
       await expect(getChartHistory(mockUUID, mockTimestamp)).rejects.toThrow("Invalid datapack symlink");
+      expect(readdir).toHaveBeenCalledOnce();
+      expect(verifySymlink).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "dp"));
+      expect(realpath).not.toHaveBeenCalled();
     });
 
     it("returns full chart history entry", async () => {
       const settings = "settings-content";
       const chartSvg = "<svg>...</svg>";
+      const chartHash = "hash";
+      getChartContentFromChartHistoryTimeStamp.mockResolvedValueOnce({
+        chartContent: chartSvg,
+        chartHash
+      });
 
-      vi.spyOn(fs, "readFile").mockResolvedValueOnce(settings).mockResolvedValueOnce(chartSvg);
-      vi.spyOn(fs, "readdir")
-        .mockResolvedValueOnce(["chart-hash.svg"] as unknown as Dirent[])
-        .mockResolvedValueOnce(["dp"] as unknown as Dirent[]);
-
+      getSettingsFromChartHistoryTimeStamp.mockResolvedValueOnce(settings);
+      readdir.mockResolvedValueOnce(["dp"] as unknown as Dirent[]);
       const result = await getChartHistory(mockUUID, mockTimestamp);
+      expect(realpath).toHaveBeenCalledOnce();
       expect(result).toEqual({
         settings,
         datapacks: [{ title: "datapack" }],
         chartContent: chartSvg,
-        chartHash: "chart-hash"
+        chartHash
       });
+      expect(getSettingsFromChartHistoryTimeStamp).toHaveBeenCalledWith(mockUUID, mockTimestamp);
+      expect(getCachedDatapackFromDirectory).toHaveBeenCalledTimes(1);
+      expect(verifySymlink).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "dp"));
     });
   });
 
@@ -201,13 +243,15 @@ describe("chartHistory tests", () => {
 
     it("deletes all entries", async () => {
       await deleteChartHistory(mockUUID, "-1");
-      expect(fs.rm).toHaveBeenCalledWith(join(baseHistoryPath, "1"), { recursive: true });
-      expect(fs.rm).toHaveBeenCalledWith(join(baseHistoryPath, "2"), { recursive: true });
+      expect(fs.rm).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "1"), { recursive: true });
+      expect(fs.rm).toHaveBeenCalledWith(join("/testdir/uploadDirectory", "2"), { recursive: true });
     });
 
     it("deletes specific entry", async () => {
       await deleteChartHistory(mockUUID, mockTimestamp);
-      expect(fs.rm).toHaveBeenCalledWith(join(baseHistoryPath, mockTimestamp), { recursive: true });
+      expect(fs.rm).toHaveBeenCalledWith(join("/testdir/uploadDirectory", mockTimestamp), {
+        recursive: true
+      });
     });
   });
 });

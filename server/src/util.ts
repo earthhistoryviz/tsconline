@@ -1,6 +1,6 @@
 import fs, { createReadStream } from "fs";
 import path from "path";
-import { readFile, access, mkdir, readdir, copyFile, realpath } from "fs/promises";
+import { readFile, access, mkdir, readdir, copyFile, realpath, lstat } from "fs/promises";
 import { glob } from "glob";
 import { createInterface } from "readline/promises";
 import { constants } from "fs";
@@ -8,6 +8,25 @@ import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
 import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+
+/**
+ * Verify that a path is a symlink and that it points to a valid target
+ * @param symlink
+ */
+export async function verifySymlink(symlink: string): Promise<boolean> {
+  try {
+    const ROOT_DIRECTORY = path.resolve(process.cwd());
+    const absPath = path.resolve(ROOT_DIRECTORY, symlink);
+    if (!absPath.startsWith(ROOT_DIRECTORY)) return false;
+    const resolvedPath = await realpath(absPath);
+    if (resolvedPath.startsWith(ROOT_DIRECTORY)) return false;
+    const stats = await lstat(absPath);
+    if (!stats.isSymbolicLink()) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 /**
  * Recursively deletes directory INCLUDING directoryPath
