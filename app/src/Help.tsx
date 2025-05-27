@@ -10,7 +10,7 @@ import rehypeRaw from "rehype-raw";
 
 //The Pages for the help
 import { HelpDrawer, HelpDrawerContext } from "./HelpDrawer";
-import { devSafeUrl, fetcher } from "./util";
+import { fetcher } from "./util";
 import {
   MarkdownFile,
   MarkdownParent,

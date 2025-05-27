@@ -1385,12 +1385,10 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
   }
 });
 
-export const replaceMarkdown = action(
-  "replaceMarkdown",
-  (markdownFile: MarkdownFile) => {
-    const processedMarkdown = markdownFile.markdown.replace(
-      /\$\{serverURL\}/g,
-      devSafeUrl("/public/file_format_guide_images")
-    );
-    markdownFile.markdown = processedMarkdown;
+export const replaceMarkdown = action("replaceMarkdown", (markdownFile: MarkdownFile) => {
+  const processedMarkdown = markdownFile.markdown.replace(
+    /\$\{serverURL\}/g,
+    devSafeUrl("/public/file_format_guide_images")
+  );
+  markdownFile.markdown = processedMarkdown;
 });
