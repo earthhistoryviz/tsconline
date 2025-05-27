@@ -42,6 +42,7 @@ export default defineConfig({
         "server/src/crossplot/crossplot-handler.ts": thresholdConfig
         // "server/src/user-routes.ts": thresholdConfig,
         // "server/src/user/user-handler.ts": thresholdConfig,
+        // "server/src/routes/routes.ts": thresholdConfig
       },
       ignoreEmptyLines: true
     }

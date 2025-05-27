@@ -20,11 +20,14 @@ import {
   setCommonProperties,
   capitalizeFirstLetter,
   checkHeader,
-  verifySymlink
+  verifySymlink,
+  uploadFileToGitHub,
+  isFileTypeAllowed
 } from "../src/util";
 import * as fsModule from "fs";
 import * as fsPromises from "fs/promises";
 import path from "path";
+
 vi.mock("path", async (importOriginal) => {
   const actual = await importOriginal<typeof path>();
   return {
@@ -177,5 +180,70 @@ describe("checkHeader", () => {
   });
   test('checkHeader("unencrypted.txt") returns false', async () => {
     expect(await checkHeader("unencrypted.txt")).toEqual(false);
+  });
+});
+
+describe("uploadFileToGithub tests", () => {
+  test("successfully uploads file and returns markdown image link if it's an image", async () => {
+    process.env.GH_UPLOAD_TOKEN = "test_token";
+    const mockFetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      text: vi.fn()
+    });
+    global.fetch = mockFetch;
+
+    const buffer = Buffer.from("hello world");
+    const result = await uploadFileToGitHub("myuser", "myrepo", "uploads", "image.png", buffer);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      "https://api.github.com/repos/myuser/myrepo/contents/uploads/image.png",
+      expect.objectContaining({
+        method: "PUT",
+        headers: expect.objectContaining({
+          Authorization: "Bearer test_token"
+        }),
+        body: expect.stringContaining("aGVsbG8gd29ybGQ=") // base64 of "hello world"
+      })
+    );
+    expect(result).toBe("https://github.com/myuser/myrepo/raw/main/uploads/image.png");
+  });
+
+  test("throws error if upload fails", async () => {
+    const mockFetch = vi.fn().mockResolvedValueOnce({
+      ok: false,
+      text: vi.fn().mockResolvedValue("Bad credentials")
+    });
+    global.fetch = mockFetch;
+
+    const buffer = Buffer.from("failure");
+
+    await expect(uploadFileToGitHub("baduser", "badrepo", "nowhere", "fail.txt", buffer)).rejects.toThrow(
+      "File upload failed: Bad credentials"
+    );
+  });
+});
+
+describe("isFileTypeAllowed", () => {
+  const allowedFileTypes = ["txt", "jpg", "png"];
+  const allowedMimeTypes = ["text/plain", "image/jpeg", "image/png"];
+
+  test("returns true for valid file extension and mime type", () => {
+    expect(isFileTypeAllowed("example.txt", "text/plain", allowedFileTypes, allowedMimeTypes)).toBe(true);
+    expect(isFileTypeAllowed("photo.jpg", "image/jpeg", allowedFileTypes, allowedMimeTypes)).toBe(true);
+    expect(isFileTypeAllowed("image.png", "image/png", allowedFileTypes, allowedMimeTypes)).toBe(true);
+  });
+
+  test("returns false for invalid file extension", () => {
+    expect(isFileTypeAllowed("example.exe", "text/plain", allowedFileTypes, allowedMimeTypes)).toBe(false);
+    expect(isFileTypeAllowed("archive.zip", "application/zip", allowedFileTypes, allowedMimeTypes)).toBe(false);
+  });
+
+  test("returns false for invalid mime type", () => {
+    expect(isFileTypeAllowed("example.txt", "application/json", allowedFileTypes, allowedMimeTypes)).toBe(false);
+    expect(isFileTypeAllowed("photo.jpg", "application/octet-stream", allowedFileTypes, allowedMimeTypes)).toBe(false);
+  });
+
+  test("returns false when both extension and mime type are invalid", () => {
+    expect(isFileTypeAllowed("script.sh", "application/x-sh", allowedFileTypes, allowedMimeTypes)).toBe(false);
   });
 });

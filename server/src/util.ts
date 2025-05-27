@@ -46,7 +46,7 @@ export async function uploadFileToGitHub(
 
   const encodedFilename = encodeURIComponent(filename);
   const rawUrl = `https://github.com/${owner}/${repo}/raw/main/${path}/${encodedFilename}`;
-  return /\.(png|jpe?g|gif|svg)$/i.test(filename) ? `![${filename}](${rawUrl})` : `- [${filename}](${rawUrl})`;
+  return rawUrl;
 }
 
 /**

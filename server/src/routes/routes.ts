@@ -84,7 +84,8 @@ export const submitBugReport = async function submitBugReport(request: FastifyRe
     const uploadedFileLinks: string[] = [];
     for (const { filename, buffer } of files) {
       const link = await uploadFileToGitHub(owner, "tsconline-bug-reports", baseUploadPath, filename, buffer);
-      uploadedFileLinks.push(link);
+      const isImage = /\.(png|jpe?g|gif|svg)$/i.test(filename);
+      uploadedFileLinks.push(isImage ? `![${filename}](${link})` : `- [${filename}](${link})`);
     }
 
     const issueTitle = `Bug Report: ${title}`;
