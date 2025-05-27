@@ -14,7 +14,7 @@ if [ ! -d "$HELP_DIR/.git" ]; then
   echo "Trying SSH sparse checkout..."
   if git init && git remote add origin "$REPO_SSH_URL"; then
     git config core.sparseCheckout true
-    git config core.sparseCheckoutCone true
+    git config core.sparseCheckoutCone false
     echo "**/*.md" > .git/info/sparse-checkout
 
     if git pull --depth=1 origin "$BRANCH"; then

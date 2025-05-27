@@ -446,6 +446,8 @@ jobs:
             CONTAINER_NAME="pr-preview-${PR_NUMBER}_pr-preview-run_1"
             TSCONLINE_DIR="/home/aaron/tsconline"
             PR_PREVIEW_DIR="${TSCONLINE_DIR}/pr-preview-${PR_NUMBER}"
+            HELP_DIR="${PR_PREVIEW_DIR}/server/assets/help"
+            REPO_SSH="git@github.com:earthhistoryviz/tsconline-help.git"
             BRANCH="${{ github.event.pull_request.head.ref }}"
             cd "$TSCONLINE_DIR"
 
@@ -460,11 +462,26 @@ jobs:
               cp "$TSCONLINE_DIR/server/.env" "$PR_PREVIEW_DIR/server"
               cp "$TSCONLINE_DIR/app/.env" "$PR_PREVIEW_DIR/app"
               sed -i 's/^DOMAIN=.*/DOMAIN="pr-preview.geolex.org"/' "$PR_PREVIEW_DIR/server/.env"
+
+              mkdir -p "$HELP_DIR"
+              cd "$HELP_DIR"
+              echo "Setting up help files for PR #${PR_NUMBER}"
+              git init
+              git remote add origin "$REPO_SSH"
+              git config core.sparseCheckout true
+              git config core.sparseCheckoutCone false
+              echo "**/*.md" > .git/info/sparse-checkout
+              git pull --depth=1 origin main
+              echo "Sparse clone complete."
+              cd "$TSCONLINE_DIR"
             else
               echo "Updating branch $BRANCH for PR #${PR_NUMBER}"
               git -C "$PR_PREVIEW_DIR" fetch origin "$BRANCH"
               git -C "$PR_PREVIEW_DIR" reset --hard "origin/$BRANCH"
               cp "$TSCONLINE_DIR/server/assets/jars/"* "$PR_PREVIEW_DIR/server/assets/jars/"
+              cd "$HELP_DIR"
+              git pull origin main
+              cd "$TSCONLINE_DIR"
             fi
 
             unzip -q -o "build-artifacts.zip" -d "$PR_PREVIEW_DIR"
