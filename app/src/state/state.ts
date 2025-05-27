@@ -14,7 +14,8 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   CrossPlotBounds,
-  CommentType
+  CommentType,
+  RenderColumnInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
 import type {
@@ -56,22 +57,24 @@ export type State = {
     showTooltips: boolean;
     chartXTimeSettings: CrossPlotTimeSettings;
     chartYTimeSettings: CrossPlotTimeSettings;
-    chartX: ColumnInfo | undefined;
-    chartY: ColumnInfo | undefined;
+    chartX: RenderColumnInfo | undefined;
+    chartY: RenderColumnInfo | undefined;
     state: ChartTabState;
     crossPlotBounds?: CrossPlotBounds;
     loading: boolean;
     columns?: ColumnInfo;
+    renderColumns?: RenderColumnInfo;
     datapacks: DatapackConfigForChartRequest[];
-    columnHashMap: Map<string, ColumnInfo>;
+    columnHashMap: Map<string, RenderColumnInfo>;
     columnSelected: string | null;
     previousSettings: {
       chartXTimeSettings: CrossPlotTimeSettings;
       chartYTimeSettings: CrossPlotTimeSettings;
-      chartX: ColumnInfo | undefined;
-      chartY: ColumnInfo | undefined;
-      columnHashMap: Map<string, ColumnInfo>;
+      chartX: RenderColumnInfo | undefined;
+      chartY: RenderColumnInfo | undefined;
+      columnHashMap: Map<string, RenderColumnInfo>;
       columns: ColumnInfo | undefined;
+      renderColumns: RenderColumnInfo | undefined;
     };
   };
   loadSaveFilename: string;
@@ -96,8 +99,10 @@ export type State = {
   settingsTabs: {
     selected: SettingsTabs;
     columns: ColumnInfo | undefined;
-    columnHashMap: Map<string, ColumnInfo>;
+    renderColumns: RenderColumnInfo | undefined;
+    columnHashMap: Map<string, RenderColumnInfo>;
     columnSearchTerm: string;
+    showColumnSearchLoader: boolean;
     datapackDisplayType: "rows" | "cards" | "compact";
     eventSearchTerm: string;
     groupedEvents: GroupedEventSearchInfo[];
@@ -179,33 +184,42 @@ export const state = observable<State>({
     chartTimelineLocked: false,
     state: cloneDeep(defaultChartTabState)
   },
-  crossPlot: {
-    lockX: false,
-    lockY: false,
-    markers: [],
-    markerMode: false,
-    modelMode: true,
-    models: [],
-    showTooltips: true,
-    chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
-    chartX: undefined,
-    chartY: undefined,
-    state: cloneDeep(defaultChartTabState),
-    crossPlotBounds: undefined,
-    loading: false,
-    datapacks: [],
-    columnHashMap: new Map<string, ColumnInfo>(),
-    columnSelected: null,
-    previousSettings: {
+  crossPlot: observable(
+    {
+      lockX: false,
+      lockY: false,
+      markers: [],
+      markerMode: false,
+      modelMode: true,
+      models: [],
+      showTooltips: true,
       chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
       chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
       chartX: undefined,
       chartY: undefined,
-      columnHashMap: new Map<string, ColumnInfo>(),
-      columns: undefined
+      state: cloneDeep(defaultChartTabState),
+      crossPlotBounds: undefined,
+      loading: false,
+      columns: undefined,
+      renderColumns: undefined,
+      datapacks: [],
+      columnHashMap: new Map<string, RenderColumnInfo>(),
+      columnSelected: null,
+      previousSettings: {
+        chartXTimeSettings: cloneDeep(defaultCrossPlotSettings),
+        chartYTimeSettings: cloneDeep(defaultCrossPlotSettings),
+        chartX: undefined,
+        chartY: undefined,
+        columnHashMap: new Map<string, RenderColumnInfo>(),
+        columns: undefined,
+        renderColumns: undefined
+      }
+    },
+    {
+      columns: false,
+      previousSettings: false
     }
-  },
+  ),
   loadSaveFilename: "settings", //name without extension (.tsc)
   cookieConsent: null,
   isLoggedIn: false,
@@ -257,15 +271,22 @@ export const state = observable<State>({
     open: false,
     columnType: "Data Mining"
   },
-  settingsTabs: {
-    selected: "time",
-    columns: undefined,
-    columnHashMap: new Map<string, ColumnInfo>(),
-    columnSearchTerm: "",
-    datapackDisplayType: "compact",
-    eventSearchTerm: "",
-    groupedEvents: []
-  },
+  settingsTabs: observable(
+    {
+      selected: "time" as SettingsTabs,
+      columns: undefined,
+      renderColumns: undefined,
+      columnHashMap: new Map<string, RenderColumnInfo>(),
+      columnSearchTerm: "",
+      showColumnSearchLoader: false,
+      datapackDisplayType: "compact" as const,
+      eventSearchTerm: "",
+      groupedEvents: []
+    },
+    {
+      columns: false
+    }
+  ),
   mapState: {
     mapInfo: {},
     mapHierarchy: {},

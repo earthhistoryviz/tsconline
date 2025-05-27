@@ -5,7 +5,7 @@ import { Box, Typography } from "@mui/material";
 import "./ColumnMenu.css";
 import { FontMenu } from "../FontMenu";
 import { ChangeBackgroundColor } from "./BackgroundColor";
-import { ColumnInfo, RangeSettings, assertRangeSettings } from "@tsconline/shared";
+import { RangeSettings, assertRangeSettings } from "@tsconline/shared";
 import {
   CustomDivider,
   CustomFormControlLabel,
@@ -25,6 +25,7 @@ import { ZoneSpecificSettings } from "../advanced_settings/ZoneSpecificSettings"
 import { AgeRulerSpecificSettings } from "../advanced_settings/AgeRulerSpecificSettings";
 import { setColumnMenuTabValue } from "../../state/actions";
 import { useTranslation } from "react-i18next";
+import { RenderColumnInfo } from "../../types";
 
 export const ColumnMenu = observer(() => {
   const { state, actions } = useContext(context);
@@ -92,7 +93,7 @@ export const ColumnMenu = observer(() => {
 
 type ColumnContentProps = {
   tab: string;
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 };
 const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) => {
   const { actions } = useContext(context);
@@ -167,7 +168,7 @@ const ColumnContent: React.FC<ColumnContentProps> = observer(({ tab, column }) =
  * @returns
  */
 function addRangeFields(
-  column: ColumnInfo,
+  column: RenderColumnInfo,
   setRangeColumnSettings: (r: RangeSettings, n: Partial<RangeSettings>) => void
 ) {
   if (!column.columnSpecificSettings || column.columnDisplayType !== "Range") return [];
@@ -194,7 +195,7 @@ function addRangeFields(
   ];
 }
 
-const ShowTitles = observer(({ column }: { column: ColumnInfo }) => {
+const ShowTitles = observer(({ column }: { column: RenderColumnInfo }) => {
   const { actions } = useContext(context);
   const { t } = useTranslation();
   return (
