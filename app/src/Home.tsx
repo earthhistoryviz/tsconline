@@ -22,6 +22,8 @@ import { useTranslation } from "react-i18next";
 import { devSafeUrl } from "./util";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
+import { SharedWorkshop } from "@tsconline/shared";
+import { formatDate, getUpcomingWorkshops, getWorkshopCoverImage } from "./state/non-action-util";
 
 export const Home = observer(function Home() {
   const { actions } = useContext(context);
@@ -559,73 +561,42 @@ const UpcomingWorkshops = observer(
   forwardRef<HTMLDivElement>(function UpcomingWorkshops() {
     const isMobile = useMediaQuery("(max-width:900px)");
     const isTall = useMediaQuery("(min-height:650px)");
+    const { state } = useContext(context);
     const { t } = useTranslation();
     const [open, setOpen] = useState(false);
-    const workshops = [
-      {
-        title: "Switzerland Workshop",
-        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-        description:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-        dataPacks: "5",
-        image: devSafeUrl("/datapack-images//")
-      },
-      {
-        title: "Switzerland Workshop",
-        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-        description:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-        dataPacks: "5",
-        image: devSafeUrl("/datapack-images//")
-      },
-      {
-        title: "Switzerland Workshop",
-        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-        description:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-        dataPacks: "5",
-        image: devSafeUrl("/datapack-images//")
-      },
-      {
-        title: "Switzerland Workshop",
-        date: "Fri • Nov 28 • 8:00 PM - Fri • Dec 3 • 8:00 PM",
-        description:
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco labox",
-        dataPacks: "5",
-        image: devSafeUrl("/datapack-images//")
-      }
-    ];
+    const upcomingWorkshops = getUpcomingWorkshops(state.workshops);
+    const upcomingWorkshopsLength = upcomingWorkshops.length;
     return (
       <>
         {!isMobile && (
           <Box
             className="upcoming-workshops-section"
             sx={{
-              alignSelf: "flex-start",
               backgroundColor: "secondaryBackground.main"
             }}>
-            <Box
-              sx={{
-                position: "sticky",
-                zIndex: 10,
-                height: "60px"
-              }}>
+            <Box className="upcoming-workshops-sticky">
               <Typography className="upcoming-workshop-title" variant="h3">
                 {t("UPCOMING WORKSHOPS")}
               </Typography>
               <CustomDivider />
             </Box>
-            <StyledScrollbar
-              sx={
-                !isMobile && isTall
-                  ? { height: "calc(100% - 60px)", maxHeight: "calc(100% - 60px)" }
-                  : { height: "590px", maxHeight: "590px" }
-              }>
-              {" "}
-              {workshops.map((step, index) => (
-                <WorkshopItem key={index} step={step} />
-              ))}
-            </StyledScrollbar>
+            {upcomingWorkshopsLength > 0 ? (
+              <StyledScrollbar
+                sx={
+                  !isMobile && isTall
+                    ? { height: "calc(100% - 60px)", maxHeight: "calc(100% - 60px)" }
+                    : { height: "590px", maxHeight: "590px" }
+                }>
+                {" "}
+                {upcomingWorkshops.map((workshop, index) => (
+                  <WorkshopItem key={index} workshop={workshop} />
+                ))}
+              </StyledScrollbar>
+            ) : (
+              <Box className="no-upcoming-workshops">
+                <Typography className="no-upcoming-workshops-text">{t("workshops.no-upcoming-workshops")}</Typography>
+              </Box>
+            )}
           </Box>
         )}
         {isMobile && (
@@ -656,11 +627,19 @@ const UpcomingWorkshops = observer(
                 <TSCButton onClick={() => setOpen(false)} buttonType="gradient" className="upcoming-workshop-button">
                   {t("Upcoming Workshops")}
                 </TSCButton>
-                <StyledScrollbar>
-                  {workshops.map((step, index) => (
-                    <WorkshopItem key={index} step={step} />
-                  ))}
-                </StyledScrollbar>
+                {upcomingWorkshopsLength ? (
+                  <StyledScrollbar>
+                    {upcomingWorkshops.map((workshop, index) => (
+                      <WorkshopItem key={index} workshop={workshop} />
+                    ))}
+                  </StyledScrollbar>
+                ) : (
+                  <Box className="no-upcoming-workshops" sx={{ bgcolor: "secondaryBackground.main" }}>
+                    <Typography className="no-upcoming-workshops-text">
+                      {t("workshops.no-upcoming-workshops")}
+                    </Typography>
+                  </Box>
+                )}
               </Drawer>
             </Portal>
           </>
@@ -670,22 +649,22 @@ const UpcomingWorkshops = observer(
   })
 );
 
-interface Workshop {
-  title: string;
-  date: string;
-  description: string;
-  dataPacks: string;
-  image: string;
-}
-const WorkshopItem: React.FC<{ step: Workshop }> = ({ step }) => (
+const WorkshopItem: React.FC<{ workshop: SharedWorkshop }> = ({ workshop }) => (
   <Box className="scrollable_item">
     <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
       <Box sx={{ display: "flex", flexDirection: "column", marginLeft: "4%", marginRight: "4%", width: "inherit" }}>
-        <img loading="lazy" rel="preload" className="upcoming-workshop-image" src={step.image} />
-        <Typography className="upcoming-workshop-subtitle">{step.title}</Typography>
-        <Typography className="upcoming-workshop-date">{step.date}</Typography>
-        <Typography className="upcoming-workshop-description">{step.description}</Typography>
-        <Typography className="upcoming-workshop-pd">{step.dataPacks} Datapacks</Typography>
+        <img
+          loading="lazy"
+          rel="preload"
+          className="upcoming-workshop-image"
+          src={getWorkshopCoverImage(workshop.workshopId)}
+        />
+        <Typography className="upcoming-workshop-subtitle">{workshop.title}</Typography>
+        <Typography className="upcoming-workshop-date">{`${formatDate(workshop.start)} - ${formatDate(workshop.end)}`}</Typography>
+        <Typography className="upcoming-workshop-description">{workshop.description}</Typography>
+        {workshop.datapacks && (
+          <Typography className="upcoming-workshop-pd">{workshop.datapacks.length} Datapacks</Typography>
+        )}
         <CustomDivider />
       </Box>
     </Box>
