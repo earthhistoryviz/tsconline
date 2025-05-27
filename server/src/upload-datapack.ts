@@ -63,11 +63,15 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
     ...(Object.keys(pdfFields).length > 0 && { pdfFields })
   };
 };
-export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterableIterator<Multipart>) => {
+export const processAndUploadDatapack = async (
+  uuid: string,
+  parts: AsyncIterableIterator<Multipart>,
+  options?: { bearerToken?: string }
+) => {
   const user = await findUser({ uuid }).catch(() => {
     return [];
   });
-  if ((!uuid || !user || !user[0]) && uuid !== "treatise") {
+  if ((!uuid || !user || !user[0]) && uuid !== "official") {
     return { code: 404, message: "Error finding user" };
   }
 
@@ -79,8 +83,11 @@ export const processAndUploadDatapack = async (uuid: string, parts: AsyncIterabl
   const { filepath, tempProfilePictureFilepath, datapackMetadata, pdfFields } = result;
   try {
     if ((isOfficialDatapack(datapackMetadata) || isWorkshopDatapack(datapackMetadata)) && !isAdmin) {
-      return { code: 401, message: "Only admins can upload official or workshop datapacks" };
+      if (!(process.env.BEARER_TOKEN && options?.bearerToken === process.env.BEARER_TOKEN)) {
+        return { code: 401, message: "Only admins can upload official or workshop datapacks" };
+      }
     }
+
     // change the uuid to reflect where we are downloading the datapack to depending on the type of datapack
     const uuidDirectoryToDownloadTo = isOfficialDatapack(datapackMetadata)
       ? "official"

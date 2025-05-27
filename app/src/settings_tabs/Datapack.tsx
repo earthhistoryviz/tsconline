@@ -34,7 +34,6 @@ import {
   getPrivateOfficialDatapackMetadatas,
   getPublicDatapacksMetadataWithoutCurrentUser,
   getPublicOfficialDatapacksMetadata,
-  getTreatuseDatapackMetadata,
   getWorkshopDatapacksMetadata,
   isOwnedByUser
 } from "../state/non-action-util";
@@ -100,7 +99,9 @@ export const Datapacks = observer(function Datapacks() {
       <Box
         className={`${styles.datapackDisplayContainer} ${state.settingsTabs.datapackDisplayType === "cards" && styles.cards} datapack-display-container`}>
         <DatapackGroupDisplay
-          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata)}
+          datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter(
+            (item) => !["Treatise", "Lexicon Formations"].some((tag) => item.tags.includes(tag))
+          )}
           header={t("settings.datapacks.title.public-official")}
           HeaderIcon={Verified}
           loading={state.skeletonStates.publicOfficialDatapacksLoading}
@@ -135,12 +136,26 @@ export const Datapacks = observer(function Datapacks() {
           HeaderIcon={People}
           loading={state.skeletonStates.publicUserDatapacksLoading}
         />
-        {getTreatuseDatapackMetadata(state.datapackMetadata).length !== 0 && (
+        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) => item.tags.includes("Treatise")) && (
           <DatapackGroupDisplay
-            datapacks={getTreatuseDatapackMetadata(state.datapackMetadata)}
+            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+              item.tags.includes("Treatise")
+            )}
             header={t("settings.datapacks.title.treatise")}
             HeaderIcon={Terrain}
-            loading={state.skeletonStates.treatiseDatapackLoading}
+            loading={state.skeletonStates.publicOfficialDatapacksLoading}
+          />
+        )}
+        {getPublicOfficialDatapacksMetadata(state.datapackMetadata).some((item) =>
+          item.tags.includes("Lexicon Formations")
+        ) && (
+          <DatapackGroupDisplay
+            datapacks={getPublicOfficialDatapacksMetadata(state.datapackMetadata).filter((item) =>
+              item.tags.includes("Lexicon Formations")
+            )}
+            header={t("settings.datapacks.title.lexicon")}
+            HeaderIcon={Terrain}
+            loading={state.skeletonStates.publicOfficialDatapacksLoading}
           />
         )}
       </Box>

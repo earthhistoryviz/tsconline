@@ -90,13 +90,10 @@ export type UserDatapack = {
   type: "user";
   uuid: string;
 };
-export type TreatiseDatapack = {
-  type: "treatise";
-};
 export type TempDatapack = {
   type: "temp";
 };
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TreatiseDatapack | TempDatapack;
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TempDatapack;
 export type DatapackTypeString = DatapackType["type"];
 
 export type DatapackMetadata = {
@@ -758,9 +755,7 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
-  return datapackType.type === "temp" || datapackType.type === "official" || datapackType.type === "treatise"
-    ? datapackType.type
-    : datapackType.uuid;
+  return datapackType.type === "temp" || datapackType.type === "official" ? datapackType.type : datapackType.uuid;
 }
 
 export function isOfficialUUID(uuid: string): boolean {
@@ -1394,10 +1389,10 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function isDatapackTypeString(o: any): o is DatapackTypeString {
-  return /^(user|official|workshop|treatise|temp)$/.test(o);
+  return /^(user|official|workshop|temp)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
-  if (typeof o !== "string" || !/^(user|official|workshop|treatise|temp)$/.test(o))
+  if (typeof o !== "string" || !/^(user|official|workshop|temp)$/.test(o))
     throwError("DatapackType", "type", "string and user | server | workshop", o);
 }
 export function assertTransects(o: any): asserts o is Transects {
@@ -1427,9 +1422,6 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";
 }
-export function isTreatiseDatapack(o: any): o is TreatiseDatapack {
-  return o.type === "treatise";
-}
 export function isTempDatapack(o: any): o is TempDatapack {
   return o.type === "temp";
 }
@@ -1445,14 +1437,11 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "workshop":
       assertWorkshopDatapack(o);
       break;
-    case "treatise":
-      assertTreatiseDatapack(o);
-      break;
     case "temp":
       assertTempDatapack(o);
       break;
     default:
-      throwError("Datapack", "type", "user | official | workshop | treatise", o.type);
+      throwError("Datapack", "type", "user | official | workshop", o.type);
   }
 }
 export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
@@ -1471,11 +1460,6 @@ export function assertUserDatapack(o: any): asserts o is UserDatapack {
   if (typeof o.type !== "string") throwError("UserDatapack", "type", "string", o.type);
   if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
   if (typeof o.uuid !== "string" || o.uuid.length == 0) throwError("PublicUserDatapack", "uuid", "string", o.uuid);
-}
-export function assertTreatiseDatapack(o: any): asserts o is TreatiseDatapack {
-  if (!o || typeof o !== "object") throw new Error("TreatiseDatapack must be a non-null object");
-  if (typeof o.type !== "string") throwError("TreatiseDatapack", "type", "string", o.type);
-  if (o.type !== "treatise") throwError("TreatiseDatapack", "type", "treatise", o.type);
 }
 export function assertTempDatapack(o: any): asserts o is TempDatapack {
   if (!o || typeof o !== "object") throw new Error("TempDatapack must be a non-null object");
@@ -2077,13 +2061,10 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
     case "user":
       assertUserDatapack(o);
       break;
-    case "treatise":
-      assertTreatiseDatapack(o);
-      break;
     case "temp":
       assertTempDatapack(o);
       break;
     default:
-      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user | treatise", o.type);
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }

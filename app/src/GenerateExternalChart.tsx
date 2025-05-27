@@ -11,7 +11,7 @@ import "./Chart.css";
 export const GenerateExternalChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-  const phylum = queryParams.get("phylum");
+  const datapackTitle = queryParams.get("datapackTitle");
   const { actions } = useContext(context);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -19,19 +19,19 @@ export const GenerateExternalChart: React.FC = () => {
   const { state } = useContext(context);
 
   const fetchData = async (controller: AbortController) => {
-    if (phylum) {
+    if (datapackTitle) {
       setLoading(true);
       try {
         const fetchedDatapack = await actions.fetchDatapack(
           {
             isPublic: true,
-            title: phylum,
-            type: "treatise"
+            title: datapackTitle,
+            type: "official"
           },
           { signal: controller.signal }
         );
         if (!fetchedDatapack) {
-          console.error("Error: Treatise Datapack not found. Phylum:", phylum);
+          console.error("Error: Datapack not found. Title:", datapackTitle);
           return;
         }
 
@@ -51,11 +51,11 @@ export const GenerateExternalChart: React.FC = () => {
         actions.addDatapack(fetchedDatapack);
         actions.addDatapack(internalDatapack);
 
-        const treatiseDatapackConfig: DatapackConfigForChartRequest = {
+        const externalDatapackConfig: DatapackConfigForChartRequest = {
           storedFileName: fetchedDatapack.storedFileName,
           title: fetchedDatapack.title,
           isPublic: fetchedDatapack.isPublic,
-          type: "treatise"
+          type: "official"
         };
 
         const internalDatapackConfig: DatapackConfigForChartRequest = {
@@ -65,7 +65,7 @@ export const GenerateExternalChart: React.FC = () => {
           type: "official"
         };
 
-        await actions.processDatapackConfig([internalDatapackConfig, treatiseDatapackConfig]);
+        await actions.processDatapackConfig([internalDatapackConfig, externalDatapackConfig]);
 
         actions.toggleSettingsTabColumn("Geomagnetic Polarity");
         actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
@@ -97,13 +97,13 @@ export const GenerateExternalChart: React.FC = () => {
             const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
             const columnNames = ["Total", "New", "Extinct"];
             for (let i = 0; i < columnNames.length; i++) {
-              const columnInfo = state.settingsTabs.columnHashMap.get(`${phylum} ${columnNames[i]}-Genera`);
+              const columnInfo = state.settingsTabs.columnHashMap.get(`${datapackTitle} ${columnNames[i]}-Genera`);
               if (columnInfo && columnInfo.columnSpecificSettings) {
                 const [min, max] = [values[i * 2], values[i * 2 + 1]];
 
                 if (isNaN(min) || isNaN(max) || min > max) {
                   console.warn(
-                    `Warning: Invalid min-max numbers detected for ${columnNames[i]}-Genera ${phylum}. Skipping...`
+                    `Warning: Invalid min-max numbers detected for ${columnNames[i]}-Genera ${datapackTitle}. Skipping...`
                   );
                   continue;
                 }
@@ -134,8 +134,8 @@ export const GenerateExternalChart: React.FC = () => {
 
   useEffect(() => {
     const controller = new AbortController();
-    if (!phylum && !errorPushed) {
-      actions.pushError(ErrorCodes.INVALID_DATAPACK_PHYLUM);
+    if (!datapackTitle && !errorPushed) {
+      actions.pushError(ErrorCodes.INVALID_DATAPACK_TITLE);
       setErrorPushed(true);
       setLoading(false);
       return;
@@ -150,7 +150,7 @@ export const GenerateExternalChart: React.FC = () => {
       // This is not an issue in production
       controller.abort();
     };
-  }, [phylum, errorPushed]);
+  }, [datapackTitle, errorPushed]);
   const { t } = useTranslation();
   return (
     <Box
