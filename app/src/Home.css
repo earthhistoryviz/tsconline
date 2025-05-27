@@ -542,6 +542,7 @@
 
 .upcoming-workshops-section {
   display: flex;
+  align-self: flex-start;
   flex-direction: column;
   width: 18vw;
   padding-left: 15px;
@@ -556,6 +557,24 @@
   grid-row: 1 / span 2;
 }
 
+.upcoming-workshops-sticky {
+  position: "sticky";
+  z-index: 10;
+  height: 60px;
+}
+
+.no-upcoming-workshops {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  height: 100%;
+}
+.no-upcoming-workshops-text {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
 .scrollable_item {
   height: inherit;
   max-height: inherit;
@@ -565,9 +584,9 @@
 }
 
 .upcoming-workshop-image {
-  grid-area: "img";
   border-radius: 20px;
   width: 100%;
+  object-fit: contain;
   height: 100%;
   margin-top: 10px;
 }
