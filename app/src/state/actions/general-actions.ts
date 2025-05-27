@@ -9,7 +9,6 @@ import {
   assertSharedUser,
   assertSuccessfulServerResponse,
   assertSVGStatus,
-  assertTreatiseDatapack,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
   type ColumnInfo,
@@ -22,13 +21,14 @@ import {
   isOfficialDatapack,
   isUserDatapack,
   isWorkshopDatapack,
-  type MapHierarchy,
   type MapInfo,
+  type MapHierarchy,
   Presets,
   SharedUser,
   TimescaleItem,
   MarkdownFile
 } from "@tsconline/shared";
+
 import { state, State } from "../state";
 import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import {
@@ -97,10 +97,6 @@ export const fetchDatapack = action(
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
-        break;
-      }
-      case "treatise": {
-        datapack = await actions.fetchTreatiseDatapack(metadata.title, options);
         break;
       }
     }
@@ -248,7 +244,6 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
   } finally {
     setPublicOfficialDatapacksLoading(false);
     setPublicUserDatapacksLoading(false);
-    setTreatiseDatapackLoading(false);
   }
 });
 
@@ -295,28 +290,6 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     setPrivateUserDatapacksLoading(false);
   }
 });
-export const fetchTreatiseDatapack = action(
-  "fetchTreatiseDatapack",
-  async (datapackHash: string, options?: { signal?: AbortSignal }) => {
-    try {
-      const response = await fetcher(`/treatise/datapack/${datapackHash}`, options);
-      const data = await response.json();
-      try {
-        assertDatapack(data);
-        assertTreatiseDatapack(data);
-        return data;
-      } catch (e) {
-        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
-        console.error(e);
-      }
-    } catch (e) {
-      if ((e as Error).name === "AbortError") return;
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      console.error(e);
-    }
-  }
-);
-
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
@@ -1343,10 +1316,6 @@ export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
-export const setTreatiseDatapackLoading = action((fetching: boolean) => {
-  state.skeletonStates.treatiseDatapackLoading = fetching;
-});
-
 export const setTourOpen = action((openTour: boolean, tourName: string) => {
   switch (tourName) {
     case "qsg":

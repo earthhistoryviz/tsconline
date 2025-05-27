@@ -151,7 +151,6 @@ export type State = {
     privateOfficialDatapacksLoading: boolean;
     publicUserDatapacksLoading: boolean;
     privateUserDatapacksLoading: boolean;
-    treatiseDatapackLoading: boolean;
   };
   mapPatterns: {
     patterns: Patterns;
@@ -325,8 +324,7 @@ export const state = observable<State>({
     publicOfficialDatapacksLoading: true,
     privateOfficialDatapacksLoading: true,
     publicUserDatapacksLoading: true,
-    privateUserDatapacksLoading: true,
-    treatiseDatapackLoading: true
+    privateUserDatapacksLoading: true
   },
   mapPatterns: {
     patterns: {},
