@@ -23,7 +23,13 @@ import { devSafeUrl } from "./util";
 import { createGradient } from "./util/util";
 import { TSCStepper } from "./components/TSCStepper";
 import { SharedWorkshop } from "@tsconline/shared";
-import { formatDate, getUpcomingWorkshops, getWorkshopCoverImage } from "./state/non-action-util";
+import {
+  formatDateForSmallerDisplay,
+  getNavigationRouteForWorkshopDetails,
+  getUpcomingWorkshops,
+  getWorkshopCoverImage
+} from "./state/non-action-util";
+import { useNavigate } from "react-router";
 
 export const Home = observer(function Home() {
   const { actions } = useContext(context);
@@ -649,9 +655,15 @@ const UpcomingWorkshops = observer(
   })
 );
 
-const WorkshopItem: React.FC<{ workshop: SharedWorkshop }> = ({ workshop }) => (
-  <Box className="scrollable_item">
-    <Box sx={{ backgroundColor: "secondaryBackground.main" }}>
+const WorkshopItem: React.FC<{ workshop: SharedWorkshop }> = ({ workshop }) => {
+  const navigate = useNavigate();
+  return (
+    <Box
+      className="upcoming-workshop-item"
+      onClick={() => {
+        navigate(getNavigationRouteForWorkshopDetails(workshop.workshopId));
+      }}
+      sx={{ backgroundColor: "secondaryBackground.main" }}>
       <Box sx={{ display: "flex", flexDirection: "column", marginLeft: "4%", marginRight: "4%", width: "inherit" }}>
         <img
           loading="lazy"
@@ -660,13 +672,13 @@ const WorkshopItem: React.FC<{ workshop: SharedWorkshop }> = ({ workshop }) => (
           src={getWorkshopCoverImage(workshop.workshopId)}
         />
         <Typography className="upcoming-workshop-subtitle">{workshop.title}</Typography>
-        <Typography className="upcoming-workshop-date">{`${formatDate(workshop.start)} - ${formatDate(workshop.end)}`}</Typography>
+        <Typography className="upcoming-workshop-date">{`${formatDateForSmallerDisplay(workshop.start)} - ${formatDateForSmallerDisplay(workshop.end)}`}</Typography>
         <Typography className="upcoming-workshop-description">{workshop.description}</Typography>
-        {workshop.datapacks && (
+        {workshop.datapacks && workshop.datapacks.length > 0 && (
           <Typography className="upcoming-workshop-pd">{workshop.datapacks.length} Datapacks</Typography>
         )}
         <CustomDivider />
       </Box>
     </Box>
-  </Box>
-);
+  );
+};
