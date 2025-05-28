@@ -54,7 +54,8 @@ vi.mock("../src/util", async () => {
 });
 vi.mock("fs/promises", async () => {
   return {
-    readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content"))
+    readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content")),
+    readdir: vi.fn().mockResolvedValue(["file1.zip", "file2.zip"])
   };
 });
 vi.mock("../src/upload-handlers", async () => {
@@ -461,6 +462,17 @@ describe("downloadWorkshopFilesZip tests", () => {
     });
     expect(response.statusCode).toBe(404);
     expect(await response.json()).toEqual({ error: "Failed to process the file" });
+  });
+  it("should return 404 if readdir finds no files", async () => {
+    vi.spyOn(workshopUtil, "getWorkshopFilesPath").mockResolvedValueOnce("/tmp/fake-empty-folder");
+    vi.spyOn(fsp, "readdir").mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(404);
+    expect(await response.json()).toEqual({ error: "No files found for this workshop" });
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;

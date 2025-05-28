@@ -11,6 +11,7 @@ import { verifyNonExistentFilepath } from "../util.js";
 
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
+import { readdir } from "node:fs/promises";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -94,6 +95,11 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     let filesFolder;
     try {
       filesFolder = await getWorkshopFilesPath(directory);
+      const files = await readdir(filesFolder, { withFileTypes: true });
+      if (files.length === 0) {
+        reply.status(404).send({ error: "No files found for this workshop" });
+        return;
+      }
     } catch (error) {
       reply.status(500).send({ error: "Invalid directory path" });
       return;
