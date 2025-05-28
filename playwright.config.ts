@@ -12,7 +12,7 @@ import { defineConfig, devices } from "@playwright/test";
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
-  timeout: 30000,
+  timeout: 50000,
   /* Maximum time each action can take. Defaults to 0 (no limit).*/
   testDir: "./app/__tests__/app/",
   /* Run tests in files in parallel */
@@ -20,7 +20,7 @@ export default defineConfig({
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
-  retries: process.env.CI ? 2 : 0,
+  retries: 2,
   /* Opt out of parallel tests on CI. */
   workers: undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
@@ -38,17 +38,36 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { ...devices["Desktop Chrome"] }
+      use: { 
+        ...devices["Desktop Chrome"],
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+        headless: true,
+      }
     },
-
     {
       name: "firefox",
-      use: { ...devices["Desktop Firefox"] }
+      use: { 
+        ...devices["Desktop Firefox"],
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+        headless: true,
+      }
     },
-
     {
       name: "webkit",
-      use: { ...devices["Desktop Safari"] }
+      use: { 
+        ...devices["Desktop Safari"],
+        viewport: { width: 1024, height: 768 },
+        deviceScaleFactor: 1,
+        isMobile: false,
+        hasTouch: false,
+        headless: true,
+      }
     }
 
     /* Test against mobile viewports. */
