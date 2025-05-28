@@ -575,19 +575,25 @@
   font-weight: 600;
 }
 
-.scrollable_item {
+.upcoming-workshop-item {
   height: inherit;
   max-height: inherit;
   flex: 1;
   overflow: auto;
   scrollbar-width: none;
+  cursor: pointer;
+  border-radius: 10px;
+}
+.upcoming-workshop-item:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+  transition: background-color 0.3s ease-in-out;
 }
 
 .upcoming-workshop-image {
   border-radius: 20px;
   width: 100%;
-  object-fit: contain;
-  height: 100%;
+  object-fit: cover;
+  height: 120px;
   margin-top: 10px;
 }
 
@@ -769,6 +775,9 @@
 
   .landing-page-card-description {
     height: 230px;
+  }
+  .upcoming-workshop-image {
+    height: 70px;
   }
 }
 

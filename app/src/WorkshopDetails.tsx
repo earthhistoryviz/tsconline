@@ -64,7 +64,7 @@ export const WorkshopDetails = observer(() => {
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
         <div className={styles.header}>
-          <IconButton className={styles.back} onClick={() => navigate("/workshops")}>
+          <IconButton className={styles.back} onClick={() => navigate(-1)}>
             <ArrowBackIcon className={styles.icon} />
           </IconButton>
           <Typography className={styles.ht}>{workshop.title}</Typography>
