@@ -96,7 +96,7 @@ test("check if generate chart and save chart works", async ({ page }) => {
     maxDiffPixelRatio: 0.1,
     animations: "disabled",
     caret: "hide",
-    timeout: 10000,
+    timeout: 10000
   });
 
   await page.locator("text=Save").nth(0).click();
@@ -142,7 +142,7 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
     maxDiffPixelRatio: 0.01,
     animations: "disabled",
     caret: "hide",
-    timeout: 10000,
+    timeout: 10000
   });
 });
 
@@ -201,7 +201,7 @@ test("check if generate crossplot works", async ({ page }) => {
     maxDiffPixelRatio: 0.01,
     animations: "disabled",
     caret: "hide",
-    timeout: 10000,
+    timeout: 10000
   });
 });
 
@@ -213,7 +213,7 @@ test("check if Map Points Functional", async ({ page }) => {
     maxDiffPixelRatio: 0.1,
     animations: "disabled",
     caret: "hide",
-    timeout: 10000,
+    timeout: 10000
   });
 
   await page.locator("text=Settings").click();
