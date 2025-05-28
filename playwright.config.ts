@@ -38,35 +38,35 @@ export default defineConfig({
   projects: [
     {
       name: "chromium",
-      use: { 
+      use: {
         ...devices["Desktop Chrome"],
         viewport: { width: 1024, height: 768 },
         deviceScaleFactor: 1,
         isMobile: false,
         hasTouch: false,
-        headless: true,
+        headless: true
       }
     },
     {
       name: "firefox",
-      use: { 
+      use: {
         ...devices["Desktop Firefox"],
         viewport: { width: 1024, height: 768 },
         deviceScaleFactor: 1,
         isMobile: false,
         hasTouch: false,
-        headless: true,
+        headless: true
       }
     },
     {
       name: "webkit",
-      use: { 
+      use: {
         ...devices["Desktop Safari"],
         viewport: { width: 1024, height: 768 },
         deviceScaleFactor: 1,
         isMobile: false,
         hasTouch: false,
-        headless: true,
+        headless: true
       }
     }
 
