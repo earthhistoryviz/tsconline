@@ -93,7 +93,10 @@ test("check if generate chart and save chart works", async ({ page }) => {
 
   const chartSvg = page.locator(".react-transform-component svg");
   await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
-    maxDiffPixelRatio: 0.1
+    maxDiffPixelRatio: 0.1,
+    animations: "disabled",
+    caret: "hide",
+    timeout: 10000,
   });
 
   await page.locator("text=Save").nth(0).click();
@@ -136,7 +139,10 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
 
   const chartSvg = page.locator(".react-transform-component svg");
   await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/settings-chart.png", {
-    maxDiffPixelRatio: 0.01
+    maxDiffPixelRatio: 0.01,
+    animations: "disabled",
+    caret: "hide",
+    timeout: 10000,
   });
 });
 
@@ -192,7 +198,10 @@ test("check if generate crossplot works", async ({ page }) => {
 
   const chartSvg = page.locator(".react-transform-component svg");
   await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/crossplot-chart.png", {
-    maxDiffPixelRatio: 0.01
+    maxDiffPixelRatio: 0.01,
+    animations: "disabled",
+    caret: "hide",
+    timeout: 10000,
   });
 });
 
@@ -201,7 +210,10 @@ test("check if Map Points Functional", async ({ page }) => {
 
   const chartSvg = page.locator(".react-transform-component svg");
   await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
-    maxDiffPixelRatio: 0.1
+    maxDiffPixelRatio: 0.1,
+    animations: "disabled",
+    caret: "hide",
+    timeout: 10000,
   });
 
   await page.locator("text=Settings").click();
