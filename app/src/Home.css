@@ -585,7 +585,7 @@
   border-radius: 10px;
 }
 .upcoming-workshop-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: rgba(0, 0, 0, 0.07);
   transition: background-color 0.3s ease-in-out;
 }
 
