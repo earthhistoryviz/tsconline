@@ -4,14 +4,14 @@ import { context } from "../../state";
 import { TextFieldProps, Typography, TextField } from "@mui/material";
 import "./EditWidthField.css";
 import { NumericFormat } from "react-number-format";
-import { ColumnInfo } from "@tsconline/shared";
+import { RenderColumnInfo } from "../../types";
 
 const WidthTextField = ({ ...props }: TextFieldProps) => (
   <TextField {...props} hiddenLabel variant="outlined" className="edit-width-text-field" />
 );
 
 export const EditWidthField: React.FC<{
-  column: ColumnInfo;
+  column: RenderColumnInfo;
 }> = observer(({ column }) => {
   const { actions } = useContext(context);
   return (

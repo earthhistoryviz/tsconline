@@ -20,6 +20,7 @@ import {
   setCommonProperties,
   capitalizeFirstLetter,
   checkHeader,
+  convertTitleToUrlPath,
   verifySymlink,
   uploadFileToGitHub,
   isFileTypeAllowed
@@ -180,6 +181,20 @@ describe("checkHeader", () => {
   });
   test('checkHeader("unencrypted.txt") returns false', async () => {
     expect(await checkHeader("unencrypted.txt")).toEqual(false);
+  });
+});
+
+describe("convertTitleToUrlPath", () => {
+  test("convertTitleToUrlPath('Test Title') returns 'test-title'", () => {
+    expect(convertTitleToUrlPath("Test Title")).toBe("test-title");
+  });
+
+  test("convertTitleToUrlPath('Another Test') returns 'another-test'", () => {
+    expect(convertTitleToUrlPath("Another Test")).toBe("another-test");
+  });
+
+  test("convertTitleToUrlPath('') returns ''", () => {
+    expect(convertTitleToUrlPath("")).toBe("");
   });
 });
 

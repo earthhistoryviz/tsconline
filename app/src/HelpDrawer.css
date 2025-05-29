@@ -1,29 +1,145 @@
-.help-list-item-button {
+.help-accordion-summary > .MuiAccordionSummary-expandIconWrapper.Mui-expanded {
+  transform: rotate(90deg);
   display: flex;
-  flex-direction: row-reverse;
-  padding-top: 0;
-  padding-bottom: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-  height: 24px;
-  width: 300px;
+  order: -1;
+}
+.help-container {
+  max-height: calc(100vh - var(--nav-bar-height));
+  min-height: calc(100vh - var(--nav-bar-height));
+  grid-template-rows: calc(100vh - var(--nav-bar-height));
+  display: grid;
+  grid-template-columns: 250px auto;
+}
+.help-container > * {
+  padding-top: 10px;
+}
+.markdown-wrapper {
+  max-width: 100%;
+  overflow-x: auto;
+  word-wrap: break-word;
+}
+.markdown-wrapper pre,
+.markdown-wrapper code {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.markdown-wrapper table {
+  border-collapse: collapse;
+}
+
+.markdown-wrapper img,
+.markdown-wrapper table,
+.markdown-wrapper pre {
+  max-width: 100%;
+  width: max-content;
+  overflow-x: auto;
+  display: block;
+}
+
+.new-help-drawer-list:hover .accordion-help-line {
+  opacity: 1;
+}
+.help-accordion-summary {
+  gap: 10px;
+  min-height: 24px;
+  padding: 0px 0px 0px 10px;
+}
+.help-accordion-summary,
+.selected-help-accordion:focus::after {
+  border-top-left-radius: 8px;
+  border-bottom-left-radius: 8px;
+}
+/* highlight the selected column */
+.selected-help-accordion::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -4px;
+  z-index: 1;
+  width: 1px;
+  height: 100%;
+  background-color: #9a9a9a;
+}
+
+/* highlight on focus */
+.selected-help-accordion:focus::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid #bcbcbc85;
+  border-right: none;
+  pointer-events: none;
+  transition: border-color 0.2s;
+}
+
+.selected-help-accordion {
+  background-color: rgba(171, 171, 171, 0.2) !important;
+  position: relative;
+}
+.help-accordion-summary:hover {
+  transition: background-color 0.05s;
+  background-color: rgba(171, 171, 171, 0.1);
+}
+.help-accordion-summary > .MuiAccordionSummary-content {
+  order: 2;
+  flex-grow: 1;
+  align-items: center;
+  margin: 0;
+  display: flex;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.help-accordion-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  height: max-content;
+}
+.help-accordion {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: transparent;
+}
+.help-accordion:not(:last-child) {
+  border-bottom: 0px;
+}
+.help-accordion:before {
+  display: none;
+}
+.accordion-help-line {
+  position: absolute;
+  left: 16.5px;
+  top: 25px;
+  bottom: 0;
+  width: 1px;
+  opacity: 0;
+  z-index: 1;
+  transition: opacity 0.2s ease;
 }
 
 /* Theme palette divider: */
-.menu-item {
-  padding-left: 8px;
-  margin-left: 27.5px;
-}
-
-.menu-item.child {
-  border-left: 1px solid;
-}
-
-.menu-item .MuiListItem-root {
-  margin: 0;
+.accordion-help-details {
+  padding: 0 0 0 20.5px;
+  border: none;
 }
 
 /* New Help Drawer List*/
 .new-help-drawer-list .MuiListItem-root {
   margin: 0;
+  margin-left: 10px;
+}
+.help-accordion-summary-text {
+  font-size: 0.97rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.help-accordion-leaf {
+  margin-left: 14.4px;
 }

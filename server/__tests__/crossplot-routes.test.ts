@@ -95,7 +95,7 @@ beforeAll(async () => {
   app = fastify();
   await app.register(crossPlotRoutes, { prefix: "/crossplot" });
   await app.listen({ host: "localhost", port: 1210 });
-  // vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "error").mockImplementation(() => {});
   // vi.spyOn(console, "log").mockImplementation(() => {});
 });
 

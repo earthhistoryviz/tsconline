@@ -1,41 +1,40 @@
 import { action, isObservable, observable, runInAction, toJS } from "mobx";
 import {
-  SharedUser,
+  assertChartInfoTSC,
+  assertDatapack,
+  assertDatapackMetadataArray,
+  assertOfficialDatapack,
+  assertPatterns,
+  assertPresets,
+  assertSharedUser,
+  assertSuccessfulServerResponse,
+  assertSVGStatus,
   ChartInfoTSC,
   ChartSettingsInfoTSC,
-  TimescaleItem,
-  assertSharedUser,
-  assertChartInfoTSC,
+  type ColumnInfo,
+  Datapack,
+  DatapackConfigForChartRequest,
   DatapackMetadata,
+  DatapackUniqueIdentifier,
   defaultColumnRoot,
   FontsInfo,
-  DatapackConfigForChartRequest,
-  isUserDatapack,
   isOfficialDatapack,
-  assertOfficialDatapack,
-  assertDatapack,
-  DatapackUniqueIdentifier,
+  isUserDatapack,
   isWorkshopDatapack,
-  Datapack,
-  assertDatapackMetadataArray,
-  assertTreatiseDatapack
+  type MapInfo,
+  type MapHierarchy,
+  Presets,
+  SharedUser,
+  TimescaleItem,
+  MarkdownFile
 } from "@tsconline/shared";
 
-import {
-  type MapInfo,
-  type ColumnInfo,
-  type MapHierarchy,
-  assertSuccessfulServerResponse,
-  Presets,
-  assertSVGStatus,
-  assertPresets,
-  assertPatterns
-} from "@tsconline/shared";
 import { state, State } from "../state";
-import { executeRecaptcha, fetcher } from "../../util";
+import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import {
   applyChartColumnSettings,
   applyRowOrder,
+  convertColumnInfoToRenderColumnInfo,
   handleDataMiningColumns,
   handleDualColCompColumns,
   initializeColumnHashMap,
@@ -49,6 +48,7 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
   ChartZoomSettings,
+  CommentType,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,
@@ -56,7 +56,7 @@ import {
   SetDatapackConfigReturnValue,
   SettingsTabs
 } from "../../types";
-import { settings, defaultTimeSettings } from "../../constants";
+import { defaultTimeSettings, settings } from "../../constants";
 import { actions } from "..";
 import { cloneDeep } from "lodash";
 import {
@@ -131,10 +131,6 @@ export const fetchDatapack = action(
         break;
       case "workshop": {
         datapack = await actions.fetchWorkshopDatapack(metadata.uuid, metadata.title, options);
-        break;
-      }
-      case "treatise": {
-        datapack = await actions.fetchTreatiseDatapack(metadata.title, options);
         break;
       }
     }
@@ -282,7 +278,6 @@ export const fetchAllPublicDatapacksMetadata = action("fetchAllPublicDatapacksMe
   } finally {
     setPublicOfficialDatapacksLoading(false);
     setPublicUserDatapacksLoading(false);
-    setTreatiseDatapackLoading(false);
   }
 });
 
@@ -329,28 +324,6 @@ export const fetchUserDatapacksMetadata = action("fetchUserDatapacksMetadata", a
     setPrivateUserDatapacksLoading(false);
   }
 });
-export const fetchTreatiseDatapack = action(
-  "fetchTreatiseDatapack",
-  async (datapackHash: string, options?: { signal?: AbortSignal }) => {
-    try {
-      const response = await fetcher(`/treatise/datapack/${datapackHash}`, options);
-      const data = await response.json();
-      try {
-        assertDatapack(data);
-        assertTreatiseDatapack(data);
-        return data;
-      } catch (e) {
-        displayServerError(data, ErrorCodes.INVALID_USER_DATAPACKS, ErrorMessages[ErrorCodes.INVALID_USER_DATAPACKS]);
-        console.error(e);
-      }
-    } catch (e) {
-      if ((e as Error).name === "AbortError") return;
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      console.error(e);
-    }
-  }
-);
-
 export const uploadUserDatapack = action(
   "uploadUserDatapack",
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File, pdfFiles?: File[]) => {
@@ -471,7 +444,7 @@ export const applySettings = action("applySettings", async (settings: ChartInfoT
   applyChartColumnSettings(settings["class datastore.RootColumn:Chart Root"]);
   handleDataMiningColumns();
   handleDualColCompColumns();
-  await applyRowOrder(state.settingsTabs.columns, settings["class datastore.RootColumn:Chart Root"]);
+  await applyRowOrder(state.settingsTabs.renderColumns, settings["class datastore.RootColumn:Chart Root"]);
 });
 
 const applyChartSettings = action("applyChartSettings", (settings: ChartSettingsInfoTSC) => {
@@ -561,16 +534,18 @@ const setEmptyDatapackConfig = action("setEmptyDatapackConfig", () => {
   for (const opt in columnRoot.fontsInfo) {
     columnRoot.fontsInfo[opt as keyof FontsInfo].inheritable = true;
   }
-  // throws warning if this isn't in its own action.
-  runInAction(() => {
-    state.settingsTabs.columns = columnRoot;
-    state.settings.datapackContainsSuggAge = false;
-    state.mapState.mapHierarchy = {};
-    state.mapState.mapInfo = {};
-    state.settingsTabs.columnHashMap = new Map();
-    state.config.datapacks = [];
-    state.settingsTabs.columnHashMap.set(columnRoot.name, columnRoot);
-  });
+  const renderColumnRoot = convertColumnInfoToRenderColumnInfo(columnRoot);
+  state.settingsTabs.columns = columnRoot;
+  state.settingsTabs.renderColumns = renderColumnRoot;
+  state.settings.datapackContainsSuggAge = false;
+  state.mapState.mapHierarchy = {};
+  state.mapState.mapInfo = {};
+  for (const columnInfo of state.settingsTabs.columnHashMap.values()) {
+    if (columnInfo.dispose) columnInfo.dispose();
+  }
+  state.settingsTabs.columnHashMap = new Map();
+  state.config.datapacks = [];
+  state.settingsTabs.columnHashMap.set(renderColumnRoot.name, renderColumnRoot);
 
   // we add Ma unit by default
   state.settings.timeSettings["Ma"] = JSON.parse(JSON.stringify(defaultTimeSettings));
@@ -694,16 +669,13 @@ export const setDatapackConfig = action(
     chartSettings: ChartInfoTSC | null
   ): Promise<boolean> => {
     resetSettings();
-    // throws warning if this isn't in its own action. may have other fix but left as is
-    await runInAction(async () => {
-      state.settingsTabs.columns = columnRoot;
-      state.settings.datapackContainsSuggAge = foundDefaultAge;
-      state.mapState.mapHierarchy = mapHierarchy;
-      state.mapState.mapInfo = mapInfo;
-      state.settingsTabs.columnHashMap = new Map();
-      state.config.datapacks = datapacks;
-      await initializeColumnHashMap(state.settingsTabs.columns);
-    });
+    state.settingsTabs.columns = columnRoot;
+    state.settingsTabs.renderColumns = convertColumnInfoToRenderColumnInfo(columnRoot);
+    state.settings.datapackContainsSuggAge = foundDefaultAge;
+    state.mapState.mapHierarchy = mapHierarchy;
+    state.mapState.mapInfo = mapInfo;
+    state.config.datapacks = datapacks;
+    await initializeColumnHashMap(state.settingsTabs.columns);
     // when datapacks is empty, setEmptyDatapackConfig() is called instead and Ma is added by default. So when datapacks is no longer empty we will delete that default Ma here
     if (datapacks.length !== 0 || state.settings.timeSettings["ma"]) {
       runInAction(() => {
@@ -724,8 +696,8 @@ export const setDatapackConfig = action(
         }
       }
     }
-    searchColumns(state.settingsTabs.columnSearchTerm);
-    searchEvents(state.settingsTabs.eventSearchTerm);
+    if (state.settingsTabs.columnSearchTerm) searchColumns(state.settingsTabs.columnSearchTerm);
+    if (state.settingsTabs.columnSearchTerm) searchEvents(state.settingsTabs.eventSearchTerm);
     return true;
   }
 );
@@ -1377,10 +1349,6 @@ export const setPublicUserDatapacksLoading = action((fetching: boolean) => {
 export const setPrivateUserDatapacksLoading = action((fetching: boolean) => {
   state.skeletonStates.privateUserDatapacksLoading = fetching;
 });
-export const setTreatiseDatapackLoading = action((fetching: boolean) => {
-  state.skeletonStates.treatiseDatapackLoading = fetching;
-});
-
 export const setTourOpen = action((openTour: boolean, tourName: string) => {
   switch (tourName) {
     case "qsg":
@@ -1415,4 +1383,30 @@ export const setTourOpen = action((openTour: boolean, tourName: string) => {
       state.guides.isSettingsTourOpen = false;
       state.guides.isWorkshopsTourOpen = false;
   }
+});
+
+export const setDatapackProfileComments = action((comments: CommentType[]) => {
+  state.datapackProfilePage.comments = comments;
+});
+
+export const addDatapackProfileComment = action((newComment: CommentType) => {
+  const updatedComments = [newComment, ...state.datapackProfilePage.comments];
+  updatedComments.sort((a, b) => b.dateCreated.getTime() - a.dateCreated.getTime());
+  state.datapackProfilePage.comments = updatedComments;
+});
+
+export const deleteDatapackProfileComment = action((id: number) => {
+  state.datapackProfilePage.comments = state.datapackProfilePage.comments.filter((comment) => comment.id !== id);
+});
+
+export const setCommentInput = action((updatedComment: string) => {
+  state.commentInput = updatedComment;
+});
+
+export const replaceMarkdown = action("replaceMarkdown", (markdownFile: MarkdownFile) => {
+  const processedMarkdown = markdownFile.markdown.replace(
+    /\$\{serverURL\}/g,
+    devSafeUrl("/public/file_format_guide_images")
+  );
+  markdownFile.markdown = processedMarkdown;
 });

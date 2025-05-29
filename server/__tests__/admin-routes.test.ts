@@ -214,7 +214,9 @@ vi.mock("../src/database", async (importOriginal) => {
     findUsersWorkshops: vi.fn().mockResolvedValue([]),
     handleEndedWorkshop: vi.fn().mockResolvedValueOnce({}),
     checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
-    createUsersWorkshops: vi.fn().mockResolvedValue({})
+    createUsersWorkshops: vi.fn().mockResolvedValue({}),
+    deleteComment: vi.fn().mockResolvedValue({}),
+    findDatapackComment: vi.fn(() => Promise.resolve([testComment]))
   };
 });
 
@@ -399,6 +401,16 @@ const testWorkshop: SharedWorkshop = {
   creatorUUID: "123",
   regLink: "",
   active: false
+};
+const testComment = {
+  id: 1,
+  username: "test@example.com",
+  uuid: "123e4567-e89b-12d3-a456-426614174000",
+  dateCreated: mockDate.toISOString(),
+  pictureUrl: null,
+  commentText: "test",
+  flagged: 0,
+  datapackTitle: "test"
 };
 
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
@@ -2700,5 +2712,76 @@ describe("adminUploadCoverPicToWorkshop", () => {
     });
     expect(await response.json()).toEqual({ message: "Cover picture added to workshop" });
     expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("adminDeleteDatapackComment tests", () => {
+  const deleteComment = vi.spyOn(database, "deleteComment");
+  const findDatapackComment = vi.spyOn(database, "findDatapackComment");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 401 if the user is unauthorized", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/1",
+      headers: { "mock-uuid": "" }
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 400 if comment ID is missing", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment ID is invalid", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/a",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 200 if comment is successfully deleted", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/1",
+      headers
+    });
+    expect(deleteComment).toHaveBeenCalled();
+    expect(deleteComment).toHaveBeenCalledWith({ id: 1 });
+    expect(await response.json()).toEqual({ message: "Datapack comment deleted" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 404 if comment is not found", async () => {
+    findDatapackComment.mockResolvedValue([]);
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/2",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Requested comment not found." });
+    expect(response.statusCode).toBe(404);
+  });
+
+  it("should reply 500 if an error occurred in updateComment", async () => {
+    findDatapackComment.mockResolvedValue([{ ...testComment }]);
+    deleteComment.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/admin/datapack/comments/1",
+      headers
+    });
+    expect(deleteComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error deleting datapack comment" });
   });
 });

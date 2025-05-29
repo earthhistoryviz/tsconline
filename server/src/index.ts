@@ -28,9 +28,10 @@ import {
   deleteUserHistory,
   fetchPublicUserDatapack,
   fetchUserDatapacksMetadata,
-  uploadTreatiseDatapack,
+  uploadExternalDatapack,
   fetchUserHistory,
-  fetchUserHistoryMetadata
+  fetchUserHistoryMetadata,
+  fetchDatapackComments
 } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
@@ -38,6 +39,7 @@ import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
+import { fetchMarkdownFiles } from "./help/help-routes.js";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -245,7 +247,6 @@ server.get("/presets", async (_request, reply) => {
 
 server.get("/official/datapack/:name", routes.fetchPublicOfficialDatapack);
 server.get("/public/metadata", routes.fetchPublicDatapacksMetadata);
-server.get("/treatise/datapack/:datapack", routes.fetchTreatiseDatapack);
 
 server.get("/facies-patterns", (_request, reply) => {
   if (!patterns || Object.keys(patterns).length === 0) {
@@ -336,6 +337,7 @@ server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPubl
 server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
+server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
 
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
@@ -352,7 +354,8 @@ server.post("/auth/change-password", strictRateLimit, loginRoutes.changePassword
 server.post("/auth/account-recovery", strictRateLimit, loginRoutes.accountRecovery);
 server.post("/auth/delete-profile", moderateRateLimit, loginRoutes.deleteProfile);
 server.post("/upload-profile-picture", moderateRateLimit, loginRoutes.uploadProfilePicture);
-server.post("/external-chart", moderateRateLimit, uploadTreatiseDatapack);
+server.post("/external-chart", moderateRateLimit, uploadExternalDatapack);
+server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it

@@ -90,13 +90,10 @@ export type UserDatapack = {
   type: "user";
   uuid: string;
 };
-export type TreatiseDatapack = {
-  type: "treatise";
-};
 export type TempDatapack = {
   type: "temp";
 };
-export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TreatiseDatapack | TempDatapack;
+export type DatapackType = OfficialDatapack | WorkshopDatapack | UserDatapack | TempDatapack;
 export type DatapackTypeString = DatapackType["type"];
 
 export type DatapackMetadata = {
@@ -673,9 +670,105 @@ export type AutoPlotMarker = Omit<Marker, "element" | "line" | "x" | "y">;
 export type Model = Omit<Marker, "type" | "line"> & {
   type: "Rect" | "Circle";
 };
+export type MarkdownFile = {
+  markdown: string;
+} & MarkdownFileMetadata;
+export type MarkdownFileMetadata = {
+  title: string;
+  pathname: string;
+};
+export type MarkdownParent = {
+  markdown?: string; // optional markdown content for the parent
+  children: MarkdownTree;
+} & MarkdownFileMetadata;
+
+export type MarkdownTree = {
+  [key: string]: MarkdownFile | MarkdownParent;
+};
 
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
+
+export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
+  if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
+  if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);
+  if (typeof o.pathname !== "string") throwError("MarkdownFileMetadata", "pathname", "string", o.pathname);
+}
+
+export function assertMarkdownParent(o: any): asserts o is MarkdownParent {
+  if (!o || typeof o !== "object") throw new Error("MarkdownParent must be a non-null object");
+  if (o.markdown && typeof o.markdown !== "string") throwError("MarkdownParent", "markdown", "string", o.markdown);
+  if (!o.children || typeof o.children !== "object") throw new Error("MarkdownParent must have children");
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownParent(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownParent structure at key: ${key}`);
+      }
+    }
+  }
+  assertMarkdownFileMetadata(o);
+}
+
+export function isMarkdownParent(o: any): o is MarkdownParent {
+  if (!o || typeof o !== "object") return false;
+  if ("markdown" in o && typeof o.markdown !== "string") return false;
+  if (!Array.isArray(o.children) && typeof o.children !== "object") return false;
+  for (const key in o.children) {
+    if (key in o.children) {
+      const value = o.children[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          try {
+            assertMarkdownFileMetadata(value);
+          } catch (e) {
+            return false;
+          }
+        } else {
+          return isMarkdownParent(value);
+        }
+      } else {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+export function isMarkdownFile(o: any): o is MarkdownFile {
+  if (!o || typeof o !== "object") return false;
+  try {
+    if (typeof o.markdown !== "string") return false;
+    assertMarkdownFileMetadata(o);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+export function assertMarkdownTree(o: any): asserts o is MarkdownTree {
+  if (!o || typeof o !== "object") throw new Error("MarkdownTree must be a non-null object");
+  for (const key in o) {
+    if (key in o) {
+      const value = o[key];
+      if (typeof value === "object") {
+        if ("markdown" in value && typeof value.markdown === "string") {
+          assertMarkdownFileMetadata(value);
+        } else {
+          assertMarkdownTree(value);
+        }
+      } else {
+        throw new Error(`Invalid MarkdownTree structure at key: ${key}`);
+      }
+    }
+  }
+}
 
 export function getMarkerTypeFromNum(num: number): Marker["type"] {
   if (num < 1 || num > markerTypes.length || !markerTypes[num - 1]) {
@@ -758,9 +851,7 @@ export function assertConvertCrossPlotRequest(o: any): asserts o is ConvertCross
 }
 
 export function getUUIDOfDatapackType(datapackType: DatapackType): string {
-  return datapackType.type === "temp" || datapackType.type === "official" || datapackType.type === "treatise"
-    ? datapackType.type
-    : datapackType.uuid;
+  return datapackType.type === "temp" || datapackType.type === "official" ? datapackType.type : datapackType.uuid;
 }
 
 export function isOfficialUUID(uuid: string): boolean {
@@ -1394,10 +1485,10 @@ export function assertMapTransect(o: any): asserts o is Transects[string] {
   if ("note" in o && typeof o.note !== "string") throwError("MapTransect", "note", "string", o.note);
 }
 export function isDatapackTypeString(o: any): o is DatapackTypeString {
-  return /^(user|official|workshop|treatise|temp)$/.test(o);
+  return /^(user|official|workshop|temp)$/.test(o);
 }
 export function assertDatapackTypeString(o: any): asserts o is DatapackType {
-  if (typeof o !== "string" || !/^(user|official|workshop|treatise|temp)$/.test(o))
+  if (typeof o !== "string" || !/^(user|official|workshop|temp)$/.test(o))
     throwError("DatapackType", "type", "string and user | server | workshop", o);
 }
 export function assertTransects(o: any): asserts o is Transects {
@@ -1427,9 +1518,6 @@ export function isWorkshopDatapack(o: any): o is WorkshopDatapack {
 export function isUserDatapack(o: any): o is UserDatapack {
   return o.type === "user" && typeof o.uuid === "string";
 }
-export function isTreatiseDatapack(o: any): o is TreatiseDatapack {
-  return o.type === "treatise";
-}
 export function isTempDatapack(o: any): o is TempDatapack {
   return o.type === "temp";
 }
@@ -1445,14 +1533,11 @@ export function assertDatapackType(o: any): asserts o is DatapackType {
     case "workshop":
       assertWorkshopDatapack(o);
       break;
-    case "treatise":
-      assertTreatiseDatapack(o);
-      break;
     case "temp":
       assertTempDatapack(o);
       break;
     default:
-      throwError("Datapack", "type", "user | official | workshop | treatise", o.type);
+      throwError("Datapack", "type", "user | official | workshop", o.type);
   }
 }
 export function assertOfficialDatapack(o: any): asserts o is OfficialDatapack {
@@ -1471,11 +1556,6 @@ export function assertUserDatapack(o: any): asserts o is UserDatapack {
   if (typeof o.type !== "string") throwError("UserDatapack", "type", "string", o.type);
   if (o.type !== "user") throwError("UserDatapack", "type", "user", o.type);
   if (typeof o.uuid !== "string" || o.uuid.length == 0) throwError("PublicUserDatapack", "uuid", "string", o.uuid);
-}
-export function assertTreatiseDatapack(o: any): asserts o is TreatiseDatapack {
-  if (!o || typeof o !== "object") throw new Error("TreatiseDatapack must be a non-null object");
-  if (typeof o.type !== "string") throwError("TreatiseDatapack", "type", "string", o.type);
-  if (o.type !== "treatise") throwError("TreatiseDatapack", "type", "treatise", o.type);
 }
 export function assertTempDatapack(o: any): asserts o is TempDatapack {
   if (!o || typeof o !== "object") throw new Error("TempDatapack must be a non-null object");
@@ -2077,13 +2157,10 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
     case "user":
       assertUserDatapack(o);
       break;
-    case "treatise":
-      assertTreatiseDatapack(o);
-      break;
     case "temp":
       assertTempDatapack(o);
       break;
     default:
-      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user | treatise", o.type);
+      throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }

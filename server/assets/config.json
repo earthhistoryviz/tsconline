@@ -15,5 +15,8 @@
   "publicDatapacksDirectory": "assets/uploads/public",
   "translationsDirectory": "assets/translations",
   "modelConversionCacheDirectory": "public/model-conversion-cache",
-  "autoPlotCacheDirectory": "public/auto-plot-cache"
+  "autoPlotCacheDirectory": "public/auto-plot-cache",
+  "helpDirectory": "assets/help/src",
+  "templateMarkdownDirectory": "assets/template-markdown",
+  "cachedHelpTreeJson": "assets/help/cached-help-tree.json"
 }
