@@ -49,10 +49,15 @@ export const Home = observer(function Home() {
       });
     }
   };
+  const hasUpcomingWorkshops = getUpcomingWorkshops(state.workshops).length > 0;
   return (
     <div className="whole_page">
       <Box sx={{ backgroundColor: "secondaryBackgroud.main" }}>
-        <Box className="sub-header-section-landing-page">
+        <Box
+          className="sub-header-section-landing-page"
+          style={{
+            ...(!hasUpcomingWorkshops && { gridTemplateColumns: "0.8fr 1.2fr" })
+          }}>
           <Box className="sub-header-section-landing-page-text">
             <Typography className="landing-page-title" fontWeight="600">
               {t("landing-page.welcome")}
@@ -91,7 +96,7 @@ export const Home = observer(function Home() {
               </motion.div>
             </Box>
           </Box>
-          <UpcomingWorkshops />
+          {hasUpcomingWorkshops && <UpcomingWorkshops />}
         </Box>
       </Box>
       <CustomDivider />
