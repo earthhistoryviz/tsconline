@@ -1,10 +1,9 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-import { Email, assertEmail } from "./types.js";
+import { Email } from "./types.js";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
+import "dotenv/config";
 
-dotenv.config();
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -282,7 +281,6 @@ const HtmlTemplate = (
 };
 
 export const sendEmail = async (email: Email) => {
-  assertEmail(email);
   const window = new JSDOM("").window;
   const purify = DOMPurify(window);
   const html = HtmlTemplate(
