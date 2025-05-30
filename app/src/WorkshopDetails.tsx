@@ -161,9 +161,6 @@ export const WorkshopDetails = observer(() => {
                         </TSCLoadingButton>
                       </div>
                     </CustomTooltip>
-                    <TSCButton variant="contained" color="primary" onClick={downloadWorkshopFiles}>
-                      {t("workshops.details-page.download-button")}
-                    </TSCButton>
                   </Box>
                 </>
               </Box>
