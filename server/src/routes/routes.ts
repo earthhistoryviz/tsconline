@@ -105,18 +105,18 @@ export const submitBugReport = async function submitBugReport(request: FastifyRe
         title: issueTitle,
         body: issueBody,
         labels: ["bug", "user-report"],
-        assignees: ["asivath"]
+        assignees: ["JimOggPurdue"]
       })
     });
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("Error submitting bug report:", errorText);
+      logger.error("Error submitting bug report:", errorText);
       reply.status(500).send({ error: "Failed to submit bug report" });
       return;
     }
     reply.send({ message: "Bug report submitted successfully" });
   } catch (error) {
-    console.error("Error processing bug report:", error);
+    logger.error("Error processing bug report:", error);
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };

@@ -137,16 +137,16 @@ export const ReportBug: React.FC = observer(() => {
       alignItems="center"
       justifyContent="center"
       bgcolor="background.main"
-      mt={10}
-      mb={10}>
-      <Box textAlign="center" mb={isSubmitted ? 0 : 4}>
+      mt={4}
+      mb={4}>
+      <Box textAlign="center" mb={isSubmitted ? 0 : 2}>
         <BugReportIcon sx={{ width: 48, height: 48 }} />
-        <Typography variant="h4" component="h1" fontWeight="bold" mt={2} mb={3}>
+        <Typography variant="h4" component="h1" fontWeight="bold" mt={1} mb={3}>
           {t("report-bug.title")}
         </Typography>
 
         {!isSubmitted && (
-          <Typography variant="h6" maxWidth={900} mx="auto" m={1}>
+          <Typography variant="body1" maxWidth={900} mx="auto" m={1}>
             {t("report-bug.subtitle")}
           </Typography>
         )}
@@ -168,7 +168,7 @@ export const ReportBug: React.FC = observer(() => {
           mt={2}
           width="90%"
           maxWidth="1000px">
-          <Box mb={3}>
+          <Box>
             <Typography variant="h6" mb={1}>
               {t("report-bug.name")}
             </Typography>
