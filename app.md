@@ -5,7 +5,7 @@ This document provides an overview of the app's architecture, state management, 
 
 This app structure is maintained through a `mob-x observable` state. Instead of using the hooks that are visible only at component level we keep a state variable that propogates over all components.
 
-```js
+```ts
 export type State = {
   var1: boolean,
   var2: string,
@@ -21,7 +21,7 @@ export const state = observable<State>(
 
 For example, the above would keep track of two variables `var1` and `var2` that would keep their values until refresh. To change the state (located in `app/src/state/state.ts`) we use actions. Actions help keep our changes consistent and are located in `app/src/state/actions.ts`.
 
-```js
+```ts
 export const setVar1 = action("setVar1", (newval: boolean) => {
   state.var1 = newval;
 });
@@ -31,17 +31,63 @@ Another example above shows how you might setup an action for our state variable
 
 To use this state variable and actions, you must use `useContext()` like so
 
-```js
+```ts
 const { state, actions } = useContext(context);
 ```
 
 This will keep the state and actions consistent. We set it up on the initial app startup in `index.ts` and keep the same context throughout, giving us the proper functionality we want.
 
+## Metadata vs. Datapacks Loading
+
+To improve performance and reduce initial load time, the app separates **metadata** from **datapacks** during page load.
+
+### Definitions
+```ts
+export type DatapackMetadata = {
+  description: string;
+  title: string;
+  originalFileName: string;
+  storedFileName: string;
+  size: string;
+  date?: string;
+  authoredBy: string;
+  tags: string[];
+  references: string[];
+  isPublic: boolean;
+  contact?: string;
+  notes?: string;
+  datapackImage?: string;
+  priority: number;
+  hasFiles: boolean;
+} & DatapackType;
+
+export type BaseDatapackProps = {
+  columnInfo: ColumnInfo;
+  ageUnits: string;
+  defaultChronostrat: "USGS" | "UNESCO";
+  formatVersion: number;
+  topAge?: number;
+  baseAge?: number;
+  verticalScale?: number;
+  warnings?: DatapackWarning[];
+  totalColumns: number;
+  columnTypeCount: ColumnTypeCounter;
+  datapackImageCount: number;
+  mapPack: MapPack;
+};
+
+export type Datapack = DatapackMetadata & BaseDatapackProps;
+```
+
+The actual datapack's content is `BaseDatapackProps`, but we extend it with `DatapackMetadata` to include additional metadata fields like description, title, tags, etc. This allows us to have a single object that contains both the datapack's content and its metadata. `Datapack` is the complete type that includes both metadata and the datapack's content.
+
+On page load, we first fetch the `DatapackMetadata` for all available datapacks. This metadata includes fields that are needed for rendering the initial UI. In the Datapacks Tab of the app, this metadata is used to display a list of available datapacks. When a user selects a datapack, the app then fetches the corresponding `BaseDatapackProps`, which includes the detailed column information and other properties.
+
+The properties in `BaseDatapackProps` can be large, especially the `columnInfo` object, which can contain a lot of nested data. By separating metadata from the actual datapack content, we can load the initial UI faster and only fetch the detailed datapack information when needed.
+
 ## RenderColumnInfo
 
 `RenderColumnInfo` is a flattened, MobX-observable structure used exclusively for **UI rendering**. It mirrors the deeply nested `ColumnInfo` structure but avoids performance issues by removing deep object references and replacing them with lightweight references like child names.
-
----
 
 ### Key Properties
 
@@ -68,13 +114,9 @@ To fix this, we created `RenderColumnInfo`, a **flat structure** where:
 - Lookups are done through a shared `columnHashMap` (stored in state).
 - Each object is **observable**, but only for the fields that actually need reactivity.
 
----
-
 ### Benefits
 
 MobX does not need to set up deep tracking of the entire tree, which significantly improves performance. Additionally any changes to the `RenderColumnInfo` will only affect the specific column being changed, since it no longer keeps references to its children.
-
----
 
 ### When to Use `RenderColumnInfo` (and Caveats)
 
@@ -88,11 +130,9 @@ Most actions that modify column state should also target `RenderColumnInfo`. Thi
 Use `ColumnInfo` only when:
 - You need access to properties **not present** in `RenderColumnInfo`, such as `subInfo`.
 - You are performing **deep structural operations**, such as cloning the entire tree or modifying the **actual children** array.
-  - `RenderColumnInfo` does **not store actual child references**, only child **names**. For tree-level manipulation, you must use both `RenderColumnInfo` and `ColumnInfo`.
+  - `RenderColumnInfo` does **not store actual child references**, only child **names**. For tree-level manipulation, you must use both `RenderColumnInfo` and `ColumnInfo`. Changes to the tree structure (like adding/removing children) must manually update both structures.
 
----
-
-Here's how we transform a `ColumnInfo` object into a `RenderColumnInfo` object:
+### Transforming `ColumnInfo` to `RenderColumnInfo`
 ```ts
 export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderColumnInfo {
   const renderColumn: RenderColumnInfo = observable.object(
@@ -138,8 +178,6 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
 }
 ```
 Properties like `subInfo` are intentionally excluded from `RenderColumnInfo` to improve performance, while non-observable properties (e.g., name, units, columnRef) are marked with false because they won’t change during the lifecycle
-
----
 
 ### Syncinc Back With Reactions
 
@@ -193,7 +231,7 @@ export function addReactionToRenderColumnInfo(column: ColumnInfo, renderColumn: 
 #### Why Two Reactions?
 - The first reaction watches simple, frequently updated properties.
 - The second reaction handles complex observable objects like `fontsInfo`, `rgb`, and `columnSpecificSettings` using `toJS()` to deeply compare values.
-- Splitting them means thatn the first reaction can quickly update simple properties without needing to deeply compare complex objects, improving performance.
+- Splitting them means that the first reaction can quickly update simple properties without needing to deeply compare complex objects, improving performance.
 
 `dispose()` is called to clean up reactions when the `RenderColumnInfo` is no longer needed, preventing memory leaks.
 
