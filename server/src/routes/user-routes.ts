@@ -13,6 +13,7 @@ import {
   deleteComment,
   findCurrentDatapackComments,
   findDatapackComment,
+  findRecentDatapackComments,
   findUser,
   getActiveWorkshopsUserIsIn,
   updateComment

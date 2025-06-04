@@ -1,34 +1,10 @@
-import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-import { CommentsEmail, Email, assertCommentsEmail, assertEmail } from "./types.js";
-import { JSDOM } from "jsdom";
-import DOMPurify from "dompurify";
-import "dotenv/config";
-
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
-const HtmlTemplate = (
-  preHeader: string,
-  title: string,
-  message: string,
-  action: string,
-  link?: string,
-  buttonText?: string
-) => {
-  return `
-  <!DOCTYPE html>
+<!DOCTYPE html>
   <html>
   <head>
   
     <meta charset="utf-8">
     <meta http-equiv="x-ua-compatible" content="ie=edge">
-    <title>Email Confirmation</title>
+    <title>Comment Update</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style type="text/css">
     /**
@@ -164,7 +140,7 @@ const HtmlTemplate = (
           <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
             <tr>
               <td align="left" bgcolor="#ffffff" style="padding: 36px 24px 0; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; border-top: 3px solid #d4dadf;">
-                <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 48px;">${title}</h1>
+                <h1 style="margin: 0; font-size: 32px; font-weight: 700; letter-spacing: -1px; line-height: 48px;">Daily Comment Summary</h1>
               </td>
             </tr>
           </table>
@@ -190,10 +166,42 @@ const HtmlTemplate = (
             <!-- start copy -->
             <tr>
               <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                <p style="margin: 0;">${message}</p>
+                <p style="margin: 0;">Here are the latest updates from today</p>
               </td>
             </tr>
             <!-- end copy -->
+             <tr>
+              <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 16px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
+                <p style="margin: 0; color: #1a82e2"><strong>Datapack: Africa Bight</strong></p>
+              </td>
+            </tr>
+            <tr>
+                <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
+                    <p style="margin: 0;">• Username: user1</p>
+                    <p style="margin-left: 8px;">Time: 10:10 AM</p>
+                    <p style="margin-left: 8px;">Comment: This is a great datapack.</p>
+                </td>
+            </tr>
+            <tr>
+                <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
+                    <p style="margin: 0;">• Username: user2</p>
+                    <p style="margin-left: 8px;">Time: 10:11 AM</p>
+                    <p style="margin-left: 8px;">Comment: This is a dumb datapack.</p>
+                </td>
+            </tr>
+
+            <tr>
+              <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 16px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
+                <p style="margin: 0; color: #1a82e2"><strong>Datapack: Australia</strong></p>
+              </td>
+            </tr>
+            <tr>
+                <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
+                    <p style="margin: 0;">• Username: user1</p>
+                    <p style="margin-left: 8px;">Time: 10:10 AM</p>
+                    <p style="margin-left: 8px;">Comment: This is a great datapack.</p>
+                </td>
+            </tr>
             ${
               buttonText && link
                 ? `
@@ -227,14 +235,6 @@ const HtmlTemplate = (
             `
                 : ""
             }
-  
-            <!-- start copy -->
-            <tr>
-              <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px; border-bottom: 3px solid #d4dadf">
-                <p style="margin: 0;">Thank You,<br> TSC Online</p>
-              </td>
-            </tr>
-            <!-- end copy -->
   
           </table>
           <!--[if (gte mso 9)|(IE)]>
@@ -278,54 +278,4 @@ const HtmlTemplate = (
     <!-- end body -->
   
   </body>
-  </html>`;
-};
-
-export const sendEmail = async (email: Email) => {
-  const window = new JSDOM("").window;
-  const purify = DOMPurify(window);
-  const html = HtmlTemplate(
-    purify.sanitize(email.preHeader),
-    purify.sanitize(email.title),
-    purify.sanitize(email.message),
-    purify.sanitize(email.action),
-    email.link ? purify.sanitize(email.link) : undefined,
-    email.buttonText ? purify.sanitize(email.buttonText) : undefined
-  );
-  try {
-    await transporter.sendMail({
-      from: email.from,
-      to: email.to,
-      subject: email.subject,
-      html: html
-    });
-  } catch (error) {
-    console.error("An error occurred:", error);
-    throw error;
-  }
-};
-
-export const sendCommentsEmail = async (email: CommentsEmail) => {
-  assertCommentsEmail(email);
-  // const window = new JSDOM("").window;
-  // const purify = DOMPurify(window);
-  // const html = HtmlTemplate(
-  //   purify.sanitize(email.preHeader),
-  //   purify.sanitize(email.title),
-  //   purify.sanitize(email.message),
-  //   purify.sanitize(email.action),
-  //   email.link ? purify.sanitize(email.link) : undefined,
-  //   email.buttonText ? purify.sanitize(email.buttonText) : undefined
-  // );
-  // try {
-  //   await transporter.sendMail({
-  //     from: email.from,
-  //     to: email.to,
-  //     subject: email.subject,
-  //     html: html
-  //   });
-  // } catch (error) {
-  //   console.error("An error occurred:", error);
-  //   throw error;
-  // }
-};
+  </html>

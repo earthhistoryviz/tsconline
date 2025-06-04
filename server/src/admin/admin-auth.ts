@@ -192,6 +192,12 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     },
     required: ["commentId"]
   };
+  const fetchRecentCommentsParams = {
+    type: "object",
+    properties: {
+    },
+    required: []
+  };
 
   fastify.addHook("preHandler", verifyAdmin);
   fastify.addHook("preHandler", verifyRecaptcha);

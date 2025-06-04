@@ -14,7 +14,8 @@ import {
   findUsersWorkshops,
   updateUser,
   findDatapackComment,
-  deleteComment
+  deleteComment,
+  findRecentDatapackComments
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -922,4 +923,22 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
     return;
   }
   reply.send({ message: "Datapack comment deleted" });
+};
+
+/**
+ * Admin sends a request to fetch datapack comments made in the last 24 hours
+ * @param request
+ * @param reply
+ * @returns
+ */
+export const fetchDailyDatapackComments = async function fetchDailyDatapackComments(
+  request: FastifyRequest<{}>,
+  reply: FastifyReply
+) {
+  try {
+    const datapackComments = await findRecentDatapackComments();
+    reply.send(datapackComments);
+  } catch (e) {
+    reply.status(500).send({ error: "Error fetching recent datapack comments" });
+  }
 };

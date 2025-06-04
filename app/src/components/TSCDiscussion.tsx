@@ -10,8 +10,9 @@ import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
-import { assertCommentType, CommentType } from "../types";
 import { getRecaptchaToken } from "../state/actions";
+import { CommentType, assertCommentType } from "@tsconline/shared";
+import { DatapackType } from '../../../shared/dist/index';
 
 export const Discussion = observer(() => {
   const { id } = useParams();
@@ -43,7 +44,8 @@ export const Discussion = observer(() => {
               dateCreated: new Date(com.dateCreated),
               flagged: Boolean(com.flagged),
               isSelf: com.uuid === uuid,
-              commentText: com.commentText
+              commentText: com.commentText,
+              datapackTitle: com.datapackTitle
             };
             loadedComments.push(loadedComment);
           }
@@ -53,6 +55,35 @@ export const Discussion = observer(() => {
         } else {
           if (response.status === 500) {
             actions.pushError(ErrorCodes.DATAPACK_COMMENT_FETCH_FAILED);
+          }
+        }
+        const response2 = await fetcher(`/admin/datapack/dailyComments`, {
+          method: "GET",
+          credentials: "include"
+        });
+        if(response2.ok) {
+          const commentsArray = await response2.json();
+          console.log(commentsArray);
+          let commentsDict: { [key: string]: CommentType[] } = {};
+          for (const com of commentsArray) {
+            assertCommentType(com);
+            const loadedComment: CommentType = {
+              id: com.id,
+              username: com.username,
+              uuid: com.uuid,
+              pictureUrl: com.pictureUrl,
+              dateCreated: new Date(com.dateCreated),
+              flagged: Boolean(com.flagged),
+              isSelf: com.uuid === uuid,
+              commentText: com.commentText,
+              datapackTitle: com.datapackTitle
+            };
+            if(loadedComment.datapackTitle in commentsDict) {
+              commentsDict[loadedComment.datapackTitle].push(loadedComment);
+            } else {
+              commentsDict[loadedComment.datapackTitle] = [loadedComment];
+            }
+            console.log(commentsDict)
           }
         }
       } catch (e) {
