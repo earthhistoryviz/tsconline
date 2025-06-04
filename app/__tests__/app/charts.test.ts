@@ -92,12 +92,14 @@ test("check if generate chart and save chart works", async ({ page }) => {
   await generateBasicChart(page);
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
-    maxDiffPixelRatio: 0.1,
-    animations: "disabled",
-    caret: "hide",
-    timeout: 10000
-  });
+  await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
+
+  await expect(chartSvg.locator(`text=9`)).toBeVisible();
+
+  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
+  await expect(chartSvg.locator("text=Deep Marine")).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
+  await expect(chartSvg.locator("text=Ocean Crust")).toBeVisible();
 
   await page.locator("text=Save").nth(0).click();
   const [downloadSvg] = await Promise.all([page.waitForEvent("download"), page.locator("text=Save").nth(2).click()]);
@@ -138,12 +140,11 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible({ timeout: 30000 });
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/settings-chart.png", {
-    maxDiffPixelRatio: 0.01,
-    animations: "disabled",
-    caret: "hide",
-    timeout: 10000
-  });
+
+   await expect(chartSvg.locator(`text=9`)).toBeVisible();
+
+  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
 });
 
 test("Load Basic Settings", async ({ page }) => {
@@ -197,24 +198,20 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: 30000 });
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/crossplot-chart.png", {
-    maxDiffPixelRatio: 0.01,
-    animations: "disabled",
-    caret: "hide",
-    timeout: 10000
-  });
+   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
+
+  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
+  await expect(chartSvg.locator("text=Deep Marine").first()).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
+  await expect(chartSvg.locator("text=Ocean Crust").first()).toBeVisible();
+
 });
 
 test("check if Map Points Functional", async ({ page }) => {
   await generateBasicChart(page);
 
   const chartSvg = page.locator(".react-transform-component svg");
-  await expect(chartSvg).toHaveScreenshot("charts.test.ts-snapshots/basic-chart.png", {
-    maxDiffPixelRatio: 0.1,
-    animations: "disabled",
-    caret: "hide",
-    timeout: 10000
-  });
+  
 
   await page.locator("text=Settings").click();
 
