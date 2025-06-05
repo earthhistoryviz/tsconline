@@ -38,6 +38,8 @@ import {
   AdminSharedUser
 } from "@tsconline/shared";
 import {
+  getWorkshopDatapacksNames,
+  getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
   uploadFilesToWorkshop
@@ -578,11 +580,22 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
  * @returns
  */
 export const adminEditWorkshop = async function adminEditWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string; workshopId: number } }>,
+  request: FastifyRequest<{
+    Body: {
+      creatorUUID: string;
+      title: string;
+      start: string;
+      end: string;
+      workshopId: number;
+      regRestrict: string;
+      description: string;
+      regLink: string;
+    };
+  }>,
   reply: FastifyReply
 ) {
-  const { title, start, end, workshopId } = request.body;
-  if (!workshopId || (!title && !start && !end)) {
+  const { creatorUUID, regLink, title, start, end, workshopId, regRestrict, description } = request.body;
+  if (!workshopId || (!title && !start && !end && !regLink && !description && regRestrict === undefined)) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -590,6 +603,19 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     const fieldsToUpdate: Partial<SharedWorkshop> = {};
     if (title) {
       fieldsToUpdate.title = title;
+    }
+    if (description) {
+      fieldsToUpdate.description = description;
+    }
+    if (regLink) {
+      if (!validator.isURL(regLink)) {
+        reply.status(400).send({ error: "Invalid registration link" });
+        return;
+      }
+      fieldsToUpdate.regLink = regLink;
+    }
+    if (creatorUUID) {
+      fieldsToUpdate.creatorUUID = creatorUUID;
     }
     if (start) {
       const startDate = new Date(start);
@@ -618,14 +644,16 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       start: fieldsToUpdate.start ?? existingWorkshop.start,
       end: fieldsToUpdate.end ?? existingWorkshop.end
     };
-    const identicalWorkshops = await findWorkshop(newWorkshop);
-    if (identicalWorkshops.length > 0) {
-      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
-      return;
+    if (title || start || end) {
+      const identicalWorkshops = await findWorkshop(newWorkshop);
+      if (identicalWorkshops.length > 0) {
+        reply.status(409).send({ error: "Workshop with same title and dates already exists" });
+        return;
+      }
     }
     const fieldsToUpdateForDatabase = {
       ...fieldsToUpdate,
-      regRestrict: 0 // TODO: change this to the real updated regRestrict value when editing workshop functionality is completed
+      regRestrict: regRestrict !== undefined ? (regRestrict ? 1 : 0) : existingWorkshop.regRestrict
     };
     await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
     const updatedWorkshop = await getWorkshopIfNotEnded(workshopId);
@@ -643,7 +671,11 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       workshopId: workshopId,
       active: newStart <= now && now <= newEnd,
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
-      creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
+      creatorUUID: updatedWorkshop.creatorUUID,
+      description: updatedWorkshop.description,
+      regLink: updatedWorkshop.regLink,
+      datapacks: await getWorkshopDatapacksNames(workshopId),
+      files: await getWorkshopFilesNames(workshopId)
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
