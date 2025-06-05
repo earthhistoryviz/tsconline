@@ -90,7 +90,8 @@ const testWorkshopDatabase: Workshop = {
   workshopId: 1,
   regRestrict: 0,
   creatorUUID: "123",
-  regLink: ""
+  regLink: "",
+  description: "description"
 };
 const testWorkshop: SharedWorkshop = {
   title: "test",
@@ -99,7 +100,7 @@ const testWorkshop: SharedWorkshop = {
   workshopId: 1,
   regRestrict: false,
   creatorUUID: "123",
-  regLink: "",
+  regLink: undefined,
   active: false
 };
 

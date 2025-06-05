@@ -623,7 +623,7 @@ export const adminEditWorkshop = action(
       return null;
     }
     try {
-      const recaptchaToken = await getRecaptchaToken("adminEditWorkshop");
+      const recaptchaToken = (await getRecaptchaToken("adminEditWorkshop")) || "token";
       if (!recaptchaToken) return null;
       const response = await fetcher(`/admin/workshop`, {
         method: "PATCH",

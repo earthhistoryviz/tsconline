@@ -224,11 +224,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         if (oldRegRestrict !== regRestrict) {
           updatedFields.regRestrict = regRestrict;
         }
-        if (regLink !== undefined && regLink !== workshop?.regLink) {
+        if (regLink !== workshop?.regLink && !(regLink === "" && workshop.regLink === undefined)) {
           updatedFields.regLink = regLink;
         }
         updatedFields.workshopId = workshopId;
-        console.log("updatedFields", updatedFields);
         const isWorkshopUnchanged = Object.keys(updatedFields).length === 1;
         if (!isWorkshopUnchanged) {
           const newWorkshop = await actions.adminEditWorkshop(updatedFields);

@@ -673,7 +673,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
       creatorUUID: updatedWorkshop.creatorUUID,
       description: updatedWorkshop.description,
-      regLink: updatedWorkshop.regLink,
+      regLink: updatedWorkshop.regLink || undefined,
       datapacks: await getWorkshopDatapacksNames(workshopId),
       files: await getWorkshopFilesNames(workshopId)
     };

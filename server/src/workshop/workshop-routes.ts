@@ -62,7 +62,8 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
           active: start <= now && now <= end,
           regRestrict: Number(workshop.regRestrict) === 1,
           creatorUUID: workshop.creatorUUID,
-          regLink: workshop.regLink ? workshop.regLink : "",
+          regLink: workshop.regLink ? workshop.regLink : undefined,
+          description: workshop.description,
           datapacks: datapacks,
           files: files
         };
