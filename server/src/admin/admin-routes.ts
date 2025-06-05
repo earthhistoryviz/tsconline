@@ -520,10 +520,6 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
   reply: FastifyReply
 ) {
   const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
-  if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
-    reply.status(400).send({ error: "Missing required fields" });
-    return;
-  }
   const startDate = new Date(start);
   const endDate = new Date(end);
   if (
@@ -636,7 +632,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     const now = new Date();
     const newStart = new Date(updatedWorkshop.start);
     const newEnd = new Date(updatedWorkshop.end);
-    const workshop = {
+    const workshop: SharedWorkshop = {
       title: updatedWorkshop.title,
       start: updatedWorkshop.start,
       end: updatedWorkshop.end,
@@ -645,7 +641,6 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
       creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
-    assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
     console.error(error);
@@ -753,10 +748,6 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
   reply: FastifyReply
 ) {
   const { workshopId, datapackTitle } = request.body;
-  if (!workshopId || !datapackTitle) {
-    reply.status(400).send({ error: "Missing workshopId or datapackTitle" });
-    return;
-  }
   try {
     const workshop = await getWorkshopIfNotEnded(workshopId);
     if (!workshop) {
@@ -776,7 +767,7 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
     }
     const datapack = await fetchUserDatapack("official", datapackTitle);
     const metadata: DatapackMetadata = {
-      ...datapack,
+      ...extractMetadataFromDatapack(datapack),
       isPublic: true,
       type: "workshop",
       uuid: workshopUUID

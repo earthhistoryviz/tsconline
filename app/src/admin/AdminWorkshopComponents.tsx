@@ -123,6 +123,85 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
   }
 );
 
+type CustomDateTimePickerProps = {
+  label: string;
+  name: string;
+  onChange: (newValue: Dayjs | null) => void;
+  disablePast: boolean;
+  minDateTime?: Dayjs;
+  value?: Dayjs | null;
+};
+const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({ label, name, onChange, minDateTime, value }) => {
+  const theme = useTheme();
+  return (
+    <DateTimePicker
+      label={label}
+      name={name}
+      viewRenderers={{
+        hours: renderTimeViewClock,
+        minutes: renderTimeViewClock
+      }}
+      slotProps={{
+        textField: {
+          required: true,
+          size: "small"
+        },
+        popper: {
+          className: "date-time-picker",
+          sx: {
+            "& .MuiPaper-root": {
+              backgroundColor: theme.palette.secondaryBackground.main
+            }
+          }
+        }
+      }}
+      value={value}
+      onChange={onChange}
+      minDateTime={minDateTime || dayjs()}
+      disablePast
+    />
+  );
+};
+
+type AddWorkshopFilesProps = {
+  files: File[] | null;
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+};
+const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({ files, onChange }) => {
+  return (
+    <>
+      {/* <Typography variant="h5" mb="5px">
+            Add Presentation
+          </Typography>
+          <Typography variant="h5" mb="5px">
+            Add Instructions
+          </Typography> */}
+      <Typography variant="h5" mb="5px">
+        Add Files
+      </Typography>
+      <Box display="flex" flexDirection="column" alignItems="center">
+        <InputFileUpload
+          text="Upload Files for the workshop"
+          onChange={onChange}
+          startIcon={<CloudUploadIcon />}
+          multiple
+        />
+        <Typography>
+          {files && files.length > 0 ? (
+            <ul>
+              {files.map((file, index) => (
+                <li key={index}>{file.name}</li>
+              ))}
+            </ul>
+          ) : (
+            "No file selected"
+          )}
+        </Typography>
+      </Box>
+    </>
+  );
+};
+
 type WorkshopFormProps = {
   editMode: boolean;
   currentWorkshop: SharedWorkshop | null;
@@ -149,16 +228,18 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [regRestrict, setRegRestrict] = useState(false);
   const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop?.workshopId) : null;
 
-  const handleDialogClose = () => {
-    setWorkshopTitle("");
-    setStartDate(null);
-    setEndDate(null);
+  const resetFormState = () => {
+    setWorkshopTitle(editMode ? workshop?.title || "" : "");
+    setStartDate(editMode ? dayjs(workshop?.start) : null);
+    setEndDate(editMode ? dayjs(workshop?.end) : null);
     setEmails("");
     setEmailFile(null);
     setFiles(null);
-    setWorkshop(null);
-    onClose();
+    setCoverPicture(null);
+    setRegLink(undefined);
+    setRegRestrict(false);
   };
+
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     try {
       setLoading(true);
@@ -268,8 +349,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         const successMessage = editMode ? "Workshop edited successfully." : "Workshop created successfully.";
         actions.pushSnackbar(successMessage, "success");
       }
-
-      handleDialogClose();
     } catch (error) {
       displayServerError(
         error,
@@ -342,6 +421,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
     setCoverPicture(uploadedCoverPicture);
   };
+
   return (
     <>
       <TSCPopup
@@ -351,7 +431,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         onClose={() => setInvalidEmails("")}
         maxWidth="xs"
       />
-      <Dialog open={true} onClose={handleDialogClose}>
+      <Dialog open={true} onClose={onClose}>
         {loading && <TSCDialogLoader open={loading} headerText={editMode ? "Editing Workshop" : "Creating Workshop"} />}
         <Box textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
@@ -375,53 +455,17 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               onChange={(event) => setWorkshopTitle(event.target.value)}
             />
             <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap={5}>
-              <DateTimePicker
+              <CustomDateTimePicker
                 label="Start Date"
                 name="startDate"
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock
-                }}
-                slotProps={{
-                  textField: {
-                    required: true,
-                    size: "small"
-                  },
-                  popper: {
-                    className: "date-time-picker",
-                    sx: {
-                      "& .MuiPaper-root": {
-                        backgroundColor: theme.palette.secondaryBackground.main
-                      }
-                    }
-                  }
-                }}
                 value={startDate}
                 onChange={(newValue) => setStartDate(newValue)}
                 minDateTime={dayjs(workshop?.start).isBefore(dayjs()) ? dayjs(workshop?.start) : dayjs()}
                 disablePast={!editMode}
               />
-              <DateTimePicker
+              <CustomDateTimePicker
                 label="End Date"
                 name="endDate"
-                viewRenderers={{
-                  hours: renderTimeViewClock,
-                  minutes: renderTimeViewClock
-                }}
-                slotProps={{
-                  textField: {
-                    required: true,
-                    size: "small"
-                  },
-                  popper: {
-                    className: "date-time-picker",
-                    sx: {
-                      "& .MuiPaper-root": {
-                        backgroundColor: theme.palette.secondaryBackground.main
-                      }
-                    }
-                  }
-                }}
                 value={endDate}
                 onChange={(newValue) => setEndDate(newValue)}
                 disablePast
@@ -439,11 +483,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
               <Typography>Open for public registration?</Typography>
               <Select
-                value={regRestrict === true ? "Yes" : "No"}
+                value={regRestrict ? "Yes" : "No"}
                 sx={{ height: "30px" }}
-                onChange={() => {
-                  setRegRestrict(regRestrict === false ? true : true);
-                }}>
+                onChange={(e) => setRegRestrict(e.target.value === "Yes")}>
                 <MenuItem sx={{ height: "30px" }} value="Yes">
                   Yes
                 </MenuItem>
@@ -456,127 +498,70 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               <Typography variant="h5" mb="5px">
                 Add Users
               </Typography>
-              <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
-                <TextField
-                  label="Paste Emails"
-                  name="emails"
-                  multiline
-                  rows={5}
-                  placeholder="Enter multiple emails, separated by commas"
-                  size="small"
-                  fullWidth
-                  onChange={(event) => setEmails(event.target.value)}
-                  value={emails}
+              <TextField
+                label="Paste Emails"
+                name="emails"
+                multiline
+                rows={3}
+                placeholder="Enter multiple emails, separated by commas"
+                size="small"
+                fullWidth
+                onChange={(event) => setEmails(event.target.value)}
+                value={emails}
+              />
+              <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" mt={2}>
+                <InputFileUpload
+                  text="Upload Excel File of Emails"
+                  onChange={handleEmailFileUpload}
+                  accept=".xls,.xlsx"
+                  startIcon={<CloudUploadIcon />}
                 />
-                <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-                  <InputFileUpload
-                    text="Upload Excel File of Emails"
-                    onChange={handleEmailFileUpload}
-                    accept=".xls,.xlsx"
-                    startIcon={<CloudUploadIcon />}
-                  />
-                  <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
-                </Box>
-                <CustomDivider
-                  style={{
-                    height: "0.05px",
-                    width: "100%",
-                    backgroundColor: theme.palette.divider
-                  }}
-                />
-                <Box textAlign="center" width="100%">
-                  <Typography variant="h5" mb="5px">
-                    Add Files
-                  </Typography>
-                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
-                    <Typography ml="10px">
-                      {" "}
-                      {files && files.length > 0 ? (
-                        <ul>
-                          {files.map((file, index) => (
-                            <li key={index}>{file.name}</li>
-                          ))}
-                        </ul>
-                      ) : (
-                        "No file selected"
-                      )}
-                    </Typography>
-                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-                      <InputFileUpload
-                        text="Upload Files for the workshop"
-                        onChange={handleFileUpload}
-                        startIcon={<CloudUploadIcon />}
-                        multiple
-                      />
-                    </Box>
-                  </Box>
-
-                  {prevCoverPic ? (
-                    <Typography variant="h5" mb="5px" mt="15px">
-                      Change Cover Picture
-                    </Typography>
-                  ) : (
-                    <Typography variant="h5" mb="5px" mt="15px">
-                      Add Cover Picture
-                    </Typography>
-                  )}
-                  <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
-                    {coverPicture ? (
-                      <Avatar
-                        variant="square"
-                        src={URL.createObjectURL(coverPicture)}
-                        alt="Cover Picture"
-                        sx={{ width: 100, height: 100 }}
-                      />
-                    ) : prevCoverPic ? (
-                      <Avatar
-                        variant="square"
-                        src={prevCoverPic}
-                        alt="Workshop Avatar"
-                        sx={{ width: 100, height: 100 }}
-                      />
-                    ) : (
-                      <Typography>No cover picture for this workshop</Typography>
-                    )}
-                    <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
-                      <InputFileUpload
-                        text="Upload a Cover Picture for the workshop"
-                        onChange={handleCoverPictureUpload}
-                        startIcon={<CloudUploadIcon />}
-                        multiple
-                      />
-                    </Box>
-                  </Box>
-                </Box>
-                <CustomDivider
-                  style={{
-                    height: "0.05px",
-                    width: "100%",
-                    backgroundColor: theme.palette.divider
-                  }}
-                />
-                <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
-                  {editMode && (
-                    <>
-                      <TSCButton
-                        onClick={() => {
-                          setWorkshopTitle(workshop?.title || "");
-                          setStartDate(dayjs(workshop?.start));
-                          setEndDate(dayjs(workshop?.end));
-                          setEmails("");
-                          setEmailFile(null);
-                          setFiles(null);
-                          setCoverPicture(null);
-                          setRegLink(undefined);
-                          setRegRestrict(false);
-                        }}>
-                        Reset Form
-                      </TSCButton>
-                    </>
-                  )}
-                  <TSCButton type="submit">{editMode ? "Confirm Selection" : "Create Workshop"}</TSCButton>
-                </Box>
+                <Typography ml="10px">{emailFile?.name || "No file selected"}</Typography>
               </Box>
+            </Box>
+            <CustomDivider
+              style={{
+                height: "2px",
+                width: "100%",
+                backgroundColor: theme.palette.backgroundColor.main
+              }}
+            />
+            <Box textAlign="center" width="100%">
+              <AddWorkshopFiles files={files} onChange={handleFileUpload} />
+              <Typography variant="h5" mb="5px" mt="15px">
+                {prevCoverPic ? "Change Cover Picture" : "Add Cover Picture"}
+              </Typography>
+              <Box gap="20px" display="flex" flexDirection="column" alignItems="center">
+                {coverPicture ? (
+                  <Avatar
+                    variant="square"
+                    src={URL.createObjectURL(coverPicture)}
+                    alt="Cover Picture"
+                    sx={{ width: 100, height: 100 }}
+                  />
+                ) : prevCoverPic ? (
+                  <Avatar variant="square" src={prevCoverPic} alt="Workshop Avatar" sx={{ width: 100, height: 100 }} />
+                ) : (
+                  <Typography>No cover picture for this workshop</Typography>
+                )}
+                <InputFileUpload
+                  text="Upload a Cover Picture for the workshop"
+                  onChange={handleCoverPictureUpload}
+                  startIcon={<CloudUploadIcon />}
+                  accept="image/*"
+                />
+              </Box>
+            </Box>
+            <CustomDivider
+              style={{
+                height: "2px",
+                width: "100%",
+                backgroundColor: theme.palette.backgroundColor.main
+              }}
+            />
+            <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" gap="10px">
+              <TSCButton onClick={resetFormState}>Reset Form</TSCButton>
+              <TSCButton type="submit">{editMode ? "Confirm Selection" : "Create Workshop"}</TSCButton>
             </Box>
           </Box>
         </Box>
