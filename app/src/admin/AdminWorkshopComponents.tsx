@@ -139,6 +139,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [workshop, setWorkshop] = useState<SharedWorkshop | null>(currentWorkshop);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
   const [workshopTitle, setWorkshopTitle] = useState(editMode ? workshop?.title || "" : "");
+  const [workshopDescription, setWorkshopDescription] = useState(editMode ? workshop?.description || "" : "");
   const [startDate, setStartDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.start) : null);
   const [endDate, setEndDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.end) : null);
   const [emails, setEmails] = useState<string>("");
@@ -206,12 +207,28 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           return;
         }
         workshopId = workshop.workshopId;
-        const { title: oldTitle, start: oldStart, end: oldEnd } = workshop;
+        const {
+          title: oldTitle,
+          start: oldStart,
+          end: oldEnd,
+          description: oldDescription,
+          regRestrict: oldRegRestrict
+        } = workshop;
         const updatedFields = {} as Partial<SharedWorkshop>;
         if (oldTitle !== workshopTitle) updatedFields.title = workshopTitle;
         if (oldStart !== start) updatedFields.start = start;
         if (oldEnd !== end) updatedFields.end = end;
+        if (oldDescription !== workshopDescription) {
+          updatedFields.description = workshopDescription;
+        }
+        if (oldRegRestrict !== regRestrict) {
+          updatedFields.regRestrict = regRestrict;
+        }
+        if (regLink !== undefined && regLink !== workshop?.regLink) {
+          updatedFields.regLink = regLink;
+        }
         updatedFields.workshopId = workshopId;
+        console.log("updatedFields", updatedFields);
         const isWorkshopUnchanged = Object.keys(updatedFields).length === 1;
         if (!isWorkshopUnchanged) {
           const newWorkshop = await actions.adminEditWorkshop(updatedFields);
@@ -453,6 +470,16 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               </Select>
             </Box>
             <Box textAlign="center" width="100%">
+              <TextField
+                label="Workshop Description"
+                multiline
+                rows={3}
+                placeholder="Enter a description for the workshop"
+                size="small"
+                fullWidth
+                onChange={(event) => setWorkshopDescription(event.target.value)}
+                value={workshopDescription}
+              />
               <Typography variant="h5" mb="5px">
                 Add Users
               </Typography>
