@@ -198,20 +198,30 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(page.locator("text=Successfully generated chart")).toBeVisible({ timeout: 30000 });
 
   const chartSvg = page.locator(".react-transform-component svg");
-   await expect(chartSvg.locator(`text=9`).first()).toBeVisible();
 
-  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
-  await expect(chartSvg.locator("text=Deep Marine").first()).toBeVisible();
-  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
-  await expect(chartSvg.locator("text=Ocean Crust").first()).toBeVisible();
+  await expect(chartSvg.locator(`text=9`).nth(0)).toBeVisible();
+  await expect(chartSvg.locator("text=Delta").nth(0)).toBeVisible();
+  await expect(chartSvg.locator("text=Deep Marine").nth(0)).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").nth(0)).toBeVisible();
+  await expect(chartSvg.locator("text=Ocean Crust").nth(0)).toBeVisible();
 
+    await expect(chartSvg.locator(`text=9`).nth(1)).toBeVisible();
+  await expect(chartSvg.locator("text=Delta").nth(1)).toBeVisible();
+  await expect(chartSvg.locator("text=Deep Marine").nth(1)).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").nth(1)).toBeVisible();
+  await expect(chartSvg.locator("text=Ocean Crust").nth(1)).toBeVisible();
 });
 
 test("check if Map Points Functional", async ({ page }) => {
   await generateBasicChart(page);
 
   const chartSvg = page.locator(".react-transform-component svg");
-  
+  await expect(chartSvg.locator(`text=9`)).toBeVisible();
+
+  await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
+  await expect(chartSvg.locator("text=Deep Marine")).toBeVisible();
+  await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
+  await expect(chartSvg.locator("text=Ocean Crust")).toBeVisible();
 
   await page.locator("text=Settings").click();
 
