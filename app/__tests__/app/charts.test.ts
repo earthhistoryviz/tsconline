@@ -141,7 +141,7 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
 
   const chartSvg = page.locator(".react-transform-component svg");
 
-   await expect(chartSvg.locator(`text=9`)).toBeVisible();
+  await expect(chartSvg.locator(`text=9`)).toBeVisible();
 
   await expect(chartSvg.locator("text=Delta").first()).toBeVisible();
   await expect(chartSvg.locator("text=ProDelta").last()).toBeVisible();
@@ -205,7 +205,7 @@ test("check if generate crossplot works", async ({ page }) => {
   await expect(chartSvg.locator("text=ProDelta").nth(0)).toBeVisible();
   await expect(chartSvg.locator("text=Ocean Crust").nth(0)).toBeVisible();
 
-    await expect(chartSvg.locator(`text=9`).nth(1)).toBeVisible();
+  await expect(chartSvg.locator(`text=9`).nth(1)).toBeVisible();
   await expect(chartSvg.locator("text=Delta").nth(1)).toBeVisible();
   await expect(chartSvg.locator("text=Deep Marine").nth(1)).toBeVisible();
   await expect(chartSvg.locator("text=ProDelta").nth(1)).toBeVisible();
