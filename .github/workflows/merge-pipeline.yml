@@ -146,7 +146,7 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Install Playwright Browsers (if not cached)
-        run: yarn playwright install webkit --with-deps
+        run: yarn playwright install --with-deps
 
       - name: Build the project
         id: build
