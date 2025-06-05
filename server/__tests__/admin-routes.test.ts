@@ -369,7 +369,7 @@ const testNonSharedAdminUser = {
   ...testSharedAdminUser,
   isAdmin: 0
 };
-const mockDate = new Date("2024-08-20T00:00:00Z");
+const mockDate = new Date();
 const start = new Date(mockDate);
 start.setHours(mockDate.getHours() + 1);
 const end = new Date(mockDate);

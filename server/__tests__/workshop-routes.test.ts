@@ -77,7 +77,7 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   });
   return { code, message };
 };
-const mockDate = new Date("2024-08-20T00:00:00Z");
+const mockDate = new Date();
 const start = new Date(mockDate);
 start.setHours(mockDate.getHours() + 1);
 const end = new Date(mockDate);
