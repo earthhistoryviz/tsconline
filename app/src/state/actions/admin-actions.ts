@@ -547,7 +547,7 @@ export const adminAddUsersToWorkshop = action(
  * @param title The title of the workshop
  * @param start The start date of the workshop
  * @param end The end date of the workshop
- * @param password The password for the workshop (optional)
+ * @param regRestrict Whether registration is restricted
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
@@ -876,51 +876,71 @@ export const resetAdminConfigTempState = action(() => {
 });
 
 /**
- * Upload files to a workshop
- * @param Files The uploaded files
+ * Upload files to a workshop, at least one file is required
+ * @param presentationFile The presentation file to upload (verify it is a valid pdf before calling)
+ * @param instructionsFile The instructions file to upload (verify it is a valid pdf before calling)
+ * @param otherFiles Other files to upload
  * @returns Whether the operation was successful
  */
-
-export const adminAddFilesToWorkshop = action(async (workshopId: number, files: File[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
-  if (!recaptchaToken) return;
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append(`file`, file);
-  });
-  try {
-    const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      }
-    });
-
-    if (response.ok) {
-      return true;
-    } else {
-      let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
-      switch (response.status) {
-        case 400:
-          errorCode = ErrorCodes.INVALID_FORM;
-          break;
-        case 422:
-          errorCode = ErrorCodes.RECAPTCHA_FAILED;
-          break;
-        case 404:
-          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-          fetchAllWorkshops();
-          break;
-      }
-      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+export const adminAddFilesToWorkshop = action(
+  async (
+    workshopId: number,
+    presentationFile?: File | null,
+    instructionsFile?: File | null,
+    otherFiles?: File[] | null
+  ) => {
+    if (!presentationFile && !instructionsFile && (!otherFiles || otherFiles.length === 0)) {
+      pushError(ErrorCodes.INVALID_FORM);
+      return false;
     }
-  } catch (error) {
-    console.error(error);
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+    if (!recaptchaToken) return false;
+    const formData = new FormData();
+    if (presentationFile) {
+      formData.append("presentation", presentationFile);
+    }
+    if (instructionsFile) {
+      formData.append("instructions", instructionsFile);
+    }
+    if (otherFiles && otherFiles.length > 0) {
+      otherFiles.forEach((file) => {
+        formData.append("otherFiles", file);
+      });
+    }
+    try {
+      const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      if (response.ok) {
+        return true;
+      } else {
+        let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+        switch (response.status) {
+          case 400:
+            errorCode = ErrorCodes.INVALID_FORM;
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 404:
+            errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+            fetchAllWorkshops();
+            break;
+        }
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+    return false;
   }
-});
+);
 
 /**
  * Upload cover picture to a workshop

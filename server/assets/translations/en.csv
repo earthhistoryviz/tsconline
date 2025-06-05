@@ -497,6 +497,7 @@ translation.errors.DATAPACK_COMMENT_CREATION_FAILED,Something went wrong while c
 translation.errors.DATAPACK_COMMENT_DELETE_FAILED,Something went wrong while deleting the datpack comment.
 translation.errors.DATAPACK_COMMENT_REPORT_FAILED,Something went wrong while reporting the datapack comment.
 translation.errors.DATAPACK_COMMENT_NOT_FOUND,Datapack comment not found.
+translation.errors.UNRECOGNIZED_PDF_FILE,Unrecognized PDF file. Please upload a valid PDF file.
 translation.button.generate,Generate
 translation.button.generate-chart,Generate Chart
 translation.button.remove-cache,Remove Cache

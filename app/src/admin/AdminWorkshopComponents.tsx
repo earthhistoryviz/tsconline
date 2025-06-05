@@ -164,37 +164,66 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({ label, name
 };
 
 type AddWorkshopFilesProps = {
-  files: File[] | null;
-  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  presentationFile?: File | null;
+  instructionsFile?: File | null;
+  otherFiles?: File[] | null;
+  onPresentationFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onInstructionsFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onOtherFilesChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
-const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({ files, onChange }) => {
+const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
+  presentationFile,
+  instructionsFile,
+  otherFiles,
+  onPresentationFileChange,
+  onInstructionsFileChange = () => {},
+  onOtherFilesChange
+}) => {
   return (
     <>
-      {/* <Typography variant="h5" mb="5px">
-            Add Presentation
-          </Typography>
-          <Typography variant="h5" mb="5px">
-            Add Instructions
-          </Typography> */}
       <Typography variant="h5" mb="5px">
-        Add Files
+        Add Presentation
+      </Typography>
+      <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+        <InputFileUpload
+          text="Upload Pdf Presentation"
+          onChange={onPresentationFileChange}
+          accept=".pdf"
+          startIcon={<CloudUploadIcon />}
+        />
+        <Typography ml="10px">{presentationFile?.name || "No file selected"}</Typography>
+      </Box>
+      <Typography variant="h5" mb="5px">
+        Add Instructions
+      </Typography>
+      <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
+        <InputFileUpload
+          text="Upload Pdf Instructions"
+          onChange={onInstructionsFileChange}
+          accept=".pdf"
+          startIcon={<CloudUploadIcon />}
+        />
+        <Typography ml="10px">{instructionsFile?.name || "No file selected"}</Typography>
+      </Box>
+      <Typography variant="h5" mb="5px">
+        Add Other Files
       </Typography>
       <Box display="flex" flexDirection="column" alignItems="center">
         <InputFileUpload
           text="Upload Files for the workshop"
-          onChange={onChange}
+          onChange={onOtherFilesChange}
           startIcon={<CloudUploadIcon />}
           multiple
         />
         <Typography>
-          {files && files.length > 0 ? (
+          {otherFiles && otherFiles.length > 0 ? (
             <ul>
-              {files.map((file, index) => (
+              {otherFiles.map((file, index) => (
                 <li key={index}>{file.name}</li>
               ))}
             </ul>
           ) : (
-            "No file selected"
+            "No files added"
           )}
         </Typography>
       </Box>
@@ -222,7 +251,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [endDate, setEndDate] = useState<Dayjs | null>(editMode ? dayjs(workshop?.end) : null);
   const [emails, setEmails] = useState<string>("");
   const [emailFile, setEmailFile] = useState<File | null>(null);
-  const [files, setFiles] = useState<File[] | null>(null);
+  const [presentationFile, setPresentationFile] = useState<File | null>(null);
+  const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
+  const [otherFiles, setOtherFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>();
   const [regLink, setRegLink] = useState<string | undefined>(undefined);
   const [regRestrict, setRegRestrict] = useState(false);
@@ -234,7 +265,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     setEndDate(editMode ? dayjs(workshop?.end) : null);
     setEmails("");
     setEmailFile(null);
-    setFiles(null);
+    setPresentationFile(null);
+    setInstructionsFile(null);
+    setOtherFiles(null);
     setCoverPicture(null);
     setRegLink(undefined);
     setRegRestrict(false);
@@ -308,7 +341,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           !emailFile &&
           !emails &&
           !regLink &&
-          !files &&
+          !otherFiles &&
           !coverPicture &&
           regRestrict === currentWorkshop?.regRestrict
         ) {
@@ -336,8 +369,13 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
       }
 
-      if (files && files.length !== 0) {
-        const response = await actions.adminAddFilesToWorkshop(workshopId, files);
+      if ((otherFiles && otherFiles.length !== 0) || presentationFile || instructionsFile) {
+        const response = await actions.adminAddFilesToWorkshop(
+          workshopId,
+          presentationFile,
+          instructionsFile,
+          otherFiles
+        );
         if (!response) {
           errorMessages.push("Files could not be uploaded.");
         }
@@ -380,6 +418,31 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
     setEmailFile(file);
   };
+
+  const handlePresentationFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedPresentationFile = event.target.files![0];
+    if (!uploadedPresentationFile) {
+      return;
+    }
+    if (uploadedPresentationFile.type !== "application/pdf") {
+      actions.pushError(ErrorCodes.UNRECOGNIZED_PDF_FILE);
+      return;
+    }
+    setPresentationFile(uploadedPresentationFile);
+  };
+
+  const handleInstructionsFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedInstructionsFile = event.target.files![0];
+    if (!uploadedInstructionsFile) {
+      return;
+    }
+    if (uploadedInstructionsFile.type !== "application/pdf") {
+      actions.pushError(ErrorCodes.UNRECOGNIZED_PDF_FILE);
+      return;
+    }
+    setInstructionsFile(uploadedInstructionsFile);
+  };
+
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
     if (!uploadedFiles) {
@@ -388,7 +451,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
 
     const filesArray = Array.from(uploadedFiles);
 
-    setFiles((prevFiles) => {
+    setOtherFiles((prevFiles) => {
       const fileMap = new Map<string, File>();
       let duplicated = false;
 
@@ -431,7 +494,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         onClose={() => setInvalidEmails("")}
         maxWidth="xs"
       />
-      <Dialog open={true} onClose={onClose}>
+      <Dialog open={true} onClose={onClose} fullWidth>
         {loading && <TSCDialogLoader open={loading} headerText={editMode ? "Editing Workshop" : "Creating Workshop"} />}
         <Box textAlign="center" padding="10px">
           <Typography variant="h5" mb="5px">
@@ -480,8 +543,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               value={regLink ? regLink : ""}
               onChange={(event) => setRegLink(event.target.value)}
             />
-            <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
-              <Typography>Open for public registration?</Typography>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Typography mr={4}>Open for public registration?</Typography>
               <Select
                 value={regRestrict ? "Yes" : "No"}
                 sx={{ height: "30px" }}
@@ -527,7 +590,14 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               }}
             />
             <Box textAlign="center" width="100%">
-              <AddWorkshopFiles files={files} onChange={handleFileUpload} />
+              <AddWorkshopFiles
+                presentationFile={presentationFile}
+                instructionsFile={instructionsFile}
+                otherFiles={otherFiles}
+                onPresentationFileChange={handlePresentationFileUpload}
+                onInstructionsFileChange={handleInstructionsFileUpload}
+                onOtherFilesChange={handleFileUpload}
+              />
               <Typography variant="h5" mb="5px" mt="15px">
                 {prevCoverPic ? "Change Cover Picture" : "Add Cover Picture"}
               </Typography>
