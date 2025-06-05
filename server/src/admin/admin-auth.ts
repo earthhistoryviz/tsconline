@@ -194,8 +194,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   };
   const fetchRecentCommentsParams = {
     type: "object",
-    properties: {
-    },
+    properties: {},
     required: []
   };
 

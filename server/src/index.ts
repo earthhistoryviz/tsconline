@@ -325,7 +325,11 @@ server.register(adminRoutes, { prefix: "/admin" });
 server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha
 server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivateOfficialDatapacksMetadata);
-server.get("/admin/datapack/dailyComments", strictRateLimit, fetchDailyDatapackComments);
+server.post<{ Body: { email: string } }>(
+  "/admin/datapack/dailyComments",
+  moderateRateLimit,
+  fetchDailyDatapackComments
+);
 
 server.register(workshopRoutes, { prefix: "/workshop" });
 // these are seperate from the workshop routes because they don't require recaptcha

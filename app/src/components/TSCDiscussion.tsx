@@ -12,7 +12,6 @@ import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { getRecaptchaToken } from "../state/actions";
 import { CommentType, assertCommentType } from "@tsconline/shared";
-import { DatapackType } from '../../../shared/dist/index';
 
 export const Discussion = observer(() => {
   const { id } = useParams();
@@ -58,33 +57,17 @@ export const Discussion = observer(() => {
           }
         }
         const response2 = await fetcher(`/admin/datapack/dailyComments`, {
-          method: "GET",
-          credentials: "include"
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            email: "leytonbostre@gmail.com"
+          })
         });
-        if(response2.ok) {
-          const commentsArray = await response2.json();
-          console.log(commentsArray);
-          let commentsDict: { [key: string]: CommentType[] } = {};
-          for (const com of commentsArray) {
-            assertCommentType(com);
-            const loadedComment: CommentType = {
-              id: com.id,
-              username: com.username,
-              uuid: com.uuid,
-              pictureUrl: com.pictureUrl,
-              dateCreated: new Date(com.dateCreated),
-              flagged: Boolean(com.flagged),
-              isSelf: com.uuid === uuid,
-              commentText: com.commentText,
-              datapackTitle: com.datapackTitle
-            };
-            if(loadedComment.datapackTitle in commentsDict) {
-              commentsDict[loadedComment.datapackTitle].push(loadedComment);
-            } else {
-              commentsDict[loadedComment.datapackTitle] = [loadedComment];
-            }
-            console.log(commentsDict)
-          }
+        if (response2.ok) {
+          console.log("Daily comments fetched successfully.");
         }
       } catch (e) {
         console.error(e);
@@ -131,7 +114,8 @@ export const Discussion = observer(() => {
           id: newCommentId,
           uuid: uuid,
           flagged: false,
-          pictureUrl: pictureUrl ?? null
+          pictureUrl: pictureUrl ?? null,
+          datapackTitle: id
         };
         actions.addDatapackProfileComment(newComment);
         actions.setCommentInput("");

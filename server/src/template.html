@@ -125,7 +125,7 @@
           <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
             <tr>
               <td align="left" bgcolor="#ffffff" style="padding: 36px 24px 0; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; border-top: 3px solid #d4dadf;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 48px;">Daily Comment Summary</h1>
+                <h1 style="margin: 0; font-size: 28px; font-weight: 600; letter-spacing: -1px; line-height: 48px;">${title}</h1>
               </td>
             </tr>
           </table>
@@ -133,58 +133,20 @@
       </tr>
       <!-- end hero -->
   
-      <!-- start copy block -->
+      <!-- start comment block -->
       <tr>
         <td align="center" bgcolor="#e9ecef">
           <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
   
-            <!-- start copy -->
+           
             <tr>
               <td align="left" bgcolor="#ffffff" style="padding: 0 24px 16px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                <p style="margin: 0;">Here are the latest updates from today, 6/4/2025.</p>
+                <p style="margin: 0;">${message}</p>
               </td>
             </tr>
-            <!-- end copy -->
-             <!-- testststst -->
-       <tr>
-                <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                  <p style="margin: 0; color: #1a82e2"><strong>Datapack: Africa Bight</strong></p>
-                </td>
-              </tr><tr>
-                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
-                        <p style="margin: 0;">• <strong>Username:</strong> admin</p>
-                        <p style="margin-left: 8px;"><strong>Time:</strong> 12:46 PM</p>
-                        <p style="margin-left: 8px;"><strong>Comment:</strong> this is a test</p>
-                    </td>
-                </tr><tr>
-                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
-                        <p style="margin: 0;">• <strong>Username:</strong> admin</p>
-                        <p style="margin-left: 8px;"><strong>Time:</strong> 12:49 PM</p>
-                        <p style="margin-left: 8px;"><strong>Comment:</strong> this is a second test</p>
-                    </td>
-                </tr><tr>
-                <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                  <p style="margin: 0; color: #1a82e2"><strong>Datapack: Evolution of Modern Life</strong></p>
-                </td>
-              </tr><tr>
-                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
-                        <p style="margin: 0;">• <strong>Username:</strong> admin</p>
-                        <p style="margin-left: 8px;"><strong>Time:</strong> 12:50 PM</p>
-                        <p style="margin-left: 8px;"><strong>Comment:</strong> this is a teststs</p>
-                    </td>
-                </tr><tr>
-                <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
-                  <p style="margin: 0; color: #1a82e2"><strong>Datapack: TimeScale Creator Internal Datapack</strong></p>
-                </td>
-              </tr><tr>
-                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
-                        <p style="margin: 0;">• <strong>Username:</strong> admin</p>
-                        <p style="margin-left: 8px;"><strong>Time:</strong> 12:50 PM</p>
-                        <p style="margin-left: 8px;"><strong>Comment:</strong> another test</p>
-                    </td>
-                </tr>
-                
-            <!-- end stststs -->
+             <!-- start comment -->
+            ${commentsHtml}
+            <!-- end comment -->
               <!-- start button -->
               <tr>
                 <td align="left" bgcolor="#ffffff">
@@ -194,7 +156,7 @@
                         <table border="0" cellpadding="0" cellspacing="0">
                           <tr>
                             <td align="center" bgcolor="#1a82e2" style="border-radius: 6px;">
-                              <a href="https://tsconline.timescalecreator.org/datapacks" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">View Datapacks</a>
+                              <a href="${link}" target="_blank" style="display: inline-block; padding: 16px 36px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; color: #ffffff; text-decoration: none; border-radius: 6px;">${buttonText}</a>
                             </td>
                           </tr>
                         </table>
@@ -204,33 +166,23 @@
                 </td>
               </tr>
               <!-- end button -->
-              <!-- start copy -->
+              <!-- start link text -->
               <tr>
                 <td align="left" bgcolor="#ffffff" style="padding: 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
                   <p style="margin: 0;">If that doesn't work, copy and paste the following link in your browser:</p>
-                  <p style="margin: 0;"><a href="https://tsconline.timescalecreator.org/datapacks" target="_blank">https://tsconline.timescalecreator.org/datapacks</a></p>
+                  <p style="margin: 0;"><a href="${link}" target="_blank">${link}</a></p>
                 </td>
               </tr>
-              <!-- end copy -->
+              <!-- end link text -->
             
           </table>
         </td>
       </tr>
-      <!-- end copy block -->
+      <!-- end comment block -->
   
       <!-- start footer -->
       <tr>
         <td align="center" bgcolor="#e9ecef" style="padding: 24px;">
-          <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
-  
-            <!-- start permission -->
-            <!-- <tr>
-              <td align="center" bgcolor="#e9ecef" style="padding: 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 14px; line-height: 20px; color: #666;">
-                <p style="margin: 0;">You received this email because we received a request for ${action} for your account. If you didn't request this you can safely delete this email.</p>
-              </td>
-            </tr> -->
-            <!-- end permission -->
-          </table>
         </td>
       </tr>
       <!-- end footer -->
@@ -239,4 +191,4 @@
     <!-- end body -->
   
   </body>
-  </html>
+</html>

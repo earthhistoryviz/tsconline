@@ -377,4 +377,3 @@ export function assertSettingsTabs(value: string): asserts value is SettingsTabs
     throw new Error(`Invalid settings tab: ${value}`);
   }
 }
-

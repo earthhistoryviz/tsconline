@@ -14,7 +14,6 @@ import {
   CrossPlotTimeSettings,
   ChartTabState,
   CrossPlotBounds,
-  CommentType,
   RenderColumnInfo
 } from "../types";
 import { TimescaleItem } from "@tsconline/shared";
@@ -33,7 +32,8 @@ import type {
   DatapackPriorityChangeRequest,
   DatapackMetadata,
   Marker,
-  Model
+  Model,
+  CommentType
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";

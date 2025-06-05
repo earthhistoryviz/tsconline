@@ -102,7 +102,7 @@ export type Email = {
   action: string;
 };
 
-export type CommentsEmail = Email & {
+export type CommentsEmail = Omit<Email, "action" | "preHeader"> & {
   comments: CommentType[];
 };
 
@@ -156,17 +156,17 @@ export function assertEmail(o: any): asserts o is Email {
 }
 
 export function assertCommentsEmail(o: any): asserts o is CommentsEmail {
-  if (typeof o !== "object" || !o) throw "Email must be an object";
-  if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
-  if (typeof o.to !== "string") throwError("Email", "to", "string", o.to);
-  if (typeof o.subject !== "string") throwError("Email", "subject", "string", o.subject);
-  if (typeof o.preHeader !== "string") throwError("Email", "preHeader", "string", o.preHeader);
-  if (typeof o.title !== "string") throwError("Email", "title", "string", o.title);
-  if (typeof o.message !== "string") throwError("Email", "message", "string", o.message);
-  if (typeof o.action !== "string") throwError("Email", "action", "string", o.action);
-  if (o.link && typeof o.link !== "string") throwError("Email", "link", "string", o.link);
-  if (o.buttonText && typeof o.buttonText !== "string") throwError("Email", "buttonText", "string", o.buttonText);
-  if (typeof o.comments !== "object" || !Array.isArray(o.comments)) throwError("Email", "comments", "array", o.comments);
+  if (typeof o !== "object" || !o) throw "CommentsEmail must be an object";
+  // if (typeof o.from !== "string") throwError("CommentsEmail", "from", "string", o.from);
+  if (typeof o.to !== "string") throwError("CommentsEmail", "to", "string", o.to);
+  if (typeof o.subject !== "string") throwError("CommentsEmail", "subject", "string", o.subject);
+  if (typeof o.title !== "string") throwError("CommentsEmail", "title", "string", o.title);
+  if (typeof o.message !== "string") throwError("CommentsEmail", "message", "string", o.message);
+  if (o.link && typeof o.link !== "string") throwError("CommentsEmail", "link", "string", o.link);
+  if (o.buttonText && typeof o.buttonText !== "string")
+    throwError("CommentsEmail", "buttonText", "string", o.buttonText);
+  if (typeof o.comments !== "object" || !Array.isArray(o.comments))
+    throwError("CommentsEmail", "comments", "array", o.comments);
 }
 
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
