@@ -5,6 +5,8 @@ import "dotenv/config";
 
 const londonDatabaseName = "nannodata_arkL";
 
+const tableNames = ["arkL_columns", "arkL_datasets", "arkL_events", "arkL_intervals", "arkL_subdatasets"];
+
 const typeMap: Record<string, string> = {
   int: "number",
   bigint: "number",
@@ -30,18 +32,13 @@ const typeMap: Record<string, string> = {
 };
 
 async function generateInterfaces(connection: mysql.Connection) {
-  const [tables]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = ?`,
-    [londonDatabaseName]
-  );
-
   const schemaFile = join("src", "db", "london", "schema.ts");
 
   let output = "";
+
   fs.writeFile(schemaFile, 'import { throwError } from "@tsconline/shared";\n\n');
 
-  for (const row of tables) {
-    const tableName = row.TABLE_NAME;
+  for (const tableName of tableNames) {
     const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = ? AND table_name = ?`,
       [londonDatabaseName, tableName]
@@ -108,16 +105,10 @@ function castValue(value: string | number, targetType: string) {
 
 async function exportRowsToJson(connection: mysql.Connection) {
   const outputDir = join("db", "london", "output");
-  const [tables]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = ?`,
-    [londonDatabaseName]
-  );
 
   await fs.mkdir(outputDir, { recursive: true });
 
-  for (const row of tables) {
-    const tableName = row.TABLE_NAME;
-
+  for (const tableName of tableNames) {
     // Get column metadata
     const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = ? AND table_name = ?`,
@@ -132,7 +123,7 @@ async function exportRowsToJson(connection: mysql.Connection) {
     );
 
     const typedRows = rows.map((row) => {
-      const typedRow: Record<string, number | boolean | string> = {};
+      const typedRow: Record<string, number | boolean | string | null> = {};
       for (const key in row) {
         const targetType = columnTypes[key];
         typedRow[key] = castValue(row[key], targetType);

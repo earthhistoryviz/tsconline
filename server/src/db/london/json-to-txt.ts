@@ -39,6 +39,10 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
   const lines = [];
   for (const column of columns) {
     if (column.column_type === "events") {
+      if (datasets.filter((dataset) => dataset.id === column.dataset_id).length === 0) {
+        console.log("missing dataset id for " + column.columnx);
+        continue;
+      }
       let dbEvents = [];
       if (column.sub_columnE !== "" && column.sub_columnE !== null) {
         const regex = new RegExp(column.sub_columnE!, "i");
@@ -64,7 +68,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
 
       //look at only lads and fads for now, include others later
       if (lads.length === 0 && fads.length === 0) {
-        console.log("missing LAD and FAD events for " + column.columnx);
+        console.log("missing LAD and FAD for " + column.columnx);
         continue;
       }
 
@@ -73,21 +77,21 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       const colour = dataset[0]?.event_colour;
       //which notes to use? (Jur, Cret, etc.)
       const popup = dataset[0]?.notes_Jur;
-      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup || ""}`;
+      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup?.replace(/[\r\n]+/g, " ") || ""}`;
       lines.push(line);
 
       //TODO trim "LAD", "FAD" from beginning of titles
       if (lads.length > 0) {
         lines.push("LAD");
         for (const lad of lads) {
-          line = `\t${lad.eventx}\t${lad.age}\t${(lad.event_display && lad.event_display !== "") || ""}\t${lad.notes_2004 || lad.notes_2020}`;
+          line = `\t${lad.eventx}\t${lad.age}\t${lad.event_display || ""}\t${lad.notes_2020?.replace(/[\r\n]+/g, " ")}`;
           lines.push(line);
         }
       }
       if (fads.length > 0) {
         lines.push("FAD");
         for (const fad of fads) {
-          line = `\t${fad.eventx}\t${fad.age}\t${(fad.event_display && fad.event_display !== "") || ""}\t${fad.notes_2004 || fad.notes_2020}`;
+          line = `\t${fad.eventx}\t${fad.age}\t${fad.event_display || ""}\t${fad.notes_2020?.replace(/[\r\n]+/g, " ")}`;
           lines.push(line);
         }
       }
@@ -105,19 +109,15 @@ async function processBlockColumns(
   subdatasets: arkL_subdatasets[]
 ) {
   const lines = [];
-  const types: string[] = [];
   for (const column of columns) {
     if (
       column.column_type?.includes("interval") &&
       !column.interval_type?.includes("sequence") &&
       !column.interval_type?.includes("chron")
     ) {
-      if (column.interval_type && !types.includes(column.interval_type)) {
-        types.push(column.interval_type);
-      }
       const dataset = datasets.filter((dataset) => dataset.id === column.dataset_id);
       if (dataset.length === 0) {
-        console.log("missing dataset id for" + column.columnx);
+        console.log("missing dataset id for " + column.columnx);
         continue;
       }
       let regex = new RegExp(column.interval_type!, "i");
@@ -166,7 +166,6 @@ async function processBlockColumns(
       lines.push("");
     }
   }
-  console.log(types);
   return lines;
 }
 
