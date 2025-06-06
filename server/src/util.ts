@@ -69,25 +69,6 @@ export function isFileTypeAllowed(
 }
 
 /**
- * Checks if the file type and mime type are allowed
- * @param filename
- * @param mimeType
- * @param allowedFileTypes Not including the dot, e.g. ["txt", "jpg"]
- * @param allowedMimeTypes e.g. ["text/plain", "image/jpeg"]
- */
-export function isFileTypeAllowed(
-  filename: string,
-  mimeType: string,
-  allowedFileTypes: string[],
-  allowedMimeTypes: string[]
-): boolean {
-  const ext = path.extname(filename).toLowerCase().replace(/^\./, "");
-  if (!allowedFileTypes.includes(ext)) return false;
-  if (!allowedMimeTypes.includes(mimeType)) return false;
-  return true;
-}
-
-/**
  * Verify that a path is a symlink and that it points to a valid target
  * @param symlink
  */

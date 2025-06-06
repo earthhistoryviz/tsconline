@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findUser, findWorkshop, isUserInWorkshop } from "../database.js";
-import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
+import { findWorkshop, isUserInWorkshop } from "../database.js";
+import { getWorkshopFilesPath, getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
 import { SharedWorkshop, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
@@ -12,10 +12,10 @@ import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { createReadStream } from "fs";
 
-export const serveWorkshopHyperlinks = async function serveWorkshopHyperlinks(
+export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: string } }>,
   reply: FastifyReply
-) {
+) => {
   const { workshopId, filename } = request.params;
   try {
     if (filename !== reservedInstructionsFileName && filename !== reservedPresentationFileName) {
@@ -38,7 +38,10 @@ export const serveWorkshopHyperlinks = async function serveWorkshopHyperlinks(
     }
     return reply
       .type("application/pdf")
-      .header("Content-Disposition", `inline; filename="${filename === reservedInstructionsFileName ? "Instructions.pdf" : "Presentation.pdf"}"`)
+      .header(
+        "Content-Disposition",
+        `inline; filename="${filename === reservedInstructionsFileName ? "Instructions.pdf" : "Presentation.pdf"}"`
+      )
       .send(createReadStream(filePath));
   } catch (e) {
     logger.error("Error serving workshop hyperlinks:", e);
@@ -47,18 +50,27 @@ export const serveWorkshopHyperlinks = async function serveWorkshopHyperlinks(
 };
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
-  request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
+  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
-  const { workshopId, datapackTitle } = request.params;
+  const { workshopUUID, datapackTitle } = request.params;
   try {
     const user = request.user!; // already verified in verifyAuthority
+    const workshopId = getWorkshopIdFromUUID(workshopUUID);
+    if (!workshopId) {
+      reply.status(400).send({ error: "Invalid workshop UUID" });
+      return;
+    }
     const result = await verifyWorkshopValidity(workshopId, user.userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
-    const response = await editDatapackMetadataRequestHandler(request.parts(), getWorkshopUUIDFromWorkshopId(workshopId), datapackTitle);
+    const response = await editDatapackMetadataRequestHandler(
+      request.parts(),
+      getWorkshopUUIDFromWorkshopId(workshopId),
+      datapackTitle
+    );
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });

@@ -107,7 +107,8 @@ export const WorkshopDetails = observer(() => {
                 <Typography className={styles.fileName} mb={0.5}>
                   <a
                     href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedInstructionsFileName}`}
-                    target="_blank">
+                    target="_blank"
+                    rel="noreferrer">
                     {t("workshops.details-page.view")}
                   </a>
                 </Typography>
@@ -121,7 +122,8 @@ export const WorkshopDetails = observer(() => {
                 <Typography className={styles.fileName} mb={0.5}>
                   <a
                     href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedPresentationFileName}`}
-                    target="_blank">
+                    target="_blank"
+                    rel="noreferrer">
                     {t("workshops.details-page.view")}
                   </a>
                 </Typography>

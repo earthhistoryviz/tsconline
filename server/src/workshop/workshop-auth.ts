@@ -56,10 +56,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const editWorkshopDatapackMetadataParams = {
     type: "object",
     properties: {
-      workshopId: { type: "string" },
+      workshopUUID: { type: "string" },
       datapackTitle: { type: "string" }
     },
-    required: ["workshopId", "datapackTitle"]
+    required: ["workshopUUID", "datapackTitle"]
   };
   const workshopTitleParams = {
     type: "object",

@@ -18,7 +18,11 @@ import {
   updateComment
 } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import {
+  getWorkshopIdFromUUID,
+  getWorkshopUUIDFromWorkshopId,
+  verifyWorkshopValidity
+} from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
