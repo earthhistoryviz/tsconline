@@ -1,10 +1,14 @@
 import {
+  arkL_columns,
   arkL_datasets,
   arkL_events,
   arkL_intervals,
+  arkL_subdatasets,
+  assertarkL_columnsArray,
   assertarkL_datasetsArray,
   assertarkL_eventsArray,
-  assertarkL_intervalsArray
+  assertarkL_intervalsArray,
+  assertarkL_subdatasetsArray
 } from "./schema.js";
 import { join } from "path";
 import { readFile, writeFile } from "fs/promises";
@@ -16,48 +20,163 @@ async function loadJSONS() {
   const datasetsFilePath = join(outputDir, "arkL_datasets.json");
   const eventsFilePath = join(outputDir, "arkL_events.json");
   const intervalsFilePath = join(outputDir, "arkL_intervals.json");
+  const columnsFilePath = join(outputDir, "arkL_columns.json");
+  const subdatasetsFilePath = join(outputDir, "arkL_subdatasets.json");
   const datasets = JSON.parse(await readFile(datasetsFilePath, "utf8"));
   assertarkL_datasetsArray(datasets);
   const events = JSON.parse(await readFile(eventsFilePath, "utf8"));
   assertarkL_eventsArray(events);
   const intervals = JSON.parse(await readFile(intervalsFilePath, "utf8"));
   assertarkL_intervalsArray(intervals);
-  return { datasets, events, intervals };
+  const columns = JSON.parse(await readFile(columnsFilePath, "utf8"));
+  assertarkL_columnsArray(columns);
+  const subdatasets = JSON.parse(await readFile(subdatasetsFilePath, "utf8"));
+  assertarkL_subdatasetsArray(subdatasets);
+  return { datasets, events, intervals, columns, subdatasets };
 }
 
-async function processZoneColumns(datasets: arkL_datasets[], events: arkL_events[], intervals: arkL_intervals[]) {
+async function processEventColumns(datasets: arkL_datasets[], columns: arkL_columns[], events: arkL_events[]) {
   const lines = [];
-  for (const dataset of datasets) {
-    if (dataset.main_interval_type === "zone") {
-      const datasetEvents = events
-        .filter((event) => event.dataset_id === dataset.id && event.age)
-        .sort((a, b) => a.age! - b.age!);
-      if (!datasetEvents.length || !datasetEvents[0] || !datasetEvents[0].id) continue;
-      let topAge = intervals.find((interval) => interval.base_id === datasetEvents[0]!.id)?.top_age;
-      if (!topAge) {
-        console.log(chalk.yellow(`No interval found for dataset ${dataset.dataset}, defaulting to 0`));
-        topAge = 0;
+  for (const column of columns) {
+    if (column.column_type === "events") {
+      let dbEvents = [];
+      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
+        let regex = new RegExp(column.sub_columnE!, "i");
+        dbEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
+          .sort((a, b) => a.age! - b.age!);
+      } else {
+        dbEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.age)
+          .sort((a, b) => a.age! - b.age!);
       }
-      let line = `${dataset.dataset}\tblock\t${dataset.width || ""}\t${dataset.colour || ""}\tnotitle`;
+
+      const lads = [];
+      const fads = [];
+      //add other event types (ex. turnover?)
+      for (const event of dbEvents) {
+        if (event.event_type === "LAD") {
+          lads.push(event);
+        } else if (event.event_type === "FAD") {
+          fads.push(event);
+        }
+      }
+
+      //look at only lads and fads for now, include others later
+      if (lads.length === 0 && fads.length === 0) {
+        console.log("missing LAD and FAD events for " + column.columnx);
+        continue;
+      }
+
+      const dataset = datasets.filter((dataset) => dataset.id === column.dataset_id);
+      //some datatsets don't have event color even with event column (ex. calpionellids)
+      const colour = dataset[0]?.event_colour;
+      //which notes to use? (Jur, Cret, etc.)
+      const popup = dataset[0]?.notes_Jur;
+      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup || ""}`;
       lines.push(line);
-      line = `\tTOP ${topAge}`;
-      lines.push(line);
-      datasetEvents.map((event) => {
-        line = `\t${event.eventx}\t${event.age}\t${event.event_display || ""}\t${event.notes_2020 || ""}`;
-        lines.push(line);
-      });
+
+      //TODO trim "LAD", "FAD" from beginning of titles
+      if (lads.length > 0) {
+        lines.push("LAD");
+        for (const lad of lads) {
+          line = `\t${lad.eventx}\t${lad.age}\t${(lad.event_display && lad.event_display !== "") || ""}\t${lad.notes_2004 || lad.notes_2020}`;
+          lines.push(line);
+        }
+      }
+      if (fads.length > 0) {
+        lines.push("FAD");
+        for (const fad of fads) {
+          line = `\t${fad.eventx}\t${fad.age}\t${(fad.event_display && fad.event_display !== "") || ""}\t${fad.notes_2004 || fad.notes_2020}`;
+          lines.push(line);
+        }
+      }
+      //for blank space between columns for tscreator to parse
       lines.push("");
     }
   }
   return lines;
 }
 
+async function processBlockColumns(
+  datasets: arkL_datasets[],
+  columns: arkL_columns[],
+  intervals: arkL_intervals[],
+  subdatasets: arkL_subdatasets[]
+) {
+  const lines = [];
+  const types: String[] = [];
+  for (const column of columns) {
+    if (
+      column.column_type?.includes("interval") &&
+      !column.interval_type?.includes("sequence") &&
+      !column.interval_type?.includes("chron")
+    ) {
+      if (column.interval_type && !types.includes(column.interval_type)) {
+        types.push(column.interval_type);
+      }
+      const dataset = datasets.filter((dataset) => dataset.id === column.dataset_id);
+      if (dataset.length === 0) {
+        console.log("missing dataset id for" + column.columnx);
+        continue;
+      }
+      let regex = new RegExp(column.interval_type!, "i");
+      //% in sql is wildcard, so match anything
+      if (column.interval_type === "%") {
+        regex = new RegExp(".*", "i");
+      }
+      let dbIntervals = [];
+      if (column.colshare) {
+        const subs = subdatasets.filter((subdataset) => subdataset.colshare === column.colshare).map((item) => item.id);
+        dbIntervals = intervals
+          .filter(
+            (interval) =>
+              interval.subdataset_id && subs.includes(interval.subdataset_id) && interval.interval_type?.match(regex)
+          )
+          .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      } else if (column.subdataset_id) {
+        dbIntervals = intervals
+          .filter(
+            (interval) =>
+              interval.dataset_id === column.dataset_id &&
+              interval.interval_type?.match(regex) &&
+              interval.subdataset_id === column.subdataset_id
+          )
+          .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      } else {
+        dbIntervals = intervals
+          .filter(
+            (interval) =>
+              interval.dataset_id === column.dataset_id &&
+              interval.interval_type?.match(regex) &&
+              interval.subdataset === ""
+          )
+          .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      }
+      let line = `${column.columnx}\tblock`;
+      lines.push(line);
+      line = `\tTOP ${dbIntervals[0]?.top_age}`;
+      lines.push(line);
+      for (const inter of dbIntervals) {
+        if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
+          line = `\t${inter[column.col_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t`;
+        } else line = `\t${inter.intervalx}\t${inter.base_age}\t`;
+        lines.push(line);
+      }
+      lines.push("");
+    }
+  }
+  console.log(types);
+  return lines;
+}
+
 try {
-  const { datasets, events, intervals } = await loadJSONS();
-  const lines = await processZoneColumns(datasets, events, intervals);
-  const filePath = join(outputDir, "zone_columns.txt");
-  await writeFile(filePath, lines.join("\n"));
-  console.log(chalk.green("Processed zone columns"));
+  const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
+  const filePath = join(outputDir, "test_datapack.txt");
+  const eventLines = await processEventColumns(datasets, columns, events);
+  const blockLines = await processBlockColumns(datasets, columns, intervals, subdatasets);
+  await writeFile(filePath, eventLines.concat(blockLines).join("\n"));
+  console.log(chalk.green("Processed columns"));
 } catch (error) {
-  console.error(chalk.red(`Failed to create zone_columns.txt: ${error}`));
+  console.error(chalk.red(`Failed to create test_datapack.txt: ${error}`));
 }
