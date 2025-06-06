@@ -64,7 +64,7 @@ export async function verifyWorkshopValidity(workshopUUID: string, userId: numbe
 }
 
 export async function getWorkshopFilesPath(workshopId: number): Promise<string> {
-const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesDir = path.join(directory, "files");
 

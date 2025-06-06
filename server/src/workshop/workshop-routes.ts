@@ -1,16 +1,16 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findUser, findWorkshop, isUserInWorkshop } from "../database.js";
-import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
+import { getWorkshopFilesPath, verifyWorkshopValidity } from "./workshop-util.js";
 import { SharedWorkshop } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
-import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
 
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
+import logger from "../error-logger.js";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -79,12 +79,13 @@ export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) => {
+  // already verified uuid in verifyAuthority
   const uuid = request.session.get("uuid")!;
   const { workshopId } = request.params;
-
   try {
+    // user exists, already verified in verifyAuthority
     const user = (await findUser({ uuid }))[0]!;
-    const isAuthorized = user.isAdmin || await isUserInWorkshop(user.userId, workshopId);
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
     if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });
       return;
@@ -99,16 +100,17 @@ export const downloadWorkshopFilesZip = async (
     let file: Buffer;
     try {
       file = await readFile(zipfile);
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         file = await createZipFile(zipfile, filesFolder);
       } else {
-        reply.status(500).send({ error: `Read error: ${(err as Error).message}` });
+        reply.status(500).send({ error: `Read error: ${(error as Error).message}` });
         return;
       }
     }
     reply.send(file);
-  } catch (err) {
+  } catch (error) {
+    logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });
     return;
   }

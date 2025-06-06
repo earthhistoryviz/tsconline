@@ -52,7 +52,6 @@ import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
 import { getWorkshopUUIDFromWorkshopId, getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
-import logger from "./error-logger.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
