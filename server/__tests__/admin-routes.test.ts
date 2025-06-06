@@ -21,10 +21,20 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as adminHandler from "../src/admin/admin-handler";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import * as logger from "../src/error-logger";
+import * as validator from "validator";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
+
+vi.mock("validator", async () => {
+  return {
+    default: {
+      isEmail: vi.fn((email) => email.includes("@") && email.includes(".")),
+      isURL: vi.fn((url) => url.startsWith("http://") || url.startsWith("https://"))
+    }
+  };
+});
 
 vi.mock("../src/cloud/general-cloud-requests", async () => {
   return {
@@ -283,7 +293,7 @@ beforeAll(async () => {
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
-  vi.spyOn(console, "error").mockImplementation(() => {});
+  // vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 
@@ -381,7 +391,8 @@ const testWorkshopDatabase: Workshop = {
   workshopId: 1,
   regRestrict: 0,
   creatorUUID: "123",
-  regLink: ""
+  regLink: "http://here.com",
+  description: "test description"
 };
 const testUpdatedWorkshopDatabase: Workshop = {
   title: "new-title",
@@ -390,7 +401,8 @@ const testUpdatedWorkshopDatabase: Workshop = {
   workshopId: 1,
   regRestrict: 0,
   creatorUUID: "123",
-  regLink: ""
+  regLink: "",
+  description: "test description"
 };
 const testWorkshop: SharedWorkshop = {
   title: "test",
@@ -1822,12 +1834,21 @@ describe("adminCreateWorkshop", () => {
 
 describe("adminEditWorkshop", () => {
   const updateWorkshop = vi.spyOn(database, "updateWorkshop");
+  const getWorkshopDatapacksNames = vi.spyOn(uploadHandlers, "getWorkshopDatapacksNames");
   const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const getWorkshopFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
+  const validatorSpy = vi.mocked(validator);
   const body = {
     workshopId: testWorkshop.workshopId,
     title: "new-title",
     start: testWorkshop.start
+  };
+  const metadataBody = {
+    workshopId: testWorkshop.workshopId,
+    regLink: "http://here.com",
+    regRestrict: 1,
+    creatorUUID: "new-creatorUUID"
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1858,7 +1879,7 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Missing required fields" });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 400 if title, start, and end are empty", async () => {
+  it("should return 400 if other editable fields are empty except workshopId", async () => {
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1878,6 +1899,18 @@ describe("adminEditWorkshop", () => {
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Invalid start date" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if regLink is not a valid URL", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: { ...metadataBody, regLink: "invalid-url" },
+      headers
+    });
+    expect(updateWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid registration link" });
+    expect(validatorSpy.default.isURL).toHaveBeenCalledWith("invalid-url");
     expect(response.statusCode).toBe(400);
   });
   it("should return 404 if workshop does not exist", async () => {
@@ -1919,7 +1952,14 @@ describe("adminEditWorkshop", () => {
   it("should return 409 if workshop with title and dates already exists", async () => {
     getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     findWorkshop.mockResolvedValueOnce([
-      { ...body, end: testWorkshop.end, regLink: undefined, regRestrict: 0, creatorUUID: testWorkshop.creatorUUID }
+      {
+        ...body,
+        end: testWorkshop.end,
+        regLink: undefined,
+        regRestrict: 0,
+        creatorUUID: testWorkshop.creatorUUID,
+        description: testWorkshop.description
+      }
     ]);
     const response = await app.inject({
       method: "PATCH",
@@ -1937,7 +1977,7 @@ describe("adminEditWorkshop", () => {
   });
 
   it("should return 404 if updated workshop does not exist", async () => {
-    vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(testWorkshopDatabase).mockResolvedValueOnce(null);
+    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase).mockResolvedValueOnce(null);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -1962,10 +2002,38 @@ describe("adminEditWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
+  it("should return 200 if fields included that are not title, start, or end", async () => {
+    getWorkshopIfNotEnded
+      .mockResolvedValueOnce(testWorkshopDatabase)
+      .mockResolvedValueOnce(testUpdatedWorkshopDatabase);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: metadataBody,
+      headers
+    });
+    expect(updateWorkshop).toHaveBeenCalledOnce();
+    expect(updateWorkshop).toHaveBeenCalledWith(
+      { workshopId: body.workshopId },
+      { ...metadataBody, workshopId: undefined }
+    );
+    expect(await response.json()).toEqual({
+      workshop: {
+        ...testUpdatedWorkshopDatabase,
+        active: false,
+        regRestrict: testUpdatedWorkshopDatabase.regRestrict === 1,
+        datapacks: [],
+        files: []
+      }
+    });
+    expect(response.statusCode).toBe(200);
+  });
   it("should return 200 if successful and update workshop", async () => {
     getWorkshopIfNotEnded
       .mockResolvedValueOnce(testWorkshopDatabase)
       .mockResolvedValueOnce(testUpdatedWorkshopDatabase);
+    getWorkshopDatapacksNames.mockResolvedValueOnce(["dp 1"]);
+    getWorkshopFilesNames.mockResolvedValueOnce(["file 1"]);
     findWorkshop.mockResolvedValueOnce([]);
     const response = await app.inject({
       method: "PATCH",
@@ -1980,11 +2048,11 @@ describe("adminEditWorkshop", () => {
     );
     expect(await response.json()).toEqual({
       workshop: {
-        ...body,
-        end: testUpdatedWorkshopDatabase.end, //TODO: fix this test case  when editing is finished and add test cases. end should already be included.
+        ...testUpdatedWorkshopDatabase,
         active: false,
-        regRestrict: false,
-        creatorUUID: "123"
+        regRestrict: testUpdatedWorkshopDatabase.regRestrict === 1,
+        datapacks: ["dp 1"],
+        files: ["file 1"]
       }
     });
     expect(response.statusCode).toBe(200);
