@@ -48,12 +48,11 @@ export function isUUIDFolderAWorkshopFolder(folderName: string): boolean {
 
 /**
  * Checks to make sure the user is in the workshop and the workshop is active
- * @param workshopUUID the workshop's UUID
+ * @param workshopId the workshop's ID
  * @param userId the user's userId
  * @returns
  */
-export async function verifyWorkshopValidity(workshopUUID: string, userId: number): Promise<OperationResult> {
-  const workshopId = getWorkshopIdFromUUID(workshopUUID);
+export async function verifyWorkshopValidity(workshopId: number, userId: number): Promise<OperationResult> {
   if (!workshopId) {
     return { code: 400, message: "Invalid workshop UUID" };
   }

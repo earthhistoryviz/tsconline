@@ -61,6 +61,7 @@ export const WorkshopDetails = observer(() => {
     }
   }
   if (!workshop || !id) return <PageNotFound />;
+  const backendUrl = import.meta.env.DEV ? "http://localhost:3000" : "";
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -105,9 +106,8 @@ export const WorkshopDetails = observer(() => {
               {workshop.files?.includes(reservedInstructionsFileName) ? (
                 <Typography className={styles.fileName} mb={0.5}>
                   <a
-                    href={`/workshop/${workshop.workshopId}/files/${reservedInstructionsFileName}`}
-                    target="_blank"
-                    rel="noopener noreferrer">
+                    href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedInstructionsFileName}`}
+                    target="_blank">
                     {t("workshops.details-page.view")}
                   </a>
                 </Typography>
@@ -120,9 +120,8 @@ export const WorkshopDetails = observer(() => {
               {workshop.files?.includes(reservedPresentationFileName) ? (
                 <Typography className={styles.fileName} mb={0.5}>
                   <a
-                    href={`/workshop/${workshop.workshopId}/files/${reservedPresentationFileName}`}
-                    target="_blank"
-                    rel="noopener noreferrer">
+                    href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedPresentationFileName}`}
+                    target="_blank">
                     {t("workshops.details-page.view")}
                   </a>
                 </Typography>

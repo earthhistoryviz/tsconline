@@ -31,6 +31,9 @@ export const MAX_DATAPACK_NOTES_LENGTH = 200;
 export const MAX_DATAPACK_REFERENCES_ALLOWED = 30;
 export const MAX_DATAPACK_REFERENCE_LENGTH = 100;
 
+export const reservedPresentationFileName = ".reserved_presentation.pdf";
+export const reservedInstructionsFileName = ".reserved_instructions.pdf";
+
 export const allColumnTypes = [
   "Block",
   "Facies",

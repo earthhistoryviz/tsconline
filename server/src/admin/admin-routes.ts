@@ -35,7 +35,9 @@ import {
   SharedWorkshop,
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
-  AdminSharedUser
+  AdminSharedUser,
+  reservedPresentationFileName,
+  reservedInstructionsFileName
 } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -831,15 +833,15 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
           reply.status(415).send({ error: "Invalid file type for presentation file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, ".reserved_presentation.pdf");
-      } else if (part.fieldname === "instructionFile") {
+        result = await uploadFileToWorkshop(workshopId, part, reservedPresentationFileName);
+      } else if (part.fieldname === "instructionsFile") {
         if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
           reply.status(415).send({ error: "Invalid file type for instruction file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, ".reserved_instruction.pdf");
+        result = await uploadFileToWorkshop(workshopId, part, reservedInstructionsFileName);
       } else if (part.fieldname === "otherFiles") {
-        if (part.filename === ".reserved_presentation.pdf" || part.filename === ".reserved_instruction.pdf") {
+        if (part.filename === reservedPresentationFileName || part.filename === reservedInstructionsFileName) {
           reply.status(400).send({ error: "Cannot upload reserved file names" });
           return;
         }

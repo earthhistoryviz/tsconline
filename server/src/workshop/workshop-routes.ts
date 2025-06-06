@@ -1,35 +1,64 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findUser, findWorkshop, isUserInWorkshop } from "../database.js";
-import { getWorkshopFilesPath, verifyWorkshopValidity } from "./workshop-util.js";
-import { SharedWorkshop } from "@tsconline/shared";
+import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
+import { SharedWorkshop, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
 import { verifyNonExistentFilepath } from "../util.js";
-
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
+import { createReadStream } from "fs";
 
-export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
-  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+export const serveWorkshopHyperlinks = async function serveWorkshopHyperlinks(
+  request: FastifyRequest<{ Params: { workshopId: number; filename: string } }>,
   reply: FastifyReply
 ) {
-  const { workshopUUID, datapackTitle } = request.params;
-  const uuid = request.session.get("uuid");
+  const { workshopId, filename } = request.params;
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
+    if (filename !== reservedInstructionsFileName && filename !== reservedPresentationFileName) {
+      reply.status(400).send({ error: "Invalid filename" });
       return;
     }
-    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const user = request.user!; // already verified in verifyAuthority
+    if (!(await isUserInWorkshop(workshopId, user.userId))) {
+      return reply.status(403).send({ error: "Not registered for workshop" });
+    }
+    const filesDir = await getWorkshopFilesPath(workshopId);
+    const filePath = path.join(filesDir, filename);
+    if (!filePath.startsWith(filesDir)) {
+      reply.status(400).send({ error: "Invalid file path" });
+      return;
+    }
+    if (!(await checkFileExists(filePath))) {
+      reply.status(404).send({ error: "File not found" });
+      return;
+    }
+    return reply
+      .type("application/pdf")
+      .header("Content-Disposition", `inline; filename="${filename === reservedInstructionsFileName ? "Instructions.pdf" : "Presentation.pdf"}"`)
+      .send(createReadStream(filePath));
+  } catch (e) {
+    logger.error("Error serving workshop hyperlinks:", e);
+    reply.status(500).send({ error: "Failed to serve hyperlinks" });
+  }
+};
+
+export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
+  request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
+  reply: FastifyReply
+) {
+  const { workshopId, datapackTitle } = request.params;
+  try {
+    const user = request.user!; // already verified in verifyAuthority
+    const result = await verifyWorkshopValidity(workshopId, user.userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
-    const response = await editDatapackMetadataRequestHandler(request.parts(), workshopUUID, datapackTitle);
+    const response = await editDatapackMetadataRequestHandler(request.parts(), getWorkshopUUIDFromWorkshopId(workshopId), datapackTitle);
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
@@ -79,12 +108,10 @@ export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) => {
-  // already verified uuid in verifyAuthority
-  const uuid = request.session.get("uuid")!;
   const { workshopId } = request.params;
   try {
     // user exists, already verified in verifyAuthority
-    const user = (await findUser({ uuid }))[0]!;
+    const user = request.user!;
     const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
     if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });

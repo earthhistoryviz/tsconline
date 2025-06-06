@@ -18,7 +18,7 @@ import {
   updateComment
 } from "../database.js";
 import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
-import { getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
+import { getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata } from "@tsconline/shared";
@@ -297,7 +297,12 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
-    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const workshopId = getWorkshopIdFromUUID(workshopUUID);
+    if (!workshopId) {
+      reply.status(400).send({ error: "Invalid workshop UUID" });
+      return;
+    }
+    const result = await verifyWorkshopValidity(workshopId, user[0].userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
