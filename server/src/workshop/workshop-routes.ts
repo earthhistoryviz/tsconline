@@ -75,63 +75,42 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
   }
 };
 
-export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
+export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
-) {
-  // already verified uuid in verifyAuthority
+) => {
   const uuid = request.session.get("uuid")!;
   const { workshopId } = request.params;
+
   try {
-    // user exists, already verified in verifyAuthority
     const user = (await findUser({ uuid }))[0]!;
-    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+    const isAuthorized = user.isAdmin || await isUserInWorkshop(user.userId, workshopId);
+    if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const directory = await getUserUUIDDirectory(workshopUUID, true);
-    let filesFolder;
-    try {
-      filesFolder = await getWorkshopFilesPath(directory);
-    } catch (error) {
-      reply.status(500).send({ error: "Invalid directory path" });
-      return;
-    }
-    const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
+    const filesFolder = await getWorkshopFilesPath(workshopId);
+    const baseDir = path.dirname(filesFolder);
+    const zipfile = path.resolve(baseDir, `filesFor${workshopId}.zip`);
     if (!(await verifyNonExistentFilepath(zipfile))) {
       reply.status(500).send({ error: "Invalid directory path" });
       return;
     }
+    let file: Buffer;
     try {
-      let file;
-
-      // Check if ZIP file already exists
-      try {
-        file = await readFile(zipfile);
-      } catch (e) {
-        const error = e as NodeJS.ErrnoException;
-        if (error.code !== "ENOENT") {
-          reply.status(500).send({ error: "An error occurred: " + e });
-          return;
-        }
-      }
-
-      // If ZIP file doesn't exist, create one
-      if (!file) {
+      file = await readFile(zipfile);
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "ENOENT") {
         file = await createZipFile(zipfile, filesFolder);
-      }
-      reply.send(file);
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code === "ENOENT") {
-        reply.status(404).send({ error: "Failed to process the file" });
+      } else {
+        reply.status(500).send({ error: `Read error: ${(err as Error).message}` });
         return;
       }
-      throw e;
     }
-  } catch (e) {
+    reply.send(file);
+  } catch (err) {
     reply.status(500).send({ error: "An error occurred" });
+    return;
   }
 };
 

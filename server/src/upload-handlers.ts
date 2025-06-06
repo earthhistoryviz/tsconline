@@ -498,13 +498,13 @@ export async function processMultipartPartsForDatapackUpload(
 export async function uploadFileToWorkshop(workshopId: number, file: MultipartFile, filename?: string) {
   let filesFolder;
   try {
-    filesFolder = await getWorkshopFilesPath(getWorkshopUUIDFromWorkshopId(workshopId));
+    filesFolder = await getWorkshopFilesPath(workshopId);
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Files Directory." };
   }
 
-  const filePath = join(filesFolder, filename || file.filename); 
+  const filePath = join(filesFolder, filename || file.filename);
   try {
     const { code, message } = await uploadFileToFileSystem(file, filePath);
     if (code !== 200) {
@@ -524,7 +524,7 @@ export async function uploadFileToWorkshop(workshopId: number, file: MultipartFi
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
   let filesFolder;
   try {
-    filesFolder = await getWorkshopCoverPath(getWorkshopUUIDFromWorkshopId(workshopId));
+    filesFolder = await getWorkshopCoverPath(workshopId);
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };
@@ -555,12 +555,9 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
 }
 
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
-
   let filesFolder;
   try {
-    filesFolder = await getWorkshopCoverPath(directory);
+    filesFolder = await getWorkshopCoverPath(workshopId);
   } catch (error) {
     console.error(error);
     return null;
@@ -607,11 +604,9 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
  * @returns the name of all files of a workshop
  */
 export async function getWorkshopFilesNames(workshopId: number): Promise<string[]> {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
   let filesFolder;
   try {
-    filesFolder = await getWorkshopFilesPath(directory);
+    filesFolder = await getWorkshopFilesPath(workshopId);
   } catch (error) {
     console.error(error);
     return [];

@@ -831,14 +831,18 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
           reply.status(415).send({ error: "Invalid file type for presentation file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, "presentation.pdf");
+        result = await uploadFileToWorkshop(workshopId, part, ".reserved_presentation.pdf");
       } else if (part.fieldname === "instructionFile") {
         if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
           reply.status(415).send({ error: "Invalid file type for instruction file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, "instructions.pdf");
+        result = await uploadFileToWorkshop(workshopId, part, ".reserved_instruction.pdf");
       } else if (part.fieldname === "otherFiles") {
+        if (part.filename === ".reserved_presentation.pdf" || part.filename === ".reserved_instruction.pdf") {
+          reply.status(400).send({ error: "Cannot upload reserved file names" });
+          return;
+        }
         result = await uploadFileToWorkshop(workshopId, part);
       } else {
         await part.toBuffer(); // consume buffer to allow multipart to continue
@@ -847,7 +851,7 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
       uploadResults.push({ field: part.fieldname, code: result.code, message: result.message });
       if (result.code !== 200) fileUploadFailed = true;
     }
-    if (uploadResults.length === 0) { 
+    if (uploadResults.length === 0) {
       reply.status(400).send({ error: "No files were uploaded" });
       return;
     }

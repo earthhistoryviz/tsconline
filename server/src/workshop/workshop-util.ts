@@ -63,7 +63,8 @@ export async function verifyWorkshopValidity(workshopUUID: string, userId: numbe
   return { code: 200, message: "Success" };
 }
 
-export async function getWorkshopFilesPath(workshopUUID: string): Promise<string> {
+export async function getWorkshopFilesPath(workshopId: number): Promise<string> {
+const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesDir = path.join(directory, "files");
 
@@ -77,7 +78,8 @@ export async function getWorkshopFilesPath(workshopUUID: string): Promise<string
   return filesDir;
 }
 
-export async function getWorkshopCoverPath(workshopUUID: string): Promise<string> {
+export async function getWorkshopCoverPath(workshopId: number): Promise<string> {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
   const directory = await getUserUUIDDirectory(workshopUUID, true);
   const coverDir = path.join(directory, "cover");
 

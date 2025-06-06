@@ -706,7 +706,8 @@ export const adminUploadDatapackToWorkshop = action(
     const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
     if (!recaptchaToken) return;
     const formData = new FormData();
-    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid, hasFiles } = metadata;
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid, hasFiles } =
+      metadata;
     formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
