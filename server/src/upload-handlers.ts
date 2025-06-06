@@ -52,6 +52,7 @@ import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
 import { getWorkshopUUIDFromWorkshopId, getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
+import logger from "./error-logger.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -494,19 +495,16 @@ export async function processMultipartPartsForDatapackUpload(
   };
 }
 
-export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
+export async function uploadFileToWorkshop(workshopId: number, file: MultipartFile, filename?: string) {
   let filesFolder;
   try {
-    filesFolder = await getWorkshopFilesPath(directory);
+    filesFolder = await getWorkshopFilesPath(getWorkshopUUIDFromWorkshopId(workshopId));
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Files Directory." };
   }
 
-  const filename = file.filename;
-  const filePath = join(filesFolder, filename);
+  const filePath = join(filesFolder, filename || file.filename); 
   try {
     const { code, message } = await uploadFileToFileSystem(file, filePath);
     if (code !== 200) {
@@ -524,11 +522,9 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 }
 
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
   let filesFolder;
   try {
-    filesFolder = await getWorkshopCoverPath(directory);
+    filesFolder = await getWorkshopCoverPath(getWorkshopUUIDFromWorkshopId(workshopId));
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };

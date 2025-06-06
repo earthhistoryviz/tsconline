@@ -531,8 +531,9 @@ export const adminAddUsersToWorkshop = action(
             break;
         }
         const serverResponse = await response.json();
+        const invalidEmails = serverResponse.invalidEmails || "";
         displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
-        return { success: false, invalidEmails: serverResponse.invalidEmails };
+        return { success: false, invalidEmails };
       }
     } catch (e) {
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -705,7 +706,7 @@ export const adminUploadDatapackToWorkshop = action(
     const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
     if (!recaptchaToken) return;
     const formData = new FormData();
-    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid } = metadata;
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid, hasFiles } = metadata;
     formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
@@ -715,6 +716,7 @@ export const adminUploadDatapackToWorkshop = action(
     formData.append("isPublic", String(isPublic));
     formData.append("type", type);
     formData.append("uuid", uuid);
+    formData.append("hasFiles", String(hasFiles));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -878,7 +880,7 @@ export const resetAdminConfigTempState = action(() => {
 /**
  * Upload files to a workshop, at least one file is required
  * @param presentationFile The presentation file to upload (verify it is a valid pdf before calling)
- * @param instructionsFile The instructions file to upload (verify it is a valid pdf before calling)
+ * @param instructionFile The instructions file to upload (verify it is a valid pdf before calling)
  * @param otherFiles Other files to upload
  * @returns Whether the operation was successful
  */
@@ -886,10 +888,10 @@ export const adminAddFilesToWorkshop = action(
   async (
     workshopId: number,
     presentationFile?: File | null,
-    instructionsFile?: File | null,
+    instructionFile?: File | null,
     otherFiles?: File[] | null
   ) => {
-    if (!presentationFile && !instructionsFile && (!otherFiles || otherFiles.length === 0)) {
+    if (!presentationFile && !instructionFile && (!otherFiles || otherFiles.length === 0)) {
       pushError(ErrorCodes.INVALID_FORM);
       return false;
     }
@@ -897,10 +899,10 @@ export const adminAddFilesToWorkshop = action(
     if (!recaptchaToken) return false;
     const formData = new FormData();
     if (presentationFile) {
-      formData.append("presentation", presentationFile);
+      formData.append("presentationFile", presentationFile);
     }
-    if (instructionsFile) {
-      formData.append("instructions", instructionsFile);
+    if (instructionFile) {
+      formData.append("instructionFile", instructionFile);
     }
     if (otherFiles && otherFiles.length > 0) {
       otherFiles.forEach((file) => {

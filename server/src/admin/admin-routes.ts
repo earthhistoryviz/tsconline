@@ -19,7 +19,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
-import { assetconfigs, extractMetadataFromDatapack } from "../util.js";
+import { assetconfigs, extractMetadataFromDatapack, isFileTypeAllowed } from "../util.js";
 import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
@@ -40,7 +40,7 @@ import {
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
-  uploadFilesToWorkshop
+  uploadFileToWorkshop
 } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -818,20 +818,41 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
     reply.status(404).send({ error: "Workshop not found or has ended" });
     return;
   }
-  let file: MultipartFile | undefined;
   try {
+    let fileUploadFailed = false;
+    const uploadResults: { field: string; code: number; message: string }[] = [];
+    const allowedFileTypes = ["pdf"];
+    const allowedMimeTypes = ["application/pdf"];
     for await (const part of parts) {
-      if (part.type === "file" && part.fieldname === "file") {
-        file = part;
-        const { code, message } = await uploadFilesToWorkshop(workshopId, part);
-        if (code !== 200) {
-          reply.status(code).send({ error: message });
+      if (part.type !== "file") continue;
+      let result;
+      if (part.fieldname === "presentationFile") {
+        if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
+          reply.status(415).send({ error: "Invalid file type for presentation file" });
           return;
         }
+        result = await uploadFileToWorkshop(workshopId, part, "presentation.pdf");
+      } else if (part.fieldname === "instructionFile") {
+        if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
+          reply.status(415).send({ error: "Invalid file type for instruction file" });
+          return;
+        }
+        result = await uploadFileToWorkshop(workshopId, part, "instructions.pdf");
+      } else if (part.fieldname === "otherFiles") {
+        result = await uploadFileToWorkshop(workshopId, part);
+      } else {
+        await part.toBuffer(); // consume buffer to allow multipart to continue
+        continue;
       }
+      uploadResults.push({ field: part.fieldname, code: result.code, message: result.message });
+      if (result.code !== 200) fileUploadFailed = true;
     }
-    if (!file) {
+    if (uploadResults.length === 0) { 
       reply.status(400).send({ error: "No files were uploaded" });
+      return;
+    }
+    if (fileUploadFailed) {
+      reply.status(500).send({ error: "Some files failed to upload", uploadResults });
       return;
     }
     reply.send({ message: "Files added to workshop" });

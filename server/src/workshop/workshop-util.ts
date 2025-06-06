@@ -4,6 +4,7 @@ import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import path from "path";
 import { mkdir } from "fs/promises";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 /**
  * Extracts the workshop ID from a workshop UUID
@@ -62,7 +63,8 @@ export async function verifyWorkshopValidity(workshopUUID: string, userId: numbe
   return { code: 200, message: "Success" };
 }
 
-export async function getWorkshopFilesPath(directory: string): Promise<string> {
+export async function getWorkshopFilesPath(workshopUUID: string): Promise<string> {
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesDir = path.join(directory, "files");
 
   if (!(await verifyFilepath(filesDir))) {
@@ -75,7 +77,8 @@ export async function getWorkshopFilesPath(directory: string): Promise<string> {
   return filesDir;
 }
 
-export async function getWorkshopCoverPath(directory: string): Promise<string> {
+export async function getWorkshopCoverPath(workshopUUID: string): Promise<string> {
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
   const coverDir = path.join(directory, "cover");
 
   if (!(await verifyFilepath(coverDir))) {
