@@ -30,7 +30,7 @@ const typeMap: Record<string, string> = {
 };
 
 async function generateInterfaces(connection: mysql.Connection) {
-  const [tables]: any[] = await connection.execute(
+  const [tables]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
     `SELECT table_name FROM information_schema.tables WHERE table_schema = ?`,
     [londonDatabaseName]
   );
@@ -42,7 +42,7 @@ async function generateInterfaces(connection: mysql.Connection) {
 
   for (const row of tables) {
     const tableName = row.TABLE_NAME;
-    const [columns]: any[] = await connection.execute(
+    const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT column_name, data_type, is_nullable FROM information_schema.columns WHERE table_schema = ? AND table_name = ?`,
       [londonDatabaseName, tableName]
     );
@@ -92,7 +92,7 @@ function makeAssertLine(interfaceName: string, name: string, tsType: string, nul
   return `    if (${condition}) throwError("${interfaceName}", "${name}", "${tsType}", o.${name});`;
 }
 
-function castValue(value: any, targetType: string) {
+function castValue(value: string | number, targetType: string) {
   if (value === null) return null;
   switch (targetType) {
     case "number":
@@ -108,7 +108,7 @@ function castValue(value: any, targetType: string) {
 
 async function exportRowsToJson(connection: mysql.Connection) {
   const outputDir = join("db", "london", "output");
-  const [tables]: any[] = await connection.execute(
+  const [tables]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
     `SELECT table_name FROM information_schema.tables WHERE table_schema = ?`,
     [londonDatabaseName]
   );
@@ -119,20 +119,20 @@ async function exportRowsToJson(connection: mysql.Connection) {
     const tableName = row.TABLE_NAME;
 
     // Get column metadata
-    const [columns]: any[] = await connection.execute(
+    const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = ? AND table_name = ?`,
       [londonDatabaseName, tableName]
     );
 
-    const columnTypes = Object.fromEntries(
-      columns.map((col: any) => [col.COLUMN_NAME, typeMap[col.DATA_TYPE] || "any"])
-    );
+    const columnTypes = Object.fromEntries(columns.map((col) => [col.COLUMN_NAME, typeMap[col.DATA_TYPE] || "any"]));
 
     // Query all rows
-    const [rows]: any[] = await connection.execute(`SELECT * FROM \`${tableName}\``);
+    const [rows]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
+      `SELECT * FROM \`${tableName}\``
+    );
 
-    const typedRows = rows.map((row: any) => {
-      const typedRow: Record<string, any> = {};
+    const typedRows = rows.map((row) => {
+      const typedRow: Record<string, number | boolean | string> = {};
       for (const key in row) {
         const targetType = columnTypes[key];
         typedRow[key] = castValue(row[key], targetType);

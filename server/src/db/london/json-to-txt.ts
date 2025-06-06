@@ -41,7 +41,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
     if (column.column_type === "events") {
       let dbEvents = [];
       if (column.sub_columnE !== "" && column.sub_columnE !== null) {
-        let regex = new RegExp(column.sub_columnE!, "i");
+        const regex = new RegExp(column.sub_columnE!, "i");
         dbEvents = events
           .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
           .sort((a, b) => a.age! - b.age!);
@@ -105,7 +105,7 @@ async function processBlockColumns(
   subdatasets: arkL_subdatasets[]
 ) {
   const lines = [];
-  const types: String[] = [];
+  const types: string[] = [];
   for (const column of columns) {
     if (
       column.column_type?.includes("interval") &&
