@@ -8,6 +8,65 @@ import levenshtein from "js-levenshtein";
 import { assertAssetConfig, AssetConfig } from "./types.js";
 import { createHash, randomUUID } from "crypto";
 import { Datapack, DatapackMetadata, assertDatapackMetadata } from "@tsconline/shared";
+import "dotenv/config";
+
+/**
+ * Uploads a file to GitHub and returns a link to the uploaded file.
+ * @param owner
+ * @param repo
+ * @param path
+ * @param filename
+ * @param buffer
+ */
+export async function uploadFileToGitHub(
+  owner: string,
+  repo: string,
+  path: string,
+  filename: string,
+  buffer: Buffer
+): Promise<string> {
+  const uploadUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}/${filename}`;
+  const uploadResponse = await fetch(uploadUrl, {
+    method: "PUT",
+    headers: {
+      Accept: "application/vnd.github+json",
+      Authorization: `Bearer ${process.env.GH_UPLOAD_TOKEN}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: `Upload ${filename}`,
+      content: buffer.toString("base64")
+    })
+  });
+
+  if (!uploadResponse.ok) {
+    const errorText = await uploadResponse.text();
+    throw new Error(`File upload failed: ${errorText}`);
+  }
+
+  const encodedFilename = encodeURIComponent(filename);
+  const rawUrl = `https://github.com/${owner}/${repo}/raw/main/${path}/${encodedFilename}`;
+  return rawUrl;
+}
+
+/**
+ * Checks if the file type and mime type are allowed
+ * @param filename
+ * @param mimeType
+ * @param allowedFileTypes Not including the dot, e.g. ["txt", "jpg"]
+ * @param allowedMimeTypes e.g. ["text/plain", "image/jpeg"]
+ */
+export function isFileTypeAllowed(
+  filename: string,
+  mimeType: string,
+  allowedFileTypes: string[],
+  allowedMimeTypes: string[]
+): boolean {
+  const ext = path.extname(filename).toLowerCase().replace(/^\./, "");
+  if (!allowedFileTypes.includes(ext)) return false;
+  if (!allowedMimeTypes.includes(mimeType)) return false;
+  return true;
+}
 
 /**
  * Verify that a path is a symlink and that it points to a valid target
