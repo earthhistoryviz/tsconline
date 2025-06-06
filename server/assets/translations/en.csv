@@ -109,13 +109,18 @@ translation.workshops.messages.past,No past workshops at the moment.
 translation.workshops.dates.start,Start Date:
 translation.workshops.dates.end,End Date:
 translation.workshops.details-page.datapacks,Datapacks
+translation.workshops.details-page.instructions,Instructions
+translation.workshops.details-page.presentation,Presentation
 translation.workshops.details-page.files,Files
-translation.workshops.details-page.download-button,Download Files
+translation.workshops.details-page.view,View
+translation.workshops.details-page.download-button,Download Files as Zip
 translation.workshops.details-page.description,Description
 translation.workshops.details-page.register-button,Register
 translation.workshops.details-page.registered-button,Registered
 translation.workshops.details-page.download-tooltip-not-registered,Contact jogg@purdue.edu to register!
 translation.workshops.details-page.messages.no-datapacks,No datapacks available
+translation.workshops.details-page.messages.no-instructions,No instructions available
+translation.workshops.details-page.messages.no-presentation,No presentation available
 translation.workshops.details-page.messages.no-files,No files available
 translation.workshops.calendar.switchLabel,Toggle calendar
 translation.workshops.calendar.month,Month

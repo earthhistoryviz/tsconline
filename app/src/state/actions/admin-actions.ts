@@ -881,7 +881,7 @@ export const resetAdminConfigTempState = action(() => {
 /**
  * Upload files to a workshop, at least one file is required
  * @param presentationFile The presentation file to upload (verify it is a valid pdf before calling)
- * @param instructionFile The instructions file to upload (verify it is a valid pdf before calling)
+ * @param instructionsFile The instructions file to upload (verify it is a valid pdf before calling)
  * @param otherFiles Other files to upload
  * @returns Whether the operation was successful
  */
@@ -889,10 +889,10 @@ export const adminAddFilesToWorkshop = action(
   async (
     workshopId: number,
     presentationFile?: File | null,
-    instructionFile?: File | null,
+    instructionsFile?: File | null,
     otherFiles?: File[] | null
   ) => {
-    if (!presentationFile && !instructionFile && (!otherFiles || otherFiles.length === 0)) {
+    if (!presentationFile && !instructionsFile && (!otherFiles || otherFiles.length === 0)) {
       pushError(ErrorCodes.INVALID_FORM);
       return false;
     }
@@ -902,8 +902,8 @@ export const adminAddFilesToWorkshop = action(
     if (presentationFile) {
       formData.append("presentationFile", presentationFile);
     }
-    if (instructionFile) {
-      formData.append("instructionFile", instructionFile);
+    if (instructionsFile) {
+      formData.append("instructionsFile", instructionsFile);
     }
     if (otherFiles && otherFiles.length > 0) {
       otherFiles.forEach((file) => {

@@ -12,6 +12,7 @@ import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
+import { reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -100,72 +101,101 @@ export const WorkshopDetails = observer(() => {
               </Box>
             </div>
             <div className={styles.ai}>
+              <Typography className={styles.aih}>{t("workshops.details-page.instructions")}</Typography>
+              {workshop.files?.includes(reservedInstructionsFileName) ? (
+                <Typography className={styles.fileName} mb={0.5}>
+                  <a
+                    href={`/workshop/${workshop.workshopId}/files/${reservedInstructionsFileName}`}
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    {t("workshops.details-page.view")}
+                  </a>
+                </Typography>
+              ) : (
+                <Typography className={styles.fileName} mb={0.5}>
+                  {t("workshops.details-page.messages.no-instructions")}
+                </Typography>
+              )}
+              <Typography className={styles.aih}>{t("workshops.details-page.presentation")}</Typography>
+              {workshop.files?.includes(reservedPresentationFileName) ? (
+                <Typography className={styles.fileName} mb={0.5}>
+                  <a
+                    href={`/workshop/${workshop.workshopId}/files/${reservedPresentationFileName}`}
+                    target="_blank"
+                    rel="noopener noreferrer">
+                    {t("workshops.details-page.view")}
+                  </a>
+                </Typography>
+              ) : (
+                <Typography className={styles.fileName} mb={0.5}>
+                  {t("workshops.details-page.messages.no-presentation")}
+                </Typography>
+              )}
               <Typography className={styles.aih}>{t("workshops.details-page.files")}</Typography>
-              <Box>
-                <>
-                  {workshop.files && workshop.files.length > 0 ? (
-                    <>
-                      {workshop.files.map((file, index) => (
-                        <Typography key={index} className={styles.fileName}>
-                          • {file}
-                        </Typography>
-                      ))}
-                      <Box mt={2}>
-                        {!shouldLoadRecaptcha ? (
-                          <CustomTooltip
-                            title={t("workshops.details-page.download-tooltip-not-registered")}
-                            slotProps={{
-                              popper: {
-                                modifiers: [
-                                  {
-                                    name: "offset",
-                                    options: {
-                                      offset: [0, 0]
-                                    }
-                                  }
-                                ]
-                              }
-                            }}>
-                            <span>
-                              <TSCButton variant="contained" disabled>
-                                {t("workshops.details-page.download-button")}
-                              </TSCButton>
-                            </span>
-                          </CustomTooltip>
-                        ) : (
-                          <TSCButton variant="contained" onClick={downloadWorkshopFiles}>
-                            {t("workshops.details-page.download-button")}
-                          </TSCButton>
-                        )}
-                      </Box>
-                    </>
-                  ) : (
-                    <Typography className={styles.fileName}>{t("workshops.details-page.messages.no-files")}</Typography>
-                  )}
-                  <Box sx={{ display: "flex", marginTop: 2 }}>
-                    <CustomTooltip
-                      title={
-                        !isRegistered && !isPublicWorkshop
-                          ? t("workshops.details-page.download-tooltip-not-registered")
-                          : ""
+              {(() => {
+                const nonReservedFiles =
+                  workshop.files?.filter(
+                    (file) => file !== reservedInstructionsFileName && file !== reservedPresentationFileName
+                  ) ?? [];
+                return nonReservedFiles.length > 0 ? (
+                  <>
+                    {nonReservedFiles.map((file, index) => (
+                      <Typography key={index} className={styles.fileName}>
+                        • {file}
+                      </Typography>
+                    ))}
+                  </>
+                ) : (
+                  <Typography className={styles.fileName} mb={0.5}>
+                    {t("workshops.details-page.messages.no-files")}
+                  </Typography>
+                );
+              })()}
+              <Box sx={{ display: "flex", marginTop: 2, gap: 2 }}>
+                {!shouldLoadRecaptcha ? (
+                  <CustomTooltip
+                    title={t("workshops.details-page.download-tooltip-not-registered")}
+                    slotProps={{
+                      popper: {
+                        modifiers: [
+                          {
+                            name: "offset",
+                            options: {
+                              offset: [0, 0]
+                            }
+                          }
+                        ]
                       }
-                      placement="bottom">
-                      <div>
-                        <TSCLoadingButton
-                          variant="contained"
-                          sx={{ marginRight: 2, backgroundColor: "primary" }}
-                          onClick={handleRegisterClick}
-                          disabled={isRegistered || isDisabled}
-                          loading={loading}>
-                          {switchButtonVar}
-                        </TSCLoadingButton>
-                      </div>
-                    </CustomTooltip>
-                    <TSCButton variant="contained" color="primary" onClick={downloadWorkshopFiles}>
-                      {t("workshops.details-page.download-button")}
-                    </TSCButton>
-                  </Box>
-                </>
+                    }}>
+                    <span>
+                      <TSCButton variant="contained" disabled>
+                        {t("workshops.details-page.download-button")}
+                      </TSCButton>
+                    </span>
+                  </CustomTooltip>
+                ) : (
+                  <TSCButton variant="contained" onClick={downloadWorkshopFiles}>
+                    {t("workshops.details-page.download-button")}
+                  </TSCButton>
+                )}
+                <CustomTooltip
+                  title={
+                    !isRegistered && !isPublicWorkshop
+                      ? t("workshops.details-page.download-tooltip-not-registered")
+                      : ""
+                  }
+                  placement="bottom">
+                  <div>
+                    <TSCLoadingButton
+                      variant="contained"
+                      sx={{ marginRight: 2, backgroundColor: "primary" }}
+                      onClick={handleRegisterClick}
+                      disabled={isRegistered || isDisabled}
+                      loading={loading}>
+                      {switchButtonVar}
+                    </TSCLoadingButton>
+                  </div>
+                </CustomTooltip>
               </Box>
             </div>
           </div>

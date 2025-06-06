@@ -165,18 +165,18 @@ const CustomDateTimePicker: React.FC<CustomDateTimePickerProps> = ({ label, name
 
 type AddWorkshopFilesProps = {
   presentationFile?: File | null;
-  instructionFile?: File | null;
+  instructionsFile?: File | null;
   otherFiles?: File[] | null;
   onPresentationFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onInstructionFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onInstructionsFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOtherFilesChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
 };
 const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
   presentationFile,
-  instructionFile,
+  instructionsFile,
   otherFiles,
   onPresentationFileChange,
-  onInstructionFileChange = () => {},
+  onInstructionsFileChange = () => {},
   onOtherFilesChange
 }) => {
   return (
@@ -199,11 +199,11 @@ const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
       <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
         <InputFileUpload
           text="Upload Pdf Instructions"
-          onChange={onInstructionFileChange}
+          onChange={onInstructionsFileChange}
           accept=".pdf"
           startIcon={<CloudUploadIcon />}
         />
-        <Typography ml="10px">{instructionFile?.name || "No file selected"}</Typography>
+        <Typography ml="10px">{instructionsFile?.name || "No file selected"}</Typography>
       </Box>
       <Typography variant="h5" mb="5px">
         Add Other Files
@@ -252,7 +252,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emails, setEmails] = useState<string>("");
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [presentationFile, setPresentationFile] = useState<File | null>(null);
-  const [instructionFile, setInstructionFile] = useState<File | null>(null);
+  const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
   const [otherFiles, setOtherFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>();
   const [regLink, setRegLink] = useState<string | undefined>(undefined);
@@ -266,7 +266,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     setEmails("");
     setEmailFile(null);
     setPresentationFile(null);
-    setInstructionFile(null);
+    setInstructionsFile(null);
     setOtherFiles(null);
     setCoverPicture(null);
     setRegLink(undefined);
@@ -342,7 +342,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           !emails &&
           !regLink &&
           !presentationFile &&
-          !instructionFile &&
+          !instructionsFile &&
           !otherFiles &&
           !coverPicture &&
           regRestrict === currentWorkshop?.regRestrict
@@ -371,11 +371,11 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         }
       }
 
-      if ((otherFiles && otherFiles.length !== 0) || presentationFile || instructionFile) {
+      if ((otherFiles && otherFiles.length !== 0) || presentationFile || instructionsFile) {
         const response = await actions.adminAddFilesToWorkshop(
           workshopId,
           presentationFile,
-          instructionFile,
+          instructionsFile,
           otherFiles
         );
         if (!response) {
@@ -433,16 +433,16 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     setPresentationFile(uploadedPresentationFile);
   };
 
-  const handleInstructionFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedInstructionFile = event.target.files![0];
-    if (!uploadedInstructionFile) {
+  const handleInstructionsFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const uploadedInstructionsFile = event.target.files![0];
+    if (!uploadedInstructionsFile) {
       return;
     }
-    if (uploadedInstructionFile.type !== "application/pdf") {
+    if (uploadedInstructionsFile.type !== "application/pdf") {
       actions.pushError(ErrorCodes.UNRECOGNIZED_PDF_FILE);
       return;
     }
-    setInstructionFile(uploadedInstructionFile);
+    setInstructionsFile(uploadedInstructionsFile);
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -548,9 +548,9 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Typography mr={4}>Open for public registration?</Typography>
               <Select
-                value={regRestrict ? "Yes" : "No"}
+                value={regRestrict ? "No" : "Yes"}
                 sx={{ height: "30px" }}
-                onChange={(e) => setRegRestrict(e.target.value === "Yes")}>
+                onChange={(e) => setRegRestrict(e.target.value === "No")}>
                 <MenuItem sx={{ height: "30px" }} value="Yes">
                   Yes
                 </MenuItem>
@@ -594,10 +594,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             <Box textAlign="center" width="100%">
               <AddWorkshopFiles
                 presentationFile={presentationFile}
-                instructionFile={instructionFile}
+                instructionsFile={instructionsFile}
                 otherFiles={otherFiles}
                 onPresentationFileChange={handlePresentationFileUpload}
-                onInstructionFileChange={handleInstructionFileUpload}
+                onInstructionsFileChange={handleInstructionsFileUpload}
                 onOtherFilesChange={handleFileUpload}
               />
               <Typography variant="h5" mb="5px" mt="15px">

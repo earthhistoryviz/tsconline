@@ -183,14 +183,19 @@
             },
             "details-page": {
                 "datapacks": "Datapacks",
+                "instructions": "Instructions",
+                "presentation": "Presentation",
                 "files": "Files",
-                "download-button": "Download Files",
+                "view": "View",
+                "download-button": "Download Files as Zip",
                 "description": "Description",
                 "register-button": "Register",
                 "registered-button": "Registered",
                 "download-tooltip-not-registered": "Contact jogg@purdue.edu to register!",
                 "messages": {
                     "no-datapacks": "No datapacks available",
+                    "no-instructions": "No instructions available",
+                    "no-presentation": "No presentation available",
                     "no-files": "No files available"
                 }
             },
