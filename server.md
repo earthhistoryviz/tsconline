@@ -1846,7 +1846,11 @@ otherwise,
     "username": "username",
     "pictureUrl": "https://link.com",
     "isGoogleUser": true,
-    "isAdmin": false
+    "isAdmin": false,
+    "workshopIds": [4],
+    "accountType": "default",
+    "uuid": "a29d589e-62c8-4c2b-997b-4156311d9cbc",
+    "historyEntries": []
   }
 }
 ```
