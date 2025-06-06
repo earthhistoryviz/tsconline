@@ -14,7 +14,9 @@ import {
   assetconfigs,
   verifyFilepath,
   checkFileExists,
-  extractMetadataFromDatapack
+  extractMetadataFromDatapack,
+  isFileTypeAllowed,
+  uploadFileToGitHub
 } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import md5 from "md5";
@@ -32,6 +34,92 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
+import "dotenv/config";
+
+export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
+  const parts = request.parts();
+  let title = "";
+  let description = "";
+  let email = "";
+  const files: { filename: string; buffer: Buffer }[] = [];
+  const owner = "earthhistoryviz";
+
+  const allowedExtensions = ["png", "jpg", "jpeg", "gif", "svg", "txt", "log", "json", "csv"];
+  const allowedMimeTypes = [
+    "image/png",
+    "image/jpeg",
+    "image/gif",
+    "image/svg+xml",
+    "text/plain",
+    "application/json",
+    "text/csv"
+  ];
+  try {
+    for await (const part of parts) {
+      if (part.type === "file") {
+        if (part.file.truncated) {
+          reply.status(400).send({ error: "File size exceeds the limit" });
+          return;
+        }
+        const { filename, mimetype } = part;
+        if (!isFileTypeAllowed(filename, mimetype, allowedExtensions, allowedMimeTypes)) {
+          reply.status(400).send({ error: "Invalid file type" });
+          return;
+        }
+        const buffer = await part.toBuffer();
+        files.push({ filename, buffer });
+      } else if (part.type === "field") {
+        if (part.fieldname === "title") title = (part.value as string).trim();
+        else if (part.fieldname === "description") description = (part.value as string).trim();
+        else if (part.fieldname === "email") email = (part.value as string).trim();
+      }
+    }
+    if (!title || !description) {
+      reply.status(400).send({ error: "Title and description are required" });
+      return;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const baseUploadPath = `bug-reports/${timestamp}-${Math.random().toString(36).slice(2, 4)}`;
+    const uploadedFileLinks: string[] = [];
+    for (const { filename, buffer } of files) {
+      const link = await uploadFileToGitHub(owner, "tsconline-bug-reports", baseUploadPath, filename, buffer);
+      const isImage = /\.(png|jpe?g|gif|svg)$/i.test(filename);
+      uploadedFileLinks.push(isImage ? `![${filename}](${link})` : `- [${filename}](${link})`);
+    }
+
+    const issueTitle = `Bug Report: ${title}`;
+    const issueBody = [
+      "## Description",
+      description,
+      uploadedFileLinks.length > 0 ? `## Attachments\n\n${uploadedFileLinks.join("\n")}` : "",
+      email ? `## Contact Email\n\n${email}` : ""
+    ].join("\n\n");
+    const response = await fetch(`https://api.github.com/repos/${owner}/tsconline/issues`, {
+      method: "POST",
+      headers: {
+        Accept: "application/vnd.github+json",
+        Authorization: `Bearer ${process.env.GH_ISSUES_TOKEN}`
+      },
+      body: JSON.stringify({
+        title: issueTitle,
+        body: issueBody,
+        labels: ["bug", "user-report"],
+        assignees: ["JimOggPurdue"]
+      })
+    });
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger.error("Error submitting bug report:", errorText);
+      reply.status(500).send({ error: "Failed to submit bug report" });
+      return;
+    }
+    reply.send({ message: "Bug report submitted successfully" });
+  } catch (error) {
+    logger.error("Error processing bug report:", error);
+    reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
 
 /**
  * Fetches the official datapack with the given name if it is public

@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Typography, TextField, useTheme } from "@mui/material";
 import { InputFileUpload, TSCButton, TSCDialogLoader } from "./components";
 import BugReportIcon from "@mui/icons-material/BugReport";
@@ -7,21 +7,29 @@ import { Link, useNavigate } from "react-router-dom";
 import { context } from "./state";
 import { useTranslation } from "react-i18next";
 import { ErrorCodes } from "./util/error-codes";
+import { observer } from "mobx-react-lite";
 
-export const ReportBug: React.FC = () => {
+export const ReportBug: React.FC = observer(() => {
+  const { state, actions } = useContext(context);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [files, setFiles] = useState<File[] | null>(null);
+  const [email, setEmail] = useState("");
+  const [hasEditedEmail, setHasEditedEmail] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [countdown, setCountdown] = useState(5);
   const [titleError, setTitleError] = useState(false);
   const [descriptionError, setDescriptionError] = useState(false);
-  const { actions } = useContext(context);
   const { t } = useTranslation();
   const theme = useTheme();
   const [loading, setLoading] = useState(false);
-
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!hasEditedEmail && state.user.email) {
+      setEmail(state.user.email);
+    }
+  }, [state.user.email, hasEditedEmail]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
@@ -80,14 +88,33 @@ export const ReportBug: React.FC = () => {
       setDescriptionError(false);
     }
 
+    const allowedExtensions = /\.(png|jpe?g|gif|svg|txt|log|json|csv)$/i;
+    const allowedMimeTypes = [
+      "image/png",
+      "image/jpeg",
+      "image/gif",
+      "image/svg+xml",
+      "text/plain",
+      "application/json",
+      "text/csv"
+    ];
+    const invalidFile = (files || []).find(
+      (file) => !allowedExtensions.test(file.name) || !allowedMimeTypes.includes(file.type)
+    );
+
+    if (invalidFile) {
+      actions.pushError(ErrorCodes.INVALID_BUG_REPORT_FILE);
+      hasError = true;
+    }
+
     if (hasError) {
       return;
     }
 
     setLoading(true);
     try {
-      // TODO: add backend stuff. This is just a mock
-      await mockSubmitBugReport();
+      const success = await actions.submitBugReport(title, email, description, files || []);
+      if (!success) return;
       setIsSubmitted(true);
       const timer = setInterval(() => {
         setCountdown((prev) => prev - 1);
@@ -97,16 +124,9 @@ export const ReportBug: React.FC = () => {
         clearInterval(timer);
         navigate("/");
       }, 5000);
-    } catch (error) {
-      actions.pushError(ErrorCodes.USER_SUBMIT_BUG_REPORT_FAILED);
     } finally {
       setLoading(false);
     }
-  };
-
-  // TODO: add backend stuff. This is just a mock
-  const mockSubmitBugReport = async (): Promise<void> => {
-    return new Promise((resolve) => setTimeout(resolve, 2000));
   };
 
   return (
@@ -117,16 +137,16 @@ export const ReportBug: React.FC = () => {
       alignItems="center"
       justifyContent="center"
       bgcolor="background.main"
-      mt={10}
-      mb={10}>
-      <Box textAlign="center" mb={isSubmitted ? 0 : 4}>
+      mt={4}
+      mb={4}>
+      <Box textAlign="center" mb={isSubmitted ? 0 : 2}>
         <BugReportIcon sx={{ width: 48, height: 48 }} />
-        <Typography variant="h4" component="h1" fontWeight="bold" mt={2} mb={3}>
+        <Typography variant="h4" component="h1" fontWeight="bold" mt={1} mb={3}>
           {t("report-bug.title")}
         </Typography>
 
         {!isSubmitted && (
-          <Typography variant="h6" maxWidth={900} mx="auto" m={1}>
+          <Typography variant="body1" maxWidth={900} mx="auto" m={1}>
             {t("report-bug.subtitle")}
           </Typography>
         )}
@@ -148,7 +168,7 @@ export const ReportBug: React.FC = () => {
           mt={2}
           width="90%"
           maxWidth="1000px">
-          <Box mb={3}>
+          <Box>
             <Typography variant="h6" mb={1}>
               {t("report-bug.name")}
             </Typography>
@@ -165,6 +185,27 @@ export const ReportBug: React.FC = () => {
               error={titleError}
               helperText={titleError ? t("report-bug.helper-text") : " "}
               size="small"
+            />
+          </Box>
+
+          <Box mb={3}>
+            <Typography variant="h6" mb={1}>
+              {t("report-bug.email")}
+            </Typography>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder={t("report-bug.email-placeholder")}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setHasEditedEmail(true);
+              }}
+              helperText={t("report-bug.email-helper-text")}
+              size="small"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
             />
           </Box>
 
@@ -204,6 +245,7 @@ export const ReportBug: React.FC = () => {
               onChange={handleFileUpload}
               startIcon={<AttachFileIcon />}
               multiple
+              accept=".png,.jpg,.jpeg,.gif,.svg,.txt,.log,.json,.csv"
             />
 
             <TSCButton onClick={handleSubmit}>{t("report-bug.send")}</TSCButton>
@@ -216,7 +258,7 @@ export const ReportBug: React.FC = () => {
           </Typography>
 
           <Typography variant="h6" color="text.secondary" marginTop={2}>
-            {t("report-bug.redirect")}
+            {t("report-bug.redirect")}&nbsp;
             {countdown} {t("report-bug.second")}
             {countdown !== 1 && "s"}...
           </Typography>
@@ -231,4 +273,4 @@ export const ReportBug: React.FC = () => {
       )}
     </Box>
   );
-};
+});

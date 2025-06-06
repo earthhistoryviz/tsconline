@@ -324,6 +324,8 @@ server.get<{ Params: { workshopId: number } }>(
   fetchWorkshopCoverImage
 );
 
+server.post("/bug-report", strictRateLimit, routes.submitBugReport);
+
 server.register(adminRoutes, { prefix: "/admin" });
 server.register(crossPlotRoutes, { prefix: "/crossplot" });
 // these are seperate from the admin routes because they don't require recaptcha

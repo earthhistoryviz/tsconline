@@ -15,6 +15,7 @@ beforeAll(async () => {
   app = fastify();
   app.get("/fetch-markdown-files", fetchMarkdownFiles);
   await app.listen({ host: "", port: 1839 });
+  vi.spyOn(console, "error").mockImplementation(() => {});
 });
 
 afterAll(async () => {
