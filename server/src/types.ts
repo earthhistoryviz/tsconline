@@ -157,7 +157,7 @@ export function assertEmail(o: any): asserts o is Email {
 
 export function assertCommentsEmail(o: any): asserts o is CommentsEmail {
   if (typeof o !== "object" || !o) throw "CommentsEmail must be an object";
-  // if (typeof o.from !== "string") throwError("CommentsEmail", "from", "string", o.from);
+  if (typeof o.from !== "string") throwError("CommentsEmail", "from", "string", o.from);
   if (typeof o.to !== "string") throwError("CommentsEmail", "to", "string", o.to);
   if (typeof o.subject !== "string") throwError("CommentsEmail", "subject", "string", o.subject);
   if (typeof o.title !== "string") throwError("CommentsEmail", "title", "string", o.title);

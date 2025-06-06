@@ -56,19 +56,6 @@ export const Discussion = observer(() => {
             actions.pushError(ErrorCodes.DATAPACK_COMMENT_FETCH_FAILED);
           }
         }
-        const response2 = await fetcher(`/admin/datapack/dailyComments`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            email: "leytonbostre@gmail.com"
-          })
-        });
-        if (response2.ok) {
-          console.log("Daily comments fetched successfully.");
-        }
       } catch (e) {
         console.error(e);
         actions.pushError(ErrorCodes.SERVER_RESPONSE_ERROR);

@@ -14,8 +14,7 @@ import {
   findUsersWorkshops,
   updateUser,
   findDatapackComment,
-  deleteComment,
-  findRecentDatapackComments
+  deleteComment
 } from "../database.js";
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
@@ -36,16 +35,14 @@ import {
   SharedWorkshop,
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
-  AdminSharedUser,
-  assertCommentType,
-  CommentType
+  AdminSharedUser
 } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
   uploadFilesToWorkshop
 } from "../upload-handlers.js";
-import { AccountType, CommentsEmail, isAccountType, NewUser } from "../types.js";
+import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
@@ -64,7 +61,6 @@ import { editAdminDatapackPriorities } from "./admin-handler.js";
 import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { sendCommentsEmail } from "../send-email.js";
 
 export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
   _request: FastifyRequest,
@@ -926,48 +922,4 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
     return;
   }
   reply.send({ message: "Datapack comment deleted" });
-};
-
-/**
- * Admin sends a request to fetch datapack comments made in the last 24 hours
- * @param request
- * @param reply
- * @returns
- */
-export const fetchDailyDatapackComments = async function fetchDailyDatapackComments(
-  request: FastifyRequest<{ Body: { email: string } }>,
-  reply: FastifyReply
-) {
-  const { email } = request.body;
-  // if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-  //   reply.status(500).send({ error: "Email service not configured" });
-  //   return;
-  // }
-  if (!email || !validator.isEmail(email)) {
-    reply.status(400).send({ error: "Missing or invalid email" });
-    return;
-  }
-  try {
-    const datapackComments = await findRecentDatapackComments();
-    let newDatapackComments: CommentType[] = [];
-    for (const com of datapackComments) {
-      assertCommentType(com);
-      newDatapackComments.push(com);
-    }
-    const newEmail: CommentsEmail = {
-      from: process.env.EMAIL_USER as string,
-      to: email,
-      subject: "Daily Datapack Comments Report",
-      title: "Daily Datapack Comments Report",
-      message: `We received a request to invalidate your account credentials. Tap the button below to reset your password. You will not be able to access your account until you have reset your password. If you did not request this change or need further assistance, please contact our support team.`,
-      comments: newDatapackComments,
-      link: `${process.env.APP_URL || "http://localhost:5173"}/datapacks`,
-      buttonText: "Reset Password"
-    };
-    console.log("newEmail", newEmail);
-    await sendCommentsEmail(newEmail);
-    reply.send("Email sent");
-  } catch (e) {
-    reply.status(500).send({ error: "Error fetching recent datapack comments" });
-  }
 };

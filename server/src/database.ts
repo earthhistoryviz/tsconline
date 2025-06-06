@@ -463,6 +463,7 @@ export async function deleteComment(criteria: Partial<DatapackComment>) {
   return await query.execute();
 }
 
+// Finds all comments made in the last 24 hours
 export async function findRecentDatapackComments() {
   const now = new Date();
   const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago

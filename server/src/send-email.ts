@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
-import { CommentsEmail, Email, assertCommentsEmail, assertEmail } from "./types.js";
+import { CommentsEmail, Email, assertCommentsEmail } from "./types.js";
 import { JSDOM } from "jsdom";
 import DOMPurify from "dompurify";
 import "dotenv/config";
@@ -340,18 +339,20 @@ const commentsToHtml = (comments: CommentType[]): string => {
     } else {
       commentsDict[loadedComment.datapackTitle] = [loadedComment];
     }
-    console.log(commentsDict);
-    // convert sorted comments to HTML
-    for (const [title, comments] of Object.entries(commentsDict)) {
-      result += `<tr>
+  }
+  // convert sorted comments to HTML
+  for (const title of Object.keys(commentsDict)) {
+    result += `<tr>
                 <td align="left" bgcolor="#ffffff" style="padding: 0px 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 24px;">
                   <p style="margin: 0; color: #1a82e2"><strong>Datapack: ${title}</strong></p>
                 </td>
               </tr>`;
-      for (const comment of comments) {
+    if (commentsDict[title]!.length > 0) {
+      for (const comment of commentsDict[title]!) {
         result += `<tr>
-                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 10px;">
+                    <td bgcolor="#ffffff" style="padding: 0 24px 12px 24px; font-family: 'Source Sans Pro', Helvetica, Arial, sans-serif; font-size: 16px; line-height: 12px;">
                         <p style="margin: 0;">• <strong>Username:</strong> ${comment.username}</p>
+                        <p style="margin-left: 8px;"><strong>UUID:</strong> ${comment.uuid}</p>
                         <p style="margin-left: 8px;"><strong>Time:</strong> ${formatTime(comment.dateCreated)}</p>
                         <p style="margin-left: 8px;"><strong>Comment:</strong> ${comment.commentText}</p>
                     </td>

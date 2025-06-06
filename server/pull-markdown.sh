@@ -38,7 +38,4 @@ else
   echo "Markdown repo already exists. Pulling latest changes..."
   cd "$HELP_DIR" || exit 1
   git pull origin "$BRANCH" || true
-  # if ! git pull origin "$BRANCH"; then
-  #   echo "Warning: git pull failed, continuing anyway..."
-  # fi
 fi
