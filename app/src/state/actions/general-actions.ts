@@ -26,7 +26,8 @@ import {
   Presets,
   SharedUser,
   TimescaleItem,
-  MarkdownFile
+  MarkdownFile,
+  CommentType
 } from "@tsconline/shared";
 
 import { state, State } from "../state";
@@ -48,7 +49,6 @@ import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
   ChartTabState,
   ChartZoomSettings,
-  CommentType,
   DatapackFetchParams,
   EditableDatapackMetadata,
   SetDatapackConfigCompleteMessage,

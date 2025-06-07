@@ -137,6 +137,7 @@ jobs:
             echo 'GH_UPLOAD_TOKEN="${{ secrets.GH_UPLOAD_TOKEN }}"' >> ./server/.env
             echo 'GH_ISSUES_TOKEN="${{ secrets.GH_ISSUES_TOKEN }}"' >> ./server/.env
             echo 'BUG_REPORT_EMAILS="${{ secrets.BUG_REPORT_EMAILS }}"' >> ./server/.env
+            echo 'DAILY_COMMENTS_EMAIL_RECIPIENTS="${{ secrets.DAILY_COMMENTS_EMAIL_RECIPIENTS }}"' >> ./server/.env
 
             if [ ! -f "$COMPOSE_FILE" ]; then
               echo "Error: $COMPOSE_FILE not found"

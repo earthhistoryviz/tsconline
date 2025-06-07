@@ -462,3 +462,20 @@ export async function deleteComment(criteria: Partial<DatapackComment>) {
   if (criteria.id) query = query.where("id", "=", criteria.id);
   return await query.execute();
 }
+
+// Finds all comments made in the last 24 hours
+export async function findRecentDatapackComments() {
+  const now = new Date();
+  const oneDayAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
+  try {
+    const query = db
+      .selectFrom("comments")
+      .selectAll()
+      .where("comments.dateCreated", ">=", oneDayAgo.toISOString())
+      .orderBy("comments.dateCreated", "asc");
+    return await query.execute();
+  } catch (e) {
+    console.error("Error creating datapack comment:", e);
+    throw e;
+  }
+}

@@ -20,8 +20,8 @@ import { useTranslation } from "react-i18next";
 import { fetcher } from "../util";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
-import { CommentType } from "../types";
 import { getRecaptchaToken } from "../state/actions";
+import { CommentType } from "@tsconline/shared";
 
 export type TSCCommentProps = {
   handleDelete: (id: number) => void;
