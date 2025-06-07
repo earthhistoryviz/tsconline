@@ -456,7 +456,7 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
     async () => {
       try {
         const datapackComments = await findRecentDatapackComments();
-        let newDatapackComments: CommentType[] = [];
+        const newDatapackComments: CommentType[] = [];
         for (const com of datapackComments) {
           assertCommentType(com);
           newDatapackComments.push(com);

@@ -318,7 +318,7 @@ function formatTime(date: Date) {
 }
 
 const commentsToHtml = (comments: CommentType[]): string => {
-  let commentsDict: { [key: string]: CommentType[] } = {};
+  const commentsDict: { [key: string]: CommentType[] } = {};
   let result = "";
 
   // group comments by datapack title
