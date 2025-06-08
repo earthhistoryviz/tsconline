@@ -137,7 +137,7 @@ export const WorkshopDetails = observer(() => {
                       <a
                         href={
                           shouldLoadRecaptcha
-                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/instructions`
+                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/presentation`
                             : undefined
                         }
                         onClick={(e) => {
