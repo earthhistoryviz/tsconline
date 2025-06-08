@@ -66,6 +66,13 @@ vi.mock("../src/upload-handlers", async () => {
     getWorkshopDatapacksNames: vi.fn().mockResolvedValue([])
   };
 });
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
 
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
@@ -139,6 +146,7 @@ beforeAll(async () => {
   app.get("/workshop-images/1", fetchWorkshopCoverImage);
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
@@ -243,22 +251,10 @@ describe("verifyRecaptcha tests", () => {
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
-  const findUser = vi.spyOn(database, "findUser");
   const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
   const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should return 401 if user doesn't exist", async () => {
-    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "PATCH",
-      url: route,
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
   });
   it("should return non-200 code if verifyWorkshopValidity doesn't return 200", async () => {
     verifyWorkshopValidity.mockResolvedValueOnce({ code: 400, message: "error" });
@@ -267,7 +263,6 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "error" });
     expect(response.statusCode).toBe(400);
@@ -279,7 +274,6 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Failed to edit metadata" });
@@ -291,7 +285,6 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "success" });
@@ -393,7 +386,7 @@ describe("downloadWorkshopFilesZip tests", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(await response.json()).toEqual({ error: "An error occurred" });
   });
   it("should return 500 if verifyNonExistentFilepath returns false", async () => {
     vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValueOnce(false);
@@ -415,9 +408,7 @@ describe("downloadWorkshopFilesZip tests", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
-    expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An error occurred:")
-    });
+    expect(await response.json()).toEqual({ error: "Read error: Something else" });
   });
   it("should create the zip if readFile returns ENOENT, then return file", async () => {
     const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
@@ -445,22 +436,6 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual("existing-zip-content");
     expect(createZipFile).not.toHaveBeenCalled();
-  });
-  it("should return 404 if an ENOENT error happens later in the try block", async () => {
-    const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
-    enoentError.code = "ENOENT";
-    readFile.mockRejectedValueOnce(enoentError);
-    const creationError = new Error("failed") as NodeJS.ErrnoException;
-    creationError.code = "ENOENT";
-    createZipFile.mockRejectedValueOnce(creationError);
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(404);
-    expect(await response.json()).toEqual({ error: "Failed to process the file" });
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;

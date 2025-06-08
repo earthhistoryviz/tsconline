@@ -77,7 +77,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     required: ["workshopId", "filename"]
   };
   fastify.patch(
-    "/:workshopId/datapack/:datapackTitle",
+    "/:workshopUUID/datapack/:datapackTitle",
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: editWorkshopDatapackMetadataParams },

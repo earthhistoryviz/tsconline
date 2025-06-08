@@ -769,7 +769,7 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
     }
     const datapack = await fetchUserDatapack("official", datapackTitle);
     const metadata: DatapackMetadata = {
-      ...extractMetadataFromDatapack(datapack),
+      ...datapack,
       isPublic: true,
       type: "workshop",
       uuid: workshopUUID
@@ -797,10 +797,6 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
   try {
     const response = await editDatapackMetadataRequestHandler(request.parts(), "official", datapack);
     reply.status(response.code).send({ message: response.message });
@@ -924,10 +920,6 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
   reply: FastifyReply
 ) {
   const { commentId } = request.params;
-  if (commentId === undefined) {
-    reply.status(400).send({ error: "Missing comment ID" });
-    return;
-  }
   try {
     const comment = await findDatapackComment({ id: commentId });
     if (!comment || comment.length < 1 || !comment[0]) {

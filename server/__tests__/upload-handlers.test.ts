@@ -9,7 +9,7 @@ import {
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadFileToFileSystem,
   uploadUserDatapackHandler,
-  uploadFilesToWorkshop,
+  uploadFileToWorkshop,
   uploadCoverPicToWorkshop,
   getWorkshopDatapacksNames,
   getWorkshopFilesNames,
@@ -1016,7 +1016,7 @@ describe("fetchMapPackImageFilepath", () => {
   });
 });
 
-describe("uploadFilesToWorkshop tests", () => {
+describe("uploadFileToWorkshop tests", () => {
   const multipartFile = {
     name: "file",
     type: "file",
@@ -1029,8 +1029,6 @@ describe("uploadFilesToWorkshop tests", () => {
       bytesRead: 1
     }
   } as unknown as MultipartFile;
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
   const rm = vi.spyOn(fsPromises, "rm");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
@@ -1038,29 +1036,23 @@ describe("uploadFilesToWorkshop tests", () => {
     vi.clearAllMocks();
   });
   it("should return 500 if path is invalid", async () => {
-    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({
+    expect(await uploadFileToWorkshop(1, multipartFile)).toEqual({
       code: 500,
       message: "Invalid Workshop Files Directory."
     });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
   });
   it("should return 200 if uploaded successfully", async () => {
     pipeline.mockResolvedValueOnce();
     getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
-    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(await uploadFileToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
     expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
     expect(rm).not.toHaveBeenCalled();
   });
   it("should return clean the file path and return the error code if failed to upload", async () => {
     pipeline.mockRejectedValueOnce(new Error("error"));
     getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
-    expect(await uploadFilesToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
+    expect(await uploadFileToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
     expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
     expect(rm).toHaveBeenCalledOnce();
   });
@@ -1079,8 +1071,6 @@ describe("uploadCoverToWorkshop tests", () => {
       bytesRead: 1
     }
   } as unknown as MultipartFile;
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
   const rm = vi.spyOn(fsPromises, "rm");
   const pipeline = vi.spyOn(streamPromises, "pipeline");
@@ -1094,8 +1084,6 @@ describe("uploadCoverToWorkshop tests", () => {
       code: 500,
       message: "Invalid Workshop Cover Directory."
     });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
   });
   it("should return 200 if uploaded successfully", async () => {
@@ -1103,8 +1091,6 @@ describe("uploadCoverToWorkshop tests", () => {
 
     getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover").mockResolvedValueOnce("oldCover");
     expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 200, message: "File uploaded" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledTimes(2);
-    expect(getUserUUIDDirectory).toHaveBeenCalledTimes(2);
     expect(getWorkshopCoverPath).toHaveBeenCalledTimes(2);
     expect(rm).toHaveBeenCalledOnce();
   });
@@ -1113,16 +1099,12 @@ describe("uploadCoverToWorkshop tests", () => {
     getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover").mockResolvedValueOnce("oldCover");
 
     expect(await uploadCoverPicToWorkshop(1, multipartFile)).toEqual({ code: 500, message: "Failed to save file" });
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledTimes(2);
-    expect(getUserUUIDDirectory).toHaveBeenCalledTimes(2);
     expect(getWorkshopCoverPath).toHaveBeenCalledTimes(2);
     expect(rm).toHaveBeenCalledTimes(2);
   });
 });
 
 describe("fetchWorkshopCoverPictureFilepath tests", () => {
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   const checkFileExists = vi.spyOn(util, "checkFileExists");
   const getWorkshopCoverPath = vi.spyOn(workshopUtil, "getWorkshopCoverPath");
   beforeEach(() => {
@@ -1130,24 +1112,18 @@ describe("fetchWorkshopCoverPictureFilepath tests", () => {
   });
   it("should return null if path is invalid", async () => {
     expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual(null);
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
   });
   it("should return null if there's no cover picture", async () => {
     getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
     checkFileExists.mockResolvedValueOnce(false).mockResolvedValueOnce(false).mockResolvedValueOnce(false);
     expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual(null);
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(getWorkshopCoverPath).toHaveBeenCalledOnce();
     expect(checkFileExists).toHaveBeenCalledTimes(3);
   });
   it("should return the file path if successfully found", async () => {
     getWorkshopCoverPath.mockResolvedValueOnce("workshop-uuid/cover");
     expect(await fetchWorkshopCoverPictureFilepath(1)).toEqual("workshop-uuid/cover/coverPicture.png");
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(checkFileExists).toHaveBeenCalled();
   });
 });
@@ -1196,8 +1172,6 @@ describe("getWorkshopFilesNames tests", () => {
     { name: "file2", isFile: () => true, isDirectory: () => false } as Dirent,
     { name: "file3", isFile: () => true, isDirectory: () => false } as Dirent
   ];
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
-  const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   const readdir = vi.spyOn(fsPromises, "readdir");
   const getWorkshopFilesPath = vi.spyOn(workshopUtil, "getWorkshopFilesPath");
   beforeEach(() => {
@@ -1205,8 +1179,6 @@ describe("getWorkshopFilesNames tests", () => {
   });
   it("should return empty array if path is invalid", async () => {
     expect(await getWorkshopFilesNames(1)).toEqual([]);
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
     expect(getWorkshopFilesPath).toHaveBeenCalledOnce();
     expect(readdir).not.toHaveBeenCalled();
   });
@@ -1215,14 +1187,10 @@ describe("getWorkshopFilesNames tests", () => {
     readdir.mockRejectedValueOnce(new Error("error"));
     getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
     expect(await getWorkshopFilesNames(1)).toEqual([]);
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
   });
   it("should return the string array of datapacks names if successfully found", async () => {
     readdir.mockResolvedValueOnce(mockDirentArray);
     getWorkshopFilesPath.mockResolvedValueOnce("workshop-uuid/files");
     expect(await getWorkshopFilesNames(1)).toEqual(["file1", "file2", "file3"]);
-    expect(getWorkshopUUIDFromWorkshopId).toHaveBeenCalledOnce();
-    expect(getUserUUIDDirectory).toHaveBeenCalledOnce();
   });
 });
