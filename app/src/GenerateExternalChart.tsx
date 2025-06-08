@@ -104,7 +104,7 @@ export const GenerateExternalChart: React.FC = () => {
             actions.setUnitsPerMY(unitStep, unitType);
           } else {
             console.warn(
-              "Base Unit Value, Top Unit Value, and Unit Step must be provided with number Values. No changes made."
+              "Base Unit Value, Top Unit Value, and Unit Step must be provided with number values. No changes made."
             );
             console.warn("Provided values: baseVal: ", baseVal, ", topVal: ", topVal, ", unitStep: ", unitStep);
           }
