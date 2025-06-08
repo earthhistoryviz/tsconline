@@ -1,8 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findWorkshop, isUserInWorkshop } from "../database.js";
-import { getWorkshopFilesPath, getWorkshopIdFromUUID, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
-import { SharedWorkshop, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
+import {
+  getWorkshopFilesPath,
+  getWorkshopIdFromUUID,
+  getWorkshopUUIDFromWorkshopId,
+  verifyWorkshopValidity
+} from "./workshop-util.js";
+import { SharedWorkshop, filenameInfoMap } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
@@ -18,7 +23,8 @@ export const serveWorkshopHyperlinks = async (
 ) => {
   const { workshopId, filename } = request.params;
   try {
-    if (filename !== reservedInstructionsFileName && filename !== reservedPresentationFileName) {
+    const fileInfo = filenameInfoMap[filename];
+    if (!fileInfo) {
       reply.status(400).send({ error: "Invalid filename" });
       return;
     }
@@ -27,7 +33,7 @@ export const serveWorkshopHyperlinks = async (
       return reply.status(403).send({ error: "Not registered for workshop" });
     }
     const filesDir = await getWorkshopFilesPath(workshopId);
-    const filePath = path.join(filesDir, filename);
+    const filePath = path.join(filesDir, fileInfo.actualFilename);
     if (!filePath.startsWith(filesDir)) {
       reply.status(400).send({ error: "Invalid file path" });
       return;
@@ -38,10 +44,7 @@ export const serveWorkshopHyperlinks = async (
     }
     return reply
       .type("application/pdf")
-      .header(
-        "Content-Disposition",
-        `inline; filename="${filename === reservedInstructionsFileName ? "Instructions.pdf" : "Presentation.pdf"}"`
-      )
+      .header("Content-Disposition", `inline; filename="${fileInfo.displayName}"`)
       .send(createReadStream(filePath));
   } catch (e) {
     logger.error("Error serving workshop hyperlinks:", e);

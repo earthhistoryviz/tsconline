@@ -33,6 +33,16 @@ export const MAX_DATAPACK_REFERENCE_LENGTH = 100;
 
 export const reservedPresentationFileName = ".reserved_presentation.pdf";
 export const reservedInstructionsFileName = ".reserved_instructions.pdf";
+export const filenameInfoMap: Record<string, { actualFilename: string; displayName: string }> = {
+  presentation: {
+    actualFilename: reservedPresentationFileName,
+    displayName: "Presentation.pdf"
+  },
+  instructions: {
+    actualFilename: reservedInstructionsFileName,
+    displayName: "Instructions.pdf"
+  }
+};
 
 export const allColumnTypes = [
   "Block",

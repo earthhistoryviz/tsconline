@@ -105,12 +105,24 @@ export const WorkshopDetails = observer(() => {
               <Typography className={styles.aih}>{t("workshops.details-page.instructions")}</Typography>
               {workshop.files?.includes(reservedInstructionsFileName) ? (
                 <Typography className={styles.fileName} mb={0.5}>
-                  <a
-                    href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedInstructionsFileName}`}
-                    target="_blank"
-                    rel="noreferrer">
-                    {t("workshops.details-page.view")}
-                  </a>
+                  <CustomTooltip title={shouldLoadRecaptcha ? "" : t("workshops.details-page.please-register")}>
+                    <span>
+                      <a
+                        href={
+                          shouldLoadRecaptcha
+                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/instructions`
+                            : undefined
+                        }
+                        onClick={(e) => {
+                          if (!shouldLoadRecaptcha) e.preventDefault();
+                        }}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={shouldLoadRecaptcha ? undefined : styles.disabledLink}>
+                        {t("workshops.details-page.view")}
+                      </a>
+                    </span>
+                  </CustomTooltip>
                 </Typography>
               ) : (
                 <Typography className={styles.fileName} mb={0.5}>
@@ -120,19 +132,31 @@ export const WorkshopDetails = observer(() => {
               <Typography className={styles.aih}>{t("workshops.details-page.presentation")}</Typography>
               {workshop.files?.includes(reservedPresentationFileName) ? (
                 <Typography className={styles.fileName} mb={0.5}>
-                  <a
-                    href={`${backendUrl}/workshop/${workshop.workshopId}/files/${reservedPresentationFileName}`}
-                    target="_blank"
-                    rel="noreferrer">
-                    {t("workshops.details-page.view")}
-                  </a>
+                  <CustomTooltip title={shouldLoadRecaptcha ? "" : t("workshops.details-page.please-register")}>
+                    <span>
+                      <a
+                        href={
+                          shouldLoadRecaptcha
+                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/instructions`
+                            : undefined
+                        }
+                        onClick={(e) => {
+                          if (!shouldLoadRecaptcha) e.preventDefault();
+                        }}
+                        target="_blank"
+                        rel="noreferrer"
+                        className={shouldLoadRecaptcha ? undefined : styles.disabledLink}>
+                        {t("workshops.details-page.view")}
+                      </a>
+                    </span>
+                  </CustomTooltip>
                 </Typography>
               ) : (
                 <Typography className={styles.fileName} mb={0.5}>
                   {t("workshops.details-page.messages.no-presentation")}
                 </Typography>
               )}
-              <Typography className={styles.aih}>{t("workshops.details-page.files")}</Typography>
+              <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
                 const nonReservedFiles =
                   workshop.files?.filter(
@@ -155,7 +179,7 @@ export const WorkshopDetails = observer(() => {
               <Box sx={{ display: "flex", marginTop: 2, gap: 2 }}>
                 {!shouldLoadRecaptcha ? (
                   <CustomTooltip
-                    title={t("workshops.details-page.download-tooltip-not-registered")}
+                    title={t("workshops.details-page.please-register")}
                     slotProps={{
                       popper: {
                         modifiers: [
@@ -169,7 +193,7 @@ export const WorkshopDetails = observer(() => {
                       }
                     }}>
                     <span>
-                      <TSCButton variant="contained" disabled>
+                      <TSCButton variant="contained" disabled sx={{ backgroundColor: "primary" }}>
                         {t("workshops.details-page.download-button")}
                       </TSCButton>
                     </span>
