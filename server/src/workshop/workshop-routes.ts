@@ -7,7 +7,7 @@ import {
   getWorkshopUUIDFromWorkshopId,
   verifyWorkshopValidity
 } from "./workshop-util.js";
-import { SharedWorkshop, filenameInfoMap } from "@tsconline/shared";
+import { ReservedWorkshopFileKey, SharedWorkshop, filenameInfoMap } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
@@ -18,26 +18,18 @@ import logger from "../error-logger.js";
 import { createReadStream } from "fs";
 
 export const serveWorkshopHyperlinks = async (
-  request: FastifyRequest<{ Params: { workshopId: number; filename: string } }>,
+  request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
   reply: FastifyReply
 ) => {
   const { workshopId, filename } = request.params;
   try {
     const fileInfo = filenameInfoMap[filename];
-    if (!fileInfo) {
-      reply.status(400).send({ error: "Invalid filename" });
-      return;
-    }
     const user = request.user!; // already verified in verifyAuthority
     if (!(await isUserInWorkshop(workshopId, user.userId))) {
       return reply.status(403).send({ error: "Not registered for workshop" });
     }
     const filesDir = await getWorkshopFilesPath(workshopId);
     const filePath = path.join(filesDir, fileInfo.actualFilename);
-    if (!filePath.startsWith(filesDir)) {
-      reply.status(400).send({ error: "Invalid file path" });
-      return;
-    }
     if (!(await checkFileExists(filePath))) {
       reply.status(404).send({ error: "File not found" });
       return;
@@ -48,7 +40,7 @@ export const serveWorkshopHyperlinks = async (
       .send(createReadStream(filePath));
   } catch (e) {
     logger.error("Error serving workshop hyperlinks:", e);
-    reply.status(500).send({ error: "Failed to serve hyperlinks" });
+    reply.status(500).send({ error: "An error occurred" });
   }
 };
 
@@ -154,7 +146,6 @@ export const downloadWorkshopFilesZip = async (
   } catch (error) {
     logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });
-    return;
   }
 };
 

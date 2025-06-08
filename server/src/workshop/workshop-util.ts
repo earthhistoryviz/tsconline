@@ -53,9 +53,6 @@ export function isUUIDFolderAWorkshopFolder(folderName: string): boolean {
  * @returns
  */
 export async function verifyWorkshopValidity(workshopId: number, userId: number): Promise<OperationResult> {
-  if (!workshopId) {
-    return { code: 400, message: "Invalid workshop UUID" };
-  }
   if (!(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
     return { code: 403, message: "User does not have access to this workshop" };
   }

@@ -67,13 +67,6 @@ vi.mock("readline/promises", async () => {
       })
   };
 });
-vi.mock("../src/error-logger", async () => {
-  return {
-    default: {
-      error: vi.fn().mockReturnValue({})
-    }
-  };
-});
 
 describe("grabFilepaths", () => {
   test('grabFilepaths(["file1.txt", "file2.txt"], "/top/directory", "bot") returns ["/top/directory/file1/bot/file.txt", "/top/directory/file2/bot/file.txt"]', async () => {

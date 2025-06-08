@@ -818,7 +818,7 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
   }
   try {
     let fileUploadFailed = false;
-    const uploadResults: { field: string; code: number; message: string }[] = [];
+    const uploadResults: { filename: string; code: number; message: string }[] = [];
     const allowedFileTypes = ["pdf"];
     const allowedMimeTypes = ["application/pdf"];
     for await (const part of parts) {
@@ -838,15 +838,15 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
         result = await uploadFileToWorkshop(workshopId, part, reservedInstructionsFileName);
       } else if (part.fieldname === "otherFiles") {
         if (part.filename === reservedPresentationFileName || part.filename === reservedInstructionsFileName) {
-          reply.status(400).send({ error: "Cannot upload reserved file names" });
+          reply.status(400).send({ error: `File name ${part.filename} is reserved and cannot be used` });
           return;
         }
         result = await uploadFileToWorkshop(workshopId, part);
       } else {
-        await part.toBuffer(); // consume buffer to allow multipart to continue
-        continue;
+        reply.status(400).send({ error: `Unexpected field: ${part.fieldname}` });
+        return;
       }
-      uploadResults.push({ field: part.fieldname, code: result.code, message: result.message });
+      uploadResults.push({ filename: part.filename, code: result.code, message: result.message });
       if (result.code !== 200) fileUploadFailed = true;
     }
     if (uploadResults.length === 0) {
@@ -920,6 +920,10 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
   reply: FastifyReply
 ) {
   const { commentId } = request.params;
+  if (commentId === undefined) {
+    reply.status(400).send({ error: "Missing comment ID" });
+    return;
+  }
   try {
     const comment = await findDatapackComment({ id: commentId });
     if (!comment || comment.length < 1 || !comment[0]) {

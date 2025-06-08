@@ -30,7 +30,7 @@ export const TSCLoadingButton: React.FC<TSCLoadingButtonProps> = ({ buttonType =
         },
         "&.Mui-disabled": {
           color: theme.palette.mode === "dark" ? "darkgray" : "gray"
-        },
+        }
       }}
       loadingIndicator={<CircularProgress color="primary" size={16} />}
       variant="contained">

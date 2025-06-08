@@ -1747,7 +1747,7 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "body/start must match format \"date-time\"",
+      message: 'body/start must match format "date-time"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1763,7 +1763,7 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "body/end must match format \"date-time\"",
+      message: 'body/end must match format "date-time"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1779,7 +1779,7 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "body/start must match format \"date-time\"",
+      message: 'body/start must match format "date-time"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1795,7 +1795,7 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "body/end must match format \"date-time\"",
+      message: 'body/end must match format "date-time"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -1827,7 +1827,7 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "body/regLink must match format \"uri\"",
+      message: 'body/regLink must match format "uri"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -2692,11 +2692,11 @@ describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
   });
 });
 
-describe("adminUploadFileToWorkshop", () => {
+describe("adminUploadFilesToWorkshop", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   const createForm = (json: Record<string, unknown> = {}) => {
-    if (!("file" in json)) {
-      json.file = {
+    if (!("otherFiles" in json)) {
+      json.otherFiles = {
         value: Buffer.from("test"),
         options: {
           filename: "test.txt",
@@ -2722,7 +2722,75 @@ describe("adminUploadFileToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
     expect(response.statusCode).toBe(404);
   });
-
+  it("should return 415 if presentation file is not a pdf", async () => {
+    createForm({
+      presentationFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type for presentation file" });
+    expect(response.statusCode).toBe(415);
+  });
+  it("should return 415 if instruction file is not a pdf", async () => {
+    createForm({
+      instructionsFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type for instruction file" });
+    expect(response.statusCode).toBe(415);
+  });
+  it("should return 400 if reserved file name is used", async () => {
+    createForm({
+      otherFiles: {
+        value: Buffer.from("test"),
+        options: {
+          filename: shared.reservedInstructionsFileName,
+          contentType: "application/pdf"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      error: `File name ${shared.reservedInstructionsFileName} is reserved and cannot be used`
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if no files are provided", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: {},
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "No files were uploaded" });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return error code if failed to upload file", async () => {
     vi.mocked(uploadHandlers.uploadFileToWorkshop).mockImplementationOnce(async (id, file) => {
       await consumeStream(file);
@@ -2734,7 +2802,16 @@ describe("adminUploadFileToWorkshop", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(await response.json()).toEqual({
+      error: "Some files failed to upload",
+      uploadResults: [
+        {
+          code: 500,
+          filename: "test.txt",
+          message: "Failed to save file"
+        }
+      ]
+    });
     expect(response.statusCode).toBe(500);
   });
 

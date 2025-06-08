@@ -12,6 +12,13 @@ vi.mock("../src/index", () => {
     maxConcurrencySize: 1
   };
 });
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
 
 let app: FastifyInstance;
 beforeAll(async () => {

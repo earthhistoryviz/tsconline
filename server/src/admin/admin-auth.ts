@@ -167,7 +167,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const adminEditDatapackMetadataBody = {
     type: "object",
     properties: {
-      datapack: { type: "string", minLength: 1 },
+      datapack: { type: "string", minLength: 1 }
     },
     required: ["datapack"]
   };

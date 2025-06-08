@@ -72,7 +72,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     type: "object",
     properties: {
       workshopId: { type: "number" },
-      filename: { type: "string" }
+      filename: { type: "string", enum: ["presentation", "instructions"] }
     },
     required: ["workshopId", "filename"]
   };
