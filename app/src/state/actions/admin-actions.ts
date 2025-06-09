@@ -552,7 +552,7 @@ export const adminAddUsersToWorkshop = action(
  */
 export const adminCreateWorkshop = action(
   async (
-    workshop: Omit<SharedWorkshop, "workshopId" | "files" | "datapacks" | "active">,
+    workshop: Omit<SharedWorkshop, "workshopId" | "files" | "datapacks" | "active">
   ): Promise<number | undefined> => {
     try {
       const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
@@ -564,8 +564,8 @@ export const adminCreateWorkshop = action(
         end,
         regRestrict,
         creatorUUID,
-        ...regLink && { regLink },
-        ...description && { description }
+        ...(regLink && { regLink }),
+        ...(description && { description })
       };
       const response = await fetcher("/admin/workshop", {
         method: "POST",

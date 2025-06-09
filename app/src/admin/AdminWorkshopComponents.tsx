@@ -146,8 +146,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>();
-  const [regLink, setRegLink] = useState<string | null>(null);
-  const [regRestrict, setRegRestrict] = useState(false);
+  const [regLink, setRegLink] = useState<string | null>(editMode ? workshop?.regLink || null : null);
+  const [regRestrict, setRegRestrict] = useState(editMode ? workshop?.regRestrict || false : false);
   const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop?.workshopId) : null;
 
   const handleDialogClose = () => {
@@ -184,16 +184,15 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
       let workshopId: number;
 
       if (!editMode) {
-        const createdWorkshopId = await actions.adminCreateWorkshop(
-          {
+        const createdWorkshopId = await actions.adminCreateWorkshop({
           title: workshopTitle,
           start,
           end,
           regRestrict,
           creatorUUID: state.user.uuid,
           regLink,
-          description: workshopDescription}
-        );
+          description: workshopDescription
+        });
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
           return;
@@ -457,10 +456,10 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
             <Box display="flex" alignItems="center" justifyContent="space-between" width="70%">
               <Typography>Open for public registration?</Typography>
               <Select
-                value={regRestrict === true ? "Yes" : "No"}
+                value={regRestrict === true ? "No" : "Yes"}
                 sx={{ height: "30px" }}
-                onChange={() => {
-                  setRegRestrict(regRestrict === false ? true : true);
+                onChange={(e) => {
+                  setRegRestrict(e.target.value === "No" ? true : false);
                 }}>
                 <MenuItem sx={{ height: "30px" }} value="Yes">
                   Yes
