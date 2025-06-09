@@ -139,7 +139,7 @@ export const WorkshopCreateEditForm: React.FC<WorkshopCreateEditForm> = observer
         onClose={() => setters.setInvalidEmails("")}
         maxWidth="xs"
       />
-      <Dialog open={true} onClose={onClose} fullWidth>
+      <Dialog open={true} onClose={onClose}>
         {state.loading && (
           <TSCDialogLoader open={state.loading} headerText={editMode ? "Editing Workshop" : "Creating Workshop"} />
         )}
