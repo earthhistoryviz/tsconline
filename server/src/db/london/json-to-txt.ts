@@ -39,8 +39,9 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
   const lines = [];
   for (const column of columns) {
     if (column.column_type === "events") {
-      if (datasets.filter((dataset) => dataset.id === column.dataset_id).length === 0) {
-        console.log("missing dataset id for " + column.columnx);
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
       let dbEvents = [];
@@ -54,7 +55,6 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
           .filter((event) => event.dataset_id === column.dataset_id && event.age)
           .sort((a, b) => a.age! - b.age!);
       }
-
       const lads = [];
       const fads = [];
       //add other event types (ex. turnover?)
@@ -72,11 +72,10 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
         continue;
       }
 
-      const dataset = datasets.filter((dataset) => dataset.id === column.dataset_id);
       //some datatsets don't have event color even with event column (ex. calpionellids)
-      const colour = dataset[0]?.event_colour;
+      const colour = dataset.event_colour;
       //which notes to use? (Jur, Cret, etc.)
-      const popup = dataset[0]?.notes_Jur;
+      const popup = dataset.notes_Jur;
       let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== undefined && popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       lines.push(line);
 
@@ -115,9 +114,9 @@ async function processBlockColumns(
       !column.interval_type?.includes("sequence") &&
       !column.interval_type?.includes("chron")
     ) {
-      const dataset = datasets.filter((dataset) => dataset.id === column.dataset_id);
-      if (dataset.length === 0) {
-        console.log("missing dataset id for " + column.columnx);
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
         continue;
       }
       let regex = new RegExp(column.interval_type!, "i");
@@ -164,6 +163,8 @@ async function processBlockColumns(
       for (const inter of dbIntervals) {
         //london database is missing data
         if (inter.base_age === null) continue;
+        //if col_if_not_intvx is defined, it indicates the label that appears on TSC.
+        //ex. block_label
         if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
           //ex. CN Zone name
           if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {

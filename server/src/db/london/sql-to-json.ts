@@ -2,6 +2,7 @@ import mysql from "mysql2/promise";
 import fs from "fs/promises";
 import { join } from "path";
 import "dotenv/config";
+import chalk from "chalk";
 
 const londonDatabaseName = "nannodata_arkL";
 
@@ -36,7 +37,7 @@ async function generateInterfaces(connection: mysql.Connection) {
 
   let output = "";
 
-  fs.writeFile(schemaFile, 'import { throwError } from "@tsconline/shared";\n\n');
+  await fs.writeFile(schemaFile, 'import { throwError } from "@tsconline/shared";\n\n');
 
   for (const tableName of tableNames) {
     const [columns]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
@@ -145,7 +146,7 @@ async function connectToDB() {
       password: process.env.LONDON_DATABASE_PASSWORD
     };
     if (Object.values(configCheck).some((v) => v === undefined)) {
-      throw "Cannot connect to server, missing env variable";
+      throw chalk.red("Cannot connect to server, missing env variable");
     }
     const config = {
       host: process.env.LONDON_DATABASE_HOST!,

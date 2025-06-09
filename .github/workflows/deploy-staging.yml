@@ -201,7 +201,7 @@ jobs:
             echo 'LONDON_DATABASE_PASSWORD="${{ secrets.LONDON_DATABASE_PASSWORD }}"' >> ./server/.env
 
             if [ ! -f "docker-compose-staging.yml" ]; then
-              echo "Error: docker-compose-staging.yml not found
+              echo "Error: docker-compose-staging.yml not found"
               exit 1
             fi
 
