@@ -146,7 +146,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [emailFile, setEmailFile] = useState<File | null>(null);
   const [files, setFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>();
-  const [regLink, setRegLink] = useState<string | undefined>(undefined);
+  const [regLink, setRegLink] = useState<string | null>(null);
   const [regRestrict, setRegRestrict] = useState(false);
   const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop?.workshopId) : null;
 
@@ -185,12 +185,14 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
 
       if (!editMode) {
         const createdWorkshopId = await actions.adminCreateWorkshop(
-          workshopTitle,
+          {
+          title: workshopTitle,
           start,
           end,
           regRestrict,
-          state.user.uuid,
-          regLink
+          creatorUUID: state.user.uuid,
+          regLink,
+          description: workshopDescription}
         );
         if (!createdWorkshopId) {
           actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
@@ -593,7 +595,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setEmailFile(null);
                           setFiles(null);
                           setCoverPicture(null);
-                          setRegLink(undefined);
+                          setRegLink(null);
                           setRegRestrict(false);
                         }}>
                         Reset Form

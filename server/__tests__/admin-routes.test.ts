@@ -1791,6 +1791,20 @@ describe("adminCreateWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid date format or dates are not valid" });
     expect(response.statusCode).toBe(400);
   });
+  it("should return 400 if regLink is not a valid URL", async () => {
+    const isURL = vi.spyOn(validator.default, "isURL");
+    isURL.mockReturnValueOnce(false);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, regLink: "invalid-url" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(isURL).toHaveBeenCalledWith("invalid-url");
+    expect(await response.json()).toEqual({ error: "Invalid registration link" });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return 409 if workshop with title and dates already exists", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     const response = await app.inject({

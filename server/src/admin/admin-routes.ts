@@ -545,6 +545,10 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     reply.status(400).send({ error: "Invalid date format or dates are not valid" });
     return;
   }
+  if (regLink && !validator.isURL(regLink)) {
+    reply.status(400).send({ error: "Invalid registration link" });
+    return;
+  }
   try {
     const existingWorkshops = await findWorkshop({ title, start: startDate.toISOString(), end: endDate.toISOString() });
     if (existingWorkshops.length > 0) {
