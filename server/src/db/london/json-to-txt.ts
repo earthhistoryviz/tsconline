@@ -68,7 +68,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
 
       //look at only lads and fads for now, include others later
       if (lads.length === 0 && fads.length === 0) {
-        console.log("missing LAD and FAD for " + column.columnx);
+        console.log(chalk.yellow("missing LAD and FAD for " + column.columnx));
         continue;
       }
 
@@ -153,7 +153,7 @@ async function processBlockColumns(
           .sort((a, b) => a.base_age2020! - b.base_age2020!);
       }
       if (dbIntervals.length === 0) {
-        console.log("no blocks found for " + column.columnx);
+        console.log(chalk.yellow("no blocks found for " + column.columnx));
         continue;
       }
       let line = `${column.columnx}\tblock`;
