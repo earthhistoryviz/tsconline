@@ -1,4 +1,4 @@
-import { useContext, useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
@@ -12,7 +12,52 @@ import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
-import { reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
+import { ReservedWorkshopFileKey, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
+
+type WorkshopReservedFileProps = {
+  renderLink: boolean;
+  fileType: ReservedWorkshopFileKey;
+  workshopId: number;
+  userInWorkshop: boolean;
+};
+const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
+  renderLink,
+  fileType,
+  workshopId,
+  userInWorkshop
+}) => {
+  const { t } = useTranslation();
+  const backendUrl = import.meta.env.DEV ? "http://localhost:3000" : "";
+  return (
+    <>
+      <Typography className={styles.aih} mb={0.5}>
+        {t("workshops.details-page." + fileType)}
+      </Typography>
+      {renderLink ? (
+        <Typography className={styles.fileName} mb={0.5}>
+          <CustomTooltip title={userInWorkshop ? "" : t("workshops.details-page.please-register")}>
+            <span>
+              <a
+                href={userInWorkshop ? `${backendUrl}/workshop/${workshopId}/files/${fileType}` : undefined}
+                onClick={(e) => {
+                  if (!userInWorkshop) e.preventDefault();
+                }}
+                target="_blank"
+                rel="noreferrer"
+                className={userInWorkshop ? undefined : styles.disabledLink}>
+                {t("workshops.details-page.view")}
+              </a>
+            </span>
+          </CustomTooltip>
+        </Typography>
+      ) : (
+        <Typography className={styles.fileName} mb={0.5}>
+          {t("workshops.details-page.messages.no-" + fileType)}
+        </Typography>
+      )}
+    </>
+  );
+};
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -61,7 +106,6 @@ export const WorkshopDetails = observer(() => {
     }
   }
   if (!workshop || !id) return <PageNotFound />;
-  const backendUrl = import.meta.env.DEV ? "http://localhost:3000" : "";
   return (
     <div className={styles.adjcontainer}>
       <div className={styles.container}>
@@ -102,60 +146,18 @@ export const WorkshopDetails = observer(() => {
               </Box>
             </div>
             <div className={styles.ai}>
-              <Typography className={styles.aih}>{t("workshops.details-page.instructions")}</Typography>
-              {workshop.files?.includes(reservedInstructionsFileName) ? (
-                <Typography className={styles.fileName} mb={0.5}>
-                  <CustomTooltip title={shouldLoadRecaptcha ? "" : t("workshops.details-page.please-register")}>
-                    <span>
-                      <a
-                        href={
-                          shouldLoadRecaptcha
-                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/instructions`
-                            : undefined
-                        }
-                        onClick={(e) => {
-                          if (!shouldLoadRecaptcha) e.preventDefault();
-                        }}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={shouldLoadRecaptcha ? undefined : styles.disabledLink}>
-                        {t("workshops.details-page.view")}
-                      </a>
-                    </span>
-                  </CustomTooltip>
-                </Typography>
-              ) : (
-                <Typography className={styles.fileName} mb={0.5}>
-                  {t("workshops.details-page.messages.no-instructions")}
-                </Typography>
-              )}
-              <Typography className={styles.aih}>{t("workshops.details-page.presentation")}</Typography>
-              {workshop.files?.includes(reservedPresentationFileName) ? (
-                <Typography className={styles.fileName} mb={0.5}>
-                  <CustomTooltip title={shouldLoadRecaptcha ? "" : t("workshops.details-page.please-register")}>
-                    <span>
-                      <a
-                        href={
-                          shouldLoadRecaptcha
-                            ? `${backendUrl}/workshop/${workshop.workshopId}/files/presentation`
-                            : undefined
-                        }
-                        onClick={(e) => {
-                          if (!shouldLoadRecaptcha) e.preventDefault();
-                        }}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={shouldLoadRecaptcha ? undefined : styles.disabledLink}>
-                        {t("workshops.details-page.view")}
-                      </a>
-                    </span>
-                  </CustomTooltip>
-                </Typography>
-              ) : (
-                <Typography className={styles.fileName} mb={0.5}>
-                  {t("workshops.details-page.messages.no-presentation")}
-                </Typography>
-              )}
+              <WorkshopReservedFile
+                renderLink={workshop.files?.includes(reservedInstructionsFileName) || false}
+                fileType="instructions"
+                workshopId={workshop.workshopId}
+                userInWorkshop={shouldLoadRecaptcha}
+              />
+              <WorkshopReservedFile
+                renderLink={workshop.files?.includes(reservedPresentationFileName) || false}
+                fileType="presentation"
+                workshopId={workshop.workshopId}
+                userInWorkshop={shouldLoadRecaptcha}
+              />
               <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
                 const nonReservedFiles =

@@ -255,7 +255,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
   const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
   const [otherFiles, setOtherFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>();
-  const [regLink, setRegLink] = useState<string | undefined>(undefined);
+  const [regLink, setRegLink] = useState<string | undefined>(workshop?.regLink);
   const [regRestrict, setRegRestrict] = useState(false);
   const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop?.workshopId) : null;
 
@@ -277,121 +277,26 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     try {
       setLoading(true);
       event.preventDefault();
-      const errorMessages: string[] = [];
 
-      if (!workshopTitle) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
-      }
-      if (!startDate || !endDate) {
-        actions.pushError(ErrorCodes.INVALID_FORM);
-        return;
-      }
+      if (!validateForm()) return;
+
       const start = dayjs(startDate).toISOString();
       const end = dayjs(endDate).toISOString();
-      if (dayjs(start).isAfter(dayjs(end)) || dayjs(start).isSame(dayjs(end))) {
-        actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
-        return;
-      }
 
-      let workshopId: number;
+      const workshopId = await handleWorkshopSave(start, end);
+      if (!workshopId) return;
 
-      if (!editMode) {
-        const createdWorkshopId = await actions.adminCreateWorkshop(
-          workshopTitle,
-          start,
-          end,
-          regRestrict,
-          state.user.uuid,
-          regLink
-        );
-        if (!createdWorkshopId) {
-          actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
-          return;
-        }
-        workshopId = createdWorkshopId;
-      } else {
-        if (!workshop) {
-          actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
-          return;
-        }
-        if (new Date(workshop.end) <= new Date()) {
-          actions.pushError(ErrorCodes.ADMIN_WORKSHOP_ENDED);
-          return;
-        }
-        workshopId = workshop.workshopId;
-        const { title: oldTitle, start: oldStart, end: oldEnd } = workshop;
-        const updatedFields = {} as Partial<SharedWorkshop>;
-        if (oldTitle !== workshopTitle) updatedFields.title = workshopTitle;
-        if (oldStart !== start) updatedFields.start = start;
-        if (oldEnd !== end) updatedFields.end = end;
-        updatedFields.workshopId = workshopId;
-        const isWorkshopUnchanged = Object.keys(updatedFields).length === 1;
-        if (!isWorkshopUnchanged) {
-          const newWorkshop = await actions.adminEditWorkshop(updatedFields);
-          if (!newWorkshop) {
-            actions.pushError(ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED);
-            return;
-          }
-          setWorkshop(newWorkshop);
-        }
+      const errors: string[] = [];
+      await Promise.all([
+        handleUserUploads(workshopId, errors),
+        handleCoverUpload(workshopId, errors),
+        handleFileUploads(workshopId, errors)
+      ]);
 
-        if (
-          isWorkshopUnchanged &&
-          !emailFile &&
-          !emails &&
-          !regLink &&
-          !presentationFile &&
-          !instructionsFile &&
-          !otherFiles &&
-          !coverPicture &&
-          regRestrict === currentWorkshop?.regRestrict
-        ) {
-          actions.pushSnackbar("No changes made.", "info");
-          return;
-        }
-      }
-
-      if (emailFile || emails) {
-        const form = new FormData();
-        if (emails) form.append("emails", emails);
-        if (emailFile) form.append("file", emailFile);
-        form.append("workshopId", workshopId.toString());
-        const response = await actions.adminAddUsersToWorkshop(form);
-        if (!response.success) {
-          errorMessages.push("Users could not be added.");
-          setInvalidEmails(response.invalidEmails);
-        }
-      }
-
-      if (coverPicture) {
-        const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
-        if (!response) {
-          errorMessages.push("Cover picture could not be uploaded.");
-        }
-      }
-
-      if ((otherFiles && otherFiles.length !== 0) || presentationFile || instructionsFile) {
-        const response = await actions.adminAddFilesToWorkshop(
-          workshopId,
-          presentationFile,
-          instructionsFile,
-          otherFiles
-        );
-        if (!response) {
-          errorMessages.push("Some or all files could not be uploaded.");
-        }
-      }
-
-      if (errorMessages.length > 0) {
-        actions.pushSnackbar(errorMessages.join("\n"), "warning");
-      } else {
-        const successMessage = editMode ? "Workshop edited successfully." : "Workshop created successfully.";
-        actions.pushSnackbar(successMessage, "success");
-      }
-    } catch (error) {
+      showFinalStatus(errors);
+    } catch (err) {
       displayServerError(
-        error,
+        err,
         ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED,
         ErrorCodes[ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED]
       );
@@ -400,52 +305,147 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
     }
   };
 
-  const handleEmailFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files![0];
-    if (!file) {
-      return;
+  function validateForm(): boolean {
+    if (!workshopTitle || !startDate || !endDate) {
+      actions.pushError(ErrorCodes.INVALID_FORM);
+      return false;
     }
-    const ext = file.name.split(".").pop();
+    if (!startDate.isBefore(endDate)) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_START_AFTER_END);
+      return false;
+    }
+    return true;
+  }
+
+  async function handleWorkshopSave(start: string, end: string): Promise<number | null> {
+    if (!editMode) {
+      const id = await actions.adminCreateWorkshop(workshopTitle, start, end, regRestrict, state.user.uuid, regLink);
+      if (!id) actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
+      return id || null;
+    }
+
+    if (!workshop) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND);
+      return null;
+    }
+
+    if (new Date(workshop.end) <= new Date()) {
+      actions.pushError(ErrorCodes.ADMIN_WORKSHOP_ENDED);
+      return null;
+    }
+
+    const updatedFields = getUpdatedFields(start, end);
+    if (Object.keys(updatedFields).length > 1) {
+      const newWorkshop = await actions.adminEditWorkshop(updatedFields);
+      if (!newWorkshop) {
+        actions.pushError(ErrorCodes.ADMIN_WORKSHOP_EDIT_FAILED);
+        return null;
+      }
+      setWorkshop(newWorkshop);
+    }
+
     if (
-      file.type !== "application/vnd.ms-excel" && // for .xls files
-      file.type !== "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" && // for .xlsx files
-      file.type !== ""
+      Object.keys(updatedFields).length === 1 &&
+      !emailFile &&
+      !emails &&
+      !regLink &&
+      !presentationFile &&
+      !instructionsFile &&
+      !otherFiles &&
+      !coverPicture &&
+      regRestrict === currentWorkshop?.regRestrict
     ) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
+      actions.pushSnackbar("No changes made.", "info");
+      return null;
+    }
+
+    return workshop.workshopId;
+  }
+
+  function getUpdatedFields(start: string, end: string): Partial<SharedWorkshop> {
+    const { title: oldTitle, start: oldStart, end: oldEnd } = workshop!;
+    const updated: Partial<SharedWorkshop> = { workshopId: workshop!.workshopId };
+    if (oldTitle !== workshopTitle) updated.title = workshopTitle;
+    if (oldStart !== start) updated.start = start;
+    if (oldEnd !== end) updated.end = end;
+    return updated;
+  }
+
+  async function handleUserUploads(workshopId: number, errors: string[]) {
+    if (!emailFile && !emails) return;
+    const form = new FormData();
+    if (emails) form.append("emails", emails);
+    if (emailFile) form.append("file", emailFile);
+    form.append("workshopId", workshopId.toString());
+
+    const response = await actions.adminAddUsersToWorkshop(form);
+    if (!response.success) {
+      errors.push("Users could not be added.");
+      setInvalidEmails(response.invalidEmails);
+    }
+  }
+
+  async function handleFileUploads(workshopId: number, errors: string[]) {
+    if (!presentationFile && !instructionsFile && (!otherFiles || otherFiles.length === 0)) return;
+    const response = await actions.adminAddFilesToWorkshop(workshopId, presentationFile, instructionsFile, otherFiles);
+    if (!response) errors.push("Some or all files could not be uploaded.");
+  }
+
+  async function handleCoverUpload(workshopId: number, errors: string[]) {
+    if (!coverPicture) return;
+    const response = await actions.adminAddCoverPicToWorkshop(workshopId, coverPicture);
+    if (!response) errors.push("Cover picture could not be uploaded.");
+  }
+
+  function showFinalStatus(errors: string[]) {
+    if (errors.length > 0) {
+      actions.pushSnackbar(errors.join("\n"), "warning");
+    } else {
+      const successMessage = editMode ? "Workshop edited successfully." : "Workshop created successfully.";
+      actions.pushSnackbar(successMessage, "success");
+    }
+  }
+
+  const handleValidatedFileUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    acceptedExtensions: string[],
+    acceptedMimeTypes: string[],
+    errorCode: ErrorCodes,
+    setter: (file: File) => void
+  ) => {
+    const file = event.target.files![0];
+    if (!file) return;
+    const ext = file.name.split(".").pop();
+    if (!ext || !acceptedExtensions.includes(ext) || !acceptedMimeTypes.includes(file.type)) {
+      actions.pushError(errorCode);
       return;
     }
-    if (!ext || !/^(xlx|xlsx)$/.test(ext)) {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_EXCEL_FILE);
-      return;
-    }
-    setEmailFile(file);
+    setter(file);
+  };
+
+  const handleEmailFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    handleValidatedFileUpload(
+      event,
+      ["xls", "xlsx"],
+      ["application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+      ErrorCodes.UNRECOGNIZED_EXCEL_FILE,
+      (file) => setEmailFile(file)
+    );
   };
 
   const handlePresentationFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedPresentationFile = event.target.files![0];
-    if (!uploadedPresentationFile) {
-      return;
-    }
-    if (uploadedPresentationFile.type !== "application/pdf") {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_PDF_FILE);
-      return;
-    }
-    setPresentationFile(uploadedPresentationFile);
+    handleValidatedFileUpload(event, ["pdf"], ["application/pdf"], ErrorCodes.UNRECOGNIZED_PDF_FILE, (file) =>
+      setPresentationFile(file)
+    );
   };
 
   const handleInstructionsFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const uploadedInstructionsFile = event.target.files![0];
-    if (!uploadedInstructionsFile) {
-      return;
-    }
-    if (uploadedInstructionsFile.type !== "application/pdf") {
-      actions.pushError(ErrorCodes.UNRECOGNIZED_PDF_FILE);
-      return;
-    }
-    setInstructionsFile(uploadedInstructionsFile);
+    handleValidatedFileUpload(event, ["pdf"], ["application/pdf"], ErrorCodes.UNRECOGNIZED_PDF_FILE, (file) =>
+      setInstructionsFile(file)
+    );
   };
 
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleOtherFilesUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = event.target.files;
     if (!uploadedFiles) {
       return;
@@ -542,7 +542,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
               placeholder="Enter a registration link for the workshop"
               fullWidth
               size="small"
-              value={regLink ? regLink : ""}
+              value={regLink || ""}
               onChange={(event) => setRegLink(event.target.value)}
             />
             <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -598,7 +598,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                 otherFiles={otherFiles}
                 onPresentationFileChange={handlePresentationFileUpload}
                 onInstructionsFileChange={handleInstructionsFileUpload}
-                onOtherFilesChange={handleFileUpload}
+                onOtherFilesChange={handleOtherFilesUpload}
               />
               <Typography variant="h5" mb="5px" mt="15px">
                 {prevCoverPic ? "Change Cover Picture" : "Add Cover Picture"}

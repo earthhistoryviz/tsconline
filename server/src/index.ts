@@ -62,6 +62,7 @@ const server = fastify({
     }
   }*/
 });
+server.decorateRequest("user", undefined);
 
 collectDefaultMetrics();
 const httpMetricsLabelNames = ["method", "path", "status"];

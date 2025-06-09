@@ -279,8 +279,8 @@
 }
 
 .disabledLink {
-  color: gray;
-  pointer-events: none;
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 @media (max-width: 590px) {
