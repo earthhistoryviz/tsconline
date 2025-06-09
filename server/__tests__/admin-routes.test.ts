@@ -412,6 +412,7 @@ const testWorkshop: SharedWorkshop = {
   regRestrict: false,
   creatorUUID: "123",
   regLink: "",
+  description: "test description",
   active: false
 };
 const testComment = {
@@ -1954,11 +1955,8 @@ describe("adminEditWorkshop", () => {
     findWorkshop.mockResolvedValueOnce([
       {
         ...body,
-        end: testWorkshop.end,
-        regLink: undefined,
-        regRestrict: 0,
-        creatorUUID: testWorkshop.creatorUUID,
-        description: testWorkshop.description
+        ...testWorkshop,
+        regRestrict: testWorkshop.regRestrict === true ? 1 : 0
       }
     ]);
     const response = await app.inject({

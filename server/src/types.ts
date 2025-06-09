@@ -48,10 +48,10 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
-  regLink?: string;
+  regLink: string | null;
   regRestrict: number;
   creatorUUID: string;
-  description?: string;
+  description: string | null;
 }
 
 export interface UsersWorkshopsTable {

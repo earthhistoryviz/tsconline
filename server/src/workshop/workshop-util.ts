@@ -15,16 +15,10 @@ export function getWorkshopIdFromUUID(uuid: string): number | null {
     return null;
   }
   const workshopId = parseInt(uuid.split("-")[1] ?? "");
+  if (isNaN(workshopId)) {
+    return null;
+  }
   return workshopId;
-}
-
-/**
- * Extracts the workshop ID from a folder name
- * @param folderName
- * @returns The workshop ID or null if the workshop ID could not be extracted
- */
-export function extractWorkshopIdFromFolderName(folderName: string): number | null {
-  return getWorkshopIdFromUUID(folderName);
 }
 
 /**

@@ -5,13 +5,12 @@ import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopVali
 import { SharedWorkshop } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
-import { readFile } from "fs/promises";
+import { readFile, readdir } from "fs/promises";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
 
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
-import { readdir } from "node:fs/promises";
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
@@ -51,8 +50,8 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
         const start = new Date(workshop.start);
         const end = new Date(workshop.end);
 
-        const datapacks = (await getWorkshopDatapacksNames(workshop.workshopId)) || [];
-        const files = (await getWorkshopFilesNames(workshop.workshopId)) || [];
+        const datapacks = await getWorkshopDatapacksNames(workshop.workshopId);
+        const files = await getWorkshopFilesNames(workshop.workshopId);
 
         return {
           title: workshop.title,
@@ -62,7 +61,7 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
           active: start <= now && now <= end,
           regRestrict: Number(workshop.regRestrict) === 1,
           creatorUUID: workshop.creatorUUID,
-          regLink: workshop.regLink ? workshop.regLink : undefined,
+          regLink: workshop.regLink,
           description: workshop.description,
           datapacks: datapacks,
           files: files

@@ -563,7 +563,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       active: false,
       creatorUUID: creatorUUID,
       regRestrict: Number(regRestrict) === 1,
-      regLink: regLink
+      regLink: regLink !== undefined ? regLink : null,
+      description: null
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });

@@ -90,7 +90,7 @@ const testWorkshopDatabase: Workshop = {
   workshopId: 1,
   regRestrict: 0,
   creatorUUID: "123",
-  regLink: "",
+  regLink: null,
   description: "description"
 };
 const testWorkshop: SharedWorkshop = {
@@ -100,7 +100,8 @@ const testWorkshop: SharedWorkshop = {
   workshopId: 1,
   regRestrict: false,
   creatorUUID: "123",
-  regLink: undefined,
+  regLink: null,
+  description: "description",
   active: false
 };
 
@@ -472,8 +473,8 @@ describe("downloadWorkshopFilesZip tests", () => {
       url: route,
       headers
     });
-    expect(response.statusCode).toBe(404);
     expect(await response.json()).toEqual({ error: "No files found for this workshop" });
+    expect(response.statusCode).toBe(404);
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
