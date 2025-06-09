@@ -42,7 +42,6 @@ export const Discussion = observer(() => {
               pictureUrl: com.pictureUrl,
               dateCreated: new Date(com.dateCreated),
               flagged: Boolean(com.flagged),
-              isSelf: com.uuid === uuid,
               commentText: com.commentText,
               datapackTitle: com.datapackTitle
             };
@@ -93,11 +92,10 @@ export const Discussion = observer(() => {
         const data = await response.json();
         const newCommentId = data.id;
         const date = new Date();
-        const newComment = {
+        const newComment: CommentType = {
           username: username,
           dateCreated: date,
           commentText: state.commentInput,
-          isSelf: true,
           id: newCommentId,
           uuid: uuid,
           flagged: false,

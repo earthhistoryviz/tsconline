@@ -655,7 +655,6 @@ export type CommentType = {
   uuid: string;
   dateCreated: Date;
   commentText: string;
-  isSelf?: boolean;
   flagged?: boolean;
   pictureUrl?: string | null;
   datapackTitle: string;
@@ -841,7 +840,6 @@ export function assertCommentType(o: any): asserts o is CommentType {
     throwError("CommentType", "flagged", "number", o.flagged);
   if (typeof o.username !== "string") throwError("CommentType", "username", "string", o.username);
   if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("CommentType", "pictureUrl", "string", o.pictureUrl);
-  if (o.isSelf !== undefined && typeof o.isSelf !== "boolean") throwError("CommentType", "isSelf", "boolean", o.isSelf);
 }
 
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(
