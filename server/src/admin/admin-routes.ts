@@ -517,11 +517,19 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
   request: FastifyRequest<{
-    Body: { title: string; start: string; end: string; regRestrict: boolean; creatorUUID: string; regLink?: string };
+    Body: {
+      title: string;
+      start: string;
+      end: string;
+      regRestrict: boolean;
+      creatorUUID: string;
+      regLink?: string;
+      description?: string;
+    };
   }>,
   reply: FastifyReply
 ) {
-  const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
+  const { title, start, end, regRestrict, creatorUUID, regLink, description } = request.body;
   if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
@@ -544,13 +552,16 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       return;
     }
     const regRestrictNum = regRestrict ? 1 : 0;
+    const desc = description !== undefined ? description : null;
+    const link = regLink !== undefined ? regLink : null;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       creatorUUID: creatorUUID,
       regRestrict: regRestrictNum,
-      regLink: regLink
+      regLink: link,
+      description: desc
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
@@ -563,8 +574,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       active: false,
       creatorUUID: creatorUUID,
       regRestrict: Number(regRestrict) === 1,
-      regLink: regLink !== undefined ? regLink : null,
-      description: null
+      regLink: link,
+      description: desc
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
@@ -674,7 +685,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
       creatorUUID: updatedWorkshop.creatorUUID,
       description: updatedWorkshop.description,
-      regLink: updatedWorkshop.regLink || undefined,
+      regLink: updatedWorkshop.regLink !== undefined ? updatedWorkshop.regLink : null,
       datapacks: await getWorkshopDatapacksNames(workshopId),
       files: await getWorkshopFilesNames(workshopId)
     };

@@ -1713,7 +1713,8 @@ describe("adminCreateWorkshop", () => {
     end: testWorkshop.end,
     regRestrict: 0,
     creatorUUID: testWorkshop.creatorUUID,
-    regLink: testWorkshop.regLink
+    regLink: testWorkshop.regLink,
+    description: testWorkshop.description
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -1829,6 +1830,32 @@ describe("adminCreateWorkshop", () => {
     expect(createWorkshop).toHaveBeenCalledTimes(1);
     expect(createWorkshop).toHaveBeenCalledWith(body);
     expect(await response.json()).toEqual({ workshop: { ...testWorkshop, active: false } });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful with no optionals", async () => {
+    const bodyWithoutOptionals = {
+      title: testWorkshop.title,
+      start: testWorkshop.start,
+      end: testWorkshop.end,
+      creatorUUID: testWorkshop.creatorUUID,
+      regRestrict: 0
+    };
+    createWorkshop.mockResolvedValueOnce(1);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: bodyWithoutOptionals,
+      headers
+    });
+    expect(createWorkshop).toHaveBeenCalledTimes(1);
+    expect(createWorkshop).toHaveBeenCalledWith({
+      ...bodyWithoutOptionals,
+      regLink: null,
+      description: null
+    });
+    expect(await response.json()).toEqual({
+      workshop: { ...testWorkshop, active: false, description: null, regLink: null }
+    });
     expect(response.statusCode).toBe(200);
   });
 });
