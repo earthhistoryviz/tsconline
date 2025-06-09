@@ -1,5 +1,6 @@
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { assertRecaptchaResponse } from "./types";
 
 /**
  * Verifies the given Recaptcha token. The token is sent to Google's Recaptcha API for verification.
@@ -16,8 +17,8 @@ export async function checkRecaptchaToken(token: string, action: string): Promis
     const httpResponse = await fetch(url, { method: "POST" });
 
     if (httpResponse.ok) {
-      const data: RecaptchaResponse = await httpResponse.json();
-      console.log(data);
+      const data = await httpResponse.json();
+      assertRecaptchaResponse(data);
 
       if (!data.success) {
         throw new Error("Recaptcha verification failed");
@@ -35,12 +36,6 @@ export async function checkRecaptchaToken(token: string, action: string): Promis
     console.error("Recaptcha error:", error);
     throw new Error("Recaptcha failed");
   }
-}
-
-interface RecaptchaResponse {
-  success: boolean;
-  score: number;
-  action: string;
 }
 
 /**

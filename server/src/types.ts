@@ -143,6 +143,19 @@ export type FileMetadata = {
   uuid: string;
 };
 
+export type RecaptchaResponse = {
+  success: boolean;
+  score: number;
+  action: string;
+};
+
+export function assertRecaptchaResponse(o: any): asserts o is RecaptchaResponse {
+  if (typeof o !== "object" || !o) throw "RecaptchaResponse must be an object";
+  if (typeof o.success !== "boolean") throwError("RecaptchaResponse", "success", "boolean", o.success);
+  if (typeof o.score !== "number") throwError("RecaptchaResponse", "score", "number", o.score);
+  if (typeof o.action !== "string") throwError("RecaptchaResponse", "action", "string", o.action);
+}
+
 export function assertEmail(o: any): asserts o is Email {
   if (typeof o !== "object" || !o) throw "Email must be an object";
   if (typeof o.from !== "string") throwError("Email", "from", "string", o.from);
