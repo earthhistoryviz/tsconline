@@ -199,7 +199,7 @@ jobs:
             echo 'LONDON_DATABASE_PORT="${{ secrets.LONDON_DATABASE_PORT }}"' >> ./server/.env
             echo 'LONDON_DATABASE_USER="${{ secrets.LONDON_DATABASE_USER }}"' >> ./server/.env
             echo 'LONDON_DATABASE_PASSWORD="${{ secrets.LONDON_DATABASE_PASSWORD }}"' >> ./server/.env
-            
+
             if [ ! -f "docker-compose-staging.yml" ]; then
               echo "Error: docker-compose-staging.yml not found
               exit 1
