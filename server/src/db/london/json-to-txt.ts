@@ -77,21 +77,21 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       const colour = dataset[0]?.event_colour;
       //which notes to use? (Jur, Cret, etc.)
       const popup = dataset[0]?.notes_Jur;
-      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup?.replace(/[\r\n]+/g, " ") || ""}`;
+      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== undefined && popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       lines.push(line);
 
       //TODO trim "LAD", "FAD" from beginning of titles
       if (lads.length > 0) {
         lines.push("LAD");
         for (const lad of lads) {
-          line = `\t${lad.eventx}\t${lad.age}\t${lad.event_display || ""}\t${lad.notes_2020?.replace(/[\r\n]+/g, " ")}`;
+          line = `\t${lad.eventx}\t${lad.age}\t${lad.event_display || ""}${lad.notes_2020 !== null ? `\t${lad.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
           lines.push(line);
         }
       }
       if (fads.length > 0) {
         lines.push("FAD");
         for (const fad of fads) {
-          line = `\t${fad.eventx}\t${fad.age}\t${fad.event_display || ""}\t${fad.notes_2020?.replace(/[\r\n]+/g, " ")}`;
+          line = `\t${fad.eventx}\t${fad.age}\t${fad.event_display || ""}${fad.notes_2020 !== null ? `\t${fad.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
           lines.push(line);
         }
       }
@@ -153,12 +153,22 @@ async function processBlockColumns(
           )
           .sort((a, b) => a.base_age2020! - b.base_age2020!);
       }
+      if (dbIntervals.length === 0) {
+        console.log("no blocks found for " + column.columnx);
+        continue;
+      }
       let line = `${column.columnx}\tblock`;
       lines.push(line);
-      line = `\tTOP ${dbIntervals[0]?.top_age}`;
+      line = `\tTOP\t${dbIntervals[0]!.top_age === null ? 0 : dbIntervals[0]!.top_age}`;
       lines.push(line);
       for (const inter of dbIntervals) {
+        //london database is missing data
+        if (inter.base_age === null) continue;
         if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
+          //ex. CN Zone name
+          if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {
+            continue;
+          }
           line = `\t${inter[column.col_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t`;
         } else line = `\t${inter.intervalx}\t${inter.base_age}\t`;
         lines.push(line);

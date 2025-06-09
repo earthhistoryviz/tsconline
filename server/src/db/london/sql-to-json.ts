@@ -121,7 +121,6 @@ async function exportRowsToJson(connection: mysql.Connection) {
     const [rows]: [mysql.RowDataPacket[], mysql.FieldPacket[]] = await connection.execute(
       `SELECT * FROM \`${tableName}\``
     );
-
     const typedRows = rows.map((row) => {
       const typedRow: Record<string, number | boolean | string | null> = {};
       for (const key in row) {
