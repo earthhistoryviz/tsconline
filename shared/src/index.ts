@@ -649,6 +649,17 @@ export type DatapackPriorityUpdateSuccess = {
   completedRequests: DatapackPriorityChangeRequest[];
 };
 
+export type CommentType = {
+  id: number;
+  username: string;
+  uuid: string;
+  dateCreated: Date;
+  commentText: string;
+  flagged?: boolean;
+  pictureUrl?: string | null;
+  datapackTitle: string;
+};
+
 export type DefaultChronostrat = "USGS" | "UNESCO";
 
 export type Marker = {
@@ -813,6 +824,22 @@ export function assertAutoPlotMarker(o: any): asserts o is AutoPlotMarker {
   if (typeof o.color !== "string") throwError("AutoPlotMarker", "color", "string", o.color);
   if (typeof o.comment !== "string") throwError("AutoPlotMarker", "comment", "string", o.comment);
   if (typeof o.type !== "string") throwError("AutoPlotMarker", "type", "string", o.type);
+}
+
+// need to check for profile picture too because of join with user table when fetching comments
+export function assertCommentType(o: any): asserts o is CommentType {
+  if (typeof o !== "object" || !o) throw "CommentType must be an object";
+  if (typeof o.id !== "number") throwError("CommentType", "id", "number", o.id);
+  if (typeof o.uuid !== "string") throwError("CommentType", "uuid", "string", o.uuid);
+  if (typeof o.commentText !== "string") throwError("CommentType", "commentText", "string", o.commentText);
+  if (typeof o.datapackTitle !== "string") throwError("CommentType", "datapackTitle", "string", o.datapackTitle);
+  if (!(o.dateCreated instanceof Date) && typeof o.dateCreated !== "string") {
+    throwError("CommentType", "dateCreated", "Date or ISO string", o.dateCreated);
+  }
+  if (o.flagged !== undefined && typeof o.flagged !== "number")
+    throwError("CommentType", "flagged", "number", o.flagged);
+  if (typeof o.username !== "string") throwError("CommentType", "username", "string", o.username);
+  if (o.pictureUrl && typeof o.pictureUrl !== "string") throwError("CommentType", "pictureUrl", "string", o.pictureUrl);
 }
 
 export function convertDatapackConfigForChartRequestToUniqueDatapackIdentifier(

@@ -9,14 +9,14 @@ import fastifyCompress from "@fastify/compress";
 import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { Email } from "./types.js";
+import { CommentsEmail, Email } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import "dotenv/config";
-import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
-import { sendEmail } from "./send-email.js";
+import { db, findIp, createIp, updateIp, initializeDatabase, findRecentDatapackComments } from "./database.js";
+import { sendCommentsEmail, sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
@@ -40,6 +40,7 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
+import { CommentType, assertCommentType } from "@tsconline/shared";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -446,6 +447,41 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
         await db.deleteFrom("ip").execute();
       } catch (e) {
         logger.error("Error sending email: ", e);
+      }
+    }
+  );
+  // schedule for daily comments email
+  cron.schedule(
+    "0 5 * * *", // every day at 5 AM server time
+    async () => {
+      try {
+        const datapackComments = await findRecentDatapackComments();
+        const newDatapackComments: CommentType[] = [];
+        for (const com of datapackComments) {
+          assertCommentType(com);
+          newDatapackComments.push(com);
+        }
+        // only send email if there are new comments
+        if (newDatapackComments.length) {
+          const today = new Date();
+          const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+          const recipients = process.env.DAILY_COMMENTS_EMAIL_RECIPIENTS?.split(",").map((email) => email.trim()) || [];
+          for (const recipient of recipients) {
+            const newEmail: CommentsEmail = {
+              from: process.env.EMAIL_USER as string,
+              to: recipient,
+              subject: "Daily Datapack Comments Report",
+              title: "Daily Datapack Comments Report",
+              message: `Here are the latest updates from today, ${formattedDate}.`,
+              comments: newDatapackComments,
+              link: `${process.env.APP_URL || "http://localhost:5173"}/datapacks`,
+              buttonText: "View Datapacks"
+            };
+            await sendCommentsEmail(newEmail);
+          }
+        }
+      } catch (e) {
+        logger.error("Error fetching recent datapack comments", e);
       }
     }
   );
