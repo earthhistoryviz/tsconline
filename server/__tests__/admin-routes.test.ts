@@ -78,7 +78,8 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
     assertDatapackIndex: vi.fn(),
     assertDatapack: vi.fn(),
     assertDatapackPriorityChangeRequestArray: vi.fn(),
-    assertDatapackMetadata: vi.fn()
+    assertDatapackMetadata: vi.fn(),
+    assertSharedWorkshop: vi.fn()
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
