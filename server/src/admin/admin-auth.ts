@@ -49,12 +49,15 @@ async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
+type Headers = {
+  "recaptcha-token": string
+}
 async function verifyRecaptcha(
-  request: FastifyRequest<{ Headers: { "recaptcha-token": string; "recaptcha-action": string } }>,
-  reply: FastifyReply
+  request: FastifyRequest<{ Headers: Headers }>,
+  reply: FastifyReply,
+  action: string
 ) {
   const recaptchaToken = request.headers["recaptcha-token"];
-  const action = request.headers["recaptcha-action"];
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });
@@ -77,6 +80,10 @@ async function verifyRecaptcha(
     return;
   }
 }
+const genericRecaptchaPrehandler = (action: string) => {
+  return async (request: FastifyRequest<{Headers: Headers}>, reply: FastifyReply) => {
+    await verifyRecaptcha(request, reply, action);
+  }};
 
 export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {
@@ -206,8 +213,10 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   };
 
   fastify.addHook("preHandler", verifyAdmin);
-  fastify.addHook("preHandler", verifyRecaptcha);
-  fastify.post("/users", { config: { rateLimit: looseRateLimit } }, getUsers);
+  // fastify.addHook("preHandler", verifyRecaptcha);
+  fastify.post("/users", { 
+    preHandler: [genericRecaptchaPrehandler("adminFetchUsers")],
+    config: { rateLimit: looseRateLimit } }, getUsers);
   fastify.get(
     "/official/datapacks/private",
     { config: { rateLimit: looseRateLimit } },
