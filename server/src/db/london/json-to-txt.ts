@@ -76,7 +76,7 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       const colour = dataset.event_colour;
       //which notes to use? (Jur, Cret, etc.)
       const popup = dataset.notes_Jur;
-      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== undefined && popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       lines.push(line);
 
       //TODO trim "LAD", "FAD" from beginning of titles
@@ -156,7 +156,8 @@ async function processBlockColumns(
         console.log(chalk.yellow("no blocks found for " + column.columnx));
         continue;
       }
-      let line = `${column.columnx}\tblock`;
+      const popup = dataset.notes_Jur;
+      let line = `${column.columnx}\tblock\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       lines.push(line);
       line = `\tTOP\t${dbIntervals[0]!.top_age === null ? 0 : dbIntervals[0]!.top_age}`;
       lines.push(line);
@@ -170,8 +171,9 @@ async function processBlockColumns(
           if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {
             continue;
           }
-          line = `\t${inter[column.col_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t`;
-        } else line = `\t${inter.intervalx}\t${inter.base_age}\t`;
+          line = `\t${inter[column.col_if_not_intvx as keyof arkL_intervals]}\t${inter.base_age}\t\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}\t${inter.colour || ""}`;
+        } else
+          line = `\t${inter.intervalx}\t${inter.base_age}\t\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}\t${inter.colour || ""}`;
         lines.push(line);
       }
       lines.push("");
