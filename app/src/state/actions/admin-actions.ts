@@ -461,7 +461,7 @@ export const adminFetchPrivateOfficialDatapacksMetadata = action(async () => {
  */
 export const adminFetchOfficialDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapack");
     if (!recaptchaToken) return;
     const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET",
