@@ -166,7 +166,6 @@
             "login-first": "You are not logged in. Please sign in to view your workshops.",
             "header": "Your Registered Workshops",
             "description-header": "Click a workshop to see more information!",
-            "no-upcoming-workshops": "No upcoming workshops at the moment.",
             "titles": {
                 "all": "All Workshops",
                 "upcoming": "Upcoming Workshops",
