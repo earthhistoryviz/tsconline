@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 test.beforeEach(async ({ page }) => {
   await page.goto("http://localhost:5173");
-  await page.waitForTimeout(4000); // Wait for 4 seconds to ensure the page is fully loaded
+  await page.waitForTimeout(4000);
 });
 
 test("navigation to presets page works", async ({ page }) => {

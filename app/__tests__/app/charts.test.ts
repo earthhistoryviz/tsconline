@@ -136,7 +136,6 @@ test("check if time scaling and column adjustments work", async ({ page }) => {
   await page.locator("text=Generate Chart").click();
 
   await expect(page.locator("text=Loading Chart")).toBeHidden();
-  // await expect(page.locator("text=Successfully generated chart")).toBeVisible();
   await expect(page.locator("text=Central Africa Cenozoic")).toBeVisible();
 
   const chartSvg = page.locator(".react-transform-component svg");
@@ -235,7 +234,6 @@ test("check if Map Points Functional", async ({ page }) => {
 
   await expect(page.locator("text=Nigeria Coast")).toBeVisible();
 });
-
 
 // test("login is functional", async ({ page }) => {
 //   await page.waitForTimeout(10000);
