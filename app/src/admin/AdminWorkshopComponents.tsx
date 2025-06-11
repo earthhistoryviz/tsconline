@@ -239,15 +239,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
           setWorkshop(newWorkshop);
         }
 
-        if (
-          isWorkshopUnchanged &&
-          !emailFile &&
-          !emails &&
-          !regLink &&
-          !files &&
-          !coverPicture &&
-          regRestrict === currentWorkshop?.regRestrict
-        ) {
+        if (isWorkshopUnchanged && !emailFile && !emails && !files && !coverPicture) {
           actions.pushSnackbar("No changes made.", "info");
           return;
         }
@@ -569,6 +561,7 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                       <InputFileUpload
                         text="Upload a Cover Picture for the workshop"
                         onChange={handleCoverPictureUpload}
+                        accept=".png,.svg,.gif,.jpg,.jpeg"
                         startIcon={<CloudUploadIcon />}
                         multiple
                       />
@@ -594,8 +587,8 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
                           setEmailFile(null);
                           setFiles(null);
                           setCoverPicture(null);
-                          setRegLink(null);
-                          setRegRestrict(false);
+                          setRegLink(workshop?.regLink || null);
+                          setRegRestrict(workshop?.regRestrict || false);
                         }}>
                         Reset Form
                       </TSCButton>
