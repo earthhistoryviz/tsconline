@@ -5,7 +5,11 @@ import { context } from "../state";
 import { displayServerError } from "../state/actions/util-actions";
 import { ErrorCodes } from "../util/error-codes";
 
-export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null, editMode: boolean) => {
+export const useWorkshopCreateEditForm = (
+  currentWorkshop: SharedWorkshop | null,
+  editMode: boolean,
+  onClose: () => void
+) => {
   const { actions, state } = useContext(context);
   const [loading, setLoading] = useState(false);
   const [workshop, setWorkshop] = useState<SharedWorkshop | null>(currentWorkshop);
@@ -32,7 +36,7 @@ export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null
     setInstructionsFile(null);
     setOtherFiles(null);
     setCoverPicture(null);
-    setRegLink(undefined);
+    setRegLink(editMode ? currentWorkshop?.regLink : undefined);
     setRegRestrict(false);
     setInvalidEmails("");
   };
@@ -57,6 +61,7 @@ export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null
         handleFileUploads(workshopId, errors)
       ]);
 
+      actions.fetchAllWorkshops();
       showFinalStatus(errors);
     } catch (err) {
       displayServerError(
@@ -112,7 +117,6 @@ export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null
       Object.keys(updatedFields).length === 1 &&
       !emailFile &&
       !emails &&
-      !regLink &&
       !presentationFile &&
       !instructionsFile &&
       !otherFiles &&
@@ -132,6 +136,7 @@ export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null
     if (oldTitle !== workshopTitle) updated.title = workshopTitle;
     if (oldStart !== start) updated.start = start;
     if (oldEnd !== end) updated.end = end;
+    if (regLink && regLink !== currentWorkshop?.regLink) updated.regLink = regLink;
     return updated;
   }
 
@@ -166,7 +171,9 @@ export const useWorkshopCreateEditForm = (currentWorkshop: SharedWorkshop | null
       actions.pushSnackbar(errors.join("\n"), "warning");
     } else {
       const successMessage = editMode ? "Workshop edited successfully." : "Workshop created successfully.";
+      actions.removeAllErrors();
       actions.pushSnackbar(successMessage, "success");
+      onClose();
     }
   }
 

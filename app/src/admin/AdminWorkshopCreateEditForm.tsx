@@ -1,5 +1,5 @@
 import { Box, Dialog, Typography, TextField, Select, MenuItem, Avatar, useTheme } from "@mui/material";
-import { SharedWorkshop } from "@tsconline/shared";
+import { SharedWorkshop, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
 import dayjs, { Dayjs } from "dayjs";
 import { observer } from "mobx-react-lite";
 import { TSCPopup, TSCDialogLoader, InputFileUpload, CustomDivider, TSCButton } from "../components";
@@ -55,6 +55,8 @@ type AddWorkshopFilesProps = {
   onPresentationFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onInstructionsFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOtherFilesChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  hasExistingPrsentationFile: boolean;
+  hasExistingInstructionsFile: boolean;
 };
 const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
   presentationFile,
@@ -62,13 +64,20 @@ const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
   otherFiles,
   onPresentationFileChange,
   onInstructionsFileChange = () => {},
-  onOtherFilesChange
+  onOtherFilesChange,
+  hasExistingPrsentationFile,
+  hasExistingInstructionsFile
 }) => {
   return (
     <>
       <Typography variant="h5" mb="5px">
         Add Presentation
       </Typography>
+      {hasExistingPrsentationFile && (
+        <Typography variant="body2" color="warning.main" mb={1}>
+          A presentation file already exists. Uploading a new file will replace the existing one.
+        </Typography>
+      )}
       <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
         <InputFileUpload
           text="Upload Pdf Presentation"
@@ -81,6 +90,11 @@ const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
       <Typography variant="h5" mb="5px">
         Add Instructions
       </Typography>
+      {hasExistingInstructionsFile && (
+        <Typography variant="body2" color="warning.main" mb={1}>
+          An instructions file already exists. Uploading a new file will replace the existing one.
+        </Typography>
+      )}
       <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center">
         <InputFileUpload
           text="Upload Pdf Instructions"
@@ -127,7 +141,7 @@ export const WorkshopCreateEditForm: React.FC<WorkshopCreateEditForm> = observer
   onClose
 }) {
   const theme = useTheme();
-  const { state, setters, handlers } = useWorkshopCreateEditForm(currentWorkshop, editMode);
+  const { state, setters, handlers } = useWorkshopCreateEditForm(currentWorkshop, editMode, onClose);
   const prevCoverPic = currentWorkshop ? getWorkshopCoverImage(currentWorkshop.workshopId) : null;
 
   return (
@@ -244,6 +258,8 @@ export const WorkshopCreateEditForm: React.FC<WorkshopCreateEditForm> = observer
                 onPresentationFileChange={handlers.handlePresentationFileUpload}
                 onInstructionsFileChange={handlers.handleInstructionsFileUpload}
                 onOtherFilesChange={handlers.handleOtherFilesUpload}
+                hasExistingPrsentationFile={!!currentWorkshop?.files?.includes(reservedPresentationFileName)}
+                hasExistingInstructionsFile={!!currentWorkshop?.files?.includes(reservedInstructionsFileName)}
               />
               <Typography variant="h5" mb="5px" mt="15px">
                 {prevCoverPic ? "Change Cover Picture" : "Add Cover Picture"}

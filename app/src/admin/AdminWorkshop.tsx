@@ -120,6 +120,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       }
       await actions.adminDeleteWorkshop(workshop.workshopId);
       setDeleteWorkshopFormOpen(false);
+      setWorkshop(null);
     } catch (error) {
       displayServerError(
         error,

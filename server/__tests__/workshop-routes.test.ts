@@ -528,6 +528,7 @@ describe("serveWorkshopHyperlinks tests", () => {
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
   const checkFileExists = vi.spyOn(util, "checkFileExists");
   beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not valid", async () => {

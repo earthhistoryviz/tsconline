@@ -25,7 +25,8 @@ export const serveWorkshopHyperlinks = async (
   try {
     const fileInfo = filenameInfoMap[filename];
     const user = request.user!; // already verified in verifyAuthority
-    if (!(await isUserInWorkshop(user.userId, workshopId))) {
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
       return reply.status(403).send({ error: "Not registered for workshop" });
     }
     const filesDir = await getWorkshopFilesPath(workshopId);
