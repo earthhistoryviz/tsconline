@@ -43,7 +43,6 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
           return;
         }
         await actions.adminAddOfficialDatapackToWorkshop(currentWorkshop.workshopId, datapack);
-        actions.fetchAllWorkshops();
       } catch (error) {
         displayServerError(
           error,

@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { state } from "..";
+import { actions, state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -735,6 +735,7 @@ export const adminUploadDatapackToWorkshop = action(
 
       if (response.ok) {
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+        actions.fetchAllWorkshops();
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
       }
@@ -765,6 +766,7 @@ export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: numb
     });
     if (response.ok) {
       pushSnackbar("Datapacks added to workshop successfully", "success");
+      actions.fetchAllWorkshops();
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED;
       switch (response.status) {
