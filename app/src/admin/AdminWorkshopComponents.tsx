@@ -220,7 +220,6 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         if (oldStart !== start) updatedFields.start = start;
         if (oldEnd !== end) updatedFields.end = end;
         if (oldDescription !== workshopDescription && !(workshopDescription === "" && oldDescription === null)) {
-          console.log("Updating description", workshopDescription, oldDescription);
           updatedFields.description = workshopDescription;
         }
         if (oldRegRestrict !== regRestrict) {
