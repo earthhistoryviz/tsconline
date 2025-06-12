@@ -3,7 +3,7 @@
   justify-content: center;
   align-items: center;
   text-align: center;
-  flex-direction: row;
+  flex-direction: column;
   height: 100%;
   width: 100%;
   gap: 2px;

@@ -3,7 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo, isTempDatapack } from "@tsconline/shared";
+import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo, assertChartProgressUpdate, isTempDatapack } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -187,6 +187,7 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+      generalActions.updateChartLoadingProgress(0, "Initializing");
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
@@ -216,46 +217,24 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
       displayServerError(answer, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
       return;
     }
-    const eventSource = new EventSource(`${backendUrl}/chart-progress/${jobId}`);
 
+    const eventSource = new EventSource(`${backendUrl}/chart-progress/${jobId}`);
     return await new Promise((resolve, reject) => {
       eventSource.onmessage = async (event) => {
         const progress = JSON.parse(event.data);
-        // actions.updateProgress(progress.percent, progress.stage);
-
-        if (progress.percent === 100) {
+        assertChartProgressUpdate(progress);
+        if (progress.stage === "Error") {
           eventSource.close();
-          try {
-            assertChartInfo(progress);
-            const content = await (await fetcher(progress.chartpath)).text();
-            const sanitizedSVG = purifyChartContent(content);
-
-            generalActions.pushSnackbar("Successfully generated chart", "success");
-
-            resolve({
-              chartContent: sanitizedSVG,
-              unsafeChartContent: content,
-              hash: progress.hash
-            });
-          } catch (e) {
-            console.error("Failed while processing chart result", e);
-            reject(e);
-          }
-        }
-      };
-      eventSource.addEventListener("error", (event: MessageEvent) => {
-        eventSource.close();
-        try {
-          if (!event.data) {
-            // most likely the connection was closed, wait for onmessage to close app side
-            return;
-          }
-          const error = JSON.parse(event.data);
           let errorCode = ErrorCodes.INTERNAL_ERROR;
-
-          switch (error.errorCode) {
+          switch (progress.errorCode) {
             case 100:
               errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
+              break;
+            case 408:
+              errorCode = ErrorCodes.SERVER_TIMEOUT;
+              break;
+            case 503:
+              errorCode = ErrorCodes.SERVER_BUSY;
               break;
             case 1000:
               errorCode = ErrorCodes.INVALID_SETTINGS;
@@ -264,6 +243,7 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
               errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
               break;
             case 400:
+            case 500:
             case 1002:
             case 1003:
             case 1004:
@@ -275,17 +255,30 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
               errorCode = ErrorCodes.INTERNAL_ERROR;
               break;
           }
-
-          displayServerError(error, errorCode, ErrorMessages[errorCode]);
-          reject(error);
-        } catch (parseErr) {
-          console.error("Failed to parse SSE error event", parseErr);
-          displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-          reject(parseErr);
+          displayServerError(progress.error, errorCode, ErrorMessages[errorCode]);
+          resolve(undefined);
+          return;
         }
-      });
+        generalActions.updateChartLoadingProgress(progress.percent, progress.stage);
+        if (progress.percent === 100) {
+          eventSource.close();
+          try {
+            assertChartInfo(progress);
+            const content = await (await fetcher(progress.chartpath)).text();
+            const sanitizedSVG = purifyChartContent(content);
+            generalActions.pushSnackbar("Successfully generated chart", "success");
+            resolve({
+              chartContent: sanitizedSVG,
+              unsafeChartContent: content,
+              hash: progress.hash
+            });
+          } catch (e) {
+            console.error("Failed while processing chart result", e);
+            reject(e);
+          }
+        }
+      };
     });
-
   } catch (e) {
     console.error("Unexpected failure", e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);

@@ -33,7 +33,8 @@ import type {
   DatapackMetadata,
   Marker,
   Model,
-  CommentType
+  CommentType,
+  Stage
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -46,6 +47,8 @@ export type State = {
   chartTab: {
     chartTimelineLocked: boolean;
     state: ChartTabState;
+    percent: number;
+    stage: Stage;
   };
   crossPlot: {
     lockX: boolean;
@@ -181,7 +184,9 @@ export type State = {
 export const state = observable<State>({
   chartTab: {
     chartTimelineLocked: false,
-    state: cloneDeep(defaultChartTabState)
+    state: cloneDeep(defaultChartTabState),
+    percent: 0,
+    stage: "Initializing"
   },
   crossPlot: observable(
     {

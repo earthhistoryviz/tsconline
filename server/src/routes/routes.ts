@@ -7,7 +7,8 @@ import {
   assertTimescale,
   DatapackMetadata,
   isUserDatapack,
-  isTempDatapack
+  isTempDatapack,
+  NormalProgress
 } from "@tsconline/shared";
 import {
   deleteDirectory,
@@ -229,50 +230,6 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   }
 };
 
-/**
- * Will attempt to read pdf and return whether it can or not
- * Runs with await
- * TODO: ADD ASSERTS
- */
-export const fetchSVGStatus = async function (
-  request: FastifyRequest<{ Params: { hash: string } }>,
-  reply: FastifyReply
-) {
-  const { hash } = request.params;
-  let isSVGReady = false;
-  const root = process.cwd();
-  let directory = path.join(assetconfigs.chartsDirectory, hash);
-  let filepath = path.join(directory, "chart.svg");
-  // sanitize and check filepath
-  try {
-    directory = await realpath(path.resolve(root, directory));
-    filepath = await realpath(path.resolve(root, filepath));
-  } catch (e) {
-    console.log("reply: ", { ready: false });
-    reply.send({ ready: false });
-    return;
-  }
-  if (!directory.startsWith(root) || !filepath.startsWith(root) || !filepath.endsWith("chart.svg")) {
-    reply.status(403).send({ error: "Invalid hash" });
-    return;
-  }
-  // if hash doesn't exist reply with error
-  if (!fs.existsSync(directory)) {
-    reply.send({ error: `No directory exists at hash: ${directory}` });
-    return;
-  }
-  try {
-    if (fs.existsSync(filepath)) {
-      if (svgson.parseSync((await readFile(filepath)).toString())) isSVGReady = true;
-    }
-  } catch (e) {
-    console.log("can't read svg at hash: ", hash);
-  }
-
-  console.log("reply: ", { ready: isSVGReady });
-  reply.send({ ready: isSVGReady });
-};
-
 type Job = {
   listener?: FastifyReply;
 };
@@ -292,14 +249,7 @@ function closeListener(jobId: string) {
   jobStore.delete(jobId);
 }
 
-type Stage = "Initializing" | "Preparing datapacks" | "Generating chart" | "Waiting for file" | "Complete";
-
-type Progress = {
-  stage: Stage;
-  percent: number;
-};
-
-function parseJavaOutputLine(line: string): Progress | null {
+function parseJavaOutputLine(line: string): NormalProgress | null {
   if (line.includes("Convert Datapack to sqlite database")) {
     return { stage: "Preparing datapacks", percent: 20 };
   } else if (line.includes("Generating Image")) {
@@ -310,7 +260,7 @@ function parseJavaOutputLine(line: string): Progress | null {
   return null;
 }
 
-export const startChartGeneration = async function startChartGeneration(request: FastifyRequest, reply: FastifyReply) {
+export const handleChartGeneration = async function handleChartGeneration(request: FastifyRequest, reply: FastifyReply) {
   const jobId = randomUUID();
   const job: Job = {};
   jobStore.set(jobId, job);
@@ -323,30 +273,25 @@ export const startChartGeneration = async function startChartGeneration(request:
     closeListener(jobId);
     console.log("Chart generation complete for job:", jobId);
   } catch (error) {
-    console.error("Error in chart generation:", error);
     let message = "Unknown error";
-    let errorCode = 1000;
-
+    let errorCode = 5000;
     if (error instanceof ChartGenerationError) {
       message = error.message;
-      errorCode = error.errorCode ?? 1000;
+      errorCode = error.errorCode ?? 5000;
     } else if (error instanceof Error) {
       message = error.message;
     }
-
     notifyListener(jobId, JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
     closeListener(jobId);
   }
 };
 
 class ChartGenerationError extends Error {
-  public httpStatus: number;
-  public errorCode?: number;
+  public errorCode: number;
 
-  constructor(message: string, options?: { errorCode?: number; httpStatus?: number }) {
+  constructor(message: string, errorCode: number) {
     super(message);
-    this.errorCode = options?.errorCode;
-    this.httpStatus = options?.httpStatus ?? 500;
+    this.errorCode = errorCode;
   }
 }
 
@@ -365,7 +310,7 @@ export const getChartProgress = async function getChartProgress(
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
     "Connection": "keep-alive",
-    "Access-Control-Allow-Origin": "http://localhost:5173"
+    "Access-Control-Allow-Origin": process.env.DOMAIN || "http://localhost:5173"
   });
   reply.raw.write("\n");
   job.listener = reply;
@@ -462,7 +407,7 @@ async function generateChart(request: FastifyRequest, jobId: string) {
     // update file metadata for all used datapacks (recently used datapacks will be updated)
     await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths);
   } catch (e) {
-    throw new ChartGenerationError("Failed to update file metadata", { errorCode: 100 });
+    throw new ChartGenerationError("Failed to update file metadata", 100);
   }
   // If this setting already has a chart, just return that
   try {
@@ -605,7 +550,7 @@ async function generateChart(request: FastifyRequest, jobId: string) {
   // Add the execution task to the queue
   if (queue.size >= maxQueueSize) {
     console.log("Queue is full");
-    throw new ChartGenerationError("Queue is too busy", { httpStatus: 503 });
+    throw new ChartGenerationError("Queue is too busy", 503);
   }
   try {
     const priority = userInActiveWorkshop ? 2 : uuid ? 1 : 0;
@@ -618,10 +563,10 @@ async function generateChart(request: FastifyRequest, jobId: string) {
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {
       console.error("Queue timed out");
-      throw new ChartGenerationError("Queue timed out", { httpStatus: 503 });
+      throw new ChartGenerationError("Queue timed out", 503);
     } else {
       console.error("Failed to execute Java command:", error);
-      throw new ChartGenerationError("Failed to execute Java command", { errorCode: 400, httpStatus: 500 });
+      throw new ChartGenerationError("Failed to execute Java command", 400);
     }
   } finally {
     // delete all temporary datapacks after used in chart generation
@@ -642,7 +587,7 @@ async function generateChart(request: FastifyRequest, jobId: string) {
       "because of: ",
       { errorMessage }
     );
-    throw new ChartGenerationError(errorMessage, { errorCode: knownErrorCode, httpStatus: 500 });
+    throw new ChartGenerationError(errorMessage, 500);
   } else {
     console.log("No error found in Java output. Sending chartpath and hash.");
     console.log("Sending reply to browser: ", {

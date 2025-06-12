@@ -700,6 +700,42 @@ export type MarkdownTree = {
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
 
+const Stages = [
+  "Initializing",
+  "Preparing datapacks",
+  "Generating chart",
+  "Waiting for file",
+  "Complete"
+] as const;
+export type Stage = typeof Stages[number];
+export type NormalProgress = {
+  stage: Stage;
+  percent: number;
+};
+type ErrorProgress = {
+  stage: "Error";
+  percent: 0;
+  error: string;
+  errorCode: number;
+};
+export type ChartProgressUpdate = NormalProgress | ErrorProgress;
+
+export function assertChartProgressUpdate(o: any): asserts o is ChartProgressUpdate {
+  if (!o || typeof o !== "object") throw new Error("ChartProgressUpdate must be a non-null object");
+  if (o.stage === "Error") {
+    if (typeof o.error !== "string") throwError("ChartProgressUpdate", "error", "string", o.error);
+    if (typeof o.errorCode !== "number") throwError("ChartProgressUpdate", "errorCode", "number", o.errorCode);
+    if (o.percent !== 0) throwError("ChartProgressUpdate", "percent", "0", o.percent);
+  } else {
+     if (!Stages.includes(o.stage)) {
+      throw new Error(`Invalid stage: ${o.stage}`);
+    }
+    if (typeof o.percent !== "number" || o.percent < 0 || o.percent > 100) {
+      throwError("ChartProgressUpdate", "percent", "number between 0 and 100", o.percent);
+    }
+  }
+}
+
 export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
   if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
   if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);

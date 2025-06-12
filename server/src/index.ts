@@ -282,8 +282,6 @@ const looseRateLimit = {
     }
   }
 };
-// checks chart.pdf-status
-server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
@@ -363,7 +361,7 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
   "/chart",
   looseRateLimit,
-  routes.startChartGeneration
+  routes.handleChartGeneration
 );
 server.get("/chart-progress/:jobId", looseRateLimit, routes.getChartProgress);
 
