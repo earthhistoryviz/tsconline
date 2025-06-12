@@ -1,10 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { readFile } from "fs/promises";
-import {
-  TimescaleItem,
-  assertTimescale,
-  DatapackMetadata,
-} from "@tsconline/shared";
+import { TimescaleItem, assertTimescale, DatapackMetadata } from "@tsconline/shared";
 import {
   assetconfigs,
   verifyFilepath,
@@ -23,7 +19,15 @@ import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "
 import logger from "../error-logger.js";
 import "dotenv/config";
 import { randomUUID } from "crypto";
-import { Job, jobStore, notifyListener, closeListener, generateChart, waitForSVGReady, ChartGenerationError } from "../chart-generation-service.js";
+import {
+  Job,
+  jobStore,
+  notifyListener,
+  closeListener,
+  generateChart,
+  waitForSVGReady,
+  ChartGenerationError
+} from "../chart-generation-service.js";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -217,7 +221,10 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   }
 };
 
-export const handleChartGeneration = async function handleChartGeneration(request: FastifyRequest, reply: FastifyReply) {
+export const handleChartGeneration = async function handleChartGeneration(
+  request: FastifyRequest,
+  reply: FastifyReply
+) {
   const jobId = randomUUID();
   const job: Job = {};
   jobStore.set(jobId, job);
@@ -257,7 +264,7 @@ export const getChartProgress = async function getChartProgress(
   reply.raw.writeHead(200, {
     "Content-Type": "text/event-stream",
     "Cache-Control": "no-cache",
-    "Connection": "keep-alive",
+    Connection: "keep-alive",
     "Access-Control-Allow-Origin": process.env.DOMAIN || "http://localhost:5173"
   });
   reply.raw.write("\n");

@@ -14,7 +14,7 @@ import { deleteUserDatapack } from "./user/user-handler.js";
 import { checkFileExists, assetconfigs, deleteDirectory } from "./util.js";
 import { getWorkshopIdFromUUID } from "./workshop/workshop-util.js";
 import svgson from "svgson";
-import { queue, maxQueueSize } from "./index.js"
+import { queue, maxQueueSize } from "./index.js";
 
 export type Job = {
   listener?: FastifyReply;
@@ -63,12 +63,12 @@ export function parseJavaOutputLine(line: string): NormalProgress | null {
 
 /**
  * Waits until the SVG file exists and is fully written.
- * 
+ *
  * The Java process may exit before the SVG file is fully written and readable.
  * This function will wait for the file to exist and be parseable as SVG.
- * 
+ *
  * Throws if the file is not ready within the specified timeout.
- * 
+ *
  * @param filepath The full path to the SVG file.
  * @param timeoutMs Maximum time to wait for the file to be ready.
  */

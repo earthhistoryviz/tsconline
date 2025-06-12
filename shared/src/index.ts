@@ -700,14 +700,8 @@ export type MarkdownTree = {
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
 
-const Stages = [
-  "Initializing",
-  "Loading datapacks",
-  "Generating chart",
-  "Waiting for file",
-  "Complete"
-] as const;
-export type Stage = typeof Stages[number];
+const Stages = ["Initializing", "Loading datapacks", "Generating chart", "Waiting for file", "Complete"] as const;
+export type Stage = (typeof Stages)[number];
 export type NormalProgress = {
   stage: Stage;
   percent: number;
@@ -727,7 +721,7 @@ export function assertChartProgressUpdate(o: any): asserts o is ChartProgressUpd
     if (typeof o.errorCode !== "number") throwError("ChartProgressUpdate", "errorCode", "number", o.errorCode);
     if (o.percent !== 0) throwError("ChartProgressUpdate", "percent", "0", o.percent);
   } else {
-     if (!Stages.includes(o.stage)) {
+    if (!Stages.includes(o.stage)) {
       throw new Error(`Invalid stage: ${o.stage}`);
     }
     if (typeof o.percent !== "number" || o.percent < 0 || o.percent > 100) {

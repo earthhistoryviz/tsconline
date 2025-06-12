@@ -3,7 +3,13 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo, assertChartProgressUpdate, isTempDatapack } from "@tsconline/shared";
+import {
+  ChartRequest,
+  ColumnInfo,
+  assertChartInfo,
+  assertChartProgressUpdate,
+  isTempDatapack
+} from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -200,11 +206,14 @@ const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevConfig = JSON.parse(JSON.stringify(state.config));
 });
 
-export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
-  chartContent: string;
-  unsafeChartContent: string;
-  hash: string;
-} | undefined> = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
+export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
+  | {
+      chartContent: string;
+      unsafeChartContent: string;
+      hash: string;
+    }
+  | undefined
+> = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
   try {
     const response = await fetcher(`/chart`, {
       method: "POST",
@@ -284,4 +293,3 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
-
