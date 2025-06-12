@@ -23,7 +23,7 @@ export const useWorkshopCreateEditForm = (
   const [otherFiles, setOtherFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>(null);
   const [regLink, setRegLink] = useState<string | null>(currentWorkshop?.regLink || null);
-  const [regRestrict, setRegRestrict] = useState(false);
+  const [regRestrict, setRegRestrict] = useState(currentWorkshop?.regRestrict || false);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
   const [description, setDescription] = useState<string>(currentWorkshop?.description || "");
 

@@ -16,6 +16,7 @@ import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { createReadStream } from "fs";
+import { readdir } from "node:fs/promises";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -138,6 +139,11 @@ export const downloadWorkshopFilesZip = async (
       file = await readFile(zipfile);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        const dir = await readdir(filesFolder, { withFileTypes: true });
+        if (dir.length === 0) {
+          reply.status(404).send({ error: "No files found for this workshop" });
+          return;
+        }
         file = await createZipFile(zipfile, filesFolder);
       } else {
         reply.status(500).send({ error: `Read error: ${(error as Error).message}` });

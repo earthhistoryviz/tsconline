@@ -432,6 +432,19 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Read error: Something else" });
   });
+  it("should return 404 if no files found in workshop", async () => {
+    const error = new Error("ENOENT") as NodeJS.ErrnoException;
+    error.code = "ENOENT";
+    readFile.mockRejectedValueOnce(error);
+    vi.spyOn(fsp, "readdir").mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "No files found for this workshop" });
+    expect(response.statusCode).toBe(404);
+  });
   it("should create the zip if readFile returns ENOENT, then return file", async () => {
     const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
