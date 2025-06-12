@@ -702,7 +702,7 @@ export const modelTypes = ["Rect", "Circle"];
 
 const Stages = [
   "Initializing",
-  "Preparing datapacks",
+  "Loading datapacks",
   "Generating chart",
   "Waiting for file",
   "Complete"
