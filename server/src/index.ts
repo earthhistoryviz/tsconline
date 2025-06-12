@@ -63,6 +63,7 @@ const server = fastify({
     }
   }*/
 });
+// predefine "user" property on request to stabilize object shape for JS engine optimizations (per Fastify docs)
 server.decorateRequest("user", undefined);
 
 collectDefaultMetrics();
@@ -99,9 +100,12 @@ server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [numb
   activeUsers.set(ipSet.size);
 });
 
+// hook to track http request metrics
+// calculates request duration and increments the request count
 server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }, reply) => {
   const duration = process.hrtime(request.startTime);
   const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
+  // get route path if available for metrics, otherwise use "unknown"
   const routePath = request.routeOptions?.url || "unknown";
   totalHttpRequestCount.labels(request.method, routePath, reply.statusCode.toString()).inc();
   totalHttpRequestDuration.labels(request.method, routePath, reply.statusCode.toString()).set(durationInMs);
