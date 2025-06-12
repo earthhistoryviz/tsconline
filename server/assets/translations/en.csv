@@ -119,7 +119,6 @@ translation.workshops.details-page.please-register,Please register to access any
 translation.workshops.details-page.register-button,Register
 translation.workshops.details-page.registered-button,Registered
 translation.workshops.details-page.download-tooltip-not-registered,Contact jogg@purdue.edu to register!
-translation.workshops.details-page.no-files-to-download,No files to download
 translation.workshops.details-page.messages.no-datapacks,No datapacks available
 translation.workshops.details-page.messages.no-instructions,No instructions available
 translation.workshops.details-page.messages.no-presentation,No presentation available
@@ -385,6 +384,7 @@ translation.report-bug.return-to-homepage,to return to the homepage.
 translation.report-bug.second,second
 translation.report-bug.loading-header,Sending your report...
 translation.report-bug.loading-subheader,Please wait while we process your report.
+translation.errors.NO_FILES_TO_DOWNLOAD,No files to download.
 translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.
 translation.errors.SERVER_RESPONSE_ERROR,Server response error. Please try again later.
 translation.errors.INVALID_DATAPACK_INFO,Invalid datapack info received from server. Please try again later.
