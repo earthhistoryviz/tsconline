@@ -219,13 +219,14 @@ export const WorkshopForm: React.FC<WorkshopFormProps> = observer(function Works
         if (oldTitle !== workshopTitle) updatedFields.title = workshopTitle;
         if (oldStart !== start) updatedFields.start = start;
         if (oldEnd !== end) updatedFields.end = end;
-        if (oldDescription !== workshopDescription) {
+        if (oldDescription !== workshopDescription && !(workshopDescription === "" && oldDescription === null)) {
+          console.log("Updating description", workshopDescription, oldDescription);
           updatedFields.description = workshopDescription;
         }
         if (oldRegRestrict !== regRestrict) {
           updatedFields.regRestrict = regRestrict;
         }
-        if (regLink !== workshop?.regLink && !(regLink === "" && workshop.regLink === undefined)) {
+        if (regLink !== workshop?.regLink && !(regLink === "" && workshop.regLink === null)) {
           updatedFields.regLink = regLink;
         }
         updatedFields.workshopId = workshopId;
