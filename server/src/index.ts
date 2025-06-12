@@ -363,8 +363,9 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
   "/chart",
   looseRateLimit,
-  routes.fetchChart
+  routes.startChartGeneration
 );
+server.get("/chart-progress/:jobId", looseRateLimit, routes.getChartProgress);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

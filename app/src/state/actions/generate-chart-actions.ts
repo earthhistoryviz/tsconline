@@ -12,6 +12,7 @@ import { cloneDeep } from "lodash";
 import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
+import { backendUrl } from "../../util/constant";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
@@ -198,7 +199,11 @@ const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevConfig = JSON.parse(JSON.stringify(state.config));
 });
 
-export const sendChartRequestToServer = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
+export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<{
+  chartContent: string;
+  unsafeChartContent: string;
+  hash: string;
+} | undefined> = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
   try {
     const response = await fetcher(`/chart`, {
       method: "POST",
@@ -206,60 +211,84 @@ export const sendChartRequestToServer = action("sendChartRequestToServer", async
       credentials: "include"
     });
     const answer = await response.json();
-    if (response.status === 500) {
-      assertChartErrorResponse(answer);
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (answer.errorCode) {
-        case 100:
-          errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
-          break;
-        case 1000:
-          errorCode = ErrorCodes.INVALID_SETTINGS;
-          break;
-        case 1001:
-          errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
-          break;
-        case 400:
-        case 1002:
-        case 1003:
-        case 1004:
-        case 1005:
-        case 2000:
-        case 2001:
-        case 2002:
-        case 2003:
-          errorCode = ErrorCodes.INTERNAL_ERROR;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
+    const { jobId } = answer;
+    if (!response.ok || !jobId) {
+      displayServerError(answer, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
       return;
     }
-    try {
-      assertChartInfo(answer);
-      await generalActions.checkSVGStatus(answer.hash);
-      const content = await (await fetcher(answer.chartpath)).text();
-      const sanitizedSVG = purifyChartContent(content);
-      generalActions.pushSnackbar("Successfully generated chart", "success");
-      return {
-        chartContent: sanitizedSVG,
-        unsafeChartContent: content,
-        hash: answer.hash
+    const eventSource = new EventSource(`${backendUrl}/chart-progress/${jobId}`);
+
+    return await new Promise((resolve, reject) => {
+      eventSource.onmessage = async (event) => {
+        const progress = JSON.parse(event.data);
+        // actions.updateProgress(progress.percent, progress.stage);
+
+        if (progress.percent === 100) {
+          eventSource.close();
+          try {
+            assertChartInfo(progress);
+            const content = await (await fetcher(progress.chartpath)).text();
+            const sanitizedSVG = purifyChartContent(content);
+
+            generalActions.pushSnackbar("Successfully generated chart", "success");
+
+            resolve({
+              chartContent: sanitizedSVG,
+              unsafeChartContent: content,
+              hash: progress.hash
+            });
+          } catch (e) {
+            console.error("Failed while processing chart result", e);
+            reject(e);
+          }
+        }
       };
-    } catch (e) {
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (response.status) {
-        case 408:
-          errorCode = ErrorCodes.SERVER_TIMEOUT;
-          break;
-        case 503:
-          errorCode = ErrorCodes.SERVER_BUSY;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      return;
-    }
+      eventSource.addEventListener("error", (event: MessageEvent) => {
+        eventSource.close();
+        try {
+          if (!event.data) {
+            // most likely the connection was closed, wait for onmessage to close app side
+            return;
+          }
+          const error = JSON.parse(event.data);
+          let errorCode = ErrorCodes.INTERNAL_ERROR;
+
+          switch (error.errorCode) {
+            case 100:
+              errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
+              break;
+            case 1000:
+              errorCode = ErrorCodes.INVALID_SETTINGS;
+              break;
+            case 1001:
+              errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
+              break;
+            case 400:
+            case 1002:
+            case 1003:
+            case 1004:
+            case 1005:
+            case 2000:
+            case 2001:
+            case 2002:
+            case 2003:
+              errorCode = ErrorCodes.INTERNAL_ERROR;
+              break;
+          }
+
+          displayServerError(error, errorCode, ErrorMessages[errorCode]);
+          reject(error);
+        } catch (parseErr) {
+          console.error("Failed to parse SSE error event", parseErr);
+          displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+          reject(parseErr);
+        }
+      });
+    });
+
   } catch (e) {
-    console.error(e);
+    console.error("Unexpected failure", e);
     displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
   }
 });
+

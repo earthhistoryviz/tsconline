@@ -35,6 +35,7 @@ import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "
 import { saveChartHistory } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
+import { randomUUID } from "crypto";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -272,21 +273,135 @@ export const fetchSVGStatus = async function (
   reply.send({ ready: isSVGReady });
 };
 
+type Job = {
+  listener?: FastifyReply;
+};
+
+const jobStore = new Map<string, Job>();
+
+function notifyListener(jobId: string, message: string) {
+  const job = jobStore.get(jobId);
+  if (!job || !job.listener) return;
+  job.listener.raw.write(`data: ${message}\n\n`);
+}
+
+function closeListener(jobId: string) {
+  const job = jobStore.get(jobId);
+  if (!job || !job.listener) return;
+  job.listener.raw.end();
+  jobStore.delete(jobId);
+}
+
+type Stage = "Initializing" | "Preparing datapacks" | "Generating chart" | "Waiting for file" | "Complete";
+
+type Progress = {
+  stage: Stage;
+  percent: number;
+};
+
+function parseJavaOutputLine(line: string): Progress | null {
+  if (line.includes("Convert Datapack to sqlite database")) {
+    return { stage: "Preparing datapacks", percent: 20 };
+  } else if (line.includes("Generating Image")) {
+    return { stage: "Generating chart", percent: 50 };
+  } else if (line.includes("ImageGenerator did not have any errors")) {
+    return { stage: "Waiting for file", percent: 90 };
+  }
+  return null;
+}
+
+export const startChartGeneration = async function startChartGeneration(request: FastifyRequest, reply: FastifyReply) {
+  const jobId = randomUUID();
+  const job: Job = {};
+  jobStore.set(jobId, job);
+  reply.send({ jobId });
+  try {
+    const { chartpath, hash } = await generateChart(request, jobId);
+    notifyListener(jobId, JSON.stringify({ stage: "Waiting for file", percent: 90 }));
+    await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 1000 * 30);
+    notifyListener(jobId, JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
+    closeListener(jobId);
+    console.log("Chart generation complete for job:", jobId);
+  } catch (error) {
+    console.error("Error in chart generation:", error);
+    let message = "Unknown error";
+    let errorCode = 1000;
+
+    if (error instanceof ChartGenerationError) {
+      message = error.message;
+      errorCode = error.errorCode ?? 1000;
+    } else if (error instanceof Error) {
+      message = error.message;
+    }
+
+    notifyListener(jobId, JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
+    closeListener(jobId);
+  }
+};
+
+class ChartGenerationError extends Error {
+  public httpStatus: number;
+  public errorCode?: number;
+
+  constructor(message: string, options?: { errorCode?: number; httpStatus?: number }) {
+    super(message);
+    this.errorCode = options?.errorCode;
+    this.httpStatus = options?.httpStatus ?? 500;
+  }
+}
+
+export const getChartProgress = async function getChartProgress(
+  request: FastifyRequest<{ Params: { jobId: string } }>,
+  reply: FastifyReply
+) {
+  const { jobId } = request.params;
+  const job = jobStore.get(jobId);
+  if (!job) {
+    reply.status(404).send({ error: "Job not found" });
+    return;
+  }
+
+  reply.raw.writeHead(200, {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache",
+    "Connection": "keep-alive",
+    "Access-Control-Allow-Origin": "http://localhost:5173"
+  });
+  reply.raw.write("\n");
+  job.listener = reply;
+
+  request.raw.on("close", () => {
+    console.log(`Client disconnected from job ${jobId}`);
+    closeListener(jobId);
+  });
+};
+
+async function waitForSVGReady(filepath: string, timeoutMs: number): Promise<void> {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    if (await checkFileExists(filepath)) {
+      const content = await readFile(filepath);
+      if (svgson.parseSync(content.toString())) {
+        return;
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  throw new Error("SVG file did not finalize in time");
+}
+
 /**
  * Will fetch a chart with or without the cache
  * Will return the chart path and the hash the chart was saved with
  */
-export const fetchChart = async function fetchChart(request: FastifyRequest, reply: FastifyReply) {
+async function generateChart(request: FastifyRequest, jobId: string) {
   let chartrequest;
   try {
     chartrequest = JSON.parse(request.body as string);
     assertChartRequest(chartrequest);
   } catch (e) {
     console.log("ERROR: chart request is not valid.  Request was: ", chartrequest, ".  Error was: ", e);
-    reply.send({
-      error: "ERROR: chart request is not valid.  Error was: " + e
-    });
-    return;
+    throw new Error(`ERROR: chart request is not valid.  Error was: ${e}`);
   }
   const { useCache, isCrossPlot } = chartrequest;
   const uuid = request.session.get("uuid");
@@ -312,8 +427,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       case "workshop": {
         const workshopId = getWorkshopIdFromUUID(datapack.uuid);
         if (!userId || !workshopId || !(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
-          reply.send({ error: "ERROR: user does not have access to requested workshop datapack" });
-          return;
+          throw new Error("ERROR: user does not have access to requested workshop datapack");
         }
         uuidFolder = datapack.uuid;
         break;
@@ -323,8 +437,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         break;
       case "user":
         if (uuid !== datapack.uuid && !datapack.isPublic) {
-          reply.send({ error: "ERROR: user does not have access to requested datapack" });
-          return;
+          throw new Error("ERROR: user does not have access to requested user datapack");
         } else {
           uuidFolder = datapack.uuid;
           break;
@@ -334,8 +447,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
         break;
     }
     if (!uuidFolder) {
-      reply.send({ error: "ERROR: unknown user associated with datapack" });
-      return;
+      throw new Error("ERROR: unknown user associated with datapack");
     }
     const datapackDir = await fetchUserDatapackDirectory(uuidFolder, datapack.title);
     if (isUserDatapack(datapack)) {
@@ -350,9 +462,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     // update file metadata for all used datapacks (recently used datapacks will be updated)
     await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths);
   } catch (e) {
-    console.error("Error updating file metadata:", e);
-    reply.status(500).send({ errorCode: 100, error: "Internal Server Error" });
-    return;
+    throw new ChartGenerationError("Failed to update file metadata", { errorCode: 100 });
   }
   // If this setting already has a chart, just return that
   try {
@@ -362,13 +472,12 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       deleteDirectory(chartFilePath);
     } else {
       console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
-      reply.send({ chartpath: chartUrlPath, hash: hash }); // send the browser back the URL equivalent...
-      // after sending, save to history if user is logged in
+      // don't await for this, just send the reply
       if (!isCrossPlot && uuid)
-        await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
+        saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
           logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
         });
-      return;
+      return { chartpath: chartUrlPath, hash: hash }; // send the browser back the URL equivalent...
     }
   } catch (e) {
     // Doesn't exist, so make one
@@ -382,8 +491,7 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
     console.log("Successfully created and saved chart settings at", settingsFilePath);
   } catch (e) {
     console.log("ERROR: failed to save settings at", settingsFilePath, "  Error was:", e);
-    reply.send({ error: "ERROR: failed to save settings" });
-    return;
+    throw new Error(`ERROR: failed to save settings at ${settingsFilePath}. Error was: ${e}`);
   }
   let knownErrorCode = 0; // known error found during chart generation via java jar call, 0 means no error
   let errorMessage = "";
@@ -420,6 +528,13 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       let error = "";
 
       javaProcess.stdout.on("data", (data) => {
+        const lines = data.toString().split("\n");
+        for (const line of lines) {
+          const status = parseJavaOutputLine(line);
+          if (status) {
+            notifyListener(jobId, JSON.stringify(status));
+          }
+        }
         stdout += data;
       });
 
@@ -490,23 +605,24 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
   // Add the execution task to the queue
   if (queue.size >= maxQueueSize) {
     console.log("Queue is full");
-    reply.status(503).send({ error: "Service is too busy. Please try again later." });
-    return;
+    throw new ChartGenerationError("Queue is too busy", { httpStatus: 503 });
   }
   try {
     const priority = userInActiveWorkshop ? 2 : uuid ? 1 : 0;
-    await queue.add(async () => {
-      await execJavaCommand(1000 * 30), { priority };
-    });
+    await queue.add(
+      async () => {
+        await execJavaCommand(1000 * 30);
+      },
+      { priority }
+    );
   } catch (error) {
     if ((error as Error).message.includes("timed out")) {
       console.error("Queue timed out");
-      reply.status(408).send({ error: "Request Timeout" });
+      throw new ChartGenerationError("Queue timed out", { httpStatus: 503 });
     } else {
       console.error("Failed to execute Java command:", error);
-      reply.status(500).send({ errorCode: 400, error: "Internal Server Error" });
+      throw new ChartGenerationError("Failed to execute Java command", { errorCode: 400, httpStatus: 500 });
     }
-    return;
   } finally {
     // delete all temporary datapacks after used in chart generation
     usedTempDatapacks.forEach((datapack) => {
@@ -526,21 +642,21 @@ export const fetchChart = async function fetchChart(request: FastifyRequest, rep
       "because of: ",
       { errorMessage }
     );
-    reply.status(500).send({ errorCode: knownErrorCode, error: errorMessage });
+    throw new ChartGenerationError(errorMessage, { errorCode: knownErrorCode, httpStatus: 500 });
   } else {
     console.log("No error found in Java output. Sending chartpath and hash.");
     console.log("Sending reply to browser: ", {
       chartpath: chartUrlPath,
       hash: hash
     });
-    reply.send({ chartpath: chartUrlPath, hash: hash });
+    if (!isCrossPlot && uuid)
+      // do not await this, just send the reply
+      saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
+        logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
+      });
+    return { chartpath: chartUrlPath, hash: hash };
   }
-  // after sending, save to history if user is logged in
-  if (!isCrossPlot && uuid)
-    await saveChartHistory(uuid, settingsFilePath, datapacksToSendToCommandLine, chartFilePath, hash).catch((e) => {
-      logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
-    });
-};
+}
 
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {

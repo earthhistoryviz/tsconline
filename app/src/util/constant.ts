@@ -18,3 +18,5 @@ export const altUnitNamePrefix: string = "Chart Title in ";
 export const navBarHeight = "72px";
 
 export const dualColCompPrefix: string = "Overlay for ";
+
+export const backendUrl = import.meta.env.DEV ? "http://localhost:3000" : "";
