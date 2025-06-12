@@ -1,35 +1,72 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findUser, findWorkshop, isUserInWorkshop } from "../database.js";
-import { getWorkshopFilesPath, getWorkshopUUIDFromWorkshopId, verifyWorkshopValidity } from "./workshop-util.js";
-import { SharedWorkshop } from "@tsconline/shared";
+import { findWorkshop, isUserInWorkshop } from "../database.js";
+import { getWorkshopFilesPath, getWorkshopIdFromUUID, verifyWorkshopValidity } from "./workshop-util.js";
+import {
+  ReservedWorkshopFileKey,
+  SharedWorkshop,
+  filenameInfoMap,
+  getWorkshopUUIDFromWorkshopId
+} from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
-import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyNonExistentFilepath } from "../util.js";
-
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
+import logger from "../error-logger.js";
+import { createReadStream } from "fs";
+
+export const serveWorkshopHyperlinks = async (
+  request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
+  reply: FastifyReply
+) => {
+  const { workshopId, filename } = request.params;
+  try {
+    const fileInfo = filenameInfoMap[filename];
+    const user = request.user!; // already verified in verifyAuthority
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
+      return reply.status(403).send({ error: "Not registered for workshop" });
+    }
+    const filesDir = await getWorkshopFilesPath(workshopId);
+    const filePath = path.join(filesDir, fileInfo.actualFilename);
+    if (!(await checkFileExists(filePath))) {
+      reply.status(404).send({ error: "File not found" });
+      return;
+    }
+    return reply
+      .type("application/pdf")
+      .header("Content-Disposition", `inline; filename="${fileInfo.displayName}"`)
+      .send(createReadStream(filePath));
+  } catch (e) {
+    logger.error("Error serving workshop hyperlinks:", e);
+    reply.status(500).send({ error: "An error occurred" });
+  }
+};
 
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
   const { workshopUUID, datapackTitle } = request.params;
-  const uuid = request.session.get("uuid");
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
+    const user = request.user!; // already verified in verifyAuthority
+    const workshopId = getWorkshopIdFromUUID(workshopUUID);
+    if (!workshopId) {
+      reply.status(400).send({ error: "Invalid workshop UUID" });
       return;
     }
-    const result = await verifyWorkshopValidity(workshopUUID, user[0].userId);
+    const result = await verifyWorkshopValidity(workshopId, user.userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
     }
-    const response = await editDatapackMetadataRequestHandler(request.parts(), workshopUUID, datapackTitle);
+    const response = await editDatapackMetadataRequestHandler(
+      request.parts(),
+      getWorkshopUUIDFromWorkshopId(workshopId),
+      datapackTitle
+    );
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
@@ -75,62 +112,40 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
   }
 };
 
-export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
+export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
-) {
-  // already verified uuid in verifyAuthority
-  const uuid = request.session.get("uuid")!;
+) => {
   const { workshopId } = request.params;
   try {
     // user exists, already verified in verifyAuthority
-    const user = (await findUser({ uuid }))[0]!;
-    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+    const user = request.user!;
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const directory = await getUserUUIDDirectory(workshopUUID, true);
-    let filesFolder;
-    try {
-      filesFolder = await getWorkshopFilesPath(directory);
-    } catch (error) {
-      reply.status(500).send({ error: "Invalid directory path" });
-      return;
-    }
-    const zipfile = path.resolve(directory, `filesFor${workshopUUID}.zip`); //could be non-existent
+    const filesFolder = await getWorkshopFilesPath(workshopId);
+    const baseDir = path.dirname(filesFolder);
+    const zipfile = path.resolve(baseDir, `filesFor${workshopId}.zip`);
     if (!(await verifyNonExistentFilepath(zipfile))) {
       reply.status(500).send({ error: "Invalid directory path" });
       return;
     }
+    let file: Buffer;
     try {
-      let file;
-
-      // Check if ZIP file already exists
-      try {
-        file = await readFile(zipfile);
-      } catch (e) {
-        const error = e as NodeJS.ErrnoException;
-        if (error.code !== "ENOENT") {
-          reply.status(500).send({ error: "An error occurred: " + e });
-          return;
-        }
-      }
-
-      // If ZIP file doesn't exist, create one
-      if (!file) {
+      file = await readFile(zipfile);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         file = await createZipFile(zipfile, filesFolder);
-      }
-      reply.send(file);
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code === "ENOENT") {
-        reply.status(404).send({ error: "Failed to process the file" });
+      } else {
+        reply.status(500).send({ error: `Read error: ${(error as Error).message}` });
         return;
       }
-      throw e;
     }
-  } catch (e) {
+    reply.send(file);
+  } catch (error) {
+    logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });
   }
 };
