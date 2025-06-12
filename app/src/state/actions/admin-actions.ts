@@ -565,8 +565,7 @@ export const adminCreateWorkshop = action(
         end,
         regRestrict,
         creatorUUID,
-        ...(regLink && { ...(regLink && { regLink }),
-        ...(description && { description }) })
+        ...(regLink && { ...(regLink && { regLink }), ...(description && { description }) })
       };
       const response = await fetcher("/admin/workshop", {
         method: "POST",

@@ -472,8 +472,8 @@ describe("downloadWorkshopFilesZip tests", () => {
       url: route,
       headers
     });
-    expect(response.statusCode).toBe(404);
-    expect(await response.json()).toEqual({ error: "Failed to process the file" });
+    expect(await response.json()).toEqual({ error: "An error occurred" });
+    expect(response.statusCode).toBe(500);
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;

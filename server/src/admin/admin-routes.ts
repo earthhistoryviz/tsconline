@@ -532,10 +532,6 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
   reply: FastifyReply
 ) {
   const { title, start, end, regRestrict, creatorUUID, regLink, description } = request.body;
-  if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
-    reply.status(400).send({ error: "Missing required fields" });
-    return;
-  }
   const startDate = new Date(start);
   const endDate = new Date(end);
   if (
@@ -545,10 +541,6 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
     startDate.getTime() < Date.now()
   ) {
     reply.status(400).send({ error: "Invalid date format or dates are not valid" });
-    return;
-  }
-  if (regLink && !validator.isURL(regLink)) {
-    reply.status(400).send({ error: "Invalid registration link" });
     return;
   }
   try {
@@ -689,6 +681,10 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       workshopId: workshopId,
       active: newStart <= now && now <= newEnd,
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
+      files: await getWorkshopFilesNames(workshopId),
+      datapacks: await getWorkshopDatapacksNames(workshopId),
+      description: updatedWorkshop.description,
+      regLink: updatedWorkshop.regLink,
       creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
     reply.send({ workshop });
