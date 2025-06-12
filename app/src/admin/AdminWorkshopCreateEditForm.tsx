@@ -1,5 +1,5 @@
 import { Box, Dialog, Typography, TextField, Select, MenuItem, Avatar, useTheme } from "@mui/material";
-import { SharedWorkshop, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
+import { SharedWorkshop, RESERVED_INSTRUCTIONS_FILENAME, RESERVED_PRESENTATION_FILENAME } from "@tsconline/shared";
 import dayjs, { Dayjs } from "dayjs";
 import { observer } from "mobx-react-lite";
 import { TSCPopup, TSCDialogLoader, InputFileUpload, CustomDivider, TSCButton } from "../components";
@@ -55,7 +55,7 @@ type AddWorkshopFilesProps = {
   onPresentationFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onInstructionsFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onOtherFilesChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  hasExistingPrsentationFile: boolean;
+  hasExistingPresentationFile: boolean;
   hasExistingInstructionsFile: boolean;
 };
 const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
@@ -65,7 +65,7 @@ const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
   onPresentationFileChange,
   onInstructionsFileChange = () => {},
   onOtherFilesChange,
-  hasExistingPrsentationFile,
+  hasExistingPresentationFile,
   hasExistingInstructionsFile
 }) => {
   return (
@@ -73,7 +73,7 @@ const AddWorkshopFiles: React.FC<AddWorkshopFilesProps> = ({
       <Typography variant="h5" mb="5px">
         Add Presentation
       </Typography>
-      {hasExistingPrsentationFile && (
+      {hasExistingPresentationFile && (
         <Typography variant="body2" color="warning.main" mb={1}>
           A presentation file already exists. Uploading a new file will replace the existing one.
         </Typography>
@@ -258,8 +258,8 @@ export const WorkshopCreateEditForm: React.FC<WorkshopCreateEditForm> = observer
                 onPresentationFileChange={handlers.handlePresentationFileUpload}
                 onInstructionsFileChange={handlers.handleInstructionsFileUpload}
                 onOtherFilesChange={handlers.handleOtherFilesUpload}
-                hasExistingPrsentationFile={!!currentWorkshop?.files?.includes(reservedPresentationFileName)}
-                hasExistingInstructionsFile={!!currentWorkshop?.files?.includes(reservedInstructionsFileName)}
+                hasExistingPresentationFile={!!currentWorkshop?.files?.includes(RESERVED_PRESENTATION_FILENAME)}
+                hasExistingInstructionsFile={!!currentWorkshop?.files?.includes(RESERVED_INSTRUCTIONS_FILENAME)}
               />
               <Typography variant="h5" mb="5px" mt="15px">
                 {prevCoverPic ? "Change Cover Picture" : "Add Cover Picture"}

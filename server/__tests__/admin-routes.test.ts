@@ -2765,7 +2765,7 @@ describe("adminUploadFilesToWorkshop", () => {
       otherFiles: {
         value: Buffer.from("test"),
         options: {
-          filename: shared.reservedInstructionsFileName,
+          filename: shared.RESERVED_INSTRUCTIONS_FILENAME,
           contentType: "application/pdf"
         }
       }
@@ -2777,7 +2777,7 @@ describe("adminUploadFilesToWorkshop", () => {
       headers: formHeaders
     });
     expect(await response.json()).toEqual({
-      error: `File name ${shared.reservedInstructionsFileName} is reserved and cannot be used`
+      error: `File name ${shared.RESERVED_INSTRUCTIONS_FILENAME} is reserved and cannot be used`
     });
     expect(response.statusCode).toBe(400);
   });

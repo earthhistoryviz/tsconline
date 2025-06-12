@@ -14,10 +14,11 @@ import {
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
-  isUserDatapack
+  isUserDatapack,
+  getWorkshopUUIDFromWorkshopId,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
-import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
@@ -51,7 +52,7 @@ import { pipeline } from "stream/promises";
 import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
-import { getWorkshopUUIDFromWorkshopId, getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
+import { getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));

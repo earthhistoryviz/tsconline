@@ -14,7 +14,7 @@ import React, { useContext, useState } from "react";
 import { context } from "../state";
 import { TSCButton, DatapackUploadForm, TSCDialogLoader } from "../components";
 import { ErrorCodes } from "../util/error-codes";
-import { SharedWorkshop, isOfficialDatapack } from "@tsconline/shared";
+import { SharedWorkshop, getWorkshopUUIDFromWorkshopId, isOfficialDatapack } from "@tsconline/shared";
 import { displayServerError } from "../state/actions/util-actions";
 import "./AdminWorkshop.css";
 
@@ -43,6 +43,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
           return;
         }
         await actions.adminAddOfficialDatapackToWorkshop(currentWorkshop.workshopId, datapack);
+        actions.fetchAllWorkshops();
       } catch (error) {
         displayServerError(
           error,
@@ -101,7 +102,7 @@ export const AddDatapacksToWorkshopForm: React.FC<AddDatapacksToWorkshopFormProp
         <DatapackUploadForm
           close={() => setUploadDatapacks(false)}
           upload={actions.adminUploadDatapackToWorkshop}
-          type={{ type: "workshop", uuid: `workshop-${currentWorkshop.workshopId}` }}
+          type={{ type: "workshop", uuid: getWorkshopUUIDFromWorkshopId(currentWorkshop.workshopId) }}
           forcePublic
         />
       </Dialog>

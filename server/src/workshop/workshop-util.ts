@@ -1,4 +1,4 @@
-import { isWorkshopUUID } from "@tsconline/shared";
+import { getWorkshopUUIDFromWorkshopId, isWorkshopUUID } from "@tsconline/shared";
 import { OperationResult } from "../types.js";
 import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
@@ -26,15 +26,6 @@ export function getWorkshopIdFromUUID(uuid: string): number | null {
  */
 export function extractWorkshopIdFromFolderName(folderName: string): number | null {
   return getWorkshopIdFromUUID(folderName);
-}
-
-/**
- * Gets the workshop UUID from a workshop ID
- * @param workshopId
- * @returns
- */
-export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
-  return `workshop-${workshopId}`;
 }
 
 /**

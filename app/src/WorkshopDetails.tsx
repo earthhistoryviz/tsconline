@@ -12,7 +12,11 @@ import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
 import { loadRecaptcha, removeRecaptcha } from "./util";
-import { ReservedWorkshopFileKey, reservedInstructionsFileName, reservedPresentationFileName } from "@tsconline/shared";
+import {
+  ReservedWorkshopFileKey,
+  RESERVED_INSTRUCTIONS_FILENAME,
+  RESERVED_PRESENTATION_FILENAME
+} from "@tsconline/shared";
 
 type WorkshopReservedFileProps = {
   renderLink: boolean;
@@ -147,13 +151,13 @@ export const WorkshopDetails = observer(() => {
             </div>
             <div className={styles.ai}>
               <WorkshopReservedFile
-                renderLink={workshop.files?.includes(reservedInstructionsFileName) || false}
+                renderLink={workshop.files?.includes(RESERVED_INSTRUCTIONS_FILENAME) || false}
                 fileType="instructions"
                 workshopId={workshop.workshopId}
                 userInWorkshop={shouldLoadRecaptcha}
               />
               <WorkshopReservedFile
-                renderLink={workshop.files?.includes(reservedPresentationFileName) || false}
+                renderLink={workshop.files?.includes(RESERVED_PRESENTATION_FILENAME) || false}
                 fileType="presentation"
                 workshopId={workshop.workshopId}
                 userInWorkshop={shouldLoadRecaptcha}
@@ -162,7 +166,7 @@ export const WorkshopDetails = observer(() => {
               {(() => {
                 const nonReservedFiles =
                   workshop.files?.filter(
-                    (file) => file !== reservedInstructionsFileName && file !== reservedPresentationFileName
+                    (file) => file !== RESERVED_INSTRUCTIONS_FILENAME && file !== RESERVED_PRESENTATION_FILENAME
                   ) ?? [];
                 return nonReservedFiles.length > 0 ? (
                   <>

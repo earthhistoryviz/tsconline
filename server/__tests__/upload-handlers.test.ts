@@ -57,23 +57,18 @@ vi.mock("../src/constants", () => ({
   MAPPACK_DIRECTORY_NAME: "MapImages",
   WORKSHOP_COVER_PICTURE: "coverPicture"
 }));
-vi.mock("@tsconline/shared", () => ({
-  isDateValid: vi.fn().mockReturnValue(true),
-  isDatapackTypeString: vi.fn().mockReturnValue(true),
-  isUserDatapack: vi.fn().mockReturnValue(true),
-  assertDatapack: vi.fn().mockReturnValue(undefined),
-  assertDatapackMetadata: vi.fn().mockReturnValue(true),
-  assertUserDatapack: vi.fn().mockReturnValue(undefined),
-  MAX_DATAPACK_TAG_LENGTH: 20,
-  MAX_DATAPACK_TITLE_LENGTH: 100,
-  MAX_AUTHORED_BY_LENGTH: 200,
-  MAX_DATAPACK_TAGS_ALLOWED: 30,
-  MAX_DATAPACK_CONTACT_LENGTH: 100,
-  MAX_DATAPACK_DESC_LENGTH: 400,
-  MAX_DATAPACK_NOTES_LENGTH: 200,
-  MAX_DATAPACK_REFERENCES_ALLOWED: 30,
-  MAX_DATAPACK_REFERENCE_LENGTH: 100
-}));
+vi.mock("@tsconline/shared", async (importOriginal) => {
+  const original = await importOriginal<typeof shared>();
+  return {
+    ...original,
+    isDateValid: vi.fn().mockReturnValue(true),
+    isDatapackTypeString: vi.fn().mockReturnValue(true),
+    isUserDatapack: vi.fn().mockReturnValue(true),
+    assertDatapack: vi.fn().mockReturnValue(undefined),
+    assertDatapackMetadata: vi.fn().mockReturnValue(true),
+    assertUserDatapack: vi.fn().mockReturnValue(undefined)
+  };
+});
 vi.mock("../src/file-metadata-handler", () => ({
   writeFileMetadata: vi.fn().mockResolvedValue(undefined)
 }));
@@ -1134,7 +1129,7 @@ describe("getWorkshopDatapacksNames tests", () => {
     { name: "datapack2", isFile: () => false, isDirectory: () => true } as Dirent,
     { name: "datapack3", isFile: () => false, isDirectory: () => true } as Dirent
   ];
-  const getWorkshopUUIDFromWorkshopId = vi.spyOn(workshopUtil, "getWorkshopUUIDFromWorkshopId");
+  const getWorkshopUUIDFromWorkshopId = vi.spyOn(shared, "getWorkshopUUIDFromWorkshopId");
   const getUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
   const readdir = vi.spyOn(fsPromises, "readdir");
   const getUsersDatapacksDirectoryFromUUIDDirectory = vi.spyOn(

@@ -20,7 +20,6 @@ import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
 import { assetconfigs, extractMetadataFromDatapack, isFileTypeAllowed } from "../util.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -36,8 +35,9 @@ import {
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
   AdminSharedUser,
-  reservedPresentationFileName,
-  reservedInstructionsFileName
+  RESERVED_PRESENTATION_FILENAME,
+  RESERVED_INSTRUCTIONS_FILENAME,
+  getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import {
   setupNewDatapackDirectoryInUUIDDirectory,
@@ -829,15 +829,15 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
           reply.status(415).send({ error: "Invalid file type for presentation file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, reservedPresentationFileName);
+        result = await uploadFileToWorkshop(workshopId, part, RESERVED_PRESENTATION_FILENAME);
       } else if (part.fieldname === "instructionsFile") {
         if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
           reply.status(415).send({ error: "Invalid file type for instruction file" });
           return;
         }
-        result = await uploadFileToWorkshop(workshopId, part, reservedInstructionsFileName);
+        result = await uploadFileToWorkshop(workshopId, part, RESERVED_INSTRUCTIONS_FILENAME);
       } else if (part.fieldname === "otherFiles") {
-        if (part.filename === reservedPresentationFileName || part.filename === reservedInstructionsFileName) {
+        if (part.filename === RESERVED_PRESENTATION_FILENAME || part.filename === RESERVED_INSTRUCTIONS_FILENAME) {
           reply.status(400).send({ error: `File name ${part.filename} is reserved and cannot be used` });
           return;
         }

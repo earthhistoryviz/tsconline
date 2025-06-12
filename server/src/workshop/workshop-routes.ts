@@ -1,13 +1,13 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findWorkshop, isUserInWorkshop } from "../database.js";
+import { getWorkshopFilesPath, getWorkshopIdFromUUID, verifyWorkshopValidity } from "./workshop-util.js";
 import {
-  getWorkshopFilesPath,
-  getWorkshopIdFromUUID,
-  getWorkshopUUIDFromWorkshopId,
-  verifyWorkshopValidity
-} from "./workshop-util.js";
-import { ReservedWorkshopFileKey, SharedWorkshop, filenameInfoMap } from "@tsconline/shared";
+  ReservedWorkshopFileKey,
+  SharedWorkshop,
+  filenameInfoMap,
+  getWorkshopUUIDFromWorkshopId
+} from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
