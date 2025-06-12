@@ -6,7 +6,7 @@ import chalk from "chalk";
 try {
   await modifyTranslations();
 } catch (e) {
-  console.error("failed to activate modify translation mode");
+  console.error("failed to activate modify translation mode: ", e);
 }
 
 type JSONValue = string | JSONObject;
