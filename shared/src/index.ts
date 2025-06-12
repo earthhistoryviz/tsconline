@@ -890,6 +890,14 @@ export function isWorkshopUUID(uuid: string): boolean {
   const workshopId = Number(uuid.slice(workshopPrefix.length));
   return uuid.startsWith(workshopPrefix) && !isNaN(workshopId) && Number.isInteger(workshopId) && workshopId > 0;
 }
+/**
+ * Gets the workshop UUID from a workshop ID
+ * @param workshopId
+ * @returns
+ */
+export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
+  return `workshop-${workshopId}`;
+}
 export function isTempUUID(uuid: string): boolean {
   return uuid === "temp";
 }

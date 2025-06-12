@@ -1,5 +1,5 @@
 import { action, runInAction } from "mobx";
-import { state } from "..";
+import { actions, state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
@@ -531,8 +531,9 @@ export const adminAddUsersToWorkshop = action(
             break;
         }
         const serverResponse = await response.json();
+        const invalidEmails = serverResponse.invalidEmails || "";
         displayServerError(serverResponse, errorCode, ErrorMessages[errorCode]);
-        return { success: false, invalidEmails: serverResponse.invalidEmails };
+        return { success: false, invalidEmails };
       }
     } catch (e) {
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
@@ -547,7 +548,7 @@ export const adminAddUsersToWorkshop = action(
  * @param title The title of the workshop
  * @param start The start date of the workshop
  * @param end The end date of the workshop
- * @param password The password for the workshop (optional)
+ * @param regRestrict Whether registration is restricted
  * @returns The workshop ID if successful, undefined otherwise
  */
 export const adminCreateWorkshop = action(
@@ -564,8 +565,8 @@ export const adminCreateWorkshop = action(
         end,
         regRestrict,
         creatorUUID,
-        ...(regLink && { regLink }),
-        ...(description && { description })
+        ...(regLink && { ...(regLink && { regLink }),
+        ...(description && { description }) })
       };
       const response = await fetcher("/admin/workshop", {
         method: "POST",
@@ -702,7 +703,8 @@ export const adminUploadDatapackToWorkshop = action(
     const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
     if (!recaptchaToken) return;
     const formData = new FormData();
-    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid } = metadata;
+    const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid, hasFiles } =
+      metadata;
     formData.append("datapack", file);
     formData.append("title", title);
     formData.append("description", description);
@@ -712,6 +714,7 @@ export const adminUploadDatapackToWorkshop = action(
     formData.append("isPublic", String(isPublic));
     formData.append("type", type);
     formData.append("uuid", uuid);
+    formData.append("hasFiles", String(hasFiles));
     if (datapackProfilePicture) formData.append("datapack-image", datapackProfilePicture);
     if (notes) formData.append("notes", notes);
     if (date) formData.append("date", date);
@@ -729,6 +732,7 @@ export const adminUploadDatapackToWorkshop = action(
 
       if (response.ok) {
         pushSnackbar("Successfully uploaded " + title + " datapack", "success");
+        actions.fetchAllWorkshops();
       } else {
         displayServerError(data, ErrorCodes.INVALID_DATAPACK_UPLOAD, ErrorMessages[ErrorCodes.INVALID_DATAPACK_UPLOAD]);
       }
@@ -759,6 +763,7 @@ export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: numb
     });
     if (response.ok) {
       pushSnackbar("Datapacks added to workshop successfully", "success");
+      actions.fetchAllWorkshops();
     } else {
       let errorCode = ErrorCodes.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP_FAILED;
       switch (response.status) {
@@ -873,51 +878,71 @@ export const resetAdminConfigTempState = action(() => {
 });
 
 /**
- * Upload files to a workshop
- * @param Files The uploaded files
+ * Upload files to a workshop, at least one file is required
+ * @param presentationFile The presentation file to upload (verify it is a valid pdf before calling)
+ * @param instructionsFile The instructions file to upload (verify it is a valid pdf before calling)
+ * @param otherFiles Other files to upload
  * @returns Whether the operation was successful
  */
-
-export const adminAddFilesToWorkshop = action(async (workshopId: number, files: File[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
-  if (!recaptchaToken) return;
-  const formData = new FormData();
-  files.forEach((file) => {
-    formData.append(`file`, file);
-  });
-  try {
-    const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
-      method: "POST",
-      body: formData,
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      }
-    });
-
-    if (response.ok) {
-      return true;
-    } else {
-      let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
-      switch (response.status) {
-        case 400:
-          errorCode = ErrorCodes.INVALID_FORM;
-          break;
-        case 422:
-          errorCode = ErrorCodes.RECAPTCHA_FAILED;
-          break;
-        case 404:
-          errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
-          fetchAllWorkshops();
-          break;
-      }
-      displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+export const adminAddFilesToWorkshop = action(
+  async (
+    workshopId: number,
+    presentationFile?: File | null,
+    instructionsFile?: File | null,
+    otherFiles?: File[] | null
+  ) => {
+    if (!presentationFile && !instructionsFile && (!otherFiles || otherFiles.length === 0)) {
+      pushError(ErrorCodes.INVALID_FORM);
+      return false;
     }
-  } catch (error) {
-    console.error(error);
-    pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+    if (!recaptchaToken) return false;
+    const formData = new FormData();
+    if (presentationFile) {
+      formData.append("presentationFile", presentationFile);
+    }
+    if (instructionsFile) {
+      formData.append("instructionsFile", instructionsFile);
+    }
+    if (otherFiles && otherFiles.length > 0) {
+      otherFiles.forEach((file) => {
+        formData.append("otherFiles", file);
+      });
+    }
+    try {
+      const response = await fetcher(`/admin/workshop/files/${workshopId}`, {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        }
+      });
+      if (response.ok) {
+        return true;
+      } else {
+        let errorCode = ErrorCodes.ADMIN_ADD_FILES_TO_WORKSHOP_FAILED;
+        switch (response.status) {
+          case 400:
+            errorCode = ErrorCodes.INVALID_FORM;
+            break;
+          case 422:
+            errorCode = ErrorCodes.RECAPTCHA_FAILED;
+            break;
+          case 404:
+            errorCode = ErrorCodes.ADMIN_WORKSHOP_NOT_FOUND;
+            fetchAllWorkshops();
+            break;
+        }
+        displayServerError(await response.json(), errorCode, ErrorMessages[errorCode]);
+      }
+    } catch (error) {
+      console.error(error);
+      pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+    }
+    return false;
   }
-});
+);
 
 /**
  * Upload cover picture to a workshop

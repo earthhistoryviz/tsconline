@@ -1,9 +1,10 @@
-import { isWorkshopUUID } from "@tsconline/shared";
+import { getWorkshopUUIDFromWorkshopId, isWorkshopUUID } from "@tsconline/shared";
 import { OperationResult } from "../types.js";
 import { isUserInWorkshopAndWorkshopIsActive } from "../database.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import path from "path";
 import { mkdir } from "fs/promises";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 /**
  * Extracts the workshop ID from a workshop UUID
@@ -22,12 +23,12 @@ export function getWorkshopIdFromUUID(uuid: string): number | null {
 }
 
 /**
- * Gets the workshop UUID from a workshop ID
- * @param workshopId
- * @returns
+ * Extracts the workshop ID from a folder name
+ * @param folderName
+ * @returns The workshop ID or null if the workshop ID could not be extracted
  */
-export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
-  return `workshop-${workshopId}`;
+export function extractWorkshopIdFromFolderName(folderName: string): number | null {
+  return getWorkshopIdFromUUID(folderName);
 }
 
 /**
@@ -41,22 +42,20 @@ export function isUUIDFolderAWorkshopFolder(folderName: string): boolean {
 
 /**
  * Checks to make sure the user is in the workshop and the workshop is active
- * @param workshopUUID the workshop's UUID
+ * @param workshopId the workshop's ID
  * @param userId the user's userId
  * @returns
  */
-export async function verifyWorkshopValidity(workshopUUID: string, userId: number): Promise<OperationResult> {
-  const workshopId = getWorkshopIdFromUUID(workshopUUID);
-  if (!workshopId) {
-    return { code: 400, message: "Invalid workshop UUID" };
-  }
+export async function verifyWorkshopValidity(workshopId: number, userId: number): Promise<OperationResult> {
   if (!(await isUserInWorkshopAndWorkshopIsActive(userId, workshopId))) {
     return { code: 403, message: "User does not have access to this workshop" };
   }
   return { code: 200, message: "Success" };
 }
 
-export async function getWorkshopFilesPath(directory: string): Promise<string> {
+export async function getWorkshopFilesPath(workshopId: number): Promise<string> {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
   const filesDir = path.join(directory, "files");
 
   if (!(await verifyFilepath(filesDir))) {
@@ -69,7 +68,9 @@ export async function getWorkshopFilesPath(directory: string): Promise<string> {
   return filesDir;
 }
 
-export async function getWorkshopCoverPath(directory: string): Promise<string> {
+export async function getWorkshopCoverPath(workshopId: number): Promise<string> {
+  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
   const coverDir = path.join(directory, "cover");
 
   if (!(await verifyFilepath(coverDir))) {

@@ -113,7 +113,7 @@ vi.mock("../src/upload-handlers", async () => {
     fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
     getWorkshopDatapacksNames: vi.fn().mockResolvedValue([]),
     getWorkshopFilesNames: vi.fn().mockResolvedValue([]),
-    uploadFilesToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
+    uploadFileToWorkshop: vi.fn(async (id, file) => await consumeStream(file)),
     uploadCoverPicToWorkshop: vi.fn(async (id, file) => await consumeStream(file))
   };
 });
@@ -380,7 +380,7 @@ const testNonSharedAdminUser = {
   ...testSharedAdminUser,
   isAdmin: 0
 };
-const mockDate = new Date("2024-08-20T00:00:00Z");
+const mockDate = new Date();
 const start = new Date(mockDate);
 start.setHours(mockDate.getHours() + 1);
 const end = new Date(mockDate);
@@ -412,7 +412,7 @@ const testWorkshop: SharedWorkshop = {
   workshopId: 1,
   regRestrict: false,
   creatorUUID: "123",
-  regLink: "",
+  regLink: "https://example.com/register",
   description: "test description",
   active: false
 };
@@ -1743,7 +1743,12 @@ describe("adminCreateWorkshop", () => {
       headers
     });
     expect(createWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/title must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if start is empty", async () => {
@@ -1754,7 +1759,12 @@ describe("adminCreateWorkshop", () => {
       headers
     });
     expect(createWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/start must match format "date-time"',
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if end is empty", async () => {
@@ -1765,7 +1775,92 @@ describe("adminCreateWorkshop", () => {
       headers
     });
     expect(createWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/end must match format "date-time"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if start is not a valid date", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, start: "invalid" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/start must match format "date-time"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if end is not a valid date", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, end: "invalid" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/end must match format "date-time"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if regRestrict is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, regRestrict: "invalid" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/regRestrict must be number",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if regLink is not a valid URL", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, regLink: "invalid" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/regLink must match format "uri"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if creatorUUID is empty", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, creatorUUID: "" },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/creatorUUID must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if start is after end", async () => {
@@ -2470,24 +2565,34 @@ describe("adminAddOfficialDatapackToWorkshop", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should return 400 if workshopId is null", async () => {
+  it("should return 400 if workshopId is not a number", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/official/datapack",
-      payload: { datapackTitle: body.datapackTitle, workshopId: null },
+      payload: { datapackTitle: body.datapackTitle, workshopId: "not-a-number" },
       headers
     });
-    expect(await response.json()).toEqual({ error: "Missing workshopId or datapackTitle" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/workshopId must be number",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
-  it("should return 400 if datapackTitle is null", async () => {
+  it("should return 400 if datapackTitle is empty", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/official/datapack",
-      payload: { workshopId: body.workshopId, datapackTitle: null },
+      payload: { workshopId: body.workshopId, datapackTitle: "" },
       headers
     });
-    expect(await response.json()).toEqual({ error: "Missing workshopId or datapackTitle" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 404 if workshop does not exist", async () => {
@@ -2577,7 +2682,7 @@ describe("adminEditDatapackMetadata", () => {
       headers
     });
     expect(response.statusCode).toBe(400);
-    expect(await response.json().error).toBe("Missing datapack");
+    expect(await response.json().error).toBe("Bad Request");
   });
   it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
     editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
@@ -2698,8 +2803,8 @@ describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
 describe("adminUploadFilesToWorkshop", () => {
   let formData: ReturnType<typeof formAutoContent>, formHeaders: Record<string, string>;
   const createForm = (json: Record<string, unknown> = {}) => {
-    if (!("file" in json)) {
-      json.file = {
+    if (!("otherFiles" in json)) {
+      json.otherFiles = {
         value: Buffer.from("test"),
         options: {
           filename: "test.txt",
@@ -2725,9 +2830,77 @@ describe("adminUploadFilesToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Workshop not found or has ended" });
     expect(response.statusCode).toBe(404);
   });
-
+  it("should return 415 if presentation file is not a pdf", async () => {
+    createForm({
+      presentationFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type for presentation file" });
+    expect(response.statusCode).toBe(415);
+  });
+  it("should return 415 if instruction file is not a pdf", async () => {
+    createForm({
+      instructionsFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Invalid file type for instruction file" });
+    expect(response.statusCode).toBe(415);
+  });
+  it("should return 400 if reserved file name is used", async () => {
+    createForm({
+      otherFiles: {
+        value: Buffer.from("test"),
+        options: {
+          filename: shared.RESERVED_INSTRUCTIONS_FILENAME,
+          contentType: "application/pdf"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      error: `File name ${shared.RESERVED_INSTRUCTIONS_FILENAME} is reserved and cannot be used`
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if no files are provided", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: {},
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "No files were uploaded" });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return error code if failed to upload file", async () => {
-    vi.mocked(uploadHandlers.uploadFilesToWorkshop).mockImplementationOnce(async (id, file) => {
+    vi.mocked(uploadHandlers.uploadFileToWorkshop).mockImplementationOnce(async (id, file) => {
       await consumeStream(file);
       return { code: 500, message: "Failed to save file" };
     });
@@ -2737,7 +2910,16 @@ describe("adminUploadFilesToWorkshop", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(await response.json()).toEqual({ error: "Failed to save file" });
+    expect(await response.json()).toEqual({
+      error: "Some files failed to upload",
+      uploadResults: [
+        {
+          code: 500,
+          filename: "test.txt",
+          message: "Failed to save file"
+        }
+      ]
+    });
     expect(response.statusCode).toBe(500);
   });
 

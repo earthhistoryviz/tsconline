@@ -67,6 +67,18 @@ vi.mock("../src/upload-handlers", async () => {
     getWorkshopDatapacksNames: vi.fn().mockResolvedValue([])
   };
 });
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
+vi.mock("fs", async () => {
+  return {
+    createReadStream: vi.fn().mockImplementation(() => {})
+  };
+});
 
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
@@ -78,7 +90,7 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   });
   return { code, message };
 };
-const mockDate = new Date("2024-08-20T00:00:00Z");
+const mockDate = new Date();
 const start = new Date(mockDate);
 start.setHours(mockDate.getHours() + 1);
 const end = new Date(mockDate);
@@ -142,6 +154,7 @@ beforeAll(async () => {
   app.get("/workshop-images/1", fetchWorkshopCoverImage);
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
@@ -152,7 +165,8 @@ const testNonAdminUser = { userId: 1, isAdmin: 0 } as User;
 const testAdminUser = { userId: 1, isAdmin: 1 } as User;
 const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack" },
-  { method: "GET", url: "/workshop/download/42" }
+  { method: "GET", url: "/workshop/download/42" },
+  { method: "GET", url: "/workshop/1/files/presentation" }
 ];
 describe("verifyAuthority", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
@@ -199,69 +213,60 @@ describe("verifyAuthority", () => {
   });
 });
 describe("verifyRecaptcha tests", () => {
-  describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
-    const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
-    beforeEach(() => {
-      checkRecaptchaToken.mockClear();
-    });
-    it("should return 400 if missing recaptcha token", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: { ...headers, "recaptcha-token": "" }
+  describe.each(routes.filter(({ url }) => url != "/workshop/1/files/presentation"))(
+    "should return 400 or 422 for route $url with method $method",
+    ({ method, url, body }) => {
+      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      beforeEach(() => {
+        checkRecaptchaToken.mockClear();
       });
-      expect(checkRecaptchaToken).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-      expect(response.statusCode).toBe(400);
-    });
-    it("should return 422 if recaptcha failed", async () => {
-      checkRecaptchaToken.mockResolvedValueOnce(0);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
+      it("should return 400 if missing recaptcha token", async () => {
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers: { ...headers, "recaptcha-token": "" }
+        });
+        expect(checkRecaptchaToken).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
+        expect(response.statusCode).toBe(400);
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-      expect(response.statusCode).toBe(422);
-    });
-    it("should return 500 if checkRecaptchaToken throws error", async () => {
-      checkRecaptchaToken.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
+      it("should return 422 if recaptcha failed", async () => {
+        checkRecaptchaToken.mockResolvedValueOnce(0);
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers: headers
+        });
+        expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
+        expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "Recaptcha failed" });
+        expect(response.statusCode).toBe(422);
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha error" });
-      expect(response.statusCode).toBe(500);
-    });
-  });
+      it("should return 500 if checkRecaptchaToken throws error", async () => {
+        checkRecaptchaToken.mockRejectedValueOnce(new Error());
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers: headers
+        });
+        expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
+        expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "Recaptcha error" });
+        expect(response.statusCode).toBe(500);
+      });
+    }
+  );
 });
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
-  const findUser = vi.spyOn(database, "findUser");
   const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
   const editDatapackMetadataRequestHandler = vi.spyOn(generalFileHandlerRequests, "editDatapackMetadataRequestHandler");
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should return 401 if user doesn't exist", async () => {
-    findUser.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "PATCH",
-      url: route,
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
   });
   it("should return non-200 code if verifyWorkshopValidity doesn't return 200", async () => {
     verifyWorkshopValidity.mockResolvedValueOnce({ code: 400, message: "error" });
@@ -270,9 +275,18 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "error" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopUUID is not valid", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/workshop/workshop-invalid/datapack/datpack",
+      headers
+    });
+    expect(verifyWorkshopValidity).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Invalid workshop UUID" });
     expect(response.statusCode).toBe(400);
   });
   it("should return 500 if editDatapackMetadataRequestHandler throws error", async () => {
@@ -282,7 +296,6 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "Failed to edit metadata" });
@@ -294,7 +307,6 @@ describe("editWorkshopDatapackMetadata", async () => {
       url: route,
       headers
     });
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(verifyWorkshopValidity).toHaveBeenCalledTimes(1);
     expect(editDatapackMetadataRequestHandler).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ message: "success" });
@@ -396,7 +408,7 @@ describe("downloadWorkshopFilesZip tests", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(await response.json()).toEqual({ error: "An error occurred" });
   });
   it("should return 500 if verifyNonExistentFilepath returns false", async () => {
     vi.spyOn(util, "verifyNonExistentFilepath").mockResolvedValueOnce(false);
@@ -418,9 +430,7 @@ describe("downloadWorkshopFilesZip tests", () => {
       headers
     });
     expect(response.statusCode).toBe(500);
-    expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An error occurred:")
-    });
+    expect(await response.json()).toEqual({ error: "Read error: Something else" });
   });
   it("should create the zip if readFile returns ENOENT, then return file", async () => {
     const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
@@ -464,17 +474,6 @@ describe("downloadWorkshopFilesZip tests", () => {
     });
     expect(response.statusCode).toBe(404);
     expect(await response.json()).toEqual({ error: "Failed to process the file" });
-  });
-  it("should return 404 if readdir finds no files", async () => {
-    vi.spyOn(workshopUtil, "getWorkshopFilesPath").mockResolvedValueOnce("/tmp/fake-empty-folder");
-    vi.spyOn(fsp, "readdir").mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(await response.json()).toEqual({ error: "No files found for this workshop" });
-    expect(response.statusCode).toBe(404);
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
@@ -540,5 +539,92 @@ describe("fetchWorkshopCoverImage tests", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual("cover-pic");
     expect(checkFileExistsSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("serveWorkshopHyperlinks tests", () => {
+  const route = "/workshop/1/files/presentation";
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const checkFileExists = vi.spyOn(util, "checkFileExists");
+  beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not valid", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-invalid/files/presentation",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be number",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if filename is not valid", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/1/files/invalid-file",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/filename must be equal to one of the allowed values",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 403 if user is not registered for workshop", async () => {
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Not registered for workshop" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 404 if file does not exist", async () => {
+    isUserInWorkshop.mockResolvedValueOnce(true);
+    checkFileExists.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "File not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 500 if isUserInWorkshop fails", async () => {
+    isUserInWorkshop.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "An error occurred" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return hyperlinks if successful", async () => {
+    isUserInWorkshop.mockResolvedValueOnce(true);
+    checkFileExists.mockResolvedValueOnce(true);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(checkFileExists).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(200);
   });
 });

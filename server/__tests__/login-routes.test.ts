@@ -151,7 +151,7 @@ const testUser: User = {
   isAdmin: 0,
   accountType: "default"
 };
-const mockDate = new Date("2022-01-01T00:00:00Z");
+const mockDate = new Date();
 const testToken: Verification = {
   userId: 123,
   token: "test",
