@@ -260,6 +260,7 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   return { code, message };
 };
 let app: FastifyInstance;
+let appRoutes = 0;
 beforeAll(async () => {
   app = fastify();
   await app.register(fastifySecureSession, {
@@ -291,15 +292,17 @@ beforeAll(async () => {
       }
     };
   });
+  app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    const recaptchaHandlerName = "verifyRecaptchaPrehandler";
       const hasRecaptcha = Array.isArray(routeOptions.preHandler)
-        ? routeOptions.preHandler.some(fn => fn.name === 'verifyRecaptcha')
-        : routeOptions.preHandler?.name === 'verifyRecaptcha';
-        if (!hasRecaptcha)
-        throw new Error("Recaptcha verification is not implemented in one or more routes in admin-auth.ts");
+        ? routeOptions.preHandler.some(fn => fn.name === recaptchaHandlerName)
+        : routeOptions.preHandler?.name === recaptchaHandlerName;
+        if (!hasRecaptcha) 
+        throw new Error(`Route ${routeOptions.method} ${routeOptions.url} does not have verifyRecaptchaPrehandler`);
+      appRoutes++;
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
-  app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   await app.listen({ host: "localhost", port: 1239 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
@@ -487,6 +490,10 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   { method: "POST", url: "/admin/workshop/cover/1" }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token", "recaptcha-action": "test-action" };
+
+it("should have all routes registered", () => {
+  expect(appRoutes).toBe(routes.length + 1); // +1 for the custom route
+});
 
 describe("verifyAdmin tests", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
