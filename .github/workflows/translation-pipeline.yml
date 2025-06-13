@@ -22,6 +22,7 @@ jobs:
         run: yarn install && yarn build
 
       - name: Remove Extra Translations
+        working-directory: server
         run: yarn remove-extra-translations
 
       - name: Verify Translations
