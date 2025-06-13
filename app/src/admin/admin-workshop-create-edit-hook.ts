@@ -22,9 +22,10 @@ export const useWorkshopCreateEditForm = (
   const [instructionsFile, setInstructionsFile] = useState<File | null>(null);
   const [otherFiles, setOtherFiles] = useState<File[] | null>(null);
   const [coverPicture, setCoverPicture] = useState<File | null>(null);
-  const [regLink, setRegLink] = useState<string | undefined>(currentWorkshop?.regLink);
-  const [regRestrict, setRegRestrict] = useState(false);
+  const [regLink, setRegLink] = useState<string | null>(currentWorkshop?.regLink || null);
+  const [regRestrict, setRegRestrict] = useState(currentWorkshop?.regRestrict || false);
   const [invalidEmails, setInvalidEmails] = useState<string>("");
+  const [description, setDescription] = useState<string>(currentWorkshop?.description || "");
 
   const resetFormState = () => {
     setWorkshopTitle(editMode ? currentWorkshop?.title || "" : "");
@@ -36,8 +37,9 @@ export const useWorkshopCreateEditForm = (
     setInstructionsFile(null);
     setOtherFiles(null);
     setCoverPicture(null);
-    setRegLink(editMode ? currentWorkshop?.regLink : undefined);
-    setRegRestrict(false);
+    setRegLink(editMode ? currentWorkshop?.regLink || null : null);
+    setDescription(editMode ? currentWorkshop?.description || "" : "");
+    setRegRestrict(editMode ? currentWorkshop?.regRestrict || false : false);
     setInvalidEmails("");
   };
 
@@ -88,7 +90,15 @@ export const useWorkshopCreateEditForm = (
 
   async function handleWorkshopSave(start: string, end: string): Promise<number | null> {
     if (!editMode) {
-      const id = await actions.adminCreateWorkshop(workshopTitle, start, end, regRestrict, state.user.uuid, regLink);
+      const id = await actions.adminCreateWorkshop({
+        title: workshopTitle,
+        start,
+        end,
+        regRestrict,
+        creatorUUID: state.user.uuid,
+        regLink,
+        description
+      });
       if (!id) actions.pushError(ErrorCodes.ADMIN_CREATE_WORKSHOP_FAILED);
       return id || null;
     }
@@ -131,12 +141,30 @@ export const useWorkshopCreateEditForm = (
   }
 
   function getUpdatedFields(start: string, end: string): Partial<SharedWorkshop> {
-    const { title: oldTitle, start: oldStart, end: oldEnd } = workshop!;
-    const updated: Partial<SharedWorkshop> = { workshopId: workshop!.workshopId };
+    const {
+      workshopId,
+      title: oldTitle,
+      start: oldStart,
+      end: oldEnd,
+      regLink: oldRegLink,
+      description: oldDescription,
+      regRestrict: oldRegRestrict
+    } = workshop!;
+    const updated: Partial<SharedWorkshop> = { workshopId };
     if (oldTitle !== workshopTitle) updated.title = workshopTitle;
     if (oldStart !== start) updated.start = start;
     if (oldEnd !== end) updated.end = end;
-    if (regLink && regLink !== currentWorkshop?.regLink) updated.regLink = regLink;
+    // make sure that regRestrict is only updated if it has changed (and not just null/falsy)
+    if (regLink !== oldRegLink && Boolean(regLink) !== Boolean(oldRegLink)) {
+      updated.regLink = regLink;
+    }
+    // make sure that description is only updated if it has changed (and not just null/falsy)
+    if (oldDescription !== description && Boolean(description) !== Boolean(oldDescription)) {
+      updated.description = description;
+    }
+    if (regRestrict !== oldRegRestrict) {
+      updated.regRestrict = regRestrict;
+    }
     return updated;
   }
 
@@ -273,7 +301,8 @@ export const useWorkshopCreateEditForm = (
       coverPicture,
       regLink,
       regRestrict,
-      invalidEmails
+      invalidEmails,
+      description
     },
     setters: {
       setWorkshopTitle,
@@ -283,7 +312,8 @@ export const useWorkshopCreateEditForm = (
       setRegLink,
       setRegRestrict,
       setInvalidEmails,
-      resetFormState
+      resetFormState,
+      setDescription
     },
     handlers: {
       handleFormSubmit,

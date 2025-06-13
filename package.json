@@ -42,6 +42,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
+    "test:ui:coverage": "vitest --ui --coverage",
     "test:case": "vitest run -t",
     "coverage:ci": "vitest run --coverage --no-color",
     "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color",

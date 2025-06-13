@@ -124,7 +124,8 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       end: { type: "string", format: "date-time" },
       regRestrict: { type: "number" },
       creatorUUID: { type: "string", minLength: 1 },
-      regLink: { type: "string", format: "uri" }
+      regLink: { type: "string", format: "uri" },
+      description: { type: "string", minLength: 1 }
     },
     required: ["title", "start", "end", "regRestrict", "creatorUUID"]
   };
