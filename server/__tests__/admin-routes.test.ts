@@ -260,7 +260,7 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   return { code, message };
 };
 let app: FastifyInstance;
-let appRoutes = 0;
+const appRoutes: { method: HTTPMethods; url: string; hasRecaptcha: boolean }[] = [];
 beforeAll(async () => {
   app = fastify();
   await app.register(fastifySecureSession, {
@@ -298,9 +298,21 @@ beforeAll(async () => {
     const hasRecaptcha = Array.isArray(routeOptions.preHandler)
       ? routeOptions.preHandler.some((fn) => fn.name === recaptchaHandlerName)
       : routeOptions.preHandler?.name === recaptchaHandlerName;
-    if (!hasRecaptcha)
-      throw new Error(`Route ${routeOptions.method} ${routeOptions.url} does not have verifyRecaptchaPrehandler`);
-    appRoutes++;
+    if (Array.isArray(routeOptions.method)) {
+      routeOptions.method.forEach((method) => {
+        appRoutes.push({
+          method: method as HTTPMethods,
+          url: routeOptions.url,
+          hasRecaptcha
+        });
+      });
+    } else {
+      appRoutes.push({
+        method: routeOptions.method as HTTPMethods,
+        url: routeOptions.url,
+        hasRecaptcha
+      });
+    }
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
@@ -437,22 +449,54 @@ const testComment = {
   datapackTitle: "test"
 };
 
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "POST", url: "/admin/users" },
+const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction: string }[] = [
+  { method: "POST", url: "/admin/users", recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_USERS },
   {
     method: "POST",
     url: "/admin/user",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_CREATE_USER,
     body: { username: "test", email: "test", password: "test", pictureUrl: "test", isAdmin: 1 }
   },
-  { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
-  { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
-  { method: "DELETE", url: "/admin/official/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/official/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
-  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
+  {
+    method: "DELETE",
+    url: "/admin/user",
+    body: { uuid: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_USER
+  },
+  {
+    method: "DELETE",
+    url: "/admin/user/datapack",
+    body: { uuid: "test", datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS
+  },
+  {
+    method: "DELETE",
+    url: "/admin/official/datapack",
+    body: { datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/official/datapack",
+    body: { datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/user/datapacks",
+    body: { uuid: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/users",
+    body: { file: "test", emails: "test@email.com", workshopId: "1" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP
+  },
   {
     method: "POST",
     url: "/admin/workshop",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP,
     body: {
       title: "test",
       start: "2024-08-29T04:00:00.000Z",
@@ -464,13 +508,20 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   },
   {
     method: "PATCH",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP,
     url: "/admin/workshop",
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
-  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  {
+    method: "DELETE",
+    url: "/admin/workshop",
+    body: { workshopId: "1" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP
+  },
   {
     method: "PATCH",
     url: "/admin/user",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_USER,
     body: {
       username: "username",
       email: "email@email.com",
@@ -480,19 +531,81 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   {
     method: "PATCH",
     url: "/admin/official/datapack/priority",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY,
     body: [{ uuid: "test", id: "test", priority: 1 }]
   },
-  { method: "POST", url: "/admin/workshop/datapack" },
-  { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
-  { method: "PATCH", url: "/admin/official/datapack/test" },
-  { method: "GET", url: "/admin/official/datapack/test" },
-  { method: "POST", url: "/admin/workshop/files/1" },
-  { method: "POST", url: "/admin/workshop/cover/1" }
+  {
+    method: "POST",
+    url: "/admin/workshop/datapack",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/official/datapack",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP,
+    body: { workshopId: "1", datapackTitle: "test" }
+  },
+  {
+    method: "PATCH",
+    url: "/admin/official/datapack/test",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+  },
+  {
+    method: "GET",
+    url: "/admin/official/datapack/test",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/files/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/cover/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP
+  }
 ];
-const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token", "recaptcha-action": "test-action" };
+const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 
-it("should have all routes registered", () => {
-  expect(appRoutes).toBe(routes.length + 1); // +1 for the custom route
+function matchesRegisteredPattern(method: string, url: string): boolean {
+  for (const pattern of appRoutes) {
+    const { method: routeMethod, url: routeUrlPattern } = pattern;
+    if (routeMethod !== method.toUpperCase()) continue;
+
+    const regexPattern =
+      "^" +
+      routeUrlPattern
+        .replace(/:[^/]+/g, "[^/]+") // replace :param with wildcard
+        .replace(/\//g, "\\/") +
+      "$";
+
+    const regex = new RegExp(regexPattern);
+    if (regex.test(url)) return true;
+  }
+  return false;
+}
+// this makes sure that all routes that are registered in auth have their routes tested in the prehandlers
+it("should have all routes registered in auth", () => {
+  const failedRoutes = appRoutes.filter((route) => {
+    const isRegistered = matchesRegisteredPattern(route.method, route.url);
+    if (!isRegistered) {
+      console.error(`Route not registered: ${route.method} ${route.url}`);
+    }
+    return !isRegistered;
+  });
+  if (failedRoutes.length > 0) {
+    console.table(failedRoutes);
+  }
+  expect(failedRoutes.length).toBe(0);
+});
+// this test makes sure that all routes that are in auth have recaptcha enabled since they are now mroe of a manual addition
+it("should have all routes registered with recaptcha", () => {
+  const failedRoutes = appRoutes.filter((route) => !route.hasRecaptcha);
+  if (failedRoutes.length > 0) {
+    console.table(failedRoutes);
+  }
+  expect(failedRoutes.length).toBe(0);
 });
 
 describe("verifyAdmin tests", () => {
@@ -552,9 +665,10 @@ describe("verifyAdmin tests", () => {
     });
   });
 });
-test.skip("skip", () => {
-  describe("verifyRecaptcha tests", () => {
-    describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
+describe("verifyRecaptcha tests", () => {
+  describe.each(routes)(
+    "should return 400 or 422 for route $url with method $method",
+    ({ method, url, body, recaptchaAction }) => {
       const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
       beforeEach(() => {
         checkRecaptchaTokenMock.mockClear();
@@ -572,27 +686,15 @@ test.skip("skip", () => {
         expect(response.statusCode).toBe(400);
       });
 
-      it("should return 400 if missing recaptcha action", async () => {
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
-        });
-        expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
-        expect(await response.json()).toEqual({ error: "Missing recaptcha action" });
-        expect(response.statusCode).toBe(400);
-      });
-
       it("should return 422 if recaptcha failed", async () => {
         checkRecaptchaTokenMock.mockResolvedValueOnce(0);
         const response = await app.inject({
           method: method as InjectOptions["method"],
           url: url,
           payload: body,
-          headers: headers
+          headers
         });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
         expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
         expect(await response.json()).toEqual({ error: "Recaptcha failed" });
         expect(response.statusCode).toBe(422);
@@ -604,15 +706,15 @@ test.skip("skip", () => {
           method: method as InjectOptions["method"],
           url: url,
           payload: body,
-          headers: headers
+          headers
         });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
         expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
         expect(await response.json()).toEqual({ error: "Recaptcha error" });
         expect(response.statusCode).toBe(500);
       });
-    });
-  });
+    }
+  );
 });
 
 describe("adminCreateUser tests", () => {
