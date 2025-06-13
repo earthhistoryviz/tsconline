@@ -26,7 +26,7 @@ try {
       console.log(chalk.green(`removed extra translations for ${value}`));
     }
   }
-  console.log(chalk.green("successfully removed extra translations!"));
+  console.log(chalk.green("finished removed extra translations"));
 } catch (e) {
   console.log("failed to remove translations: ", e);
 }
