@@ -1,6 +1,7 @@
 import * as shared from "@tsconline/shared";
 
 import {
+  extractWorkshopIdFromFolderName,
   getWorkshopCoverPath,
   getWorkshopFilesPath,
   getWorkshopIdFromUUID,
@@ -39,7 +40,8 @@ vi.mock("../src/database", async () => {
 vi.mock("@tsconline/shared", async () => {
   return {
     isWorkshopUUID: vi.fn().mockResolvedValue(true),
-    getWorkshopUUIDFromWorkshopId: vi.fn().mockImplementation((id) => `workshop-${id}`)
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockImplementation((id) => `workshop-${id}`),
+    getWorkshopIdFromUUID: vi.fn().mockReturnValue("workshop-12345")
   };
 });
 
@@ -99,6 +101,16 @@ describe("verifyWorkshopValidity", async () => {
     isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(true);
     const result = await verifyWorkshopValidity(workshopId, 1);
     expect(result).toEqual({ code: 200, message: "Success" });
+  });
+});
+
+describe("extractWorkshopIdFromFolderName", () => {
+  const isWorkshopUUID = vi.spyOn(shared, "isWorkshopUUID");
+  it("should return the workshop ID from a valid workshop folder name", () => {
+    isWorkshopUUID.mockReturnValueOnce(true);
+    const folderName = "workshop-12345";
+    const result = extractWorkshopIdFromFolderName(folderName);
+    expect(result).toBe(12345);
   });
 });
 
