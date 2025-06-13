@@ -9,7 +9,7 @@ import fastifyCompress from "@fastify/compress";
 import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { CommentsEmail, Email } from "./types.js";
+import { CommentsEmail, Email, User } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
@@ -23,7 +23,6 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
@@ -45,6 +44,11 @@ import { CommentType, assertCommentType } from "@tsconline/shared";
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
 
+declare module "fastify" {
+  interface FastifyRequest {
+    user?: User;
+  }
+}
 const server = fastify({
   logger: false,
   trustProxy: true,
@@ -59,6 +63,8 @@ const server = fastify({
     }
   }*/
 });
+// predefine "user" property on request to stabilize object shape for JS engine optimizations (per Fastify docs)
+server.decorateRequest("user", undefined);
 
 collectDefaultMetrics();
 const httpMetricsLabelNames = ["method", "path", "status"];
@@ -94,11 +100,15 @@ server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [numb
   activeUsers.set(ipSet.size);
 });
 
+// hook to track http request metrics
+// calculates request duration and increments the request count
 server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }, reply) => {
   const duration = process.hrtime(request.startTime);
   const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
-  totalHttpRequestCount.labels(request.method, request.routerPath, reply.statusCode.toString()).inc();
-  totalHttpRequestDuration.labels(request.method, request.routerPath, reply.statusCode.toString()).set(durationInMs);
+  // get route path if available for metrics, otherwise use "unknown"
+  const routePath = request.routeOptions?.url || "unknown";
+  totalHttpRequestCount.labels(request.method, routePath, reply.statusCode.toString()).inc();
+  totalHttpRequestDuration.labels(request.method, routePath, reply.statusCode.toString()).set(durationInMs);
 });
 
 // Expose the metrics endpoint

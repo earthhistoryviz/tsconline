@@ -149,6 +149,29 @@ export function getNavigationRouteForWorkshopDetails(id: number) {
   return `/workshops/${id}`;
 }
 
+export function formatDateForSmallerDisplay(input: string | number | dayjs.Dayjs): string {
+  let date: Date;
+  if (typeof input === "string") {
+    if (/^\d+$/.test(input)) {
+      date = new Date(Number(input));
+    } else {
+      date = new Date(input);
+    }
+  } else if (typeof input === "number") {
+    date = new Date(input);
+  } else if (dayjs.isDayjs(input)) {
+    date = input.toDate();
+  } else {
+    throw new Error("Invalid input: must be a string or a Day.js object.");
+  }
+  const datePart = date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit"
+  });
+  return `${datePart}`;
+}
+
 export function formatDate(input: string | number | dayjs.Dayjs): string {
   let date: Date;
   if (typeof input === "string") {
