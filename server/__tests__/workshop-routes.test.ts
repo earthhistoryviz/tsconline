@@ -220,8 +220,8 @@ describe("verifyRecaptcha tests", () => {
       beforeEach(() => {
         checkRecaptchaTokenMock.mockClear();
       });
-  
-    it("should return 400 if missing recaptcha token", async () => {
+
+      it("should return 400 if missing recaptcha token", async () => {
         const response = await app.inject({
           method: method as InjectOptions["method"],
           url: url,
@@ -232,20 +232,20 @@ describe("verifyRecaptcha tests", () => {
         expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
         expect(response.statusCode).toBe(400);
       });
-  
-    it("should return 400 if missing recaptcha action", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
-      });
-      expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Missing recaptcha action" });
-      expect(response.statusCode).toBe(400);
-    });
 
-    it("should return 422 if recaptcha failed", async () => {
+      it("should return 400 if missing recaptcha action", async () => {
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
+        });
+        expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ error: "Missing recaptcha action" });
+        expect(response.statusCode).toBe(400);
+      });
+
+      it("should return 422 if recaptcha failed", async () => {
         checkRecaptchaTokenMock.mockResolvedValueOnce(0);
         const response = await app.inject({
           method: method as InjectOptions["method"],
@@ -258,8 +258,8 @@ describe("verifyRecaptcha tests", () => {
         expect(await response.json()).toEqual({ error: "recaptcha failed" });
         expect(response.statusCode).toBe(422);
       });
-  
-    it("should return 500 if checkRecaptchaToken throws error", async () => {
+
+      it("should return 500 if checkRecaptchaToken throws error", async () => {
         checkRecaptchaTokenMock.mockRejectedValueOnce(new Error());
         const response = await app.inject({
           method: method as InjectOptions["method"],

@@ -24,6 +24,7 @@ import {
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { fetchAllPrivateOfficialDatapacks } from "../user/user-handler.js";
+import { AdminRecaptchaActions } from "@tsconline/shared/dist/recaptcha-keys.js";
 
 async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -49,11 +50,7 @@ async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-async function verifyRecaptcha(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  action: string
-) {
+async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
   const recaptchaToken = request.headers["recaptcha-token"];
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
@@ -78,9 +75,9 @@ async function verifyRecaptcha(
   }
 }
 const genericRecaptchaPrehandler = (action: string) => {
-  const middleware =   async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
+  const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
     await verifyRecaptcha(request, reply, action);
-  }
+  };
   return middleware;
 };
 
@@ -212,22 +209,29 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   };
 
   fastify.addHook("preHandler", verifyAdmin);
-  // fastify.addHook("preHandler", verifyRecaptcha);
-  fastify.post("/users", { 
-    preHandler: [genericRecaptchaPrehandler("adminFetchUsers")],
-    config: { rateLimit: looseRateLimit } }, getUsers);
+  fastify.post(
+    "/users",
+    {
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_USERS)],
+      config: { rateLimit: looseRateLimit }
+    },
+    getUsers
+  );
   fastify.get(
     "/official/datapacks/private",
-    { config: { rateLimit: looseRateLimit,
-     },
-      preHandler: [genericRecaptchaPrehandler("fetchAllPrivateOfficialDatapacks")]
-     },
+    {
+      config: { rateLimit: looseRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS)]
+    },
     fetchAllPrivateOfficialDatapacks
   );
   fastify.get(
     "/official/datapack/:datapackTitle",
-    { schema: { params: adminFetchSingleOfficialDatapackParams }, config: { rateLimit: looseRateLimit },
-      preHandler: [genericRecaptchaPrehandler("adminFetchOfficialDatapack")]},
+    {
+      schema: { params: adminFetchSingleOfficialDatapackParams },
+      config: { rateLimit: looseRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK)]
+    },
     adminFetchSingleOfficialDatapack
   );
   fastify.post(
@@ -239,7 +243,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler("adminCreateUser")]
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_CREATE_USER)]
     },
     adminCreateUser
   );
@@ -252,7 +256,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler("adminDeleteUser")]
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER)]
     },
     adminDeleteUser
   );
@@ -265,13 +269,18 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler("adminDeleteUserDatapacks")]
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS)]
     },
     adminDeleteUserDatapack
   );
-  fastify.post("/official/datapack", { config: { rateLimit: moderateRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminUploadOfficialDatapack")]
-   }, adminUploadDatapack);
+  fastify.post(
+    "/official/datapack",
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK)]
+    },
+    adminUploadDatapack
+  );
   fastify.delete(
     "/official/datapack",
     {
@@ -281,88 +290,122 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler("adminDeleteOfficialDatapacks")]
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK)]
     },
     adminDeleteOfficialDatapack
   );
   fastify.post(
     "/user/datapacks",
-    { schema: { body: adminUUIDbody }, config: { rateLimit: looseRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminFetchUserDatapacks")]
-   },
+    {
+      schema: { body: adminUUIDbody },
+      config: { rateLimit: looseRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS)]
+    },
     getAllUserDatapacks
   );
-  fastify.post("/workshop/users", { config: { rateLimit: looseRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminAddUsersToWorkshop")]
-   }, adminAddUsersToWorkshop);
+  fastify.post(
+    "/workshop/users",
+    {
+      config: { rateLimit: looseRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP)]
+    },
+    adminAddUsersToWorkshop
+  );
   fastify.post(
     "/workshop",
-    { schema: { body: adminCreateWorkshopBody }, config: { rateLimit: moderateRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminCreateWorkshop")]
-   },
+    {
+      schema: { body: adminCreateWorkshopBody },
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP)]
+    },
     adminCreateWorkshop
   );
   fastify.patch(
     "/workshop",
-    { schema: { body: adminEditWorkshopBody }, config: { rateLimit: moderateRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminEditWorkshop")]
-   },
+    {
+      schema: { body: adminEditWorkshopBody },
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP)]
+    },
     adminEditWorkshop
   );
   fastify.delete(
     "/workshop",
-    { schema: { body: adminDeleteWorkshopBody }, config: { rateLimit: moderateRateLimit }
-    , preHandler: [genericRecaptchaPrehandler("adminDeleteWorkshop")]},
+    {
+      schema: { body: adminDeleteWorkshopBody },
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP)]
+    },
     adminDeleteWorkshop
   );
   fastify.patch(
     "/user",
-    { schema: { body: adminModifyUserBody }, config: { rateLimit: moderateRateLimit } 
-    , preHandler: [genericRecaptchaPrehandler("adminModifyUser")]},
+    {
+      schema: { body: adminModifyUserBody },
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_USER)]
+    },
     adminModifyUser
   );
   fastify.patch(
     "/official/datapack/priority",
-    { config: { rateLimit: moderateRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminUpdateDatapackPriority")]},
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY)]
+    },
     adminEditDatapackPriorities
   );
-  fastify.post("/workshop/datapack", { config: { rateLimit: moderateRateLimit } ,
-    preHandler: [genericRecaptchaPrehandler("adminUploadDatapackToWorkshop")]
-  }, adminUploadDatapack);
+  fastify.post(
+    "/workshop/datapack",
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP)]
+    },
+    adminUploadDatapack
+  );
   fastify.post(
     "/workshop/official/datapack",
-    { schema: { body: adminAddOfficialDatapackToWorkshopBody }, config: { rateLimit: moderateRateLimit },
-    preHandler: [genericRecaptchaPrehandler("adminAddOfficialDatapackToWorkshop")]
-   },
+    {
+      schema: { body: adminAddOfficialDatapackToWorkshopBody },
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP)]
+    },
     adminAddOfficialDatapackToWorkshop
   );
   fastify.patch(
     "/official/datapack/:datapack",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: adminEditDatapackMetadataBody },
-    preHandler: [genericRecaptchaPrehandler("editOfficialDatapack")]
-   },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: adminEditDatapackMetadataBody },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
+    },
     adminEditDatapackMetadata
   );
   fastify.post(
     "/workshop/files/:workshopId",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopFileParams },
-    preHandler: [genericRecaptchaPrehandler("adminUploadFilesToWorkshop")]
-   },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: addWorkshopFileParams },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP)]
+    },
     adminUploadFilesToWorkshop
   );
   fastify.post(
     "/workshop/cover/:workshopId",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: addWorkshopCoverParams } ,
-    preHandler: [genericRecaptchaPrehandler("adminUploadCoverPictureToWorkshop")]
-  },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: addWorkshopCoverParams },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP)]
+    },
     adminUploadCoverPictureToWorkshop
   );
   fastify.delete(
     "/datapack/comments/:commentId",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: deleteDatapackCommentParams },
-    preHandler: [genericRecaptchaPrehandler("adminDeleteDatapackComment")]
-   },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: deleteDatapackCommentParams },
+      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT)]
+    },
     adminDeleteDatapackComment
   );
 };

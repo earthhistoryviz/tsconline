@@ -1,4 +1,9 @@
-import { Datapack, assertBatchUpdateServerPartialError, DatapackUniqueIdentifier } from "@tsconline/shared";
+import {
+  Datapack,
+  assertBatchUpdateServerPartialError,
+  DatapackUniqueIdentifier,
+  AdminRecaptchaActions
+} from "@tsconline/shared";
 import { action, toJS } from "mobx";
 import { EditableDatapackMetadata, assertDatapackFetchParams } from "../../types";
 import { fetcher } from "../../util";
@@ -98,21 +103,30 @@ export const handleDatapackEdit = action(
  * @param datapack the datapack (original)
  * @returns
  */
-const getEditDatapackRoute = (datapack: DatapackUniqueIdentifier): {
-  route: string; recaptchaAction: string;
+const getEditDatapackRoute = (
+  datapack: DatapackUniqueIdentifier
+): {
+  route: string;
+  recaptchaAction: string;
 } => {
   switch (datapack.type) {
     case "official": {
-      return { route: `/admin/official/datapack/${datapack.title}`, recaptchaAction: "editOfficialDatapack" };
+      return {
+        route: `/admin/official/datapack/${datapack.title}`,
+        recaptchaAction: AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+      };
     }
     case "workshop": {
-      return {route: `/workshop/${datapack.uuid}/datapack/${datapack.title}`, recaptchaAction: "editWorkshopDatapack"};
+      return {
+        route: `/workshop/${datapack.uuid}/datapack/${datapack.title}`,
+        recaptchaAction: "editWorkshopDatapack"
+      };
     }
     case "user": {
-      return {route: `/user/datapack/${datapack.title}`, recaptchaAction: "editUserDatapack"};
+      return { route: `/user/datapack/${datapack.title}`, recaptchaAction: "editUserDatapack" };
     }
     default: {
-      return {route: "", recaptchaAction: ""};
+      return { route: "", recaptchaAction: "" };
     }
   }
 };
