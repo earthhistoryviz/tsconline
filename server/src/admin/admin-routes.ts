@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import {
   checkForUsersWithUsernameOrEmail,
   createUser,
@@ -107,6 +107,11 @@ export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPr
   }
 };
 
+interface AdminFetchSingleOfficialDatapackRequest extends RouteGenericInterface {
+  Params: {
+    datapackTitle: string;
+  };
+}
 /**
  * Fetch a single official datapack, private or public
  * @param request
@@ -114,7 +119,7 @@ export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPr
  * @returns
  */
 export const adminFetchSingleOfficialDatapack = async function fetchSinglePrivateOfficialDatapack(
-  request: FastifyRequest<{ Params: { datapackTitle: string } }>,
+  request: FastifyRequest<AdminFetchSingleOfficialDatapackRequest>,
   reply: FastifyReply
 ) {
   const { datapackTitle } = request.params;
@@ -222,6 +227,12 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
   reply.send({ message: "User created" });
 };
 
+interface DeleteUserRequest extends RouteGenericInterface {
+  Body: {
+    uuid: string;
+  };
+}
+
 /**
  * Admin sends a request to delete a user
  * TODO case where user is deleted, if user is still logged in, invalidate session or handle logic in login-routes
@@ -230,7 +241,7 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
  * @returns
  */
 export const adminDeleteUser = async function adminDeleteUser(
-  request: FastifyRequest<{ Body: { uuid: string } }>,
+  request: FastifyRequest<DeleteUserRequest>,
   reply: FastifyReply
 ) {
   const { uuid } = request.body;
@@ -307,8 +318,14 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
   }
 };
 
+interface AdminDeleteDatapackRequest extends RouteGenericInterface {
+  Body: {
+    uuid: string;
+    datapack: string;
+  };
+}
 export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
-  request: FastifyRequest<{ Body: { uuid: string; datapack: string } }>,
+  request: FastifyRequest<AdminDeleteDatapackRequest>,
   reply: FastifyReply
 ) {
   const { uuid, datapack } = request.body;
@@ -328,6 +345,11 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
   reply.send({ message: "Datapack deleted" });
 };
 
+interface AdminDeleteOfficialDatapacksRequest extends RouteGenericInterface {
+  Body: {
+    datapack: string;
+  };
+}
 /**
  * Delete admin server datapack from server or remove any dev datapacks in config
  * @param request
@@ -335,7 +357,7 @@ export const adminDeleteUserDatapack = async function adminDeleteUserDatapack(
  * @returns
  */
 export const adminDeleteOfficialDatapack = async function adminDeleteOfficialDatapack(
-  request: FastifyRequest<{ Body: { datapack: string } }>,
+  request: FastifyRequest<AdminDeleteDatapackRequest>,
   reply: FastifyReply
 ) {
   const { datapack } = request.body;
@@ -511,6 +533,17 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
   }
 };
 
+interface AdminCreateWorkshopRequest extends RouteGenericInterface {
+  Body: {
+    title: string;
+    start: string;
+    end: string;
+    regRestrict: boolean;
+    creatorUUID: string;
+    regLink?: string;
+    description?: string;
+  };
+}
 /**
  * Create a workshop
  * @param request
@@ -518,17 +551,7 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  * @returns
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
-  request: FastifyRequest<{
-    Body: {
-      title: string;
-      start: string;
-      end: string;
-      regRestrict: boolean;
-      creatorUUID: string;
-      regLink?: string;
-      description?: string;
-    };
-  }>,
+  request: FastifyRequest<AdminCreateWorkshopRequest>,
   reply: FastifyReply
 ) {
   const { title, start, end, regRestrict, creatorUUID, regLink, description } = request.body;
@@ -583,6 +606,18 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
   }
 };
 
+interface AdminEditWorkshopRequest extends RouteGenericInterface {
+  Body: {
+    creatorUUID?: string;
+    title?: string;
+    start?: string;
+    end?: string;
+    workshopId: number;
+    regRestrict?: string;
+    description?: string;
+    regLink?: string;
+  };
+}
 /**
  * Edit a workshop
  * @param request
@@ -590,18 +625,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
  * @returns
  */
 export const adminEditWorkshop = async function adminEditWorkshop(
-  request: FastifyRequest<{
-    Body: {
-      creatorUUID: string;
-      title: string;
-      start: string;
-      end: string;
-      workshopId: number;
-      regRestrict: string;
-      description: string;
-      regLink: string;
-    };
-  }>,
+  request: FastifyRequest<AdminEditWorkshopRequest>,
   reply: FastifyReply
 ) {
   const { creatorUUID, regLink, title, start, end, workshopId, regRestrict, description } = request.body;
@@ -694,6 +718,11 @@ export const adminEditWorkshop = async function adminEditWorkshop(
   }
 };
 
+interface AdminDeleteWorkshopRequest extends RouteGenericInterface {
+  Body: {
+    workshopId: number;
+  };
+}
 /**
  * Delete a workshop
  * @param request
@@ -701,7 +730,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
  * @returns
  */
 export const adminDeleteWorkshop = async function adminDeleteWorkshop(
-  request: FastifyRequest<{ Body: { workshopId: number } }>,
+  request: FastifyRequest<AdminDeleteWorkshopRequest>,
   reply: FastifyReply
 ) {
   const { workshopId } = request.body;
@@ -723,8 +752,13 @@ export const adminDeleteWorkshop = async function adminDeleteWorkshop(
   reply.send({ message: "Workshop deleted" });
 };
 
+interface AdminEditDatapackPrioritiesRequest extends RouteGenericInterface {
+  Body: {
+    tasks: DatapackPriorityChangeRequest[];
+  };
+};
 export const adminEditDatapackPriorities = async function adminEditDatapackPriorities(
-  request: FastifyRequest<{ Body: { tasks: DatapackPriorityChangeRequest[] } }>,
+  request: FastifyRequest<AdminEditDatapackPrioritiesRequest>,
   reply: FastifyReply
 ) {
   try {
@@ -789,8 +823,14 @@ export const adminUploadDatapack = async function adminUploadDatapack(request: F
   reply.send({ message: "Datapack uploaded" });
 };
 
+interface AdminAddOfficialDatapackToWorkshopRequest extends RouteGenericInterface {
+  Body: {
+    workshopId: number;
+    datapackTitle: string;
+  };
+};
 export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficialDatapackToWorkshop(
-  request: FastifyRequest<{ Body: { workshopId: number; datapackTitle: string } }>,
+  request: FastifyRequest<AdminAddOfficialDatapackToWorkshopRequest>,
   reply: FastifyReply
 ) {
   const { workshopId, datapackTitle } = request.body;
@@ -836,8 +876,13 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
   }
 };
 
+interface AdminEditDatapackMetadataRequest extends RouteGenericInterface {
+  Params: {
+    datapack: string;
+  };
+};
 export const adminEditDatapackMetadata = async function adminEditDatapackMetadata(
-  request: FastifyRequest<{ Params: { datapack: string } }>,
+  request: FastifyRequest<AdminEditDatapackMetadataRequest>,
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
@@ -849,8 +894,13 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
   }
 };
 
+interface AdminUploadFilesToWorkshopRequest extends RouteGenericInterface {
+  Params: {
+    workshopId: number;
+  };
+}
 export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  request: FastifyRequest<AdminUploadFilesToWorkshopRequest>,
   reply: FastifyReply
 ) {
   const parts = request.parts();
@@ -908,8 +958,13 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
   }
 };
 
+interface AdminUploadCoverPictureToWorkshopRequest extends RouteGenericInterface {
+  Params: {
+    workshopId: number;
+  };
+}
 export const adminUploadCoverPictureToWorkshop = async function adminUploadCoverPictureToWorkshop(
-  request: FastifyRequest<{ Params: { workshopId: number } }>,
+  request: FastifyRequest<AdminUploadCoverPictureToWorkshopRequest>,
   reply: FastifyReply
 ) {
   const parts = request.parts();
@@ -952,6 +1007,11 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
   }
 };
 
+interface AdminDeleteDatapackCommentRequest extends RouteGenericInterface {
+  Params: {
+    commentId: number;
+  }
+};
 /**
  * Admin sends a request to delete a datapack comment
  * TODO case where user is deleted, if user is still logged in, invalidate session or handle logic in login-routes
@@ -960,7 +1020,7 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
  * @returns
  */
 export const adminDeleteDatapackComment = async function adminDeleteDatapackComment(
-  request: FastifyRequest<{ Params: { commentId: number } }>,
+  request: FastifyRequest<AdminDeleteDatapackCommentRequest>,
   reply: FastifyReply
 ) {
   const { commentId } = request.params;
