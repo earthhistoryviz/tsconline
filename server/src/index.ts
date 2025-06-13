@@ -23,7 +23,6 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
@@ -282,6 +281,14 @@ const looseRateLimit = {
     }
   }
 };
+const testRateLimit = {
+  config: {
+    rateLimit: {
+      max: 100000,
+      timeWindow: 1000 * 60 * 60
+    }
+  }
+};
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
@@ -339,11 +346,14 @@ server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
-
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
-server.post("/auth/login", strictRateLimit, loginRoutes.login);
+server.post("/auth/login", process.env.NODE_ENV === "test" ? testRateLimit : strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
-server.post("/auth/session-check", moderateRateLimit, loginRoutes.sessionCheck);
+server.post(
+  "/auth/session-check",
+  process.env.NODE_ENV === "test" ? testRateLimit : strictRateLimit,
+  loginRoutes.sessionCheck
+);
 server.post("/auth/logout", moderateRateLimit, loginRoutes.logout);
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);

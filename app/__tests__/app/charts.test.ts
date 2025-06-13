@@ -234,34 +234,3 @@ test("check if Map Points Functional", async ({ page }) => {
 
   await expect(page.locator("text=Nigeria Coast")).toBeVisible();
 });
-
-// test("login is functional", async ({ page }) => {
-//   await page.waitForTimeout(10000);
-
-//   const loginButton = page.locator("text=SIGN IN");
-//   await expect(loginButton).toBeVisible();
-//   await expect(loginButton).toBeEnabled();
-//   await loginButton.click();
-
-//   const acceptButton = page.locator("text=Accept");
-//   await expect(acceptButton).toBeVisible();
-//   await acceptButton.click();
-
-//   await expect(page).toHaveURL(/.*\/login/);
-
-//   const usernameInput = page.locator("#username");
-//   const passwordInput = page.locator("#password");
-//   const signInButton = page.locator('[data-testid="LoginIcon"]');
-
-//   await expect(usernameInput).toBeVisible();
-//   await expect(usernameInput).toBeEnabled();
-//   await usernameInput.fill("admin");
-
-//   await expect(passwordInput).toBeVisible();
-//   await expect(passwordInput).toBeEnabled();
-//   await passwordInput.fill("admin-password");
-
-//   await expect(signInButton).toBeVisible();
-//   await expect(signInButton).toBeEnabled();
-//   await signInButton.click();
-// });
