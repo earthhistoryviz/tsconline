@@ -108,7 +108,7 @@ export const setUsers = action((users: AdminSharedUser[]) => {
 });
 
 export const adminAddUser = action(async (email: string, password: string, isAdmin: boolean, username?: string) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddUser");
+  const recaptchaToken = await getRecaptchaToken("adminCreateUser");
   if (!recaptchaToken) return;
   const body = JSON.stringify({
     email,
@@ -461,7 +461,7 @@ export const adminFetchPrivateOfficialDatapacksMetadata = action(async () => {
  */
 export const adminFetchOfficialDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapack");
+    const recaptchaToken = await getRecaptchaToken("adminFetchOfficialDatapack");
     if (!recaptchaToken) return;
     const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET",
@@ -894,7 +894,7 @@ export const adminAddFilesToWorkshop = action(
       pushError(ErrorCodes.INVALID_FORM);
       return false;
     }
-    const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+    const recaptchaToken = await getRecaptchaToken("adminUploadFilesToWorkshop");
     if (!recaptchaToken) return false;
     const formData = new FormData();
     if (presentationFile) {
@@ -950,7 +950,7 @@ export const adminAddFilesToWorkshop = action(
  */
 
 export const adminAddCoverPicToWorkshop = action(async (workshopId: number, coverPicture: File) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
+  const recaptchaToken = await getRecaptchaToken("adminUploadCoverPicToWorkshop");
   if (!recaptchaToken) return;
   const formData = new FormData();
   formData.append("file", coverPicture);
