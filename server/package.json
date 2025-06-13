@@ -79,6 +79,7 @@
     "modify-translations": "node dist/translations/modify-translations.js",
     "init-translations": "node dist/translations/warn-modify-translations.js && node dist/translations/create-translations-from-csv.js",
     "verify-translations": "node dist/translations/verify-translations.js",
+    "remove-extra-translations": "node dist/translations/remove-extra-translations.js",
     "production": "node dist/index.js",
     "dev:config": "node dist/add-dev-config.js",
     "dev:config:overwrite": "node dist/add-dev-config.js --overwrite",

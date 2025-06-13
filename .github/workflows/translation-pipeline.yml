@@ -21,6 +21,10 @@ jobs:
       - name: Install Dependencies
         run: yarn install && yarn build
 
+      - name: Remove Extra Translations
+        working-directory: server
+        run: yarn remove-extra-translations
+
       - name: Verify Translations
         working-directory: server
         run: yarn verify-translations
