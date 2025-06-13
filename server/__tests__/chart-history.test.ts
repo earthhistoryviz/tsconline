@@ -66,7 +66,7 @@ vi.mock("../src/error-logger", async () => {
 const mockUUID = "1234";
 const mockUploadDir = "/testdir/uploadDirectory";
 const baseHistoryPath = join(mockUploadDir, "private", mockUUID, "history");
-const mockTimestamp = "1234567890123";
+const mockTimestamp = Date.now().toString();
 const historyEntryPath = join(baseHistoryPath, mockTimestamp);
 
 describe("chartHistory tests", () => {

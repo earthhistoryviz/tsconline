@@ -311,6 +311,7 @@ export async function findWorkshop(criteria: Partial<Workshop>) {
   if (criteria.creatorUUID) query = query.where("creatorUUID", "=", criteria.creatorUUID);
   if (criteria.regLink) query = query.where("regLink", "=", criteria.regLink);
   if (criteria.regRestrict) query = query.where("regRestrict", "=", criteria.regRestrict);
+  if (criteria.description) query = query.where("description", "=", criteria.description);
   return await query.selectAll().execute();
 }
 
@@ -320,6 +321,10 @@ export async function updateWorkshop(criteria: Partial<Workshop>, updatedWorksho
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
+  if (criteria.regLink) query = query.where("regLink", "=", criteria.regLink);
+  if (criteria.regRestrict) query = query.where("regRestrict", "=", criteria.regRestrict);
+  if (criteria.description) query = query.where("description", "=", criteria.description);
+  if (criteria.creatorUUID) query = query.where("creatorUUID", "=", criteria.creatorUUID);
   return await query.execute();
 }
 
@@ -329,6 +334,10 @@ export async function deleteWorkshop(criteria: Partial<Workshop>) {
   if (criteria.title) query = query.where("title", "=", criteria.title);
   if (criteria.start) query = query.where("start", "=", criteria.start);
   if (criteria.end) query = query.where("end", "=", criteria.end);
+  if (criteria.regLink) query = query.where("regLink", "=", criteria.regLink);
+  if (criteria.regRestrict) query = query.where("regRestrict", "=", criteria.regRestrict);
+  if (criteria.description) query = query.where("description", "=", criteria.description);
+  if (criteria.creatorUUID) query = query.where("creatorUUID", "=", criteria.creatorUUID);
   return await query.execute();
 }
 

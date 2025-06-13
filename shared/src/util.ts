@@ -15,6 +15,15 @@ export function calculateAutoScale(min: number, max: number) {
   return { lowerRange, upperRange, scaleStep, scaleStart };
 }
 
+/**
+ * Gets the workshop UUID from a workshop ID
+ * @param workshopId
+ * @returns
+ */
+export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
+  return `workshop-${workshopId}`;
+}
+
 export function checkUserAllowedDownloadDatapack(user: SharedUser, datapack: DatapackMetadata) {
   if (user.isAdmin || datapack.isPublic || (datapack.type === "user" && datapack.uuid === user.uuid)) {
     return true;

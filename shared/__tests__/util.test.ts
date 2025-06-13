@@ -1,6 +1,6 @@
 import { describe, test, expect, it } from "vitest";
 import { roundToDecimalPlace, calculateAutoScale, checkUserAllowedDownloadDatapack } from "../src/util";
-import { DatapackMetadata } from "../src";
+import { DatapackMetadata, SharedUser, getWorkshopUUIDFromWorkshopId } from "../src";
 
 describe("roundToDecimalPlace tests", () => {
   test.each([
@@ -29,18 +29,15 @@ describe("calculateAutoScale tests", () => {
 
 describe("checkUserAllowedDownloadDatapack tests", () => {
   const uuid = "123e4567-e89b-12d3-a456-426614174000";
-  const testUser = {
+  const testUser: SharedUser = {
     uuid,
-    userId: 123,
     email: "test@example.com",
-    emailVerified: 1,
-    invalidateSession: 0,
     username: "testuser",
-    hashedPassword: "password123",
     pictureUrl: "https://example.com/picture.jpg",
     isAdmin: false,
     isGoogleUser: false,
-    accountType: ""
+    accountType: "",
+    historyEntries: []
   };
   const testOfficialDatapack: DatapackMetadata = {
     description: "description",
@@ -86,5 +83,12 @@ describe("checkUserAllowedDownloadDatapack tests", () => {
   it("should not allow user to download a private official datapack", () => {
     const privateOfficialDatapack: DatapackMetadata = { ...testOfficialDatapack, isPublic: false, type: "official" };
     expect(checkUserAllowedDownloadDatapack(testUser, privateOfficialDatapack)).toBe(false);
+  });
+});
+describe("getWorkshopUUIDFromWorkshopId", () => {
+  it("should return the correct workshop UUID for a given workshop ID", () => {
+    const workshopId = 12345;
+    const result = getWorkshopUUIDFromWorkshopId(workshopId);
+    expect(result).toBe("workshop-12345");
   });
 });

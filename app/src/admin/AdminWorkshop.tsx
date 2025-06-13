@@ -11,7 +11,8 @@ import { displayServerError } from "../state/actions/util-actions";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { WorkshopForm, AddDatapacksToWorkshopForm } from "./AdminWorkshopComponents";
+import { WorkshopCreateEditForm } from "./AdminWorkshopCreateEditForm";
+import { AddDatapacksToWorkshopForm } from "./AdminWorkshopDatapacksForm";
 import { formatDate } from "../state/non-action-util";
 import "./AdminWorkshop.css";
 
@@ -119,6 +120,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
       }
       await actions.adminDeleteWorkshop(workshop.workshopId);
       setDeleteWorkshopFormOpen(false);
+      setWorkshop(null);
     } catch (error) {
       displayServerError(
         error,
@@ -146,7 +148,7 @@ export const AdminWorkshop = observer(function AdminWorkshop() {
         onNo={() => setDeleteWorkshopFormOpen(false)}
       />
       {((editWorkshopFormOpen && workshop) || createWorkshopFormOpen) && (
-        <WorkshopForm
+        <WorkshopCreateEditForm
           editMode={editWorkshopFormOpen}
           currentWorkshop={workshop}
           onClose={() => {

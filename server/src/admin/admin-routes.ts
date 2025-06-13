@@ -19,8 +19,7 @@ import {
 import { randomUUID } from "node:crypto";
 import { hash } from "bcrypt-ts";
 import { resolve, extname, relative, join } from "path";
-import { assetconfigs, extractMetadataFromDatapack } from "../util.js";
-import { getWorkshopUUIDFromWorkshopId } from "../workshop/workshop-util.js";
+import { assetconfigs, extractMetadataFromDatapack, isFileTypeAllowed } from "../util.js";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import { deleteAllUserMetadata, deleteDatapackFoundInMetadata } from "../file-metadata-handler.js";
@@ -35,12 +34,17 @@ import {
   SharedWorkshop,
   assertDatapackPriorityChangeRequestArray,
   assertSharedWorkshop,
-  AdminSharedUser
+  AdminSharedUser,
+  RESERVED_PRESENTATION_FILENAME,
+  RESERVED_INSTRUCTIONS_FILENAME,
+  getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import {
+  getWorkshopDatapacksNames,
+  getWorkshopFilesNames,
   setupNewDatapackDirectoryInUUIDDirectory,
   uploadCoverPicToWorkshop,
-  uploadFilesToWorkshop
+  uploadFileToWorkshop
 } from "../upload-handlers.js";
 import { AccountType, isAccountType, NewUser } from "../types.js";
 import { parseExcelFile } from "../parse-excel-file.js";
@@ -515,15 +519,19 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
  */
 export const adminCreateWorkshop = async function adminCreateWorkshop(
   request: FastifyRequest<{
-    Body: { title: string; start: string; end: string; regRestrict: boolean; creatorUUID: string; regLink?: string };
+    Body: {
+      title: string;
+      start: string;
+      end: string;
+      regRestrict: boolean;
+      creatorUUID: string;
+      regLink?: string;
+      description?: string;
+    };
   }>,
   reply: FastifyReply
 ) {
-  const { title, start, end, regRestrict, creatorUUID, regLink } = request.body;
-  if (!title || !start || !end || regRestrict === undefined || !creatorUUID) {
-    reply.status(400).send({ error: "Missing required fields" });
-    return;
-  }
+  const { title, start, end, regRestrict, creatorUUID, regLink, description } = request.body;
   const startDate = new Date(start);
   const endDate = new Date(end);
   if (
@@ -542,13 +550,16 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       return;
     }
     const regRestrictNum = regRestrict ? 1 : 0;
+    const desc = description !== undefined ? description : null;
+    const link = regLink !== undefined ? regLink : null;
     const workshopId = await createWorkshop({
       title,
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       creatorUUID: creatorUUID,
       regRestrict: regRestrictNum,
-      regLink: regLink
+      regLink: link,
+      description: desc
     });
     if (!workshopId) {
       throw new Error("Workshop not created");
@@ -561,7 +572,8 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       active: false,
       creatorUUID: creatorUUID,
       regRestrict: Number(regRestrict) === 1,
-      regLink: regLink
+      regLink: link,
+      description: desc
     };
     assertSharedWorkshop(workshop);
     reply.send({ workshop });
@@ -578,11 +590,22 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
  * @returns
  */
 export const adminEditWorkshop = async function adminEditWorkshop(
-  request: FastifyRequest<{ Body: { title: string; start: string; end: string; workshopId: number } }>,
+  request: FastifyRequest<{
+    Body: {
+      creatorUUID: string;
+      title: string;
+      start: string;
+      end: string;
+      workshopId: number;
+      regRestrict: string;
+      description: string;
+      regLink: string;
+    };
+  }>,
   reply: FastifyReply
 ) {
-  const { title, start, end, workshopId } = request.body;
-  if (!workshopId || (!title && !start && !end)) {
+  const { creatorUUID, regLink, title, start, end, workshopId, regRestrict, description } = request.body;
+  if (!workshopId || (!title && !start && !end && !regLink && !description && regRestrict === undefined)) {
     reply.status(400).send({ error: "Missing required fields" });
     return;
   }
@@ -590,6 +613,19 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     const fieldsToUpdate: Partial<SharedWorkshop> = {};
     if (title) {
       fieldsToUpdate.title = title;
+    }
+    if (description) {
+      fieldsToUpdate.description = description;
+    }
+    if (regLink) {
+      if (!validator.isURL(regLink)) {
+        reply.status(400).send({ error: "Invalid registration link" });
+        return;
+      }
+      fieldsToUpdate.regLink = regLink;
+    }
+    if (creatorUUID) {
+      fieldsToUpdate.creatorUUID = creatorUUID;
     }
     if (start) {
       const startDate = new Date(start);
@@ -618,14 +654,16 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       start: fieldsToUpdate.start ?? existingWorkshop.start,
       end: fieldsToUpdate.end ?? existingWorkshop.end
     };
-    const identicalWorkshops = await findWorkshop(newWorkshop);
-    if (identicalWorkshops.length > 0) {
-      reply.status(409).send({ error: "Workshop with same title and dates already exists" });
-      return;
+    if (title || start || end) {
+      const identicalWorkshops = await findWorkshop(newWorkshop);
+      if (identicalWorkshops.length > 0) {
+        reply.status(409).send({ error: "Workshop with same title and dates already exists" });
+        return;
+      }
     }
     const fieldsToUpdateForDatabase = {
       ...fieldsToUpdate,
-      regRestrict: 0 // TODO: change this to the real updated regRestrict value when editing workshop functionality is completed
+      regRestrict: regRestrict !== undefined ? (regRestrict ? 1 : 0) : existingWorkshop.regRestrict
     };
     await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
     const updatedWorkshop = await getWorkshopIfNotEnded(workshopId);
@@ -636,16 +674,19 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     const now = new Date();
     const newStart = new Date(updatedWorkshop.start);
     const newEnd = new Date(updatedWorkshop.end);
-    const workshop = {
+    const workshop: SharedWorkshop = {
       title: updatedWorkshop.title,
       start: updatedWorkshop.start,
       end: updatedWorkshop.end,
       workshopId: workshopId,
       active: newStart <= now && now <= newEnd,
       regRestrict: Number(updatedWorkshop.regRestrict) === 1,
+      files: await getWorkshopFilesNames(workshopId),
+      datapacks: await getWorkshopDatapacksNames(workshopId),
+      description: updatedWorkshop.description,
+      regLink: updatedWorkshop.regLink,
       creatorUUID: updatedWorkshop.creatorUUID //TODO: add real required fields when implementing the functionality for editing files, regRestrict, regLink, creatorUUID. This is just for temporarily walk round the test cases
     };
-    assertSharedWorkshop(workshop);
     reply.send({ workshop });
   } catch (error) {
     console.error(error);
@@ -753,10 +794,6 @@ export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficia
   reply: FastifyReply
 ) {
   const { workshopId, datapackTitle } = request.body;
-  if (!workshopId || !datapackTitle) {
-    reply.status(400).send({ error: "Missing workshopId or datapackTitle" });
-    return;
-  }
   try {
     const workshop = await getWorkshopIfNotEnded(workshopId);
     if (!workshop) {
@@ -804,10 +841,6 @@ export const adminEditDatapackMetadata = async function adminEditDatapackMetadat
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
   try {
     const response = await editDatapackMetadataRequestHandler(request.parts(), "official", datapack);
     reply.status(response.code).send({ message: response.message });
@@ -827,20 +860,45 @@ export const adminUploadFilesToWorkshop = async function adminUploadFilesToWorks
     reply.status(404).send({ error: "Workshop not found or has ended" });
     return;
   }
-  let file: MultipartFile | undefined;
   try {
+    let fileUploadFailed = false;
+    const uploadResults: { filename: string; code: number; message: string }[] = [];
+    const allowedFileTypes = ["pdf"];
+    const allowedMimeTypes = ["application/pdf"];
     for await (const part of parts) {
-      if (part.type === "file" && part.fieldname === "file") {
-        file = part;
-        const { code, message } = await uploadFilesToWorkshop(workshopId, part);
-        if (code !== 200) {
-          reply.status(code).send({ error: message });
+      if (part.type !== "file") continue;
+      let result;
+      if (part.fieldname === "presentationFile") {
+        if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
+          reply.status(415).send({ error: "Invalid file type for presentation file" });
           return;
         }
+        result = await uploadFileToWorkshop(workshopId, part, RESERVED_PRESENTATION_FILENAME);
+      } else if (part.fieldname === "instructionsFile") {
+        if (!isFileTypeAllowed(part.filename, part.mimetype, allowedFileTypes, allowedMimeTypes)) {
+          reply.status(415).send({ error: "Invalid file type for instruction file" });
+          return;
+        }
+        result = await uploadFileToWorkshop(workshopId, part, RESERVED_INSTRUCTIONS_FILENAME);
+      } else if (part.fieldname === "otherFiles") {
+        if (part.filename === RESERVED_PRESENTATION_FILENAME || part.filename === RESERVED_INSTRUCTIONS_FILENAME) {
+          reply.status(400).send({ error: `File name ${part.filename} is reserved and cannot be used` });
+          return;
+        }
+        result = await uploadFileToWorkshop(workshopId, part);
+      } else {
+        reply.status(400).send({ error: `Unexpected field: ${part.fieldname}` });
+        return;
       }
+      uploadResults.push({ filename: part.filename, code: result.code, message: result.message });
+      if (result.code !== 200) fileUploadFailed = true;
     }
-    if (!file) {
+    if (uploadResults.length === 0) {
       reply.status(400).send({ error: "No files were uploaded" });
+      return;
+    }
+    if (fileUploadFailed) {
+      reply.status(500).send({ error: "Some files failed to upload", uploadResults });
       return;
     }
     reply.send({ message: "Files added to workshop" });

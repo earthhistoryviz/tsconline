@@ -10,7 +10,6 @@ import { useTheme } from "@mui/material/styles";
 import { TSCCard, StyledScrollbar } from "./components";
 import "./Home.css";
 import { ErrorCodes } from "./util/error-codes";
-import { useTranslation } from "react-i18next";
 
 export const Presets = () => {
   const { state } = useContext(context);
@@ -42,7 +41,6 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
   const { actions, state } = useContext(context);
   const theme = useTheme();
   const [expanded, setExpanded] = useState(true);
-  const { t } = useTranslation();
   const handleAccordionChange = () => {
     setExpanded(!expanded);
   };
@@ -58,7 +56,7 @@ const TSCPresetHighlights = observer(function TSCPresetHighlights({
           aria-controls="panel1a-content"
           id="panel1a-header"
           className="preset-summary">
-          <Typography className="preset-type-title">{t(`presets.${type}`)}</Typography>
+          <Typography className="preset-type-title">{type}</Typography>
         </AccordionSummary>
         <AccordionDetails>
           <StyledScrollbar>

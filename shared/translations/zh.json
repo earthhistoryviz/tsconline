@@ -72,7 +72,6 @@
             },
             "details-page": {
                 "datapacks": "数据包",
-                "files": "文件",
                 "download-button": "下载文件",
                 "description": "内容简介",
                 "messages": {

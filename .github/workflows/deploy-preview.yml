@@ -97,11 +97,20 @@ jobs:
           echo "${{ secrets.SSH_KEY }}" > /tmp/ssh_key.pem
           chmod 600 /tmp/ssh_key.pem
           scp -o StrictHostKeyChecking=no -i /tmp/ssh_key.pem deployuser@dev.geolex.org:/tmp/running_pr.txt ./running_pr.txt
-          PR_NUMBER=$(cat ./running_pr.txt)
-          echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          PR_NUMBER=$(cat ./running_pr.txt | tr -d '\n' | xargs)
+          if [[ -z "$PR_NUMBER" ]]; then
+            echo "No previous PR found."
+          elif ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "Invalid PR number format: $PR_NUMBER"
+          elif [[ "$PR_NUMBER" == "${{ github.event.issue.number }}" ]]; then
+            echo "Same as current PR number ($PR_NUMBER), skipping."
+          else
+            echo "Previous PR number: $PR_NUMBER"
+            echo "previous_pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          fi
 
       - name: Comment on previous PR
-        if: steps.fetch_previous_pr.outputs.previous_pr_number != '' && steps.fetch_previous_pr.outputs.previous_pr_number != '${{ github.event.issue.number }}'
+        if: ${{ steps.fetch_previous_pr.outputs.previous_pr_number != '' }}
         uses: actions/github-script@v6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
