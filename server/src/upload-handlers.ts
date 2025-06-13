@@ -53,6 +53,7 @@ import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
 import { getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
+import logger from "./error-logger.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -585,7 +586,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
   try {
     datapacksDirectory = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return [];
   }
   try {
@@ -593,7 +594,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
     const folders = (await entries).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
     return folders;
   } catch (error) {
-    console.error(`Error reading directory ${directory}:`, error);
+    logger.error(error);
     return [];
   }
 }
@@ -620,7 +621,7 @@ export async function getWorkshopFilesNames(workshopId: number): Promise<string[
     if (error.code === "ENOENT") {
       return [];
     }
-    console.error(`Error reading directory ${filesFolder}:`, error);
+    logger.error(error);
     return [];
   }
 }

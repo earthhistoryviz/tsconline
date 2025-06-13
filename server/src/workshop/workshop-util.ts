@@ -16,6 +16,9 @@ export function getWorkshopIdFromUUID(uuid: string): number | null {
     return null;
   }
   const workshopId = parseInt(uuid.split("-")[1] ?? "");
+  if (isNaN(workshopId)) {
+    return null;
+  }
   return workshopId;
 }
 
