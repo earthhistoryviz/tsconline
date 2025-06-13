@@ -357,7 +357,7 @@ interface AdminDeleteOfficialDatapacksRequest extends RouteGenericInterface {
  * @returns
  */
 export const adminDeleteOfficialDatapack = async function adminDeleteOfficialDatapack(
-  request: FastifyRequest<AdminDeleteDatapackRequest>,
+  request: FastifyRequest<AdminDeleteOfficialDatapacksRequest>,
   reply: FastifyReply
 ) {
   const { datapack } = request.body;
@@ -756,7 +756,7 @@ interface AdminEditDatapackPrioritiesRequest extends RouteGenericInterface {
   Body: {
     tasks: DatapackPriorityChangeRequest[];
   };
-};
+}
 export const adminEditDatapackPriorities = async function adminEditDatapackPriorities(
   request: FastifyRequest<AdminEditDatapackPrioritiesRequest>,
   reply: FastifyReply
@@ -828,7 +828,7 @@ interface AdminAddOfficialDatapackToWorkshopRequest extends RouteGenericInterfac
     workshopId: number;
     datapackTitle: string;
   };
-};
+}
 export const adminAddOfficialDatapackToWorkshop = async function adminAddOfficialDatapackToWorkshop(
   request: FastifyRequest<AdminAddOfficialDatapackToWorkshopRequest>,
   reply: FastifyReply
@@ -880,7 +880,7 @@ interface AdminEditDatapackMetadataRequest extends RouteGenericInterface {
   Params: {
     datapack: string;
   };
-};
+}
 export const adminEditDatapackMetadata = async function adminEditDatapackMetadata(
   request: FastifyRequest<AdminEditDatapackMetadataRequest>,
   reply: FastifyReply
@@ -1010,8 +1010,8 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
 interface AdminDeleteDatapackCommentRequest extends RouteGenericInterface {
   Params: {
     commentId: number;
-  }
-};
+  };
+}
 /**
  * Admin sends a request to delete a datapack comment
  * TODO case where user is deleted, if user is still logged in, invalidate session or handle logic in login-routes
