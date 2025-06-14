@@ -2,6 +2,7 @@ import { test, expect, Page } from "@playwright/test";
 import fs from "fs/promises";
 import path from "path";
 import { fileURLToPath } from "url";
+import { DOMParser } from "@xmldom/xmldom";
 
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
@@ -121,6 +122,12 @@ test("check if generate chart and save chart works", async ({ page }) => {
 
   const referenceSvg = await fs.readFile(path.resolve(dirname, "charts.test.ts-snapshots/chart.svg"), "utf-8");
   const downloadedSvg = await fs.readFile(downloadSvgPath, "utf-8");
+
+  const parser = new DOMParser();
+  const parsed = parser.parseFromString(downloadedSvg, "image/svg+xml");
+
+  const isValidSvg = parsed.getElementsByTagName("parsererror").length === 0;
+  expect(isValidSvg).toBe(true);
 
   const downloadedSize = Buffer.byteLength(downloadedSvg);
   const referenceSize = Buffer.byteLength(referenceSvg);
