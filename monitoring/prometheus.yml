@@ -31,7 +31,7 @@ scrape_configs:
       type: Bearer
       credentials: "__METRICS_AUTH__"
     static_configs:
-      - targets: ["stage.timescalecreator.org:3000"]
+      - targets: ["stage.timescalecreator.org"]
 
   - job_name: "tscprod"
     scrape_interval: 20s
@@ -39,7 +39,7 @@ scrape_configs:
       type: Bearer
       credentials: "__METRICS_AUTH__"
     static_configs:
-      - targets: ["tsconline.timescalecreator.org:3000"]
+      - targets: ["tsconline.timescalecreator.org"]
 
   - job_name: "tscdeep"
     scrape_interval: 20s
@@ -47,7 +47,7 @@ scrape_configs:
       type: Bearer
       credentials: "__METRICS_AUTH__"
     static_configs:
-      - targets: ["timescalecreator.deep.org:3000"]
+      - targets: ["timescalecreator.deep.org"]
 
 remote_write:
   - url: "https://prometheus-prod-56-prod-us-east-2.grafana.net/api/prom/push"

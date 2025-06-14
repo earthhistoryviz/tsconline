@@ -88,6 +88,15 @@ choco install yarn
 brew install yarn
 ```
 
+### Installing Java 8
+```bash
+sudo apt-get install openjdk-8-jdk
+```
+or
+
+```bash
+sudo apt install openjdk-8-jdk
+```
 ### Setting up locally hosted website
 
 1. On first time being in the repo, `cd` into `tsconline` (or whatever you named the repo and ensure you are in the root dir) and run
@@ -105,7 +114,16 @@ sudo apt-get install -y python3 make g++
 
 - For reference, this will run `yarn install` and `yarn build` to download all the packages we use internally (dev and production) and additionally compile all the `Typescript` files (`.ts`) into `Javascript` files (`.js`)
 
-2. **Manual setup**
+- Make sure to get the env file from the Dropbox and put it in the root of the `server` directory. This file is called `.env` and contains all the environment variables needed to setup various files. If you don't have access to the dropbox, ask a team member for it.
+
+2. **Quick Website Setup**
+- If you have already run `yarn setup` and have the dependencies installed you can run
+```bash
+yarn dev
+```
+This will start the development server and you can view the website at `http://localhost:5173` in your browser.
+
+3. **Manual setup**
 
 - Open two (or four) terminals and run these commands in each
 
@@ -128,22 +146,6 @@ cd server && yarn start
 ```
 
 - The `yarn start` in `server` and `yarn dev` in `app` will put up our backend server on your machine and the `app` will go live at `http://localhost:5173` whereas the server will service requests from port `3000` at `http://localhost:3000`
-
-3. **Quick Website Setup**
-
-- If you want to quickly setup the website without opening more than one terminal, run
-
-```bash
-./start.sh
-```
-
-- Don't forget to run this command after you finish, otherwise these terminals will hide in your background
-
-```bash
-./stop.sh
-```
-
-NOTE: this doesn't work on some machines unfortunately.
 
 ### Using docker to run the website
 - Simply run
