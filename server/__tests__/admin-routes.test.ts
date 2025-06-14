@@ -599,6 +599,19 @@ it("should have all routes registered in auth", () => {
   }
   expect(failedRoutes.length).toBe(0);
 });
+it("should have all auth routes dictated in routes", () => {
+  const failedRoutes = routes.filter((route) => {
+    const isRegistered = matchesRegisteredPattern(route.method, route.url);
+    if (!isRegistered) {
+      console.error(`Route not registered: ${route.method} ${route.url}`);
+    }
+    return !isRegistered;
+  });
+  if (failedRoutes.length > 0) {
+    console.table(failedRoutes);
+  }
+  expect(failedRoutes.length).toBe(0);
+})
 // this test makes sure that all routes that are in auth have recaptcha enabled since they are now mroe of a manual addition
 it("should have all routes registered with recaptcha", () => {
   const failedRoutes = appRoutes.filter((route) => !route.hasRecaptcha);
