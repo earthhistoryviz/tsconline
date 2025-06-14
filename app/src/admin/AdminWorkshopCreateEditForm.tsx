@@ -219,6 +219,16 @@ export const WorkshopCreateEditForm: React.FC<WorkshopCreateEditForm> = observer
               </Select>
             </Box>
             <Box textAlign="center" width="100%">
+              <TextField
+                label="Workshop Description"
+                multiline
+                rows={3}
+                placeholder="Enter a description for the workshop"
+                size="small"
+                fullWidth
+                onChange={(event) => setters.setDescription(event.target.value)}
+                value={state.description}
+              />
               <Typography variant="h5" mb="5px">
                 Add Users
               </Typography>

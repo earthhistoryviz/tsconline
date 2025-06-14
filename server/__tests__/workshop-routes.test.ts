@@ -54,7 +54,8 @@ vi.mock("../src/util", async () => {
 });
 vi.mock("fs/promises", async () => {
   return {
-    readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content"))
+    readFile: vi.fn().mockResolvedValue(Buffer.from("fake-zip-content")),
+    readdir: vi.fn().mockResolvedValue(["file1.zip", "file2.zip"])
   };
 });
 vi.mock("../src/upload-handlers", async () => {
@@ -101,7 +102,8 @@ const testWorkshopDatabase: Workshop = {
   workshopId: 1,
   regRestrict: 0,
   creatorUUID: "123",
-  regLink: ""
+  regLink: null,
+  description: "description"
 };
 const testWorkshop: SharedWorkshop = {
   title: "test",
@@ -110,7 +112,8 @@ const testWorkshop: SharedWorkshop = {
   workshopId: 1,
   regRestrict: false,
   creatorUUID: "123",
-  regLink: "",
+  regLink: null,
+  description: "description",
   active: false
 };
 
@@ -429,6 +432,19 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Read error: Something else" });
   });
+  it("should return 404 if no files found in workshop", async () => {
+    const error = new Error("ENOENT") as NodeJS.ErrnoException;
+    error.code = "ENOENT";
+    readFile.mockRejectedValueOnce(error);
+    vi.spyOn(fsp, "readdir").mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "No files found for this workshop" });
+    expect(response.statusCode).toBe(404);
+  });
   it("should create the zip if readFile returns ENOENT, then return file", async () => {
     const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
     enoentError.code = "ENOENT";
@@ -455,6 +471,22 @@ describe("downloadWorkshopFilesZip tests", () => {
     expect(response.statusCode).toBe(200);
     expect(response.body).toEqual("existing-zip-content");
     expect(createZipFile).not.toHaveBeenCalled();
+  });
+  it("should return 404 if an ENOENT error happens later in the try block", async () => {
+    const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
+    enoentError.code = "ENOENT";
+    readFile.mockRejectedValueOnce(enoentError);
+    const creationError = new Error("failed") as NodeJS.ErrnoException;
+    creationError.code = "ENOENT";
+    createZipFile.mockRejectedValueOnce(creationError);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "An error occurred" });
+    expect(response.statusCode).toBe(500);
   });
   it("should return 500 if createZipFile throws an error", async () => {
     const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
