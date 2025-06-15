@@ -34,7 +34,7 @@ import type {
   Marker,
   Model,
   CommentType,
-  Stage
+  AllStages
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -48,7 +48,7 @@ export type State = {
     chartTimelineLocked: boolean;
     state: ChartTabState;
     percent: number;
-    stage: Stage;
+    stage: AllStages;
   };
   crossPlot: {
     lockX: boolean;

@@ -1,6 +1,6 @@
-import { NormalProgress, assertChartRequest, isTempDatapack, isUserDatapack } from "@tsconline/shared";
+import { ChartProgressUpdate, ChartRequest, NormalProgress, isTempDatapack, isUserDatapack } from "@tsconline/shared";
 import { spawn } from "child_process";
-import { FastifyReply, FastifyRequest } from "fastify";
+import { FastifyReply } from "fastify";
 import md5 from "md5";
 import path from "path";
 import { readFile, writeFile, stat, mkdir } from "fs/promises";
@@ -15,10 +15,7 @@ import { checkFileExists, assetconfigs, deleteDirectory } from "./util.js";
 import { getWorkshopIdFromUUID } from "./workshop/workshop-util.js";
 import svgson from "svgson";
 import { queue, maxQueueSize } from "./index.js";
-
-export type Job = {
-  listener?: FastifyReply;
-};
+import type { WebSocket } from "ws";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -27,27 +24,6 @@ export class ChartGenerationError extends Error {
     super(message);
     this.errorCode = errorCode;
   }
-}
-
-export const jobStore = new Map<string, Job>();
-
-/**
- * Sends a message to the client listening with SSE for the given job.
- */
-export function notifyListener(jobId: string, message: string) {
-  const job = jobStore.get(jobId);
-  if (!job || !job.listener) return;
-  job.listener.raw.write(`data: ${message}\n\n`);
-}
-
-/**
- * Closes the listener for a job and removes it from the job store.
- */
-export function closeListener(jobId: string) {
-  const job = jobStore.get(jobId);
-  if (!job || !job.listener) return;
-  job.listener.raw.end();
-  jobStore.delete(jobId);
 }
 
 export function parseJavaOutputLine(line: string): NormalProgress | null {
@@ -90,22 +66,13 @@ export async function waitForSVGReady(filepath: string, timeoutMs: number): Prom
  * Will fetch a chart with or without the cache
  * Will return the chart path and the hash the chart was saved with
  */
-export async function generateChart(request: FastifyRequest, jobId: string) {
-  let chartrequest;
-  try {
-    chartrequest = JSON.parse(request.body as string);
-    assertChartRequest(chartrequest);
-  } catch (e) {
-    console.log("ERROR: chart request is not valid.  Request was: ", chartrequest, ".  Error was: ", e);
-    throw new Error(`ERROR: chart request is not valid.  Error was: ${e}`);
-  }
-  const { useCache, isCrossPlot } = chartrequest;
-  const uuid = request.session.get("uuid");
-  const userId = (await findUser({ uuid }))[0]?.userId;
+export async function generateChart(chartRequest: ChartRequest, socket: WebSocket, uuid?: string) {
+  const { useCache, isCrossPlot } = chartRequest;
+  const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
-  const settingsXml = chartrequest.settings;
+  const settingsXml = chartRequest.settings;
   // Compute the paths: chart directory, chart file, settings file, and URL equivalent for chart
-  const hash = md5(isCrossPlot + settingsXml + chartrequest.datapacks.join(","));
+  const hash = md5(isCrossPlot + settingsXml + chartRequest.datapacks.join(","));
   const chartDirUrlPath = `/${assetconfigs.chartsDirectory}/${hash}`;
   const chartUrlPath = chartDirUrlPath + "/chart.svg";
 
@@ -117,7 +84,7 @@ export async function generateChart(request: FastifyRequest, jobId: string) {
   const usedUserDatapackFilepaths: string[] = [];
   const usedTempDatapacks: string[] = [];
 
-  for (const datapack of chartrequest.datapacks) {
+  for (const datapack of chartRequest.datapacks) {
     let uuidFolder = uuid;
     switch (datapack.type) {
       case "workshop": {
@@ -228,7 +195,7 @@ export async function generateChart(request: FastifyRequest, jobId: string) {
         for (const line of lines) {
           const status = parseJavaOutputLine(line);
           if (status) {
-            notifyListener(jobId, JSON.stringify(status));
+            socket.send(JSON.stringify(status));
           }
         }
         stdout += data;

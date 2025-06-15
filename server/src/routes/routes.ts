@@ -1,6 +1,6 @@
 import type { FastifyRequest, FastifyReply } from "fastify";
 import { readFile } from "fs/promises";
-import { TimescaleItem, assertTimescale, DatapackMetadata } from "@tsconline/shared";
+import { TimescaleItem, assertTimescale, DatapackMetadata, assertChartRequest } from "@tsconline/shared";
 import {
   assetconfigs,
   verifyFilepath,
@@ -18,16 +18,9 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
-import { randomUUID } from "crypto";
-import {
-  Job,
-  jobStore,
-  notifyListener,
-  closeListener,
-  generateChart,
-  waitForSVGReady,
-  ChartGenerationError
-} from "../chart-generation-service.js";
+import { generateChart, waitForSVGReady, ChartGenerationError } from "../chart-generation-service.js";
+import type { WebSocket } from "ws";
+
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
@@ -221,60 +214,31 @@ export const fetchSettingsXml = async function fetchSettingsJson(
   }
 };
 
-export const handleChartGeneration = async function handleChartGeneration(
-  request: FastifyRequest,
-  reply: FastifyReply
-) {
-  const jobId = randomUUID();
-  const job: Job = {};
-  jobStore.set(jobId, job);
-  reply.send({ jobId });
-  try {
-    const { chartpath, hash } = await generateChart(request, jobId);
-    notifyListener(jobId, JSON.stringify({ stage: "Waiting for file", percent: 90 }));
-    await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 1000 * 30);
-    notifyListener(jobId, JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
-    closeListener(jobId);
-    console.log("Chart generation complete for job:", jobId);
-  } catch (error) {
-    let message = "Unknown error";
-    let errorCode = 5000;
-    if (error instanceof ChartGenerationError) {
-      message = error.message;
-      errorCode = error.errorCode ?? 5000;
-    } else if (error instanceof Error) {
-      message = error.message;
+export async function handleChartGeneration(socket: WebSocket, request: FastifyRequest) {
+  socket.once("message", async (message: string) => {
+    try {
+      socket.send(JSON.stringify({ stage: "Initializing", percent: 0 }));
+      const chartRequest = JSON.parse(message.toString());
+      assertChartRequest(chartRequest);
+      const { chartpath, hash } = await generateChart(chartRequest, socket, request.session.get("uuid"));
+      socket.send(JSON.stringify({ stage: "Waiting for file", percent: 90 }));
+      await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 30_000);
+      socket.send(JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
+    } catch (error) {
+      let message = "Unknown error";
+      let errorCode = 5000;
+      if (error instanceof ChartGenerationError) {
+        message = error.message;
+        errorCode = error.errorCode ?? 5000;
+      } else if (error instanceof Error) {
+        message = error.message;
+      }
+      socket.send(JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
+    } finally {
+      socket.close();
     }
-    notifyListener(jobId, JSON.stringify({ stage: "Error", percent: 0, error: message, errorCode }));
-    closeListener(jobId);
-  }
-};
-
-export const getChartProgress = async function getChartProgress(
-  request: FastifyRequest<{ Params: { jobId: string } }>,
-  reply: FastifyReply
-) {
-  const { jobId } = request.params;
-  const job = jobStore.get(jobId);
-  if (!job) {
-    reply.status(404).send({ error: "Job not found" });
-    return;
-  }
-
-  reply.raw.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
-    Connection: "keep-alive",
-    "Access-Control-Allow-Origin": process.env.DOMAIN || "http://localhost:5173"
   });
-  reply.raw.write("\n");
-  job.listener = reply;
-
-  request.raw.on("close", () => {
-    console.log(`Client disconnected from job ${jobId}`);
-    closeListener(jobId);
-  });
-};
+}
 
 // Serve timescale data endpoint
 export const fetchTimescale = async function (_request: FastifyRequest, reply: FastifyReply) {

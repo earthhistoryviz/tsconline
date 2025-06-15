@@ -4,9 +4,9 @@ import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
 import {
+  ChartProgressUpdate,
   ChartRequest,
   ColumnInfo,
-  assertChartInfo,
   assertChartProgressUpdate,
   isTempDatapack
 } from "@tsconline/shared";
@@ -214,26 +214,17 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
     }
   | undefined
 > = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
-  try {
-    const response = await fetcher(`/chart`, {
-      method: "POST",
-      body: JSON.stringify(chartRequest),
-      credentials: "include"
-    });
-    const answer = await response.json();
-    const { jobId } = answer;
-    if (!response.ok || !jobId) {
-      displayServerError(answer, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      return;
-    }
+  return await new Promise((resolve, reject) => {
+    try {
+      const ws = new WebSocket(`${backendUrl}/chart`);
+      ws.onopen = () => {
+        ws.send(JSON.stringify(chartRequest));
+      };
 
-    const eventSource = new EventSource(`${backendUrl}/chart-progress/${jobId}`);
-    return await new Promise((resolve, reject) => {
-      eventSource.onmessage = async (event) => {
-        const progress = JSON.parse(event.data);
+      ws.addEventListener("message", async (e: MessageEvent) => {
+        const progress: ChartProgressUpdate = JSON.parse(e.data);
         assertChartProgressUpdate(progress);
         if (progress.stage === "Error") {
-          eventSource.close();
           let errorCode = ErrorCodes.INTERNAL_ERROR;
           switch (progress.errorCode) {
             case 100:
@@ -251,28 +242,14 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
             case 1001:
               errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
               break;
-            case 400:
-            case 500:
-            case 1002:
-            case 1003:
-            case 1004:
-            case 1005:
-            case 2000:
-            case 2001:
-            case 2002:
-            case 2003:
-              errorCode = ErrorCodes.INTERNAL_ERROR;
-              break;
           }
           displayServerError(progress.error, errorCode, ErrorMessages[errorCode]);
           resolve(undefined);
           return;
         }
         generalActions.updateChartLoadingProgress(progress.percent, progress.stage);
-        if (progress.percent === 100) {
-          eventSource.close();
+        if (progress.stage === "Complete") {
           try {
-            assertChartInfo(progress);
             const content = await (await fetcher(progress.chartpath)).text();
             const sanitizedSVG = purifyChartContent(content);
             generalActions.pushSnackbar("Successfully generated chart", "success");
@@ -286,10 +263,11 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
             reject(e);
           }
         }
-      };
-    });
-  } catch (e) {
-    console.error("Unexpected failure", e);
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  }
+      });
+    } catch (e) {
+      console.error("Unexpected failure", e);
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      reject(e);
+    }
+  });
 });

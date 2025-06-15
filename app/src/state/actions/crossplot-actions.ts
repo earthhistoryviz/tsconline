@@ -18,6 +18,7 @@ import {
   removeError,
   setChartTabState,
   setTab,
+  updateChartLoadingProgress,
   uploadUserDatapack
 } from "./general-actions";
 import { NavigateFunction } from "react-router";
@@ -681,6 +682,7 @@ export const compileAndSendCrossPlotChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: true
       });
+      updateChartLoadingProgress(0, "Initializing");
     } catch (e) {
       console.error(e);
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);

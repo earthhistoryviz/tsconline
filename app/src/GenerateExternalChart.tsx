@@ -160,7 +160,11 @@ export const GenerateExternalChart: React.FC = () => {
         alignItems: "center",
         height: "100vh"
       }}>
-      {loading ? <LoadingChart /> : <Typography variant="h4">{t("chart.no-chart-yet")}</Typography>}
+      {loading ? (
+        <LoadingChart percent={state.chartTab.percent} stage={state.chartTab.stage} />
+      ) : (
+        <Typography variant="h4">{t("chart.no-chart-yet")}</Typography>
+      )}
     </Box>
   );
 };

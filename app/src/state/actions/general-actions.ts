@@ -28,9 +28,8 @@ import {
   TimescaleItem,
   MarkdownFile,
   CommentType,
-  Stage
+  AllStages
 } from "@tsconline/shared";
-
 import { state, State } from "../state";
 import { devSafeUrl, executeRecaptcha, fetcher } from "../../util";
 import {
@@ -71,7 +70,7 @@ import {
 import { fetchUserDatapack } from "./user-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
-export const updateChartLoadingProgress = action("updateChartLoadingProgress", (percent: number, stage: Stage) => {
+export const updateChartLoadingProgress = action("updateChartLoadingProgress", (percent: number, stage: AllStages) => {
   state.chartTab.percent = percent;
   state.chartTab.stage = stage;
 });
