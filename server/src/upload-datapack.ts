@@ -18,7 +18,8 @@ import logger from "./error-logger.js";
 
 export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = async (
   uuid: string,
-  parts: AsyncIterableIterator<Multipart>
+  parts: AsyncIterableIterator<Multipart>,
+  options?: { bearerToken?: string }
 ): Promise<
   | OperationResult
   | {
@@ -33,7 +34,11 @@ export const getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack = asy
   let file: MultipartFile | undefined;
   let pdfFields: { [fileName: string]: string } = {};
   try {
-    const result = await processMultipartPartsForDatapackUpload(uuid, parts);
+    const result = await processMultipartPartsForDatapackUpload(
+      uuid,
+      parts,
+      options?.bearerToken ? { bearerToken: options.bearerToken } : undefined
+    );
     if (isOperationResult(result)) {
       return result;
     }
@@ -76,7 +81,11 @@ export const processAndUploadDatapack = async (
   }
 
   const isAdmin = user[0] ? !!user[0].isAdmin : false;
-  const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(uuid, parts);
+  const result = await getDatapackMetadataFromIterableAndTemporarilyDownloadDatapack(
+    uuid,
+    parts,
+    options?.bearerToken ? { bearerToken: options.bearerToken } : undefined
+  );
   if (isOperationResult(result)) {
     return result;
   }

@@ -396,7 +396,8 @@ export async function fetchMapPackImageFilepath(uuid: string, datapackTitle: str
 
 export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
-  parts: AsyncIterableIterator<Multipart>
+  parts: AsyncIterableIterator<Multipart>,
+  options?: { bearerToken?: string }
 ): Promise<
   | { fields: { [key: string]: string }; file: MultipartFile; pdfFields?: { [fileName: string]: string } }
   | OperationResult
@@ -440,8 +441,10 @@ export async function processMultipartPartsForDatapackUpload(
           return { code: 415, message: "Invalid file type for datapack file" };
         }
         if (file.file.bytesRead > 3000 && !isProOrAdmin) {
-          await cleanupTempFiles();
-          return { code: 413, message: "File is too large" };
+          if (!(process.env.BEARER_TOKEN && options?.bearerToken === process.env.BEARER_TOKEN)) {
+            await cleanupTempFiles();
+            return { code: 413, message: "File is too large" };
+          }
         }
         const { code, message } = await uploadFileToFileSystem(file, filepath);
         if (code !== 200) {
