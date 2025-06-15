@@ -12,7 +12,7 @@ export const GenerateExternalChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const datapackTitle = queryParams.get("datapackTitle");
-  const chartType = queryParams.get("charttype");
+  const chartConfig = queryParams.get("chartConfig");
   const parsedBase = parseFloat(queryParams.get("baseVal") ?? "");
   const baseVal = isNaN(parsedBase) ? 10 : parsedBase;
   const parsedTop = parseFloat(queryParams.get("topVal") ?? "");
@@ -20,7 +20,7 @@ export const GenerateExternalChart: React.FC = () => {
   const parsedStep = parseFloat(queryParams.get("unitStep") ?? "");
   const unitStep = isNaN(parsedStep) ? 0.1 : parsedStep;
   const unitType = queryParams.get("unitType") ?? "Ma";
-  const minMaxPlot = queryParams.get("minMaxPlot"); // treatise: min_total-max_total-min_new-max_new-min_extinct-max_extinct
+  const minMaxPlot = queryParams.get("minMaxPlot"); // treatise use only: min_total-max_total-min_new-max_new-min_extinct-max_extinct
 
   const { actions } = useContext(context);
   const navigate = useNavigate();
@@ -53,7 +53,7 @@ export const GenerateExternalChart: React.FC = () => {
           type: "official"
         };
 
-        if (chartType === "Treatise") {
+        if (chartConfig === "Internal") {
           const internalDatapack = await actions.fetchDatapack(
             {
               isPublic: true,
@@ -86,7 +86,7 @@ export const GenerateExternalChart: React.FC = () => {
         // !isNaN here isn't redundant, reason is because 0 and negative numbers need to also work
         if (isNaN(parsedTop) || isNaN(parsedBase) || isNaN(parsedStep)) {
           console.warn(
-            "Base Unit Value, Top Unit Value, and Unit Step must ALL be provided with number values. No changes made."
+            "Base Unit Value, Top Unit Value, and Unit Step must ALL be provided with number values. Using Default."
           );
           console.warn("Provided values: baseVal: ", baseVal, ", topVal: ", topVal, ", unitStep: ", unitStep);
         }
@@ -95,13 +95,13 @@ export const GenerateExternalChart: React.FC = () => {
           if (!isNaN(topVal) && !isNaN(baseVal) && !isNaN(unitStep)) {
             if (topVal > baseVal) {
               console.warn("Top Unit Value must be less than Base Unit Value. No changes made.");
-            }
-            if (unitStep <= 0) {
+            } else if (unitStep <= 0) {
               console.warn("Unit Step must be greater than 0. No changes made.");
+            } else {
+              actions.setBaseStageAge(baseVal, unitType);
+              actions.setTopStageAge(topVal, unitType);
+              actions.setUnitsPerMY(unitStep, unitType);
             }
-            actions.setBaseStageAge(baseVal, unitType);
-            actions.setTopStageAge(topVal, unitType);
-            actions.setUnitsPerMY(unitStep, unitType);
           } else {
             console.warn(
               "Base Unit Value, Top Unit Value, and Unit Step must be provided with number values. No changes made."
@@ -112,7 +112,7 @@ export const GenerateExternalChart: React.FC = () => {
           console.warn("Failed to set stage ages or unit steps: ", err);
         }
 
-        if (chartType === "Treatise" && minMaxPlot) {
+        if (chartConfig === "Internal" && minMaxPlot) {
           const parts = minMaxPlot.split("-");
           if (parts.length == 6) {
             const values = parts.map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
