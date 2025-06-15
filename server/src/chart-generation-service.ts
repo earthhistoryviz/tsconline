@@ -1,4 +1,4 @@
-import { ChartRequest, NormalProgress, isTempDatapack, isUserDatapack } from "@tsconline/shared";
+import { ChartProgressUpdate, ChartRequest, NormalProgress, isTempDatapack, isUserDatapack } from "@tsconline/shared";
 import { spawn } from "child_process";
 import md5 from "md5";
 import path from "path";
@@ -14,7 +14,6 @@ import { checkFileExists, assetconfigs, deleteDirectory } from "./util.js";
 import { getWorkshopIdFromUUID } from "./workshop/workshop-util.js";
 import svgson from "svgson";
 import { queue, maxQueueSize } from "./index.js";
-import type { WebSocket } from "ws";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -65,7 +64,11 @@ export async function waitForSVGReady(filepath: string, timeoutMs: number): Prom
  * Will fetch a chart with or without the cache
  * Will return the chart path and the hash the chart was saved with
  */
-export async function generateChart(chartRequest: ChartRequest, socket: WebSocket, uuid?: string) {
+export async function generateChart(
+  chartRequest: ChartRequest,
+  onProgress: (progress: ChartProgressUpdate) => void,
+  uuid?: string
+) {
   const { useCache, isCrossPlot } = chartRequest;
   const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
   const userInActiveWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
@@ -194,7 +197,7 @@ export async function generateChart(chartRequest: ChartRequest, socket: WebSocke
         for (const line of lines) {
           const status = parseJavaOutputLine(line);
           if (status) {
-            socket.send(JSON.stringify(status));
+            onProgress(status);
           }
         }
         stdout += data;

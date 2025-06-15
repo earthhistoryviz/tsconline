@@ -4,7 +4,6 @@ import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
 import {
-  ChartProgressUpdate,
   ChartRequest,
   ColumnInfo,
   assertChartProgressUpdate,

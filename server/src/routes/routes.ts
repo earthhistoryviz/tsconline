@@ -219,7 +219,13 @@ export async function handleChartGeneration(socket: WebSocket, request: FastifyR
       socket.send(JSON.stringify({ stage: "Initializing", percent: 0 }));
       const chartRequest = JSON.parse(message.toString());
       assertChartRequest(chartRequest);
-      const { chartpath, hash } = await generateChart(chartRequest, socket, request.session.get("uuid"));
+      const { chartpath, hash } = await generateChart(
+        chartRequest,
+        (progress) => {
+          socket.send(JSON.stringify({ stage: progress.stage, percent: progress.percent }));
+        },
+        request.session.get("uuid")
+      );
       socket.send(JSON.stringify({ stage: "Waiting for file", percent: 90 }));
       await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 30_000);
       socket.send(JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
