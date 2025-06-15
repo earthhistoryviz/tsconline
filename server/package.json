@@ -10,7 +10,7 @@
     "@fastify/rate-limit": "^9.1.0",
     "@fastify/secure-session": "^7.4.0",
     "@fastify/static": "^6.10.1",
-    "@fastify/websocket": "^11.1.0",
+    "@fastify/websocket": "10.0.1",
     "@tsconline/shared": "1.0.0",
     "@xmldom/xmldom": "0.8.10",
     "adm-zip": "^0.5.16",

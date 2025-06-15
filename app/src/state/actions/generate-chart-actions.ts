@@ -214,15 +214,26 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
     }
   | undefined
 > = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
-  return await new Promise((resolve, reject) => {
+  return await new Promise((resolve) => {
     try {
       const ws = new WebSocket(`${backendUrl}/chart`);
       ws.onopen = () => {
         ws.send(JSON.stringify(chartRequest));
       };
-
-      ws.addEventListener("message", async (e: MessageEvent) => {
-        const progress: ChartProgressUpdate = JSON.parse(e.data);
+      ws.onclose = (event) => {
+        if (!event.wasClean) {
+          console.error("WebSocket closed unexpectedly", event.code, event.reason);
+          displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+          resolve(undefined);
+        }
+      };
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        resolve(undefined);
+      };
+      ws.onmessage = async (event) => {
+        const progress = JSON.parse(event.data);
         assertChartProgressUpdate(progress);
         if (progress.stage === "Error") {
           let errorCode = ErrorCodes.INTERNAL_ERROR;
@@ -260,14 +271,14 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
             });
           } catch (e) {
             console.error("Failed while processing chart result", e);
-            reject(e);
+            resolve(undefined);
           }
         }
-      });
+      };
     } catch (e) {
-      console.error("Unexpected failure", e);
+      console.error(e);
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      reject(e);
+      resolve(undefined);
     }
   });
 });

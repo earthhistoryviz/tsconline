@@ -835,14 +835,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@fastify/websocket@npm:^11.1.0":
-  version: 11.1.0
-  resolution: "@fastify/websocket@npm:11.1.0"
+"@fastify/websocket@npm:10.0.1":
+  version: 10.0.1
+  resolution: "@fastify/websocket@npm:10.0.1"
   dependencies:
-    duplexify: "npm:^4.1.3"
-    fastify-plugin: "npm:^5.0.0"
-    ws: "npm:^8.16.0"
-  checksum: 721ad18f74b7ac73239554ab25179e02bcb09d52e0786e4443605a443cbd805e6e64a161149266982d3a48ab531e175376f117f3e110efb123f6215530db316c
+    duplexify: "npm:^4.1.2"
+    fastify-plugin: "npm:^4.0.0"
+    ws: "npm:^8.0.0"
+  checksum: 12dbbd9377de5e696359180090150d2e8ebd27f7dd213d9e523277d2f5d472c0beaf132b9f802a9279da091cbf0b7737b713dfe5b56bcb2a819079e1e31396b1
   languageName: node
   linkType: hard
 
@@ -2358,7 +2358,7 @@ __metadata:
     "@fastify/rate-limit": "npm:^9.1.0"
     "@fastify/secure-session": "npm:^7.4.0"
     "@fastify/static": "npm:^6.10.1"
-    "@fastify/websocket": "npm:^11.1.0"
+    "@fastify/websocket": "npm:10.0.1"
     "@tsconline/shared": "npm:1.0.0"
     "@types/adm-zip": "npm:^0"
     "@types/archiver": "npm:^6.0.3"
@@ -5582,7 +5582,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"duplexify@npm:^4.1.1, duplexify@npm:^4.1.3":
+"duplexify@npm:^4.1.1, duplexify@npm:^4.1.2":
   version: 4.1.3
   resolution: "duplexify@npm:4.1.3"
   dependencies:
@@ -6328,13 +6328,6 @@ __metadata:
   version: 4.5.1
   resolution: "fastify-plugin@npm:4.5.1"
   checksum: 7c6d777ada0f01c8a1166a2a669cccfd6074c7764121f07cce997745f198227a271c7a317aaf0da273b329f24307f0eba3f093d872d29b839b33deb525bbafe2
-  languageName: node
-  linkType: hard
-
-"fastify-plugin@npm:^5.0.0":
-  version: 5.0.1
-  resolution: "fastify-plugin@npm:5.0.1"
-  checksum: 76f6960558239d1ead520ecfb9dbb9b0435a63376d9d48bed0861609a909bf1958cb097745bb1a5485592f2c6d1438941e7481203c86b0e74d2bc34f09e8ed3e
   languageName: node
   linkType: hard
 
@@ -13564,9 +13557,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.16.0":
-  version: 8.18.0
-  resolution: "ws@npm:8.18.0"
+"ws@npm:^8.0.0, ws@npm:^8.16.0":
+  version: 8.18.2
+  resolution: "ws@npm:8.18.2"
   peerDependencies:
     bufferutil: ^4.0.1
     utf-8-validate: ">=5.0.2"
@@ -13575,7 +13568,7 @@ __metadata:
       optional: true
     utf-8-validate:
       optional: true
-  checksum: 70dfe53f23ff4368d46e4c0b1d4ca734db2c4149c6f68bc62cb16fc21f753c47b35fcc6e582f3bdfba0eaeb1c488cddab3c2255755a5c3eecb251431e42b3ff6
+  checksum: 018e04ec95561d88248d53a2eaf094b4ae131e9b062f2679e6e8a62f04649bc543448f1e038125225ac6bbb25f54c1e65d7a2cc9dbc1e28b43e5e6b7162ad88e
   languageName: node
   linkType: hard
 

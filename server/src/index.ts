@@ -238,7 +238,7 @@ server.register(cors, {
 
 server.register(fastifyCompress, { global: false, threshold: 1024 * 20 });
 
-server.register(fastifyWebsocket);
+await server.register(fastifyWebsocket);
 
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
@@ -372,11 +372,6 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
 server.get("/chart", { websocket: true }, routes.handleChartGeneration);
-// server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
-//   "/chart",
-//   looseRateLimit,
-//   routes.handleChartGeneration
-// );
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);

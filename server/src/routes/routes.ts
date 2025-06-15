@@ -21,7 +21,6 @@ import "dotenv/config";
 import { generateChart, waitForSVGReady, ChartGenerationError } from "../chart-generation-service.js";
 import type { WebSocket } from "ws";
 
-
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();
   let title = "";
@@ -215,7 +214,7 @@ export const fetchSettingsXml = async function fetchSettingsJson(
 };
 
 export async function handleChartGeneration(socket: WebSocket, request: FastifyRequest) {
-  socket.once("message", async (message: string) => {
+  socket.once("message", async (message) => {
     try {
       socket.send(JSON.stringify({ stage: "Initializing", percent: 0 }));
       const chartRequest = JSON.parse(message.toString());
