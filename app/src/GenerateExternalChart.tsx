@@ -84,6 +84,7 @@ export const GenerateExternalChart: React.FC = () => {
         }
 
         // !isNaN here isn't redundant, reason is because 0 and negative numbers need to also work
+        // This is mainly to warn users one of their inputs didn't work
         if (isNaN(parsedTop) || isNaN(parsedBase) || isNaN(parsedStep)) {
           console.warn(
             "Base Unit Value, Top Unit Value, and Unit Step must ALL be provided with number values. Using Default."
@@ -92,21 +93,14 @@ export const GenerateExternalChart: React.FC = () => {
         }
 
         try {
-          if (!isNaN(topVal) && !isNaN(baseVal) && !isNaN(unitStep)) {
-            if (topVal > baseVal) {
-              console.warn("Top Unit Value must be less than Base Unit Value. No changes made.");
-            } else if (unitStep <= 0) {
-              console.warn("Unit Step must be greater than 0. No changes made.");
-            } else {
-              actions.setBaseStageAge(baseVal, unitType);
-              actions.setTopStageAge(topVal, unitType);
-              actions.setUnitsPerMY(unitStep, unitType);
-            }
+          if (topVal > baseVal) {
+            console.warn("Top Unit Value must be less than Base Unit Value. No changes made.");
+          } else if (unitStep <= 0) {
+            console.warn("Unit Step must be greater than 0. No changes made.");
           } else {
-            console.warn(
-              "Base Unit Value, Top Unit Value, and Unit Step must be provided with number values. No changes made."
-            );
-            console.warn("Provided values: baseVal: ", baseVal, ", topVal: ", topVal, ", unitStep: ", unitStep);
+            actions.setBaseStageAge(baseVal, unitType);
+            actions.setTopStageAge(topVal, unitType);
+            actions.setUnitsPerMY(unitStep, unitType);
           }
         } catch (err) {
           console.warn("Failed to set stage ages or unit steps: ", err);
