@@ -3,12 +3,7 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import {
-  ChartRequest,
-  ColumnInfo,
-  assertChartProgressUpdate,
-  isTempDatapack
-} from "@tsconline/shared";
+import { ChartRequest, ColumnInfo, assertChartProgressUpdate, isTempDatapack } from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
