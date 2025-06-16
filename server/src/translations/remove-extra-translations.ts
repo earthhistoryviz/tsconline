@@ -6,8 +6,11 @@ import chalk from "chalk";
 
 const availLanguages = path.join("..", "shared", "translations", "available-languages.json");
 const engTranslation = path.join("..", "shared", "translations", "en.json");
-
-await removeExtraTranslations();
+try {
+  await removeExtraTranslations();
+} catch (e) {
+  console.log("failed to remove extra translations: ", e);
+}
 
 export async function removeExtraTranslations() {
   try {
@@ -19,12 +22,12 @@ export async function removeExtraTranslations() {
       const langTranslationJSON = path.join("..", "shared", "translations", `${value}.json`);
       const langData = JSON.parse(readFileSync(langTranslationJSON, "utf-8"));
       const [prunedData, didRemove] = removeExtraKeys(langData, engData);
-      writeFileSync(langTranslationJSON, JSON.stringify(prunedData, null, 4), "utf-8");
-      const langCSV = path.join(assetconfigs.translationsDirectory, `${value}.csv`);
-      const flattened = flattenJson(prunedData);
-      const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
-      writeFileSync(langCSV, csvContent, "utf-8");
       if (didRemove) {
+        writeFileSync(langTranslationJSON, JSON.stringify(prunedData, null, 4), "utf-8");
+        const langCSV = path.join(assetconfigs.translationsDirectory, `${value}.csv`);
+        const flattened = flattenJson(prunedData);
+        const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
+        writeFileSync(langCSV, csvContent, "utf-8");
         console.log(chalk.green(`removed extra translations for ${value}`));
       }
     }
