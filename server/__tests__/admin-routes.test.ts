@@ -262,7 +262,9 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
 let app: FastifyInstance;
 const appRoutes: { method: HTTPMethods; url: string; hasRecaptcha: boolean }[] = [];
 beforeAll(async () => {
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "adminSession",
     key: Buffer.from("c30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -564,31 +566,39 @@ const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction
     method: "POST",
     url: "/admin/workshop/cover/1",
     recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP
+  },
+  {
+    method: "GET",
+    url: "/admin/official/datapacks/private",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS
+  },
+  {
+    method: "DELETE",
+    url: "/admin/datapack/comments/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT
   }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 
-function matchesRegisteredPattern(method: string, url: string): boolean {
-  for (const pattern of appRoutes) {
-    const { method: routeMethod, url: routeUrlPattern } = pattern;
-    if (routeMethod !== method.toUpperCase()) continue;
-
+// this makes sure that all routes that are registered in auth have their routes tested in the prehandlers
+it("should have all routes registered in auth", () => {
+  const convertToRegexRoutes = appRoutes.map((route) => {
     const regexPattern =
       "^" +
-      routeUrlPattern
+      route.url
         .replace(/:[^/]+/g, "[^/]+") // replace :param with wildcard
         .replace(/\//g, "\\/") +
       "$";
-
     const regex = new RegExp(regexPattern);
-    if (regex.test(url)) return true;
-  }
-  return false;
-}
-// this makes sure that all routes that are registered in auth have their routes tested in the prehandlers
-it("should have all routes registered in auth", () => {
-  const failedRoutes = appRoutes.filter((route) => {
-    const isRegistered = matchesRegisteredPattern(route.method, route.url);
+    return {
+      method: route.method,
+      url: regex
+    };
+  });
+  const failedRoutes = convertToRegexRoutes.filter((route) => {
+    const isRegistered = routes.find((r) => {
+      return r.method === route.method && route.url.test(r.url);
+    });
     if (!isRegistered) {
       console.error(`Route not registered: ${route.method} ${route.url}`);
     }
@@ -600,8 +610,23 @@ it("should have all routes registered in auth", () => {
   expect(failedRoutes.length).toBe(0);
 });
 it("should have all auth routes dictated in routes", () => {
-  const failedRoutes = routes.filter((route) => {
-    const isRegistered = matchesRegisteredPattern(route.method, route.url);
+  const convertedRegexRoutes = routes.map((route) => {
+    const regexPattern =
+      "^" +
+      route.url
+        .replace(/:[^/]+/g, "[^/]+") // replace :param with wildcard
+        .replace(/\//g, "\\/") +
+      "$";
+    const regex = new RegExp(regexPattern);
+    return {
+      method: route.method,
+      url: regex
+    };
+  });
+  const failedRoutes = convertedRegexRoutes.filter((route) => {
+    const isRegistered = routes.find((r) => {
+      return r.method === route.method && route.url.test(r.url);
+    });
     if (!isRegistered) {
       console.error(`Route not registered: ${route.method} ${route.url}`);
     }
@@ -611,7 +636,7 @@ it("should have all auth routes dictated in routes", () => {
     console.table(failedRoutes);
   }
   expect(failedRoutes.length).toBe(0);
-})
+});
 // this test makes sure that all routes that are in auth have recaptcha enabled since they are now mroe of a manual addition
 it("should have all routes registered with recaptcha", () => {
   const failedRoutes = appRoutes.filter((route) => !route.hasRecaptcha);
