@@ -2,6 +2,7 @@ import { WatchListener, existsSync, readFileSync, unlinkSync, watch, writeFileSy
 import { assetconfigs, loadAssetConfigs } from "../util.js";
 import path from "path";
 import chalk from "chalk";
+import { removeExtraTranslations } from "./remove-extra-translations.js";
 
 try {
   await modifyTranslations();
@@ -44,7 +45,7 @@ export async function modifyTranslations() {
   }
 
   //dev-translation-en.json becomes master, so on change overwrite static JSON and csv
-  const listener: WatchListener<string> = (event, filename) => {
+  const listener: WatchListener<string> = async (event, filename) => {
     if (filename) {
       const data = readFileSync(devTranslationJson, "utf-8");
       try {
@@ -54,6 +55,7 @@ export async function modifyTranslations() {
         const flattened = flattenJson(JSON.parse(parsedData));
         const csvContent = flattened.map(([key, value]) => `${key},${value}`).join("\n");
         writeFileSync(translationCSV, csvContent, "utf-8");
+        await removeExtraTranslations();
         console.log(chalk.green("successfully updated translations!"));
       } catch (e) {
         console.log(chalk.yellow("check JSON formatting..."));
