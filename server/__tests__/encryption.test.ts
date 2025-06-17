@@ -44,7 +44,7 @@ describe("runJavaEncrypt", async () => {
     }
   });
   let jarFilePath = "";
-  let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
+  const resultPath = "server/__tests__/__data__/encryption-test-generated-file";
   try {
     const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
     assertAssetConfig(contents);

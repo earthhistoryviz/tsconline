@@ -64,7 +64,6 @@ const returnModelConversionFilepaths = (testCaseDir: string) => {
   const datapackFilepath = path.join(testCaseDir, "datapack.txt");
   return { modelTextFilepath, settingsTextFilepath, outputTextFilepath, datapackFilepath };
 };
-const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
 const conversionTestKeys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
 describe("convertCrossPlotWithModelsInJar", async () => {
   const spawn = vi.spyOn(child_process, "spawn");
