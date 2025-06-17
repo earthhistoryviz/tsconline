@@ -95,11 +95,13 @@ export const GenerateExternalChart: React.FC = () => {
         try {
           if (topVal > baseVal) {
             console.warn("Top Unit Value must be less than Base Unit Value. No changes made.");
-          } else if (unitStep <= 0) {
-            console.warn("Unit Step must be greater than 0. No changes made.");
           } else {
             actions.setBaseStageAge(baseVal, unitType);
             actions.setTopStageAge(topVal, unitType);
+          }
+          if (unitStep <= 0) {
+            console.warn("Unit Step must be greater than 0. No changes made.");
+          } else {
             actions.setUnitsPerMY(unitStep, unitType);
           }
         } catch (err) {
