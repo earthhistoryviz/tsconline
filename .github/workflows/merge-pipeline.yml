@@ -203,22 +203,39 @@ jobs:
           java-version: "8"
           java-package: "jdk"
 
+      - name: Parse JAR Names
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        id: parse_jar_names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
+          main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
+
+          if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
+            echo "Error: pr_jar or main_jar is empty. Check config.json format."
+            exit 1
+          fi
+
+          echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
+          echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
+          echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
+          echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
+
       - name: Build and compile TSCreator Jar for tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
-          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.parse_jar_names.outputs.pr_jar_name }} \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.parse_jar_names.outputs.pr_jar_name }}" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
             exit 1
           fi
-
-          echo "Contents of the assets folder:"
-          ls -R ${{ github.workspace }}/server/assets
 
       - name: Run Tests
         id: run_tests
@@ -265,29 +282,6 @@ jobs:
               repo: context.repo.repo,
               body: commentBody
             });
-
-      - name: Move TSCreator Jar for e2e
-        id: move_jar
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        run: |
-          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
-            echo "Jar file found."
-          else
-            echo "Jar file not found."
-            exit 1
-          fi
-          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-          if [ -z pr_jar ]; then
-            echo "Error: activeJar not found in config.json"
-            exit 1
-          fi
-          mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar ${{ github.workspace }}/server/assets/jars/$pr_jar
-          if [ ! -f "${{ github.workspace }}/server/assets/jars/$pr_jar" ]; then
-            echo "Error: Failed to rename jar."
-            exit 1
-          fi
-          echo "Successfully renamed jar to $pr_jar"
-          echo "pr_jar=$pr_jar" >> $GITHUB_OUTPUT
 
       - name: Set up Decryption Jar and Datapacks
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -344,8 +338,6 @@ jobs:
             exit 1
           fi
           echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
-          echo "Contents of the assets folder:"
-          ls -R ${{ github.workspace }}/server/assets
 
       - name: e2e Tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -354,21 +346,6 @@ jobs:
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
-
-          pr_jar=${{ steps.move_jar.outputs.pr_jar }}
-          if [ -z "$pr_jar" ]; then
-            echo "Error: pr_jar is empty. Check config.json format."
-            exit 1
-          fi
-
-          mv ${{ github.workspace }}/server/assets/jars/$pr_jar ${{ github.workspace }}/server/assets/jars/testUsageJar.jar
-
-          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
-            echo "Successfully renamed jar back to testUsageJar.jar."
-          else
-            echo "Failed to rename jar back to testUsageJar.jar."
-            exit 1
-          fi
 
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
@@ -406,11 +383,11 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Upload E2E Screenshots
+      - name: Upload E2E Trace Artifacts
         if: steps.e2e_tests.outputs.e2e_failed == 'true'
         uses: actions/upload-artifact@v4
         with:
-          name: e2e-screenshots-${{ github.run_id }}
+          name: e2e-trace-${{ github.run_id }}
           path: test-results/**/trace.zip
           retention-days: 7
 
@@ -435,26 +412,6 @@ jobs:
         if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
         run: exit 1
 
-      - name: Parse JAR Names
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        id: parse_jar_names
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-          main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
-          main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
-
-          if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
-            echo "Error: pr_jar or main_jar is empty. Check config.json format."
-            exit 1
-          fi
-
-          echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
-          echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
-          echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
-          echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
-
       - name: Determine if Jar Upload is Necessary
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         id: upload_artifacts
@@ -466,7 +423,6 @@ jobs:
 
           if [[ "$main_jar_name" != "$pr_jar_name" ]]; then
             upload_needed=true
-            mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
 
           echo "Upload needed: $upload_needed"

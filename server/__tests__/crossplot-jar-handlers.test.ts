@@ -54,9 +54,7 @@ beforeAll(async () => {
   const assetconfigs = JSON.parse(await fsPromises.readFile(path.join("server", "assets", "config.json"), "utf-8"));
   assertAssetConfig(assetconfigs);
   getActiveJar.mockImplementation(() => {
-    return isCI
-      ? "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar"
-      : path.join("server", assetconfigs.activeJar);
+    return path.join("server", assetconfigs.activeJar);
   });
 });
 const returnModelConversionFilepaths = (testCaseDir: string) => {
