@@ -700,11 +700,8 @@ export type MarkdownTree = {
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
 
-const Stages = ["Initializing", "Loading datapacks", "Generating chart", "Waiting for file"] as const;
-export type Stage = (typeof Stages)[number];
-export type AllStages = Stage | "Complete" | "Error";
 export type NormalProgress = {
-  stage: Stage;
+  stage: string;
   percent: number;
 };
 type ErrorProgress = {
@@ -719,19 +716,23 @@ type CompleteProgress = {
 } & ChartResponseInfo;
 export type ChartProgressUpdate = NormalProgress | CompleteProgress | ErrorProgress;
 
+export function isErrorProgress(o: ChartProgressUpdate): o is ErrorProgress {
+  return o.stage === "Error";
+}
+export function isCompleteProgress(o: ChartProgressUpdate): o is CompleteProgress {
+  return o.stage === "Complete";
+}
 export function assertChartProgressUpdate(o: any): asserts o is ChartProgressUpdate {
   if (!o || typeof o !== "object") throw new Error("ChartProgressUpdate must be a non-null object");
-  if (o.stage === "Error") {
+  if (isErrorProgress(o)) {
     if (typeof o.error !== "string") throwError("ChartProgressUpdate", "error", "string", o.error);
     if (typeof o.errorCode !== "number") throwError("ChartProgressUpdate", "errorCode", "number", o.errorCode);
     if (o.percent !== 0) throwError("ChartProgressUpdate", "percent", "0", o.percent);
-  } else if (o.stage === "Complete") {
+  } else if (isCompleteProgress(o)) {
     if (o.percent !== 100) throwError("ChartProgressUpdate", "percent", "100", o.percent);
     assertChartInfo(o);
   } else {
-    if (!Stages.includes(o.stage)) {
-      throw new Error(`Invalid stage: ${o.stage}`);
-    }
+    if (typeof o.stage !== "string") throwError("ChartProgressUpdate", "stage", "string", o.stage);
     if (typeof o.percent !== "number" || o.percent < 0 || o.percent > 100) {
       throwError("ChartProgressUpdate", "percent", "number between 0 and 100", o.percent);
     }

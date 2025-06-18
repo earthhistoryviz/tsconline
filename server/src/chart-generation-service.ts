@@ -24,12 +24,23 @@ export class ChartGenerationError extends Error {
   }
 }
 
-export function parseJavaOutputLine(line: string): NormalProgress | null {
+export function parseJavaOutputLine(line: string, filenameMap: Record<string, string>): NormalProgress | null {
   if (line.includes("Convert Datapack to sqlite database")) {
-    return { stage: "Loading datapacks", percent: 20 };
-  } else if (line.includes("Generating Image")) {
+    return { stage: "Loading Datapacks", percent: 10 };
+  }
+  const loadMatch = line.match(/Loading datapack \[(\d+)\/(\d+)\]:\s*(.+)/);
+  if (loadMatch && loadMatch[1] && loadMatch[2] && loadMatch[3]) {
+    const current = parseInt(loadMatch[1], 10);
+    const total = parseInt(loadMatch[2], 10);
+    const filename = loadMatch[3].trim();
+    const displayName = filenameMap[filename] || filename;
+    const percent = 10 + Math.floor((current / total) * 30);
+    return { stage: `Loading Datapack: ${displayName} (${current}/${total})`, percent };
+  }
+  if (line.includes("Generating Image")) {
     return { stage: "Generating chart", percent: 50 };
-  } else if (line.includes("ImageGenerator did not have any errors")) {
+  }
+  if (line.includes("ImageGenerator did not have any errors")) {
     return { stage: "Waiting for file", percent: 90 };
   }
   return null;
@@ -85,6 +96,7 @@ export async function generateChart(
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
   const usedTempDatapacks: string[] = [];
+  const filenameMap: Record<string, string> = {};
 
   for (const datapack of chartRequest.datapacks) {
     let uuidFolder = uuid;
@@ -122,6 +134,7 @@ export async function generateChart(
       usedTempDatapacks.push(datapack.title);
     }
     datapacksToSendToCommandLine.push(path.join(datapackDir, datapack.storedFileName));
+    filenameMap[datapack.storedFileName] = datapack.title;
   }
   try {
     // update file metadata for all used datapacks (recently used datapacks will be updated)
@@ -195,7 +208,7 @@ export async function generateChart(
       javaProcess.stdout.on("data", (data) => {
         const lines = data.toString().split("\n");
         for (const line of lines) {
-          const status = parseJavaOutputLine(line);
+          const status = parseJavaOutputLine(line, filenameMap);
           if (status) {
             onProgress(status);
           }

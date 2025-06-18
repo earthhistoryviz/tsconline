@@ -671,6 +671,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       };
 
       const response = await sendChartRequestToServer(crossPlotChartRequest);
+      updateChartLoadingProgress(0, "Initializing");
       if (!response) {
         // error SHOULD already displayed
         return;
@@ -682,7 +683,6 @@ export const compileAndSendCrossPlotChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: true
       });
-      updateChartLoadingProgress(0, "Initializing");
     } catch (e) {
       console.error(e);
       displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);

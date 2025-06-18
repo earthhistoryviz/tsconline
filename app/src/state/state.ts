@@ -33,8 +33,7 @@ import type {
   DatapackMetadata,
   Marker,
   Model,
-  CommentType,
-  AllStages
+  CommentType
 } from "@tsconline/shared";
 import { ErrorCodes } from "../util/error-codes";
 import { defaultColors } from "../util/constant";
@@ -48,7 +47,7 @@ export type State = {
     chartTimelineLocked: boolean;
     state: ChartTabState;
     percent: number;
-    stage: AllStages;
+    stage: string;
   };
   crossPlot: {
     lockX: boolean;

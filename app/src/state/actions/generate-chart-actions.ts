@@ -3,7 +3,14 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { ChartRequest, ColumnInfo, assertChartProgressUpdate, isTempDatapack } from "@tsconline/shared";
+import {
+  ChartRequest,
+  ColumnInfo,
+  assertChartProgressUpdate,
+  isCompleteProgress,
+  isErrorProgress,
+  isTempDatapack
+} from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -176,6 +183,7 @@ export const compileChartRequest = action(
         return;
       }
       const response = await sendChartRequestToServer(chartRequest);
+      generalActions.updateChartLoadingProgress(0, "Initializing");
       if (!response) {
         // error SHOULD already displayed
         return;
@@ -187,7 +195,6 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
-      generalActions.updateChartLoadingProgress(0, "Initializing");
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
@@ -229,7 +236,7 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
       ws.onmessage = async (event) => {
         const progress = JSON.parse(event.data);
         assertChartProgressUpdate(progress);
-        if (progress.stage === "Error") {
+        if (isErrorProgress(progress)) {
           let errorCode = ErrorCodes.INTERNAL_ERROR;
           switch (progress.errorCode) {
             case 100:
@@ -253,7 +260,7 @@ export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
           return;
         }
         generalActions.updateChartLoadingProgress(progress.percent, progress.stage);
-        if (progress.stage === "Complete") {
+        if (isCompleteProgress(progress)) {
           try {
             const content = await (await fetcher(progress.chartpath)).text();
             const sanitizedSVG = purifyChartContent(content);
