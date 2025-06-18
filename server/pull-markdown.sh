@@ -37,5 +37,9 @@ if [ ! -d "$HELP_DIR/.git" ]; then
 else
   echo "Markdown repo already exists. Pulling latest changes..."
   cd "$HELP_DIR" || exit 1
-  git pull origin "$BRANCH"
+  if git pull origin "$BRANCH"; then
+    echo "Successfully pulled latest changes from $BRANCH."
+  else
+    echo "Failed to pull latest changes from $BRANCH."
+  fi
 fi

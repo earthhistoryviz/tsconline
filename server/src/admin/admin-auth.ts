@@ -119,12 +119,13 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const adminCreateWorkshopBody = {
     type: "object",
     properties: {
-      title: { type: "string" },
-      start: { type: "string" },
-      end: { type: "string" },
+      title: { type: "string", minLength: 1 },
+      start: { type: "string", format: "date-time" },
+      end: { type: "string", format: "date-time" },
       regRestrict: { type: "number" },
-      creatorUUID: { type: "string" },
-      regLink: { type: "string" }
+      creatorUUID: { type: "string", minLength: 1 },
+      regLink: { type: "string", format: "uri" },
+      description: { type: "string", minLength: 1 }
     },
     required: ["title", "start", "end", "regRestrict", "creatorUUID"]
   };
@@ -160,14 +161,14 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     type: "object",
     properties: {
       workshopId: { type: "number" },
-      datapackTitle: { type: "string" }
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopId", "datapackTitle"]
   };
   const adminEditDatapackMetadataBody = {
     type: "object",
     properties: {
-      datapack: { type: "string" }
+      datapack: { type: "string", minLength: 1 }
     },
     required: ["datapack"]
   };

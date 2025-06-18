@@ -9,21 +9,20 @@ import fastifyCompress from "@fastify/compress";
 import { collectDefaultMetrics, Gauge, Counter, register } from "prom-client";
 import { loadFaciesPatterns } from "./load-packs.js";
 import { loadPresets } from "./preset.js";
-import { Email } from "./types.js";
+import { CommentsEmail, Email, User } from "./types.js";
 import fastifyMultipart from "@fastify/multipart";
 import { checkFileMetadata, sunsetInterval } from "./file-metadata-handler.js";
 import fastifySecureSession from "@fastify/secure-session";
 import fastifyRateLimit from "@fastify/rate-limit";
 import "dotenv/config";
-import { db, findIp, createIp, updateIp, initializeDatabase } from "./database.js";
-import { sendEmail } from "./send-email.js";
+import { db, findIp, createIp, updateIp, initializeDatabase, findRecentDatapackComments } from "./database.js";
+import { sendCommentsEmail, sendEmail } from "./send-email.js";
 import cron from "node-cron";
 import path from "path";
 import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-
 import {
   deleteUserHistory,
   fetchPublicUserDatapack,
@@ -40,10 +39,16 @@ import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
+import { CommentType, assertCommentType } from "@tsconline/shared";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
 
+declare module "fastify" {
+  interface FastifyRequest {
+    user?: User;
+  }
+}
 const server = fastify({
   logger: false,
   trustProxy: true,
@@ -58,6 +63,8 @@ const server = fastify({
     }
   }*/
 });
+// predefine "user" property on request to stabilize object shape for JS engine optimizations (per Fastify docs)
+server.decorateRequest("user", undefined);
 
 collectDefaultMetrics();
 const httpMetricsLabelNames = ["method", "path", "status"];
@@ -93,11 +100,15 @@ server.addHook("onRequest", async (request: FastifyRequest & { startTime?: [numb
   activeUsers.set(ipSet.size);
 });
 
+// hook to track http request metrics
+// calculates request duration and increments the request count
 server.addHook("onResponse", async (request: FastifyRequest & { startTime?: [number, number] }, reply) => {
   const duration = process.hrtime(request.startTime);
   const durationInMs = duration[0] * 1000 + duration[1] / 1e6;
-  totalHttpRequestCount.labels(request.method, request.routerPath, reply.statusCode.toString()).inc();
-  totalHttpRequestDuration.labels(request.method, request.routerPath, reply.statusCode.toString()).set(durationInMs);
+  // get route path if available for metrics, otherwise use "unknown"
+  const routePath = request.routeOptions?.url || "unknown";
+  totalHttpRequestCount.labels(request.method, routePath, reply.statusCode.toString()).inc();
+  totalHttpRequestDuration.labels(request.method, routePath, reply.statusCode.toString()).set(durationInMs);
 });
 
 // Expose the metrics endpoint
@@ -256,31 +267,20 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-const strictRateLimit = {
+const isTestEnv = process.env.NODE_ENV === "test";
+const rateLimitConfig = (max: number) => ({
   config: {
     rateLimit: {
-      max: 10,
-      timeWindow: 1000 * 60
+      max: isTestEnv ? 100000 : max,
+      timeWindow: 1000 * 60 * (isTestEnv ? 60 : 1)
     }
   }
-};
+});
 
-const moderateRateLimit = {
-  config: {
-    rateLimit: {
-      max: 20,
-      timeWindow: 1000 * 60
-    }
-  }
-};
-const looseRateLimit = {
-  config: {
-    rateLimit: {
-      max: 30,
-      timeWindow: 1000 * 60
-    }
-  }
-};
+const strictRateLimit = rateLimitConfig(10);
+const moderateRateLimit = rateLimitConfig(20);
+const looseRateLimit = rateLimitConfig(30);
+
 // checks chart.pdf-status
 server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
@@ -338,11 +338,10 @@ server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
-
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
-server.post("/auth/session-check", moderateRateLimit, loginRoutes.sessionCheck);
+server.post("/auth/session-check", strictRateLimit, loginRoutes.sessionCheck);
 server.post("/auth/logout", moderateRateLimit, loginRoutes.logout);
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);
@@ -446,6 +445,41 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS && process.env.NODE_ENV ===
         await db.deleteFrom("ip").execute();
       } catch (e) {
         logger.error("Error sending email: ", e);
+      }
+    }
+  );
+  // schedule for daily comments email
+  cron.schedule(
+    "0 5 * * *", // every day at 5 AM server time
+    async () => {
+      try {
+        const datapackComments = await findRecentDatapackComments();
+        const newDatapackComments: CommentType[] = [];
+        for (const com of datapackComments) {
+          assertCommentType(com);
+          newDatapackComments.push(com);
+        }
+        // only send email if there are new comments
+        if (newDatapackComments.length) {
+          const today = new Date();
+          const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+          const recipients = process.env.DAILY_COMMENTS_EMAIL_RECIPIENTS?.split(",").map((email) => email.trim()) || [];
+          for (const recipient of recipients) {
+            const newEmail: CommentsEmail = {
+              from: process.env.EMAIL_USER as string,
+              to: recipient,
+              subject: "Daily Datapack Comments Report",
+              title: "Daily Datapack Comments Report",
+              message: `Here are the latest updates from today, ${formattedDate}.`,
+              comments: newDatapackComments,
+              link: `${process.env.APP_URL || "http://localhost:5173"}/datapacks`,
+              buttonText: "View Datapacks"
+            };
+            await sendCommentsEmail(newEmail);
+          }
+        }
+      } catch (e) {
+        logger.error("Error fetching recent datapack comments", e);
       }
     }
   );
