@@ -26,6 +26,7 @@ import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
+import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
 vi.mock("validator", async () => {
   return {
@@ -260,7 +261,7 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   return { code, message };
 };
 let app: FastifyInstance;
-const appRoutes: { method: HTTPMethods; url: string; hasRecaptcha: boolean }[] = [];
+const appRoutes: RouteDefinition[] = [];
 beforeAll(async () => {
   app = fastify({
     exposeHeadRoutes: false
@@ -296,25 +297,11 @@ beforeAll(async () => {
   });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
   app.addHook("onRoute", (routeOptions: RouteOptions) => {
-    const recaptchaHandlerName = "verifyRecaptchaPrehandler";
-    const hasRecaptcha = Array.isArray(routeOptions.preHandler)
-      ? routeOptions.preHandler.some((fn) => fn.name === recaptchaHandlerName)
-      : routeOptions.preHandler?.name === recaptchaHandlerName;
-    if (Array.isArray(routeOptions.method)) {
-      routeOptions.method.forEach((method) => {
-        appRoutes.push({
-          method: method as HTTPMethods,
-          url: routeOptions.url,
-          hasRecaptcha
-        });
-      });
-    } else {
-      appRoutes.push({
-        method: routeOptions.method as HTTPMethods,
-        url: routeOptions.url,
-        hasRecaptcha
-      });
-    }
+    appRoutes.push(
+      ...initializeAppRoutes(routeOptions, {
+        recatpchaHandlerName: "verifyRecaptchaPrehandler"
+      })
+    );
   });
   await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
@@ -580,70 +567,20 @@ const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 
-// this makes sure that all routes that are registered in auth have their routes tested in the prehandlers
-it("should have all routes registered in auth", () => {
-  const convertToRegexRoutes = appRoutes.map((route) => {
-    const regexPattern =
-      "^" +
-      route.url
-        .replace(/:[^/]+/g, "[^/]+") // replace :param with wildcard
-        .replace(/\//g, "\\/") +
-      "$";
-    const regex = new RegExp(regexPattern);
-    return {
-      method: route.method,
-      url: regex
-    };
-  });
-  const failedRoutes = convertToRegexRoutes.filter((route) => {
-    const isRegistered = routes.find((r) => {
-      return r.method === route.method && route.url.test(r.url);
-    });
-    if (!isRegistered) {
-      console.error(`Route not registered: ${route.method} ${route.url}`);
-    }
-    return !isRegistered;
-  });
-  if (failedRoutes.length > 0) {
-    console.table(failedRoutes);
-  }
-  expect(failedRoutes.length).toBe(0);
-});
-it("should have all auth routes dictated in routes", () => {
-  const convertedRegexRoutes = appRoutes.map((route) => {
-    const regexPattern =
-      "^" +
-      route.url
-        .replace(/:[^/]+/g, "[^/]+") // replace :param with wildcard
-        .replace(/\//g, "\\/") +
-      "$";
-    const regex = new RegExp(regexPattern);
-    return {
-      method: route.method,
-      url: regex
-    };
-  });
-  const failedRoutes = routes.filter((route) => {
-    const isRegistered = convertedRegexRoutes.find((r) => {
-      return r.method === route.method && r.url.test(route.url);
-    });
-    if (!isRegistered) {
-      console.error(`Route not registered: ${route.method} ${route.url}`);
-    }
-    return !isRegistered;
-  });
-  if (failedRoutes.length > 0) {
-    console.table(failedRoutes);
-  }
-  expect(failedRoutes.length).toBe(0);
-});
 // this test makes sure that all routes that are in auth have recaptcha enabled since they are now mroe of a manual addition
 it("should have all routes registered with recaptcha", () => {
-  const failedRoutes = appRoutes.filter((route) => !route.hasRecaptcha);
+  const failedRoutes = appRoutes.filter((route) => !route.recaptchaAction);
   if (failedRoutes.length > 0) {
     console.table(failedRoutes);
   }
   expect(failedRoutes.length).toBe(0);
+});
+describe("Route Consistency Tests", () => {
+  it("should have a 1:1 match between expected and actual routes", () => {
+    const { missingInActual, unexpectedInActual } = oneToOneMatch(appRoutes, routes);
+    expect(missingInActual.length).toBe(0);
+    expect(unexpectedInActual.length).toBe(0);
+  });
 });
 
 describe("verifyAdmin tests", () => {

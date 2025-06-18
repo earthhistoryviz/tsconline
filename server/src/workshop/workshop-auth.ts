@@ -32,11 +32,7 @@ async function verifyAuthority<T extends FastifyRequest = FastifyRequest>(reques
   }
 }
 
-async function verifyRecaptcha(
-  request: FastifyRequest,
-  reply: FastifyReply,
-  action: string
-) {
+async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
   const recaptchaToken = request.headers["recaptcha-token"];
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
@@ -61,14 +57,12 @@ async function verifyRecaptcha(
   }
 }
 const genericRecaptchaMiddlewarePrehandler = (action: string) => {
-  const verifyRecaptchaPrehandler = async (
-    request: FastifyRequest, reply: FastifyReply
-  ) => {
+  const verifyRecaptchaPrehandler = async (request: FastifyRequest, reply: FastifyReply) => {
     await verifyRecaptcha(request, reply, action);
-  }
+  };
   verifyRecaptchaPrehandler.recaptchaAction = action;
   return verifyRecaptchaPrehandler;
-}
+};
 export const workshopRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const moderateRateLimit = {
     max: 30,
@@ -102,7 +96,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: editWorkshopDatapackMetadataParams },
-      preHandler: [verifyAuthority, genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA)]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA)
+      ]
     },
     editWorkshopDatapackMetadata
   );
@@ -111,7 +108,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopTitleParams },
-      preHandler: [verifyAuthority, genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)
+      ]
     },
     downloadWorkshopFilesZip
   );
