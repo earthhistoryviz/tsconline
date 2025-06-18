@@ -130,6 +130,24 @@ jobs:
       - name: Install Dependencies
         run: yarn install
 
+      - name: Get Playwright version
+        id: playwright-version
+        run: |
+          version=$(node -p "require('./package.json').dependencies['@playwright/test'] || require('./package.json').devDependencies['@playwright/test']")
+          echo "version=${version}" >> $GITHUB_OUTPUT
+
+      - name: Cache Playwright Browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Browsers (if not cached)
+        run: yarn playwright install --with-deps
+
       - name: Build the project
         id: build
         run: |
@@ -185,14 +203,34 @@ jobs:
           java-version: "8"
           java-package: "jdk"
 
+      - name: Parse JAR Names
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        id: parse_jar_names
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
+          main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
+          main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
+
+          if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
+            echo "Error: pr_jar or main_jar is empty. Check config.json format."
+            exit 1
+          fi
+
+          echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
+          echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
+          echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
+          echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
+
       - name: Build and compile TSCreator Jar for tests
         if: github.event.pull_request.user.login != 'dependabot[bot]'
         run: |
           cd ${{ github.workspace }}/tscreator/devel
           make
           make jar
-          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/testUsageJar.jar \;
-          if [ -f "${{ github.workspace }}/server/assets/jars/testUsageJar.jar" ]; then
+          find ${{ github.workspace }}/tscreator/jars/ -type f -name '*.jar' -exec cp {} ${{ github.workspace }}/server/assets/jars/${{ steps.parse_jar_names.outputs.pr_jar_name }} \;
+          if [ -f "${{ github.workspace }}/server/assets/jars/${{ steps.parse_jar_names.outputs.pr_jar_name }}" ]; then
             echo "Successfully made jar."
           else
             echo "Failed to make jar."
@@ -206,7 +244,6 @@ jobs:
           Xvfb :1 -screen 0 1024x768x16 &
           export DISPLAY=:1
           yarn coverage:ci > test_output.log 2>&1 || (grep -q 'ERROR: Coverage' test_output.log && echo "coverage_failed=true" >> $GITHUB_OUTPUT) || echo "test_failed=true" >> $GITHUB_OUTPUT
-        continue-on-error: true
 
       - name: Run Tests and Coverage (Exclude Encryption)
         id: run_tests_exclude_encryption
@@ -246,6 +283,70 @@ jobs:
               body: commentBody
             });
 
+      - name: Set up Decryption Jar and Datapacks
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        run: |
+          ACCESS_TOKEN=$(curl -s https://api.dropbox.com/oauth2/token -d refresh_token=${{ secrets.DROPBOX_REFRESH_TOKEN }} -d grant_type=refresh_token -d client_id=${{ secrets.DROPBOX_APP_KEY }} -d client_secret=${{ secrets.DROPBOX_APP_SECRET }} | jq -r '.access_token')
+          DECRYPTION_NAME=$(jq -r '.decryptionJar' server/assets/config.json | xargs basename)
+          if [ -z "$DECRYPTION_NAME" ]; then
+            echo "Error: decryptionJar not found in config.json"
+            exit 1
+          fi
+          DROPBOX_FOLDER_PATH="${{ secrets.DROPBOX_PATH }}"
+
+          LIST_RESPONSE=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"path\": \"$DROPBOX_FOLDER_PATH\"}")
+
+          DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower')
+          if [ -z "$DECRYPTION_PATH" ]; then
+            echo "Error: Decryption jar not found."
+            exit 1
+          fi
+          DATAPACKS_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DATA_PACKS_NAME "datapacks" '.entries[] | select(.name == $DATA_PACKS_NAME) | .path_lower')
+          if [ -z "$DATAPACKS_PATH" ]; then
+            echo "Error: Datapacks folder not found."
+            exit 1
+          fi
+
+          curl -s -X POST "https://content.dropboxapi.com/2/files/download" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Dropbox-API-Arg: {\"path\": \"$DECRYPTION_PATH\"}" \
+          --output "${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+
+          DECRYPTION_JAR="${{ github.workspace }}/server/assets/jars/$DECRYPTION_NAME"
+          if [ ! -f "$DECRYPTION_JAR" ]; then
+            echo "Error: Failed to download decryption jar."
+            exit 1
+          fi
+          echo "Successfully downloaded decryption jar."
+
+          curl -s -X POST "https://content.dropboxapi.com/2/files/download_zip" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Dropbox-API-Arg: {\"path\": \"$DATAPACKS_PATH\"}" \
+          --output "${{ github.workspace }}/datapacks.zip"
+
+          if [ ! -f "${{ github.workspace }}/datapacks.zip" ]; then
+            echo "Error: Failed to download datapacks folder."
+            exit 1
+          fi
+          unzip -q "${{ github.workspace }}/datapacks.zip" -d "${{ github.workspace }}/server/assets"
+          rm "${{ github.workspace }}/datapacks.zip"
+          if [ ! -d "${{ github.workspace }}/server/assets/datapacks" ]; then
+            echo "Error: Failed to extract datapacks folder."
+            exit 1
+          fi
+          echo "Successfully downloaded and extracted datapacks folder to assets/datapacks."
+
+      - name: e2e Tests
+        if: github.event.pull_request.user.login != 'dependabot[bot]'
+        id: e2e_tests
+        run: |
+          Xvfb :1 -screen 0 1024x768x16 &
+          export DISPLAY=:1
+          yarn test:charts:ci > e2e_output.log 2>&1 || echo "e2e_failed=true" >> $GITHUB_OUTPUT
+
       - name: Report Test Errors
         if: steps.run_tests.outputs.test_failed == 'true'
         uses: actions/github-script@v5
@@ -264,29 +365,52 @@ jobs:
             }
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Report E2E Test Errors
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const fs = require('fs');
+            const e2eLog = fs.readFileSync('e2e_output.log', 'utf8');
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              const message = `🚨 E2E tests have failed. Please check the E2E test logs for more information.\n\n\`\`\`\n${e2eLog}\n\`\`\``;
+              github.rest.issues.createComment({
+                ...context.repo,
+                issue_number: prNumber,
+                body: message,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload E2E Trace Artifacts
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-trace-${{ github.run_id }}
+          path: test-results/**/trace.zip
+          retention-days: 7
+
+      - name: Comment E2E Trace Link
+        if: steps.e2e_tests.outputs.e2e_failed == 'true'
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const runId = process.env.GITHUB_RUN_ID;
+            const prNumber = context.payload.pull_request?.number;
+            if (prNumber) {
+              github.rest.issues.createComment({
+                issue_number: prNumber,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: `🖼️ Traces for failed E2E tests are available in the [Artifacts tab](https://github.com/${{ github.repository }}/actions/runs/${runId}) view them at [Trace Viewer](https://trace.playwright.dev/)`
+              });
+            }
+
       - name: Check for any test failures
-        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true'
+        if: steps.run_tests.outputs.test_failed == 'true' || steps.run_tests.outputs.coverage_failed == 'true' || steps.e2e_tests.outputs.e2e_failed == 'true'
         run: exit 1
-
-      - name: Parse JAR Names
-        if: github.event.pull_request.user.login != 'dependabot[bot]'
-        id: parse_jar_names
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pr_jar=$(jq -r '.activeJar' ${{ github.workspace }}/server/assets/config.json | xargs basename)
-          main_config=$(gh api repos/${{ github.repository }}/contents/server/assets/config.json?ref=main | jq -r '.content' | base64 --decode)
-          main_jar=$(echo "$main_config" | jq -r '.activeJar' | xargs basename)
-
-          if [[ -z "$pr_jar" || -z "$main_jar" ]]; then
-            echo "Error: pr_jar or main_jar is empty. Check config.json format."
-            exit 1
-          fi
-
-          echo "Found JAR names: PR: $pr_jar, Main: $main_jar"
-          echo "pr_jar_name=$pr_jar" >> $GITHUB_OUTPUT
-          echo "main_jar_name=$main_jar" >> $GITHUB_OUTPUT
-          echo "jar_artifact_name=jar-artifact-${{ github.event.number }}" >> $GITHUB_OUTPUT
 
       - name: Determine if Jar Upload is Necessary
         if: github.event.pull_request.user.login != 'dependabot[bot]'
@@ -299,7 +423,6 @@ jobs:
 
           if [[ "$main_jar_name" != "$pr_jar_name" ]]; then
             upload_needed=true
-            mv ${{ github.workspace }}/server/assets/jars/testUsageJar.jar "${{ github.workspace }}/$pr_jar_name"
           fi
 
           echo "Upload needed: $upload_needed"

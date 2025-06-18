@@ -5,6 +5,7 @@
     "fastify": "^4.27.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "@types/eslint": "^8",
     "@types/node": "^20.11.28",
     "@typescript-eslint/eslint-plugin": "^7.0.2",
@@ -17,6 +18,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-check-file": "^2.7.1",
     "eslint-plugin-react": "^7.33.2",
+    "playwright": "^1.51.1",
     "prettier": "^3.2.5",
     "syncpack": "^12.3.0",
     "typescript": "5.2.2",
@@ -37,17 +39,21 @@
     "prettier-format": "prettier --write \"**/*.{ts,tsx,css,yml}\"",
     "setup": "yarn && yarn build",
     "start": "yarn workspace @tsconline/server start",
-    "dev": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
+    "setup-files": "yarn workspace @tsconline/server run pull-supporting-files && yarn dev:config --overwrite && yarn workspace @tsconline/server run init-translations && yarn workspace @tsconline/server run migrate-datapacks && yarn workspace @tsconline/server run pull-help",
+    "dev:playwright": "yarn setup-files && concurrently \"NODE_ENV=test yarn start\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\"",
+    "dev": "yarn setup-files && concurrently \"yarn start\" \"yarn workspace @tsconline/server dev\" \"wait-on http://localhost:3000 && yarn workspace @tsconline/app dev\" \"yarn workspace @tsconline/shared dev\"",
     "production": "yarn workspace @tsconline/server run production",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:ui:coverage": "vitest --ui --coverage",
     "test:case": "vitest run -t",
+    "test:charts": "yarn playwright test",
+    "test:charts:ui": "yarn playwright test --ui",
+    "test:charts:ci": "CI=true yarn test:charts",
     "coverage:ci": "vitest run --coverage --no-color",
-    "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color",
-    "coverage": "vitest run --coverage",
-    "clean": "yarn workspaces foreach -A --parallel run clean"
+    "coverage:ci:exclude-encryption": "vitest run --config ./dependabot-vite.config.ts --coverage --no-color; yarn playwright test --reporter=html",
+    "coverage": "vitest run --coverage"
   },
   "workspaces": [
     "app",
