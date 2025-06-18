@@ -35,9 +35,11 @@ async function loadJSONS() {
   return { datasets, events, intervals, columns, subdatasets };
 }
 
+type NestedDict = { [key: string]: NestedDict | string[] };
 async function processEventColumns(datasets: arkL_datasets[], columns: arkL_columns[], events: arkL_events[]) {
-  const lines = [];
+  const pathDict: NestedDict = {};
   for (const column of columns) {
+    let columnLines: string[] = [];
     if (column.column_type === "events") {
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
@@ -77,27 +79,66 @@ async function processEventColumns(datasets: arkL_datasets[], columns: arkL_colu
       //which notes to use? (Jur, Cret, etc.)
       const popup = dataset.notes_Jur;
       let line = `${column.columnx}\tevent\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
-      lines.push(line);
+      columnLines.push(line);
 
       //TODO trim "LAD", "FAD" from beginning of titles
       if (lads.length > 0) {
-        lines.push("LAD");
+        columnLines.push("LAD");
         for (const lad of lads) {
           line = `\t${lad.eventx}\t${lad.age}\t${lad.event_display || ""}${lad.notes_2020 !== null ? `\t${lad.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
-          lines.push(line);
+          columnLines.push(line);
         }
       }
       if (fads.length > 0) {
-        lines.push("FAD");
+        columnLines.push("FAD");
         for (const fad of fads) {
           line = `\t${fad.eventx}\t${fad.age}\t${fad.event_display || ""}${fad.notes_2020 !== null ? `\t${fad.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
-          lines.push(line);
+          columnLines.push(line);
         }
       }
       //for blank space between columns for tscreator to parse
-      lines.push("");
+      columnLines.push("");
+      const pathArray = column.path?.split("/");
+      let currentLevel = pathDict;
+      if (pathArray && pathArray.length > 0) {
+        for (let i = 0; i < pathArray.length; i++) {
+          const path = String(pathArray[i]).trim();
+          if (!path) continue;
+          if (i === pathArray.length - 1) {
+            if (Array.isArray(currentLevel[path])) {
+              currentLevel[path] = [...(currentLevel[path] as string[]), ...columnLines];
+            } else {
+              currentLevel[path] = columnLines;
+            }
+          } else {
+            if (!currentLevel[path]) {
+              currentLevel[path] = {};
+            }
+            currentLevel = currentLevel[path]! as NestedDict;
+          }
+        }
+      }
     }
   }
+  return linesFromNestedDict(pathDict);;
+}
+
+async function linesFromNestedDict(dict: NestedDict) {
+  const lines: string[] = [];
+
+  function traverseDict(node: NestedDict | string[], depth: number) {
+    if (Array.isArray(node)) {
+      for (const item of node) {
+        lines.push(`${item}`);
+      }
+    } else {
+      for (const key in node) {
+        lines.push(`$${key}`);
+        traverseDict(node[key]!, depth + 1);
+      }
+    }
+  }
+  traverseDict(dict, 0);
   return lines;
 }
 
@@ -184,7 +225,7 @@ async function processBlockColumns(
 
 try {
   const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
-  const filePath = join(outputDir, "test_datapack.txt");
+  const filePath = join(outputDir, "test_bruh_datapack.txt");
   const eventLines = await processEventColumns(datasets, columns, events);
   const blockLines = await processBlockColumns(datasets, columns, intervals, subdatasets);
   await writeFile(filePath, eventLines.concat(blockLines).join("\n"));
