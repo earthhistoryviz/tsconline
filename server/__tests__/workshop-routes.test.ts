@@ -1,6 +1,7 @@
 import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import fastifySecureSession from "@fastify/secure-session";
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, InjectOptions, RouteOptions } from "fastify";
+import { WorkshopRecaptchaActions } from "@tsconline/shared";
 import { beforeAll, vi, afterAll, expect, describe, it, beforeEach } from "vitest";
 import * as workshopAuth from "../src/workshop/workshop-auth";
 import * as database from "../src/database";
@@ -13,6 +14,7 @@ import * as fsp from "fs/promises";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
+import { RouteDefinition, getMissingRoutesInActualRegistered, getUnexpectedRoutesInActualRegistered, initializeAppRoutes } from "./util/route-checks";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -118,8 +120,11 @@ const testWorkshop: SharedWorkshop = {
 };
 
 let app: FastifyInstance;
+let appRoutes: RouteDefinition[] = []
 beforeAll(async () => {
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "adminSession",
     key: Buffer.from("c30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -130,12 +135,6 @@ beforeAll(async () => {
       secure: false,
       sameSite: "strict",
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
-    }
-  });
-  app.register(fastifyMultipart, {
-    limits: {
-      fieldNameSize: 100,
-      fileSize: 1024 * 1024 * 60
     }
   });
   app.addHook("onRequest", async (request, _reply) => {
@@ -149,27 +148,73 @@ beforeAll(async () => {
       }
     };
   });
-  await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
+  app.register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 100,
+      fileSize: 1024 * 1024 * 60
+    }
+  });
   app.get("/workshop", fetchAllWorkshops);
   app.get("/workshop-images/1", fetchWorkshopCoverImage);
+  app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    appRoutes.push(...initializeAppRoutes(routeOptions, {
+      recatpchaHandlerName: "verifyRecaptchaPrehandler",
+      verifyAuthHandlerName: "verifyAuthority"
+    }));
+  });
+  await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
   await app.close();
 });
-const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token", "recaptcha-action": "test-action" };
+const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 const testNonAdminUser = { userId: 1, isAdmin: 0 } as User;
 const testAdminUser = { userId: 1, isAdmin: 1 } as User;
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack" },
-  { method: "GET", url: "/workshop/download/42" },
-  { method: "GET", url: "/workshop/1/files/presentation" }
+const routes: RouteDefinition[] = [
+  { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack", recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA,
+    hasAuth: true },
+  { method: "GET", url: "/workshop/download/42", recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
+    hasAuth: true 
+
+   },
+  { method: "GET", url: "/workshop/1/files/presentation",
+    hasAuth: true
+   }
 ];
+
+    describe("Route Consistency Tests", () => {
+      it("should have a 1:1 match between expected and actual routes", () => {
+        const missingInActual = getMissingRoutesInActualRegistered(appRoutes, routes);
+      
+        const unexpectedInActual = getUnexpectedRoutesInActualRegistered(appRoutes, routes);
+      
+        if (missingInActual.length > 0) {
+          console.log("❌ Missing in actual routes:");
+          console.table(missingInActual);
+          console.log("Defined routes:");
+          console.table(routes);
+          console.log("Actual routes:");
+          console.table(appRoutes);
+        }
+      
+        if (unexpectedInActual.length > 0) {
+          console.log("❌ Extra routes not defined in appRoutes:");
+          console.table(unexpectedInActual);
+          console.log("Expected routes:");
+          console.table(routes);
+          console.log("Actual routes:");
+          console.table(appRoutes);
+        }
+      
+        expect(missingInActual.length).toBe(0);
+        expect(unexpectedInActual.length).toBe(0);
+      });
+    });
 describe("verifyAuthority", () => {
-  describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
+  describe.each(routes.filter(r => r.hasAuth))("should return 401 for route $url with method $method", ({ method, url, body }) => {
     const findUser = vi.spyOn(database, "findUser");
     beforeEach(() => {
       findUser.mockClear();
@@ -192,9 +237,9 @@ describe("verifyAuthority", () => {
         payload: body,
         headers
       });
+      expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
       expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
       expect(response.statusCode).toBe(401);
     });
     it("should return 500 if findUser throws error", async () => {
@@ -212,10 +257,10 @@ describe("verifyAuthority", () => {
     });
   });
 });
-describe("verifyRecaptcha tests", () => {
-  describe.each(routes.filter(({ url }) => url != "/workshop/1/files/presentation"))(
+it("should have correct recaptchaAction logic on each route", () => {
+  describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction ))(
     "should return 400 or 422 for route $url with method $method",
-    ({ method, url, body }) => {
+    ({ method, url, body, recaptchaAction }) => {
       const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
       beforeEach(() => {
         checkRecaptchaTokenMock.mockClear();
@@ -226,22 +271,10 @@ describe("verifyRecaptcha tests", () => {
           method: method as InjectOptions["method"],
           url: url,
           payload: body,
-          headers: { ...headers, "recaptcha-token": "", "recaptcha-action": "test-action" }
+          headers: { ...headers, "recaptcha-token": ""}
         });
         expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
         expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-        expect(response.statusCode).toBe(400);
-      });
-
-      it("should return 400 if missing recaptcha action", async () => {
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: { ...headers, "recaptcha-token": "valid-token", "recaptcha-action": "" }
-        });
-        expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
-        expect(await response.json()).toEqual({ error: "Missing recaptcha action" });
         expect(response.statusCode).toBe(400);
       });
 
@@ -253,9 +286,9 @@ describe("verifyRecaptcha tests", () => {
           payload: body,
           headers: headers
         });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
         expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "recaptcha failed" });
+        expect(await response.json()).toEqual({ error: "Recaptcha failed" });
         expect(response.statusCode).toBe(422);
       });
 
@@ -267,9 +300,9 @@ describe("verifyRecaptcha tests", () => {
           payload: body,
           headers: headers
         });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], headers["recaptcha-action"]);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
         expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "recaptcha error" });
+        expect(await response.json()).toEqual({ error: "Recaptcha error" });
         expect(response.statusCode).toBe(500);
       });
     }

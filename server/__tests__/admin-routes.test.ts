@@ -610,7 +610,7 @@ it("should have all routes registered in auth", () => {
   expect(failedRoutes.length).toBe(0);
 });
 it("should have all auth routes dictated in routes", () => {
-  const convertedRegexRoutes = routes.map((route) => {
+  const convertedRegexRoutes = appRoutes.map((route) => {
     const regexPattern =
       "^" +
       route.url
@@ -623,9 +623,9 @@ it("should have all auth routes dictated in routes", () => {
       url: regex
     };
   });
-  const failedRoutes = convertedRegexRoutes.filter((route) => {
-    const isRegistered = routes.find((r) => {
-      return r.method === route.method && route.url.test(r.url);
+  const failedRoutes = routes.filter((route) => {
+    const isRegistered = convertedRegexRoutes.find((r) => {
+      return r.method === route.method && r.url.test(route.url);
     });
     if (!isRegistered) {
       console.error(`Route not registered: ${route.method} ${route.url}`);
