@@ -74,10 +74,11 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, act
     return;
   }
 }
-const genericRecaptchaPrehandler = (action: string) => {
+const genericRecaptchaMiddlewarePrehandler = (action: string) => {
   const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
     await verifyRecaptcha(request, reply, action);
   };
+  middleware.recaptchaAction = action;
   return middleware;
 };
 
@@ -212,7 +213,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   fastify.post(
     "/users",
     {
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_USERS)],
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_FETCH_USERS)],
       config: { rateLimit: looseRateLimit }
     },
     getUsers
@@ -221,7 +222,9 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapacks/private",
     {
       config: { rateLimit: looseRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS)]
+      preHandler: [
+        genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS)
+      ]
     },
     fetchAllPrivateOfficialDatapacks
   );
@@ -230,7 +233,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { params: adminFetchSingleOfficialDatapackParams },
       config: { rateLimit: looseRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK)]
     },
     adminFetchSingleOfficialDatapack
   );
@@ -243,7 +246,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_CREATE_USER)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_CREATE_USER)]
     },
     adminCreateUser
   );
@@ -256,7 +259,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER)]
     },
     adminDeleteUser
   );
@@ -269,7 +272,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS)]
     },
     adminDeleteUserDatapack
   );
@@ -277,7 +280,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapack",
     {
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK)]
     },
     adminUploadDatapack
   );
@@ -290,7 +293,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       config: {
         rateLimit: moderateRateLimit
       },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK)]
     },
     adminDeleteOfficialDatapack
   );
@@ -299,7 +302,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminUUIDbody },
       config: { rateLimit: looseRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS)]
     },
     getAllUserDatapacks
   );
@@ -307,7 +310,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop/users",
     {
       config: { rateLimit: looseRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP)]
     },
     adminAddUsersToWorkshop
   );
@@ -316,7 +319,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminCreateWorkshopBody },
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP)]
     },
     adminCreateWorkshop
   );
@@ -325,7 +328,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminEditWorkshopBody },
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP)]
     },
     adminEditWorkshop
   );
@@ -334,7 +337,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminDeleteWorkshopBody },
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP)]
     },
     adminDeleteWorkshop
   );
@@ -343,7 +346,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminModifyUserBody },
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_USER)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_USER)]
     },
     adminModifyUser
   );
@@ -351,7 +354,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/official/datapack/priority",
     {
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY)]
     },
     adminEditDatapackPriorities
   );
@@ -359,7 +362,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     "/workshop/datapack",
     {
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP)]
     },
     adminUploadDatapack
   );
@@ -368,7 +371,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       schema: { body: adminAddOfficialDatapackToWorkshopBody },
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP)]
     },
     adminAddOfficialDatapackToWorkshop
   );
@@ -377,7 +380,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: adminEditDatapackMetadataBody },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK)]
     },
     adminEditDatapackMetadata
   );
@@ -386,7 +389,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: addWorkshopFileParams },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP)]
     },
     adminUploadFilesToWorkshop
   );
@@ -395,7 +398,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: addWorkshopCoverParams },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP)]
     },
     adminUploadCoverPictureToWorkshop
   );
@@ -404,7 +407,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: deleteDatapackCommentParams },
-      preHandler: [genericRecaptchaPrehandler(AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT)]
     },
     adminDeleteDatapackComment
   );
