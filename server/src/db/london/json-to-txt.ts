@@ -237,6 +237,7 @@ async function linesFromDicts(pathDict: StringDictSet, linesDict: StringDict) {
           line += `\t${item}`;
         }
       }
+      line += "\t_METACOLUMN_OFF\t_TITLE_ON"; // metacolumn off, title on by default
     }
     lines.push(line);
     // need empty line between groups
