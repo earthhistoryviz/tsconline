@@ -2,7 +2,8 @@ import {
   Datapack,
   assertBatchUpdateServerPartialError,
   DatapackUniqueIdentifier,
-  AdminRecaptchaActions
+  AdminRecaptchaActions,
+  UserRecaptchaActions
 } from "@tsconline/shared";
 import { action, toJS } from "mobx";
 import { EditableDatapackMetadata, assertDatapackFetchParams } from "../../types";
@@ -123,7 +124,10 @@ const getEditDatapackRoute = (
       };
     }
     case "user": {
-      return { route: `/user/datapack/${datapack.title}`, recaptchaAction: "editUserDatapack" };
+      return {
+        route: `/user/datapack/${datapack.title}`,
+        recaptchaAction: UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA
+      };
     }
     default: {
       return { route: "", recaptchaAction: "" };

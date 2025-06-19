@@ -14,6 +14,7 @@ import {
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
+import { UserRecaptchaActions } from "@tsconline/shared";
 
 async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -33,14 +34,14 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   }
 }
 
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
+async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
   const recaptcha = request.headers["recaptcha-token"];
   if (!recaptcha || typeof recaptcha !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptcha, "verifyRecaptcha");
+    const score = await checkRecaptchaToken(recaptcha, action);
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -50,6 +51,13 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
     return;
   }
 }
+const genericRecaptchaMiddlewarePrehandler = (action: string) => {
+  const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
+    await verifyRecaptcha(request, reply, action);
+  };
+  middleware.recaptchaAction = action;
+  return middleware;
+};
 
 export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {
@@ -112,14 +120,14 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     required: ["commentId"]
   };
   fastify.addHook("preHandler", verifySession);
-  fastify.addHook("preHandler", verifyRecaptcha);
   fastify.get(
     "/datapack/:datapack",
     {
       config: {
         rateLimit: looseRateLimit
       },
-      schema: { params: datapackTitleParams }
+      schema: { params: datapackTitleParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK)]
     },
     fetchSingleUserDatapack
   );
@@ -127,27 +135,44 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/download/:datapack",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: datapackTitleParams, querystring: requestDownloadQuery }
+      schema: { params: datapackTitleParams, querystring: requestDownloadQuery },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK)]
     },
     requestDownload
   );
   // TODO - TRY WITH SCHEMA
-  fastify.post("/datapack", { config: { rateLimit: moderateRateLimit } }, uploadDatapack);
+  fastify.post(
+    "/datapack",
+    {
+      config: { rateLimit: moderateRateLimit },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK)]
+    },
+    uploadDatapack
+  );
   fastify.delete(
     "/datapack/:datapack",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: datapackTitleParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_DATAPACK)]
+    },
     userDeleteDatapack
   );
   fastify.patch(
     "/datapack/:datapack",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: datapackTitleParams } },
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: datapackTitleParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA)]
+    },
     editDatapackMetadata
   );
   fastify.get(
     "/workshop/:workshopUUID/datapack/:datapackTitle",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: fetchWorkshopDatapackParams }
+      schema: { params: fetchWorkshopDatapackParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_WORKSHOP_DATAPACK)]
     },
     fetchWorkshopDatapack
   );
@@ -155,7 +180,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/download/files/:datapackTitle/:uuid/:isPublic",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: downloadDatapackFilesZipParams }
+      schema: { params: downloadDatapackFilesZipParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)]
     },
     downloadDatapackFilesZip
   );
@@ -163,7 +189,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/addComment/:datapackTitle",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: uploadDatapackCommentParams }
+      schema: { params: uploadDatapackCommentParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT)]
     },
     uploadDatapackComment
   );
@@ -171,7 +198,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/comments/report/:commentId",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: updateDatapackCommentParams }
+      schema: { params: updateDatapackCommentParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_REPORT_COMMENT)]
     },
     updateDatapackComment
   );
@@ -179,7 +207,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/comments/:commentId",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: deleteDatapackCommentParams }
+      schema: { params: deleteDatapackCommentParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_COMMENT)]
     },
     deleteDatapackComment
   );
