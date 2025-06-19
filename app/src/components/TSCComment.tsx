@@ -21,7 +21,7 @@ import { fetcher } from "../util";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { getRecaptchaToken } from "../state/actions";
-import { CommentType } from "@tsconline/shared";
+import { CommentType, UserRecaptchaActions } from "@tsconline/shared";
 
 export type TSCCommentProps = {
   handleDelete: (id: number) => void;
@@ -58,7 +58,7 @@ export const Comment = ({ comment, isSelf = false, handleDelete, userLoggedIn, u
 
   const handleReport = async () => {
     try {
-      const recaptchaToken = await getRecaptchaToken("updateComment");
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_REPORT_COMMENT);
       if (!recaptchaToken) {
         handleClose();
         return;

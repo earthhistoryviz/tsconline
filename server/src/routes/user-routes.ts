@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import {
@@ -31,8 +31,13 @@ import path from "path";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
 
+interface EditDatapackMetadataRequest extends RouteGenericInterface {
+  Params: {
+    datapack: string;
+  };
+}
 export const editDatapackMetadata = async function editDatapackMetadata(
-  request: FastifyRequest<{ Params: { datapack: string } }>,
+  request: FastifyRequest<EditDatapackMetadataRequest>,
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
@@ -53,8 +58,13 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   }
 };
 
+interface FetchSingleUserDatapackRequest extends RouteGenericInterface {
+  Params: {
+    datapack: string;
+  };
+}
 export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
-  request: FastifyRequest<{ Params: { datapack: string } }>,
+  request: FastifyRequest<FetchSingleUserDatapackRequest>,
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
@@ -87,8 +97,16 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
   }
 };
 
+interface RequestDownloadRequest extends RouteGenericInterface {
+  Params: {
+    datapack: string;
+  };
+  Querystring: {
+    needEncryption?: boolean;
+  };
+}
 export const requestDownload = async function requestDownload(
-  request: FastifyRequest<{ Params: { datapack: string }; Querystring: { needEncryption?: boolean } }>,
+  request: FastifyRequest<RequestDownloadRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -281,8 +299,14 @@ export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
   reply.send(datapack);
 };
 
+interface FetchWorkshopDatapackRequest extends RouteGenericInterface {
+  Params: {
+    workshopUUID: string;
+    datapackTitle: string;
+  };
+}
 export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
-  request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
+  request: FastifyRequest<FetchWorkshopDatapackRequest>,
   reply: FastifyReply
 ) {
   const { workshopUUID, datapackTitle } = request.params;
@@ -341,8 +365,13 @@ export const uploadDatapack = async function uploadDatapack(request: FastifyRequ
   reply.send({ message: "Datapack uploaded" });
 };
 
+interface UserDeleteDatapackRequest extends RouteGenericInterface {
+  Params: {
+    datapack: string;
+  };
+}
 export const userDeleteDatapack = async function userDeleteDatapack(
-  request: FastifyRequest<{ Params: { datapack: string } }>,
+  request: FastifyRequest<UserDeleteDatapackRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -489,8 +518,15 @@ export const deleteUserHistory = async function deleteUserHistory(
   }
 };
 
+interface DownloadDatapackFilesZipRequest extends RouteGenericInterface {
+  Params: {
+    datapackTitle: string;
+    uuid: string;
+    isPublic: boolean;
+  };
+}
 export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
-  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
+  request: FastifyRequest<DownloadDatapackFilesZipRequest>,
   reply: FastifyReply
 ) {
   const { datapackTitle, uuid, isPublic } = request.params;
@@ -552,8 +588,16 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
   }
 };
 
+interface UploadDatapackComment extends RouteGenericInterface {
+  Params: {
+    datapackTitle: string;
+  };
+  Body: {
+    commentText: string;
+  };
+}
 export const uploadDatapackComment = async function uploadDatapackComment(
-  request: FastifyRequest<{ Params: { datapackTitle: string }; Body: { commentText: string } }>,
+  request: FastifyRequest<UploadDatapackComment>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -625,8 +669,16 @@ export const fetchDatapackComments = async function fetchDatapackComments(
   }
 };
 
+interface UpdateDatapackCommentRequest extends RouteGenericInterface {
+  Params: {
+    commentId: number;
+  };
+  Body: {
+    flagged: number;
+  };
+}
 export const updateDatapackComment = async function updateDatapackComment(
-  request: FastifyRequest<{ Params: { commentId: number }; Body: { flagged: number } }>,
+  request: FastifyRequest<UpdateDatapackCommentRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -666,8 +718,13 @@ export const updateDatapackComment = async function updateDatapackComment(
   }
 };
 
+interface DeleteDatapackCommentRequest extends RouteGenericInterface {
+  Params: {
+    commentId: number;
+  };
+}
 export const deleteDatapackComment = async function deleteDatapackComment(
-  request: FastifyRequest<{ Params: { commentId: number } }>,
+  request: FastifyRequest<DeleteDatapackCommentRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");

@@ -27,7 +27,8 @@ import {
   SharedUser,
   TimescaleItem,
   MarkdownFile,
-  CommentType
+  CommentType,
+  UserRecaptchaActions
 } from "@tsconline/shared";
 
 import { state, State } from "../state";
@@ -168,7 +169,7 @@ export const fetchPublicOfficialDatapack = action(
 );
 
 export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
-  const recaptchaToken = await getRecaptchaToken("fetchDatapackFiles");
+  const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP);
   if (!recaptchaToken) return null;
   try {
     const response = await fetcher(
@@ -331,7 +332,7 @@ export const uploadUserDatapack = action(
       pushError(ErrorCodes.DATAPACK_ALREADY_EXISTS);
       return;
     }
-    const recaptcha = await getRecaptchaToken("uploadUserDatapack");
+    const recaptcha = await getRecaptchaToken(UserRecaptchaActions.USER_UPLOAD_DATAPACK);
     if (!recaptcha) return;
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags } = metadata;
@@ -969,7 +970,7 @@ export const requestDownload = action(async (datapack: DatapackMetadata, needEnc
   } else {
     route = `/user/datapack/download/${datapack.title}?needEncryption=${needEncryption}`;
   }
-  const recaptchaToken = await getRecaptchaToken("downloadUserDatapacks");
+  const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK);
   if (!recaptchaToken) return null;
   const response = await fetcher(route, {
     method: "GET",
