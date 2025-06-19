@@ -282,7 +282,7 @@ const customSplit = (path: string): string[] => {
 
 try {
   const { datasets, events, intervals, columns, subdatasets } = await loadJSONS();
-  const filePath = join(outputDir, "test_bruh_datapack.txt");
+  const filePath = join(outputDir, "group_organized_test_datapack.txt");
   const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
   const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
   await processEventColumns(datasets, columns, events, pathDict, linesDict);
