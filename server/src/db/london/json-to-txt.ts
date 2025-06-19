@@ -46,7 +46,7 @@ async function processEventColumns(
   linesDict: StringDict
 ) {
   for (const column of columns) {
-    let columnLines: string[] = [];
+    const columnLines: string[] = [];
     if (column.column_type === "events") {
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
@@ -125,7 +125,7 @@ async function processBlockColumns(
       !column.interval_type?.includes("sequence") &&
       !column.interval_type?.includes("chron")
     ) {
-      let columnLines: string[] = [];
+      const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
         console.log(chalk.yellow("missing dataset id for " + column.columnx));
