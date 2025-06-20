@@ -78,15 +78,15 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const datapackTitleParams = {
     type: "object",
     properties: {
-      datapack: { type: "string" }
+      datapack: { type: "string", minLength: 1 }
     },
     required: ["datapack"]
   };
   const fetchWorkshopDatapackParams = {
     type: "object",
     properties: {
-      workshopUUID: { type: "string" },
-      datapackTitle: { type: "string" }
+      workshopUUID: { type: "string", minLength: 1 },
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopUUID", "datapackTitle"]
   };
@@ -108,7 +108,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const uploadDatapackCommentParams = {
     type: "object",
     properties: {
-      datapackTitle: { type: "string" }
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["datapackTitle"]
   };
@@ -129,61 +129,84 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const fetchPublicUserDatapackParams = {
     type: "object",
     properties: {
-      uuid: { type: "string" },
-      datapackTitle: { type: "string" }
+      uuid: { type: "string", minLength: 1 },
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["uuid", "datapackTitle"]
   };
   const fetchUserHistoryParams = {
     type: "object",
     properties: {
-      timestamp: { type: "string" }
+      timestamp: { type: "string", format: "date-time", minLength: 1 }
     },
     required: ["timestamp"]
   };
-  fastify.get("/metadata", {
-    config: {
-      rateLimit: looseRateLimit
+  fastify.get(
+    "/metadata",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      preHandler: [verifySession]
     },
-    preHandler: [verifySession]
-  }, fetchUserDatapacksMetadata);
-  fastify.get("/uuid/:uuid/datapack/:datapackTitle", {
-    config: {
-      rateLimit: looseRateLimit
+    fetchUserDatapacksMetadata
+  );
+  fastify.get(
+    "/uuid/:uuid/datapack/:datapackTitle",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      schema: { params: fetchPublicUserDatapackParams }
     },
-    schema: { params: fetchPublicUserDatapackParams },
-  }, fetchPublicUserDatapack);
-  fastify.get("/history", {
-    config: {
-      rateLimit: looseRateLimit
+    fetchPublicUserDatapack
+  );
+  fastify.get(
+    "/history",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      preHandler: [verifySession]
     },
-    preHandler: [verifySession]
-  }, fetchUserHistoryMetadata);
-  fastify.get("/history/:timestamp", {
-    config: {
-      rateLimit: looseRateLimit
+    fetchUserHistoryMetadata
+  );
+  fastify.get(
+    "/history/:timestamp",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      schema: {
+        params: fetchUserHistoryParams
+      },
+      preHandler: [verifySession]
     },
-    schema: {
-      params: fetchUserHistoryParams
-    }
-    ,
-    preHandler: [verifySession]
-  }, fetchUserHistory);
-  fastify.delete("/history/:timestamp", {
-    config: {
-      rateLimit: looseRateLimit
+    fetchUserHistory
+  );
+  fastify.delete(
+    "/history/:timestamp",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      schema: {
+        params: fetchUserHistoryParams
+      },
+      preHandler: [verifySession]
     },
-    schema: {
-      params: fetchUserHistoryParams
+    deleteUserHistory
+  );
+  fastify.get(
+    "/datapack/comments/:datapackTitle",
+    {
+      config: {
+        rateLimit: looseRateLimit
+      },
+      schema: { params: uploadDatapackCommentParams }
     },
-    preHandler: [verifySession]
-  }, deleteUserHistory);
-  fastify.get("/datapack/comments/:datapackTitle", {
-    config: {
-      rateLimit: looseRateLimit
-    },
-    schema: { params: uploadDatapackCommentParams }
-  }, fetchDatapackComments);
+    fetchDatapackComments
+  );
   fastify.get(
     "/datapack/:datapack",
     {
