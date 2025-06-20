@@ -9,7 +9,13 @@ import {
   downloadDatapackFilesZip,
   uploadDatapackComment,
   updateDatapackComment,
-  deleteDatapackComment
+  deleteDatapackComment,
+  fetchUserDatapacksMetadata,
+  fetchPublicUserDatapack,
+  fetchUserHistoryMetadata,
+  fetchUserHistory,
+  deleteUserHistory,
+  fetchDatapackComments
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -28,6 +34,7 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
       reply.status(401).send({ error: "Unauthorized access" });
       return;
     }
+    request.user = user[0];
   } catch (e) {
     reply.status(500).send({ error: "Database error" });
     return;
@@ -119,6 +126,64 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["commentId"]
   };
+  const fetchPublicUserDatapackParams = {
+    type: "object",
+    properties: {
+      uuid: { type: "string" },
+      datapackTitle: { type: "string" }
+    },
+    required: ["uuid", "datapackTitle"]
+  };
+  const fetchUserHistoryParams = {
+    type: "object",
+    properties: {
+      timestamp: { type: "string" }
+    },
+    required: ["timestamp"]
+  };
+  fastify.get("/metadata", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    preHandler: [verifySession]
+  }, fetchUserDatapacksMetadata);
+  fastify.get("/uuid/:uuid/datapack/:datapackTitle", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    schema: { params: fetchPublicUserDatapackParams },
+  }, fetchPublicUserDatapack);
+  fastify.get("/history", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    preHandler: [verifySession]
+  }, fetchUserHistoryMetadata);
+  fastify.get("/history/:timestamp", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    schema: {
+      params: fetchUserHistoryParams
+    }
+    ,
+    preHandler: [verifySession]
+  }, fetchUserHistory);
+  fastify.delete("/history/:timestamp", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    schema: {
+      params: fetchUserHistoryParams
+    },
+    preHandler: [verifySession]
+  }, deleteUserHistory);
+  fastify.get("/datapack/comments/:datapackTitle", {
+    config: {
+      rateLimit: looseRateLimit
+    },
+    schema: { params: uploadDatapackCommentParams }
+  }, fetchDatapackComments);
   fastify.get(
     "/datapack/:datapack",
     {
