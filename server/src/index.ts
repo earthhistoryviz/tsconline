@@ -24,14 +24,7 @@ import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
 import {
-  deleteUserHistory,
-  fetchPublicUserDatapack,
-  fetchUserDatapacksMetadata,
-  uploadExternalDatapack,
-  fetchUserHistory,
-  fetchUserHistoryMetadata,
-  fetchDatapackComments
-} from "./routes/user-routes.js";
+  uploadExternalDatapack} from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";

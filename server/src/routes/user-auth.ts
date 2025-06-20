@@ -112,17 +112,31 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["datapackTitle"]
   };
+  const uploadDatapackCommentBody = {
+    type: "object",
+    properties: {
+      commentText: { type: "string", minLength: 1 }
+    },
+    required: ["commentText"]
+  };
   const updateDatapackCommentParams = {
     type: "object",
     properties: {
-      commentId: { type: "number" }
+      commentId: { type: "number", minimum: 1 }
     },
     required: ["commentId"]
+  };
+  const updateDatapackCommentBody = {
+    type: "object",
+    properties: {
+      flagged: { type: "number", enum: [0, 1] }
+    },
+    required: ["flagged"]
   };
   const deleteDatapackCommentParams = {
     type: "object",
     properties: {
-      commentId: { type: "number" }
+      commentId: { type: "number", minimum: 1 }
     },
     required: ["commentId"]
   };
@@ -285,7 +299,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/addComment/:datapackTitle",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: uploadDatapackCommentParams },
+      schema: { params: uploadDatapackCommentParams, body: uploadDatapackCommentBody },
       preHandler: [
         verifySession,
         genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT)
@@ -297,7 +311,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/comments/report/:commentId",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: updateDatapackCommentParams },
+      schema: { params: updateDatapackCommentParams, body: updateDatapackCommentBody },
       preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_REPORT_COMMENT)]
     },
     updateDatapackComment
