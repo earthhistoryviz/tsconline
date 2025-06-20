@@ -407,3 +407,19 @@ DCC (dual column comparsion) columns overlay an event/point column onto another 
    Notice that the column name has the prepend `Overlay for`, which textually indicates that it's a DCC column and makes it a unique name from the column it was based off of. It has the `isDualColCompColumn` attribute, which explicitly indicates that it's a DCC column. Note, although `isDualColCompColumn` has a boolean associated with it, it will always be true since the attribute is only added if it is a DCC column.
 
 ### How does DCC columns work while loading settings?
+
+The program uses two caches to load in DCC columns. 
+
+1. `dualColCompRefCache`
+
+    While iterating through the settings, the program checks if a column has a setting tag with `drawDualColCompColumn` and if it does, adds it to the cache. The cache's key is the column name, the cache's value is the string found in the `drawDualColCompColumn` tag.
+
+2. `dualColCompFoundCache`
+
+    While iterating through the settings, the program checks if a column has the attribute `isDualColCompColumn` and if it does, adds it to the cache. the cache's key is the column name, the cache's value is the settings for the entire column.
+
+After the first iteration of the settings and filling these caches, the program then uses the caches to create the DCC columns. First, it goes through the DCCRefCache to create the DCC columns themselves. Then the program goes through the DCCFoundCache, applying the settings found in them to the created DCC columns. 
+
+#### why use this process?
+
+The two columns being overlayed in a DCC column can have different parents/be located in different levels. Therefore, if the addition of DCC columns were to be done right away, the settings of the second overlay may not have been loaded in and may result in unexpected visuals. 
