@@ -20,7 +20,7 @@ import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
 import * as shared from "@tsconline/shared";
-import { User } from "../src/types";
+import { User, Workshop } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
@@ -62,7 +62,8 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     ...actual,
-    isPartialDatapackMetadata: vi.fn().mockReturnValue(true)
+    isPartialDatapackMetadata: vi.fn().mockReturnValue(true),
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid"),
   };
 });
 
@@ -82,7 +83,8 @@ vi.mock("../src/database", async () => {
     createDatapackComment: vi.fn().mockResolvedValue({}),
     updateComment: vi.fn().mockResolvedValue({}),
     deleteComment: vi.fn().mockResolvedValue({}),
-    findDatapackComment: vi.fn(() => Promise.resolve([testComment]))
+    findDatapackComment: vi.fn(() => Promise.resolve([testComment])),
+    getActiveWorkshopsUserIsIn: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -139,7 +141,8 @@ vi.mock("../src/util", async (importOriginal) => {
     loadAssetConfigs: vi.fn().mockImplementation(() => {}),
     deleteDirectory: vi.fn().mockImplementation(() => {}),
     resetUploadDirectory: vi.fn().mockImplementation(() => {}),
-    checkHeader: vi.fn().mockReturnValue(true)
+    checkHeader: vi.fn().mockReturnValue(true),
+    extractMetadataFromDatapack: vi.fn().mockImplementation((obj) => obj)
   };
 });
 
@@ -222,12 +225,12 @@ beforeAll(async () => {
       }
     };
   });
-  app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
-  app.post("/external-chart", uploadExternalDatapack);
-  app.get("/user/history", fetchUserHistoryMetadata);
-  app.get("/user/history/:timestamp", fetchUserHistory);
-  app.delete("/user/history/:timestamp", deleteUserHistory);
-  app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
+  // app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
+  // app.post("/external-chart", uploadExternalDatapack);
+  // app.get("/user/history", fetchUserHistoryMetadata);
+  // app.get("/user/history/:timestamp", fetchUserHistory);
+  // app.delete("/user/history/:timestamp", deleteUserHistory);
+  // app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
   app.addHook("onRoute", (routeOptions: RouteOptions) => {
     appRoutes.push(
       ...initializeAppRoutes(routeOptions, {
@@ -338,6 +341,34 @@ const routes: RouteDefinition[] = [
     url: `/user/datapack/comments/${testComment.id}`,
     recaptchaAction: UserRecaptchaActions.USER_DELETE_COMMENT,
     hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/metadata",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/uuid/123e4567-e89b-12d3-a456-426614174000/datapack/test_filename",
+  },
+  {
+    method: "GET",
+    url: "/user/history",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/history/test",
+    hasAuth: true
+  },
+  {
+    method: "DELETE",
+    url: "/user/history/test",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/datapack/comments/test_filename"
   }
 ];
 describe("Route Consistency Tests", () => {
@@ -417,7 +448,7 @@ describe("get a single user datapack", () => {
 });
 
 describe("verifySession tests", () => {
-  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+  describe.each(routes.filter(r => r.hasAuth))("when request is %s %s", ({ method, url, body }) => {
     const findUser = vi.spyOn(database, "findUser");
     beforeEach(() => {
       findUser.mockClear();
@@ -461,7 +492,7 @@ describe("verifySession tests", () => {
 });
 
 describe("verifyRecaptcha tests", () => {
-  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+  describe.each(routes.filter(r => r.recaptchaAction))("when request is %s %s", ({ method, url, body }) => {
     it("should reply 400 when recaptcha token is missing", async () => {
       const response = await app.inject({
         method: method as InjectOptions["method"],
@@ -1764,5 +1795,60 @@ describe("deleteDatapackComment tests", () => {
     expect(deleteComment).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error deleting datapack comment" });
+  });
+});
+
+describe("fetchUserDatapacksMetadata", async () => {
+  const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+  const getActiveWorkshopsUserIsIn = vi.spyOn(database, "getActiveWorkshopsUserIsIn");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 500 if an error occurred in fetchAllUsersDatapacks", async () => {
+    fetchAllUsersDatapacks.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to fetch metadatas" });
+  });
+  it("should reply 200 and empty if user has no datapacks", async () => {
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    getActiveWorkshopsUserIsIn.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+    expect(getActiveWorkshopsUserIsIn).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual([]);
+  });
+  it("should reply 200 with metadata when user has datapacks", async () => {
+    fetchAllUsersDatapacks.mockResolvedValueOnce([{ title: "test", isPublic: true } as unknown as shared.Datapack])
+    .mockResolvedValueOnce([{ title: "test2", isPublic: false } as unknown as shared.Datapack]);
+    getActiveWorkshopsUserIsIn.mockResolvedValueOnce([{ workshopId: "workshop-1" } as unknown as Workshop]);
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(2);
+    expect(getActiveWorkshopsUserIsIn).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual([
+      {
+        title: "test",
+        isPublic: true,
+      },
+      {
+        title: "test2",
+        isPublic: false,
+      }
+    ]);
   });
 });

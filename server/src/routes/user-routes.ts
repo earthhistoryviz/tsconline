@@ -248,20 +248,10 @@ export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetada
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
-      return;
-    }
-
-    const userDatapacks = await fetchAllUsersDatapacks(uuid);
-    const workshops = await getActiveWorkshopsUserIsIn(user[0].userId);
+    const userDatapacks = await fetchAllUsersDatapacks(user.uuid);
+    const workshops = await getActiveWorkshopsUserIsIn(user.userId);
     const workshopDatapacksPromises = workshops.map((workshop) =>
       fetchAllUsersDatapacks(getWorkshopUUIDFromWorkshopId(workshop.workshopId))
     );
@@ -280,8 +270,14 @@ export const fetchUserDatapacksMetadata = async function fetchUserDatapackMetada
   }
 };
 
+interface FetchPublicUserDatapackRequest extends RouteGenericInterface {
+  Params: {
+    uuid: string;
+    datapackTitle: string;
+  };
+}
 export const fetchPublicUserDatapack = async function fetchPublicUserDatapack(
-  request: FastifyRequest<{ Params: { uuid: string; datapackTitle: string } }>,
+  request: FastifyRequest<FetchPublicUserDatapackRequest>,
   reply: FastifyReply
 ) {
   const { uuid, datapackTitle } = request.params;
@@ -460,8 +456,13 @@ export const uploadExternalDatapack = async function uploadExternalDatapack(
   }
 };
 
+interface FetchUserHistoryRequest extends RouteGenericInterface {
+  Params: {
+    timestamp: string;
+  };
+}
 export const fetchUserHistory = async function fetchUserHistory(
-  request: FastifyRequest<{ Params: { timestamp: string } }>,
+  request: FastifyRequest<FetchUserHistoryRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -499,8 +500,13 @@ export const fetchUserHistoryMetadata = async function fetchUserHistoryMetadata(
   }
 };
 
+interface DeleteUserHistoryRequest extends RouteGenericInterface {
+  Params: {
+    timestamp: string;
+  };
+}
 export const deleteUserHistory = async function deleteUserHistory(
-  request: FastifyRequest<{ Params: { timestamp: string } }>,
+  request: FastifyRequest<DeleteUserHistoryRequest>,
   reply: FastifyReply
 ) {
   const uuid = request.session.get("uuid");
@@ -648,8 +654,13 @@ export const uploadDatapackComment = async function uploadDatapackComment(
   }
 };
 
+interface FetchDatapackCommentsRequest extends RouteGenericInterface {
+  Params: {
+    datapackTitle: string;
+  };
+}
 export const fetchDatapackComments = async function fetchDatapackComments(
-  request: FastifyRequest<{ Params: { datapackTitle: string } }>,
+  request: FastifyRequest<FetchDatapackCommentsRequest>,
   reply: FastifyReply
 ) {
   const { datapackTitle } = request.params;
