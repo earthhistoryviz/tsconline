@@ -273,3 +273,137 @@ useEffect(() => {
 ```
 
 Strict Mode does not affect production builds, but it’s useful for catching side-effect-related bugs early. If you’re debugging and confused about something happening twice, this is likely why.
+
+## Parse Settings
+
+parse settings deals with `settings.tsc` files. These files are written in XML and contain attributes and configurations that can be applied to a chart. Below is an example of some attributes in a `settings.tsc` file.
+
+```
+<column id="class datastore.EventColumn:GSSPs">
+  <setting name="title">GSSPs</setting>
+  <setting name="isSelected">false</setting>
+  <setting name="width">50.0</setting>
+  <setting name="backgroundColor">rgb(253,253,253)</setting>
+<column>
+```
+### Structure of `settings.tsc` files
+
+<details>
+<summary>Reference file</summary>
+
+```
+<?xml version="1.0" encoding="UTF-8"?>
+<TSCreator version="PRO8.1">
+  <settings version="1.0">
+    <setting name="topAge" source="text" unit="Ma">
+    <setting name="text">0.0</setting>
+    </setting>
+    <setting name="baseAge" source="text" unit="Ma">
+    <setting name="text">50.0</setting>
+    </setting>
+    <setting>...</setting>
+  </settings>
+  <column id="class datastore.RootColumn:Chart Root">
+    <setting>...</setting>
+    <fonts>
+      <font>...</font>
+    </fonts>
+    <column id="class datastore.RootColumn:Chart Title">
+      <column id="class datastore.RulerColumn:Ma">
+        <setting>...</setting>
+        <fonts>
+          <font>...</font>
+        </fonts>
+      </column>
+      <column id="class datastore.MetaColumn:Central Africa Cenozoic">
+        <setting>...</setting>
+        <fonts>
+          <font>...</font>
+        </fonts>
+        <column id="class datastore.BlockSeriesMetaColumn:Nigeria Coast">
+          <setting>...</setting>
+          <fonts>
+            <font>...</font>
+          </fonts>
+          <column id="class datastore.FaciesColumn:Facies"> 
+            <setting>...</setting>
+            <fonts>
+              <font>...</font>
+            </fonts>
+          </column>
+          <column id="class datastore.ZoneColumn:Members">
+            <setting>...</setting>
+            <fonts>
+              <font>...</font>
+            </fonts>
+          </column>
+        </column>
+        <column id="class datastore.BlockSeriesMetaColumn:South Atlantic">
+          <setting>...</setting>
+          <fonts>
+            <font>...</font>
+          </fonts>
+          <column id="class datastore.FaciesColumn:Facies">
+            <setting>...</setting>
+            <fonts>
+              <font>...</font>
+            </fonts> 
+          </column>
+          <column id="class datastore.ZoneColumn:Members"> 
+            <setting>...</setting>
+            <fonts>
+              <font>...</font>
+            </fonts>
+          </column>
+        </column>
+      </column>
+    </column>
+  </column>
+</TSCreator>
+```
+</details>
+
+### Explaining the tags
+
+- `<settings>`: the configurations that apply to the entire chart. For example, the top age and base age (shown in reference) indicates the upper and lower ages of the chart.
+- `<column>`: a column in the chart. it has three possible children tags: `<setting>`, `<fonts>`, and `<column>`.
+  - `<setting>`: various configurations that are applied to a column. each `<setting>` tag has a name attribute. For example, `<setting name="backgroundColor">` indicates the background color of the column.
+  - `<fonts>`: the parent of various `<font>` tags that provide font settings to the text in a column.
+    - `<font>`: has two attributes, `function` and `inheritable`. For example, `<font function="Column Header" inheritable="false"/>` indicates that the font setting following this tag applies to the column header, and it doesn't inherit the font setting of its parent column.
+  - `<column>`: a child column.
+
+### XML to JSON
+`xmlToJson` converts the information stored in a `settings.tsc` file into a JSON object. It first parses the XML string into a DOM document, which is then iterated over to access the child columns and its child tags. The information is extracted and stored in a separate JSON object, which has the same parent-child column structure.
+
+#### Purpose of XML to JSON?
+
+- allows tsconline to receive a `settings.tsc` file from the user and apply the settings to the current `ColumnInfo` object.
+- allows tsconline to have presets, which have premade `settings.tsc` files.
+
+### JSON to XML
+
+- Parses a `ColumnInfo` object into an equivalent `settings.tsc` file. First, `ColumnInfo` is passed through `translateColumnInfoToColumnInfoTSC`, which removes unneeded information in `ColumnInfo` and changes the attribute names to be the same as the ones seen in the XML file. Then `ColumnInfoTSC` is iterated over to create `settings.tsc`.
+
+#### Purpose of JSON to XML?
+
+- allows tsconline to propogate the changes made by the user to the java program.
+
+## Dual Column Comparsion columns
+
+DCC (dual column comparsion) columns overlay an event/point column onto another event/point column. The user adds DCC columns, so tsconline stores any associated information in a `settings.tsc` file to communicate with the java program. There are two parts in specifying a DCC column in a settings file.
+
+1. adding `drawDualColCompColumn` to an event/point column
+   
+    after adding a DCC column (using the application interface), the column that was selected first to create the DCC column will store the overlayed column in a settings tag. For example:
+
+    `<setting name="drawDualColCompColumn">class datastore.PointColumn:Tropical and Global Average</setting>`
+    
+2. adding `isDualColCompColumn` attribute to the DCC column
+
+    the created DCC column will have a column tag that looks like this:
+
+    `<column id="class datastore.EventColumn:Overlay for GSSPs" isDualColCompColumn="true">`
+
+   Notice that the column name has the prepend `Overlay for`, which textually indicates that it's a DCC column and makes it a unique name from the column it was based off of. It has the `isDualColCompColumn` attribute, which explicitly indicates that it's a DCC column. Note, although `isDualColCompColumn` has a boolean associated with it, it will always be true since the attribute is only added if it is a DCC column.
+
+### How does DCC columns work while loading settings?
