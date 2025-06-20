@@ -119,7 +119,6 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["commentId"]
   };
-  fastify.addHook("preHandler", verifySession);
   fastify.get(
     "/datapack/:datapack",
     {
@@ -127,7 +126,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
         rateLimit: looseRateLimit
       },
       schema: { params: datapackTitleParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK)]
     },
     fetchSingleUserDatapack
   );
@@ -136,7 +135,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: datapackTitleParams, querystring: requestDownloadQuery },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK)]
     },
     requestDownload
   );
@@ -145,7 +144,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack",
     {
       config: { rateLimit: moderateRateLimit },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK)]
     },
     uploadDatapack
   );
@@ -154,7 +153,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: datapackTitleParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_DATAPACK)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_DATAPACK)]
     },
     userDeleteDatapack
   );
@@ -163,7 +162,10 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: datapackTitleParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA)]
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA)
+      ]
     },
     editDatapackMetadata
   );
@@ -172,7 +174,10 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: fetchWorkshopDatapackParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_WORKSHOP_DATAPACK)]
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_FETCH_WORKSHOP_DATAPACK)
+      ]
     },
     fetchWorkshopDatapack
   );
@@ -181,7 +186,10 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: downloadDatapackFilesZipParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)]
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)
+      ]
     },
     downloadDatapackFilesZip
   );
@@ -190,7 +198,10 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: uploadDatapackCommentParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT)]
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT)
+      ]
     },
     uploadDatapackComment
   );
@@ -199,7 +210,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: updateDatapackCommentParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_REPORT_COMMENT)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_REPORT_COMMENT)]
     },
     updateDatapackComment
   );
@@ -208,7 +219,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: deleteDatapackCommentParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_COMMENT)]
+      preHandler: [verifySession, genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_COMMENT)]
     },
     deleteDatapackComment
   );

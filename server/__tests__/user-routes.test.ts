@@ -1,5 +1,5 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, InjectOptions, RouteOptions } from "fastify";
 import formAutoContent from "form-auto-content";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
@@ -25,6 +25,8 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
+import { UserRecaptchaActions } from "@tsconline/shared";
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -186,9 +188,11 @@ vi.mock("path", async (importOriginal) => {
 
 /*----------------------TEST---------------------*/
 let app: FastifyInstance;
+const appRoutes: RouteDefinition[] = [];
 beforeAll(async () => {
-  app = fastify();
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "loginSession",
     key: Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -218,15 +222,22 @@ beforeAll(async () => {
       }
     };
   });
-  await app.register(userRoutes, { prefix: "/user" });
   app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   app.post("/external-chart", uploadExternalDatapack);
   app.get("/user/history", fetchUserHistoryMetadata);
   app.get("/user/history/:timestamp", fetchUserHistory);
   app.delete("/user/history/:timestamp", deleteUserHistory);
   app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
+  app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    appRoutes.push(
+      ...initializeAppRoutes(routeOptions, {
+        recatpchaHandlerName: "verifyRecaptchaPrehandler",
+        verifyAuthHandlerName: "verifySession"
+      })
+    );
+  });
+  await app.register(userRoutes, { prefix: "/user" });
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
@@ -269,14 +280,73 @@ const testComment = {
   datapackTitle: "test"
 };
 
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: `/user/datapack/download/${filename}`, body: { title: "title" } },
-  { method: "POST", url: "/user/datapack" },
-  { method: "DELETE", url: `/user/datapack/${filename}` },
-  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
-  { method: "GET", url: `/user/datapack/${filename}` },
-  { method: "GET", url: "/user/workshop/workshop-1/datapack/test" }
+const routes: RouteDefinition[] = [
+  {
+    method: "GET",
+    url: `/user/datapack/download/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_DOWNLOAD_DATAPACK,
+    hasAuth: true
+  },
+  { method: "POST", url: "/user/datapack", recaptchaAction: UserRecaptchaActions.USER_UPLOAD_DATAPACK, hasAuth: true },
+  {
+    method: "DELETE",
+    url: `/user/datapack/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_DELETE_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "PATCH",
+    url: `/user/datapack/${filename}`,
+    body: { title: "new_title" },
+    recaptchaAction: UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/workshop/workshop-1/datapack/test",
+    recaptchaAction: UserRecaptchaActions.USER_FETCH_WORKSHOP_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/download/files/${filename}/${uuid}/false`,
+    recaptchaAction: UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP,
+    hasAuth: true
+  },
+  {
+    method: "POST",
+    url: "/user/datapack/addComment/test",
+    body: { commentText: "test comment" },
+    recaptchaAction: UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT,
+    hasAuth: true
+  },
+  {
+    method: "POST",
+    url: "/user/datapack/comments/report/1",
+    body: { flagged: 1 },
+    recaptchaAction: UserRecaptchaActions.USER_REPORT_COMMENT,
+    hasAuth: true
+  },
+  {
+    method: "DELETE",
+    url: `/user/datapack/comments/${testComment.id}`,
+    recaptchaAction: UserRecaptchaActions.USER_DELETE_COMMENT,
+    hasAuth: true
+  }
 ];
+describe("Route Consistency Tests", () => {
+  it("should have a 1:1 match between expected and actual routes", () => {
+    const { missingInActual, unexpectedInActual } = oneToOneMatch(appRoutes, routes);
+    expect(missingInActual.length).toBe(0);
+    expect(unexpectedInActual.length).toBe(0);
+  });
+});
 
 describe("get a single user datapack", () => {
   const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
