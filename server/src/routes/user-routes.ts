@@ -555,15 +555,10 @@ export const uploadDatapackComment = async function uploadDatapackComment(
   request: FastifyRequest<UploadDatapackComment>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  const user = await findUser({ uuid });
-  if (!user || user.length !== 1 || !user[0]) {
-    reply.status(401).send({ error: "Unauthorized access" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { commentText } = request.body;
   const { datapackTitle } = request.params;
-  if (!uuid) {
+  if (!user.uuid) {
     reply.status(401).send({ error: "User not logged in" });
     return;
   }
@@ -580,18 +575,18 @@ export const uploadDatapackComment = async function uploadDatapackComment(
 
   try {
     const newDatapackComment: NewDatapackComment = {
-      uuid: uuid,
+      uuid: user.uuid,
       commentText: commentText,
       datapackTitle: datapackTitle,
       dateCreated: new Date().toISOString(),
       flagged: 0,
-      username: user[0].username
+      username: user.username
     };
 
     await createDatapackComment(newDatapackComment);
 
     const insertedComment = (
-      await findDatapackComment({ uuid: uuid, datapackTitle: datapackTitle, commentText: commentText })
+      await findDatapackComment({ uuid: user.uuid, datapackTitle: datapackTitle, commentText: commentText })
     )[0];
     if (!insertedComment) {
       throw new Error("Datapack comment not inserted");
@@ -637,16 +632,6 @@ export const updateDatapackComment = async function updateDatapackComment(
   request: FastifyRequest<UpdateDatapackCommentRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  const user = await findUser({ uuid });
-  if (!user || user.length !== 1 || !user[0]) {
-    reply.status(401).send({ error: "Unauthorized access" });
-    return;
-  }
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
   const { commentId } = request.params;
   const { flagged } = request.body;
 
@@ -683,22 +668,8 @@ export const deleteDatapackComment = async function deleteDatapackComment(
   request: FastifyRequest<DeleteDatapackCommentRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  const user = await findUser({ uuid });
-  if (!user || user.length !== 1 || !user[0]) {
-    reply.status(401).send({ error: "Unauthorized access" });
-    return;
-  }
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { commentId } = request.params;
-
-  if (commentId === undefined) {
-    reply.status(400).send({ error: "Missing or invalid comment ID." });
-    return;
-  }
 
   try {
     const comment = await findDatapackComment({ id: commentId });
@@ -706,7 +677,7 @@ export const deleteDatapackComment = async function deleteDatapackComment(
     if (!comment.length) {
       reply.status(404).send({ error: "Requested comment not found." });
       return;
-    } else if (comment[0]?.uuid !== uuid) {
+    } else if (comment[0]?.uuid !== user.uuid) {
       reply.status(403).send({ error: "Cannot delete other's comments." });
       return;
     }

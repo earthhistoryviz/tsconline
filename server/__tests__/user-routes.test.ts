@@ -1630,16 +1630,6 @@ describe("uploadDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/user/datapack/addComment/test",
-      headers: { "mock-uuid": "" }
-    });
-    expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if datapack title is missing", async () => {
     const response = await app.inject({
       method: "POST",
@@ -1650,8 +1640,13 @@ describe("uploadDatapackComment tests", () => {
       }
     });
     expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing datapack title" });
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment text is missing", async () => {
     const response = await app.inject({
@@ -1663,7 +1658,12 @@ describe("uploadDatapackComment tests", () => {
       }
     });
     expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing comment text" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/commentText must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 200 if successful", async () => {
@@ -1701,19 +1701,6 @@ describe("updateDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/user/datapack/comments/report/1",
-      headers: { "mock-uuid": "" },
-      payload: {
-        flagged: 1
-      }
-    });
-    expect(updateComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
       method: "POST",
@@ -1725,6 +1712,12 @@ describe("updateDatapackComment tests", () => {
     });
     expect(updateComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({
@@ -1737,6 +1730,30 @@ describe("updateDatapackComment tests", () => {
     });
     expect(updateComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if comment ID is less than 1", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/0",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be >= 1",
+      statusCode: 400
+    });
   });
   it("should return 400 if body is missing", async () => {
     const response = await app.inject({
@@ -1748,7 +1765,31 @@ describe("updateDatapackComment tests", () => {
       }
     });
     expect(updateComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing flagged in body" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'flagged'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if body.flagged is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers,
+      payload: {
+        flagged: "not-a-number"
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/flagged must be number",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
 
@@ -1803,16 +1844,6 @@ describe("deleteDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/user/datapack/comments/1",
-      headers: { "mock-uuid": "" }
-    });
-    expect(deleteComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
       method: "DELETE",
@@ -1821,6 +1852,12 @@ describe("deleteDatapackComment tests", () => {
     });
     expect(deleteComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({
@@ -1829,6 +1866,27 @@ describe("deleteDatapackComment tests", () => {
       headers
     });
     expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment ID is less than 1", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/0",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be >= 1",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 200 if comment is successfully deleted", async () => {
