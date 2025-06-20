@@ -41,17 +41,13 @@ export const editDatapackMetadata = async function editDatapackMetadata(
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   if (!datapack) {
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
   try {
-    const response = await editDatapackMetadataRequestHandler(request.parts(), uuid, datapack);
+    const response = await editDatapackMetadataRequestHandler(request.parts(), user.uuid, datapack);
     reply.status(response.code).send({ message: response.message });
   } catch (e) {
     reply.status(500).send({ error: "Failed to edit metadata" });
@@ -68,23 +64,9 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
   reply: FastifyReply
 ) {
   const { datapack } = request.params;
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Database error" });
-    return;
-  }
-  try {
-    const metadata = await fetchUserDatapack(uuid, datapack).catch(() => {
+    const metadata = await fetchUserDatapack(user.uuid, datapack).catch(() => {
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     });
     if (!metadata) {
@@ -109,11 +91,7 @@ export const requestDownload = async function requestDownload(
   request: FastifyRequest<RequestDownloadRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { datapack } = request.params;
@@ -132,7 +110,7 @@ export const requestDownload = async function requestDownload(
       filename: fn,
       encryptedDir: ed,
       encryptedFilepath: ef
-    } = await getEncryptionDatapackFileSystemDetails(uuid, datapack);
+    } = await getEncryptionDatapackFileSystemDetails(user.uuid, datapack);
     filepath = f;
     filename = fn;
     encryptedDir = ed;
@@ -306,23 +284,14 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
   reply: FastifyReply
 ) {
   const { workshopUUID, datapackTitle } = request.params;
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0]) {
-      reply.status(401).send({ error: "Unauthorized access" });
-      return;
-    }
     const workshopId = getWorkshopIdFromUUID(workshopUUID);
     if (!workshopId) {
       reply.status(400).send({ error: "Invalid workshop UUID" });
       return;
     }
-    const result = await verifyWorkshopValidity(workshopId, user[0].userId);
+    const result = await verifyWorkshopValidity(workshopId, user.userId);
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
@@ -344,13 +313,9 @@ export const fetchWorkshopDatapack = async function fetchWorkshopDatapack(
 
 // If at some point a delete datapack function is needed, this function needs to be modified for race conditions
 export const uploadDatapack = async function uploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   try {
-    const result = await processAndUploadDatapack(uuid, request.parts());
+    const result = await processAndUploadDatapack(user.uuid, request.parts());
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;
@@ -370,18 +335,14 @@ export const userDeleteDatapack = async function userDeleteDatapack(
   request: FastifyRequest<UserDeleteDatapackRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { datapack } = request.params;
   if (!datapack) {
     reply.status(400).send({ error: "Missing datapack" });
     return;
   }
   try {
-    await deleteUserDatapack(uuid, datapack);
+    await deleteUserDatapack(user.uuid, datapack);
   } catch (e) {
     reply.status(500).send({ error: "There was an error deleting the datapack" });
     return;
@@ -465,14 +426,10 @@ export const fetchUserHistory = async function fetchUserHistory(
   request: FastifyRequest<FetchUserHistoryRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!;
   const { timestamp } = request.params;
   try {
-    const history = await getChartHistory(uuid, timestamp);
+    const history = await getChartHistory(user.uuid, timestamp);
     reply.send(history);
   } catch (e) {
     if ((e as Error).message === "Invalid datapack symlink") {
@@ -487,13 +444,9 @@ export const fetchUserHistoryMetadata = async function fetchUserHistoryMetadata(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
   try {
-    const metadata = await getChartHistoryMetadata(uuid);
+    const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
+    const metadata = await getChartHistoryMetadata(user.uuid);
     reply.send(metadata);
   } catch (e) {
     reply.status(500).send({ error: "Failed to fetch history metadata" });
@@ -509,14 +462,10 @@ export const deleteUserHistory = async function deleteUserHistory(
   request: FastifyRequest<DeleteUserHistoryRequest>,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { timestamp } = request.params;
   try {
-    await deleteChartHistory(uuid, timestamp);
+    await deleteChartHistory(user.uuid, timestamp);
     reply.send({ message: "History deleted" });
   } catch (e) {
     console.error(e);
@@ -665,10 +614,6 @@ export const fetchDatapackComments = async function fetchDatapackComments(
 ) {
   const { datapackTitle } = request.params;
 
-  if (!datapackTitle || datapackTitle.trim() === "") {
-    reply.status(400).send({ error: "Missing or invalid datapack title" });
-    return;
-  }
   try {
     const datapackComments = await findCurrentDatapackComments({ datapackTitle: datapackTitle });
     for (const comment of datapackComments) {
