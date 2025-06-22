@@ -2,7 +2,7 @@ import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from "
 import { findUser } from "../database.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
-import { downloadWorkshopFilesZip, editWorkshopDatapackMetadata } from "./workshop-routes.js";
+import { downloadWorkshopFilesZip, downloadWorkshopFile, editWorkshopDatapackMetadata, downloadWorkshopDetailsDataPack } from "./workshop-routes.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -68,8 +68,25 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     required: ["workshopId"]
   };
-  fastify.addHook("preHandler", verifyAuthority);
-  fastify.addHook("preHandler", verifyRecaptcha);
+
+  const workshopFileParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+      fileName: {type: "string"}
+    },
+    required: ["workshopId", "fileName"]
+  };
+  const workshopDataPackParams = {
+    type: "object",
+    properties: {
+      workshopId: { type: "number" },
+      datapackTitle: {type: "string"}
+    },
+    required: ["workshopId", "datapackTitle"]
+  };
+  // fastify.addHook("preHandler", verifyAuthority);
+  // fastify.addHook("preHandler", verifyRecaptcha);
   fastify.patch(
     "/:workshopUUID/datapack/:datapackTitle",
     { config: { rateLimit: moderateRateLimit }, schema: { params: editWorkshopDatapackMetadataParams } },
@@ -80,4 +97,15 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     { config: { rateLimit: moderateRateLimit }, schema: { params: workshopTitleParams } },
     downloadWorkshopFilesZip
   );
+  fastify.get(
+    "/workshop-files/:workshopId/:fileName",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopFileParams } },
+    downloadWorkshopFile
+  );
+    fastify.get(
+    "/workshop-datapack/:workshopId/:datapackTitle",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopDataPackParams } },
+    downloadWorkshopDetailsDataPack
+  );
+
 };

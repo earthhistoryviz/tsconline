@@ -65,3 +65,92 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     }
   }
 });
+
+export const fetchWorkshopFile = action (async (fileName: string, workshop: SharedWorkshop) => {
+
+  const fileURL = `/workshop/workshop-files/${workshop.workshopId}/${encodeURIComponent(fileName)}`;
+  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFileForDownload");
+  if (!recaptchaToken) return null;
+
+  const response = await fetcher(fileURL, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+
+if (!response.ok) {
+  let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+  switch (response.status) {
+    case 404:
+      errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+      break;
+    case 401:
+      errorCode = ErrorCodes.NOT_LOGGED_IN;
+      break;
+    case 500:
+      errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+      break;
+  }
+  displayServerError(response, errorCode, ErrorMessages[errorCode]);
+  return;
+}
+  
+  const file = await response.blob();
+
+  if (file) {
+    try {
+      await downloadFile(file, fileName);
+    } catch (error) {
+      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+    }
+  }
+  
+});
+
+
+export const fetchWorkshopDetailsDatapack = action (async (datapackTitle: string, workshop: SharedWorkshop) => {
+
+  const requestURL = `/workshop/workshop-datapack/${workshop.workshopId}/${datapackTitle}`
+  
+
+  const recaptchaToken = await getRecaptchaToken("fetchWorkshopDataPackForDownload");
+  if (!recaptchaToken) return null;
+
+  const response = await fetcher(requestURL, {
+    method: "GET",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+
+if (!response.ok) {
+  console.log(response);
+  let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+  switch (response.status) {
+    case 404:
+      errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+      break;
+    case 401:
+      errorCode = ErrorCodes.NOT_LOGGED_IN;
+      break;
+    case 500:
+      errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+      break;
+  }
+  displayServerError(response, errorCode, ErrorMessages[errorCode]);
+  return;
+}
+  
+const file = await response.blob();
+  if (file) {
+    try {
+      await downloadFile(file, `${datapackTitle}.zip`);
+    } catch (error) {
+      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+    }
+  }
+  
+});

@@ -11,7 +11,8 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
-import { loadRecaptcha, removeRecaptcha } from "./util";
+import { fetcher, devSafeUrl, loadRecaptcha, removeRecaptcha } from "./util";
+import { getRecaptchaToken } from "./state/actions";
 
 export const WorkshopDetails = observer(() => {
   const { state, actions } = useContext(context);
@@ -46,6 +47,7 @@ export const WorkshopDetails = observer(() => {
     return workshop;
   };
 
+ 
   const workshop = fetchWorkshop();
   const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
@@ -59,6 +61,13 @@ export const WorkshopDetails = observer(() => {
       await actions.fetchWorkshopFilesForDownload(workshop);
     }
   }
+  async function downloadWorkshopFile(fileName: string) {
+    await actions.fetchWorkshopFile(fileName, workshop);
+  }
+  async function downloadWorkshopDatapack(dataPackTitle: string) {
+    await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
+  }
+  
   if (!workshop || !id) return <PageNotFound />;
   return (
     <div className={styles.adjcontainer}>
@@ -89,7 +98,14 @@ export const WorkshopDetails = observer(() => {
                 {workshop.datapacks && workshop.datapacks.length > 0 ? (
                   workshop.datapacks.map((datapack, index) => (
                     <Typography key={index} className={styles.fileName}>
-                      • {datapack}
+                      • <a
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            downloadWorkshopDatapack(datapack);
+                            }}>
+                            {datapack}
+                        </a> 
                     </Typography>
                   ))
                 ) : (
@@ -107,9 +123,16 @@ export const WorkshopDetails = observer(() => {
                     <>
                       {workshop.files.map((file, index) => (
                         <Typography key={index} className={styles.fileName}>
-                          • {file}
+                          •   <a
+                                href="#"
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  downloadWorkshopFile(file);
+                                  }}>
+                                  {file}
+                                </a> 
                         </Typography>
-                      ))}
+                    ))}
                       <Box mt={2}>
                         {!shouldLoadRecaptcha ? (
                           <CustomTooltip

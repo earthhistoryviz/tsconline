@@ -6,8 +6,9 @@ import { SharedWorkshop } from "@tsconline/shared";
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
+import {createReadStream} from 'fs';
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
-import { verifyNonExistentFilepath } from "../util.js";
+import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
@@ -134,6 +135,104 @@ export const downloadWorkshopFilesZip = async function downloadWorkshopFilesZip(
     reply.status(500).send({ error: "An error occurred" });
   }
 };
+
+
+export const downloadWorkshopFile = async function downloadWorkshopFile(
+  request: FastifyRequest<{ Params: { workshopId: number, fileName: string} }>,
+  reply: FastifyReply
+) {
+  try{
+    // already verified uuid in verifyAuthority
+    const uuid = request.session.get("uuid")!;
+    const { workshopId, fileName} = request.params;
+
+    const user = (await findUser({ uuid }))[0]!;
+    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const directory = await getUserUUIDDirectory(workshopUUID, true);
+
+
+    var filePath = path.join(directory, "files");
+    filePath = path.join(filePath, fileName);
+
+
+    if (!(await verifyFilepath(filePath))){
+      reply.status(500).send({ error: "Invalid file path"});
+      return;
+    }
+
+    const stream = createReadStream(filePath);
+    return reply.send(stream);
+
+  } catch (e) {
+    reply.status(500).send({ error: "An error occurred" });
+  }
+};
+
+export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDetailsDataPack(
+  request: FastifyRequest<{ Params: { workshopId: number, datapackTitle: string} }>,
+  reply: FastifyReply
+) {
+  try{
+
+    // already verified uuid in verifyAuthority
+    const uuid = request.session.get("uuid")!;
+    const { workshopId, datapackTitle} = request.params;
+
+    const user = (await findUser({ uuid }))[0]!;
+    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+      reply.status(403).send({ error: "Unauthorized access" });
+      return;
+    }
+
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const directory = await getUserUUIDDirectory(workshopUUID, true);
+
+    var datapackBasePath = path.join(directory, "datapacks/");
+
+    let zipfile = path.join(datapackBasePath, `/${datapackTitle}.zip`);;
+
+    //contains path of datapack folder
+    let datapackPath = path.join(datapackBasePath, datapackTitle);
+
+
+
+    // Check if ZIP file already exists
+    let file;
+    try {
+      file = await readFile(zipfile);
+    } catch (e) {
+      const error = e as NodeJS.ErrnoException;
+      if (error.code !== "ENOENT") {
+        reply.status(500).send({ error: "An error occurred: " + e });
+        return;
+      }
+    }
+
+    //check if decrypted folder exists
+    if (!(await verifyFilepath(datapackPath))){
+      reply.status(500).send({ error: "Invalid datapack path"});
+      return;
+    }
+    try {   
+      if (!file){
+       file = await createZipFile(zipfile, datapackPath);
+      }
+      reply.status(200).send(file);
+
+    } catch(e) {
+      reply.status(500).send({ error: "Error creating Zip"});
+    }
+
+  } catch (e: any) {
+    reply.status(500).send({ error: e});
+  }
+};
+
 
 export const fetchWorkshopCoverImage = async function (
   request: FastifyRequest<{ Params: { workshopId: number } }>,

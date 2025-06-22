@@ -248,6 +248,7 @@ export function getWorkshopCoverImage(workshopId: number) {
   return devSafeUrl(`/workshop-images/${workshopId}`);
 }
 
+
 export function getHelpKeysFromPath(path: string) {
   path = decodeURIComponent(path);
   const keys = path.split("/help/")[1]?.split("/") || [];
