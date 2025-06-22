@@ -14,7 +14,6 @@ import { readFile } from "fs/promises";
 import {createReadStream} from 'fs';
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
-
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";

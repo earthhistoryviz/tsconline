@@ -10,7 +10,8 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
-import { loadRecaptcha, removeRecaptcha } from "./util";
+import { fetcher, devSafeUrl, loadRecaptcha, removeRecaptcha } from "./util";
+import { getRecaptchaToken } from "./state/actions";
 import {
   ReservedWorkshopFileKey,
   RESERVED_INSTRUCTIONS_FILENAME,
@@ -76,6 +77,7 @@ export const WorkshopDetails = observer(() => {
   };
 
  
+ 
   const workshop = fetchWorkshop();
   const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
@@ -92,10 +94,18 @@ export const WorkshopDetails = observer(() => {
     }
   }
   async function downloadWorkshopFile(fileName: string) {
-    await actions.fetchWorkshopFile(fileName, workshop);
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopFile(fileName, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
   }
   async function downloadWorkshopDatapack(dataPackTitle: string) {
-    await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
   }
   
   if (!workshop || !id) return <PageNotFound />;

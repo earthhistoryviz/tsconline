@@ -4,6 +4,7 @@ import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { downloadWorkshopFilesZip, downloadWorkshopFile, editWorkshopDatapackMetadata, downloadWorkshopDetailsDataPack, serveWorkshopHyperlinks } from "./workshop-routes.js";
 
+// import { downloadWorkshopFilesZip, downloadWorkshopFile, editWorkshopDatapackMetadata, downloadWorkshopDetailsDataPack } from "./workshop-routes.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -94,8 +95,9 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     required: ["workshopId", "filename"]
   };
-  fastify.addHook("preHandler", verifyAuthority);
-  fastify.addHook("preHandler", verifyRecaptcha);
+
+  // fastify.addHook("preHandler", verifyAuthority);
+  // fastify.addHook("preHandler", verifyRecaptcha);
   fastify.patch(
     "/:workshopUUID/datapack/:datapackTitle",
     {
@@ -133,4 +135,15 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     serveWorkshopHyperlinks
   );
+  fastify.get(
+    "/workshop-files/:workshopId/:fileName",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopFileParams } },
+    downloadWorkshopFile
+  );
+    fastify.get(
+    "/workshop-datapack/:workshopId/:datapackTitle",
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopDataPackParams } },
+    downloadWorkshopDetailsDataPack
+  );
+
 };
