@@ -10,8 +10,8 @@ import { useParams } from "react-router";
 import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
-import { assertCommentType, CommentType } from "../types";
 import { getRecaptchaToken } from "../state/actions";
+import { CommentType, assertCommentType } from "@tsconline/shared";
 
 export const Discussion = observer(() => {
   const { id } = useParams();
@@ -42,8 +42,8 @@ export const Discussion = observer(() => {
               pictureUrl: com.pictureUrl,
               dateCreated: new Date(com.dateCreated),
               flagged: Boolean(com.flagged),
-              isSelf: com.uuid === uuid,
-              commentText: com.commentText
+              commentText: com.commentText,
+              datapackTitle: com.datapackTitle
             };
             loadedComments.push(loadedComment);
           }
@@ -92,15 +92,15 @@ export const Discussion = observer(() => {
         const data = await response.json();
         const newCommentId = data.id;
         const date = new Date();
-        const newComment = {
+        const newComment: CommentType = {
           username: username,
           dateCreated: date,
           commentText: state.commentInput,
-          isSelf: true,
           id: newCommentId,
           uuid: uuid,
           flagged: false,
-          pictureUrl: pictureUrl ?? null
+          pictureUrl: pictureUrl ?? null,
+          datapackTitle: id
         };
         actions.addDatapackProfileComment(newComment);
         actions.setCommentInput("");

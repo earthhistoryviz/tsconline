@@ -54,9 +54,7 @@ beforeAll(async () => {
   const assetconfigs = JSON.parse(await fsPromises.readFile(path.join("server", "assets", "config.json"), "utf-8"));
   assertAssetConfig(assetconfigs);
   getActiveJar.mockImplementation(() => {
-    return isCI
-      ? "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar"
-      : path.join("server", assetconfigs.activeJar);
+    return path.join("server", assetconfigs.activeJar);
   });
 });
 const returnModelConversionFilepaths = (testCaseDir: string) => {
@@ -66,7 +64,6 @@ const returnModelConversionFilepaths = (testCaseDir: string) => {
   const datapackFilepath = path.join(testCaseDir, "datapack.txt");
   return { modelTextFilepath, settingsTextFilepath, outputTextFilepath, datapackFilepath };
 };
-const isCI = process.env.CI === "true" || !!process.env.GITHUB_ACTIONS;
 const conversionTestKeys = path.join("server", "__tests__", "__data__", "conversion-test-keys");
 describe("convertCrossPlotWithModelsInJar", async () => {
   const spawn = vi.spyOn(child_process, "spawn");

@@ -54,6 +54,7 @@
     "web-worker": "^1.3.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.51.1",
     "@types/color": "^3.0.6",
     "@types/d3": "^7",
     "@types/dompurify": "^3",
@@ -63,7 +64,9 @@
     "@types/react": "^18.0.27",
     "@types/react-big-calendar": "^1",
     "@types/react-dom": "^18.0.10",
+    "@types/xmldom": "^0.1.34",
     "@vitejs/plugin-react": "^4.2.1",
+    "@xmldom/xmldom": "^0.9.8",
     "typescript": "5.2.2",
     "vite": "^5.4.15",
     "vite-plugin-checker": "^0.8.0",

@@ -70,7 +70,8 @@
                 "shared/**/*",
                 "app/src/types.ts",
                 "server/src/types.ts",
-                "server/src/db/london/schema.ts"
+                "server/src/db/london/schema.ts",
+                "server/__tests__/routes.test.ts"
             ],
             "rules": {
                 "@typescript-eslint/no-explicit-any": "off"

@@ -290,6 +290,13 @@ describe("processAndUploadDatapack", () => {
     expect(isWorkshopDatapack).not.toHaveBeenCalled();
     expect(val).toEqual({ code: 401, message: "Only admins can upload official or workshop datapacks" });
   });
+  it("should return 401 if user is not admin, datapack is official, and bearer token is wrong", async () => {
+    isOfficialDatapack.mockReturnValueOnce(true);
+    const val = await processAndUploadDatapack("uuid", formData, { bearerToken: "random" });
+    expect(isOfficialDatapack).toHaveBeenCalledOnce();
+    expect(isWorkshopDatapack).not.toHaveBeenCalled();
+    expect(val).toEqual({ code: 401, message: "Only admins can upload official or workshop datapacks" });
+  });
   it("should return 401 if user is not admin and datapack is workshop", async () => {
     isOfficialDatapack.mockReturnValueOnce(false);
     isWorkshopDatapack.mockReturnValueOnce(true);

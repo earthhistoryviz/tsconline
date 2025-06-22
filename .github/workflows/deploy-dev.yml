@@ -236,6 +236,13 @@ jobs:
             echo 'DOMAIN="dev.timescalecreator.org"' >> ./server/.env
             echo 'METRICS_AUTH="${{ secrets.METRICS_AUTH }}"' >> ./server/.env
             echo 'BEARER_TOKEN="${{ secrets.BEARER_TOKEN }}"' >> ./server/.env
+            echo 'GH_UPLOAD_TOKEN="${{ secrets.GH_UPLOAD_TOKEN }}"' >> ./server/.env
+            echo 'GH_ISSUES_TOKEN="${{ secrets.GH_ISSUES_TOKEN }}"' >> ./server/.env
+            echo 'BUG_REPORT_EMAILS="${{ secrets.BUG_REPORT_EMAILS }}"' >> ./server/.env
+            echo 'LONDON_DATABASE_HOST="${{ secrets.LONDON_DATABASE_HOST }}"' >> ./server/.env
+            echo 'LONDON_DATABASE_PORT="${{ secrets.LONDON_DATABASE_PORT }}"' >> ./server/.env
+            echo 'LONDON_DATABASE_USER="${{ secrets.LONDON_DATABASE_USER }}"' >> ./server/.env
+            echo 'LONDON_DATABASE_PASSWORD="${{ secrets.LONDON_DATABASE_PASSWORD }}"' >> ./server/.env
 
 
             if [ ! -f "docker-compose-server.yml" ]; then
