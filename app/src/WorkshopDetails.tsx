@@ -14,7 +14,8 @@ import { loadRecaptcha, removeRecaptcha } from "./util";
 import {
   ReservedWorkshopFileKey,
   RESERVED_INSTRUCTIONS_FILENAME,
-  RESERVED_PRESENTATION_FILENAME
+  RESERVED_PRESENTATION_FILENAME, 
+  getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
 
@@ -83,9 +84,21 @@ export const WorkshopDetails = observer(() => {
       if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, [shouldLoadRecaptcha]);
+  
   async function downloadWorkshopFiles() {
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);
+      // If there are datapacks, download them as well
+      if (workshop.datapacks && workshop.datapacks.length > 0) {
+        for (const datapackTitle of workshop.datapacks) {
+          try {
+            await actions.fetchDatapackFiles(datapackTitle, getWorkshopUUIDFromWorkshopId(workshop.workshopId), true);
+          } catch (error) {
+            console.error("Failed to download datapack files:", error);
+            actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+          }
+        }
+      }
     } else {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }

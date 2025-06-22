@@ -2,7 +2,8 @@
   "name": "tsconline-monorepo",
   "type": "module",
   "dependencies": {
-    "fastify": "^4.27.0"
+    "fastify": "^4.27.0",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/eslint": "^8",

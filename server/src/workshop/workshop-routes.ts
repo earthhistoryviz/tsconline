@@ -17,6 +17,9 @@ import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { createReadStream } from "fs";
 import { readdir } from "node:fs/promises";
+import fs from "fs/promises";
+import os from "os";
+import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -127,7 +130,7 @@ export const downloadWorkshopFilesZip = async (
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    const filesFolder = await getWorkshopFilesPath(workshopId);
+    /*const filesFolder = await getWorkshopFilesPath(workshopId);
     const baseDir = path.dirname(filesFolder);
     const zipfile = path.resolve(baseDir, `filesFor${workshopId}.zip`);
     if (!(await verifyNonExistentFilepath(zipfile))) {
@@ -150,7 +153,43 @@ export const downloadWorkshopFilesZip = async (
         return;
       }
     }
-    reply.send(file);
+    reply.send(file);*/
+    const filesDir = await getWorkshopFilesPath(workshopId);
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const datapacksRootDir = await getUserUUIDDirectory(workshopUUID, true);
+    const datapacksDir = path.join(datapacksRootDir, "datapacks");
+
+    // Create a temp directory to hold both folders
+    const tempDir = path.join(os.tmpdir(), `workshop_zip_${workshopId}`);
+    await fs.mkdir(tempDir, { recursive: true });
+
+    // Copy filesDir and datapacksDir into tempDir (if they exist)
+    const copyIfExists = async (src: string, dest: string) => {
+      try {
+        await fs.access(src);
+        await fs.cp(src, dest, { recursive: true });
+      } catch {
+        // ignore if not exists
+      }
+    };
+    await copyIfExists(filesDir, path.join(tempDir, "files"));
+    await copyIfExists(datapacksDir, path.join(tempDir, "datapacks"));
+
+    // Create the zip
+    const zipFilePath = path.join(os.tmpdir(), `workshop_${workshopId}_all_files.zip`);
+    if (!(await verifyNonExistentFilepath(zipFilePath))) {
+      reply.status(500).send({ error: "Invalid directory path" });
+      return;
+    }
+    const zipBuffer = await createZipFile(zipFilePath, tempDir);
+
+    // Clean up tempDir
+    await fs.rm(tempDir, { recursive: true, force: true });
+    reply
+      .header("Content-Type", "application/zip")
+      .header("Content-Disposition", `attachment; filename="workshop_${workshopId}_all_files.zip"`)
+      .send(zipBuffer);
+
   } catch (error) {
     logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });
