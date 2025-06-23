@@ -99,9 +99,9 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const downloadDatapackFilesZipParams = {
     type: "object",
     properties: {
-      datapackTitle: { type: "string" },
-      uuid: { type: "string" },
-      isPublic: { type: "boolean" }
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1 },
+      isPublic: { type: "boolean"}
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };

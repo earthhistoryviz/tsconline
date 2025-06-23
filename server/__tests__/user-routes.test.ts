@@ -1992,3 +1992,34 @@ describe("fetchUserDatapacksMetadata", async () => {
     ]);
   });
 });
+
+describe("downloadDatapackFilesZip tests", () => {
+  it("should return 400 if datapack title is missing", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files///`,
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if datapack title is invalid", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/files/title//`,
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must match format \"uuid\"",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+})
