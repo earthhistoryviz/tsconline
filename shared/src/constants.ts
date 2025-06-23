@@ -240,6 +240,7 @@ export const defaultColumnRootConstant: ColumnInfo = {
   children: [],
   parent: null,
   units: "",
+  isNegativeUnits: false,
   columnDisplayType: "RootColumn",
   show: true,
   expanded: true
