@@ -18,7 +18,6 @@ import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
-import { createReadStream } from "fs";
 import { readdir } from "node:fs/promises";
 
 export const serveWorkshopHyperlinks = async (
@@ -166,12 +165,12 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
   reply: FastifyReply
 ) {
   try{
-    // already verified uuid in verifyAuthority
-    const uuid = request.session.get("uuid")!;
     const { workshopId, fileName} = request.params;
 
-    const user = (await findUser({ uuid }))[0]!;
-    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+    // user exists, already verified in verifyAuthority
+    const user = request.user!;
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
@@ -204,11 +203,12 @@ export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDe
   try{
 
     // already verified uuid in verifyAuthority
-    const uuid = request.session.get("uuid")!;
     const { workshopId, datapackTitle} = request.params;
 
-    const user = (await findUser({ uuid }))[0]!;
-    if (!user.isAdmin && !(await isUserInWorkshop(user.userId, workshopId))) {
+    // user exists, already verified in verifyAuthority
+    const user = request.user!;
+    const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
+    if (!isAuthorized) {
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
