@@ -80,6 +80,11 @@ export const fetchWorkshopFile = action (async (fileName: string, workshop: Shar
     }
   });
 
+  const text = await response.text()
+  console.log(text);
+  console.log(response.status);
+
+
 if (!response.ok) {
   let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
   switch (response.status) {
