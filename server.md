@@ -2005,3 +2005,15 @@ This flowchart shows all the current flows for the login routes:
 ## Database Structure:
 
 ![database](assets/Database-Structure.drawio.svg)
+
+## Translations
+
+TSC online can change between different languages (currently English and Chinese). Each language has a translation file, stored in the `shared` directory, that the application pulls from. Whenever a developer wants to add or modify text in the frontend, they must add/modify translations in the english file. The developer can accomplish this by running `yarn modify-translations` in the server directory.
+
+### Modifying Translations
+
+The `modify-translations` script creates a copy of the `en.json` translation file, which is named `dev-translation-en.json`. The developer can modify this file, and any changes made will be reflected in the relevent files. For example, changing a translation in `dev-translation-en.json` will change the corresponding translation in `en.csv`. Any removal of a key in the `dev-translation-en.json` file will remove the corresponding key in other languages if it exists. For example, if the key `login` exists in `zh.json` as well, then removing it in `dev.json` will remove it in `zh.json`. For more info on the file structure of translations, checkout out the `shared` docs.
+
+### Verifying Translations
+
+There are two checks run on github-actions that verifies translations. First is checking that the CSV files and JSON files have equivalent translations. This is because the CSV files are the files used by external translators, and we have to be sure that they match what shows up on the website. Second is checking that the translations that exist in other languages are a subset of the translations that exist in english. This is because we've decided that the english translation is the basis of our website.
