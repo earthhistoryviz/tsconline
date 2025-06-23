@@ -2008,11 +2008,15 @@ This flowchart shows all the current flows for the login routes:
 
 ## Translations
 
-TSC online can change between different languages (currently English and Chinese). Each language has a translation file, stored in the `shared` directory, that the application pulls from. Whenever a developer wants to add or modify text in the frontend, they must add/modify translations in the english file. The developer can accomplish this by running `yarn modify-translations` in the server directory.
+TSC online can change between different languages (currently English and Chinese). Each language has a translation file that the application pulls from.
+
+### File Structure
+
+Each language has a `CSV` file and a `JSON` file, where the CSV is the master and the JSON is the slave. The JSON file is overwritten by the translations in the CSV file everytime the developer runs `yarn dev`. The CSV files are positioned as the master because they are the files that the translators will be working on.
 
 ### Modifying Translations
 
-The `modify-translations` script creates a copy of the `en.json` translation file, which is named `dev-translation-en.json`. The developer can modify this file, and any changes made will be reflected in the relevent files. For example, changing a translation in `dev-translation-en.json` will change the corresponding translation in `en.csv`. Any removal of a key in the `dev-translation-en.json` file will remove the corresponding key in other languages if it exists. For example, if the key `login` exists in `zh.json` as well, then removing it in `dev.json` will remove it in `zh.json`. For more info on the file structure of translations, checkout out the `shared` docs.
+The `yarn modify-translations` script creates a copy of the `en.json` translation file, which is named `dev-translation-en.json`. The developer can modify this file, and any changes made will be reflected in the relevent files. For example, changing a translation in `dev-translation-en.json` will change the corresponding translation in `en.csv`. Any removal of a key in the `dev-translation-en.json` file will remove the corresponding key in other languages if it exists. For example, if the key `login` exists in `zh.json` as well, then removing it in `dev.json` will remove it in `zh.json`.
 
 ### Verifying Translations
 
