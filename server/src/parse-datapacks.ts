@@ -481,18 +481,6 @@ export async function getAllEntries(
     }
     allEntries.set(parent, parsedChildren);
   }
-  console.log({
-    title: chartTitle,
-    units: ageUnits,
-    isNegativeUnits: isNegativeUnitsDefault,
-    top,
-    base,
-    chronostrat: defaultChronostrat,
-    datapackDate: date,
-    vertScale,
-    version: formatVersion,
-    filePropertyLines
-  })
   return {
     title: chartTitle,
     units: ageUnits,
