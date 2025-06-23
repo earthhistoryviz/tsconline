@@ -278,6 +278,11 @@
   color: black;
 }
 
+.disabledLink {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (max-width: 590px) {
   .di {
     width: 200px;

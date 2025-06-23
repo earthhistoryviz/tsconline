@@ -127,6 +127,13 @@ const members = [
     homeTown: "Denville, NJ",
     timeWorked: "2024 - Present",
     proPic: "MichaelPic.jpg"
+  },
+  {
+    name: "Ellis Selznick",
+    role: "Member",
+    homeTown: "Tucson, AZ",
+    timeWorked: "2024 - Present",
+    proPic: "EllisSelznick.jpg"
   }
 ];
 

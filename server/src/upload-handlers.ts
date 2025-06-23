@@ -14,10 +14,11 @@ import {
   assertUserDatapack,
   isDatapackTypeString,
   isDateValid,
-  isUserDatapack
+  isUserDatapack,
+  getWorkshopUUIDFromWorkshopId,
+  DatapackMetadata
 } from "@tsconline/shared";
 import { copyFile, mkdir, readFile, readdir, rename, rm, writeFile } from "fs/promises";
-import { DatapackMetadata } from "@tsconline/shared";
 import { assetconfigs, checkFileExists, getBytes, makeTempFilename, verifyNonExistentFilepath } from "./util.js";
 import path, { extname, join } from "path";
 import {
@@ -51,7 +52,8 @@ import { pipeline } from "stream/promises";
 import { tmpdir } from "os";
 import { OperationResult } from "./types.js";
 import { findUser } from "./database.js";
-import { getWorkshopUUIDFromWorkshopId, getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
+import { getWorkshopCoverPath, getWorkshopFilesPath } from "./workshop/workshop-util.js";
+import logger from "./error-logger.js";
 
 async function userUploadHandler(filepath?: string, tempProfilePictureFilepath?: string) {
   filepath && (await rm(filepath, { force: true }));
@@ -394,7 +396,8 @@ export async function fetchMapPackImageFilepath(uuid: string, datapackTitle: str
 
 export async function processMultipartPartsForDatapackUpload(
   uuid: string | undefined,
-  parts: AsyncIterableIterator<Multipart>
+  parts: AsyncIterableIterator<Multipart>,
+  options?: { bearerToken?: string }
 ): Promise<
   | { fields: { [key: string]: string }; file: MultipartFile; pdfFields?: { [fileName: string]: string } }
   | OperationResult
@@ -438,8 +441,10 @@ export async function processMultipartPartsForDatapackUpload(
           return { code: 415, message: "Invalid file type for datapack file" };
         }
         if (file.file.bytesRead > 3000 && !isProOrAdmin) {
-          await cleanupTempFiles();
-          return { code: 413, message: "File is too large" };
+          if (!(process.env.BEARER_TOKEN && options?.bearerToken === process.env.BEARER_TOKEN)) {
+            await cleanupTempFiles();
+            return { code: 413, message: "File is too large" };
+          }
         }
         const { code, message } = await uploadFileToFileSystem(file, filepath);
         if (code !== 200) {
@@ -494,19 +499,16 @@ export async function processMultipartPartsForDatapackUpload(
   };
 }
 
-export async function uploadFilesToWorkshop(workshopId: number, file: MultipartFile) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
+export async function uploadFileToWorkshop(workshopId: number, file: MultipartFile, filename?: string) {
   let filesFolder;
   try {
-    filesFolder = await getWorkshopFilesPath(directory);
+    filesFolder = await getWorkshopFilesPath(workshopId);
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Files Directory." };
   }
 
-  const filename = file.filename;
-  const filePath = join(filesFolder, filename);
+  const filePath = join(filesFolder, filename || file.filename);
   try {
     const { code, message } = await uploadFileToFileSystem(file, filePath);
     if (code !== 200) {
@@ -524,11 +526,9 @@ export async function uploadFilesToWorkshop(workshopId: number, file: MultipartF
 }
 
 export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture: MultipartFile) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
   let filesFolder;
   try {
-    filesFolder = await getWorkshopCoverPath(directory);
+    filesFolder = await getWorkshopCoverPath(workshopId);
   } catch (error) {
     console.error(error);
     return { code: 500, message: error instanceof Error ? error.message : "Invalid Workshop Cover Directory." };
@@ -559,12 +559,9 @@ export async function uploadCoverPicToWorkshop(workshopId: number, coverPicture:
 }
 
 export async function fetchWorkshopCoverPictureFilepath(workshopId: number) {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
-
   let filesFolder;
   try {
-    filesFolder = await getWorkshopCoverPath(directory);
+    filesFolder = await getWorkshopCoverPath(workshopId);
   } catch (error) {
     console.error(error);
     return null;
@@ -592,7 +589,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
   try {
     datapacksDirectory = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   } catch (error) {
-    console.error(error);
+    logger.error(error);
     return [];
   }
   try {
@@ -600,7 +597,7 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
     const folders = (await entries).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
     return folders;
   } catch (error) {
-    console.error(`Error reading directory ${directory}:`, error);
+    logger.error(error);
     return [];
   }
 }
@@ -611,11 +608,9 @@ export async function getWorkshopDatapacksNames(workshopId: number): Promise<str
  * @returns the name of all files of a workshop
  */
 export async function getWorkshopFilesNames(workshopId: number): Promise<string[]> {
-  const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-  const directory = await getUserUUIDDirectory(workshopUUID, true);
   let filesFolder;
   try {
-    filesFolder = await getWorkshopFilesPath(directory);
+    filesFolder = await getWorkshopFilesPath(workshopId);
   } catch (error) {
     console.error(error);
     return [];
@@ -629,7 +624,7 @@ export async function getWorkshopFilesNames(workshopId: number): Promise<string[
     if (error.code === "ENOENT") {
       return [];
     }
-    console.error(`Error reading directory ${filesFolder}:`, error);
+    logger.error(error);
     return [];
   }
 }

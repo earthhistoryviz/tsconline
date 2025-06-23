@@ -31,6 +31,20 @@ export const MAX_DATAPACK_NOTES_LENGTH = 200;
 export const MAX_DATAPACK_REFERENCES_ALLOWED = 30;
 export const MAX_DATAPACK_REFERENCE_LENGTH = 100;
 
+export const RESERVED_PRESENTATION_FILENAME = ".reserved_presentation.pdf";
+export const RESERVED_INSTRUCTIONS_FILENAME = ".reserved_instructions.pdf";
+export type ReservedWorkshopFileKey = "presentation" | "instructions";
+export const filenameInfoMap: Record<ReservedWorkshopFileKey, { actualFilename: string; displayName: string }> = {
+  presentation: {
+    actualFilename: RESERVED_PRESENTATION_FILENAME,
+    displayName: "Presentation.pdf"
+  },
+  instructions: {
+    actualFilename: RESERVED_INSTRUCTIONS_FILENAME,
+    displayName: "Instructions.pdf"
+  }
+};
+
 export const allColumnTypes = [
   "Block",
   "Facies",

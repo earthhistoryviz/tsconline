@@ -1,4 +1,4 @@
-import { throwError } from "@tsconline/shared";
+import { CommentType, throwError } from "@tsconline/shared";
 import { Generated, Insertable, Selectable, Updateable } from "kysely";
 
 export interface Database {
@@ -48,9 +48,10 @@ export interface WorkshopTable {
   title: string;
   start: string;
   end: string;
-  regLink?: string;
+  regLink: string | null;
   regRestrict: number;
   creatorUUID: string;
+  description: string | null;
 }
 
 export interface UsersWorkshopsTable {
@@ -102,6 +103,10 @@ export type Email = {
   action: string;
 };
 
+export type CommentsEmail = Omit<Email, "action" | "preHeader"> & {
+  comments: CommentType[];
+};
+
 export type AssetConfig = {
   activeJar: string;
   decryptionJar: string;
@@ -149,6 +154,20 @@ export function assertEmail(o: any): asserts o is Email {
   if (typeof o.action !== "string") throwError("Email", "action", "string", o.action);
   if (o.link && typeof o.link !== "string") throwError("Email", "link", "string", o.link);
   if (o.buttonText && typeof o.buttonText !== "string") throwError("Email", "buttonText", "string", o.buttonText);
+}
+
+export function assertCommentsEmail(o: any): asserts o is CommentsEmail {
+  if (typeof o !== "object" || !o) throw "CommentsEmail must be an object";
+  if (typeof o.from !== "string") throwError("CommentsEmail", "from", "string", o.from);
+  if (typeof o.to !== "string") throwError("CommentsEmail", "to", "string", o.to);
+  if (typeof o.subject !== "string") throwError("CommentsEmail", "subject", "string", o.subject);
+  if (typeof o.title !== "string") throwError("CommentsEmail", "title", "string", o.title);
+  if (typeof o.message !== "string") throwError("CommentsEmail", "message", "string", o.message);
+  if (o.link && typeof o.link !== "string") throwError("CommentsEmail", "link", "string", o.link);
+  if (o.buttonText && typeof o.buttonText !== "string")
+    throwError("CommentsEmail", "buttonText", "string", o.buttonText);
+  if (typeof o.comments !== "object" || !Array.isArray(o.comments))
+    throwError("CommentsEmail", "comments", "array", o.comments);
 }
 
 export function assertFileMetadata(o: any): asserts o is FileMetadata {
