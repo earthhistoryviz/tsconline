@@ -204,16 +204,26 @@ export async function generateChart(
       let stdout = "";
       let stderr = "";
       let error = "";
+      let leftover = "";
 
       javaProcess.stdout.on("data", (data) => {
-        const lines = data.toString().split("\n");
+        const combined = leftover + data.toString();
+        const lines = combined.split("\n");
+        leftover = lines.pop() ?? "";
+
         for (const line of lines) {
           const status = parseJavaOutputLine(line, filenameMap);
-          if (status) {
-            onProgress(status);
-          }
+          if (status) onProgress(status);
         }
+
         stdout += data;
+      });
+
+      javaProcess.stdout.on("end", () => {
+        if (leftover) {
+          const status = parseJavaOutputLine(leftover, filenameMap);
+          if (status) onProgress(status);
+        }
       });
 
       javaProcess.stderr.on("data", (data) => {
