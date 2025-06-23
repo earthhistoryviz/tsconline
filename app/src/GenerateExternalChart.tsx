@@ -12,6 +12,16 @@ export const GenerateExternalChart: React.FC = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const datapackTitle = queryParams.get("datapackTitle");
+  const chartConfig = queryParams.get("chartConfig");
+  const parsedBase = parseFloat(queryParams.get("baseVal") ?? "");
+  const baseVal = isNaN(parsedBase) ? 10 : parsedBase;
+  const parsedTop = parseFloat(queryParams.get("topVal") ?? "");
+  const topVal = isNaN(parsedTop) ? 0 : parsedTop;
+  const parsedStep = parseFloat(queryParams.get("unitStep") ?? "");
+  const unitStep = isNaN(parsedStep) ? 0.1 : parsedStep;
+  const unitType = queryParams.get("unitType") ?? "Ma";
+  const minMaxPlot = queryParams.get("minMaxPlot"); // treatise use only: min_total-max_total-min_new-max_new-min_extinct-max_extinct
+
   const { actions } = useContext(context);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -34,22 +44,7 @@ export const GenerateExternalChart: React.FC = () => {
           console.error("Error: Datapack not found. Title:", datapackTitle);
           return;
         }
-
-        const internalDatapack = await actions.fetchDatapack(
-          {
-            isPublic: true,
-            title: "TimeScale Creator Internal Datapack",
-            type: "official"
-          },
-          { signal: controller.signal }
-        );
-        if (!internalDatapack) {
-          console.error("Error: Internal Datapack not found.");
-          return;
-        }
-
         actions.addDatapack(fetchedDatapack);
-        actions.addDatapack(internalDatapack);
 
         const externalDatapackConfig: DatapackConfigForChartRequest = {
           storedFileName: fetchedDatapack.storedFileName,
@@ -58,43 +53,65 @@ export const GenerateExternalChart: React.FC = () => {
           type: "official"
         };
 
-        const internalDatapackConfig: DatapackConfigForChartRequest = {
-          storedFileName: internalDatapack.storedFileName,
-          title: internalDatapack.title,
-          isPublic: internalDatapack.isPublic,
-          type: "official"
-        };
+        if (chartConfig === "Internal") {
+          const internalDatapack = await actions.fetchDatapack(
+            {
+              isPublic: true,
+              title: "TimeScale Creator Internal Datapack",
+              type: "official"
+            },
+            { signal: controller.signal }
+          );
+          if (!internalDatapack) {
+            console.error("Error: Internal Datapack not found.");
+            return;
+          }
+          actions.addDatapack(internalDatapack);
 
-        await actions.processDatapackConfig([internalDatapackConfig, externalDatapackConfig]);
+          const internalDatapackConfig: DatapackConfigForChartRequest = {
+            storedFileName: internalDatapack.storedFileName,
+            title: internalDatapack.title,
+            isPublic: internalDatapack.isPublic,
+            type: "official"
+          };
+          await actions.processDatapackConfig([internalDatapackConfig, externalDatapackConfig]);
+          actions.toggleSettingsTabColumn("Geomagnetic Polarity");
+          actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
+          actions.toggleSettingsTabColumn("Microfossils");
+          actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
+        } else {
+          await actions.processDatapackConfig([externalDatapackConfig]);
+        }
 
-        actions.toggleSettingsTabColumn("Geomagnetic Polarity");
-        actions.toggleSettingsTabColumn("Marine Macrofossils (Mesozoic-Paleozoic)");
-        actions.toggleSettingsTabColumn("Microfossils");
-        actions.toggleSettingsTabColumn("Global Reconstructions (R. Blakey)");
+        // !isNaN here isn't redundant, reason is because 0 and negative numbers need to also work
+        // This is mainly to warn users one of their inputs didn't work
+        if (isNaN(parsedTop) || isNaN(parsedBase) || isNaN(parsedStep)) {
+          console.warn(
+            "Base Unit Value, Top Unit Value, and Unit Step must ALL be provided with number values. Using Default."
+          );
+          console.warn("Provided values: baseVal: ", baseVal, ", topVal: ", topVal, ", unitStep: ", unitStep);
+        }
 
-        const chartInfo = queryParams.get("chartInfo");
-        if (chartInfo) {
-          const parts = chartInfo.split("-");
-          if (parts.length == 8) {
-            const oldestTime = parseInt(parts[0], 10);
-            const newestTime = parseInt(parts[1], 10);
-            if (isNaN(oldestTime) || isNaN(newestTime)) {
-              console.warn(
-                `Warning: Oldest time or newest time is NaN. Oldest time: ${oldestTime}, Newest time: ${newestTime}`
-              );
-            } else {
-              if (oldestTime <= newestTime) {
-                console.warn(
-                  `Warning: Oldest time should be greater than newst time. Oldest time: ${oldestTime}, Newest time: ${newestTime}`
-                );
-              } else {
-                actions.setBaseStageAge(oldestTime, "Ma");
-                actions.setTopStageAge(newestTime, "Ma");
-                actions.setUnitsPerMY(0.1, "Ma");
-              }
-            }
+        try {
+          if (topVal > baseVal) {
+            console.warn("Top Unit Value must be less than Base Unit Value. No changes made.");
+          } else {
+            actions.setBaseStageAge(baseVal, unitType);
+            actions.setTopStageAge(topVal, unitType);
+          }
+          if (unitStep <= 0) {
+            console.warn("Unit Step must be greater than 0. No changes made.");
+          } else {
+            actions.setUnitsPerMY(unitStep, unitType);
+          }
+        } catch (err) {
+          console.warn("Failed to set stage ages or unit steps: ", err);
+        }
 
-            const values = parts.slice(2).map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
+        if (chartConfig === "Internal" && minMaxPlot) {
+          const parts = minMaxPlot.split("-");
+          if (parts.length == 6) {
+            const values = parts.map(Number); // [minTotal, maxTotal, minNew, maxNew, minExtinct, maxExtinct]
             const columnNames = ["Total", "New", "Extinct"];
             for (let i = 0; i < columnNames.length; i++) {
               const columnInfo = state.settingsTabs.columnHashMap.get(`${datapackTitle} ${columnNames[i]}-Genera`);
@@ -115,14 +132,11 @@ export const GenerateExternalChart: React.FC = () => {
             }
           } else {
             console.warn(
-              "Warning: chartInfo format is incorrect. No changes to settings. Expected 8 parts, got:",
+              "Warning: chartInfo format is incorrect. No changes to settings. Expected 6 parts, got:",
               parts.length
             );
           }
-        } else {
-          console.warn("Warning: chartInfo not found in URL. No changes to step and time settings");
         }
-
         actions.initiateChartGeneration(navigate, location.pathname);
       } catch (error) {
         actions.pushError(ErrorCodes.USER_FETCH_DATAPACK_FAILED);

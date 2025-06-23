@@ -270,31 +270,20 @@ server.get("/facies-patterns", (_request, reply) => {
   }
 });
 
-const strictRateLimit = {
+const isTestEnv = process.env.NODE_ENV === "test";
+const rateLimitConfig = (max: number) => ({
   config: {
     rateLimit: {
-      max: 10,
-      timeWindow: 1000 * 60
+      max: isTestEnv ? 100000 : max,
+      timeWindow: 1000 * 60 * (isTestEnv ? 60 : 1)
     }
   }
-};
+});
 
-const moderateRateLimit = {
-  config: {
-    rateLimit: {
-      max: 20,
-      timeWindow: 1000 * 60
-    }
-  }
-};
-const looseRateLimit = {
-  config: {
-    rateLimit: {
-      max: 30,
-      timeWindow: 1000 * 60
-    }
-  }
-};
+const strictRateLimit = rateLimitConfig(10);
+const moderateRateLimit = rateLimitConfig(20);
+const looseRateLimit = rateLimitConfig(30);
+
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
@@ -350,11 +339,10 @@ server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
 server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
 server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
 server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
-
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
-server.post("/auth/session-check", moderateRateLimit, loginRoutes.sessionCheck);
+server.post("/auth/session-check", strictRateLimit, loginRoutes.sessionCheck);
 server.post("/auth/logout", moderateRateLimit, loginRoutes.logout);
 server.post("/auth/verify", strictRateLimit, loginRoutes.verifyEmail);
 server.post("/auth/resend", moderateRateLimit, loginRoutes.resendVerificationEmail);

@@ -44,18 +44,13 @@ describe("runJavaEncrypt", async () => {
     }
   });
   let jarFilePath = "";
-  let resultPath = "server/__tests__/__data__/encryption-test-generated-file";
-  if (await checkFileExists("/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar")) {
-    jarFilePath = "/home/runner/work/tsconline/tsconline/server/assets/jars/testUsageJar.jar";
-    resultPath = "/home/runner/work/tsconline/tsconline/server/__tests__/__data__/encryption-test-generated-file";
-  } else {
-    try {
-      const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
-      assertAssetConfig(contents);
-      jarFilePath = "server/" + contents.activeJar;
-    } catch (e) {
-      throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
-    }
+  const resultPath = "server/__tests__/__data__/encryption-test-generated-file";
+  try {
+    const contents = JSON.parse((await readFile("server/assets/config.json")).toString());
+    assertAssetConfig(contents);
+    jarFilePath = "server/" + contents.activeJar;
+  } catch (e) {
+    throw new Error("ERROR: Failed to load local jar file path from assets/config.json.  Error was: " + e);
   }
   if (!jarFilePath) throw new Error("jar file path shouldn't be empty");
   it("should correctly encrypt an unencrypted TSCreator txt file", { timeout: 20000 }, async () => {
