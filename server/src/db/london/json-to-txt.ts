@@ -105,7 +105,9 @@ async function processEventColumns(
       }
       //for blank space between columns for tscreator to parse
       columnLines.push("");
-      organizeColumn(column.path!, column.columnx!, columnLines, pathDict, linesDict);
+      if (column.path && column.columnx) {
+        organizeColumn(column.path, column.columnx, columnLines, pathDict, linesDict);
+      }
     }
   }
   return;
@@ -189,7 +191,9 @@ async function processBlockColumns(
         columnLines.push(line);
       }
       columnLines.push("");
-      organizeColumn(column.path!, column.columnx!, columnLines, pathDict, linesDict);
+      if (column.path && column.columnx) {
+        organizeColumn(column.path, column.columnx, columnLines, pathDict, linesDict);
+      }
     }
   }
   return;
@@ -251,6 +255,10 @@ async function linesFromDicts(pathDict: StringDictSet, linesDict: StringDict) {
 
 // custom split function that handles paths with "/"'s that are not meant to split the path, as well as "/"'s that are part of the group name
 const customSplit = (path: string): string[] => {
+  // return empty array if path is empty or only contains whitespace
+  if (path === "" || path.trim() === "") {
+    return [];
+  }
   const parts: string[] = [];
   let currentPart = "";
   let parentDepth = 0;
@@ -263,14 +271,9 @@ const customSplit = (path: string): string[] => {
       parentDepth = Math.max(parentDepth - 1, 0);
       currentPart += char;
     } else if (char === "/" && parentDepth === 0) {
-      if (!(path[i - 1] === " " && path[i + 1] === " ")) {
-        // split here
-        parts.push(currentPart.trim());
-        currentPart = "";
-      } else {
-        // slash is part of folder name (surrounded by spaces)
-        currentPart += char;
-      }
+      // split here
+      parts.push(currentPart.trim());
+      currentPart = "";
     } else {
       currentPart += char;
     }
