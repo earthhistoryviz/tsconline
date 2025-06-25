@@ -8,14 +8,6 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
-import {
-  fetchPublicUserDatapack,
-  uploadExternalDatapack,
-  fetchUserHistory,
-  fetchUserHistoryMetadata,
-  deleteUserHistory,
-  fetchDatapackComments
-} from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
@@ -63,7 +55,8 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   return {
     ...actual,
     isPartialDatapackMetadata: vi.fn().mockReturnValue(true),
-    getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid")
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid"),
+    checkUserAllowedDownloadDatapack: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -156,7 +149,8 @@ vi.mock("../src/user/user-handler", () => {
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
-    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
+    downloadDatapackFilesZip: vi.fn().mockResolvedValue(Buffer.from("test"))
   };
 });
 
@@ -1517,77 +1511,151 @@ describe("deleteUserHistory tests", () => {
   });
 });
 
-describe("fetchDatapacksFiles tests", () => {
-  const findUser = vi.spyOn(database, "findUser");
+describe("downloadPrivateDatapackFilesZip tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
-  it("should return 401 if user is not logged in", async () => {
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const checkUserAllowedDownloadDatapack = vi.spyOn(shared, "checkUserAllowedDownloadDatapack");
+  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  it("should return 400 if title is empty", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/title/12345/true`,
-      headers: { "mock-uuid": "" }
-    });
-    expect(response.statusCode).toBe(401);
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-  });
-
-  it("should reply 401 if user is not found in database", async () => {
-    findUser.mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files/title/12345/true`,
+      url: `/user/datapack/download/private/files//`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
-
-  it("should return 401 if datapackTitle is invalid", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files/invalid:title/12345/true`,
-      headers
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
     });
     expect(response.statusCode).toBe(400);
-    expect(await response.json()).toEqual({ error: "Missing datapack title" });
   });
-
-  it("should return 500 if the files directory is invalid", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 400 if uuid is empty", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/`,
       headers
     });
-
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
   });
-
-  it("should return 500 if zipfile path is not valid or already exists", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 404 if the datapack is not found", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Datapack not found"));
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
       headers
     });
-
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(404);
+    expect(await response.json()).toEqual({ error: "Datapack not found" });
   });
-
-  it("should return 500 if an unknown error occurs while reading", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 403 if the user is not allowed to download the datapack", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
       headers
     });
-
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized to download this datapack" });
+  });
+  it("should return 500 if an error occurred in downloadDatapackFilesZip", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(true);
+    downloadDatapackFilesZip.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(await response.json()).toEqual({ error: "Error downloading datapack files zip" });
     expect(response.statusCode).toBe(500);
+    expect(checkUserAllowedDownloadDatapack).toHaveBeenCalledOnce();
+    expect(downloadDatapackFilesZip).toHaveBeenCalledOnce();
+  });
+  it("should return 200 and download the datapack files zip", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(true);
+    downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(checkUserAllowedDownloadDatapack).toHaveBeenCalledOnce();
+    expect(downloadDatapackFilesZip).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(response.rawPayload).toEqual(Buffer.from("zip content"));
+  });
+});
+describe("downloadPublicDatapackFilesZip tests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  it("should return 400 if title is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files//`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if uuid is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/title/`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 200 and download the datapack files zip", async () => {
+    const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+    downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/${filename}/${testUser.uuid}`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(200);
+    expect(response.rawPayload).toEqual(Buffer.from("zip content"));
   });
 });
 
@@ -2017,9 +2085,9 @@ describe("downloadDatapackFilesZip tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "params/uuid must match format \"uuid\"",
+      message: 'params/uuid must match format "uuid"',
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
   });
-})
+});

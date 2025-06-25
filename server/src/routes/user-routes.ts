@@ -4,30 +4,25 @@ import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encry
 import {
   assetconfigs,
   checkHeader,
-  extractMetadataFromDatapack,
-  verifyFilepath,
-  verifyNonExistentFilepath
-} from "../util.js";
+  extractMetadataFromDatapack} from "../util.js";
 import {
   createDatapackComment,
   deleteComment,
   findCurrentDatapackComments,
   findDatapackComment,
-  findUser,
   getActiveWorkshopsUserIsIn,
   updateComment
 } from "../database.js";
-import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import {
+  deleteUserDatapack,
+  downloadDatapackFilesZip,
+  fetchAllUsersDatapacks,
+  fetchUserDatapack
+} from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { DatapackMetadata, getWorkshopUUIDFromWorkshopId } from "@tsconline/shared";
-import {
-  getPDFFilesDirectoryFromDatapackDirectory,
-  getUsersDatapacksDirectoryFromUUIDDirectory,
-  getUserUUIDDirectory
-} from "../user/fetch-user-files.js";
-import path from "path";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownloadDatapack } from "@tsconline/shared";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
 
@@ -477,69 +472,42 @@ interface DownloadDatapackFilesZipRequest extends RouteGenericInterface {
   Params: {
     datapackTitle: string;
     uuid: string;
-    isPublic: boolean;
   };
 }
-export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
+export const downloadPublicDatapackFilesZip = async function downloadPublicDatapackFilesZip(
   request: FastifyRequest<DownloadDatapackFilesZipRequest>,
   reply: FastifyReply
 ) {
-  const { datapackTitle, uuid, isPublic } = request.params;
-
-  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
-    reply.status(400).send({ error: "Missing datapack title" });
-    return;
-  }
-
-  const directory = await getUserUUIDDirectory(uuid, isPublic);
-  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-  const datapackFolder = path.join(datapacksFolder, datapackTitle);
-
-  if (!datapackFolder.startsWith(datapacksFolder)) {
-    reply.status(400).send({ error: "Invalid datapack title" });
-    return;
-  }
-
-  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
-  if (!(await verifyFilepath(filesDir))) {
-    reply.status(500).send({ error: "Invalid directory path" });
-    return;
-  }
-  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`); //could be non-existent
-  if (!(await verifyNonExistentFilepath(zipfile))) {
-    reply.status(500).send({ error: "Invalid directory path" });
-    return;
-  }
-  if (!zipfile.startsWith(path.join(process.cwd(), directory))) {
-    reply.status(500).send({ error: "Invalid directory path" });
-    return;
-  }
   try {
-    let file;
-    try {
-      if (!zipfile.startsWith(process.cwd())) {
-        reply.status(500).send({ error: "Invalid directory path" });
-      }
-      file = await readFile(zipfile);
-    } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code !== "ENOENT") {
-        reply.status(500).send({ error: "An error occurred: " + e });
-        return;
-      }
-    }
-
-    if (!file) {
-      file = await createZipFile(zipfile, filesDir);
-    }
-    reply.send(file);
+    const { datapackTitle, uuid } = request.params;
+    reply.send(await downloadDatapackFilesZip(uuid, datapackTitle));
   } catch (e) {
-    const error = e as NodeJS.ErrnoException;
-    if (error.code === "ENOENT") {
-      reply.status(404).send({ error: "Failed to process the file" });
-    } else {
-      reply.status(500).send({ error: "An error occurred: " + e });
+    console.error(e);
+    reply.status(500).send({ error: "Error downloading datapack files zip" });
+  }
+};
+export const downloadPrivateDatapackFilesZip = async function downloadPrivateDatapackFilesZip(
+  request: FastifyRequest<DownloadDatapackFilesZipRequest>,
+  reply: FastifyReply
+) {
+  const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
+  const { datapackTitle, uuid } = request.params;
+  try {
+    const datapackMetadata = await fetchUserDatapack(uuid, datapackTitle).catch(() => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+    });
+    if (!datapackMetadata) {
+      reply.status(404).send({ error: "Datapack not found" });
+      return;
     }
+    if (!checkUserAllowedDownloadDatapack({ isAdmin: !!user.isAdmin, uuid: user.uuid }, datapackMetadata)) {
+      reply.status(403).send({ error: "Unauthorized to download this datapack" });
+      return;
+    }
+    reply.send(await downloadDatapackFilesZip(uuid, datapackTitle));
+  } catch (e) {
+    reply.status(500).send({ error: "Error downloading datapack files zip" });
+    console.error(e);
   }
 };
 

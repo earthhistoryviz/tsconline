@@ -6,7 +6,7 @@ import {
   uploadDatapack,
   userDeleteDatapack,
   fetchWorkshopDatapack,
-  downloadDatapackFilesZip,
+  downloadPublicDatapackFilesZip,
   uploadDatapackComment,
   updateDatapackComment,
   deleteDatapackComment,
@@ -15,7 +15,8 @@ import {
   fetchUserHistoryMetadata,
   fetchUserHistory,
   deleteUserHistory,
-  fetchDatapackComments
+  fetchDatapackComments,
+  downloadPrivateDatapackFilesZip
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -100,10 +101,9 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     type: "object",
     properties: {
       datapackTitle: { type: "string", minLength: 1 },
-      uuid: { type: "string", minLength: 1 },
-      isPublic: { type: "boolean"}
+      uuid: { type: "string", minLength: 1 }
     },
-    required: ["datapackTitle", "uuid", "isPublic"]
+    required: ["datapackTitle", "uuid"]
   };
   const uploadDatapackCommentParams = {
     type: "object",
@@ -284,7 +284,16 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     fetchWorkshopDatapack
   );
   fastify.get(
-    "/datapack/download/files/:datapackTitle/:uuid/:isPublic",
+    "/datapack/download/public/files/:datapackTitle/:uuid",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: downloadDatapackFilesZipParams },
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)]
+    },
+    downloadPublicDatapackFilesZip
+  );
+  fastify.get(
+    "/datapack/download/private/files/:datapackTitle/:uuid",
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: downloadDatapackFilesZipParams },
@@ -293,7 +302,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
         genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)
       ]
     },
-    downloadDatapackFilesZip
+    downloadPrivateDatapackFilesZip
   );
   fastify.post(
     "/datapack/addComment/:datapackTitle",
