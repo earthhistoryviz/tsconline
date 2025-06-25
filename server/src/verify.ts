@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
-import { assertRecaptchaResponse } from "./types";
+import { assertRecaptchaResponse } from "./types.js";
 
 /**
  * Verifies the given Recaptcha token. The token is sent to Google's Recaptcha API for verification.

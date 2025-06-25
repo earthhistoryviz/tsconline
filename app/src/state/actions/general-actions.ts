@@ -169,11 +169,16 @@ export const fetchPublicOfficialDatapack = action(
 );
 
 export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
-  const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP);
+  const recaptchaToken = await getRecaptchaToken(
+    isPublic
+      ? UserRecaptchaActions.USER_PUBLIC_DOWNLOAD_DATAPACK_FILES_ZIP
+      : UserRecaptchaActions.USER_PRIVATE_DOWNLOAD_DATAPACK_FILES_ZIP
+  );
   if (!recaptchaToken) return null;
   try {
+    const param = isPublic ? "public" : "private";
     const response = await fetcher(
-      `/user/datapack/download/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+      `/user/datapack/${param}/download/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
       {
         method: "GET",
         credentials: "include",
