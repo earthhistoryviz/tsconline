@@ -34,10 +34,6 @@ export const editDatapackMetadata = async function editDatapackMetadata(
 ) {
   const { datapack } = request.params;
   const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
   try {
     const response = await editDatapackMetadataRequestHandler(request.parts(), user.uuid, datapack);
     reply.status(response.code).send({ message: response.message });
@@ -57,18 +53,14 @@ export const fetchSingleUserDatapack = async function fetchSingleUserDatapack(
 ) {
   const { datapack } = request.params;
   const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
-  try {
-    const metadata = await fetchUserDatapack(user.uuid, datapack).catch(() => {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-    });
-    if (!metadata) {
-      reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
-      return;
-    }
-    reply.send(metadata);
-  } catch (e) {
-    reply.status(500).send({ error: "Failed to fetch datapacks" });
+  const metadata = await fetchUserDatapack(user.uuid, datapack).catch(() => {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  });
+  if (!metadata) {
+    reply.status(404).send({ error: "Datapack does not exist or cannot be found" });
+    return;
   }
+  reply.send(metadata);
 };
 
 interface RequestDownloadRequest extends RouteGenericInterface {
@@ -87,10 +79,6 @@ export const requestDownload = async function requestDownload(
   // for test usage: const uuid = "username";
   const { needEncryption } = request.query;
   const { datapack } = request.params;
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
   let filepath = "";
   let filename = "";
   let encryptedDir = "";
@@ -523,20 +511,6 @@ export const uploadDatapackComment = async function uploadDatapackComment(
   const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { commentText } = request.body;
   const { datapackTitle } = request.params;
-  if (!user.uuid) {
-    reply.status(401).send({ error: "User not logged in" });
-    return;
-  }
-
-  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
-    reply.status(400).send({ error: "Missing datapack title" });
-    return;
-  }
-
-  if (!commentText || commentText.trim().length === 0) {
-    reply.status(400).send({ error: "Missing comment text" });
-    return;
-  }
 
   try {
     const newDatapackComment: NewDatapackComment = {

@@ -16,10 +16,22 @@ import { Workshop } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
+import * as workshopUtil from "../src/workshop/workshop-util"
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 import { UserRecaptchaActions } from "@tsconline/shared";
 import { uploadExternalDatapack } from "../src/routes/user-routes";
+
+vi.mock("../src/workshop/workshop-util", async (importOriginal) => {
+  const actual = await importOriginal<typeof workshopUtil>();
+  return {
+    verifyWorkshopValidity: vi.fn().mockImplementation(() => ({
+      code: 200,
+      message: "Success"
+    })),
+    getWorkshopIdFromUUID: vi.fn().mockReturnValue("workshop-123")
+  };
+});
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -72,7 +84,6 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testUser])),
-    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true),
     findCurrentDatapackComments: vi.fn(() => Promise.resolve([testComment])),
     createDatapackComment: vi.fn().mockResolvedValue({}),
     updateComment: vi.fn().mockResolvedValue({}),
@@ -1204,7 +1215,8 @@ describe("uploadExternalDatapack", () => {
 
 describe("fetchWorkshopDatapack tests", () => {
   const findUser = vi.spyOn(database, "findUser");
-  const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
+  const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
+  const getWorkshopIdFromUUID = vi.spyOn(workshopUtil, "getWorkshopIdFromUUID")
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1239,6 +1251,7 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(findUser).not.toHaveBeenCalled();
   });
   it("should reply 400 if workshopUUID is invalid", async () => {
+    getWorkshopIdFromUUID.mockReturnValueOnce(null)
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/1/datapack/test`,
@@ -1248,7 +1261,10 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should reply 403 if workshop is not active", async () => {
-    isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
+    verifyWorkshopValidity.mockResolvedValueOnce({
+      code: 403,
+      message: "User does not have access to this workshop"
+    })
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/workshop-1/datapack/test`,
@@ -1268,6 +1284,19 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(await response.json()).toEqual({ error: "Datapack not found" });
     expect(response.statusCode).toBe(404);
   });
+  it("should reply 500 if verifyWorkshop fails", async () => {
+    verifyWorkshopValidity.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown Error" });
+    expect(response.statusCode).toBe(500);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(verifyWorkshopValidity).toHaveBeenCalledOnce();
+  });
+
   it("should reply 200 when the datapack is successfully fetched", async () => {
     const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
     fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
