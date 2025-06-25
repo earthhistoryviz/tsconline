@@ -245,55 +245,55 @@ describe("verifyAuthority", () => {
     }
   );
 });
-  describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
-    "should return 400 or 422 for route $url with method $method",
-    ({ method, url, body, recaptchaAction }) => {
-      const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
-      beforeEach(() => {
-        checkRecaptchaTokenMock.mockClear();
-      });
+describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
+  "should return 400 or 422 for route $url with method $method",
+  ({ method, url, body, recaptchaAction }) => {
+    const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
+    beforeEach(() => {
+      checkRecaptchaTokenMock.mockClear();
+    });
 
-      it("should return 400 if missing recaptcha token", async () => {
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: { ...headers, "recaptcha-token": "" }
-        });
-        expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
-        expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-        expect(response.statusCode).toBe(400);
+    it("should return 400 if missing recaptcha token", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: { ...headers, "recaptcha-token": "" }
       });
+      expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
+      expect(response.statusCode).toBe(400);
+    });
 
-      it("should return 422 if recaptcha failed", async () => {
-        checkRecaptchaTokenMock.mockResolvedValueOnce(0);
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: headers
-        });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-        expect(response.statusCode).toBe(422);
+    it("should return 422 if recaptcha failed", async () => {
+      checkRecaptchaTokenMock.mockResolvedValueOnce(0);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: headers
       });
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
+      expect(response.statusCode).toBe(422);
+    });
 
-      it("should return 500 if checkRecaptchaToken throws error", async () => {
-        checkRecaptchaTokenMock.mockRejectedValueOnce(new Error());
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: headers
-        });
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
-        expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "Recaptcha error" });
-        expect(response.statusCode).toBe(500);
+    it("should return 500 if checkRecaptchaToken throws error", async () => {
+      checkRecaptchaTokenMock.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: headers
       });
-    }
-  );
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Recaptcha error" });
+      expect(response.statusCode).toBe(500);
+    });
+  }
+);
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
