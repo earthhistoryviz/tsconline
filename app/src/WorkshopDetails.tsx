@@ -76,8 +76,6 @@ export const WorkshopDetails = observer(() => {
     return workshop;
   };
 
- 
- 
   const workshop = fetchWorkshop();
   const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
@@ -107,7 +105,7 @@ export const WorkshopDetails = observer(() => {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }
   }
-  
+
   if (!workshop || !id) return <PageNotFound />;
   const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
   const isPublicWorkshop = !workshop.regRestrict;
@@ -141,14 +139,15 @@ export const WorkshopDetails = observer(() => {
                 {workshop.datapacks && workshop.datapacks.length > 0 ? (
                   workshop.datapacks.map((datapack, index) => (
                     <Typography key={index} className={styles.fileName}>
-                      • <a
-                          href="#"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            downloadWorkshopDatapack(datapack);
-                            }}>
-                            {datapack}
-                        </a> 
+                      •{" "}
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          downloadWorkshopDatapack(datapack);
+                        }}>
+                        {datapack}
+                      </a>
                     </Typography>
                   ))
                 ) : (
@@ -181,10 +180,14 @@ export const WorkshopDetails = observer(() => {
                   <>
                     {nonReservedFiles.map((file, index) => (
                       <Typography key={index} className={styles.fileName}>
-                      •   <a href="" onClick={(e) => { e.preventDefault();
-                                  downloadWorkshopFile(file);}}>
+                        • <a
+                          href=""
+                          onClick={(e) => {
+                            e.preventDefault();
+                            downloadWorkshopFile(file);
+                          }}>
                           {file}
-                          </a> 
+                        </a>
                       </Typography>
                     ))}
                   </>

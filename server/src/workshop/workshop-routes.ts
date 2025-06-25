@@ -14,6 +14,7 @@ import { readFile } from "fs/promises";
 import {createReadStream} from 'fs';
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
+import { getUploadedDatapackFilepath } from "../user/user-handler.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
@@ -158,13 +159,12 @@ export const downloadWorkshopFilesZip = async (
   }
 };
 
-
 export const downloadWorkshopFile = async function downloadWorkshopFile(
-  request: FastifyRequest<{ Params: { workshopId: number, fileName: string} }>,
+  request: FastifyRequest<{ Params: { workshopId: number; fileName: string } }>,
   reply: FastifyReply
 ) {
-  try{
-    const { workshopId, fileName} = request.params;
+  try {
+    const { workshopId, fileName } = request.params;
 
     // user exists, already verified in verifyAuthority
     const user = request.user!;
@@ -177,32 +177,32 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
     const directory = await getUserUUIDDirectory(workshopUUID, true);
 
-
-    var filePath = path.join(directory, "files");
+    let filePath = path.join(directory, "files");
     filePath = path.join(filePath, fileName);
 
-
-    if (!(await verifyFilepath(filePath))){
-      reply.status(500).send({ error: "Invalid file path"});
+    if (!(await verifyFilepath(filePath))) {
+      reply.status(500).send({ error: "Invalid file path" });
       return;
     }
 
-    const stream = createReadStream(filePath);
-    return reply.send(stream);
-
+    try {
+      const stream = createReadStream(filePath);
+      return reply.send(stream);
+    } catch (e) {
+      reply.status(500).send({ error: "Error creating file stream" });
+    }
   } catch (e) {
     reply.status(500).send({ error: "An error occurred" });
   }
 };
 
 export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDetailsDataPack(
-  request: FastifyRequest<{ Params: { workshopId: number, datapackTitle: string} }>,
+  request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
-  try{
-
+  try {
     // already verified uuid in verifyAuthority
-    const { workshopId, datapackTitle} = request.params;
+    const { workshopId, datapackTitle } = request.params;
 
     // user exists, already verified in verifyAuthority
     const user = request.user!;
@@ -213,49 +213,22 @@ export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDe
     }
 
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const directory = await getUserUUIDDirectory(workshopUUID, true);
+    const dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
 
-    var datapackBasePath = path.join(directory, "datapacks/");
+    if (!(await checkFileExists(dataPackPath))) {
+      reply.status(500).send({ error: "File does not exist" });
+    }
 
-    let zipfile = path.join(datapackBasePath, `/${datapackTitle}.zip`);;
-
-    //contains path of datapack folder
-    let datapackPath = path.join(datapackBasePath, datapackTitle);
-
-
-
-    // Check if ZIP file already exists
-    let file;
     try {
-      file = await readFile(zipfile);
+      const stream = createReadStream(dataPackPath);
+      return reply.send(stream);
     } catch (e) {
-      const error = e as NodeJS.ErrnoException;
-      if (error.code !== "ENOENT") {
-        reply.status(500).send({ error: "An error occurred: " + e });
-        return;
-      }
+      reply.status(500).send({ error: "Error creating file stream" });
     }
-
-    //check if decrypted folder exists
-    if (!(await verifyFilepath(datapackPath))){
-      reply.status(500).send({ error: "Invalid datapack path"});
-      return;
-    }
-    try {   
-      if (!file){
-       file = await createZipFile(zipfile, datapackPath);
-      }
-      reply.status(200).send(file);
-
-    } catch(e) {
-      reply.status(500).send({ error: "Error creating Zip"});
-    }
-
-  } catch (e: any) {
-    reply.status(500).send({ error: e});
+  } catch (e) {
+    reply.status(500).send({ error: "An error has occured" });
   }
 };
-
 
 export const fetchWorkshopCoverImage = async function (
   request: FastifyRequest<{ Params: { workshopId: number } }>,

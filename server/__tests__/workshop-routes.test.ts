@@ -10,12 +10,11 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
 import * as fsp from "fs/promises";
-import {createReadStream} from "fs";
+import { createReadStream } from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
 import { Readable } from "stream";
-
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -515,11 +514,10 @@ describe("downloadWorkshopFilesZip tests", () => {
 
 describe("downloadWorkshopFile tests", () => {
   const workshopId = 42;
-  const fileName = "test_file.txt"
+  const fileName = "test_file.txt";
   const route = `/workshop/workshop-files/${workshopId}/${fileName}`;
   const findUser = vi.spyOn(database, "findUser");
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const readFile = vi.spyOn(fsp, "readFile");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -551,9 +549,9 @@ describe("downloadWorkshopFile tests", () => {
   });
 
   it("should return 500 if createReadStream throws an error", async () => {
-      (createReadStream as vi.Mock).mockImplementationOnce(() => {
-    throw new Error("Simulated stream error");
-     });
+    (createReadStream as vi.Mock).mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
 
     const response = await app.inject({
       method: "GET",
@@ -562,7 +560,7 @@ describe("downloadWorkshopFile tests", () => {
     });
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An error occurred")
+      error: expect.stringContaining("Error creating file stream")
     });
   });
   it("should return existing file if createReadStream succeeds", async () => {
@@ -582,12 +580,10 @@ describe("downloadWorkshopFile tests", () => {
 
 describe("downloadWorkshopDetailsDataPack tests", () => {
   const workshopId = 42;
-  const datapackName = "datapackName"
+  const datapackName = "datapackName";
   const route = `/workshop/workshop-datapack/${workshopId}/${datapackName}`;
   const findUser = vi.spyOn(database, "findUser");
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const readFile = vi.spyOn(fsp, "readFile");
-  const createZipFile = vi.spyOn(generalFileHandlerRequests, "createZipFile");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -606,8 +602,22 @@ describe("downloadWorkshopDetailsDataPack tests", () => {
     expect(await response.json()).toEqual({ error: "Unauthorized access" });
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
-  it("should return 500 if readFile throws an error != ENOENT", async () => {
-    readFile.mockRejectedValueOnce(new Error("Something else"));
+  it("should return 500 if checkFileExists returns false", async () => {
+    vi.checkFileExistsSpy.mockRejectedValueOnce(new Error());
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "File does not exist" });
+  });
+  it("should return 500 if createReadStream throws an error", async () => {
+    (createReadStream as vi.Mock).mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
+    vi.creareR
 
     const response = await app.inject({
       method: "GET",
@@ -616,75 +626,9 @@ describe("downloadWorkshopDetailsDataPack tests", () => {
     });
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An error occurred:")
+      error: expect.stringContaining("An error has occured")
     });
   });
-  it("should return 500 if readFile throws an error != ENOENT", async () => {
-    readFile.mockRejectedValueOnce(new Error("Something else"));
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An error occurred:")
-    });
-  });
-  it("should return 500 if verifyFilepath returns false", async () => {
-    vi.spyOn(util, "verifyFilepath").mockResolvedValueOnce(false);
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid datapack path" });
-  });
-  it("should return 500 if createZipFile throws an error", async () => {
-    const enoentError = new Error("Creation ENOENT") as NodeJS.ErrnoException;
-    enoentError.code = "ENOENT";
-    readFile.mockRejectedValueOnce(enoentError);
-    createZipFile.mockRejectedValueOnce(new Error("failed"));
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Error creating Zip" });
-  });
-  it("should create the zip if readFile returns ENOENT, then return file", async () => {
-    const enoentError = new Error("no zip yet") as NodeJS.ErrnoException;
-    enoentError.code = "ENOENT";
-    readFile.mockRejectedValueOnce(enoentError);
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(200);
-    expect(createZipFile).toHaveBeenCalledTimes(1);
-    expect(response.body).toEqual("fake-zip-content");
-  });
-  it("should return existing zip file if readFile succeeds", async () => {
-    const existingFileBuffer = Buffer.from("existing-zip-content");
-    readFile.mockResolvedValueOnce(existingFileBuffer);
-
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(200);
-    expect(response.body).toEqual("existing-zip-content");
-    expect(createZipFile).not.toHaveBeenCalled();
-  });
-
 });
 
 describe("fetchWorkshopCoverImage tests", () => {

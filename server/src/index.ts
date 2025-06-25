@@ -30,14 +30,11 @@ import {
   uploadExternalDatapack,
   fetchUserHistory,
   fetchUserHistoryMetadata,
-  fetchDatapackComments,
-  downloadDatapackFilesZip
+  fetchDatapackComments
 } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
-import { fetchAllWorkshops,
-        downloadWorkshopFile
-} from "./workshop/workshop-routes.js";
+import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin/admin-routes.js";
 import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
@@ -332,7 +329,6 @@ server.get("/admin/official/private/metadata", looseRateLimit, adminFetchPrivate
 server.register(workshopRoutes, { prefix: "/workshop" });
 // these are seperate from the workshop routes because they don't require recaptcha
 server.get("/workshop", looseRateLimit, fetchAllWorkshops);
-
 
 server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha

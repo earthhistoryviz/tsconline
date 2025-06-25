@@ -2,9 +2,13 @@ import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from "
 import { findUser } from "../database.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
-import { downloadWorkshopFilesZip, downloadWorkshopFile, editWorkshopDatapackMetadata, downloadWorkshopDetailsDataPack, serveWorkshopHyperlinks } from "./workshop-routes.js";
-
-// import { downloadWorkshopFilesZip, downloadWorkshopFile, editWorkshopDatapackMetadata, downloadWorkshopDetailsDataPack } from "./workshop-routes.js";
+import {
+  downloadWorkshopFilesZip,
+  downloadWorkshopFile,
+  editWorkshopDatapackMetadata,
+  downloadWorkshopDetailsDataPack,
+  serveWorkshopHyperlinks
+} from "./workshop-routes.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -75,7 +79,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     type: "object",
     properties: {
       workshopId: { type: "number" },
-      fileName: {type: "string"}
+      fileName: { type: "string" }
     },
     required: ["workshopId", "fileName"]
   };
@@ -83,7 +87,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     type: "object",
     properties: {
       workshopId: { type: "number" },
-      datapackTitle: {type: "string"}
+      datapackTitle: { type: "string" }
     },
     required: ["workshopId", "datapackTitle"]
   };
@@ -140,10 +144,19 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     { config: { rateLimit: moderateRateLimit }, schema: { params: workshopFileParams } },
     downloadWorkshopFile
   );
-    fastify.get(
+  fastify.get(
     "/workshop-datapack/:workshopId/:datapackTitle",
     { config: { rateLimit: moderateRateLimit }, schema: { params: workshopDataPackParams } },
     downloadWorkshopDetailsDataPack
   );
 
+  fastify.get(
+    "/:workshopId/files/:filename",
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: serveWorkshopHyperlinksParams },
+      preHandler: [verifyAuthority]
+    },
+    serveWorkshopHyperlinks
+  );
 };
