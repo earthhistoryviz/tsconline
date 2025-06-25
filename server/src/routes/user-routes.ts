@@ -1,10 +1,7 @@
 import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { rm, mkdir, readFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
-import {
-  assetconfigs,
-  checkHeader,
-  extractMetadataFromDatapack} from "../util.js";
+import { assetconfigs, checkHeader, extractMetadataFromDatapack } from "../util.js";
 import {
   createDatapackComment,
   deleteComment,

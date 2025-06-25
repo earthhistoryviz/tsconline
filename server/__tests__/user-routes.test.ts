@@ -12,7 +12,7 @@ import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
 import * as shared from "@tsconline/shared";
-import { User, Workshop } from "../src/types";
+import { Workshop } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
