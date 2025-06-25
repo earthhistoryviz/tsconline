@@ -288,7 +288,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: downloadDatapackFilesZipParams },
-      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)]
+      preHandler: [genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_PUBLIC_DOWNLOAD_DATAPACK_FILES_ZIP)]
     },
     downloadPublicDatapackFilesZip
   );
@@ -299,7 +299,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: downloadDatapackFilesZipParams },
       preHandler: [
         verifySession,
-        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP)
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_PRIVATE_DOWNLOAD_DATAPACK_FILES_ZIP)
       ]
     },
     downloadPrivateDatapackFilesZip

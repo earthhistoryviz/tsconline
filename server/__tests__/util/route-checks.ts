@@ -83,7 +83,8 @@ export const getMissingRoutesInActualRegistered = (
     const regex = normalizeToRegex(url);
     // If the route has auth or recaptcha action, we need to check if it is defined in the test defined routes
     return !testDefinedRoutes.some(
-      (r) => r.method === method && regex.test(r.url) && r.hasAuth === hasAuth && r.recaptchaAction === recaptchaAction
+      (r) =>
+        r.method === method && regex.test(r.url) && !!r.hasAuth === !!hasAuth && r.recaptchaAction === recaptchaAction
     );
   });
 };
@@ -102,7 +103,7 @@ export const getUnexpectedRoutesInActualRegistered = (
       (route) =>
         route.method === method &&
         normalizeToRegex(route.url).test(url) &&
-        route.hasAuth === hasAuth &&
+        !!route.hasAuth === !!hasAuth &&
         route.recaptchaAction === recaptchaAction
     );
   });

@@ -19,6 +19,7 @@ import * as chartHistory from "../src/user/chart-history";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 import { UserRecaptchaActions } from "@tsconline/shared";
+import { uploadExternalDatapack } from "../src/routes/user-routes";
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -219,12 +220,7 @@ beforeAll(async () => {
       }
     };
   });
-  // app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
-  // app.post("/external-chart", uploadExternalDatapack);
-  // app.get("/user/history", fetchUserHistoryMetadata);
-  // app.get("/user/history/:timestamp", fetchUserHistory);
-  // app.delete("/user/history/:timestamp", deleteUserHistory);
-  // app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
+  app.post("/external-chart", uploadExternalDatapack);
   app.addHook("onRoute", (routeOptions: RouteOptions) => {
     appRoutes.push(
       ...initializeAppRoutes(routeOptions, {
@@ -312,8 +308,14 @@ const routes: RouteDefinition[] = [
   },
   {
     method: "GET",
-    url: `/user/datapack/download/files/${filename}/${uuid}/false`,
-    recaptchaAction: UserRecaptchaActions.USER_DOWNLOAD_DATAPACK_FILES_ZIP,
+    url: `/user/datapack/download/public/files/${filename}/${uuid}`,
+    recaptchaAction: UserRecaptchaActions.USER_PUBLIC_DOWNLOAD_DATAPACK_FILES_ZIP,
+    hasAuth: false
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/download/private/files/${filename}/${uuid}`,
+    recaptchaAction: UserRecaptchaActions.USER_PRIVATE_DOWNLOAD_DATAPACK_FILES_ZIP,
     hasAuth: true
   },
   {
@@ -352,12 +354,12 @@ const routes: RouteDefinition[] = [
   },
   {
     method: "GET",
-    url: "/user/history/test",
+    url: `/user/history/${mockDate.toISOString()}`,
     hasAuth: true
   },
   {
     method: "DELETE",
-    url: "/user/history/test",
+    url: `/user/history/${mockDate.toISOString()}`,
     hasAuth: true
   },
   {
@@ -2058,36 +2060,5 @@ describe("fetchUserDatapacksMetadata", async () => {
         isPublic: false
       }
     ]);
-  });
-});
-
-describe("downloadDatapackFilesZip tests", () => {
-  it("should return 400 if datapack title is missing", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files///`,
-      headers
-    });
-    expect(await response.json()).toEqual({
-      code: "FST_ERR_VALIDATION",
-      error: "Bad Request",
-      message: "params/datapackTitle must NOT have fewer than 1 characters",
-      statusCode: 400
-    });
-    expect(response.statusCode).toBe(400);
-  });
-  it("should return 400 if datapack title is invalid", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files/title//`,
-      headers
-    });
-    expect(await response.json()).toEqual({
-      code: "FST_ERR_VALIDATION",
-      error: "Bad Request",
-      message: 'params/uuid must match format "uuid"',
-      statusCode: 400
-    });
-    expect(response.statusCode).toBe(400);
   });
 });
