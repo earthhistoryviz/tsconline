@@ -40,11 +40,6 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, act
     return;
   }
 
-  if (!action || typeof action !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha action" });
-    return;
-  }
-
   try {
     const score = await checkRecaptchaToken(recaptchaToken, action);
     if (score < googleRecaptchaBotThreshold) {

@@ -245,7 +245,6 @@ describe("verifyAuthority", () => {
     }
   );
 });
-it("should have correct recaptchaAction logic on each route", () => {
   describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
     "should return 400 or 422 for route $url with method $method",
     ({ method, url, body, recaptchaAction }) => {
@@ -295,7 +294,6 @@ it("should have correct recaptchaAction logic on each route", () => {
       });
     }
   );
-});
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
