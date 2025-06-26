@@ -97,11 +97,11 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const adminCreateUserBody = {
     type: "object",
     properties: {
-      username: { type: "string" },
-      email: { type: "string" },
-      password: { type: "string" },
-      pictureUrl: { type: "string" },
-      isAdmin: { type: "number" }
+      username: { type: "string", minLength: 1 },
+      email: { type: "string", format: "email" },
+      password: { type: "string", minLength: 1 },
+      pictureUrl: { type: "string", format: "uri", nullable: true },
+      isAdmin: { type: "integer", enum: [0, 1] }
     },
     required: ["email", "password"]
   };

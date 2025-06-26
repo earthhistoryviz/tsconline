@@ -164,10 +164,6 @@ export const adminCreateUser = async function adminCreateUser(request: FastifyRe
     pictureUrl: string;
     isAdmin: number;
   };
-  if (!email || !password || !validator.isEmail(email)) {
-    reply.status(400).send({ error: "Missing/invalid required fields" });
-    return;
-  }
   try {
     const user = await checkForUsersWithUsernameOrEmail(username || email, email);
     if (user.length > 0) {
@@ -461,7 +457,6 @@ export const adminAddUsersToWorkshop = async function addUsersToWorkshop(request
         invalidEmails.push(email);
       }
     };
-
     for (const email of emailList) {
       const user = await checkForUsersWithUsernameOrEmail(email, email);
       if (user.length > 0) {
@@ -588,7 +583,7 @@ interface AdminEditWorkshopRequest extends RouteGenericInterface {
     start?: string;
     end?: string;
     workshopId: number;
-    regRestrict?: string;
+    regRestrict?: number;
     description?: string;
     regLink?: string;
   };
@@ -650,7 +645,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     }
     const fieldsToUpdateForDatabase = {
       ...fieldsToUpdate,
-      regRestrict: regRestrict !== undefined ? (regRestrict ? 1 : 0) : existingWorkshop.regRestrict
+      regRestrict: regRestrict !== undefined ? regRestrict : existingWorkshop.regRestrict
     };
     await updateWorkshop({ workshopId }, fieldsToUpdateForDatabase);
     const updatedWorkshop = await getWorkshopIfNotEnded(workshopId);

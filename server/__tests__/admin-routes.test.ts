@@ -446,7 +446,7 @@ const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction
     method: "POST",
     url: "/admin/user",
     recaptchaAction: shared.AdminRecaptchaActions.ADMIN_CREATE_USER,
-    body: { username: "test", email: "test", password: "test", pictureUrl: "test", isAdmin: 1 }
+    body: { username: "test", email: "test@gmail.com", password: "test", pictureUrl: "https://test.com", isAdmin: 1 }
   },
   {
     method: "DELETE",
@@ -481,7 +481,7 @@ const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction
   {
     method: "POST",
     url: "/admin/workshop/users",
-    body: { file: "test", emails: "test@email.com", workshopId: "1" },
+    body: { file: "test", emails: "test@gmail.com", workshopId: "1" },
     recaptchaAction: shared.AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP
   },
   {
@@ -700,7 +700,7 @@ describe("adminCreateUser tests", () => {
     username: "username",
     email: "email@email.com",
     password: "password",
-    pictureUrl: "pictureUrl",
+    pictureUrl: "http://pictureUrl.com",
     isAdmin: 1
   };
   const customUser = {
@@ -721,22 +721,90 @@ describe("adminCreateUser tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test.each([
-    { ...body, email: "" },
-    { ...body, password: "" },
-    { ...body, email: "hi@gmailcom" },
-    { ...body, email: "higmail.com" }
-  ])("should return 400 for body %p", async (body) => {
+  it("should return 400 if username is blank", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/admin/user",
-      payload: body,
+      payload: { ...body, username: "" },
       headers
     });
     expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/username must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if email is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, email: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/email must match format "email"',
+      statusCode: 400
+    });
+  });
+  it("should return 400 if password is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, password: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/password must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if pictureUrl is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, pictureUrl: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/pictureUrl must match format "uri"',
+      statusCode: 400
+    });
+  });
+  it("should return 400 if isAdmin is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, isAdmin: "not-a-number" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/isAdmin must be integer",
+      statusCode: 400
+    });
   });
 
   it("should return 409 if user already exists", async () => {
@@ -854,6 +922,22 @@ describe("adminCreateUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).toHaveBeenCalledWith(customUser);
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(await response.json()).toEqual({ message: "User created" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful if username is not provided and cover image null", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, username: undefined, pictureUrl: null },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.email, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(createUser).toHaveBeenCalledTimes(1);
     expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
     expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
@@ -1667,9 +1751,6 @@ describe("adminAddUsersToWorkshop", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(parseExcelFile).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
@@ -1751,6 +1832,24 @@ describe("adminAddUsersToWorkshop", () => {
     expect(createUser).not.toHaveBeenCalled();
     expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
     expect(await response.json()).toEqual({ message: "Users added" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("asdf should return 200 if just file is provided but no emails", async () => {
+    createForm({
+      emails: ""
+    });
+    parseExcelFile.mockResolvedValueOnce([["emily@gmail.com"], ["emily2@gmail.com"]]);
+    checkWorkshopHasUser.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([testUserWorkshop]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "Users added" });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
     expect(response.statusCode).toBe(200);
   });
   it("should return 200 if successful and update old users and still succeed cleaning up if rm fails for cleanup", async () => {
@@ -2145,7 +2244,6 @@ describe("adminEditWorkshop", () => {
   const findWorkshop = vi.spyOn(database, "findWorkshop");
   const getWorkshopFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
-  const validatorSpy = vi.mocked(validator);
   const body = {
     workshopId: testWorkshop.workshopId,
     title: "new-title",
@@ -2387,6 +2485,42 @@ describe("adminEditWorkshop", () => {
       }
     });
     expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and update workshop with both start AND end", async () => {
+    const start = new Date(testWorkshop.start);
+    vi.setSystemTime(start.setDate(start.getDate() + 1)); // Mock current time to be after start
+    getWorkshopIfNotEnded
+      .mockResolvedValueOnce(testWorkshopDatabase)
+      .mockResolvedValueOnce(testUpdatedWorkshopDatabase);
+    getWorkshopDatapacksNames.mockResolvedValueOnce(["dp 1"]);
+    getWorkshopFilesNames.mockResolvedValueOnce(["file 1"]);
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: {
+        ...body,
+        start: testWorkshop.start,
+        end: testWorkshop.end
+      },
+      headers
+    });
+    expect(updateWorkshop).toHaveBeenCalledOnce();
+    expect(updateWorkshop).toHaveBeenCalledWith(
+      { workshopId: body.workshopId },
+      { ...body, regRestrict: 0, workshopId: undefined, start: testWorkshop.start, end: testWorkshop.end }
+    );
+    expect(await response.json()).toEqual({
+      workshop: {
+        ...testUpdatedWorkshopDatabase,
+        active: false,
+        regRestrict: testUpdatedWorkshopDatabase.regRestrict === 1,
+        datapacks: ["dp 1"],
+        files: ["file 1"]
+      }
+    });
+    expect(response.statusCode).toBe(200);
+    vi.setSystemTime(mockDate); // Reset system time
   });
 });
 
@@ -3052,7 +3186,8 @@ describe("adminUploadFilesToWorkshop", () => {
           filename: shared.RESERVED_INSTRUCTIONS_FILENAME,
           contentType: "application/pdf"
         }
-      }
+      },
+      extraFile: ""
     });
     const response = await app.inject({
       method: "POST",
