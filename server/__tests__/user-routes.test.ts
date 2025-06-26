@@ -16,7 +16,7 @@ import { Workshop } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
-import * as workshopUtil from "../src/workshop/workshop-util"
+import * as workshopUtil from "../src/workshop/workshop-util";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 import { UserRecaptchaActions } from "@tsconline/shared";
@@ -53,7 +53,8 @@ vi.mock("../src/upload-datapack", async () => {
 });
 vi.mock("../src/types", async () => {
   return {
-    isOperationResult: vi.fn().mockReturnValue(false)
+    isOperationResult: vi.fn().mockReturnValue(false),
+    assertDatapackCommentWithProfilePicture: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -1081,19 +1082,29 @@ describe("uploadDatapack tests", () => {
 });
 
 describe("uploadExternalDatapack", () => {
+  const payload = {
+    datapack: {
+      value: Buffer.from("test"),
+      options: {
+        filename: "test.dpk",
+        contentType: "text/plain"
+      }
+    }
+  };
+  const bearerToken = "auth token";
+  const headers = {
+    Authorization: bearerToken,
+    datapacktitle: "test",
+    datapackhash: "hash"
+  };
+  beforeAll(() => {
+    process.env.BEARER_TOKEN = bearerToken.split(" ")[1];
+  });
   it("should return 401 if authorization header is missing", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      payload
     });
 
     expect(response.statusCode).toBe(401);
@@ -1104,20 +1115,12 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({ error: "Token missing" });
+    expect(response.statusCode).toBe(401);
   });
 
   it("should return 500 if BEARER_TOKEN is missing in enviroment variables", async () => {
@@ -1125,47 +1128,106 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "Incorrect Token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(500);
     expect(response.json()).toEqual({
       error: "Server misconfiguration: Missing BEARER_TOKEN on TSC Online. Contact admin"
     });
+    expect(response.statusCode).toBe(500);
+    process.env.BEARER_TOKEN = bearerToken.split(" ")[1]; // Restore for other tests
   });
 
   it("should return 403 if token is incorrect", async () => {
-    process.env.BEARER_TOKEN = "correct_token";
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer incorrect_token" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "Incorrect Token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({ error: "Token mismatch" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 401 if datapacktitle header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: bearerToken },
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "Datapack requires datapackTitle field in header"
+    });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 401 if datapackhash header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { ...headers, datapackhash: "" },
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "DatapackHash missing"
+    });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 200 if official datapack already exists and file is the same", async () => {
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([
+      { title: headers.datapacktitle, originalFileName: headers.datapackhash + ".txt" } as shared.Datapack
+    ]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      datapackTitle: headers.datapacktitle
+    });
+    expect(response.statusCode).toBe(200);
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+  });
+  it("should return custom operation code if processUploadDatpaack fails", async () => {
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockResolvedValueOnce({
+      code: 500,
+      message: "Custom error message"
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "Custom error message"
+    });
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalled();
+  });
+  it("should return 500 if processAndUploadDatapack throws an error", async () => {
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({ error: "Internal server error" });
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
   });
 
   it("should return 200 if upload is successful", async () => {
-    process.env.BEARER_TOKEN = "correct_token";
     const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
     const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
@@ -1176,16 +1238,11 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token", datapacktitle: "test", datapackHash: "test" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      datapackTitle: headers.datapacktitle
     });
     expect(response.statusCode).toBe(200);
     expect(processAndUploadDatapack).toHaveBeenCalled();
@@ -1216,7 +1273,7 @@ describe("uploadExternalDatapack", () => {
 describe("fetchWorkshopDatapack tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
-  const getWorkshopIdFromUUID = vi.spyOn(workshopUtil, "getWorkshopIdFromUUID")
+  const getWorkshopIdFromUUID = vi.spyOn(workshopUtil, "getWorkshopIdFromUUID");
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -1251,7 +1308,7 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(findUser).not.toHaveBeenCalled();
   });
   it("should reply 400 if workshopUUID is invalid", async () => {
-    getWorkshopIdFromUUID.mockReturnValueOnce(null)
+    getWorkshopIdFromUUID.mockReturnValueOnce(null);
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/1/datapack/test`,
@@ -1264,7 +1321,7 @@ describe("fetchWorkshopDatapack tests", () => {
     verifyWorkshopValidity.mockResolvedValueOnce({
       code: 403,
       message: "User does not have access to this workshop"
-    })
+    });
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/workshop-1/datapack/test`,
@@ -1676,6 +1733,17 @@ describe("downloadPublicDatapackFilesZip tests", () => {
       statusCode: 400
     });
   });
+  it("should return 500 if downloadDatapackFilesZip throws an error", async () => {
+    downloadDatapackFilesZip.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/${filename}/${testUser.uuid}`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error downloading datapack files zip" });
+  });
   it("should return 200 and download the datapack files zip", async () => {
     const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
     downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
@@ -1720,6 +1788,17 @@ describe("fetchDatapackComments tests", () => {
     expect(findCurrentDatapackComments).toHaveBeenCalledWith({ datapackTitle: "test" });
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error fetching datapack comments" });
+  });
+  it("should return 200 and the comments if successful", async () => {
+    findCurrentDatapackComments.mockResolvedValueOnce([testComment]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/datapack/comments/test"
+    });
+    expect(findCurrentDatapackComments).toHaveBeenCalledOnce();
+    expect(findCurrentDatapackComments).toHaveBeenCalledWith({ datapackTitle: "test" });
+    expect(await response.json()).toEqual([testComment]);
+    expect(response.statusCode).toBe(200);
   });
 });
 
@@ -1790,6 +1869,21 @@ describe("uploadDatapackComment tests", () => {
       }
     });
     expect(createDatapackComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error uploading datapack comment" });
+  });
+  it("should return 500 if findDatapackComment does not find the comment", async () => {
+    findDatapackComment.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers,
+      payload: {
+        commentText: "test"
+      }
+    });
+    expect(createDatapackComment).toHaveBeenCalledOnce();
+    expect(findDatapackComment).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error uploading datapack comment" });
   });

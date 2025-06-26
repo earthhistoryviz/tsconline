@@ -22,6 +22,7 @@ import { editDatapackMetadataRequestHandler } from "../file-handlers/general-fil
 import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownloadDatapack } from "@tsconline/shared";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
+import logger from "../error-logger.js";
 
 interface EditDatapackMetadataRequest extends RouteGenericInterface {
   Params: {
@@ -359,7 +360,6 @@ export const uploadExternalDatapack = async function uploadExternalDatapack(
     }
     const datapackTitle = request.headers["datapacktitle"]; // This would be the phylum name for Treatise, and formation for Lexicons/OneStrat
     if (!datapackTitle) {
-      console.error("Datapack requires datapackTitle field in header");
       reply.status(401).send({ error: "Datapack requires datapackTitle field in header" });
       return;
     }
@@ -392,7 +392,7 @@ export const uploadExternalDatapack = async function uploadExternalDatapack(
       reply.status(result.code).send({ error: result.message });
     }
   } catch (error) {
-    console.error("Error during /external-chart route:", error);
+    logger.error(error);
     reply.status(500).send({ error: "Internal server error" });
   }
 };
@@ -573,15 +573,6 @@ export const updateDatapackComment = async function updateDatapackComment(
 ) {
   const { commentId } = request.params;
   const { flagged } = request.body;
-
-  if (!commentId || isNaN(Number(commentId))) {
-    reply.status(400).send({ error: "Invalid or missing comment ID" });
-    return;
-  }
-  if (flagged === undefined) {
-    reply.status(400).send({ error: "Missing flagged in body" });
-    return;
-  }
 
   const updateData: { flagged: number } = { flagged: flagged };
   try {
