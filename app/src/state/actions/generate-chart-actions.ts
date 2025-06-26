@@ -195,6 +195,7 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+      generalActions.removeAllErrors();
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });

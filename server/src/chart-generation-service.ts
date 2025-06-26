@@ -2,7 +2,7 @@ import { ChartProgressUpdate, ChartRequest, NormalProgress, isTempDatapack, isUs
 import { spawn } from "child_process";
 import md5 from "md5";
 import path from "path";
-import { readFile, writeFile, stat, mkdir } from "fs/promises";
+import { readFile, writeFile, mkdir } from "fs/promises";
 import { containsKnownError } from "./chart-error-handler.js";
 import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "./database.js";
 import logger from "./error-logger.js";
@@ -34,14 +34,14 @@ export function parseJavaOutputLine(line: string, filenameMap: Record<string, st
     const total = parseInt(loadMatch[2], 10);
     const filename = loadMatch[3].trim();
     const displayName = filenameMap[filename] || filename;
-    const percent = 10 + Math.floor((current / total) * 30);
+    const percent = 10 + Math.floor((current / total) * 30); // make percent go from 10 to 40
     return { stage: `Loading Datapack: ${displayName} (${current}/${total})`, percent };
   }
   if (line.includes("Generating Image")) {
-    return { stage: "Generating chart", percent: 50 };
+    return { stage: "Generating Chart", percent: 50 };
   }
   if (line.includes("ImageGenerator did not have any errors")) {
-    return { stage: "Waiting for file", percent: 90 };
+    return { stage: "Waiting for File", percent: 90 };
   }
   return null;
 }
@@ -71,7 +71,7 @@ export async function waitForSVGReady(filepath: string, timeoutMs: number): Prom
   throw new Error("SVG file did not finalize in time");
 }
 
-async function resolveDatapacks(chartRequest: ChartRequest, uuid?: string) {
+export async function resolveDatapacks(chartRequest: ChartRequest, uuid?: string) {
   const datapacksToSendToCommandLine: string[] = [];
   const usedUserDatapackFilepaths: string[] = [];
   const usedTempDatapacks: string[] = [];
@@ -100,7 +100,6 @@ async function resolveDatapacks(chartRequest: ChartRequest, uuid?: string) {
         uuidFolder = "temp";
         break;
     }
-    if (!uuidFolder) throw new Error("Unknown user for datapack");
     const datapackDir = await fetchUserDatapackDirectory(uuidFolder, datapack.title);
     if (isUserDatapack(datapack)) usedUserDatapackFilepaths.push(datapackDir);
     if (isTempDatapack(datapack)) usedTempDatapacks.push(datapack.title);
@@ -110,26 +109,23 @@ async function resolveDatapacks(chartRequest: ChartRequest, uuid?: string) {
   return { datapacksToSendToCommandLine, usedUserDatapackFilepaths, usedTempDatapacks, filenameMap };
 }
 
-async function checkForCacheHit(
+export async function checkForCacheHit(
   chartFilePath: string,
   useCache: boolean,
   chartUrlPath: string,
   hash: string
 ): Promise<{ chartpath: string; hash: string } | null> {
-  try {
-    await stat(chartFilePath);
-    if (!useCache) {
-      console.log("Deleting chart filepath since it already exists and cache is not being used");
-      deleteDirectory(chartFilePath);
-    } else {
-      console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
-      return { chartpath: chartUrlPath, hash };
-    }
-  } catch {
-    // File does not exist, continue with chart generation
+  if (!(await checkFileExists(chartFilePath))) {
     console.log("Chart file does not exist, proceeding with generation");
+    return null;
   }
-  return null;
+  if (!useCache) {
+    console.log("Deleting chart filepath since it already exists and cache is not being used");
+    deleteDirectory(chartFilePath);
+    return null;
+  }
+  console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
+  return { chartpath: chartUrlPath, hash };
 }
 
 async function writeChartSettings(settingsFilePath: string, chartDirFilePath: string, settingsXml: string) {
@@ -137,7 +133,7 @@ async function writeChartSettings(settingsFilePath: string, chartDirFilePath: st
   await writeFile(settingsFilePath, settingsXml);
 }
 
-async function runJavaChartGeneration(
+export async function runJavaChartGeneration(
   chartRequest: ChartRequest,
   datapacks: string[],
   settingsFile: string,
