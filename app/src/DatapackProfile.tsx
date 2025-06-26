@@ -42,6 +42,7 @@ import {
 import { ResponsivePie } from "@nivo/pie";
 import { useTranslation } from "react-i18next";
 import CreateIcon from "@mui/icons-material/Create";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { DatePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { ErrorCodes, ErrorMessages } from "./util/error-codes";
@@ -355,6 +356,7 @@ type AboutProps = {
 const About: React.FC<AboutProps> = observer(({ datapack }) => {
   const { state, actions } = useContext(context);
   const { t } = useTranslation();
+  const [originalFileNames, setOriginalFileNames] = useState<string[]>([]);
   // TODO used to prevent a warning with the useBlocker hook (will need to revisit later to see whether this is still necessary)
   const isMountedRef = useRef<boolean>();
   useEffect(() => {
@@ -385,6 +387,21 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
+  useEffect(() => {
+    const fetchFileNames = async () => {
+      const names = await actions.fetchDatapackFileNames(
+        datapack.title,
+        getUUIDOfDatapackType(datapack),
+        datapack.isPublic
+      );
+      if (names === undefined) {
+        setOriginalFileNames([]);
+      } else {
+        setOriginalFileNames(names);
+      }
+    };
+    fetchFileNames();
+  }, []);
 
   function downloadDatapackFiles() {
     if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
@@ -424,6 +441,10 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         <div className={styles.ai}>
           <Typography className={styles.aih}>File Size</Typography>
           <Typography>{datapack.size}</Typography>
+        </div>
+        <div className={styles.ai}>
+          {originalFileNames.length > 0 && <Typography className={styles.aih}>Attached Files</Typography>}
+          <AttachedFiles datapack={datapack} fileNames={originalFileNames} setFileNames={setOriginalFileNames} />
         </div>
         <div className={styles.ai}>
           <Tags tags={datapack.tags} />
@@ -520,6 +541,98 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ datapack, fileName
         </Box>
       ) : (
         <Typography className={styles.fileName}>{fileName}</Typography>
+      )}
+    </>
+  );
+});
+
+type AttachedFilesProps = {
+  fileNames: string[];
+  setFileNames: React.Dispatch<React.SetStateAction<string[]>>;
+  datapack: Datapack;
+};
+const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNames, setFileNames }) => {
+  const { state, actions } = useContext(context);
+  const setDatapack = useContext(SetDatapackContext);
+  const [pdfFiles, setPDFFiles] = useState<File[]>([]);
+
+  const handlePDFFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newFiles = event.target.files;
+    if (!newFiles) {
+      return;
+    }
+    actions.removeAllErrors();
+    const fileMap = new Map<string, File>();
+    Array.from(newFiles).forEach((file) => fileMap.set(file.name, file));
+    pdfFiles.forEach((file) => {
+      if (!fileMap.has(file.name)) {
+        fileMap.set(file.name, file);
+      }
+    });
+    setPDFFiles(Array.from(fileMap.values()));
+    const newFileNames: string[] = Array.from(fileMap.values()).map((file) => file.name);
+    await actions.addAttachedDatapackFiles(
+      datapack.title,
+      getUUIDOfDatapackType(datapack),
+      datapack.isPublic,
+      Array.from(fileMap.values())
+    );
+    // only add new file names that are not already in the list
+    setFileNames((prevFileNames) => [
+      ...prevFileNames,
+      ...newFileNames.filter((name) => !prevFileNames.includes(name))
+    ]);
+  };
+
+  const handleDeleteFile = async (fileName: string) => {
+    setFileNames(fileNames.filter((name) => name !== fileName));
+    try {
+      const numFilesRemaining = await actions.deleteAttachedDatapackFile(
+        datapack.title,
+        getUUIDOfDatapackType(datapack),
+        datapack.isPublic,
+        fileName
+      );
+      console.log("File deleted successfully:", fileName);
+      if (numFilesRemaining === 0) {
+        setDatapack({ ...datapack, hasFiles: false });
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+    }
+  };
+
+  return (
+    <>
+      {state.datapackProfilePage.editMode ? (
+        <Box className={styles.changeDatapackFile}>
+          {fileNames.length > 0 ? (
+            fileNames.map((fileName, index) => (
+              <Box key={index} sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography className={styles.fileName}>{fileName}</Typography>
+                <IconButton onClick={() => handleDeleteFile(fileName)} size="small">
+                  <DeleteIcon fontSize="small" />
+                </IconButton>
+              </Box>
+            ))
+          ) : (
+            <Typography className={styles.fileName}>No attached files</Typography>
+          )}
+          <InputFileUpload
+            startIcon={<FileUpload />}
+            text={"Change Attached Files"}
+            onChange={handlePDFFileUpload}
+            accept=".pdf"
+            multiple={true}
+          />
+        </Box>
+      ) : (
+        fileNames.length > 0 &&
+        fileNames.map((fileName, index) => (
+          <Typography key={index} className={styles.fileName}>
+            {fileName}
+          </Typography>
+        ))
       )}
     </>
   );

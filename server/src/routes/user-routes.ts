@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { rm, mkdir, readFile } from "fs/promises";
+import { rm, mkdir, readFile, readdir, copyFile } from "fs/promises";
 import { getEncryptionDatapackFileSystemDetails, runJavaEncrypt } from "../encryption.js";
 import {
   assetconfigs,
@@ -17,7 +17,12 @@ import {
   getActiveWorkshopsUserIsIn,
   updateComment
 } from "../database.js";
-import { deleteUserDatapack, fetchAllUsersDatapacks, fetchUserDatapack } from "../user/user-handler.js";
+import {
+  checkFileTypeIsPDF,
+  deleteUserDatapack,
+  fetchAllUsersDatapacks,
+  fetchUserDatapack
+} from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
@@ -27,9 +32,12 @@ import {
   getUsersDatapacksDirectoryFromUUIDDirectory,
   getUserUUIDDirectory
 } from "../user/fetch-user-files.js";
-import path from "path";
+import path, { join } from "path";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
+import { editDatapack } from "../file-handlers/edit-handler.js";
+import { tmpdir } from "os";
+import { uploadFileToFileSystem } from "../upload-handlers.js";
 
 export const editDatapackMetadata = async function editDatapackMetadata(
   request: FastifyRequest<{ Params: { datapack: string } }>,
@@ -550,6 +558,140 @@ export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(
       reply.status(500).send({ error: "An error occurred: " + e });
     }
   }
+};
+
+export const fetchDatapackAttachedFileNames = async function fetchDatapackAttachedFileNames(
+  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle, uuid, isPublic } = request.params;
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
+
+  const directory = await getUserUUIDDirectory(uuid, isPublic);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+
+  if (!datapackFolder.startsWith(datapacksFolder)) {
+    reply.status(400).send({ error: "Invalid datapack title" });
+    return;
+  }
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+  const files = await readdir(filesDir);
+  if (!files || files.length === 0) {
+    reply.status(404).send({ error: "No files found in the datapack" });
+    return;
+  }
+  reply.send(files);
+};
+
+export const deleteDatapackAttachedFile = async function deleteDatapackAttachedFile(
+  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean; fileName: string } }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle, uuid, isPublic, fileName } = request.params;
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
+
+  if (fileName === "" || fileName.trim() === "") {
+    reply.status(400).send({ error: "Missing filename" });
+    return;
+  }
+
+  const directory = await getUserUUIDDirectory(uuid, isPublic);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+
+  if (!datapackFolder.startsWith(datapacksFolder)) {
+    reply.status(400).send({ error: "Invalid datapack title" });
+    return;
+  }
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+  const deleteFileDir = path.join(filesDir, fileName);
+  await rm(deleteFileDir);
+  const numFilesRemaining = (await readdir(filesDir)).length;
+  // if there are no files remaining, we should update the metadata of the datapack
+  if (numFilesRemaining === 0) {
+    const errors = await editDatapack(uuid, datapackTitle, { hasFiles: false });
+    if (errors.length > 0) {
+      return { code: 422, message: "There were errors updating the datapack" };
+    }
+  }
+  reply.send({ message: "File deleted successfully", numFilesRemaining });
+  return;
+};
+
+export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
+  request: FastifyRequest<{
+    Params: { datapackTitle: string; uuid: string; isPublic: boolean };
+  }>,
+  reply: FastifyReply
+) {
+  const { datapackTitle, uuid, isPublic } = request.params;
+  const parts = request.parts();
+  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
+    reply.status(400).send({ error: "Missing datapack title" });
+    return;
+  }
+
+  async function cleanupTempFiles() {
+    for (const pdfPath of Object.values(pdfFields)) {
+      await rm(pdfPath, { force: true });
+    }
+  }
+
+  const directory = await getUserUUIDDirectory(uuid, isPublic);
+  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
+  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+  const pdfFields: Record<string, string> = {};
+
+  if (!datapackFolder.startsWith(datapacksFolder)) {
+    reply.status(400).send({ error: "Invalid datapack title" });
+    return;
+  }
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+
+  // process the multipart form data
+  for await (const part of parts) {
+    if (part.type === "file") {
+      if (part.fieldname === "newFiles[]") {
+        if (!checkFileTypeIsPDF(part)) {
+          await cleanupTempFiles();
+          return { code: 415, message: "Invalid file type for datapack pdf file" };
+        }
+        const filePath = join(tmpdir(), part.filename);
+        pdfFields[part.filename] = filePath;
+        const { code, message } = await uploadFileToFileSystem(part, filePath);
+        if (code !== 200) {
+          await cleanupTempFiles();
+          return { code, message };
+        }
+      }
+    }
+  }
+
+  // copy temp files to the datapack files directory
+  for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
+    if (!pdfFilePath || !pdfFileName) continue;
+    const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
+    if (!datapackPDFFilepathDest.startsWith(filesDir) || !(await verifyNonExistentFilepath(datapackPDFFilepathDest))) {
+      throw new Error("Invalid datapack PDF filepath destination path");
+    }
+    await copyFile(pdfFilePath, datapackPDFFilepathDest);
+    // remove the original file if it was copied from a temp file
+    if (pdfFilePath !== datapackPDFFilepathDest) {
+      await rm(pdfFilePath, { force: true });
+    }
+  }
+
+  // update the metadata of the datapack to indicate that it has files
+  await editDatapack(uuid, datapackTitle, { hasFiles: true });
+  reply.send({ message: "File added successfully" });
+  return;
 };
 
 export const uploadDatapackComment = async function uploadDatapackComment(
