@@ -284,7 +284,6 @@ const strictRateLimit = rateLimitConfig(10);
 const moderateRateLimit = rateLimitConfig(20);
 const looseRateLimit = rateLimitConfig(30);
 
-
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
 
