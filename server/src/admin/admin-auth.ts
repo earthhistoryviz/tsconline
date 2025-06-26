@@ -195,7 +195,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const addWorkshopCoverParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" }
+      workshopId: { type: "integer", minimum: 1 }
     },
     required: ["workshopId"]
   };
@@ -209,7 +209,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const deleteDatapackCommentParams = {
     type: "object",
     properties: {
-      commentId: { type: "number" }
+      commentId: { type: "integer", minimum: 1 }
     },
     required: ["commentId"]
   };

@@ -71,7 +71,6 @@ export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPr
   reply: FastifyReply
 ) {
   try {
-    const user = request.user!;
     const datapacks = await fetchAllPrivateOfficialDatapacks();
     const metadata = datapacks.map((datapack) => {
       return extractMetadataFromDatapack(datapack);
@@ -935,10 +934,6 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
           reply.status(415).send({ error: "Invalid file type" });
           return;
         }
-        if (!workshopId) {
-          reply.status(400).send({ error: "Missing workshopId" });
-          return;
-        }
         const workshop = await getWorkshopIfNotEnded(workshopId);
         if (!workshop) {
           reply.status(404).send({ error: "Workshop not found or has ended" });
@@ -954,7 +949,7 @@ export const adminUploadCoverPictureToWorkshop = async function adminUploadCover
       }
     }
     if (!coverPicture) {
-      reply.status(400).send({ error: "No cover picture were uploaded" });
+      reply.status(400).send({ error: "No cover picture was uploaded" });
       return;
     }
   } catch (error) {
@@ -980,10 +975,6 @@ export const adminDeleteDatapackComment = async function adminDeleteDatapackComm
   reply: FastifyReply
 ) {
   const { commentId } = request.params;
-  if (commentId === undefined) {
-    reply.status(400).send({ error: "Missing comment ID" });
-    return;
-  }
   try {
     const comment = await findDatapackComment({ id: commentId });
     if (!comment || comment.length < 1 || !comment[0]) {

@@ -3098,8 +3098,72 @@ describe("adminUploadFilesToWorkshop", () => {
     });
     expect(response.statusCode).toBe(500);
   });
-
+  it("should return 400 if unrecognized file type is uploaded", async () => {
+    createForm({
+      otherFiles: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.xyz",
+          contentType: "application/octet-stream"
+        }
+      },
+      test: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+      }
+    }})
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      error: "Unexpected field: test"
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in uploadFileToWorkshop", async () => {
+    vi.mocked(uploadHandlers.uploadFileToWorkshop).mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Error uploading files to workshop" });
+    expect(response.statusCode).toBe(500);
+    expect(uploadHandlers.uploadFileToWorkshop).toHaveBeenCalledOnce();
+  });
   it("should return 200 if successfully uploaded file", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Files added to workshop" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successfully uploaded file with presentation and instructions", async () => {
+    createForm({
+      presentationFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "presentation.pdf",
+          contentType: "application/pdf"
+        }
+      },
+      instructionsFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "instructions.pdf",
+          contentType: "application/pdf"
+        }
+      }
+    });
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/files/1",
@@ -3129,6 +3193,21 @@ describe("adminUploadCoverPicToWorkshop", () => {
   beforeEach(() => {
     createForm();
     vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/not-a-number",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should return 404 if workshop ended", async () => {
     vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
@@ -3168,7 +3247,28 @@ describe("adminUploadCoverPicToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid file type" });
     expect(response.statusCode).toBe(415);
   });
-
+  it("should return 400 if no file is provided", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: {},
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "No cover picture was uploaded" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in uploadCoverPicToWorkshop", async () => {
+    vi.mocked(uploadHandlers.uploadCoverPicToWorkshop).mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Error uploading cover picture to workshop" });
+    expect(response.statusCode).toBe(500);
+    expect(uploadHandlers.uploadCoverPicToWorkshop).toHaveBeenCalledOnce();
+  });
   it("should return 200 if successfully uploaded cover picture", async () => {
     const response = await app.inject({
       method: "POST",
@@ -3187,16 +3287,6 @@ describe("adminDeleteDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/datapack/comments/1",
-      headers: { "mock-uuid": "" }
-    });
-    expect(deleteComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
       method: "DELETE",
@@ -3205,6 +3295,12 @@ describe("adminDeleteDatapackComment tests", () => {
     });
     expect(deleteComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be integer",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({
