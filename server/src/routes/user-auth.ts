@@ -9,7 +9,10 @@ import {
   downloadDatapackFilesZip,
   uploadDatapackComment,
   updateDatapackComment,
-  deleteDatapackComment
+  deleteDatapackComment,
+  fetchDatapackAttachedFileNames,
+  deleteDatapackAttachedFile,
+  addDatapackAttachedFiles
 } from "./user-routes.js";
 import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
@@ -90,6 +93,34 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     required: ["datapackTitle", "uuid", "isPublic"]
   };
+  const fetchDatapackAttachedFileNamesParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" },
+      uuid: { type: "string" },
+      isPublic: { type: "boolean" }
+    },
+    required: ["datapackTitle", "uuid", "isPublic"]
+  };
+  const deleteDatapackAttachedFileParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" },
+      uuid: { type: "string" },
+      isPublic: { type: "boolean" },
+      fileName: { type: "string" }
+    },
+    required: ["datapackTitle", "uuid", "isPublic", "fileName"]
+  };
+  const addDatapackAttachedFilesParams = {
+    type: "object",
+    properties: {
+      datapackTitle: { type: "string" },
+      uuid: { type: "string" },
+      isPublic: { type: "boolean" }
+    },
+    required: ["datapackTitle", "uuid", "isPublic"]
+  };
   const uploadDatapackCommentParams = {
     type: "object",
     properties: {
@@ -158,6 +189,30 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
       schema: { params: downloadDatapackFilesZipParams }
     },
     downloadDatapackFilesZip
+  );
+  fastify.get(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: fetchDatapackAttachedFileNamesParams }
+    },
+    fetchDatapackAttachedFileNames
+  );
+  fastify.delete(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic/:fileName",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: deleteDatapackAttachedFileParams }
+    },
+    deleteDatapackAttachedFile
+  );
+  fastify.post(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: addDatapackAttachedFilesParams }
+    },
+    addDatapackAttachedFiles
   );
   fastify.post(
     "/datapack/addComment/:datapackTitle",
