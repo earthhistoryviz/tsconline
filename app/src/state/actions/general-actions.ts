@@ -210,6 +210,109 @@ export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: str
   }
 });
 
+export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+  const recaptchaToken = await getRecaptchaToken("fetchDatapackFileNames");
+  if (!recaptchaToken) return null;
+  try {
+    const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
+    const names = await response.json();
+    if (response.ok) {
+      return names;
+    } else {
+      // !! need error for datapack file names !!
+      // displayServerError(
+      //   response,
+      //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+      //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+      // );
+    }
+  } catch (e) {
+    if ((e as Error).name === "AbortError") return;
+    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+    console.error(e);
+  }
+});
+
+export const deleteAttachedDatapackFile = action(
+  async (datapackTitle: string, uuid: string, isPublic: boolean, fileName: string) => {
+    const recaptchaToken = await getRecaptchaToken("deleteAttachedDatapackFile");
+    if (!recaptchaToken) return null;
+    try {
+      const response = await fetcher(
+        `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}/${fileName}`,
+        {
+          method: "DELETE",
+          credentials: "include",
+          headers: {
+            "recaptcha-token": recaptchaToken
+          }
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Number of files remaining: ${data.numFilesRemaining}`);
+        return data.numFilesRemaining;
+      } else {
+        // !! need error for when deletion fails !!
+        // displayServerError(
+        //   response,
+        //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+        // );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error(e);
+    }
+  }
+);
+
+export const addAttachedDatapackFiles = action(
+  async (datapackTitle: string, uuid: string, isPublic: boolean, newFiles: File[]) => {
+    const recaptchaToken = await getRecaptchaToken("addAttachedDatapackFiles");
+    if (!recaptchaToken) return null;
+    const formData = new FormData();
+    if (newFiles?.length) {
+      newFiles.forEach((pdfFile) => {
+        formData.append("newFiles[]", pdfFile);
+      });
+    }
+    try {
+      const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
+        },
+        body: formData
+      });
+      console.log(`Response status: ${response.status}`);
+      if (response.ok) {
+        return true;
+      } else {
+        // !! need error for when deletion fails !!
+        // displayServerError(
+        //   response,
+        //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
+        //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
+        // );
+      }
+    } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      console.error("error bruh", e);
+    }
+  }
+);
+
 export const fetchFaciesPatterns = action("fetchFaciesPatterns", async () => {
   try {
     const response = await fetcher("/facies-patterns");
