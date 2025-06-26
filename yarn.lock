@@ -12267,6 +12267,7 @@ __metadata:
     typescript: "npm:5.2.2"
     vitest: "npm:^1.6.1"
     wait-on: "npm:^8.0.1"
+    ws: "npm:^8.18.2"
   languageName: unknown
   linkType: soft
 
@@ -13229,7 +13230,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ws@npm:^8.0.0, ws@npm:^8.16.0":
+"ws@npm:^8.0.0, ws@npm:^8.16.0, ws@npm:^8.18.2":
   version: 8.18.2
   resolution: "ws@npm:8.18.2"
   peerDependencies:

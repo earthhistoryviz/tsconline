@@ -227,7 +227,7 @@ export async function handleChartGeneration(socket: WebSocket, request: FastifyR
         request.session.get("uuid")
       );
       socket.send(JSON.stringify({ stage: "Waiting for file", percent: 90 }));
-      await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 30_000);
+      await waitForSVGReady(path.join(assetconfigs.chartsDirectory, hash, "chart.svg"), 30000);
       socket.send(JSON.stringify({ stage: "Complete", percent: 100, chartpath, hash }));
     } catch (error) {
       let message = "Unknown error";

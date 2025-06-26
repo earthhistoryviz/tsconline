@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeAll } from "vitest";
 import {
   parseJavaOutputLine,
   resolveDatapacks,
@@ -32,6 +32,11 @@ vi.mock("../src/util", () => ({
 vi.mock("child_process", () => ({
   spawn: vi.fn()
 }));
+
+beforeAll(() => {
+  vi.spyOn(console, "error").mockImplementation(() => {});
+  vi.spyOn(console, "log").mockImplementation(() => {});
+});
 
 describe("parseJavaOutputLine tests", () => {
   const filenameMap = { "foo.sqlite": "Foo Pack" };
