@@ -1,28 +1,15 @@
 import { ChartProgressUpdate, ChartRequest, NormalProgress, isTempDatapack, isUserDatapack } from "@tsconline/shared";
 import { spawn } from "child_process";
-import md5 from "md5";
 import path from "path";
 import { readFile, writeFile, mkdir } from "fs/promises";
-import { containsKnownError } from "./chart-error-handler.js";
-import { findUser, getActiveWorkshopsUserIsIn, isUserInWorkshopAndWorkshopIsActive } from "./database.js";
-import logger from "./error-logger.js";
-import { updateFileMetadata } from "./file-metadata-handler.js";
-import { saveChartHistory } from "./user/chart-history.js";
-import { fetchUserDatapackDirectory } from "./user/fetch-user-files.js";
-import { deleteUserDatapack } from "./user/user-handler.js";
-import { checkFileExists, assetconfigs, deleteDirectory } from "./util.js";
-import { getWorkshopIdFromUUID } from "./workshop/workshop-util.js";
+import { containsKnownError } from "../chart-error-handler.js";
+import { findUser, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
+import logger from "../error-logger.js";
+import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
+import { deleteUserDatapack } from "../user/user-handler.js";
+import { checkFileExists, assetconfigs, deleteDirectory } from "../util.js";
+import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import svgson from "svgson";
-import { queue, maxQueueSize } from "./index.js";
-
-export class ChartGenerationError extends Error {
-  public errorCode: number;
-
-  constructor(message: string, errorCode: number) {
-    super(message);
-    this.errorCode = errorCode;
-  }
-}
 
 export function parseJavaOutputLine(line: string, filenameMap: Record<string, string>): NormalProgress | null {
   if (line.includes("Convert Datapack to sqlite database")) {
@@ -128,7 +115,7 @@ export async function checkForCacheHit(
   return { chartpath: chartUrlPath, hash };
 }
 
-async function writeChartSettings(settingsFilePath: string, chartDirFilePath: string, settingsXml: string) {
+export async function writeChartSettings(settingsFilePath: string, chartDirFilePath: string, settingsXml: string) {
   await mkdir(chartDirFilePath, { recursive: true });
   await writeFile(settingsFilePath, settingsXml);
 }
@@ -228,106 +215,10 @@ export async function runJavaChartGeneration(
   return { knownErrorCode, errorMessage };
 }
 
-function cleanupTempDatapacks(tempDatapacks: string[]) {
+export function cleanupTempDatapacks(tempDatapacks: string[]) {
   tempDatapacks.forEach((dp) => {
     deleteUserDatapack("temp", dp).catch((e) => {
       logger.error(`Failed to delete temporary datapack ${dp}: ${e}`);
     });
   });
-}
-
-export async function generateChart(
-  chartRequest: ChartRequest,
-  onProgress: (p: ChartProgressUpdate) => void,
-  uuid?: string
-) {
-  const { useCache, isCrossPlot, settings } = chartRequest;
-  const hash = md5(isCrossPlot + settings + chartRequest.datapacks.join(","));
-  const userId = uuid ? (await findUser({ uuid }))[0]?.userId : undefined;
-  const isInWorkshop = userId ? (await getActiveWorkshopsUserIsIn(userId)).length : 0;
-  const chartDir = path.join(assetconfigs.chartsDirectory, hash);
-  const chartFile = path.join(chartDir, "chart.svg");
-  const settingsFile = path.join(chartDir, "settings.tsc");
-  const chartUrlPath = `/${assetconfigs.chartsDirectory}/${hash}/chart.svg`;
-
-  const { datapacksToSendToCommandLine, usedUserDatapackFilepaths, usedTempDatapacks, filenameMap } =
-    await resolveDatapacks(chartRequest, uuid);
-
-  await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths).catch(() => {
-    throw new ChartGenerationError("Failed to update file metadata", 100);
-  });
-
-  const cached = await checkForCacheHit(chartFile, useCache, chartUrlPath, hash);
-  if (cached) {
-    if (!isCrossPlot && uuid) {
-      // do not await this, let it run in the background
-      saveChartHistory(uuid, settingsFile, datapacksToSendToCommandLine, chartFile, hash).catch((e) => {
-        logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
-      });
-    }
-    return cached;
-  }
-
-  await writeChartSettings(settingsFile, chartDir, settings);
-  console.log("Successfully created and saved chart settings at", settingsFile);
-
-  if (queue.size >= maxQueueSize) throw new ChartGenerationError("Queue is too busy", 503);
-
-  let knownErrorCode = 0;
-  let errorMessage = "";
-
-  try {
-    const priority = isInWorkshop ? 2 : uuid ? 1 : 0;
-    await queue.add(
-      async () => {
-        const result = await runJavaChartGeneration(
-          chartRequest,
-          datapacksToSendToCommandLine,
-          settingsFile,
-          chartFile,
-          filenameMap,
-          onProgress
-        );
-        knownErrorCode = result.knownErrorCode;
-        errorMessage = result.errorMessage;
-      },
-      { priority }
-    );
-  } catch (error) {
-    if ((error as Error).message.includes("timed out")) {
-      console.error("Queue timed out");
-      throw new ChartGenerationError("Queue timed out", 408);
-    } else {
-      console.error("Failed to execute Java command:", error);
-      throw new ChartGenerationError("Failed to execute Java command", 400);
-    }
-  } finally {
-    cleanupTempDatapacks(usedTempDatapacks);
-  }
-
-  if (knownErrorCode) {
-    console.log("Error found in Java output. Sending error as response");
-    console.log(
-      "The following failed: ",
-      {
-        chartpath: chartUrlPath,
-        hash: hash
-      },
-      "because of: ",
-      { errorMessage }
-    );
-    throw new ChartGenerationError(errorMessage, 500);
-  }
-
-  console.log("No error found in Java output. Sending chartpath and hash.");
-  console.log("Sending reply to browser: ", {
-    chartpath: chartUrlPath,
-    hash: hash
-  });
-  if (!isCrossPlot && uuid)
-    // do not await this, let it run in the background
-    saveChartHistory(uuid, settingsFile, datapacksToSendToCommandLine, chartFile, hash).catch((e) => {
-      logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
-    });
-  return { chartpath: chartUrlPath, hash: hash };
 }

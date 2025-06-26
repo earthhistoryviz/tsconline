@@ -18,8 +18,9 @@ import { loadPublicUserDatapacks } from "../public-datapack-handler.js";
 import { fetchDatapackProfilePictureFilepath, fetchMapPackImageFilepath } from "../upload-handlers.js";
 import logger from "../error-logger.js";
 import "dotenv/config";
-import { generateChart, waitForSVGReady, ChartGenerationError } from "../chart-generation-service.js";
+import { waitForSVGReady } from "../chart-generation/generate-chart-helpers.js";
 import type { WebSocket } from "ws";
+import { generateChart, ChartGenerationError } from "../chart-generation/generate-chart.js";
 
 export const submitBugReport = async function submitBugReport(request: FastifyRequest, reply: FastifyReply) {
   const parts = request.parts();

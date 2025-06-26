@@ -30,7 +30,7 @@ vi.mock("../src/util", async (importOriginal) => {
     assetconfigs: {
       chartsDirectory: "test/charts"
     }
-  }
+  };
 });
 
 let app: FastifyInstance;

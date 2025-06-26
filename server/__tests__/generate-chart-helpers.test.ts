@@ -4,7 +4,7 @@ import {
   resolveDatapacks,
   checkForCacheHit,
   runJavaChartGeneration
-} from "../src/chart-generation-service";
+} from "../src/chart-generation/generate-chart-helpers";
 import * as childProcess from "child_process";
 import * as db from "../src/database";
 import * as userFiles from "../src/user/fetch-user-files";
