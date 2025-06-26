@@ -66,35 +66,12 @@ import _ from "lodash";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
-export const getPrivateOfficialDatapacks = async function getPrivateOfficialDatapacks(
-  _request: FastifyRequest,
-  reply: FastifyReply
-) {
-  try {
-    const datapacks = await fetchAllPrivateOfficialDatapacks();
-    reply.send(datapacks);
-  } catch (e) {
-    console.error(e);
-    reply.status(500).send({ error: "Unknown error fetching user datapacks" });
-    return;
-  }
-};
-
 export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPrivateOfficialDatapacksMetadata(
   request: FastifyRequest,
   reply: FastifyReply
 ) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "No session" });
-    return;
-  }
   try {
-    const user = await findUser({ uuid });
-    if (!user || user.length !== 1 || !user[0] || !user[0].isAdmin) {
-      reply.status(403).send({ error: "Unauthorized access" });
-      return;
-    }
+    const user = request.user!;
     const datapacks = await fetchAllPrivateOfficialDatapacks();
     const metadata = datapacks.map((datapack) => {
       return extractMetadataFromDatapack(datapack);
@@ -245,10 +222,6 @@ export const adminDeleteUser = async function adminDeleteUser(
   reply: FastifyReply
 ) {
   const { uuid } = request.body;
-  if (!uuid) {
-    reply.status(400).send({ error: "Missing uuid" });
-    return;
-  }
   try {
     const user = await findUser({ uuid });
     if (!user || user.length < 1 || !user[0]) {
@@ -303,7 +276,7 @@ export const adminModifyUser = async function adminModifyUser(request: FastifyRe
     }
 
     if (user[0] && user[0].email === (process.env.ADMIN_EMAIL || "test@gmail.com")) {
-      reply.status(403).send({ error: "Cannot modify root user" });
+      reply.status(403).send({ error: "Cannot modify root admin user" });
       return;
     }
 
@@ -374,12 +347,16 @@ export const adminDeleteOfficialDatapack = async function adminDeleteOfficialDat
   reply.status(200).send({ message: `Datapack ${datapack} deleted` });
 };
 
-export const getAllUserDatapacks = async function getAllUserDatapacks(request: FastifyRequest, reply: FastifyReply) {
-  const { uuid } = request.body as { uuid: string };
-  if (!uuid) {
-    reply.status(400).send({ error: "Missing uuid in body" });
-    return;
-  }
+interface GetAllUserDatapacksRequest extends RouteGenericInterface {
+  Body: {
+    uuid: string;
+  };
+}
+export const getAllUserDatapacks = async function getAllUserDatapacks(
+  request: FastifyRequest<GetAllUserDatapacksRequest>,
+  reply: FastifyReply
+) {
+  const { uuid } = request.body;
   try {
     const datapacksArray = await fetchAllUsersDatapacks(uuid);
     reply.send(datapacksArray);
@@ -538,7 +515,7 @@ interface AdminCreateWorkshopRequest extends RouteGenericInterface {
     title: string;
     start: string;
     end: string;
-    regRestrict: boolean;
+    regRestrict: number;
     creatorUUID: string;
     regLink?: string;
     description?: string;
@@ -572,7 +549,6 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       reply.status(409).send({ error: "Workshop with same title and dates already exists" });
       return;
     }
-    const regRestrictNum = regRestrict ? 1 : 0;
     const desc = description !== undefined ? description : null;
     const link = regLink !== undefined ? regLink : null;
     const workshopId = await createWorkshop({
@@ -580,7 +556,7 @@ export const adminCreateWorkshop = async function adminCreateWorkshop(
       start: startDate.toISOString(),
       end: endDate.toISOString(),
       creatorUUID: creatorUUID,
-      regRestrict: regRestrictNum,
+      regRestrict,
       regLink: link,
       description: desc
     });
@@ -629,10 +605,6 @@ export const adminEditWorkshop = async function adminEditWorkshop(
   reply: FastifyReply
 ) {
   const { creatorUUID, regLink, title, start, end, workshopId, regRestrict, description } = request.body;
-  if (!workshopId || (!title && !start && !end && !regLink && !description && regRestrict === undefined)) {
-    reply.status(400).send({ error: "Missing required fields" });
-    return;
-  }
   try {
     const fieldsToUpdate: Partial<SharedWorkshop> = {};
     if (title) {
@@ -642,10 +614,6 @@ export const adminEditWorkshop = async function adminEditWorkshop(
       fieldsToUpdate.description = description;
     }
     if (regLink) {
-      if (!validator.isURL(regLink)) {
-        reply.status(400).send({ error: "Invalid registration link" });
-        return;
-      }
       fieldsToUpdate.regLink = regLink;
     }
     if (creatorUUID) {
@@ -653,10 +621,6 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     }
     if (start) {
       const startDate = new Date(start);
-      if (isNaN(startDate.getTime())) {
-        reply.status(400).send({ error: "Invalid start date" });
-        return;
-      }
       fieldsToUpdate.start = startDate.toISOString();
     }
     const existingWorkshop = await getWorkshopIfNotEnded(workshopId);
@@ -667,7 +631,7 @@ export const adminEditWorkshop = async function adminEditWorkshop(
     if (end) {
       const startDate = new Date(fieldsToUpdate.start ?? existingWorkshop.start);
       const endDate = new Date(end);
-      if (isNaN(endDate.getTime()) || startDate.getTime() >= endDate.getTime()) {
+      if (startDate.getTime() >= endDate.getTime()) {
         reply.status(400).send({ error: "Invalid end date" });
         return;
       }
@@ -770,19 +734,15 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
   const { tasks } = request.body;
   const failedRequests = _.cloneDeep(tasks);
   const completedRequests: DatapackPriorityChangeRequest[] = [];
-  try {
-    for (const task of tasks) {
-      try {
-        await editAdminDatapackPriorities(task);
-      } catch (e) {
-        logger.error(e);
-        continue;
-      }
-      failedRequests.shift();
-      completedRequests.push(task);
+  for (const task of tasks) {
+    try {
+      await editAdminDatapackPriorities(task);
+    } catch (e) {
+      logger.error(e);
+      continue;
     }
-  } catch (e) {
-    logger.error(e);
+    failedRequests.shift();
+    completedRequests.push(task);
   }
   if (failedRequests.length > 0) {
     if (completedRequests.length > 0) {
@@ -806,13 +766,9 @@ export const adminEditDatapackPriorities = async function adminEditDatapackPrior
 };
 
 export const adminUploadDatapack = async function adminUploadDatapack(request: FastifyRequest, reply: FastifyReply) {
-  const uuid = request.session.get("uuid");
-  if (!uuid) {
-    reply.status(401).send({ error: "Unauthorized access" });
-    return;
-  }
+  const user = request.user!;
   try {
-    const result = await processAndUploadDatapack(uuid, request.parts());
+    const result = await processAndUploadDatapack(user.uuid, request.parts());
     if (result.code !== 200) {
       reply.status(result.code).send({ error: result.message });
       return;

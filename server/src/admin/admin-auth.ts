@@ -48,6 +48,7 @@ async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
     reply.status(401).send({ error: "Unauthorized access" });
     return;
   }
+  request.user = user[0];
 }
 
 async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
@@ -55,11 +56,6 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, act
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });
-    return;
-  }
-
-  if (!action || typeof action !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha action" });
     return;
   }
 
@@ -112,7 +108,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const adminUUIDbody = {
     type: "object",
     properties: {
-      uuid: { type: "string" }
+      uuid: { type: "string", format: "uuid" }
     },
     required: ["uuid"]
   };
@@ -137,7 +133,7 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
       title: { type: "string", minLength: 1 },
       start: { type: "string", format: "date-time" },
       end: { type: "string", format: "date-time" },
-      regRestrict: { type: "number" },
+      regRestrict: { type: "number", enum: [0, 1] },
       creatorUUID: { type: "string", minLength: 1 },
       regLink: { type: "string", format: "uri" },
       description: { type: "string", minLength: 1 }
@@ -147,12 +143,21 @@ export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOp
   const adminEditWorkshopBody = {
     type: "object",
     properties: {
-      title: { type: "string" },
-      start: { type: "string" },
-      end: { type: "string" },
-      workshopId: { type: "number" }
+      workshopId: { type: "number", minimum: 1 },
+      title: { type: "string", minLength: 1 },
+      start: { type: "string", format: "date-time" },
+      end: { type: "string", format: "date-time" },
+      regRestrict: { type: "number", enum: [0, 1] },
+      creatorUUID: { type: "string", minLength: 1 },
+      regLink: { type: "string", format: "uri" },
+      description: { type: "string", minLength: 1 }
     },
-    required: ["workshopId"]
+    required: ["workshopId"],
+    not: {
+      required: ["workshopId"],
+      maxProperties: 1
+    },
+    additionalProperties: false
   };
   const adminDeleteWorkshopBody = {
     type: "object",

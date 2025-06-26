@@ -12,8 +12,7 @@ const fullyCoveredConfig = {
   branches: 100,
   function: 100,
   lines: 100
-}
-
+};
 
 export default defineConfig({
   test: {
