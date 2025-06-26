@@ -3112,8 +3112,9 @@ describe("adminUploadFilesToWorkshop", () => {
         options: {
           filename: "test.txt",
           contentType: "text/plain"
+        }
       }
-    }})
+    });
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/files/1",
