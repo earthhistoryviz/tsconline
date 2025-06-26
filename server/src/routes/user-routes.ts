@@ -318,10 +318,6 @@ export const userDeleteDatapack = async function userDeleteDatapack(
 ) {
   const user = request.user!; // This should be set by a preHandler that verifies the user is logged in
   const { datapack } = request.params;
-  if (!datapack) {
-    reply.status(400).send({ error: "Missing datapack" });
-    return;
-  }
   try {
     await deleteUserDatapack(user.uuid, datapack);
   } catch (e) {

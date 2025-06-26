@@ -7,6 +7,13 @@ const thresholdConfig = {
   functions: 90,
   lines: 90
 };
+const fullyCoveredConfig = {
+  statements: 100,
+  branches: 100,
+  function: 100,
+  lines: 100
+}
+
 
 export default defineConfig({
   test: {
@@ -31,8 +38,8 @@ export default defineConfig({
         "server/src/user-auth.ts": thresholdConfig,
         "server/src/cloud/general-cloud-requests.ts": thresholdConfig,
         "server/src/cloud/edit-handler.ts": thresholdConfig,
-        "server/src/workshop/workshop-auth.ts": thresholdConfig,
-        "server/src/workshop/workshop-routes.ts": thresholdConfig,
+        "server/src/workshop/workshop-auth.ts": fullyCoveredConfig,
+        "server/src/workshop/workshop-routes.ts": fullyCoveredConfig,
         "server/src/constants.ts": thresholdConfig,
         "server/src/error-logger.ts": thresholdConfig,
         "server/src/crossplot-handler.ts": thresholdConfig,
@@ -40,8 +47,8 @@ export default defineConfig({
         "server/src/user/chart-history.ts": thresholdConfig,
         "server/src/crossplot/extract-markers.ts": thresholdConfig,
         "server/src/crossplot/crossplot-handler.ts": thresholdConfig,
-        "server/src/workshop/workshop-util.ts": thresholdConfig
-        // "server/src/user-routes.ts": thresholdConfig,
+        "server/src/workshop/workshop-util.ts": fullyCoveredConfig,
+        "server/src/user-routes.ts": fullyCoveredConfig
         // "server/src/user/user-handler.ts": thresholdConfig,
         // "server/src/routes/routes.ts": thresholdConfig
       },
