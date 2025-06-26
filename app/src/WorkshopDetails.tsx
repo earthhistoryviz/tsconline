@@ -10,8 +10,7 @@ import { PageNotFound } from "./PageNotFound";
 import { useTranslation } from "react-i18next";
 import { TSCLoadingButton } from "./components/TSCLoadingButton";
 import { formatDate, getWorkshopCoverImage } from "./state/non-action-util";
-import { fetcher, devSafeUrl, loadRecaptcha, removeRecaptcha } from "./util";
-import { getRecaptchaToken } from "./state/actions";
+import { loadRecaptcha, removeRecaptcha } from "./util";
 import {
   ReservedWorkshopFileKey,
   RESERVED_INSTRUCTIONS_FILENAME,
@@ -180,7 +179,8 @@ export const WorkshopDetails = observer(() => {
                   <>
                     {nonReservedFiles.map((file, index) => (
                       <Typography key={index} className={styles.fileName}>
-                        • <a
+                        •{" "}
+                        <a
                           href=""
                           onClick={(e) => {
                             e.preventDefault();

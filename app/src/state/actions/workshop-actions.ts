@@ -42,6 +42,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
   });
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+    console.log(response);
     switch (response.status) {
       case 404:
         errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
@@ -120,7 +121,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
       "recaptcha-token": recaptchaToken
     }
   });
-
+  console.log(response);
   if (!response.ok) {
     console.log(response);
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
@@ -142,7 +143,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
   const file = await response.blob();
   if (file) {
     try {
-      await downloadFile(file, "Unknown");
+      await downloadFile(file, "datapack.txt");
     } catch (error) {
       pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
     }

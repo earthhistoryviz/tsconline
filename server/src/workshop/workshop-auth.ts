@@ -141,12 +141,15 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   );
   fastify.get(
     "/workshop-files/:workshopId/:fileName",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopFileParams } },
+    { config: { rateLimit: moderateRateLimit }, 
+    schema: { params: workshopFileParams },
+    preHandler: [verifyAuthority, verifyRecaptcha] },
     downloadWorkshopFile
   );
   fastify.get(
     "/workshop-datapack/:workshopId/:datapackTitle",
-    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopDataPackParams } },
+    { config: { rateLimit: moderateRateLimit }, schema: { params: workshopDataPackParams },
+     preHandler: [verifyAuthority, verifyRecaptcha]  },
     downloadWorkshopDetailsDataPack
   );
 
