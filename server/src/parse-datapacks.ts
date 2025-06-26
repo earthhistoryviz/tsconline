@@ -205,8 +205,18 @@ export async function parseDatapacks(
   }
   try {
     for (const decryptPath of decryptPaths) {
-      const { units, title, chronostrat, datapackDate, vertScale, version, top, base, filePropertyLines, isNegativeUnits } =
-        await getAllEntries(decryptPath, allEntries, isChild);
+      const {
+        units,
+        title,
+        chronostrat,
+        datapackDate,
+        vertScale,
+        version,
+        top,
+        base,
+        filePropertyLines,
+        isNegativeUnits
+      } = await getAllEntries(decryptPath, allEntries, isChild);
       topAge = top;
       baseAge = base;
       chartTitle = title;
@@ -216,7 +226,7 @@ export async function parseDatapacks(
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
-      await getColumnTypes(decryptPath, loneColumns, ageUnits, negativeFlag,filePropertyLines, warnings);
+      await getColumnTypes(decryptPath, loneColumns, ageUnits, negativeFlag, filePropertyLines, warnings);
       // all the entries parsed thus far (only from parent and child relationships)
       // only iterate over parents. if we encounter one that is a child, the recursive function
       // should have already processed it.
@@ -405,7 +415,7 @@ export async function getAllEntries(
           continue;
         case "age units:":
           ageUnits = value;
-          if (value[0] =="-") isNegativeUnitsDefault = true;
+          if (value[0] == "-") isNegativeUnitsDefault = true;
           filePropertyLines++;
           continue;
         case "default chronostrat:":
@@ -574,25 +584,25 @@ export async function getColumnTypes(
     if (!line.trim()) {
       // we reached the end and store the key value pairs in to faciesMap
       if (inFaciesBlock) {
-        inFaciesBlock = processColumn("Facies", facies, "subFaciesInfo", units,isNegativeUnits, loneColumns);
+        inFaciesBlock = processColumn("Facies", facies, "subFaciesInfo", units, isNegativeUnits, loneColumns);
       } else if (inBlockBlock) {
-        inBlockBlock = processColumn("Block", block, "subBlockInfo", units,isNegativeUnits, loneColumns);
+        inBlockBlock = processColumn("Block", block, "subBlockInfo", units, isNegativeUnits, loneColumns);
       } else if (inEventBlock) {
         // reset for any future event blocks
-        inEventBlock = processColumn("Event", event, "subEventInfo", units,isNegativeUnits, loneColumns);
+        inEventBlock = processColumn("Event", event, "subEventInfo", units, isNegativeUnits, loneColumns);
         subEventType = null;
       } else if (inRangeBlock) {
-        inRangeBlock = processColumn("Range", range, "subRangeInfo", units,isNegativeUnits, loneColumns);
+        inRangeBlock = processColumn("Range", range, "subRangeInfo", units, isNegativeUnits, loneColumns);
       } else if (inChronBlock) {
-        inChronBlock = processColumn("Chron", chron, "subChronInfo", units,isNegativeUnits, loneColumns);
+        inChronBlock = processColumn("Chron", chron, "subChronInfo", units, isNegativeUnits, loneColumns);
       } else if (inPointBlock) {
-        inPointBlock = processColumn("Point", point, "subPointInfo", units,isNegativeUnits, loneColumns);
+        inPointBlock = processColumn("Point", point, "subPointInfo", units, isNegativeUnits, loneColumns);
       } else if (inSequenceBlock) {
-        inSequenceBlock = processColumn("Sequence", sequence, "subSequenceInfo", units,isNegativeUnits, loneColumns);
+        inSequenceBlock = processColumn("Sequence", sequence, "subSequenceInfo", units, isNegativeUnits, loneColumns);
       } else if (inTransectBlock) {
-        inTransectBlock = processColumn("Transect", transect, "subTransectInfo", units,isNegativeUnits, loneColumns);
+        inTransectBlock = processColumn("Transect", transect, "subTransectInfo", units, isNegativeUnits, loneColumns);
       } else if (inFreehandBlock) {
-        inFreehandBlock = processColumn("Freehand", freehand, "subFreehandInfo", units,isNegativeUnits, loneColumns);
+        inFreehandBlock = processColumn("Freehand", freehand, "subFreehandInfo", units, isNegativeUnits, loneColumns);
       } else if (inSkipBlock) {
         inSkipBlock = false;
       }
@@ -642,7 +652,7 @@ export async function getColumnTypes(
       continue;
     } else if (inTransectBlock) {
       if (tabSeparated[0] === "POLYGON" || tabSeparated[0] === "TEXT") {
-        processColumn("Transect", transect, "subTransectInfo", units,isNegativeUnits, loneColumns);
+        processColumn("Transect", transect, "subTransectInfo", units, isNegativeUnits, loneColumns);
         inSkipBlock = true;
         inTransectBlock = false;
         continue;
@@ -786,23 +796,23 @@ export async function getColumnTypes(
   }
 
   if (inFaciesBlock) {
-    processColumn("Facies", facies, "subFaciesInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Facies", facies, "subFaciesInfo", units, isNegativeUnits, loneColumns);
   } else if (inBlockBlock) {
-    processColumn("Block", block, "subBlockInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Block", block, "subBlockInfo", units, isNegativeUnits, loneColumns);
   } else if (inEventBlock) {
-    processColumn("Event", event, "subEventInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Event", event, "subEventInfo", units, isNegativeUnits, loneColumns);
   } else if (inRangeBlock) {
-    processColumn("Range", range, "subRangeInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Range", range, "subRangeInfo", units, isNegativeUnits, loneColumns);
   } else if (inChronBlock) {
-    processColumn("Chron", chron, "subChronInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Chron", chron, "subChronInfo", units, isNegativeUnits, loneColumns);
   } else if (inPointBlock) {
-    processColumn("Point", point, "subPointInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Point", point, "subPointInfo", units, isNegativeUnits, loneColumns);
   } else if (inSequenceBlock) {
-    processColumn("Sequence", sequence, "subSequenceInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Sequence", sequence, "subSequenceInfo", units, isNegativeUnits, loneColumns);
   } else if (inTransectBlock) {
-    processColumn("Transect", transect, "subTransectInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Transect", transect, "subTransectInfo", units, isNegativeUnits, loneColumns);
   } else if (inFreehandBlock) {
-    processColumn("Freehand", freehand, "subFreehandInfo", units,isNegativeUnits, loneColumns);
+    processColumn("Freehand", freehand, "subFreehandInfo", units, isNegativeUnits, loneColumns);
   }
   return warnings;
 }
@@ -1797,7 +1807,7 @@ function processColumn<T extends ColumnInfoType>(
   column: ColumnInfoTypeMap[T],
   subInfoKey: keyof ColumnInfoTypeMap[T],
   units: string,
-  isNegativeUnits:boolean,
+  isNegativeUnits: boolean,
   loneColumns: Map<string, ColumnInfo>
 ): boolean {
   const { [subInfoKey]: subInfo, ...columnHeaderProps } = column;
@@ -1824,12 +1834,12 @@ function processColumn<T extends ColumnInfoType>(
       break;
     case "Sequence":
       assertSequence(column);
-      handleSequenceFields(column, loneColumns, units,isNegativeUnits);
+      handleSequenceFields(column, loneColumns, units, isNegativeUnits);
       break;
     default:
       loneColumns.set(
         column.name,
-        createLoneColumn(columnHeaderProps, getValidFontOptions(type), units,isNegativeUnits, subInfo, type)
+        createLoneColumn(columnHeaderProps, getValidFontOptions(type), units, isNegativeUnits, subInfo, type)
       );
       break;
   }
@@ -1891,7 +1901,12 @@ export function configureOptionalPointSettings(tabSeparated: string[], point: Po
   assertPoint(point);
 }
 
-function handleSequenceFields(sequence: Sequence, loneColumns: Map<string, ColumnInfo>, units: string, isNegativeUnits: boolean) {
+function handleSequenceFields(
+  sequence: Sequence,
+  loneColumns: Map<string, ColumnInfo>,
+  units: string,
+  isNegativeUnits: boolean
+) {
   const sequenceStyle = "stroke-width: 0; fill: rgb(64, 191, 233);";
   const trendStyle = "stroke-width: 1; stroke: black; fill: rgb(64, 191, 233);";
   const sequenceColor = { r: 255, g: 255, b: 255 };
@@ -1924,7 +1939,12 @@ function handleSequenceFields(sequence: Sequence, loneColumns: Map<string, Colum
   );
 }
 
-function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, units: string, isNegativeUnits:boolean) {
+function handlePointFields(
+  point: Point,
+  loneColumns: Map<string, ColumnInfo>,
+  units: string,
+  isNegativeUnits: boolean
+) {
   for (const subPoint of point.subPointInfo) {
     point.minX = Math.min(subPoint.xVal, point.minX);
     point.maxX = Math.max(subPoint.xVal, point.maxX);
@@ -1973,7 +1993,15 @@ function handlePointFields(point: Point, loneColumns: Map<string, ColumnInfo>, u
   assertColumnHeaderProps(headerInfo);
   loneColumns.set(
     point.name,
-    createLoneColumn(headerInfo, getValidFontOptions("Point"), units, isNegativeUnits,subPointInfo, "Point", columnSpecificSettings)
+    createLoneColumn(
+      headerInfo,
+      getValidFontOptions("Point"),
+      units,
+      isNegativeUnits,
+      subPointInfo,
+      "Point",
+      columnSpecificSettings
+    )
   );
 }
 

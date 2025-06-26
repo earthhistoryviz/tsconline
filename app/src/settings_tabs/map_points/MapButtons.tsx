@@ -86,7 +86,8 @@ const MapPointButton: React.FC<MapPointButtonProps> = observer(
           column.minAge,
           column.maxAge,
           state.settings.timeSettings[column.units].topStageAge,
-          state.settings.timeSettings[column.units].baseStageAge
+          state.settings.timeSettings[column.units].baseStageAge,
+          state.settings.timeSettings[column.units].isNegativeUnits
         )
       : false;
     const scaleButton = !isInfo && state.mapState.isFacies;

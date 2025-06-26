@@ -28,6 +28,9 @@ export const Time = observer(function Time() {
   const disabled = units.toLowerCase() !== "ma";
 
   function checkAgeRange() {
+    if (state.settings.timeSettings[units].isNegativeUnits) {
+      return state.settings.timeSettings[units].topStageAge < state.settings.timeSettings[units].baseStageAge;
+    }
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
   const navigate = useNavigate();
@@ -160,7 +163,11 @@ export const Time = observer(function Time() {
             type="number"
             size="small"
             name="vertical-scale-text-field"
-            value={state.settings.timeSettings[units].unitsPerMY}
+            value={
+              state.settings.timeSettings[units].isNegativeUnits
+                ? -state.settings.timeSettings[units].unitsPerMY
+                : state.settings.timeSettings[units].unitsPerMY
+            }
             onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
           />
           <div className="generate-button-container">

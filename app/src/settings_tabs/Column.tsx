@@ -250,17 +250,21 @@ const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   // todo fix this for crossplot
+  console.log(state.timeSettings[column.units].isNegativeUnits);
   const dataInRange = checkIfDccColumn(column)
     ? checkIfDccDataIsInRange(
         column,
         state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].baseStageAge,
+        state.timeSettings[column.units].isNegativeUnits
+        
       )
     : checkIfDataIsInRange(
         column.minAge,
         column.maxAge,
         state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].baseStageAge,
+        state.timeSettings[column.units].isNegativeUnits
       );
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (

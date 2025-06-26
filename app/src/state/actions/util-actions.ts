@@ -86,14 +86,28 @@ export function checkDatapackValidity(file: File) {
   return true;
 }
 
-export function checkIfDccDataIsInRange(dccColumn: RenderColumnInfo, userTopAge: number, userBaseAge: number) {
+export function checkIfDccDataIsInRange(
+  dccColumn: RenderColumnInfo,
+  userTopAge: number,
+  userBaseAge: number,
+  isNegativeUnits: boolean
+) {
+  if (isNegativeUnits) {
+    userBaseAge = -userBaseAge;
+    userTopAge = -userTopAge;
+  }
   if (userBaseAge <= userTopAge) {
     return false;
   }
   let reachedFirstRef = false;
   while (!reachedFirstRef) {
+    if (isNegativeUnits) {
+      let temp: number = -dccColumn.maxAge;
+      dccColumn.maxAge = -dccColumn.minAge;
+      dccColumn.minAge = temp;
+    }
     if (dccColumn.maxAge < userTopAge || dccColumn.minAge > userBaseAge) {
-      return false;
+      return;
     }
     if (dccColumn.columnDisplayType === "Event") {
       assertEventSettings(dccColumn.columnSpecificSettings);
