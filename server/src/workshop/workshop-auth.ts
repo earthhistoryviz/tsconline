@@ -4,6 +4,7 @@ import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { downloadWorkshopFilesZip, editWorkshopDatapackMetadata, serveWorkshopHyperlinks } from "./workshop-routes.js";
 import { WorkshopRecaptchaActions } from "@tsconline/shared";
+import { genericRecaptchaMiddlewarePrehandler } from "../routes/prehandlers.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -32,32 +33,6 @@ async function verifyAuthority<T extends FastifyRequest = FastifyRequest>(reques
   }
 }
 
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
-  const recaptchaToken = request.headers["recaptcha-token"];
-
-  if (!recaptchaToken || typeof recaptchaToken !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha token" });
-    return;
-  }
-
-  try {
-    const score = await checkRecaptchaToken(recaptchaToken, action);
-    if (score < googleRecaptchaBotThreshold) {
-      reply.status(422).send({ error: "Recaptcha failed" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Recaptcha error" });
-    return;
-  }
-}
-const genericRecaptchaMiddlewarePrehandler = (action: string) => {
-  const verifyRecaptchaPrehandler = async (request: FastifyRequest, reply: FastifyReply) => {
-    await verifyRecaptcha(request, reply, action);
-  };
-  verifyRecaptchaPrehandler.recaptchaAction = action;
-  return verifyRecaptchaPrehandler;
-};
 export const workshopRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const moderateRateLimit = {
     max: 30,

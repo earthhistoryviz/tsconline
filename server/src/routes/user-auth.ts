@@ -22,6 +22,7 @@ import { findUser } from "../database.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
 import { UserRecaptchaActions } from "@tsconline/shared";
+import { genericRecaptchaMiddlewarePrehandler } from "./prehandlers.js";
 
 async function verifySession(request: FastifyRequest, reply: FastifyReply) {
   const uuid = request.session.get("uuid");
@@ -41,31 +42,6 @@ async function verifySession(request: FastifyRequest, reply: FastifyReply) {
     return;
   }
 }
-
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
-  const recaptcha = request.headers["recaptcha-token"];
-  if (!recaptcha || typeof recaptcha !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha token" });
-    return;
-  }
-  try {
-    const score = await checkRecaptchaToken(recaptcha, action);
-    if (score < googleRecaptchaBotThreshold) {
-      reply.status(422).send({ error: "Recaptcha failed" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Recaptcha error" });
-    return;
-  }
-}
-const genericRecaptchaMiddlewarePrehandler = (action: string) => {
-  const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
-    await verifyRecaptcha(request, reply, action);
-  };
-  middleware.recaptchaAction = action;
-  return middleware;
-};
 
 export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {

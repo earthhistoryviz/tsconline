@@ -1,5 +1,6 @@
 import { FastifyInstance, FastifyReply, FastifyRequest, RegisterOptions } from "fastify";
 import { findUser } from "../database.js";
+import { genericRecaptchaMiddlewarePrehandler } from "../routes/prehandlers.js";
 import {
   adminCreateUser,
   adminDeleteUserDatapack,
@@ -50,33 +51,6 @@ async function verifyAdmin(request: FastifyRequest, reply: FastifyReply) {
   }
   request.user = user[0];
 }
-
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
-  const recaptchaToken = request.headers["recaptcha-token"];
-
-  if (!recaptchaToken || typeof recaptchaToken !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha token" });
-    return;
-  }
-
-  try {
-    const score = await checkRecaptchaToken(recaptchaToken, action);
-    if (score < googleRecaptchaBotThreshold) {
-      reply.status(422).send({ error: "Recaptcha failed" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Recaptcha error" });
-    return;
-  }
-}
-const genericRecaptchaMiddlewarePrehandler = (action: string) => {
-  const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
-    await verifyRecaptcha(request, reply, action);
-  };
-  middleware.recaptchaAction = action;
-  return middleware;
-};
 
 export const adminRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const looseRateLimit = {
