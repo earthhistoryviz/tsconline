@@ -294,7 +294,7 @@ translation.settings.column.add-custom-column-menu.select-base-column,Please Sel
 translation.settings.column.add-custom-column-menu.create-column,Create Column
 translation.settings.search.search-bar,Search
 translation.settings.search.found-result,Found {{count}} Results
-translation.settings.search.current-time-settings,Current Time Settings(Top / Base)
+translation.settings.search.current-time-settings,Current Time Settings(Base / Top)
 translation.settings.search.header.status,Column On?
 translation.settings.search.header.center,Center
 translation.settings.search.header.extend,Extend
