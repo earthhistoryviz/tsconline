@@ -232,7 +232,7 @@ server.register(fastifyStatic, {
 server.register(cors, {
   origin: process.env.APP_ORIGIN || "http://localhost:5173",
   methods: ["GET", "POST", "DELETE", "PATCH"],
-  credentials: true,
+  credentials: true
 });
 
 server.register(fastifyCompress, { global: false, threshold: 1024 * 20 });

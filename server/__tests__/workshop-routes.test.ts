@@ -10,7 +10,7 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
 import * as fsp from "fs/promises";
-import * as fs from "fs"; 
+import * as fs from "fs";
 // import { createReadStream } from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
@@ -46,7 +46,6 @@ vi.mock("../src/database", async () => {
 vi.mock("../src/user/fetch-user-files", async () => {
   return {
     getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory")
-    
   };
 });
 vi.mock("../src/util", async () => {
@@ -83,7 +82,7 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("fs", async () => {
   return {
     createReadStream: vi.fn().mockImplementation(() => {}),
-    readFileSync: vi.fn().mockReturnValue(Buffer.from("fake-file-content")),
+    readFileSync: vi.fn().mockReturnValue(Buffer.from("fake-file-content"))
   };
 });
 vi.mock("../src/user/user-handler", async () => {
@@ -541,7 +540,6 @@ describe("downloadWorkshopFile tests", () => {
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
   it("should return 500 if fileName is invalid", async () => {
-    const fileName = "invalid/../file.txt"; // Simulating an invalid file name
     //mock the filename.includes("..") check
     const response = await app.inject({
       method: "GET",
@@ -564,7 +562,7 @@ describe("downloadWorkshopFile tests", () => {
   });
   it("should return 500 if createReadStream throws an error", async () => {
     vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
-            throw new Error("Simulated stream error");
+      throw new Error("Simulated stream error");
     });
 
     const response = await app.inject({
@@ -578,14 +576,13 @@ describe("downloadWorkshopFile tests", () => {
     });
   });
   it("should return 200 and file stream if createReadStream succeeds", async () => {
-     const response = await app.inject({
+    const response = await app.inject({
       method: "GET",
       url: route,
       headers
     });
     expect(response.statusCode).toBe(200);
   });
-  
 });
 
 describe("downloadWorkshopDataPack tests", () => {
@@ -596,7 +593,6 @@ describe("downloadWorkshopDataPack tests", () => {
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
   const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
   const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
-
 
   beforeEach(() => {
     vi.clearAllMocks();
