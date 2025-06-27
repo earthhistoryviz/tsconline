@@ -11,7 +11,7 @@ import {
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
-import {createReadStream} from 'fs';
+import { createReadStream, readFileSync } from "fs";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
@@ -19,6 +19,9 @@ import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { readdir } from "node:fs/promises";
+
+
+
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -48,6 +51,7 @@ export const serveWorkshopHyperlinks = async (
   }
 };
 
+
 export const editWorkshopDatapackMetadata = async function editWorkshopDatapackMetadata(
   request: FastifyRequest<{ Params: { workshopUUID: string; datapackTitle: string } }>,
   reply: FastifyReply
@@ -76,6 +80,7 @@ export const editWorkshopDatapackMetadata = async function editWorkshopDatapackM
   }
 };
 
+
 /**
  * Fetch all workshops
  * @param _request
@@ -90,8 +95,10 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
         const start = new Date(workshop.start);
         const end = new Date(workshop.end);
 
+
         const datapacks = await getWorkshopDatapacksNames(workshop.workshopId);
         const files = await getWorkshopFilesNames(workshop.workshopId);
+
 
         return {
           title: workshop.title,
@@ -109,12 +116,14 @@ export const fetchAllWorkshops = async function fetchAllWorkshops(_request: Fast
       })
     );
 
+
     reply.send(workshops);
   } catch (error) {
     console.error(error);
     reply.status(500).send({ error: "Unknown error" });
   }
 };
+
 
 export const downloadWorkshopFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
@@ -159,6 +168,7 @@ export const downloadWorkshopFilesZip = async (
   }
 };
 
+
 export const downloadWorkshopFile = async function downloadWorkshopFile(
   request: FastifyRequest<{ Params: { workshopId: number; fileName: string } }>,
   reply: FastifyReply
@@ -166,7 +176,6 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
   try {
     const { workshopId, fileName } = request.params;
 
-    // user exists, already verified in verifyAuthority
     const user = request.user!;
     const isAuthorized = user.isAdmin || (await isUserInWorkshop(user.userId, workshopId));
     if (!isAuthorized) {
@@ -174,11 +183,19 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       return;
     }
 
+    //check if fileName is valid
+    if (!fileName || fileName.includes("..") || fileName.includes("/")) {
+      reply.status(500).send({ error: "Invalid file name" });
+      return;
+    }
+
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
     const directory = await getUserUUIDDirectory(workshopUUID, true);
 
+
     let filePath = path.join(directory, "files");
     filePath = path.join(filePath, fileName);
+
 
     if (!(await verifyFilepath(filePath))) {
       reply.status(500).send({ error: "Invalid file path" });
@@ -196,13 +213,15 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
   }
 };
 
-export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDetailsDataPack(
+
+export const downloadWorkshopDataPack = async function downloadWorkshopDataPack(
   request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
   try {
     // already verified uuid in verifyAuthority
     const { workshopId, datapackTitle } = request.params;
+
 
     // user exists, already verified in verifyAuthority
     const user = request.user!;
@@ -212,23 +231,39 @@ export const downloadWorkshopDetailsDataPack = async function downloadWorkshopDe
       return;
     }
 
+    //check if datapackTitle is valid
+    if (!datapackTitle || datapackTitle.includes("..") || datapackTitle.includes("/")) {
+      reply.status(500).send({ error: "Invalid datapack name" });
+      return;
+    }
+
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
     const dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
 
+
     if (!(await checkFileExists(dataPackPath))) {
       reply.status(500).send({ error: "File does not exist" });
+      return;
     }
 
+
     try {
-      const stream = createReadStream(dataPackPath);
-      return reply.send(stream);
+      const fileBuffer = readFileSync(dataPackPath);
+      const fileBase64 = fileBuffer.toString("base64");
+      const fileType = "application/octet-stream";
+      reply.send({
+        fileName: path.basename(dataPackPath),
+        fileData: fileBase64,
+        fileType
+      });
     } catch (e) {
-      reply.status(500).send({ error: "Error creating file stream" });
+      reply.status(500).send({ error: "Error sending file buffer" });
     }
   } catch (e) {
-    reply.status(500).send({ error: "An error has occured" });
+    reply.status(500).send({ error: "An Error has occurred" });
   }
 };
+
 
 export const fetchWorkshopCoverImage = async function (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
@@ -239,6 +274,7 @@ export const fetchWorkshopCoverImage = async function (
   try {
     const imageFilepath = await fetchWorkshopCoverPictureFilepath(workshopId);
     if (!imageFilepath) throw new Error("No cover image found");
+
 
     reply.send(await readFile(imageFilepath));
   } catch (e) {
