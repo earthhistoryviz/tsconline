@@ -650,7 +650,6 @@ describe("verifyRecaptcha tests", () => {
       });
 
       it("should return 400 if missing recaptcha token", async () => {
-        console.log("Testing missing recaptcha token for", url, " with body", body);
         const response = await app.inject({
           method: method as InjectOptions["method"],
           url: url,

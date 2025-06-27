@@ -22,7 +22,7 @@ import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/rout
 import { UserRecaptchaActions } from "@tsconline/shared";
 import { uploadExternalDatapack } from "../src/routes/user-routes";
 
-vi.mock("../src/workshop/workshop-util", async (importOriginal) => {
+vi.mock("../src/workshop/workshop-util", async () => {
   return {
     verifyWorkshopValidity: vi.fn().mockImplementation(() => ({
       code: 200,

@@ -25,8 +25,8 @@ export default defineConfig({
       include: ["server/src/**", "app/src/**", "shared/src/**"],
       // TODO: add the commented out files
       thresholds: {
-        "server/src/admin/admin-auth.ts": thresholdConfig,
-        "server/src/admin/admin-routes.ts": thresholdConfig,
+        "server/src/admin/admin-auth.ts": fullyCoveredConfig,
+        "server/src/admin/admin-routes.ts": fullyCoveredConfig,
         "server/src/encryption.ts": thresholdConfig,
         "server/src/routes/login-routes.ts": thresholdConfig,
         "server/src/parse-datapacks.ts": thresholdConfig,
