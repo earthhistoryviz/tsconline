@@ -21,13 +21,11 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as adminHandler from "../src/admin/admin-handler";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import * as logger from "../src/error-logger";
-import * as validator from "validator";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
-import { randomUUID } from "crypto";
 
 vi.mock("validator", async () => {
   return {
@@ -1834,7 +1832,7 @@ describe("adminAddUsersToWorkshop", () => {
     expect(await response.json()).toEqual({ message: "Users added" });
     expect(response.statusCode).toBe(200);
   });
-  it("asdf should return 200 if just file is provided but no emails", async () => {
+  it("should return 200 if just file is provided but no emails", async () => {
     createForm({
       emails: ""
     });
@@ -3178,16 +3176,16 @@ describe("adminUploadFilesToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid file type for instruction file" });
     expect(response.statusCode).toBe(415);
   });
-  it("should return 400 if reserved file name is used", async () => {
+  it("asdf should return 400 if reserved file name is used", async () => {
     createForm({
+      extraFile: "",
       otherFiles: {
         value: Buffer.from("test"),
         options: {
           filename: shared.RESERVED_INSTRUCTIONS_FILENAME,
           contentType: "application/pdf"
         }
-      },
-      extraFile: ""
+      }
     });
     const response = await app.inject({
       method: "POST",

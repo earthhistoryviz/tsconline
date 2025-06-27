@@ -23,7 +23,6 @@ import { UserRecaptchaActions } from "@tsconline/shared";
 import { uploadExternalDatapack } from "../src/routes/user-routes";
 
 vi.mock("../src/workshop/workshop-util", async (importOriginal) => {
-  const actual = await importOriginal<typeof workshopUtil>();
   return {
     verifyWorkshopValidity: vi.fn().mockImplementation(() => ({
       code: 200,

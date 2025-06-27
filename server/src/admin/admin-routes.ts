@@ -67,7 +67,7 @@ import { processAndUploadDatapack } from "../upload-datapack.js";
 import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 
 export const adminFetchPrivateOfficialDatapacksMetadata = async function fetchPrivateOfficialDatapacksMetadata(
-  request: FastifyRequest,
+  _request: FastifyRequest,
   reply: FastifyReply
 ) {
   try {
