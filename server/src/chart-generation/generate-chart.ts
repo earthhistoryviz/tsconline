@@ -1,19 +1,15 @@
 import { ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
 import md5 from "md5";
 import path from "path";
-import {
-  resolveDatapacks,
-  checkForCacheHit,
-  runJavaChartGeneration,
-  writeChartSettings,
-  cleanupTempDatapacks
-} from "./generate-chart-helpers.js";
+import { resolveDatapacks, checkForCacheHit, runJavaChartGeneration } from "./generate-chart-helpers.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import logger from "../error-logger.js";
 import { updateFileMetadata } from "../file-metadata-handler.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import { assetconfigs } from "../util.js";
 import { queue, maxQueueSize } from "../index.js";
+import { deleteUserDatapack } from "../user/user-handler.js";
+import { mkdir, writeFile } from "fs/promises";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -53,12 +49,13 @@ export async function generateChart(
   }
 
   if (queue.size >= maxQueueSize) throw new ChartGenerationError("Queue is too busy", 503);
-console.log("Queue size is", queue.size, "max size is", maxQueueSize); u 
+
   await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths).catch(() => {
     throw new ChartGenerationError("Failed to update file metadata", 100);
   });
 
-  await writeChartSettings(settingsFile, chartDir, settings);
+  await mkdir(chartDir, { recursive: true });
+  await writeFile(settingsFile, settings);
   console.log("Successfully created and saved chart settings at", settingsFile);
 
   let knownErrorCode = 0;
@@ -90,7 +87,11 @@ console.log("Queue size is", queue.size, "max size is", maxQueueSize); u
       throw new ChartGenerationError("Failed to execute Java command", 400);
     }
   } finally {
-    cleanupTempDatapacks(usedTempDatapacks);
+    usedTempDatapacks.forEach((dp) => {
+      deleteUserDatapack("temp", dp).catch((e) => {
+        logger.error(`Failed to delete temporary datapack ${dp}: ${e}`);
+      });
+    });
   }
 
   if (knownErrorCode) {

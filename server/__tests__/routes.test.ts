@@ -8,7 +8,8 @@ import formAutoContent from "form-auto-content";
 import * as util from "../src/util";
 import { ChartProgressUpdate, ChartRequest } from "@tsconline/shared";
 import { WebSocket } from "ws";
-import * as chartGenerationSevice from "../src/chart-generation-service";
+import * as generateChartHelpers from "../src/chart-generation/generate-chart-helpers";
+import * as generateChart from "../src/chart-generation/generate-chart";
 
 vi.mock("../src/index", () => {
   return {
@@ -317,8 +318,8 @@ describe("handleChartGeneration", () => {
     useCache: true,
     isCrossPlot: false
   };
-  const generateChartSpy = vi.spyOn(chartGenerationSevice, "generateChart");
-  vi.spyOn(chartGenerationSevice, "waitForSVGReady").mockResolvedValue();
+  const generateChartSpy = vi.spyOn(generateChart, "generateChart");
+  vi.spyOn(generateChartHelpers, "waitForSVGReady").mockResolvedValue();
 
   it("sends progress and completes successfully", async () => {
     generateChartSpy.mockResolvedValueOnce({ chartpath: "/charts/test/chart.svg", hash: "test" });
@@ -349,7 +350,7 @@ describe("handleChartGeneration", () => {
   });
 
   it("handles ChartGenerationError properly", async () => {
-    generateChartSpy.mockRejectedValueOnce(new chartGenerationSevice.ChartGenerationError("Chart failed", 1234));
+    generateChartSpy.mockRejectedValueOnce(new generateChart.ChartGenerationError("Chart failed", 1234));
     const ws = new WebSocket("ws://localhost:4650/chart");
     const messages: any[] = [];
 

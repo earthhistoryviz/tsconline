@@ -1,15 +1,13 @@
 import { ChartProgressUpdate, ChartRequest, NormalProgress, isTempDatapack, isUserDatapack } from "@tsconline/shared";
 import { spawn } from "child_process";
 import path from "path";
-import { readFile, writeFile, mkdir } from "fs/promises";
+import { readFile } from "fs/promises";
 import { containsKnownError } from "../chart-error-handler.js";
 import { findUser, isUserInWorkshopAndWorkshopIsActive } from "../database.js";
-import logger from "../error-logger.js";
 import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
-import { deleteUserDatapack } from "../user/user-handler.js";
 import { checkFileExists, assetconfigs, deleteDirectory } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
-import svgson from "svgson";
+import { parse } from "svgson";
 
 export function parseJavaOutputLine(line: string, filenameMap: Record<string, string>): NormalProgress | null {
   if (line.includes("Convert Datapack to sqlite database")) {
@@ -49,8 +47,11 @@ export async function waitForSVGReady(filepath: string, timeoutMs: number): Prom
   while (Date.now() - start < timeoutMs) {
     if (await checkFileExists(filepath)) {
       const content = await readFile(filepath);
-      if (svgson.parseSync(content.toString())) {
-        return;
+      try {
+        const parsed = await parse(content.toString());
+        if (parsed) return;
+      } catch {
+        // malformed SVG; wait and retry
       }
     }
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -113,11 +114,6 @@ export async function checkForCacheHit(
   }
   console.log("Request for chart that already exists (hash:", hash, ".  Returning cached version");
   return { chartpath: chartUrlPath, hash };
-}
-
-export async function writeChartSettings(settingsFilePath: string, chartDirFilePath: string, settingsXml: string) {
-  await mkdir(chartDirFilePath, { recursive: true });
-  await writeFile(settingsFilePath, settingsXml);
 }
 
 export async function runJavaChartGeneration(
@@ -213,12 +209,4 @@ export async function runJavaChartGeneration(
   });
 
   return { knownErrorCode, errorMessage };
-}
-
-export function cleanupTempDatapacks(tempDatapacks: string[]) {
-  tempDatapacks.forEach((dp) => {
-    deleteUserDatapack("temp", dp).catch((e) => {
-      logger.error(`Failed to delete temporary datapack ${dp}: ${e}`);
-    });
-  });
 }

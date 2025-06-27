@@ -1,9 +1,10 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi, beforeAll, beforeEach } from "vitest";
 import {
   parseJavaOutputLine,
   resolveDatapacks,
   checkForCacheHit,
-  runJavaChartGeneration
+  runJavaChartGeneration,
+  waitForSVGReady
 } from "../src/chart-generation/generate-chart-helpers";
 import * as childProcess from "child_process";
 import * as db from "../src/database";
@@ -13,6 +14,8 @@ import * as util from "../src/util";
 import { ChartRequest } from "@tsconline/shared";
 import { User } from "../src/types";
 import { Readable } from "stream";
+import * as fs from "fs/promises";
+import * as svgson from "svgson";
 
 vi.mock("../src/index", () => ({
   queue: [],
@@ -20,7 +23,7 @@ vi.mock("../src/index", () => ({
 }));
 vi.mock("../src/database", () => ({
   isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true),
-  findUser: vi.fn()
+  findUser: vi.fn().mockResolvedValue([])
 }));
 vi.mock("../src/util", () => ({
   deleteDirectory: vi.fn(),
@@ -31,6 +34,12 @@ vi.mock("../src/util", () => ({
 }));
 vi.mock("child_process", () => ({
   spawn: vi.fn()
+}));
+vi.mock("svgson", () => ({
+  parse: vi.fn().mockResolvedValue({})
+}));
+vi.mock("fs/promises", () => ({
+  readFile: vi.fn()
 }));
 
 beforeAll(() => {
@@ -70,19 +79,31 @@ describe("resolveDatapacks", () => {
   const chartRequest: ChartRequest = {
     settings: "<xml></xml>",
     datapacks: [
-      { title: "Pack 1", storedFileName: "test1.dpk", type: "user", isPublic: false, uuid: "uuid" },
+      { title: "Pack 1", storedFileName: "test1.dpk", type: "user", isPublic: true, uuid: "uuid" },
       { title: "Pack 2", storedFileName: "test2.dpk", type: "official", isPublic: true },
       { title: "Pack 3", storedFileName: "test3.dpk", type: "temp", isPublic: false },
-      { title: "Pack 4", storedFileName: "test4.dpk", type: "workshop", isPublic: false, uuid: "workshop-1" }
+      { title: "Pack 4", storedFileName: "test4.dpk", type: "workshop", isPublic: false, uuid: "workshop-1" },
+      { title: "Pack 5", storedFileName: "test5.dpk", type: "user", isPublic: false, uuid: "uuid2" }
     ],
     useCache: true,
     isCrossPlot: false
   };
   vi.spyOn(userFiles, "fetchUserDatapackDirectory").mockImplementation(async (uuid, title) => `/fake/${uuid}/${title}`);
-  vi.spyOn(db, "findUser").mockResolvedValueOnce([{ userId: 5 } as User]);
 
-  it("resolves datapacks to paths and maps titles", async () => {
-    const result = await resolveDatapacks(chartRequest, "uuid");
+  it("should throw if user is not in workshop and uses workshop datapack", async () => {
+    vi.spyOn(db, "findUser").mockResolvedValueOnce([{ userId: 5 } as User]);
+    vi.spyOn(db, "isUserInWorkshopAndWorkshopIsActive").mockResolvedValueOnce(false);
+    await expect(resolveDatapacks(chartRequest, "uuid2")).rejects.toThrow("User lacks access to workshop datapack");
+  });
+
+  it("should throw if user does not have access to user datapack", async () => {
+    vi.spyOn(db, "findUser").mockResolvedValueOnce([{ userId: 5 } as User]);
+    await expect(resolveDatapacks(chartRequest, "uuid")).rejects.toThrow("Unauthorized user datapack access");
+  });
+
+  it("should resolve datapacks to paths and maps titles", async () => {
+    vi.spyOn(db, "findUser").mockResolvedValueOnce([{ userId: 5 } as User]);
+    const result = await resolveDatapacks(chartRequest, "uuid2");
     expect(result.datapacksToSendToCommandLine).toContain("/fake/uuid/Pack 1/test1.dpk");
     expect(result.datapacksToSendToCommandLine).toContain("/fake/official/Pack 2/test2.dpk");
     expect(result.datapacksToSendToCommandLine).toContain("/fake/temp/Pack 3/test3.dpk");
@@ -91,7 +112,8 @@ describe("resolveDatapacks", () => {
       "test1.dpk": "Pack 1",
       "test2.dpk": "Pack 2",
       "test3.dpk": "Pack 3",
-      "test4.dpk": "Pack 4"
+      "test4.dpk": "Pack 4",
+      "test5.dpk": "Pack 5"
     });
   });
 });
@@ -221,5 +243,120 @@ describe("runJavaChartGeneration", () => {
     expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine("Generating Image\n", filenameMap));
     expect(result.knownErrorCode).toBe(1234);
     expect(result.errorMessage).toBe("Fatal error: something broke");
+  });
+
+  it("handles leftover data in stdout", async () => {
+    const onProgress = vi.fn();
+    const stdout = createMockReadable();
+    const stderr = createMockReadable();
+
+    spawnMock.mockImplementationOnce(() => {
+      return {
+        stdout,
+        stderr,
+        on: (event: string, cb: any) => {
+          if (event === "close") {
+            setImmediate(() => cb(0, null));
+          }
+        }
+      } as unknown as ReturnType<typeof childProcess.spawn>;
+    });
+
+    const filenameMap = {};
+    const promise = runJavaChartGeneration(
+      { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
+      [],
+      "file.tsc",
+      "chart.svg",
+      filenameMap,
+      onProgress
+    );
+
+    stdout.emit("data", Buffer.from("Generating Image")); // no newline to trigger parsing stdout
+    stdout.emit("end");
+
+    await promise;
+    expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine("Generating Image\n", filenameMap));
+  });
+
+  it("should return generic error if error detected but not known", async () => {
+    const onProgress = vi.fn();
+    const stdout = createMockReadable();
+    const stderr = createMockReadable();
+
+    spawnMock.mockImplementationOnce(() => {
+      return {
+        stdout,
+        stderr,
+        on: (event: string, cb: any) => {
+          if (event === "close") {
+            setImmediate(() => cb(0, null));
+          }
+        }
+      } as unknown as ReturnType<typeof childProcess.spawn>;
+    });
+
+    const filenameMap = {};
+    const promise = runJavaChartGeneration(
+      { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
+      [],
+      "file.tsc",
+      "chart.svg",
+      filenameMap,
+      onProgress
+    );
+
+    stdout.emit("data", Buffer.from("Generating Image\n"));
+    stdout.emit("end");
+
+    const result = await promise;
+    expect(result).toEqual({
+      knownErrorCode: 1005,
+      errorMessage: "Unknown error occurred during chart generation"
+    });
+  });
+});
+
+describe("waitForSVGReady", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+  });
+  const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
+  const readFileSpy = vi.spyOn(fs, "readFile");
+
+  it("resolves when file is found and valid SVG is parsed", async () => {
+    checkFileExistsSpy.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
+    readFileSpy.mockResolvedValueOnce(Buffer.from("<svg></svg>"));
+
+    const promise = waitForSVGReady("/charts/test.svg", 1000);
+    await vi.advanceTimersByTimeAsync(600);
+
+    await expect(promise).resolves.toBeUndefined();
+    expect(checkFileExistsSpy).toHaveBeenCalledTimes(2);
+    expect(readFileSpy).toHaveBeenCalledOnce();
+  });
+
+  it("rejects when timeout is reached", async () => {
+    checkFileExistsSpy.mockResolvedValue(false);
+    const promise = expect(waitForSVGReady("/charts/never-there.svg", 1000)).rejects.toThrow(
+      "SVG file did not finalize in time"
+    );
+
+    await vi.advanceTimersByTimeAsync(1500);
+    await promise.catch((e) => e.message);
+  });
+
+  it("keeps polling if SVG content is invalid", async () => {
+    checkFileExistsSpy.mockResolvedValue(true);
+    readFileSpy.mockResolvedValue(Buffer.from("not svg"));
+    vi.spyOn(svgson, "parse").mockRejectedValue(new Error("Invalid SVG"));
+
+    const promise = expect(waitForSVGReady("/charts/bad.svg", 900)).rejects.toThrow(
+      "SVG file did not finalize in time"
+    );
+    await vi.advanceTimersByTimeAsync(900);
+
+    await promise.catch((e) => e.message);
   });
 });
