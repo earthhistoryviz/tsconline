@@ -325,7 +325,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     deleteDatapackAttachedFile
   );
-  fastify.post(
+  fastify.patch(
     "/datapack/files/:datapackTitle/:uuid/:isPublic",
     {
       config: { rateLimit: looseRateLimit },

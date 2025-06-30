@@ -388,21 +388,19 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
+  // fetch the original attached file names for the datapack
   useEffect(() => {
     const fetchFileNames = async () => {
+      // names will always be an array. could be empty if no files are attached
       const names = await actions.fetchDatapackFileNames(
         datapack.title,
         getUUIDOfDatapackType(datapack),
         datapack.isPublic
       );
-      if (names === undefined) {
-        setOriginalFileNames([]);
-      } else {
-        setOriginalFileNames(names);
-      }
+      setOriginalFileNames(names);
     };
     fetchFileNames();
-  }, []);
+  }, [datapack]);
 
   function downloadDatapackFiles() {
     if (checkUserAllowedDownloadDatapack(state.user, datapack)) {
@@ -558,25 +556,27 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
   const [pdfFiles, setPDFFiles] = useState<File[]>([]);
 
   const handlePDFFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const newFiles = event.target.files;
+    const newFiles: FileList | null = event.target.files;
     if (!newFiles) {
       return;
     }
     actions.removeAllErrors();
     const fileMap = new Map<string, File>();
-    Array.from(newFiles).forEach((file) => fileMap.set(file.name, file));
-    pdfFiles.forEach((file) => {
-      if (!fileMap.has(file.name)) {
-        fileMap.set(file.name, file);
-      }
+
+    [...pdfFiles, ...Array.from(newFiles)].forEach((file) => {
+      fileMap.set(file.name, file); // later files overwrite earlier ones
     });
-    setPDFFiles(Array.from(fileMap.values()));
-    const newFileNames: string[] = Array.from(fileMap.values()).map((file) => file.name);
+
+    const uniqueFiles = Array.from(fileMap.values());
+    setPDFFiles(uniqueFiles);
+
+    const newFileNames = uniqueFiles.map((file) => file.name);
+
     await actions.addAttachedDatapackFiles(
       datapack.title,
       getUUIDOfDatapackType(datapack),
       datapack.isPublic,
-      Array.from(fileMap.values())
+      uniqueFiles
     );
     // only add new file names that are not already in the list
     setFileNames((prevFileNames) => [
@@ -594,7 +594,7 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
         datapack.isPublic,
         fileName
       );
-      console.log("File deleted successfully:", fileName);
+      // if there are no files remaining, set the hasFiles to false
       if (numFilesRemaining === 0) {
         setDatapack({ ...datapack, hasFiles: false });
       }
