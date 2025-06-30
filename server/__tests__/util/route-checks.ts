@@ -26,7 +26,7 @@ const findPrehandlerFromRouteOptions = (routeOptions: RouteOptions, handlerName:
 export function initializeAppRoutes(
   routeOptions: RouteOptions,
   options?: {
-    recatpchaHandlerName?: string;
+    recaptchaHandlerName?: string;
     verifyAuthHandlerName?: string;
   }
 ) {
@@ -36,8 +36,8 @@ export function initializeAppRoutes(
   };
   let recaptchaAction: string = "";
   let hasAuth: boolean = false;
-  if (options?.recatpchaHandlerName) {
-    const preHandler = findPrehandlerFromRouteOptions(routeOptions, options.recatpchaHandlerName);
+  if (options?.recaptchaHandlerName) {
+    const preHandler = findPrehandlerFromRouteOptions(routeOptions, options.recaptchaHandlerName);
     if (preHandler && hasRecaptchaAction(preHandler)) {
       recaptchaAction = preHandler.recaptchaAction;
     }

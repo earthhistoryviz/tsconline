@@ -298,7 +298,7 @@ beforeAll(async () => {
   app.addHook("onRoute", (routeOptions: RouteOptions) => {
     appRoutes.push(
       ...initializeAppRoutes(routeOptions, {
-        recatpchaHandlerName: "verifyRecaptchaPrehandler"
+        recaptchaHandlerName: "verifyRecaptchaPrehandler"
       })
     );
   });

@@ -19,8 +19,6 @@ import {
   downloadPrivateDatapackFilesZip
 } from "./user-routes.js";
 import { findUser } from "../database.js";
-import { checkRecaptchaToken } from "../verify.js";
-import { googleRecaptchaBotThreshold } from "./login-routes.js";
 import { UserRecaptchaActions } from "@tsconline/shared";
 import { genericRecaptchaMiddlewarePrehandler } from "./prehandlers.js";
 

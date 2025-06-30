@@ -22,8 +22,6 @@ import {
   adminFetchSingleOfficialDatapack,
   adminDeleteDatapackComment
 } from "./admin-routes.js";
-import { checkRecaptchaToken } from "../verify.js";
-import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { fetchAllPrivateOfficialDatapacks } from "../user/user-handler.js";
 import { AdminRecaptchaActions } from "@tsconline/shared/dist/recaptcha-keys.js";
 
