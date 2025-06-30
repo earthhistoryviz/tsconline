@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import * as verify from "../src/verify.ts";
+import * as verify from "../src/verify";
 import { FastifyReply, FastifyRequest } from "fastify";
-import { genericRecaptchaMiddlewarePrehandler, verifyRecaptcha } from "../src/routes/prehandlers.ts";
+import { genericRecaptchaMiddlewarePrehandler, verifyRecaptcha } from "../src/routes/prehandlers";
 
 vi.mock("../src/verify", () => ({
   checkRecaptchaToken: vi.fn().mockResolvedValue(0.9)

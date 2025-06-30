@@ -47,7 +47,9 @@ export default defineConfig({
         "server/src/crossplot/extract-markers.ts": thresholdConfig,
         "server/src/crossplot/crossplot-handler.ts": thresholdConfig,
         "server/src/workshop/workshop-util.ts": fullyCoveredConfig,
-        "server/src/user-routes.ts": fullyCoveredConfig
+        "server/src/user-routes.ts": fullyCoveredConfig,
+        "sersver/src/routes/public-routes.ts": fullyCoveredConfig,
+        "server/src/routes/prehandlers.ts": thresholdConfig
         // "server/src/user/user-handler.ts": thresholdConfig,
         // "server/src/routes/routes.ts": thresholdConfig
       },
