@@ -130,7 +130,7 @@ const getEditDatapackRoute = (
       };
     }
     default: {
-      return { route: "", recaptchaAction: "" };
+      throw new Error("Invalid datapack type");
     }
   }
 };

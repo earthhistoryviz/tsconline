@@ -1,8 +1,11 @@
 import { FastifyReply, FastifyRequest } from "fastify";
 import { checkRecaptchaToken } from "../verify.js";
 import { googleRecaptchaBotThreshold } from "./login-routes.js";
+import { AdminRecaptchaActions, UserRecaptchaActions, WorkshopRecaptchaActions } from "@tsconline/shared";
 
-export async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
+export type RecaptchaAction = AdminRecaptchaActions | UserRecaptchaActions | WorkshopRecaptchaActions;
+
+export async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: RecaptchaAction) {
   const recaptchaToken = request.headers["recaptcha-token"];
 
   if (!recaptchaToken || typeof recaptchaToken !== "string") {
@@ -22,7 +25,7 @@ export async function verifyRecaptcha(request: FastifyRequest, reply: FastifyRep
   }
 }
 
-export const genericRecaptchaMiddlewarePrehandler = (action: string) => {
+export const genericRecaptchaMiddlewarePrehandler = (action: RecaptchaAction) => {
   const middleware = async function verifyRecaptchaPrehandler(request: FastifyRequest, reply: FastifyReply) {
     await verifyRecaptcha(request, reply, action);
   };
