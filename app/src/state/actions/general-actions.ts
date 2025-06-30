@@ -67,7 +67,7 @@ import {
   getMetadataFromArray,
   isOwnedByUser
 } from "../non-action-util";
-import { fetchUserDatapack } from "./user-actions";
+import { fetchUserDatapack, setEditRequestInProgress } from "./user-actions";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "./admin-actions";
 
 export const submitBugReport = action(
@@ -219,12 +219,11 @@ export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid:
     if (response.ok) {
       return names;
     } else {
-      // !! need error for datapack file names !!
-      // displayServerError(
-      //   response,
-      //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
-      //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
-      // );
+      displayServerError(
+        response,
+        ErrorCodes.USER_FETCH_ATTACHED_DATAPACK_FILES_FAILED,
+        ErrorMessages[ErrorCodes.USER_FETCH_ATTACHED_DATAPACK_FILES_FAILED]
+      );
     }
   } catch (e) {
     if ((e as Error).name === "AbortError") return;
@@ -235,74 +234,92 @@ export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid:
 
 export const deleteAttachedDatapackFile = action(
   async (datapackTitle: string, uuid: string, isPublic: boolean, fileName: string) => {
-    const recaptchaToken = await getRecaptchaToken("deleteAttachedDatapackFile");
-    if (!recaptchaToken) return null;
     try {
-      const response = await fetcher(
-        `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}/${fileName}`,
-        {
-          method: "DELETE",
-          credentials: "include",
-          headers: {
-            "recaptcha-token": recaptchaToken
+      setEditRequestInProgress(true);
+      const recaptchaToken = await getRecaptchaToken("deleteAttachedDatapackFile");
+      if (!recaptchaToken) return null;
+      try {
+        const response = await fetcher(
+          `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}/${fileName}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+            headers: {
+              "recaptcha-token": recaptchaToken
+            }
           }
-        }
-      );
+        );
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log(`Number of files remaining: ${data.numFilesRemaining}`);
-        return data.numFilesRemaining;
-      } else {
-        // !! need error for when deletion fails !!
-        // displayServerError(
-        //   response,
-        //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
-        //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
-        // );
+        if (response.ok) {
+          // return number of files remaining
+          const data = await response.json();
+          pushSnackbar("File deleted", "success");
+          return data.numFilesRemaining;
+        } else {
+          displayServerError(
+            response,
+            ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED,
+            ErrorMessages[ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED]
+          );
+        }
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        console.error(e);
       }
     } catch (e) {
-      if ((e as Error).name === "AbortError") return;
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
       console.error(e);
+    } finally {
+      setEditRequestInProgress(false);
     }
   }
 );
 
 export const addAttachedDatapackFiles = action(
   async (datapackTitle: string, uuid: string, isPublic: boolean, newFiles: File[]) => {
-    const recaptchaToken = await getRecaptchaToken("addAttachedDatapackFiles");
-    if (!recaptchaToken) return null;
-    const formData = new FormData();
-    if (newFiles?.length) {
-      newFiles.forEach((pdfFile) => {
-        formData.append("newFiles[]", pdfFile);
-      });
-    }
     try {
-      const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "recaptcha-token": recaptchaToken
-        },
-        body: formData
-      });
-      console.log(`Response status: ${response.status}`);
-      if (response.ok) {
-        return true;
-      } else {
-        // !! need error for when deletion fails !!
-        // displayServerError(
-        //   response,
-        //   ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST,
-        //   ErrorMessages[ErrorCodes.INVALID_SERVER_DATAPACK_REQUEST]
-        // );
+      setEditRequestInProgress(true);
+      const recaptchaToken = await getRecaptchaToken("addAttachedDatapackFiles");
+      if (!recaptchaToken) return null;
+
+      // create form data to send files
+      const formData = new FormData();
+      if (newFiles?.length) {
+        newFiles.forEach((pdfFile) => {
+          formData.append("newFiles[]", pdfFile);
+        });
+      }
+      try {
+        const response = await fetcher(
+          `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`,
+          {
+            method: "PATCH",
+            body: formData,
+            credentials: "include",
+            headers: {
+              "recaptcha-token": recaptchaToken
+            }
+          }
+        );
+        if (response.ok) {
+          pushSnackbar("File(s) added", "success");
+          return true;
+        } else {
+          displayServerError(
+            response,
+            ErrorCodes.USER_ADD_ATTACHED_DATAPACK_FILES_FAILED,
+            ErrorMessages[ErrorCodes.USER_ADD_ATTACHED_DATAPACK_FILES_FAILED]
+          );
+        }
+      } catch (e) {
+        if ((e as Error).name === "AbortError") return;
+        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        console.error("error bruh", e);
       }
     } catch (e) {
-      if ((e as Error).name === "AbortError") return;
-      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-      console.error("error bruh", e);
+      console.error(e);
+    } finally {
+      setEditRequestInProgress(false);
     }
   }
 );

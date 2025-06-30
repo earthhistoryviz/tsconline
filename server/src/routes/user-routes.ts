@@ -570,6 +570,7 @@ export const fetchDatapackAttachedFileNames = async function fetchDatapackAttach
     return;
   }
 
+  // find datapack folder
   const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   const datapackFolder = path.join(datapacksFolder, datapackTitle);
@@ -578,13 +579,16 @@ export const fetchDatapackAttachedFileNames = async function fetchDatapackAttach
     reply.status(400).send({ error: "Invalid datapack title" });
     return;
   }
+
+  // find files directory and check how many files are in it
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
-  const files = await readdir(filesDir);
-  if (!files || files.length === 0) {
-    reply.status(404).send({ error: "No files found in the datapack" });
-    return;
+  try {
+    const fileNames = await readdir(filesDir);
+    reply.send(fileNames);
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to fetch files" });
   }
-  reply.send(files);
 };
 
 export const deleteDatapackAttachedFile = async function deleteDatapackAttachedFile(
@@ -602,6 +606,7 @@ export const deleteDatapackAttachedFile = async function deleteDatapackAttachedF
     return;
   }
 
+  // find datapack folder
   const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   const datapackFolder = path.join(datapacksFolder, datapackTitle);
@@ -610,19 +615,30 @@ export const deleteDatapackAttachedFile = async function deleteDatapackAttachedF
     reply.status(400).send({ error: "Invalid datapack title" });
     return;
   }
+
+  // find the files directory and then remove file. after, check number of files remaining
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
-  const deleteFileDir = path.join(filesDir, fileName);
-  await rm(deleteFileDir);
-  const numFilesRemaining = (await readdir(filesDir)).length;
-  // if there are no files remaining, we should update the metadata of the datapack
-  if (numFilesRemaining === 0) {
-    const errors = await editDatapack(uuid, datapackTitle, { hasFiles: false });
-    if (errors.length > 0) {
-      return { code: 422, message: "There were errors updating the datapack" };
+
+  try {
+    const deleteFileDir = path.join(filesDir, fileName);
+    await rm(deleteFileDir);
+    const numFilesRemaining = (await readdir(filesDir)).length;
+
+    // if there are no files remaining, we should update the hasFiles attribute in the datapack metadata
+    if (numFilesRemaining === 0) {
+      const errors = await editDatapack(uuid, datapackTitle, { hasFiles: false });
+      if (errors.length > 0) {
+        reply.status(422).send({ error: "There were errors updating the datapack" });
+        return;
+      }
     }
+    reply.send({ message: "File deleted successfully", numFilesRemaining });
+    return;
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to delete attached datapack file" });
+    return;
   }
-  reply.send({ message: "File deleted successfully", numFilesRemaining });
-  return;
 };
 
 export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
@@ -644,6 +660,7 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
     }
   }
 
+  // find datapack folder and files directory within its
   const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   const datapackFolder = path.join(datapacksFolder, datapackTitle);
@@ -658,14 +675,17 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   // process the multipart form data
   for await (const part of parts) {
     if (part.type === "file") {
+      // newFiles[] is the fieldname for the uploaded files
       if (part.fieldname === "newFiles[]") {
         if (!checkFileTypeIsPDF(part)) {
           await cleanupTempFiles();
           return { code: 415, message: "Invalid file type for datapack pdf file" };
         }
+        // create a temporary file path for the uploaded file
         const filePath = join(tmpdir(), part.filename);
         pdfFields[part.filename] = filePath;
         const { code, message } = await uploadFileToFileSystem(part, filePath);
+        // if the upload failed, clean up the temp files and return an error
         if (code !== 200) {
           await cleanupTempFiles();
           return { code, message };
@@ -674,18 +694,26 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
     }
   }
 
-  // copy temp files to the datapack files directory
-  for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
-    if (!pdfFilePath || !pdfFileName) continue;
-    const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
-    if (!datapackPDFFilepathDest.startsWith(filesDir) || !(await verifyNonExistentFilepath(datapackPDFFilepathDest))) {
-      throw new Error("Invalid datapack PDF filepath destination path");
+  try {
+    // copy temp files to the datapack files directory
+    for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
+      if (!pdfFilePath || !pdfFileName) continue;
+      const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
+      if (
+        !datapackPDFFilepathDest.startsWith(filesDir) ||
+        !(await verifyNonExistentFilepath(datapackPDFFilepathDest))
+      ) {
+        throw new Error("Invalid datapack PDF filepath destination path");
+      }
+      await copyFile(pdfFilePath, datapackPDFFilepathDest);
+      // remove the original file if it was copied from a temp file
+      if (pdfFilePath !== datapackPDFFilepathDest) {
+        await rm(pdfFilePath, { force: true });
+      }
     }
-    await copyFile(pdfFilePath, datapackPDFFilepathDest);
-    // remove the original file if it was copied from a temp file
-    if (pdfFilePath !== datapackPDFFilepathDest) {
-      await rm(pdfFilePath, { force: true });
-    }
+  } catch (e) {
+    console.error(e);
+    reply.status(500).send({ error: "Failed to copy PDF files" });
   }
 
   // update the metadata of the datapack to indicate that it has files
