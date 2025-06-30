@@ -1,8 +1,7 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
-import fastify, { FastifyInstance, FastifyReply, FastifyRequest, InjectOptions, RouteOptions } from "fastify";
+import fastify, { FastifyInstance, InjectOptions, RouteOptions } from "fastify";
 import formAutoContent from "form-auto-content";
 import fastifySecureSession from "@fastify/secure-session";
-import * as prehandlers from "../src/routes/prehandlers";
 import * as runJavaEncryptModule from "../src/encryption";
 import * as utilModule from "../src/util";
 import * as fspModule from "fs/promises";
