@@ -3,6 +3,7 @@ import { findUser } from "../database.js";
 import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
 import { checkRecaptchaToken } from "../verify.js";
 import { downloadWorkshopFilesZip, editWorkshopDatapackMetadata, serveWorkshopHyperlinks } from "./workshop-routes.js";
+import { WorkshopRecaptchaActions } from "@tsconline/shared";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -31,14 +32,16 @@ async function verifyAuthority<T extends FastifyRequest = FastifyRequest>(reques
   }
 }
 
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
-  const recaptcha = request.headers["recaptcha-token"];
-  if (!recaptcha || typeof recaptcha !== "string") {
+async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply, action: string) {
+  const recaptchaToken = request.headers["recaptcha-token"];
+
+  if (!recaptchaToken || typeof recaptchaToken !== "string") {
     reply.status(400).send({ error: "Missing recaptcha token" });
     return;
   }
+
   try {
-    const score = await checkRecaptchaToken(recaptcha);
+    const score = await checkRecaptchaToken(recaptchaToken, action);
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -48,6 +51,13 @@ async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
     return;
   }
 }
+const genericRecaptchaMiddlewarePrehandler = (action: string) => {
+  const verifyRecaptchaPrehandler = async (request: FastifyRequest, reply: FastifyReply) => {
+    await verifyRecaptcha(request, reply, action);
+  };
+  verifyRecaptchaPrehandler.recaptchaAction = action;
+  return verifyRecaptchaPrehandler;
+};
 export const workshopRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const moderateRateLimit = {
     max: 30,
@@ -81,7 +91,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: editWorkshopDatapackMetadataParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA)
+      ]
     },
     editWorkshopDatapackMetadata
   );
@@ -90,7 +103,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopTitleParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)
+      ]
     },
     downloadWorkshopFilesZip
   );
