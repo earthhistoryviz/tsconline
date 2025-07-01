@@ -21,15 +21,12 @@ import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as editHandler from "../src/file-handlers/edit-handler";
-import * as uploadHandler from "../src/upload-handlers";
 import * as shared from "@tsconline/shared";
 import { User } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
-import fastifyMultipart from "@fastify/multipart";
+import fastifyMultipart, { Multipart } from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
-import FormData from "form-data";
-import { once } from "events";
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -160,7 +157,8 @@ vi.mock("../src/user/user-handler", () => {
     writeUserDatapack: vi.fn().mockResolvedValue({}),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
     fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
-    checkFileTypeIsPDF: vi.fn().mockResolvedValue(true)
+    checkFileTypeIsPDF: vi.fn().mockResolvedValue(true),
+    processMultipartPartsForAttachedDatapackFilesEditUpload: vi.fn().mockResolvedValue({})
   };
 });
 
@@ -1874,5 +1872,76 @@ describe("deleteDatapackAttachedFile tests", () => {
 
     expect(res.statusCode).toBe(500);
     expect(await res.json()).toEqual({ error: "Failed to delete attached datapack file" });
+  });
+});
+describe("addDatapackAttachedFiles tests", () => {
+  const mockGetUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
+  const mockGetUsersDatapacksDir = vi.spyOn(fetchUserFiles, "getUsersDatapacksDirectoryFromUUIDDirectory");
+  const mockGetPDFDir = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
+  const mockCheckFileTypeIsPDF = vi.spyOn(userHandler, "checkFileTypeIsPDF");
+  const mockProcessMultipartPartsForAttachedDatapackFilesEditUpload = vi.spyOn(
+    userHandler,
+    "processMultipartPartsForAttachedDatapackFilesEditUpload"
+  );
+  const mockCopyFile = vi.spyOn(fspModule, "copyFile");
+  let formData: AsyncIterableIterator<Multipart>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 400 if invalid datapack title", async () => {
+    mockCheckFileTypeIsPDF.mockReturnValue(true);
+    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
+    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
+    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/files/test<>Title/12345/false",
+      payload: formData,
+      headers
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(await res.json()).toEqual({ error: "Missing or invalid datapack title" });
+  });
+
+  it("should return 500 if failed to copy PDF files", async () => {
+    mockCheckFileTypeIsPDF.mockReturnValue(true);
+    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
+    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
+    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockProcessMultipartPartsForAttachedDatapackFilesEditUpload.mockResolvedValue({
+      pdfFields: { "file.pdf": expect.stringContaining("file.pdf") }
+    });
+    mockCopyFile.mockRejectedValue(new Error("Failed to copy file"));
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/files/testTitle/12345/false",
+      payload: formData,
+      headers
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(await res.json()).toEqual({ error: "Failed to copy PDF files" });
+  });
+  it("should return 200 when adding files successfully", async () => {
+    mockCheckFileTypeIsPDF.mockReturnValue(true);
+    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
+    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
+    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockProcessMultipartPartsForAttachedDatapackFilesEditUpload.mockResolvedValue({
+      pdfFields: { "file.pdf": expect.stringContaining("file.pdf") }
+    });
+    mockCopyFile.mockResolvedValue(undefined);
+    const res = await app.inject({
+      method: "PATCH",
+      url: "/user/datapack/files/testTitle/12345/false",
+      payload: formData,
+      headers
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(await res.json()).toEqual({ message: "File added successfully" });
   });
 });
