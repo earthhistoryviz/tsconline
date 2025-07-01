@@ -15,14 +15,14 @@ import {
   downloadDatapackFilesZip,
   checkFileTypeIsPDF,
   fetchAllUsersDatapacks,
-  fetchUserDatapack
+  fetchUserDatapack,
+  processMultipartPartsForAttachedDatapackFilesEditUpload
 } from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownloadDatapack } from "@tsconline/shared";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
-import { NewDatapackComment, assertDatapackCommentWithProfilePicture } from "../types.js";
 import logger from "../error-logger.js";
 import {
   getPDFFilesDirectoryFromDatapackDirectory,
@@ -30,9 +30,8 @@ import {
   getUserUUIDDirectory
 } from "../user/fetch-user-files.js";
 import path, { join } from "path";
+import { NewDatapackComment, assertDatapackCommentWithProfilePicture, isOperationResult } from "../types.js";
 import { editDatapack } from "../file-handlers/edit-handler.js";
-import { tmpdir } from "os";
-import { uploadFileToFileSystem } from "../upload-handlers.js";
 
 interface EditDatapackMetadataRequest extends RouteGenericInterface {
   Params: {
@@ -613,14 +612,7 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   const parts = request.parts();
 
   if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
-    reply.status(400).send({ error: "Missing datapack title" });
-    return;
-  }
-
-  async function cleanupTempFiles() {
-    for (const pdfPath of Object.values(pdfFields)) {
-      await rm(pdfPath, { force: true });
-    }
+    reply.status(400).send({ error: "Missing or invalid datapack title" });
     return;
   }
 
@@ -628,45 +620,23 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
   const datapackFolder = path.join(datapacksFolder, datapackTitle);
-  const pdfFields: Record<string, string> = {};
-
-  if (!datapackFolder.startsWith(datapacksFolder)) {
-    reply.status(400).send({ error: "Invalid datapack title" });
-    return;
-  }
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
 
-  // process the multipart form data
-  for await (const part of parts) {
-    if (part.type === "file") {
-      // newFiles[] is the fieldname for the uploaded files
-      if (part.fieldname === "newFiles[]") {
-        if (!checkFileTypeIsPDF(part)) {
-          await cleanupTempFiles();
-          reply.status(415).send({ error: "Invalid file type for datapack pdf file" });
-          return;
-        }
-
-        // create a temporary file path for the uploaded file
-        const filePath = join(tmpdir(), part.filename);
-        pdfFields[part.filename] = filePath;
-
-        const { code, message } = await uploadFileToFileSystem(part, filePath);
-
-        // if the upload failed, clean up the temp files and return an error
-        if (code !== 200) {
-          await cleanupTempFiles();
-          reply.status(code).send({ error: message });
-          return;
-        }
-      }
+  let pdfFields: { [fileName: string]: string } = {};
+  // process parts and get the PDF fields
+  try {
+    const result = await processMultipartPartsForAttachedDatapackFilesEditUpload(uuid, datapackTitle, isPublic, parts);
+    if (isOperationResult(result)) {
+      return result;
     }
+    pdfFields = result.pdfFields;
+  } catch (e) {
+    reply.status(500).send({ error: "Failed to process multipart parts" });
+    return;
   }
 
-  reply.status(200).send({ message: pdfFields });
-
+  // copy temp files to the datapack files directory
   try {
-    // copy temp files to the datapack files directory
     for (const [pdfFileName, pdfFilePath] of Object.entries(pdfFields)) {
       if (!pdfFilePath || !pdfFileName) continue;
       const datapackPDFFilepathDest = path.resolve(filesDir, pdfFileName);
