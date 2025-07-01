@@ -624,6 +624,10 @@ export const deleteDatapackAttachedFile = async function deleteDatapackAttachedF
     await rm(deleteFileDir);
     const numFilesRemaining = (await readdir(filesDir)).length;
 
+    // delete outdated zip
+    const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`);
+    await rm(zipfile, { force: true });
+
     // if there are no files remaining, we should update the hasFiles attribute in the datapack metadata
     if (numFilesRemaining === 0) {
       const errors = await editDatapack(uuid, datapackTitle, { hasFiles: false });
@@ -649,6 +653,7 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
 ) {
   const { datapackTitle, uuid, isPublic } = request.params;
   const parts = request.parts();
+
   if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
     reply.status(400).send({ error: "Missing datapack title" });
     return;
@@ -658,6 +663,7 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
     for (const pdfPath of Object.values(pdfFields)) {
       await rm(pdfPath, { force: true });
     }
+    return;
   }
 
   // find datapack folder and files directory within its
@@ -679,20 +685,27 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
       if (part.fieldname === "newFiles[]") {
         if (!checkFileTypeIsPDF(part)) {
           await cleanupTempFiles();
-          return { code: 415, message: "Invalid file type for datapack pdf file" };
+          reply.status(415).send({ error: "Invalid file type for datapack pdf file" });
+          return;
         }
+
         // create a temporary file path for the uploaded file
         const filePath = join(tmpdir(), part.filename);
         pdfFields[part.filename] = filePath;
+
         const { code, message } = await uploadFileToFileSystem(part, filePath);
+
         // if the upload failed, clean up the temp files and return an error
         if (code !== 200) {
           await cleanupTempFiles();
-          return { code, message };
+          reply.status(code).send({ error: message });
+          return;
         }
       }
     }
   }
+
+  reply.status(200).send({ message: pdfFields });
 
   try {
     // copy temp files to the datapack files directory
@@ -714,7 +727,12 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   } catch (e) {
     console.error(e);
     reply.status(500).send({ error: "Failed to copy PDF files" });
+    return;
   }
+
+  // delete outdated zip
+  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`);
+  await rm(zipfile, { force: true });
 
   // update the metadata of the datapack to indicate that it has files
   await editDatapack(uuid, datapackTitle, { hasFiles: true });
