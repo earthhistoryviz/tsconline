@@ -77,7 +77,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const serveWorkshopHyperlinksParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" },
+      workshopId: { type: "number"},
       filename: { type: "string", enum: ["presentation", "instructions"] }
     },
     required: ["workshopId", "filename"]
@@ -85,16 +85,16 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const workshopFileParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" },
-      fileName: { type: "string" }
+      workshopId: { type: "integer", minimum: 1},
+      fileName: { type: "string", minLength: 1 }
     },
     required: ["workshopId", "fileName"]
   };
   const workshopDataPackParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" },
-      datapackTitle: { type: "string" }
+      workshopId: { type: "integer", minimum: 1},
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopId", "datapackTitle"]
   };

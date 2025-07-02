@@ -11,11 +11,9 @@ import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
 import * as fsp from "fs/promises";
 import * as fs from "fs";
-// import { createReadStream } from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
-// import { Readable } from "stream";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -525,6 +523,51 @@ describe("downloadWorkshopFile tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
+  it("should return 400 if workshopId is not a int", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-files/invalid-id/file.txt",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is less than 0", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "workshop/workshop-files/0/file.txt",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be >= 1",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if fileName is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "workshop/workshop-files/1/",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/fileName must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return 403 if user is not admin AND not in workshop", async () => {
     findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
     isUserInWorkshop.mockResolvedValueOnce(false);
@@ -596,6 +639,51 @@ describe("downloadWorkshopDataPack tests", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not a int", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/bad-id/datapackName",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if workshopId is less than 0", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/0/datapackName",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be >= 1",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if datapackTitle is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/workshop/workshop-datapack/1/",
+      headers
+    });
+    expect(isUserInWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should return 403 if user is not admin AND not in workshop", async () => {
     findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);

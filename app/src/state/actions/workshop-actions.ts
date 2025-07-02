@@ -5,7 +5,7 @@ import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { getRecaptchaToken, pushError } from "./general-actions";
-import { downloadFile } from "../non-action-util";
+import { downloadFile, convertBase64ToBlob} from "../non-action-util";
 
 export const fetchAllWorkshops = action(async () => {
   try {
@@ -42,7 +42,6 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
   });
   if (!response.ok) {
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-    console.log(response);
     switch (response.status) {
       case 404:
         errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
@@ -98,7 +97,6 @@ export const fetchWorkshopFile = action(async (fileName: string, workshop: Share
   }
 
   const file = await response.blob();
-  console.log(response);
   if (file) {
     try {
       await downloadFile(file, fileName);
@@ -122,10 +120,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
     }
   });
 
-  console.log("Response from fetchWorkshopDetailsDatapack:", response);
-
   if (!response.ok) {
-    console.log(response);
     let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
     switch (response.status) {
       case 404:
@@ -145,17 +140,8 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
   const data = await response.json();
   const { fileName, fileData, fileType } = data;
 
-  // Convert base64 to Blob
-  const byteCharacters = atob(fileData);
-  const byteArrays = [];
+  const file = convertBase64ToBlob(fileData, fileType);
 
-  for (let i = 0; i < byteCharacters.length; i += 512) {
-    const slice = byteCharacters.slice(i, i + 512);
-    const byteNumbers = Array.from(slice).map((char) => char.charCodeAt(0));
-    byteArrays.push(new Uint8Array(byteNumbers));
-  }
-
-  const file = new Blob(byteArrays, { type: fileType });
   if (file) {
     try {
       await downloadFile(file, fileName);
