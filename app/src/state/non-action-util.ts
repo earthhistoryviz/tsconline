@@ -277,7 +277,7 @@ export function getHelpKeysFromPath(path: string) {
   return keys;
 }
 
-export function convertBase64ToBlob(b64Data: string, contentType = "application/octet-stream", sliceSize = 512): Blob {
+export async function convertBase64ToBlob(b64Data: string, contentType = "application/octet-stream", sliceSize = 512): Promise<Blob> {
   const byteCharacters = atob(b64Data);
   const byteArrays: Uint8Array[] = [];
 

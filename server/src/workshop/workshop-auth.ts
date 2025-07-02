@@ -6,7 +6,7 @@ import {
   downloadWorkshopFilesZip,
   downloadWorkshopFile,
   editWorkshopDatapackMetadata,
-  downloadWorkshopDataPack,
+  downloadWorkshopDatapack,
   serveWorkshopHyperlinks
 } from "./workshop-routes.js";
 
@@ -141,6 +141,6 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
       schema: { params: workshopDataPackParams },
       preHandler: [verifyAuthority, verifyRecaptcha]
     },
-    downloadWorkshopDataPack
+    downloadWorkshopDatapack
   );
 };

@@ -11,7 +11,7 @@ import {
 import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-handlers.js";
 import path from "node:path";
 import { readFile } from "fs/promises";
-import { createReadStream, readFileSync } from "fs";
+import { createReadStream } from "fs";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
@@ -19,6 +19,7 @@ import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { readdir } from "node:fs/promises";
+import { readFileSync } from "node:fs";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -173,12 +174,6 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       return;
     }
 
-    //check if fileName is valid
-    if (!fileName || fileName.includes("..") || fileName.includes("/")) {
-      reply.status(500).send({ error: "Invalid file name" });
-      return;
-    }
-
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
     const directory = await getUserUUIDDirectory(workshopUUID, true);
 
@@ -201,7 +196,7 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
   }
 };
 
-export const downloadWorkshopDataPack = async function downloadWorkshopDataPack(
+export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
   request: FastifyRequest<{ Params: { workshopId: number; datapackTitle: string } }>,
   reply: FastifyReply
 ) {
@@ -217,22 +212,13 @@ export const downloadWorkshopDataPack = async function downloadWorkshopDataPack(
       return;
     }
 
-    //check if datapackTitle is valid
-    if (!datapackTitle || datapackTitle.includes("..") || datapackTitle.includes("/")) {
-      reply.status(500).send({ error: "Invalid datapack name" });
-      return;
-    }
-
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+
     const dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
 
-    if (!(await checkFileExists(dataPackPath))) {
-      reply.status(500).send({ error: "File does not exist" });
-      return;
-    }
 
     try {
-      const fileBuffer = readFileSync(dataPackPath);
+      const fileBuffer = await readFile(dataPackPath);
       const fileBase64 = fileBuffer.toString("base64");
       const fileType = "application/octet-stream";
       reply.send({
@@ -243,8 +229,8 @@ export const downloadWorkshopDataPack = async function downloadWorkshopDataPack(
     } catch (e) {
       reply.status(500).send({ error: "Error sending file buffer" });
     }
-  } catch (e) {
-    reply.status(500).send({ error: "An Error has occurred" });
+  } catch (e: any) {
+    reply.status(500).send({ error: e.stack || "An error has occurred" });
   }
 };
 

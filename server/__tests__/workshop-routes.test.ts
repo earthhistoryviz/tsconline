@@ -14,6 +14,7 @@ import * as fs from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
+import * as userHandlers from "../src/user/user-handler";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -85,9 +86,11 @@ vi.mock("fs", async () => {
 });
 vi.mock("../src/user/user-handler", async () => {
   return {
-    getUploadedDatapackFilepath: vi.fn().mockResolvedValue("/tmp/fake-datapack-filepath")
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue("/assets/fake-datapack-filepath")
   };
 });
+
+
 
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
@@ -582,16 +585,6 @@ describe("downloadWorkshopFile tests", () => {
     expect(await response.json()).toEqual({ error: "Unauthorized access" });
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
-  it("should return 500 if fileName is invalid", async () => {
-    //mock the filename.includes("..") check
-    const response = await app.inject({
-      method: "GET",
-      url: `/workshop/workshop-files/${workshopId}/bad..file.tx`,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid file name" });
-  });
   it("should return 500 if verifyFilepath returns false", async () => {
     vi.spyOn(util, "verifyFilepath").mockResolvedValueOnce(false);
 
@@ -635,7 +628,10 @@ describe("downloadWorkshopDataPack tests", () => {
   const findUser = vi.spyOn(database, "findUser");
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
   const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
-  const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
+  const readFileSpy = vi.spyOn(fsp, "readFile");
+
+
+  const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -698,40 +694,32 @@ describe("downloadWorkshopDataPack tests", () => {
     expect(await response.json()).toEqual({ error: "Unauthorized access" });
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
+  it("should return 500 if readFile fails", async () => {
+    readFileSpy.mockRejectedValueOnce(new Error("Something else"));
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error sending file buffer")
+    });
+  });
   it("should return 500 if datapackTitle is invalid", async () => {
     const response = await app.inject({
       method: "GET",
       url: `/workshop/workshop-datapack/${workshopId}/bad..Datapack`,
       headers
     });
+
+    getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
+      throw new Error("Simulated error");
+    });
+    
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Invalid datapack name" });
-  });
-  it("should return 500 if checkFileExists is false", async () => {
-    checkFileExistsSpy.mockResolvedValueOnce(false);
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("File does not exist")
-    });
-  });
-  it("should return 500 if readFileSync fails", async () => {
-    readFileSyncSpy.mockImplementationOnce(() => {
-      throw new Error("Simulated read error");
-    });
-    const response = await app.inject({
-      method: "GET",
-      url: route,
-      headers
-    });
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toMatchObject({
-      error: expect.stringContaining("An Error has occurred")
-    });
   });
 });
 

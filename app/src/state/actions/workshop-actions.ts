@@ -140,7 +140,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
   const data = await response.json();
   const { fileName, fileData, fileType } = data;
 
-  const file = convertBase64ToBlob(fileData, fileType);
+  const file = await convertBase64ToBlob(fileData, fileType);
 
   if (file) {
     try {
