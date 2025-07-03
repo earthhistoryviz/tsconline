@@ -35,6 +35,33 @@ async function loadJSONS() {
   return { datasets, events, intervals, columns, subdatasets };
 }
 
+async function processSequenceColumns(
+  events: arkL_events[],
+  interval: arkL_intervals[],
+  columns: arkL_columns[],
+  datasets: arkL_datasets[]
+) {
+  // const lines = [];
+  for (const column of columns) {
+    if (column.column_type === "sequence") {
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+      let dbEvents = [];
+      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
+        const regex = new RegExp(column.sub_columnE!, "i");
+        dbEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
+          .sort((a, b) => a.age! - b.age!);
+        console.log("getting here", dbEvents.length);
+      }
+    }
+  // return lines;
+  }
+}
+
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
 
