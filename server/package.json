@@ -60,7 +60,7 @@
     "@types/lodash": "^4.17.4",
     "@types/md5": "^2.3.5",
     "@types/nearest-color": "^0.4.1",
-    "@types/node": "^22.15.21",
+    "@types/node": "^20.11.28",
     "@types/node-cron": "^3",
     "@types/nodemailer": "^6",
     "@types/pump": "^1.1.3",

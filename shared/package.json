@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "author": "",
   "devDependencies": {
-    "@types/node": "^22.15.21",
+    "@types/node": "^20.11.28",
     "@types/validator": "^13",
     "typescript": "5.2.2",
     "vitest": "^1.6.1"
