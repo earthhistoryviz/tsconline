@@ -438,7 +438,7 @@
             "search": {
                 "search-bar": "Search",
                 "found-result": "Found {{count}} Results",
-                "current-time-settings": "Current Time Settings(Top / Base)",
+                "current-time-settings": "Current Time Settings(Base / Top)",
                 "header": {
                     "status": "Column On?",
                     "center": "Center",
