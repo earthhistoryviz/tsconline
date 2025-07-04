@@ -35,6 +35,58 @@ async function loadJSONS() {
   return { datasets, events, intervals, columns, subdatasets };
 }
 
+async function processSequenceColumns(
+  events: arkL_events[],
+  columns: arkL_columns[],
+  datasets: arkL_datasets[],
+  pathDict: StringDictSet,
+  linesDict: StringDict
+) {
+  const lines = [];
+  for (const column of columns) {
+    if (column.column_type === "sequence") {
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+      // Add other column types (intervals but they have sequence types, but no info on SB, MFS, Major, Minor, etc.)
+      let sequenceEvents = [];
+      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
+        const regex = new RegExp(column.sub_columnE!, "i");
+        sequenceEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
+          .sort((a, b) => a.age! - b.age!);
+      } else {
+        sequenceEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.age)
+          .sort((a, b) => a.age! - b.age!);
+      }
+      if (sequenceEvents.length === 0) {
+        console.log(chalk.yellow("missing sequence events for " + column.columnx));
+        continue;
+      }
+      const colour = dataset.colour;
+      // which notes to use? Cenoz, Jur, Cret, multi?
+      const popup = dataset.notes_Cenoz;
+      let line = `${column.columnx}\tsequence\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      lines.push(line);
+      for (const event of sequenceEvents) {
+        const sequenceType =
+          event.event_type === "seq bdy" ? "SB" : event.event_type === "mfs" ? "MFS" : event.event_type;
+        line = `\t${event.eventx != null ? event.eventx : ""}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
+        lines.push(line);
+      }
+      // for blank space between columns for tscreator to parse
+      lines.push("");
+      if (column.path && column.columnx) {
+        organizeColumn(column.path, column.columnx, lines, pathDict, linesDict);
+      }
+    }
+  }
+  return;
+}
+
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
 
@@ -291,6 +343,7 @@ try {
   const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
   await processEventColumns(datasets, columns, events, pathDict, linesDict);
   await processBlockColumns(datasets, columns, intervals, subdatasets, pathDict, linesDict);
+  await processSequenceColumns(events, columns, datasets, pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
   console.log(chalk.green("Processed columns"));
