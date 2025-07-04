@@ -57,8 +57,7 @@ async function processSequenceColumns(
         sequenceEvents = events
           .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
           .sort((a, b) => a.age! - b.age!);
-      }
-      else {
+      } else {
         sequenceEvents = events
           .filter((event) => event.dataset_id === column.dataset_id && event.age)
           .sort((a, b) => a.age! - b.age!);
@@ -73,7 +72,8 @@ async function processSequenceColumns(
       let line = `${column.columnx}\tsequence\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
       lines.push(line);
       for (const event of sequenceEvents) {
-        const sequenceType = event.event_type === "seq bdy" ? "SB" : event.event_type === "mfs" ? "MFS" : event.event_type;
+        const sequenceType =
+          event.event_type === "seq bdy" ? "SB" : event.event_type === "mfs" ? "MFS" : event.event_type;
         line = `\t${event.eventx != null ? event.eventx : ""}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
         lines.push(line);
       }
