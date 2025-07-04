@@ -10,9 +10,12 @@ import * as generalFileHandlerRequests from "../src/file-handlers/general-file-h
 import { User, Workshop } from "../src/types";
 import * as util from "../src/util";
 import * as fsp from "fs/promises";
+import * as fs from "fs";
+// import { createReadStream } from "fs";
 import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
+// import { Readable } from "stream";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -49,6 +52,7 @@ vi.mock("../src/util", async () => {
   return {
     verifyNonExistentFilepath: vi.fn().mockResolvedValue(true),
     checkFileExists: vi.fn().mockRejectedValue(true),
+    verifyFilepath: vi.fn().mockResolvedValue(true),
     assetconfigs: { datapackImagesDirectory: "assets/images" }
   };
 });
@@ -58,6 +62,7 @@ vi.mock("fs/promises", async () => {
     readdir: vi.fn().mockResolvedValue(["file1.zip", "file2.zip"])
   };
 });
+
 vi.mock("../src/upload-handlers", async () => {
   return {
     fetchWorkshopCoverPictureFilepath: vi.fn().mockResolvedValue(""),
@@ -76,7 +81,13 @@ vi.mock("../src/error-logger", async () => {
 });
 vi.mock("fs", async () => {
   return {
-    createReadStream: vi.fn().mockImplementation(() => {})
+    createReadStream: vi.fn().mockImplementation(() => {}),
+    readFileSync: vi.fn().mockReturnValue(Buffer.from("fake-file-content"))
+  };
+});
+vi.mock("../src/user/user-handler", async () => {
+  return {
+    getUploadedDatapackFilepath: vi.fn().mockResolvedValue("/tmp/fake-datapack-filepath")
   };
 });
 
@@ -501,6 +512,138 @@ describe("downloadWorkshopFilesZip tests", () => {
     });
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "An error occurred" });
+  });
+});
+
+describe("downloadWorkshopFile tests", () => {
+  const workshopId = 42;
+  const fileName = "test_file.txt";
+  const route = `/workshop/workshop-files/${workshopId}/${fileName}`;
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 403 if user is not admin AND not in workshop", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    console.log(response);
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
+  });
+  it("should return 500 if fileName is invalid", async () => {
+    //mock the filename.includes("..") check
+    const response = await app.inject({
+      method: "GET",
+      url: `/workshop/workshop-files/${workshopId}/bad..file.tx`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid file name" });
+  });
+  it("should return 500 if verifyFilepath returns false", async () => {
+    vi.spyOn(util, "verifyFilepath").mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid file path" });
+  });
+  it("should return 500 if createReadStream throws an error", async () => {
+    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error creating file stream")
+    });
+  });
+  it("should return 200 and file stream if createReadStream succeeds", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("downloadWorkshopDataPack tests", () => {
+  const workshopId = 42;
+  const datapackName = "datapackName";
+  const route = `/workshop/workshop-datapack/${workshopId}/${datapackName}`;
+  const findUser = vi.spyOn(database, "findUser");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
+  const readFileSyncSpy = vi.spyOn(fs, "readFileSync");
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should return 403 if user is not admin AND not in workshop", async () => {
+    findUser.mockResolvedValueOnce([testNonAdminUser]).mockResolvedValueOnce([testNonAdminUser]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
+  });
+  it("should return 500 if datapackTitle is invalid", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/workshop/workshop-datapack/${workshopId}/bad..Datapack`,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Invalid datapack name" });
+  });
+  it("should return 500 if checkFileExists is false", async () => {
+    checkFileExistsSpy.mockResolvedValueOnce(false);
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("File does not exist")
+    });
+  });
+  it("should return 500 if readFileSync fails", async () => {
+    readFileSyncSpy.mockImplementationOnce(() => {
+      throw new Error("Simulated read error");
+    });
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("An Error has occurred")
+    });
   });
 });
 
