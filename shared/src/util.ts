@@ -1,4 +1,4 @@
-import { DatapackMetadata, SharedUser } from "./index";
+import { DatapackMetadata } from "./index";
 
 export function roundToDecimalPlace(value: number, decimalPlace: number) {
   const factor = Math.pow(10, decimalPlace);
@@ -24,7 +24,7 @@ export function getWorkshopUUIDFromWorkshopId(workshopId: number): string {
   return `workshop-${workshopId}`;
 }
 
-export function checkUserAllowedDownloadDatapack(user: SharedUser, datapack: DatapackMetadata) {
+export function checkUserAllowedDownloadDatapack(user: { isAdmin: boolean; uuid: string }, datapack: DatapackMetadata) {
   if (user.isAdmin || datapack.isPublic || (datapack.type === "user" && datapack.uuid === user.uuid)) {
     return true;
   }

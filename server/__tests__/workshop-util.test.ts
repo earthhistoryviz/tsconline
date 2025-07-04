@@ -40,8 +40,7 @@ vi.mock("../src/database", async () => {
 vi.mock("@tsconline/shared", async () => {
   return {
     isWorkshopUUID: vi.fn().mockResolvedValue(true),
-    getWorkshopUUIDFromWorkshopId: vi.fn().mockImplementation((id) => `workshop-${id}`),
-    getWorkshopIdFromUUID: vi.fn().mockReturnValue("workshop-12345")
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockImplementation((id) => `workshop-${id}`)
   };
 });
 

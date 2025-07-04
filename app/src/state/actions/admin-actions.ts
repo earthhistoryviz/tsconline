@@ -3,6 +3,7 @@ import { actions, state } from "..";
 import { fetcher } from "../../util";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import {
+  AdminRecaptchaActions,
   AdminSharedUser,
   Datapack,
   DatapackMetadata,
@@ -37,7 +38,7 @@ import { EditableDatapackMetadata, UploadDatapackMethodType } from "../../types"
 import { fetchAllWorkshops } from "./workshop-actions";
 
 export const adminFetchUsers = action(async () => {
-  const recaptchaToken = await getRecaptchaToken("adminFetchUsers");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_FETCH_USERS);
   if (!recaptchaToken) return;
   try {
     const response = await fetcher("/admin/users", {
@@ -70,7 +71,7 @@ export const adminFetchUsers = action(async () => {
 });
 
 export const adminFetchUserDatapacks = action("adminFetchUserDatapacks", async (uuid: string) => {
-  const recaptchaToken = await getRecaptchaToken("adminFetchUserDatapacks");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS);
   if (!recaptchaToken) return null;
   try {
     const response = await fetcher("/admin/user/datapacks", {
@@ -108,7 +109,7 @@ export const setUsers = action((users: AdminSharedUser[]) => {
 });
 
 export const adminAddUser = action(async (email: string, password: string, isAdmin: boolean, username?: string) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddUser");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_CREATE_USER);
   if (!recaptchaToken) return;
   const body = JSON.stringify({
     email,
@@ -154,7 +155,7 @@ export const adminDeleteUsers = action(async (users: AdminSharedUser[]) => {
       uuid: user.uuid
     });
     try {
-      const recaptchaToken = await getRecaptchaToken("adminDeleteUsers");
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_DELETE_USER);
       if (!recaptchaToken) return;
       const response = await fetcher("/admin/user", {
         method: "DELETE",
@@ -202,7 +203,7 @@ export const adminModifyUsers = action(
       return;
     }
     try {
-      const recaptchaToken = await getRecaptchaToken("adminModifyUsers");
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_USER);
       if (!recaptchaToken) return;
 
       const response = await fetcher("/admin/user", {
@@ -238,7 +239,7 @@ export const adminModifyUsers = action(
  * Deletes a user's datapack (datapack's "id" is the filename)
  */
 export const adminDeleteUserDatapacks = action(async (datapacks: { uuid: string; datapack: string }[]) => {
-  const recaptchaToken = await getRecaptchaToken("adminDeleteUserDatapacks");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS);
   if (!recaptchaToken) return;
   let deletedAllDatapacks = true;
   for (const { uuid, datapack } of datapacks) {
@@ -394,7 +395,7 @@ export const adminUploadOfficialDatapack: UploadDatapackMethodType = action(
  */
 export const adminFetchPrivateOfficialDatapacks = action(async (options?: { signal?: AbortSignal }) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS);
     if (!recaptchaToken) return;
     const response = await fetcher("/admin/official/datapacks/private", {
       method: "GET",
@@ -461,7 +462,7 @@ export const adminFetchPrivateOfficialDatapacksMetadata = action(async () => {
  */
 export const adminFetchOfficialDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminFetchPrivateOfficialDatapacks");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK);
     if (!recaptchaToken) return;
     const response = await fetcher(`/admin/official/datapack/${encodeURIComponent(datapack)}`, {
       method: "GET",
@@ -499,7 +500,7 @@ export const adminFetchOfficialDatapack = action(async (datapack: string, option
 export const adminAddUsersToWorkshop = action(
   async (formData: FormData): Promise<{ success: boolean; invalidEmails: string }> => {
     try {
-      const recaptchaToken = await getRecaptchaToken("adminAddUsersToWorkshop");
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP);
       if (!recaptchaToken) return { success: false, invalidEmails: "" };
       const response = await fetcher(`/admin/workshop/users`, {
         method: "POST",
@@ -556,7 +557,7 @@ export const adminCreateWorkshop = action(
     workshop: Omit<SharedWorkshop, "workshopId" | "files" | "datapacks" | "active">
   ): Promise<number | undefined> => {
     try {
-      const recaptchaToken = await getRecaptchaToken("adminCreateWorkshop");
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP);
       if (!recaptchaToken) return;
       const { title, start, end, regRestrict, creatorUUID, regLink, description } = workshop;
       const body: Record<string, string | boolean | undefined> = {
@@ -620,7 +621,7 @@ export const adminEditWorkshop = action(
       return null;
     }
     try {
-      const recaptchaToken = await getRecaptchaToken("adminEditWorkshop");
+      const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP);
       if (!recaptchaToken) return null;
       const response = await fetcher(`/admin/workshop`, {
         method: "PATCH",
@@ -662,7 +663,7 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
     return;
   }
   try {
-    const recaptchaToken = await getRecaptchaToken("adminDeleteWorkshop");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP);
     if (!recaptchaToken) return;
     const response = await fetcher(`/admin/workshop`, {
       method: "DELETE",
@@ -699,7 +700,7 @@ export const adminDeleteWorkshop = action(async (workshopId: number) => {
 export const adminUploadDatapackToWorkshop = action(
   async (file: File, metadata: DatapackMetadata, datapackProfilePicture?: File) => {
     assertWorkshopDatapack(metadata);
-    const recaptchaToken = await getRecaptchaToken("adminUploadDatapackToWorkshop");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP);
     if (!recaptchaToken) return;
     const formData = new FormData();
     const { title, description, authoredBy, contact, notes, date, references, tags, isPublic, type, uuid, hasFiles } =
@@ -749,7 +750,7 @@ export const adminUploadDatapackToWorkshop = action(
  */
 export const adminAddOfficialDatapackToWorkshop = action(async (workshopId: number, datapackTitle: string) => {
   try {
-    const recaptchaToken = await getRecaptchaToken("adminAddOfficialDatapackToWorkshop");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP);
     if (!recaptchaToken) return;
     const response = await fetcher(`/admin/workshop/official/datapack`, {
       method: "POST",
@@ -819,7 +820,7 @@ export const setLoadingDatapackPriority = action((loading: boolean) => {
 export const adminUpdateDatapackPriority = action(async (tasks: DatapackPriorityChangeRequest[]) => {
   try {
     setLoadingDatapackPriority(true);
-    const recaptchaToken = await getRecaptchaToken("adminUpdateDatapackPriority");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY);
     if (!recaptchaToken) return;
     const response = await fetcher("/admin/official/datapack/priority", {
       method: "PATCH",
@@ -894,7 +895,7 @@ export const adminAddFilesToWorkshop = action(
       pushError(ErrorCodes.INVALID_FORM);
       return false;
     }
-    const recaptchaToken = await getRecaptchaToken("adminAddFilesToWorkshop");
+    const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP);
     if (!recaptchaToken) return false;
     const formData = new FormData();
     if (presentationFile) {
@@ -950,7 +951,7 @@ export const adminAddFilesToWorkshop = action(
  */
 
 export const adminAddCoverPicToWorkshop = action(async (workshopId: number, coverPicture: File) => {
-  const recaptchaToken = await getRecaptchaToken("adminAddCoverPicToWorkshop");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP);
   if (!recaptchaToken) return;
   const formData = new FormData();
   formData.append("file", coverPicture);
@@ -998,7 +999,7 @@ export const adminAddCoverPicToWorkshop = action(async (workshopId: number, cove
  */
 
 export const adminDeleteDatapackComment = action(async (commentId: number) => {
-  const recaptchaToken = await getRecaptchaToken("adminDeleteDatapackComment");
+  const recaptchaToken = await getRecaptchaToken(AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT);
   if (!recaptchaToken) return;
   try {
     const response = await fetcher(`/admin/datapack/comments/${commentId}`, {

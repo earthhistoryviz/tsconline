@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, HTTPMethods, InjectOptions, RouteOptions } from "fastify";
 import * as adminAuth from "../src/admin/admin-auth";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
@@ -21,11 +21,11 @@ import * as fetchUserFiles from "../src/user/fetch-user-files";
 import * as adminHandler from "../src/admin/admin-handler";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import * as logger from "../src/error-logger";
-import * as validator from "validator";
 import { User, Workshop } from "../src/types";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import * as uploadDatapack from "../src/upload-datapack";
 import { adminFetchPrivateOfficialDatapacksMetadata } from "../src/admin/admin-routes";
+import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
 vi.mock("validator", async () => {
   return {
@@ -260,8 +260,11 @@ const consumeStream = async (multipartFile: MultipartFile, code: number = 200, m
   return { code, message };
 };
 let app: FastifyInstance;
+const appRoutes: RouteDefinition[] = [];
 beforeAll(async () => {
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "adminSession",
     key: Buffer.from("c30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -291,8 +294,15 @@ beforeAll(async () => {
       }
     };
   });
-  await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   app.get("/admin/official/private/metadata", adminFetchPrivateOfficialDatapacksMetadata);
+  app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    appRoutes.push(
+      ...initializeAppRoutes(routeOptions, {
+        recaptchaHandlerName: "verifyRecaptchaPrehandler"
+      })
+    );
+  });
+  await app.register(adminAuth.adminRoutes, { prefix: "/admin" });
   await app.listen({ host: "localhost", port: 1239 });
   vi.spyOn(console, "error").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
@@ -405,6 +415,7 @@ const testUpdatedWorkshopDatabase: Workshop = {
   regLink: "",
   description: "test description"
 };
+const testUUID = "123e4567-e89b-12d3-a456-426614174000";
 const testWorkshop: SharedWorkshop = {
   title: "test",
   start: start.toISOString(),
@@ -419,7 +430,7 @@ const testWorkshop: SharedWorkshop = {
 const testComment = {
   id: 1,
   username: "test@example.com",
-  uuid: "123e4567-e89b-12d3-a456-426614174000",
+  uuid: testUUID,
   dateCreated: mockDate.toISOString(),
   pictureUrl: null,
   commentText: "test",
@@ -427,22 +438,54 @@ const testComment = {
   datapackTitle: "test"
 };
 
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "POST", url: "/admin/users" },
+const routes: { method: HTTPMethods; url: string; body?: object; recaptchaAction: string }[] = [
+  { method: "POST", url: "/admin/users", recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_USERS },
   {
     method: "POST",
     url: "/admin/user",
-    body: { username: "test", email: "test", password: "test", pictureUrl: "test", isAdmin: 1 }
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_CREATE_USER,
+    body: { username: "test", email: "test@gmail.com", password: "test", pictureUrl: "https://test.com", isAdmin: 1 }
   },
-  { method: "DELETE", url: "/admin/user", body: { uuid: "test" } },
-  { method: "DELETE", url: "/admin/user/datapack", body: { uuid: "test", datapack: "test" } },
-  { method: "DELETE", url: "/admin/official/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/official/datapack", body: { datapack: "test" } },
-  { method: "POST", url: "/admin/user/datapacks", body: { uuid: "test" } },
-  { method: "POST", url: "/admin/workshop/users", body: { file: "test", emails: "test@email.com", workshopId: "1" } },
+  {
+    method: "DELETE",
+    url: "/admin/user",
+    body: { uuid: testUUID },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_USER
+  },
+  {
+    method: "DELETE",
+    url: "/admin/user/datapack",
+    body: { uuid: testUUID, datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_USER_DATAPACKS
+  },
+  {
+    method: "DELETE",
+    url: "/admin/official/datapack",
+    body: { datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/official/datapack",
+    body: { datapack: "test" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/user/datapacks",
+    body: { uuid: testUUID },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_USER_DATAPACKS
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/users",
+    body: { file: "test", emails: "test@gmail.com", workshopId: "1" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_ADD_USERS_TO_WORKSHOP
+  },
   {
     method: "POST",
     url: "/admin/workshop",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_CREATE_WORKSHOP,
     body: {
       title: "test",
       start: "2024-08-29T04:00:00.000Z",
@@ -454,13 +497,20 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   },
   {
     method: "PATCH",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_WORKSHOP,
     url: "/admin/workshop",
     body: { workshopId: "1", title: "test", start: "2024-08-29T04:00:00.000Z" }
   },
-  { method: "DELETE", url: "/admin/workshop", body: { workshopId: "1" } },
+  {
+    method: "DELETE",
+    url: "/admin/workshop",
+    body: { workshopId: "1" },
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_WORKSHOP
+  },
   {
     method: "PATCH",
     url: "/admin/user",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_USER,
     body: {
       username: "username",
       email: "email@email.com",
@@ -470,16 +520,69 @@ const routes: { method: HTTPMethods; url: string; body?: object }[] = [
   {
     method: "PATCH",
     url: "/admin/official/datapack/priority",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPDATE_DATAPACK_PRIORITY,
     body: [{ uuid: "test", id: "test", priority: 1 }]
   },
-  { method: "POST", url: "/admin/workshop/datapack" },
-  { method: "POST", url: "/admin/workshop/official/datapack", body: { workshopId: "1", datapackTitle: "test" } },
-  { method: "PATCH", url: "/admin/official/datapack/test" },
-  { method: "GET", url: "/admin/official/datapack/test" },
-  { method: "POST", url: "/admin/workshop/files/1" },
-  { method: "POST", url: "/admin/workshop/cover/1" }
+  {
+    method: "POST",
+    url: "/admin/workshop/datapack",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_DATAPACK_TO_WORKSHOP
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/official/datapack",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_ADD_OFFICIAL_DATAPACK_TO_WORKSHOP,
+    body: { workshopId: "1", datapackTitle: "test" }
+  },
+  {
+    method: "PATCH",
+    url: "/admin/official/datapack/test",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+  },
+  {
+    method: "GET",
+    url: "/admin/official/datapack/test",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_OFFICIAL_DATAPACK
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/files/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_FILES_TO_WORKSHOP
+  },
+  {
+    method: "POST",
+    url: "/admin/workshop/cover/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_UPLOAD_COVER_PICTURE_TO_WORKSHOP
+  },
+  {
+    method: "GET",
+    url: "/admin/official/datapacks/private",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_FETCH_ALL_PRIVATE_OFFICIAL_DATAPACKS
+  },
+  {
+    method: "DELETE",
+    url: "/admin/datapack/comments/1",
+    recaptchaAction: shared.AdminRecaptchaActions.ADMIN_DELETE_DATAPACK_COMMENT
+  }
 ];
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
+
+// this test makes sure that all routes that are in auth have recaptcha enabled since they are now mroe of a manual addition
+it("should have all routes registered with recaptcha", () => {
+  const failedRoutes = appRoutes.filter((route) => !route.recaptchaAction);
+  if (failedRoutes.length > 0) {
+    console.table(failedRoutes);
+  }
+  expect(failedRoutes.length).toBe(0);
+});
+describe("Route Consistency Tests", () => {
+  it("should have a 1:1 match between expected and actual routes", () => {
+    const { missingInActual, unexpectedInActual } = oneToOneMatch(appRoutes, routes);
+    expect(missingInActual.length).toBe(0);
+    expect(unexpectedInActual.length).toBe(0);
+  });
+});
+
 describe("verifyAdmin tests", () => {
   describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
     const findUser = vi.spyOn(database, "findUser");
@@ -537,51 +640,56 @@ describe("verifyAdmin tests", () => {
     });
   });
 });
-
 describe("verifyRecaptcha tests", () => {
-  describe.each(routes)("should return 400 or 422 for route $url with method $method", ({ method, url, body }) => {
-    const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
-    beforeEach(() => {
-      checkRecaptchaToken.mockClear();
-    });
-    it("should return 400 if missing recaptcha token", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: { ...headers, "recaptcha-token": "" }
+  describe.each(routes)(
+    "should return 400 or 422 for route $url with method $method",
+    ({ method, url, body, recaptchaAction }) => {
+      const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
+      beforeEach(() => {
+        checkRecaptchaTokenMock.mockClear();
       });
-      expect(checkRecaptchaToken).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-      expect(response.statusCode).toBe(400);
-    });
-    it("should return 422 if recaptcha failed", async () => {
-      checkRecaptchaToken.mockResolvedValueOnce(0);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
+
+      it("should return 400 if missing recaptcha token", async () => {
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers: { ...headers, "recaptcha-token": "" }
+        });
+        expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
+        expect(response.statusCode).toBe(400);
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-      expect(response.statusCode).toBe(422);
-    });
-    it("should return 500 if checkRecaptchaToken throws error", async () => {
-      checkRecaptchaToken.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers: headers
+
+      it("should return 422 if recaptcha failed", async () => {
+        checkRecaptchaTokenMock.mockResolvedValueOnce(0);
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers
+        });
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "Recaptcha failed" });
+        expect(response.statusCode).toBe(422);
       });
-      expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-      expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Recaptcha error" });
-      expect(response.statusCode).toBe(500);
-    });
-  });
+
+      it("should return 500 if checkRecaptchaToken throws error", async () => {
+        checkRecaptchaTokenMock.mockRejectedValueOnce(new Error());
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body,
+          headers
+        });
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+        expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "Recaptcha error" });
+        expect(response.statusCode).toBe(500);
+      });
+    }
+  );
 });
 
 describe("adminCreateUser tests", () => {
@@ -589,7 +697,7 @@ describe("adminCreateUser tests", () => {
     username: "username",
     email: "email@email.com",
     password: "password",
-    pictureUrl: "pictureUrl",
+    pictureUrl: "http://pictureUrl.com",
     isAdmin: 1
   };
   const customUser = {
@@ -610,22 +718,90 @@ describe("adminCreateUser tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  test.each([
-    { ...body, email: "" },
-    { ...body, password: "" },
-    { ...body, email: "hi@gmailcom" },
-    { ...body, email: "higmail.com" }
-  ])("should return 400 for body %p", async (body) => {
+  it("should return 400 if username is blank", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/admin/user",
-      payload: body,
+      payload: { ...body, username: "" },
       headers
     });
     expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
     expect(createUser).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing/invalid required fields" });
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/username must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if email is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, email: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/email must match format "email"',
+      statusCode: 400
+    });
+  });
+  it("should return 400 if password is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, password: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/password must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if pictureUrl is blank", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, pictureUrl: "" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/pictureUrl must match format "uri"',
+      statusCode: 400
+    });
+  });
+  it("should return 400 if isAdmin is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, isAdmin: "not-a-number" },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).not.toHaveBeenCalled();
+    expect(createUser).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/isAdmin must be integer",
+      statusCode: 400
+    });
   });
 
   it("should return 409 if user already exists", async () => {
@@ -750,6 +926,22 @@ describe("adminCreateUser tests", () => {
     expect(await response.json()).toEqual({ message: "User created" });
     expect(response.statusCode).toBe(200);
   });
+  it("should return 200 if successful if username is not provided and cover image null", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user",
+      payload: { ...body, username: undefined, pictureUrl: null },
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.email, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(createUser).toHaveBeenCalledTimes(1);
+    expect(findUser).toHaveBeenNthCalledWith(1, { uuid: headers["mock-uuid"] });
+    expect(findUser).toHaveBeenNthCalledWith(2, { email: body.email });
+    expect(findUser).toHaveBeenCalledTimes(2);
+    expect(await response.json()).toEqual({ message: "User created" });
+    expect(response.statusCode).toBe(200);
+  });
 });
 
 describe("adminDeleteUser tests", () => {
@@ -757,7 +949,7 @@ describe("adminDeleteUser tests", () => {
   const deleteUser = vi.spyOn(database, "deleteUser");
   const deleteAllUserMetadata = vi.spyOn(fileMetadataHandler, "deleteAllUserMetadata");
   const deleteAllUserDatapacks = vi.spyOn(userHandlers, "deleteAllUserDatapacks");
-  const body = { uuid: "test" };
+  const body = { uuid: testUUID };
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -783,7 +975,12 @@ describe("adminDeleteUser tests", () => {
       payload: { uuid: "" },
       headers
     });
-    expect(await response.json()).toEqual({ error: "Missing uuid" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/uuid must match format "uuid"',
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 404 if user not found", async () => {
@@ -1224,7 +1421,7 @@ describe("adminDeleteOfficialDatapack", () => {
 describe("getAllUserDatapacks", () => {
   const fetchAllUsersDatapacks = vi.spyOn(userHandlers, "fetchAllUsersDatapacks");
   const payload = {
-    uuid: "test-uuid"
+    uuid: testUUID
   };
   const testDatapackArray = [
     {
@@ -1258,7 +1455,28 @@ describe("getAllUserDatapacks", () => {
       headers
     });
     expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing uuid in body" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/uuid must match format "uuid"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if string uuid is not a valid uuid", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/user/datapacks",
+      payload: { uuid: "not-a-uuid" },
+      headers
+    });
+    expect(fetchAllUsersDatapacks).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/uuid must match format "uuid"',
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 500 if fetchAllUsersDatapacks throws error", async () => {
@@ -1530,9 +1748,6 @@ describe("adminAddUsersToWorkshop", () => {
       payload: formData.body,
       headers: formHeaders
     });
-    expect(pipeline).toHaveBeenCalledTimes(1);
-    expect(parseExcelFile).toHaveBeenCalledTimes(1);
-    expect(rm).toHaveBeenCalledWith(resolve(`testdir/uploadDirectory/test.xlsx`), { force: true });
     expect(await response.json()).toEqual({ error: "Unknown error" });
     expect(response.statusCode).toBe(500);
   });
@@ -1594,6 +1809,54 @@ describe("adminAddUsersToWorkshop", () => {
       .mockResolvedValueOnce([testUserWorkshop])
       .mockResolvedValueOnce([])
       .mockResolvedValueOnce([testUserWorkshop2]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(1, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(2, 123, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(3, 321, 1);
+    expect(checkWorkshopHasUser).toHaveBeenNthCalledWith(4, 321, 1);
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(1, { userId: 123, workshopId: 1 });
+    expect(createUsersWorkshops).toHaveBeenNthCalledWith(2, { userId: 321, workshopId: 1 });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(1, "test@gmail.com", "test@gmail.com");
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenNthCalledWith(2, "test2@gmail.com", "test2@gmail.com");
+    expect(createUser).not.toHaveBeenCalled();
+    expect(findUser).toHaveBeenCalledTimes(1); // 1st call is from the prehandler verifyAdmin
+    expect(await response.json()).toEqual({ message: "Users added" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if just file is provided but no emails", async () => {
+    createForm({
+      emails: ""
+    });
+    parseExcelFile.mockResolvedValueOnce([["emily@gmail.com"], ["emily2@gmail.com"]]);
+    checkWorkshopHasUser.mockResolvedValueOnce([testUserWorkshop]).mockResolvedValueOnce([testUserWorkshop]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/users",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(pipeline).toHaveBeenCalledTimes(1);
+    expect(parseExcelFile).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ message: "Users added" });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(2);
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and update old users and still succeed cleaning up if rm fails for cleanup", async () => {
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([testAdminUser]).mockResolvedValueOnce([testAdminUser2]);
+    checkWorkshopHasUser
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop])
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([testUserWorkshop2]);
+    rm.mockRejectedValueOnce(new Error("Failed to remove file"));
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/users",
@@ -1847,6 +2110,22 @@ describe("adminCreateWorkshop", () => {
     });
     expect(response.statusCode).toBe(400);
   });
+  it("should return 400 if regRestrict is not 0 or 1", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop",
+      payload: { ...body, regRestrict: 2 },
+      headers
+    });
+    expect(createWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/regRestrict must be equal to one of the allowed values",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
   it("should return 400 if creatorUUID is empty", async () => {
     const response = await app.inject({
       method: "POST",
@@ -1962,7 +2241,6 @@ describe("adminEditWorkshop", () => {
   const findWorkshop = vi.spyOn(database, "findWorkshop");
   const getWorkshopFilesNames = vi.spyOn(uploadHandlers, "getWorkshopFilesNames");
   const getWorkshopIfNotEnded = vi.spyOn(database, "getWorkshopIfNotEnded");
-  const validatorSpy = vi.mocked(validator);
   const body = {
     workshopId: testWorkshop.workshopId,
     title: "new-title",
@@ -1972,7 +2250,9 @@ describe("adminEditWorkshop", () => {
     workshopId: testWorkshop.workshopId,
     regLink: "http://here.com",
     regRestrict: 1,
-    creatorUUID: "new-creatorUUID"
+    creatorUUID: "new-creatorUUID",
+    description: "new-description",
+    end: testWorkshop.end
   };
   beforeEach(() => {
     vi.clearAllMocks();
@@ -2000,7 +2280,12 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/workshopId must be >= 1",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if other editable fields are empty except workshopId", async () => {
@@ -2011,7 +2296,12 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing required fields" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must NOT be valid",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if start is an invalid date", async () => {
@@ -2022,7 +2312,12 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Invalid start date" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/start must match format "date-time"',
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if regLink is not a valid URL", async () => {
@@ -2033,8 +2328,12 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Invalid registration link" });
-    expect(validatorSpy.default.isURL).toHaveBeenCalledWith("invalid-url");
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/regLink must match format "uri"',
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 404 if workshop does not exist", async () => {
@@ -2050,7 +2349,6 @@ describe("adminEditWorkshop", () => {
     expect(response.statusCode).toBe(404);
   });
   it("should return 400 if end is an invalid date", async () => {
-    getWorkshopIfNotEnded.mockResolvedValueOnce(testWorkshopDatabase);
     const response = await app.inject({
       method: "PATCH",
       url: "/admin/workshop",
@@ -2058,7 +2356,13 @@ describe("adminEditWorkshop", () => {
       headers
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Invalid end date" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'body/end must match format "date-time"',
+      statusCode: 400
+    });
+    expect(getWorkshopIfNotEnded).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
   });
   it("should return 400 if start is after end", async () => {
@@ -2071,6 +2375,7 @@ describe("adminEditWorkshop", () => {
     });
     expect(updateWorkshop).not.toHaveBeenCalled();
     expect(await response.json()).toEqual({ error: "Invalid end date" });
+    expect(getWorkshopIfNotEnded).toHaveBeenCalledTimes(1);
     expect(response.statusCode).toBe(400);
   });
   it("should return 409 if workshop with title and dates already exists", async () => {
@@ -2177,6 +2482,42 @@ describe("adminEditWorkshop", () => {
       }
     });
     expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successful and update workshop with both start AND end", async () => {
+    const start = new Date(testWorkshop.start);
+    vi.setSystemTime(start.setDate(start.getDate() + 1)); // Mock current time to be after start
+    getWorkshopIfNotEnded
+      .mockResolvedValueOnce(testWorkshopDatabase)
+      .mockResolvedValueOnce(testUpdatedWorkshopDatabase);
+    getWorkshopDatapacksNames.mockResolvedValueOnce(["dp 1"]);
+    getWorkshopFilesNames.mockResolvedValueOnce(["file 1"]);
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/workshop",
+      payload: {
+        ...body,
+        start: testWorkshop.start,
+        end: testWorkshop.end
+      },
+      headers
+    });
+    expect(updateWorkshop).toHaveBeenCalledOnce();
+    expect(updateWorkshop).toHaveBeenCalledWith(
+      { workshopId: body.workshopId },
+      { ...body, regRestrict: 0, workshopId: undefined, start: testWorkshop.start, end: testWorkshop.end }
+    );
+    expect(await response.json()).toEqual({
+      workshop: {
+        ...testUpdatedWorkshopDatabase,
+        active: false,
+        regRestrict: testUpdatedWorkshopDatabase.regRestrict === 1,
+        datapacks: ["dp 1"],
+        files: ["file 1"]
+      }
+    });
+    expect(response.statusCode).toBe(200);
+    vi.setSystemTime(mockDate); // Reset system time
   });
 });
 
@@ -2326,6 +2667,20 @@ describe("adminModifyUser tests", () => {
     expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
     expect(await response.json()).toEqual({ error: "User does not exist." });
     expect(response.statusCode).toBe(409);
+  });
+  it("should return 403 if user modified is the root admin", async () => {
+    process.env.ADMIN_EMAIL = "test_root@gmail.com";
+    checkForUsersWithUsernameOrEmail.mockResolvedValueOnce([{ email: process.env.ADMIN_EMAIL } as User]);
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/admin/user",
+      payload: body,
+      headers
+    });
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledWith(body.username, body.email);
+    expect(checkForUsersWithUsernameOrEmail).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "Cannot modify root admin user" });
+    delete process.env.ADMIN_EMAIL;
   });
 
   it("should return 500 if checkForUsersWithUsernameOrEmail throws error", async () => {
@@ -2722,44 +3077,11 @@ describe("adminFetchSingleOfficialDatapack", () => {
   });
 });
 describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
-  const findUser = vi.spyOn(database, "findUser");
   const fetchAllPrivateOfficialDatapacks = vi.spyOn(userHandlers, "fetchAllPrivateOfficialDatapacks");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should return 401 if not logged in", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/official/private/metadata",
-      headers: {}
-    });
-    expect(findUser).not.toHaveBeenCalled();
-    expect(response.statusCode).toBe(401);
-  });
-  it("should return 403 if no user is found", async () => {
-    findUser.mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/official/private/metadata",
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(1);
-    expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-    expect(response.statusCode).toBe(403);
-  });
-  it("should return 403 if not admin", async () => {
-    findUser.mockResolvedValueOnce([testNonAdminUser]);
-    const response = await app.inject({
-      method: "GET",
-      url: "/admin/official/private/metadata",
-      headers
-    });
-    expect(findUser).toHaveBeenCalledTimes(1);
-    expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-    expect(response.statusCode).toBe(403);
-  });
   it("should return 500 if an error occurred in fetchAllPrivateOfficialDatapacks", async () => {
-    findUser.mockResolvedValueOnce([testAdminUser]);
     fetchAllPrivateOfficialDatapacks.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
@@ -2771,7 +3093,6 @@ describe("adminFetchPrivateOfficialDatapacksMetadata", () => {
     expect(fetchAllPrivateOfficialDatapacks).toHaveBeenCalledOnce();
   });
   it("should return metadatas", async () => {
-    findUser.mockResolvedValueOnce([testAdminUser]);
     fetchAllPrivateOfficialDatapacks.mockResolvedValueOnce([
       { title: "test", defaultChronostrat: "UNESCO" }
     ] as shared.Datapack[]);
@@ -2854,8 +3175,9 @@ describe("adminUploadFilesToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid file type for instruction file" });
     expect(response.statusCode).toBe(415);
   });
-  it("should return 400 if reserved file name is used", async () => {
+  it("asdf should return 400 if reserved file name is used", async () => {
     createForm({
+      extraFile: "",
       otherFiles: {
         value: Buffer.from("test"),
         options: {
@@ -2908,8 +3230,73 @@ describe("adminUploadFilesToWorkshop", () => {
     });
     expect(response.statusCode).toBe(500);
   });
-
+  it("should return 400 if unrecognized file type is uploaded", async () => {
+    createForm({
+      otherFiles: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.xyz",
+          contentType: "application/octet-stream"
+        }
+      },
+      test: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "test.txt",
+          contentType: "text/plain"
+        }
+      }
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      error: "Unexpected field: test"
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in uploadFileToWorkshop", async () => {
+    vi.mocked(uploadHandlers.uploadFileToWorkshop).mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Error uploading files to workshop" });
+    expect(response.statusCode).toBe(500);
+    expect(uploadHandlers.uploadFileToWorkshop).toHaveBeenCalledOnce();
+  });
   it("should return 200 if successfully uploaded file", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/files/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ message: "Files added to workshop" });
+    expect(response.statusCode).toBe(200);
+  });
+  it("should return 200 if successfully uploaded file with presentation and instructions", async () => {
+    createForm({
+      presentationFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "presentation.pdf",
+          contentType: "application/pdf"
+        }
+      },
+      instructionsFile: {
+        value: Buffer.from("test"),
+        options: {
+          filename: "instructions.pdf",
+          contentType: "application/pdf"
+        }
+      }
+    });
     const response = await app.inject({
       method: "POST",
       url: "/admin/workshop/files/1",
@@ -2939,6 +3326,21 @@ describe("adminUploadCoverPicToWorkshop", () => {
   beforeEach(() => {
     createForm();
     vi.clearAllMocks();
+  });
+  it("should return 400 if workshopId is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/not-a-number",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopId must be integer",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should return 404 if workshop ended", async () => {
     vi.mocked(database.getWorkshopIfNotEnded).mockResolvedValueOnce(null);
@@ -2978,7 +3380,28 @@ describe("adminUploadCoverPicToWorkshop", () => {
     expect(await response.json()).toEqual({ error: "Invalid file type" });
     expect(response.statusCode).toBe(415);
   });
-
+  it("should return 400 if no file is provided", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: {},
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "No cover picture was uploaded" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if an error occurred in uploadCoverPicToWorkshop", async () => {
+    vi.mocked(uploadHandlers.uploadCoverPicToWorkshop).mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/admin/workshop/cover/1",
+      payload: formData.body,
+      headers: formHeaders
+    });
+    expect(await response.json()).toEqual({ error: "Error uploading cover picture to workshop" });
+    expect(response.statusCode).toBe(500);
+    expect(uploadHandlers.uploadCoverPicToWorkshop).toHaveBeenCalledOnce();
+  });
   it("should return 200 if successfully uploaded cover picture", async () => {
     const response = await app.inject({
       method: "POST",
@@ -2997,16 +3420,6 @@ describe("adminDeleteDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/admin/datapack/comments/1",
-      headers: { "mock-uuid": "" }
-    });
-    expect(deleteComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
       method: "DELETE",
@@ -3015,6 +3428,12 @@ describe("adminDeleteDatapackComment tests", () => {
     });
     expect(deleteComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be integer",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({

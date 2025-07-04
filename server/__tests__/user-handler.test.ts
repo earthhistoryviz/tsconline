@@ -492,16 +492,11 @@ describe("deleteUserDatapack tests", () => {
     expect(rm).toHaveBeenCalledOnce();
     expect(fetchUserDatapackDirectory).toHaveBeenCalledOnce();
   });
-  const uuidChecks = {
-    isOfficialUUID,
-    isWorkshopUUID,
-    isTempUUID
-  };
-  test.each(["isOfficialUUID", "isWorkshopUUID", "isTempUUID"])(
+  test.each([isOfficialUUID, isWorkshopUUID, isTempUUID])(
     "should not delete metadata if true for %s",
     async (uuidCheck) => {
       vi.clearAllMocks();
-      uuidChecks[uuidCheck].mockReturnValueOnce(true);
+      uuidCheck.mockReturnValueOnce(true);
       verifyFilepath.mockResolvedValueOnce(true);
       fetchUserDatapackDirectory.mockResolvedValueOnce("test");
       await deleteUserDatapack("uuid", "datapack");

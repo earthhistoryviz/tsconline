@@ -1,4 +1,10 @@
-import { Datapack, assertBatchUpdateServerPartialError, DatapackUniqueIdentifier } from "@tsconline/shared";
+import {
+  Datapack,
+  assertBatchUpdateServerPartialError,
+  DatapackUniqueIdentifier,
+  AdminRecaptchaActions,
+  UserRecaptchaActions
+} from "@tsconline/shared";
 import { action, toJS } from "mobx";
 import { EditableDatapackMetadata, assertDatapackFetchParams } from "../../types";
 import { fetcher } from "../../util";
@@ -43,9 +49,10 @@ export const handleDatapackEdit = action(
         return;
       }
       try {
-        const recaptcha = await getRecaptchaToken("handleDatapackEdit");
+        const { route, recaptchaAction } = getEditDatapackRoute(originalDatapack);
+        const recaptcha = await getRecaptchaToken(recaptchaAction);
         if (!recaptcha) return;
-        const response = await fetcher(getEditDatapackRoute(originalDatapack), {
+        const response = await fetcher(route, {
           method: "PATCH",
           body: formData,
           credentials: "include",
@@ -97,19 +104,33 @@ export const handleDatapackEdit = action(
  * @param datapack the datapack (original)
  * @returns
  */
-const getEditDatapackRoute = (datapack: DatapackUniqueIdentifier) => {
+const getEditDatapackRoute = (
+  datapack: DatapackUniqueIdentifier
+): {
+  route: string;
+  recaptchaAction: string;
+} => {
   switch (datapack.type) {
     case "official": {
-      return `/admin/official/datapack/${datapack.title}`;
+      return {
+        route: `/admin/official/datapack/${datapack.title}`,
+        recaptchaAction: AdminRecaptchaActions.ADMIN_EDIT_OFFICIAL_DATAPACK
+      };
     }
     case "workshop": {
-      return `/workshop/${datapack.uuid}/datapack/${datapack.title}`;
+      return {
+        route: `/workshop/${datapack.uuid}/datapack/${datapack.title}`,
+        recaptchaAction: "editWorkshopDatapack"
+      };
     }
     case "user": {
-      return `/user/datapack/${datapack.title}`;
+      return {
+        route: `/user/datapack/${datapack.title}`,
+        recaptchaAction: UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA
+      };
     }
     default: {
-      return "";
+      throw new Error("Invalid datapack type");
     }
   }
 };
@@ -126,11 +147,12 @@ export const replaceDatapackFile = action(async (datapackUniqueIdentifier: Datap
       pushError(ErrorCodes.NOT_LOGGED_IN);
       return;
     }
-    const recaptcha = await getRecaptchaToken("replaceUserDatapackFile");
+    const { route, recaptchaAction } = getEditDatapackRoute(datapackUniqueIdentifier);
+    const recaptcha = await getRecaptchaToken(recaptchaAction);
     if (!recaptcha) return;
     const formData = new FormData();
     formData.append("datapack", file);
-    const response = await fetcher(getEditDatapackRoute(datapackUniqueIdentifier), {
+    const response = await fetcher(route, {
       method: "PATCH",
       body: formData,
       credentials: "include",
@@ -179,11 +201,12 @@ export const replaceProfileImageFile = action(
         pushError(ErrorCodes.NOT_LOGGED_IN);
         return false;
       }
-      const recaptcha = await getRecaptchaToken("replaceUserProfileImageFile");
+      const { route, recaptchaAction } = getEditDatapackRoute(datapackUniqueIdentifier);
+      const recaptcha = await getRecaptchaToken(recaptchaAction);
       if (!recaptcha) return;
       const formData = new FormData();
       formData.append("datapack-image", file);
-      const response = await fetcher(getEditDatapackRoute(datapackUniqueIdentifier), {
+      const response = await fetcher(route, {
         method: "PATCH",
         body: formData,
         credentials: "include",

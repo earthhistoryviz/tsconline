@@ -87,7 +87,8 @@ export const DatapackProfile = observer(() => {
     !!metadata &&
     ((isUserDatapack(metadata) && state.user.uuid && isOwnedByUser(metadata, state.user.uuid)) ||
       isWorkshopDatapack(metadata) ||
-      (state.user.isAdmin && isOfficialDatapack(metadata)));
+      (state.user.isAdmin && isOfficialDatapack(metadata)) ||
+      (metadata.isPublic && metadata.hasFiles));
   const initializeDatapack = async (controller: AbortController) => {
     if (!areParamsValid || !metadata) return;
     if (!datapack) {

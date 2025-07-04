@@ -1,24 +1,37 @@
 import "dotenv/config";
 import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { assertRecaptchaResponse } from "./types.js";
 
 /**
  * Verifies the given Recaptcha token. The token is sent to Google's Recaptcha API for verification.
  * @param token The token to verify
+ * @param action The expected action to verify
  * @returns The score of the token. Values closer to 1.0 indicate that the token is likely valid, while values closer to 0.0 indicate that the token is likely invalid.
  */
-export async function checkRecaptchaToken(token: string): Promise<number> {
+export async function checkRecaptchaToken(token: string, action: string): Promise<number> {
   try {
-    if (process.env.NODE_ENV != "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
-    const response = await fetch(
-      `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET_KEY}&response=${token}`,
-      { method: "POST" }
-    );
-    const data = await response.json();
-    if (!data.success) {
-      console.error("Recaptcha failed:", data);
-      throw new Error("Recaptcha failed");
+    if (process.env.NODE_ENV !== "production" && !process.env.RECAPTCHA_SECRET_KEY) return 1.0;
+
+    const secret = process.env.RECAPTCHA_SECRET_KEY;
+    const url = `https://www.google.com/recaptcha/api/siteverify?secret=${secret}&response=${token}`;
+    const httpResponse = await fetch(url, { method: "POST" });
+
+    if (httpResponse.ok) {
+      const data = await httpResponse.json();
+      assertRecaptchaResponse(data);
+
+      if (!data.success) {
+        throw new Error("Recaptcha verification failed");
+      }
+
+      if (data.action !== action) {
+        throw new Error(`Recaptcha action mismatch: expected "${action}", got "${data.action}"`);
+      }
+
+      return data.score;
     }
-    return data.score;
+
+    throw new Error("Network response was not ok");
   } catch (error) {
     console.error("Recaptcha error:", error);
     throw new Error("Recaptcha failed");
