@@ -333,6 +333,30 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     },
     addDatapackAttachedFiles
   );
+  fastify.get(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: fetchDatapackAttachedFileNamesParams }
+    },
+    fetchDatapackAttachedFileNames
+  );
+  fastify.delete(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic/:fileName",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: deleteDatapackAttachedFileParams }
+    },
+    deleteDatapackAttachedFile
+  );
+  fastify.patch(
+    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    {
+      config: { rateLimit: looseRateLimit },
+      schema: { params: addDatapackAttachedFilesParams }
+    },
+    addDatapackAttachedFiles
+  );
   fastify.post(
     "/datapack/addComment/:datapackTitle",
     {
