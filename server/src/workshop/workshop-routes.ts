@@ -176,8 +176,8 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
 
     //add exception handling?
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const filePath = await getFileFromWorkshop(workshopUUID, fileName);
-
+    let filePath = await getFileFromWorkshop(workshopUUID, fileName);
+    
     try {
       const stream = createReadStream(filePath);
       return reply.send(stream);
@@ -251,3 +251,17 @@ export const fetchWorkshopCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
+
+
+// export async function getFileFromWorkshop(workshopUUID: string, fileName: string): Promise<string> {
+
+//     const directory = await getUserUUIDDirectory(workshopUUID, true);
+
+//     let filePath = path.join(directory, "files");
+//     filePath = path.join(filePath, fileName);
+
+//     if (!(await verifyFilepath(filePath))) {
+//       throw new Error("Invalid filepath");
+//     }
+//     return filePath
+// }

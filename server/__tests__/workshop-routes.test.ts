@@ -44,7 +44,8 @@ vi.mock("../src/database", async () => {
 });
 vi.mock("../src/user/fetch-user-files", async () => {
   return {
-    getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory")
+    getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory"),
+    getFileFromWorkshop: vi.fn().mockResolvedValue("tmp/fake-file"),
   };
 });
 vi.mock("../src/util", async () => {
