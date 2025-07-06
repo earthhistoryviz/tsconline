@@ -384,6 +384,21 @@ const routes: RouteDefinition[] = [
   {
     method: "GET",
     url: "/user/datapack/comments/test_filename"
+  },
+  {
+    method: "GET",
+    url: "/user/datapack/files/testDatapackTitle/12345/false",
+    hasAuth: false
+  },
+  {
+    method: "DELETE",
+    url: "/user/datapack/files/testDatapackTitle/12345/false/testfile.pdf",
+    hasAuth: false
+  },
+  {
+    method: "PATCH",
+    url: "/user/datapack/files/testDatapackTitle/12345/false",
+    hasAuth: false
   }
 ];
 describe("Route Consistency Tests", () => {
