@@ -16,7 +16,7 @@ import {
   fetchUserHistory,
   deleteUserHistory,
   fetchDatapackComments,
-  downloadPrivateDatapackFilesZip
+  downloadPrivateDatapackFilesZip,
   fetchDatapackAttachedFileNames,
   deleteDatapackAttachedFile,
   addDatapackAttachedFiles

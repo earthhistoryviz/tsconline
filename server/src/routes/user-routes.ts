@@ -13,14 +13,13 @@ import {
 import {
   deleteUserDatapack,
   downloadDatapackFilesZip,
-  checkFileTypeIsPDF,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
   processMultipartPartsForAttachedDatapackFilesEditUpload
 } from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
-import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
+import { editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownloadDatapack } from "@tsconline/shared";
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import logger from "../error-logger.js";
@@ -29,7 +28,7 @@ import {
   getUsersDatapacksDirectoryFromUUIDDirectory,
   getUserUUIDDirectory
 } from "../user/fetch-user-files.js";
-import path, { join } from "path";
+import path from "path";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture, isOperationResult } from "../types.js";
 import { editDatapack } from "../file-handlers/edit-handler.js";
 
@@ -490,15 +489,15 @@ export const downloadPrivateDatapackFilesZip = async function downloadPrivateDat
       reply.status(404).send({ error: "Datapack not found" });
       return;
     }
-    if (!checkUserAllowedDownloadDatapack({
-      isAdmin: !!user.isAdmin, uuid: user.uuid,
-      username: "",
-      email: "",
-      pictureUrl: null,
-      isGoogleUser: false,
-      accountType: "",
-      historyEntries: []
-    }, datapackMetadata)) {
+    if (
+      !checkUserAllowedDownloadDatapack(
+        {
+          isAdmin: !!user.isAdmin,
+          uuid: user.uuid
+        },
+        datapackMetadata
+      )
+    ) {
       reply.status(403).send({ error: "Unauthorized to download this datapack" });
       return;
     }

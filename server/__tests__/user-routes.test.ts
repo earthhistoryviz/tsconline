@@ -23,7 +23,6 @@ import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
 import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 import { UserRecaptchaActions } from "@tsconline/shared";
 import { uploadExternalDatapack } from "../src/routes/user-routes";
-import { once } from "events";
 
 vi.mock("../src/workshop/workshop-util", async () => {
   return {
@@ -34,7 +33,6 @@ vi.mock("../src/workshop/workshop-util", async () => {
     getWorkshopIdFromUUID: vi.fn().mockReturnValue("workshop-123")
   };
 });
-
 
 vi.mock("../src/user/chart-history", async () => {
   return {
