@@ -516,6 +516,7 @@ interface UploadDatapackComment extends RouteGenericInterface {
     commentText: string;
   };
 }
+
 export const fetchDatapackAttachedFileNames = async function fetchDatapackAttachedFileNames(
   request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
   reply: FastifyReply
