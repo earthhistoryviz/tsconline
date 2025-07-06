@@ -83,7 +83,7 @@ export const changePassword = async function changePassword(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "changePassword");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -126,7 +126,7 @@ export const changeUsername = async function changeUsername(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "changeUsername");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -316,7 +316,7 @@ export const changeEmail = async function changeEmail(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "changeEmail");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -440,7 +440,7 @@ export const forgotPassword = async function forgotPassword(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, password);
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -486,7 +486,7 @@ export const sendForgotPasswordEmail = async function sendForgotPasswordEmail(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "sendForgotPasswordEmail");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -556,7 +556,7 @@ export const resendVerificationEmail = async function resendVerificationEmail(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "resendVerificationEmail");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -656,7 +656,7 @@ export const signup = async function signup(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "signup");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;
@@ -723,7 +723,7 @@ export const login = async function login(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "login");
     // the score is a number between 0 and 1 that indicates the likelihood that the user is a bot
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
@@ -765,7 +765,7 @@ export const googleLogin = async function googleLogin(
     return;
   }
   try {
-    const score = await checkRecaptchaToken(recaptchaToken);
+    const score = await checkRecaptchaToken(recaptchaToken, "googleLogin");
     if (score < googleRecaptchaBotThreshold) {
       reply.status(422).send({ error: "Recaptcha failed" });
       return;

@@ -11,7 +11,7 @@ import { ErrorCodes } from "../util/error-codes";
 import { context } from "../state";
 import { observer } from "mobx-react-lite";
 import { getRecaptchaToken } from "../state/actions";
-import { CommentType, assertCommentType } from "@tsconline/shared";
+import { CommentType, UserRecaptchaActions, assertCommentType } from "@tsconline/shared";
 
 export const Discussion = observer(() => {
   const { id } = useParams();
@@ -128,7 +128,7 @@ export const Discussion = observer(() => {
       return;
     }
     try {
-      const recaptchaToken = await getRecaptchaToken("deleteComment");
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_COMMENT);
       if (!recaptchaToken) return;
       const response = await fetcher(`/user/datapack/comments/${id}`, {
         method: "DELETE",
