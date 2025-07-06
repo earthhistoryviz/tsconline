@@ -1,4 +1,4 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
 import { findWorkshop, isUserInWorkshop } from "../database.js";
 import { getWorkshopFilesPath, getWorkshopIdFromUUID, verifyWorkshopValidity } from "./workshop-util.js";
@@ -181,3 +181,34 @@ export const fetchWorkshopCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
+
+interface RegisterUserForWorkshopParams extends RouteGenericInterface {
+  Params: {
+    workshopId: number;
+  };
+}
+export const registerUserForWorkshop = async (
+  request: FastifyRequest<RegisterUserForWorkshopParams>,
+  reply: FastifyReply
+) => {
+  const { workshopId } = request.params;
+  const user = request.user!; // already verified in verifyAuthority
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (!workshop || workshop.length !== 1) {
+      return reply.status(404).send({ error: "Workshop not found" });
+    }
+    const isRegistered = await isUserInWorkshop(user.userId, workshopId);
+    if (isRegistered) {
+      return reply.status(400).send({ error: "User already registered for this workshop" });
+    }
+    // Logic to register the user for the workshop goes here
+    // For example, updating the database to add the user to the workshop
+    // ...
+
+    reply.send({ message: "User successfully registered for the workshop" });
+  } catch (error) {
+    logger.error("Error registering user for workshop:", error);
+    reply.status(500).send({ error: "An error occurred while registering for the workshop" });
+  }
+}
