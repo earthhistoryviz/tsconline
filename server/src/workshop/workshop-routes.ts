@@ -12,7 +12,7 @@ import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-hand
 import path from "node:path";
 import { readFile } from "fs/promises";
 import { createReadStream } from "fs";
-import { getUserUUIDDirectory } from "../user/fetch-user-files.js";
+import { getUserUUIDDirectory, getFileFromWorkshop} from "../user/fetch-user-files.js";
 import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
@@ -174,16 +174,9 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       return;
     }
 
+    //add exception handling?
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const directory = await getUserUUIDDirectory(workshopUUID, true);
-
-    let filePath = path.join(directory, "files");
-    filePath = path.join(filePath, fileName);
-
-    if (!(await verifyFilepath(filePath))) {
-      reply.status(500).send({ error: "Invalid file path" });
-      return;
-    }
+    const filePath = await getFileFromWorkshop(workshopUUID, fileName);
 
     try {
       const stream = createReadStream(filePath);
@@ -212,8 +205,8 @@ export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
       return;
     }
 
+    //add exception handling?
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-
     const dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
 
 
@@ -229,8 +222,8 @@ export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
     } catch (e) {
       reply.status(500).send({ error: "Error sending file buffer" });
     }
-  } catch (e: any) {
-    reply.status(500).send({ error: e.stack || "An error has occurred" });
+  } catch (e) {
+    reply.status(500).send({ error: "An error has occurred" });
   }
 };
 
