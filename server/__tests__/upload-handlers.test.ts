@@ -959,7 +959,6 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     });
 
     const data = await processMultipartPartsForDatapackUpload("user", formData);
-    console.log(data);
 
     expect(findUser).toHaveBeenCalledOnce();
     expect(checkFileTypeIsDatapack).toHaveBeenCalledOnce();

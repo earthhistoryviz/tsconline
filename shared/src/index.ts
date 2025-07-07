@@ -3,6 +3,7 @@
 import { defaultColumnRootConstant, defaultFontsInfoConstant, validDateFormats } from "./constants.js";
 import validator from "validator";
 
+export * from "./recaptcha-keys.js";
 export * from "./constants.js";
 export * from "./util.js";
 export * from "./settings-types.js";
