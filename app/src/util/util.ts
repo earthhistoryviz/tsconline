@@ -41,6 +41,7 @@ export function checkIfDataIsInRange(
   userBaseAge: number,
   isNegativeUnits: boolean
 ) {
+  
   // support negative units: negate top and base ages and switch min/maxes before checking
   if (isNegativeUnits) {
     userBaseAge = -userBaseAge;
@@ -51,7 +52,9 @@ export function checkIfDataIsInRange(
   }
 
   if (userBaseAge <= userTopAge) {
-    return false;
+    if(!isNegativeUnits){
+          return false;
+    }
   }
 
   // once we finish datapack parsing we should not have any at 99999 and -99999

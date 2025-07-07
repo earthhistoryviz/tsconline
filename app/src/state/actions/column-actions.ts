@@ -524,6 +524,7 @@ export function convertColumnInfoToRenderColumnInfo(column: ColumnInfo): RenderC
       rgb: column.rgb,
       width: column.width,
       units: column.units,
+      isNegativeUnits: column.isNegativeUnits,
       showAgeLabels: column.showAgeLabels,
       showUncertaintyLabels: column.showUncertaintyLabels,
       columnRef: column,

@@ -49,7 +49,7 @@ const Status = observer(({ info }: { info: EventSearchInfo }) => {
         ages.baseAge,
         state.settings.timeSettings[column.units].topStageAge,
         state.settings.timeSettings[column.units].baseStageAge,
-        state.settings.timeSettings[column.units].isNegativeUnits
+        column.isNegativeUnits
       )
     : true;
   return (
