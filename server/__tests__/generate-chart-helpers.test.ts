@@ -13,7 +13,7 @@ import * as containsKnownError from "../src/chart-error-handler";
 import * as util from "../src/util";
 import { ChartRequest } from "@tsconline/shared";
 import { User } from "../src/types";
-import { Readable } from "stream";
+import { EventEmitter, Readable } from "stream";
 import * as fs from "fs/promises";
 import * as svgson from "svgson";
 
@@ -48,7 +48,7 @@ beforeAll(() => {
 });
 
 describe("parseJavaOutputLine tests", () => {
-  const filenameMap = { "foo.sqlite": "Foo Pack" };
+  const filenameMap = { "foo.dpk": "Foo Pack" };
 
   it("parses initial loading datapack line", () => {
     const result = parseJavaOutputLine("Convert Datapack to sqlite database", filenameMap);
@@ -56,8 +56,13 @@ describe("parseJavaOutputLine tests", () => {
   });
 
   it("parses individual datapack and outputs percentage", () => {
-    const result = parseJavaOutputLine("Loading datapack [1/2]: foo.sqlite", filenameMap);
+    const result = parseJavaOutputLine("Loading datapack [1/2]: foo.dpk", filenameMap);
     expect(result).toEqual({ stage: "Loading Datapack: Foo Pack (1/2)", percent: 25 });
+  });
+
+  it("parses loading datapack with no known display name", () => {
+    const result = parseJavaOutputLine("Loading datapack [1/2]: foo1.dpk ", filenameMap);
+    expect(result).toEqual({ stage: "Loading Datapack: foo1.dpk (1/2)", percent: 25 });
   });
 
   it("parses image generation line", () => {
@@ -99,6 +104,10 @@ describe("resolveDatapacks", () => {
   it("should throw if user does not have access to user datapack", async () => {
     vi.spyOn(db, "findUser").mockResolvedValueOnce([{ userId: 5 } as User]);
     await expect(resolveDatapacks(chartRequest, "uuid")).rejects.toThrow("Unauthorized user datapack access");
+  });
+
+  it("should throw if trying to access workshop datapack without uuid", async () => {
+    await expect(resolveDatapacks(chartRequest, undefined)).rejects.toThrow("User lacks access to workshop datapack");
   });
 
   it("should resolve datapacks to paths and maps titles", async () => {
@@ -152,31 +161,38 @@ describe("runJavaChartGeneration", () => {
     });
     return stream;
   }
+  const CONVERT_DATAPACK_TO_SQLITE = "Convert Datapack to sqlite database\n";
+  const LOADING_DATAPACK_1_OF_2 = "Loading datapack [1/2]: pack1.dpk\n";
+  const GENERATING_IMAGE = "Generating Image\n";
+  const NO_ERRORS = "ImageGenerator did not have any errors on generation\n";
   const spawnMock = vi.spyOn(childProcess, "spawn");
+  let stdout: Readable;
+  let stderr: Readable;
+
+  beforeEach(() => {
+    stdout = createMockReadable();
+    stderr = createMockReadable();
+
+    spawnMock.mockImplementation(
+      () =>
+        ({
+          stdout,
+          stderr,
+          on: (event: string, cb: any) => {
+            if (event === "close") setImmediate(() => cb(0, null));
+          }
+        }) as unknown as ReturnType<typeof childProcess.spawn>
+    );
+  });
 
   it("reports progress from Java stdout lines", async () => {
     const onProgress = vi.fn();
-    const stdout = createMockReadable();
-    const stderr = createMockReadable();
-
-    spawnMock.mockImplementationOnce(() => {
-      return {
-        stdout,
-        stderr,
-        on: (event: string, cb: any) => {
-          if (event === "close") {
-            setImmediate(() => cb(0, null));
-          }
-        }
-      } as unknown as ReturnType<typeof childProcess.spawn>;
-    });
-
     const filenameMap = {
       "pack1.dpk": "Pack One"
     };
 
     const promise = runJavaChartGeneration(
-      { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
+      { settings: "", datapacks: [], isCrossPlot: true, useCache: false },
       [],
       "file.tsc",
       "chart.svg",
@@ -184,10 +200,6 @@ describe("runJavaChartGeneration", () => {
       onProgress
     );
 
-    const CONVERT_DATAPACK_TO_SQLITE = "Convert Datapack to sqlite database\n";
-    const LOADING_DATAPACK_1_OF_2 = "Loading datapack [1/2]: pack1.dpk\n";
-    const GENERATING_IMAGE = "Generating Image\n";
-    const NO_ERRORS = "ImageGenerator did not have any errors on generation\n";
     stdout.emit("data", Buffer.from(CONVERT_DATAPACK_TO_SQLITE));
     stdout.emit("data", Buffer.from(LOADING_DATAPACK_1_OF_2));
     stdout.emit("data", Buffer.from(GENERATING_IMAGE));
@@ -206,20 +218,6 @@ describe("runJavaChartGeneration", () => {
 
   it("detects and reports known error from Java output", async () => {
     const onProgress = vi.fn();
-    const stdout = new Readable({ read() {} });
-    const stderr = new Readable({ read() {} });
-
-    spawnMock.mockImplementationOnce(
-      () =>
-        ({
-          stdout,
-          stderr,
-          on: (event: string, cb: any) => {
-            if (event === "close") setImmediate(() => cb(0, null));
-          }
-        }) as unknown as ReturnType<typeof childProcess.spawn>
-    );
-
     vi.spyOn(containsKnownError, "containsKnownError").mockImplementation((line: string) => {
       return line.includes("Fatal error") ? 1234 : 0;
     });
@@ -234,35 +232,21 @@ describe("runJavaChartGeneration", () => {
       onProgress
     );
 
-    stdout.emit("data", Buffer.from("Generating Image\n"));
+    stdout.emit("data", Buffer.from(GENERATING_IMAGE));
     stdout.emit("data", Buffer.from("Fatal error: something broke\n")); // This will be matched
     stdout.emit("end");
 
     const result = await promise;
 
-    expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine("Generating Image\n", filenameMap));
+    expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine(GENERATING_IMAGE, filenameMap));
     expect(result.knownErrorCode).toBe(1234);
     expect(result.errorMessage).toBe("Fatal error: something broke");
   });
 
   it("handles leftover data in stdout", async () => {
     const onProgress = vi.fn();
-    const stdout = createMockReadable();
-    const stderr = createMockReadable();
-
-    spawnMock.mockImplementationOnce(() => {
-      return {
-        stdout,
-        stderr,
-        on: (event: string, cb: any) => {
-          if (event === "close") {
-            setImmediate(() => cb(0, null));
-          }
-        }
-      } as unknown as ReturnType<typeof childProcess.spawn>;
-    });
-
     const filenameMap = {};
+
     const promise = runJavaChartGeneration(
       { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
       [],
@@ -276,26 +260,11 @@ describe("runJavaChartGeneration", () => {
     stdout.emit("end");
 
     await promise;
-    expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine("Generating Image\n", filenameMap));
+    expect(onProgress).toHaveBeenCalledWith(parseJavaOutputLine(GENERATING_IMAGE, filenameMap));
   });
 
   it("should return generic error if error detected but not known", async () => {
     const onProgress = vi.fn();
-    const stdout = createMockReadable();
-    const stderr = createMockReadable();
-
-    spawnMock.mockImplementationOnce(() => {
-      return {
-        stdout,
-        stderr,
-        on: (event: string, cb: any) => {
-          if (event === "close") {
-            setImmediate(() => cb(0, null));
-          }
-        }
-      } as unknown as ReturnType<typeof childProcess.spawn>;
-    });
-
     const filenameMap = {};
     const promise = runJavaChartGeneration(
       { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
@@ -306,7 +275,7 @@ describe("runJavaChartGeneration", () => {
       onProgress
     );
 
-    stdout.emit("data", Buffer.from("Generating Image\n"));
+    stdout.emit("data", Buffer.from(GENERATING_IMAGE));
     stdout.emit("end");
 
     const result = await promise;
@@ -314,6 +283,51 @@ describe("runJavaChartGeneration", () => {
       knownErrorCode: 1005,
       errorMessage: "Unknown error occurred during chart generation"
     });
+  });
+
+  it("should handle error in java process", async () => {
+    const onProgress = vi.fn();
+    const filenameMap = {};
+    const mockProcess = new EventEmitter() as childProcess.ChildProcessWithoutNullStreams;
+    mockProcess.stdout = stdout;
+    mockProcess.stderr = stderr;
+    spawnMock.mockImplementationOnce(() => mockProcess);
+
+    const promise = runJavaChartGeneration(
+      { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
+      [],
+      "file.tsc",
+      "chart.svg",
+      filenameMap,
+      onProgress
+    );
+
+    const error = new Error("Java process failed");
+    mockProcess.emit("error", error);
+
+    await expect(promise).rejects.toThrow("Failed to spawn Java process: Java process failed");
+  });
+
+  it("should reject with timeout error if Java process is killed", async () => {
+    const onProgress = vi.fn();
+    const filenameMap = {};
+    const mockProcess = new EventEmitter() as childProcess.ChildProcessWithoutNullStreams;
+    mockProcess.stdout = stdout;
+    mockProcess.stderr = stderr;
+    spawnMock.mockImplementationOnce(() => mockProcess);
+
+    const promise = runJavaChartGeneration(
+      { settings: "", datapacks: [], isCrossPlot: false, useCache: false },
+      [],
+      "file.tsc",
+      "chart.svg",
+      filenameMap,
+      onProgress
+    );
+
+    mockProcess.emit("close", null, "SIGKILL");
+
+    await expect(promise).rejects.toThrow("Java process timed out");
   });
 });
 

@@ -152,7 +152,7 @@ export async function runJavaChartGeneration(
     javaProcess.stdout.on("data", (data) => {
       const combined = leftover + data.toString();
       const lines = combined.split("\n");
-      leftover = lines.pop() ?? "";
+      leftover = lines.pop()!;
       for (const line of lines) {
         const status = parseJavaOutputLine(line, filenameMap);
         if (status) onProgress(status);
