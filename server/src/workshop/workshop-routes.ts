@@ -262,15 +262,3 @@ export const fetchWorkshopCoverImage = async function (
   }
 };
 
-// export async function getFileFromWorkshop(workshopUUID: string, fileName: string): Promise<string> {
-
-//     const directory = await getUserUUIDDirectory(workshopUUID, true);
-
-//     let filePath = path.join(directory, "files");
-//     filePath = path.join(filePath, fileName);
-
-//     if (!(await verifyFilepath(filePath))) {
-//       throw new Error("Invalid filepath");
-//     }
-//     return filePath
-// }
