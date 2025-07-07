@@ -23,15 +23,7 @@ import { adminRoutes } from "./admin/admin-auth.js";
 import PQueue from "p-queue";
 import { userRoutes } from "./routes/user-auth.js";
 import { fetchWorkshopCoverImage } from "./workshop/workshop-routes.js";
-import {
-  deleteUserHistory,
-  fetchPublicUserDatapack,
-  fetchUserDatapacksMetadata,
-  uploadExternalDatapack,
-  fetchUserHistory,
-  fetchUserHistoryMetadata,
-  fetchDatapackComments
-} from "./routes/user-routes.js";
+import { uploadExternalDatapack } from "./routes/user-routes.js";
 import logger from "./error-logger.js";
 import { workshopRoutes } from "./workshop/workshop-auth.js";
 import { fetchAllWorkshops } from "./workshop/workshop-routes.js";
@@ -332,12 +324,6 @@ server.get("/workshop", looseRateLimit, fetchAllWorkshops);
 
 server.register(userRoutes, { prefix: "/user" });
 // these are seperate from the user routes because they don't require recaptcha
-server.get("/user/metadata", looseRateLimit, fetchUserDatapacksMetadata);
-server.get("/user/uuid/:uuid/datapack/:datapackTitle", looseRateLimit, fetchPublicUserDatapack);
-server.get("/user/history", looseRateLimit, fetchUserHistoryMetadata);
-server.get("/user/history/:timestamp", looseRateLimit, fetchUserHistory);
-server.delete("/user/history/:timestamp", looseRateLimit, deleteUserHistory);
-server.get("/user/datapack/comments/:datapackTitle", looseRateLimit, fetchDatapackComments);
 server.post("/auth/oauth", strictRateLimit, loginRoutes.googleLogin);
 server.post("/auth/login", strictRateLimit, loginRoutes.login);
 server.post("/auth/signup", strictRateLimit, loginRoutes.signup);
