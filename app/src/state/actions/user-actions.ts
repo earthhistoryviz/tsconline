@@ -17,6 +17,7 @@ import {
   ChartHistory,
   Datapack,
   DatapackUniqueIdentifier,
+  UserRecaptchaActions,
   assertChartHistory,
   assertDatapack,
   assertHistoryEntryArray,
@@ -73,7 +74,7 @@ export const fetchPublicUserDatapack = action(
 
 export const fetchUserDatapack = action(async (datapack: string, options?: { signal?: AbortSignal }) => {
   try {
-    const recaptcha = await getRecaptchaToken("fetchUserDatapack");
+    const recaptcha = await getRecaptchaToken(UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK);
     if (!recaptcha) return;
     const response = await fetcher(`/user/datapack/${datapack}`, {
       credentials: "include",
@@ -133,7 +134,7 @@ export const fetchWorkshopDatapack = action(
 
 export const userDeleteDatapack = action(async (datapack: string) => {
   try {
-    const recaptcha = await getRecaptchaToken("userDeleteDatapack");
+    const recaptcha = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_DATAPACK);
     if (!recaptcha) return;
     const response = await fetcher(`/user/datapack/${datapack}`, {
       method: "DELETE",

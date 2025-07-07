@@ -9,6 +9,8 @@ import {
   downloadWorkshopDatapack,
   serveWorkshopHyperlinks
 } from "./workshop-routes.js";
+import { WorkshopRecaptchaActions } from "@tsconline/shared";
+import { genericRecaptchaMiddlewarePrehandler } from "../routes/prehandlers.js";
 
 /**
  * This function verifiees the user making the request can edit/delete/change the workshops
@@ -37,23 +39,6 @@ async function verifyAuthority<T extends FastifyRequest = FastifyRequest>(reques
   }
 }
 
-async function verifyRecaptcha(request: FastifyRequest, reply: FastifyReply) {
-  const recaptcha = request.headers["recaptcha-token"];
-  if (!recaptcha || typeof recaptcha !== "string") {
-    reply.status(400).send({ error: "Missing recaptcha token" });
-    return;
-  }
-  try {
-    const score = await checkRecaptchaToken(recaptcha);
-    if (score < googleRecaptchaBotThreshold) {
-      reply.status(422).send({ error: "Recaptcha failed" });
-      return;
-    }
-  } catch (e) {
-    reply.status(500).send({ error: "Recaptcha error" });
-    return;
-  }
-}
 export const workshopRoutes = async (fastify: FastifyInstance, _options: RegisterOptions) => {
   const moderateRateLimit = {
     max: 30,
@@ -77,7 +62,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const serveWorkshopHyperlinksParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number"},
+      workshopId: { type: "number" },
       filename: { type: "string", enum: ["presentation", "instructions"] }
     },
     required: ["workshopId", "filename"]
@@ -85,7 +70,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const workshopFileParams = {
     type: "object",
     properties: {
-      workshopId: { type: "integer", minimum: 1},
+      workshopId: { type: "integer", minimum: 1 },
       fileName: { type: "string", minLength: 1 }
     },
     required: ["workshopId", "fileName"]
@@ -93,7 +78,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const workshopDataPackParams = {
     type: "object",
     properties: {
-      workshopId: { type: "integer", minimum: 1},
+      workshopId: { type: "integer", minimum: 1 },
       datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopId", "datapackTitle"]
@@ -103,7 +88,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: editWorkshopDatapackMetadataParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA)
+      ]
     },
     editWorkshopDatapackMetadata
   );
@@ -112,7 +100,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopTitleParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)
+      ]
     },
     downloadWorkshopFilesZip
   );
@@ -130,7 +121,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopFileParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [verifyAuthority]
     },
     downloadWorkshopFile
   );
@@ -139,7 +130,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopDataPackParams },
-      preHandler: [verifyAuthority, verifyRecaptcha]
+      preHandler: [verifyAuthority]
     },
     downloadWorkshopDatapack
   );

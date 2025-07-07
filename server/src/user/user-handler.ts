@@ -24,12 +24,15 @@ import {
   getDirectories,
   getUsersPrivateDatapacksDirectoryFromUUID,
   getCachedDatapackFilePath,
-  
+  getPDFFilesDirectoryFromDatapackDirectory,
+  getDatapackZipFileIfExists,
+  getDatapackZipFilePath
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";
 import { OperationResult, User } from "../types.js";
 import { getTemporaryFilepath, uploadFileToFileSystem } from "../upload-handlers.js";
+import { createZipFile } from "../file-handlers/general-file-handler-requests.js";
 
 /**
  * looks for a specific datapack in all the user directories
@@ -446,3 +449,14 @@ export function convertNonStringFieldsToCorrectTypesInDatapackMetadataRequest(fi
   return partial;
 }
 
+export const downloadDatapackFilesZip = async function downloadDatapackFilesZip(uuid: string, datapack: string) {
+  const zipFile = await getDatapackZipFileIfExists(uuid, datapack);
+  if (zipFile) {
+    return zipFile;
+  }
+  const datapackPath = await fetchUserDatapackDirectory(uuid, datapack);
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackPath);
+  const newZipFilePath = getDatapackZipFilePath(uuid, datapack);
+  const newZipFile = await createZipFile(newZipFilePath, filesDir);
+  return newZipFile;
+};

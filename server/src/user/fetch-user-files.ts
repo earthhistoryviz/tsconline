@@ -165,11 +165,7 @@ export async function getUserUUIDDirectory(uuid: string, isPublic: boolean): Pro
 }
 
 export async function getPDFFilesDirectoryFromDatapackDirectory(directory: string) {
-  const rootDirectory = path.resolve(assetconfigs.privateDatapacksDirectory);
   const pdfFileDir = path.resolve(directory, "files");
-  if (!pdfFileDir.startsWith(rootDirectory)) {
-    throw new Error("Invalid filepath");
-  }
   if (!(await verifyFilepath(pdfFileDir))) {
     if (await verifyNonExistentFilepath(pdfFileDir)) {
       await mkdir(pdfFileDir, { recursive: true });
@@ -181,14 +177,25 @@ export async function getPDFFilesDirectoryFromDatapackDirectory(directory: strin
 }
 
 export async function getFileFromWorkshop(workshopUUID: string, fileName: string): Promise<string> {
+  const directory = await getUserUUIDDirectory(workshopUUID, true);
 
-    const directory = await getUserUUIDDirectory(workshopUUID, true);
+  let filePath = path.join(directory, "files");
+  filePath = path.join(filePath, fileName);
 
-    let filePath = path.join(directory, "files");
-    filePath = path.join(filePath, fileName);
-
-    if (!(await verifyFilepath(filePath))) {
-      throw new Error("Invalid filepath");
-    }
-    return filePath
+  if (!(await verifyFilepath(filePath))) {
+    throw new Error("Invalid filepath");
+  }
+  return filePath;
 }
+export async function getDatapackZipFileIfExists(uuid: string, datapackTitle: string) {
+  const directory = await fetchUserDatapackDirectory(uuid, datapackTitle);
+  const zipFilePath = getDatapackZipFilePath(directory, datapackTitle);
+  if (!(await verifyFilepath(zipFilePath))) {
+    return null;
+  }
+  return await readFile(zipFilePath);
+}
+
+export const getDatapackZipFilePath = (directory: string, datapackTitle: string) => {
+  return path.join(directory, `${datapackTitle}.zip`);
+};

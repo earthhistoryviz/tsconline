@@ -21,6 +21,13 @@ export const TSCPopup: React.FC<TSCPopupProps> = ({
 }) => {
   const theme = useTheme();
   const sanitizedMessage = dangerous ? DOMPurify.sanitize(message) : message;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(sanitizedMessage, "text/html");
+  doc.querySelectorAll("a[href]").forEach((link) => {
+    link.setAttribute("target", "_blank");
+    link.setAttribute("rel", "noopener noreferrer");
+  });
+  const parsedAndSanitizedMessage = doc.documentElement.innerHTML;
   return (
     <Dialog className="popup-dialog" open={open} onClose={onClose} maxWidth={maxWidth} fullWidth={true}>
       <Box display="flex" alignItems="center" justifyContent="space-between">
@@ -35,7 +42,11 @@ export const TSCPopup: React.FC<TSCPopupProps> = ({
         </IconButton>
       </Box>
       <DialogContent className="popup-content">
-        {dangerous ? <div dangerouslySetInnerHTML={{ __html: sanitizedMessage }} /> : <>{message}</>}
+        {dangerous ? (
+          <div dangerouslySetInnerHTML={{ __html: parsedAndSanitizedMessage }} />
+        ) : (
+          <>{parsedAndSanitizedMessage}</>
+        )}
       </DialogContent>
     </Dialog>
   );

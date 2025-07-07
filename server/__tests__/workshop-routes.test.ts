@@ -1,6 +1,7 @@
 import fastifyMultipart, { MultipartFile } from "@fastify/multipart";
 import fastifySecureSession from "@fastify/secure-session";
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, InjectOptions, RouteOptions } from "fastify";
+import { WorkshopRecaptchaActions } from "@tsconline/shared";
 import { beforeAll, vi, afterAll, expect, describe, it, beforeEach } from "vitest";
 import * as workshopAuth from "../src/workshop/workshop-auth";
 import * as database from "../src/database";
@@ -16,6 +17,7 @@ import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
 import * as userHandlers from "../src/user/user-handler";
 import * as fetchUserFiles from "../src/user/fetch-user-files";
+import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -46,7 +48,7 @@ vi.mock("../src/database", async () => {
 vi.mock("../src/user/fetch-user-files", async () => {
   return {
     getUserUUIDDirectory: vi.fn().mockResolvedValue("/tmp/fake-directory"),
-    getFileFromWorkshop: vi.fn().mockResolvedValue("tmp/fake-file"),
+    getFileFromWorkshop: vi.fn().mockResolvedValue("tmp/fake-file")
   };
 });
 vi.mock("../src/util", async () => {
@@ -92,8 +94,6 @@ vi.mock("../src/user/user-handler", async () => {
   };
 });
 
-
-
 const consumeStream = async (multipartFile: MultipartFile, code: number = 200, message: string = "File uploaded") => {
   const file = multipartFile.file;
   await new Promise<void>((resolve) => {
@@ -132,8 +132,11 @@ const testWorkshop: SharedWorkshop = {
 };
 
 let app: FastifyInstance;
+const appRoutes: RouteDefinition[] = [];
 beforeAll(async () => {
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "adminSession",
     key: Buffer.from("c30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -144,12 +147,6 @@ beforeAll(async () => {
       secure: false,
       sameSite: "strict",
       maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
-    }
-  });
-  app.register(fastifyMultipart, {
-    limits: {
-      fieldNameSize: 100,
-      fileSize: 1024 * 1024 * 60
     }
   });
   app.addHook("onRequest", async (request, _reply) => {
@@ -163,12 +160,25 @@ beforeAll(async () => {
       }
     };
   });
-  await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
+  app.register(fastifyMultipart, {
+    limits: {
+      fieldNameSize: 100,
+      fileSize: 1024 * 1024 * 60
+    }
+  });
   app.get("/workshop", fetchAllWorkshops);
   app.get("/workshop-images/1", fetchWorkshopCoverImage);
+  app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    appRoutes.push(
+      ...initializeAppRoutes(routeOptions, {
+        recaptchaHandlerName: "verifyRecaptchaPrehandler",
+        verifyAuthHandlerName: "verifyAuthority"
+      })
+    );
+  });
+  await app.register(workshopAuth.workshopRoutes, { prefix: "/workshop" });
   await app.listen({ host: "localhost", port: 1250 });
   vi.spyOn(console, "error").mockImplementation(() => {});
-  vi.spyOn(console, "log").mockImplementation(() => {});
   vi.setSystemTime(mockDate);
 });
 afterAll(async () => {
@@ -177,103 +187,135 @@ afterAll(async () => {
 const headers = { "mock-uuid": "uuid", "recaptcha-token": "recaptcha-token" };
 const testNonAdminUser = { userId: 1, isAdmin: 0 } as User;
 const testAdminUser = { userId: 1, isAdmin: 1 } as User;
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "PATCH", url: "/workshop/workshop-1/datapack/datpack" },
-  { method: "GET", url: "/workshop/download/42" },
-  { method: "GET", url: "/workshop/1/files/presentation" }
+const routes: RouteDefinition[] = [
+  {
+    method: "PATCH",
+    url: "/workshop/workshop-1/datapack/datpack",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_EDIT_DATAPACK_METADATA,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/workshop/download/42",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
+    hasAuth: true
+  },
+  { method: "GET", url: "/workshop/1/files/presentation", hasAuth: true },
+  {
+    method: "GET",
+    url: "/workshop/workshop-files/1/fileName",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/workshop/workshop-datapack/1/datapackTitle",
+    hasAuth: true
+  }
 ];
-describe("verifyAuthority", () => {
-  describe.each(routes)("should return 401 for route $url with method $method", ({ method, url, body }) => {
-    const findUser = vi.spyOn(database, "findUser");
-    beforeEach(() => {
-      findUser.mockClear();
-    });
-    it("should return 401 if not logged in", async () => {
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body
-      });
-      expect(findUser).not.toHaveBeenCalled();
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
-      expect(response.statusCode).toBe(401);
-    });
-    it("should return 401 if not found in database", async () => {
-      findUser.mockResolvedValueOnce([]);
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers
-      });
-      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-      expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Unauthorized access" });
-      expect(response.statusCode).toBe(401);
-    });
-    it("should return 500 if findUser throws error", async () => {
-      findUser.mockRejectedValueOnce(new Error());
-      const response = await app.inject({
-        method: method as InjectOptions["method"],
-        url: url,
-        payload: body,
-        headers
-      });
-      expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
-      expect(findUser).toHaveBeenCalledTimes(1);
-      expect(await response.json()).toEqual({ error: "Database error" });
-      expect(response.statusCode).toBe(500);
-    });
+
+describe("Route Consistency Tests", () => {
+  it("should have a 1:1 match between expected and actual routes", () => {
+    const { missingInActual, unexpectedInActual } = oneToOneMatch(appRoutes, routes);
+    expect(missingInActual.length).toBe(0);
+    expect(unexpectedInActual.length).toBe(0);
   });
 });
-describe("verifyRecaptcha tests", () => {
-  describe.each(routes.filter(({ url }) => url != "/workshop/1/files/presentation"))(
-    "should return 400 or 422 for route $url with method $method",
+describe("verifyAuthority", () => {
+  describe.each(routes.filter((r) => r.hasAuth))(
+    "should return 401 for route $url with method $method",
     ({ method, url, body }) => {
-      const checkRecaptchaToken = vi.spyOn(verify, "checkRecaptchaToken");
+      const findUser = vi.spyOn(database, "findUser");
       beforeEach(() => {
-        checkRecaptchaToken.mockClear();
+        findUser.mockClear();
       });
-      it("should return 400 if missing recaptcha token", async () => {
+      it("should return 401 if not logged in", async () => {
+        const response = await app.inject({
+          method: method as InjectOptions["method"],
+          url: url,
+          payload: body
+        });
+        expect(findUser).not.toHaveBeenCalled();
+        expect(await response.json()).toEqual({ error: "Unauthorized access" });
+        expect(response.statusCode).toBe(401);
+      });
+      it("should return 401 if not found in database", async () => {
+        findUser.mockResolvedValueOnce([]);
         const response = await app.inject({
           method: method as InjectOptions["method"],
           url: url,
           payload: body,
-          headers: { ...headers, "recaptcha-token": "" }
+          headers
         });
-        expect(checkRecaptchaToken).not.toHaveBeenCalled();
-        expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
-        expect(response.statusCode).toBe(400);
+        expect(await response.json()).toEqual({ error: "Unauthorized access" });
+        expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+        expect(findUser).toHaveBeenCalledTimes(1);
+        expect(response.statusCode).toBe(401);
       });
-      it("should return 422 if recaptcha failed", async () => {
-        checkRecaptchaToken.mockResolvedValueOnce(0);
+      it("should return 500 if findUser throws error", async () => {
+        findUser.mockRejectedValueOnce(new Error());
         const response = await app.inject({
           method: method as InjectOptions["method"],
           url: url,
           payload: body,
-          headers: headers
+          headers
         });
-        expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-        expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "Recaptcha failed" });
-        expect(response.statusCode).toBe(422);
-      });
-      it("should return 500 if checkRecaptchaToken throws error", async () => {
-        checkRecaptchaToken.mockRejectedValueOnce(new Error());
-        const response = await app.inject({
-          method: method as InjectOptions["method"],
-          url: url,
-          payload: body,
-          headers: headers
-        });
-        expect(checkRecaptchaToken).toHaveBeenCalledWith(headers["recaptcha-token"]);
-        expect(checkRecaptchaToken).toHaveBeenCalledTimes(1);
-        expect(await response.json()).toEqual({ error: "Recaptcha error" });
+        expect(findUser).toHaveBeenCalledWith({ uuid: headers["mock-uuid"] });
+        expect(findUser).toHaveBeenCalledTimes(1);
+        expect(await response.json()).toEqual({ error: "Database error" });
         expect(response.statusCode).toBe(500);
       });
     }
   );
 });
+describe.each(routes.filter(({ recaptchaAction }) => !!recaptchaAction))(
+  "should return 400 or 422 for route $url with method $method",
+  ({ method, url, body, recaptchaAction }) => {
+    const checkRecaptchaTokenMock = vi.spyOn(verify, "checkRecaptchaToken");
+    beforeEach(() => {
+      checkRecaptchaTokenMock.mockClear();
+    });
+
+    it("should return 400 if missing recaptcha token", async () => {
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: { ...headers, "recaptcha-token": "" }
+      });
+      expect(checkRecaptchaTokenMock).not.toHaveBeenCalled();
+      expect(await response.json()).toEqual({ error: "Missing recaptcha token" });
+      expect(response.statusCode).toBe(400);
+    });
+
+    it("should return 422 if recaptcha failed", async () => {
+      checkRecaptchaTokenMock.mockResolvedValueOnce(0);
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: headers
+      });
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Recaptcha failed" });
+      expect(response.statusCode).toBe(422);
+    });
+
+    it("should return 500 if checkRecaptchaToken throws error", async () => {
+      checkRecaptchaTokenMock.mockRejectedValueOnce(new Error());
+      const response = await app.inject({
+        method: method as InjectOptions["method"],
+        url: url,
+        payload: body,
+        headers: headers
+      });
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledWith(headers["recaptcha-token"], recaptchaAction);
+      expect(checkRecaptchaTokenMock).toHaveBeenCalledTimes(1);
+      expect(await response.json()).toEqual({ error: "Recaptcha error" });
+      expect(response.statusCode).toBe(500);
+    });
+  }
+);
 
 describe("editWorkshopDatapackMetadata", async () => {
   const route = "/workshop/workshop-1/datapack/datpack";
@@ -633,7 +675,6 @@ describe("downloadWorkshopDataPack tests", () => {
   const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
   const readFileSpy = vi.spyOn(fsp, "readFile");
 
-
   const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
 
   beforeEach(() => {
@@ -711,7 +752,6 @@ describe("downloadWorkshopDataPack tests", () => {
     });
   });
   it("should return 500 if datapackTitle is invalid", async () => {
-
     getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
       throw new Error("Simulated error");
     });
@@ -721,7 +761,7 @@ describe("downloadWorkshopDataPack tests", () => {
       url: `/workshop/workshop-datapack/${workshopId}/bad..Datapack`,
       headers
     });
-    
+
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Invalid datapack title" });
   });
