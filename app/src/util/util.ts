@@ -2,7 +2,6 @@ import { RGB, assertEventSettings, assertPointSettings } from "@tsconline/shared
 import Color from "color";
 import { dualColCompPrefix } from "./constant";
 import { RenderColumnInfo } from "../types";
-import { resetAdminConfigTempState } from "../state/actions";
 
 /**
  * removes the prefix of a column id in the tsc format
@@ -41,19 +40,18 @@ export function checkIfDataIsInRange(
   userBaseAge: number,
   isNegativeUnits: boolean
 ) {
-  
   // support negative units: negate top and base ages and switch min/maxes before checking
   if (isNegativeUnits) {
     userBaseAge = -userBaseAge;
     userTopAge = -userTopAge;
-    let temp: number = -minDataAge;
+    const temp: number = -minDataAge;
     minDataAge = -maxDataAge;
     maxDataAge = temp;
   }
 
   if (userBaseAge <= userTopAge) {
-    if(!isNegativeUnits){
-          return false;
+    if (!isNegativeUnits) {
+      return false;
     }
   }
 

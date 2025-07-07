@@ -10,8 +10,6 @@ import { toJS } from "mobx";
 import { TSCButton } from "../components";
 import { useNavigate, useLocation } from "react-router-dom";
 import { AnimatedTabs } from "../components/TSCAnimatedTabs";
-import { Column } from "./Column";
-import { columnInfoTSCToXml } from "../state/parse-settings";
 
 export const Time = observer(function Time() {
   const { state, actions } = useContext(context);
@@ -32,7 +30,7 @@ export const Time = observer(function Time() {
   function checkAgeRange() {
     return state.settings.timeSettings[units].topStageAge > state.settings.timeSettings[units].baseStageAge;
   }
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
@@ -163,9 +161,7 @@ export const Time = observer(function Time() {
             type="number"
             size="small"
             name="vertical-scale-text-field"
-            value={
-              state.settings.timeSettings[units].unitsPerMY
-            }
+            value={state.settings.timeSettings[units].unitsPerMY}
             onChange={(event) => actions.setUnitsPerMY(parseFloat(event.target.value), units)}
           />
           <div className="generate-button-container">

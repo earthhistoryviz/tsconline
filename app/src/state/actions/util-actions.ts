@@ -107,7 +107,7 @@ export function checkIfDccDataIsInRange(
       dccColumn.minAge = temp;
     }
     if (dccColumn.maxAge < userTopAge || dccColumn.minAge > userBaseAge) {
-      if(!isNegativeUnits){
+      if (!isNegativeUnits) {
         return false;
       }
     }
