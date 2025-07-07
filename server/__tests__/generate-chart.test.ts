@@ -6,6 +6,8 @@ import * as chartHistory from "../src/user/chart-history";
 import * as database from "../src/database";
 import { Workshop } from "../src/types";
 import * as fs from "fs/promises";
+import * as userHandler from "../src/user/user-handler";
+import * as logger from "../src/error-logger";
 
 vi.mock("../src/file-metadata-handler", () => ({
   updateFileMetadata: vi.fn().mockResolvedValue({})
@@ -38,6 +40,16 @@ vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue({}),
   writeFile: vi.fn().mockResolvedValue({})
 }));
+vi.mock("../src/user/user-handler", () => ({
+  deleteUserDatapack: vi.fn().mockResolvedValue({})
+}));
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockResolvedValue(undefined)
+    }
+  };
+});
 
 beforeAll(() => {
   vi.spyOn(console, "log").mockImplementation(() => {});
@@ -234,5 +246,90 @@ describe("generateChart", () => {
 
     await generateChart(chartRequest, () => {}, undefined);
     expect(mockQueue.add).toHaveBeenCalledWith(expect.any(Function), { priority: 0 });
+  });
+
+  it("should delete temp datapacks after generation", async () => {
+    vi.spyOn(chartGenerationHelpers, "resolveDatapacks").mockResolvedValueOnce({
+      datapacksToSendToCommandLine: ["/temp/path"],
+      usedUserDatapackFilepaths: [],
+      usedTempDatapacks: ["/temp/path"],
+      filenameMap: {}
+    });
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce(null);
+    vi.spyOn(chartGenerationHelpers, "runJavaChartGeneration").mockResolvedValueOnce({
+      knownErrorCode: 0,
+      errorMessage: ""
+    });
+    const deleteUserDatapackSpy = vi.spyOn(userHandler, "deleteUserDatapack");
+    await generateChart(chartRequest, () => {}, "uuid");
+    expect(deleteUserDatapackSpy).toHaveBeenCalledWith("temp", "/temp/path");
+  });
+
+  it("should log error if saving chart history fails before generation", async () => {
+    vi.spyOn(chartGenerationHelpers, "resolveDatapacks").mockResolvedValueOnce({
+      datapacksToSendToCommandLine: [],
+      usedUserDatapackFilepaths: [],
+      usedTempDatapacks: [],
+      filenameMap: {}
+    });
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce(null);
+    vi.spyOn(chartGenerationHelpers, "runJavaChartGeneration").mockResolvedValueOnce({
+      knownErrorCode: 0,
+      errorMessage: ""
+    });
+    const saveSpy = vi.spyOn(chartHistory, "saveChartHistory").mockRejectedValueOnce(new Error("Save failed"));
+    const loggerSpy = vi.spyOn(logger.default, "error");
+
+    await generateChart(chartRequest, () => {}, "uuid");
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(saveSpy).toHaveBeenCalled();
+    expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to save chart history for user"));
+  });
+
+  it("should log error if saving chart history fails after generation", async () => {
+    vi.spyOn(chartGenerationHelpers, "resolveDatapacks").mockResolvedValueOnce({
+      datapacksToSendToCommandLine: [],
+      usedUserDatapackFilepaths: [],
+      usedTempDatapacks: [],
+      filenameMap: {}
+    });
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce(null);
+    vi.spyOn(chartGenerationHelpers, "runJavaChartGeneration").mockResolvedValueOnce({
+      knownErrorCode: 0,
+      errorMessage: ""
+    });
+    const saveSpy = vi.spyOn(chartHistory, "saveChartHistory").mockRejectedValueOnce(new Error("Save failed"));
+    const loggerSpy = vi.spyOn(logger.default, "error");
+
+    await generateChart(chartRequest, () => {}, "uuid");
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(saveSpy).toHaveBeenCalled();
+    expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to save chart history for user"));
+  });
+
+  it("should log error if deleteUserDatapack fails", async () => {
+    vi.spyOn(chartGenerationHelpers, "resolveDatapacks").mockResolvedValueOnce({
+      datapacksToSendToCommandLine: [],
+      usedUserDatapackFilepaths: [],
+      usedTempDatapacks: ["/temp/path"],
+      filenameMap: {}
+    });
+    vi.spyOn(chartGenerationHelpers, "checkForCacheHit").mockResolvedValueOnce(null);
+    vi.spyOn(chartGenerationHelpers, "runJavaChartGeneration").mockResolvedValueOnce({
+      knownErrorCode: 0,
+      errorMessage: ""
+    });
+    const deleteUserDatapackSpy = vi
+      .spyOn(userHandler, "deleteUserDatapack")
+      .mockRejectedValueOnce(new Error("Delete failed"));
+    const loggerSpy = vi.spyOn(logger.default, "error");
+
+    await generateChart(chartRequest, () => {}, "uuid");
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(deleteUserDatapackSpy).toHaveBeenCalledWith("temp", "/temp/path");
+    expect(loggerSpy).toHaveBeenCalledWith(expect.stringContaining("Failed to delete temporary datapack"));
   });
 });
