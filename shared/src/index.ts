@@ -2191,3 +2191,16 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
       throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }
+
+export function assertWorkshopDatapackDownloadResponse(o: any): asserts o is { fileName: string; fileData: string; fileType: string } {
+  if (!o || typeof o !== "object") throw new Error("WorkshopDatapackDownloadResponse must be a non-null object");
+  if (typeof o.fileName !== "string"){
+    throwError("WorkshopDatapackDownloadResponse", "fileName", "string", o.fileName);
+  }
+  if (typeof o.fileData !== "string"){
+    throwError("WorkshopDatapackDownloadResponse", "fileData", "string", o.fileData);
+  }
+  if (typeof o.fileType !== "string"){
+    throwError("WorkshopDatapackDownloadResponse", "fileType", "string", o.fileType);
+  }
+}

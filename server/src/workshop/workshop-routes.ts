@@ -19,7 +19,6 @@ import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { readdir } from "node:fs/promises";
-import { readFileSync } from "node:fs";
 
 export const serveWorkshopHyperlinks = async (
   request: FastifyRequest<{ Params: { workshopId: number; filename: ReservedWorkshopFileKey } }>,
@@ -173,11 +172,16 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-
-    //add exception handling?
-    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    let filePath = await getFileFromWorkshop(workshopUUID, fileName);
     
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+
+    try{
+      var filePath = await getFileFromWorkshop(workshopUUID, fileName);
+    }catch (error) {
+      reply.status(500).send({ error: "Invalid file path" });;
+      return;
+    }
+
     try {
       const stream = createReadStream(filePath);
       return reply.send(stream);
@@ -205,9 +209,14 @@ export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
       return;
     }
 
-    //add exception handling?
-    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
-    const dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
+        const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+
+    try{
+      var dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
+    } catch (error) {
+      reply.status(500).send({ error: "Invalid datapack title" });
+      return;
+    }
 
 
     try {

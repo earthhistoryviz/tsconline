@@ -15,6 +15,7 @@ import * as uploadHandlers from "../src/upload-handlers";
 import { SharedWorkshop } from "@tsconline/shared";
 import { fetchAllWorkshops, fetchWorkshopCoverImage } from "../src/workshop/workshop-routes";
 import * as userHandlers from "../src/user/user-handler";
+import * as fetchUserFiles from "../src/user/fetch-user-files";
 
 vi.mock("../src/file-handlers/general-file-handler-requests", async () => {
   return {
@@ -581,13 +582,14 @@ describe("downloadWorkshopFile tests", () => {
       url: route,
       headers
     });
-    console.log(response);
     expect(response.statusCode).toBe(403);
     expect(await response.json()).toEqual({ error: "Unauthorized access" });
     expect(isUserInWorkshop).toHaveBeenCalledWith(testNonAdminUser.userId, workshopId);
   });
-  it("should return 500 if verifyFilepath returns false", async () => {
-    vi.spyOn(util, "verifyFilepath").mockResolvedValueOnce(false);
+  it("should return 500 if getFileFromWorkshop returns false", async () => {
+    vi.spyOn(fetchUserFiles, "getFileFromWorkshop").mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
 
     const response = await app.inject({
       method: "GET",
@@ -709,18 +711,19 @@ describe("downloadWorkshopDataPack tests", () => {
     });
   });
   it("should return 500 if datapackTitle is invalid", async () => {
+
+    getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
+      throw new Error("Simulated error");
+    });
+
     const response = await app.inject({
       method: "GET",
       url: `/workshop/workshop-datapack/${workshopId}/bad..Datapack`,
       headers
     });
-
-    getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
-      throw new Error("Simulated error");
-    });
     
     expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid datapack name" });
+    expect(await response.json()).toEqual({ error: "Invalid datapack title" });
   });
 });
 

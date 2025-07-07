@@ -1,6 +1,6 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { SharedWorkshop, assertSharedWorkshopArray } from "@tsconline/shared";
+import { SharedWorkshop, assertSharedWorkshopArray,assertWorkshopDatapackDownloadResponse} from "@tsconline/shared";
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -145,6 +145,8 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
 
     const data = await response.json();
     const { fileName, fileData, fileType } = data;
+    
+    assertWorkshopDatapackDownloadResponse(data);
 
     const file = await convertBase64ToBlob(fileData, fileType);
 
