@@ -672,7 +672,6 @@ describe("downloadWorkshopDataPack tests", () => {
   const route = `/workshop/workshop-datapack/${workshopId}/${datapackName}`;
   const findUser = vi.spyOn(database, "findUser");
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
-  const checkFileExistsSpy = vi.spyOn(util, "checkFileExists");
   const readFileSpy = vi.spyOn(fsp, "readFile");
 
   const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");

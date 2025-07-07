@@ -1,7 +1,5 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from "fastify";
 import { findUser } from "../database.js";
-import { googleRecaptchaBotThreshold } from "../routes/login-routes.js";
-import { checkRecaptchaToken } from "../verify.js";
 import {
   downloadWorkshopFilesZip,
   downloadWorkshopFile,

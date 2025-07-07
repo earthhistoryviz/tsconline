@@ -141,7 +141,14 @@ export const WorkshopDetails = observer(() => {
                       •{" "}
                       <a
                         href={isRegistered ? "" : undefined}
-                        onClick={isRegistered ? (e) => { e.preventDefault(); downloadWorkshopDatapack(datapack); } : undefined}>
+                        onClick={
+                          isRegistered
+                            ? (e) => {
+                                e.preventDefault();
+                                downloadWorkshopDatapack(datapack);
+                              }
+                            : undefined
+                        }>
                         {datapack}
                       </a>
                     </Typography>
@@ -178,8 +185,15 @@ export const WorkshopDetails = observer(() => {
                       <Typography key={index} className={styles.fileName}>
                         •{" "}
                         <a
-                          href= {isRegistered ? "" : undefined}
-                          onClick={isRegistered ? (e) => { e.preventDefault(); downloadWorkshopFile(file); } : undefined}>
+                          href={isRegistered ? "" : undefined}
+                          onClick={
+                            isRegistered
+                              ? (e) => {
+                                  e.preventDefault();
+                                  downloadWorkshopFile(file);
+                                }
+                              : undefined
+                          }>
                           {file}
                         </a>
                       </Typography>

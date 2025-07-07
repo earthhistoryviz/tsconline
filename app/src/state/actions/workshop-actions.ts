@@ -1,11 +1,11 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { SharedWorkshop, assertSharedWorkshopArray,assertWorkshopDatapackDownloadResponse} from "@tsconline/shared";
+import { SharedWorkshop, assertSharedWorkshopArray, assertWorkshopDatapackDownloadResponse } from "@tsconline/shared";
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
 import { getRecaptchaToken, pushError } from "./general-actions";
-import { downloadFile, convertBase64ToBlob} from "../non-action-util";
+import { downloadFile, convertBase64ToBlob } from "../non-action-util";
 
 export const fetchAllWorkshops = action(async () => {
   try {
@@ -69,52 +69,50 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
 export const fetchWorkshopFile = action(async (fileName: string, workshop: SharedWorkshop) => {
   try {
     const fileURL = `/workshop/workshop-files/${workshop.workshopId}/${encodeURIComponent(fileName)}`;
-  const recaptchaToken = await getRecaptchaToken("fetchWorkshopFileForDownload");
-  if (!recaptchaToken) return null;
+    const recaptchaToken = await getRecaptchaToken("fetchWorkshopFileForDownload");
+    if (!recaptchaToken) return null;
 
-  const response = await fetcher(fileURL, {
-    method: "GET",
-    credentials: "include",
-    headers: {
-      "recaptcha-token": recaptchaToken
-    }
-  });
+    const response = await fetcher(fileURL, {
+      method: "GET",
+      credentials: "include",
+      headers: {
+        "recaptcha-token": recaptchaToken
+      }
+    });
 
-  if (!response.ok) {
-    let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-    switch (response.status) {
-      case 404:
-        errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
-        break;
-      case 401:
-        errorCode = ErrorCodes.NOT_LOGGED_IN;
-        break;
-      case 500:
-        errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
-        break;
+    if (!response.ok) {
+      let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+      switch (response.status) {
+        case 404:
+          errorCode = ErrorCodes.WORKSHOP_FILE_NOT_FOUND_FOR_DOWNLOAD;
+          break;
+        case 401:
+          errorCode = ErrorCodes.NOT_LOGGED_IN;
+          break;
+        case 500:
+          errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
+          break;
+      }
+      displayServerError(response, errorCode, ErrorMessages[errorCode]);
+      return;
     }
-    displayServerError(response, errorCode, ErrorMessages[errorCode]);
-    return;
-  }
 
-  const file = await response.blob();
-  if (file) {
-    try {
-      await downloadFile(file, fileName);
-    } catch (error) {
-      pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+    const file = await response.blob();
+    if (file) {
+      try {
+        await downloadFile(file, fileName);
+      } catch (error) {
+        pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
+      }
     }
-  }
   } catch (error) {
-  
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
-  
 });
 
 export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string, workshop: SharedWorkshop) => {
-    const requestURL = `/workshop/workshop-datapack/${workshop.workshopId}/${datapackTitle}`;
-  try{
+  const requestURL = `/workshop/workshop-datapack/${workshop.workshopId}/${datapackTitle}`;
+  try {
     const recaptchaToken = await getRecaptchaToken("fetchWorkshopDataPackForDownload");
     if (!recaptchaToken) return null;
 
@@ -145,7 +143,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
 
     const data = await response.json();
     const { fileName, fileData, fileType } = data;
-    
+
     assertWorkshopDatapackDownloadResponse(data);
 
     const file = await convertBase64ToBlob(fileData, fileType);
@@ -157,10 +155,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
         pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
       }
     }
-  }
-  catch (error) {
+  } catch (error) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
   }
-
-
 });

@@ -12,8 +12,8 @@ import { getWorkshopDatapacksNames, getWorkshopFilesNames } from "../upload-hand
 import path from "node:path";
 import { readFile } from "fs/promises";
 import { createReadStream } from "fs";
-import { getUserUUIDDirectory, getFileFromWorkshop} from "../user/fetch-user-files.js";
-import { verifyFilepath, verifyNonExistentFilepath } from "../util.js";
+import { getFileFromWorkshop } from "../user/fetch-user-files.js";
+import { verifyNonExistentFilepath } from "../util.js";
 import { getUploadedDatapackFilepath } from "../user/user-handler.js";
 import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
@@ -172,13 +172,14 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       reply.status(403).send({ error: "Unauthorized access" });
       return;
     }
-    
+
     const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
 
-    try{
-      var filePath = await getFileFromWorkshop(workshopUUID, fileName);
-    }catch (error) {
-      reply.status(500).send({ error: "Invalid file path" });;
+    let filePath: string;
+    try {
+      filePath = await getFileFromWorkshop(workshopUUID, fileName);
+    } catch (error) {
+      reply.status(500).send({ error: "Invalid file path" });
       return;
     }
 
@@ -209,15 +210,15 @@ export const downloadWorkshopDatapack = async function downloadWorkshopDatapack(
       return;
     }
 
-        const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
+    const workshopUUID = getWorkshopUUIDFromWorkshopId(workshopId);
 
-    try{
-      var dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
+    let dataPackPath: string;
+    try {
+      dataPackPath = await getUploadedDatapackFilepath(workshopUUID, datapackTitle);
     } catch (error) {
       reply.status(500).send({ error: "Invalid datapack title" });
       return;
     }
-
 
     try {
       const fileBuffer = await readFile(dataPackPath);
@@ -260,7 +261,6 @@ export const fetchWorkshopCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
-
 
 // export async function getFileFromWorkshop(workshopUUID: string, fileName: string): Promise<string> {
 
