@@ -568,6 +568,7 @@ describe("downloadWorkshopFile tests", () => {
   const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
 
   beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not a int", async () => {
@@ -630,7 +631,7 @@ describe("downloadWorkshopFile tests", () => {
   });
   it("should return 500 if getFileFromWorkshop returns false", async () => {
     vi.spyOn(fetchUserFiles, "getFileFromWorkshop").mockImplementationOnce(() => {
-      throw new Error("Simulated stream error");
+      throw new Error("Simulated error");
     });
 
     const response = await app.inject({
@@ -656,6 +657,32 @@ describe("downloadWorkshopFile tests", () => {
       error: expect.stringContaining("Error creating file stream")
     });
   });
+  it("should return 500 if getWorkshopID throws an error", async () => {
+    vi.spyOn(fs, "createReadStream").mockImplementationOnce(() => {
+      throw new Error("Simulated stream error");
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toMatchObject({
+      error: expect.stringContaining("Error creating file stream")
+    });
+  });
+  it("should return 500 if isUserInWorkshop fails", async () => {
+    isUserInWorkshop.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "An error has occurred" });
+    expect(response.statusCode).toBe(500);
+  });
   it("should return 200 and file stream if createReadStream succeeds", async () => {
     const response = await app.inject({
       method: "GET",
@@ -677,6 +704,7 @@ describe("downloadWorkshopDataPack tests", () => {
   const getUploadedDatapackFilepathSpy = vi.spyOn(userHandlers, "getUploadedDatapackFilepath");
 
   beforeEach(() => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
     vi.clearAllMocks();
   });
   it("should return 400 if workshopId is not a int", async () => {
@@ -750,6 +778,17 @@ describe("downloadWorkshopDataPack tests", () => {
       error: expect.stringContaining("Error sending file buffer")
     });
   });
+  it("should return 500 if isUserInWorkshop fails", async () => {
+    isUserInWorkshop.mockRejectedValueOnce(new Error("Database error"));
+    const response = await app.inject({
+      method: "GET",
+      url: route,
+      headers
+    });
+    expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
+    expect(await response.json()).toEqual({ error: "An error has occurred" });
+    expect(response.statusCode).toBe(500);
+  });
   it("should return 500 if datapackTitle is invalid", async () => {
     getUploadedDatapackFilepathSpy.mockImplementationOnce(async () => {
       throw new Error("Simulated error");
@@ -763,6 +802,14 @@ describe("downloadWorkshopDataPack tests", () => {
 
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Invalid datapack title" });
+  });
+  it("should return 200 if successful", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/workshop/workshop-datapack/${workshopId}/DatapackName`,
+      headers
+    });
+    expect(response.statusCode).toBe(200);
   });
 });
 

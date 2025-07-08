@@ -190,7 +190,7 @@ export const downloadWorkshopFile = async function downloadWorkshopFile(
       reply.status(500).send({ error: "Error creating file stream" });
     }
   } catch (e) {
-    reply.status(500).send({ error: "An error has occured" });
+    reply.status(500).send({ error: "An error has occurred" });
   }
 };
 
@@ -261,4 +261,3 @@ export const fetchWorkshopCoverImage = async function (
     reply.status(500).send({ error: "Internal Server Error" });
   }
 };
-
