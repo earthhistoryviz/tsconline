@@ -1,17 +1,4 @@
 import { vi, describe, expect, test } from "vitest";
-vi.mock("glob", () => ({
-  __esModule: true,
-  glob: vi.fn().mockImplementation((pattern) => {
-    const mockFiles = [
-      "/top/directory/file1/bot/file.txt",
-      "/top/directory/file2/bot/file.txt",
-      "/top/directory/otherfile/bot/file.txt"
-    ];
-    if (pattern.endsWith("**/*")) pattern = pattern.replace("**/*", ".*");
-    return Promise.resolve(mockFiles.filter((path) => new RegExp(pattern).test(path)));
-  })
-}));
-
 import {
   componentToHex,
   rgbToHex,
@@ -29,6 +16,18 @@ import * as fsModule from "fs";
 import * as fsPromises from "fs/promises";
 import path from "path";
 
+vi.mock("glob", () => ({
+  __esModule: true,
+  glob: vi.fn().mockImplementation((pattern) => {
+    const mockFiles = [
+      "/top/directory/file1/bot/file.txt",
+      "/top/directory/file2/bot/file.txt",
+      "/top/directory/otherfile/bot/file.txt"
+    ];
+    if (pattern.endsWith("**/*")) pattern = pattern.replace("**/*", ".*");
+    return Promise.resolve(mockFiles.filter((path) => new RegExp(pattern).test(path)));
+  })
+}));
 vi.mock("path", async (importOriginal) => {
   const actual = await importOriginal<typeof path>();
   return {
@@ -84,11 +83,13 @@ describe("verifySymlink", () => {
   test("returns true for valid symlink", async () => {
     vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => true } as fsModule.Stats);
     vi.spyOn(process, "cwd").mockReturnValueOnce("/top/directory");
+    vi.spyOn(fsPromises, "realpath").mockResolvedValueOnce("/top/directory/some/symlink");
     expect(await verifySymlink("/top/directory/some/symlink")).toBe(true);
   });
 
   test("returns false for non-symlink", async () => {
     vi.spyOn(fsPromises, "lstat").mockResolvedValueOnce({ isSymbolicLink: () => false } as fsModule.Stats);
+    vi.spyOn(fsPromises, "realpath").mockResolvedValueOnce("/top/directory/some/symlink");
     expect(await verifySymlink("/some/file")).toBe(false);
   });
 

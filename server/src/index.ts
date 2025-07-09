@@ -32,6 +32,7 @@ import { crossPlotRoutes } from "./crossplot/crossplot-auth.js";
 import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
 import { CommentType, assertCommentType } from "@tsconline/shared";
+import fastifyWebsocket from "@fastify/websocket";
 
 const maxConcurrencySize = 2;
 export const maxQueueSize = 30;
@@ -229,6 +230,8 @@ server.register(cors, {
 
 server.register(fastifyCompress, { global: false, threshold: 1024 * 20 });
 
+await server.register(fastifyWebsocket);
+
 // removes the cached public/cts directory
 server.post("/removecache", async (request, reply) => {
   try {
@@ -272,9 +275,6 @@ const rateLimitConfig = (max: number) => ({
 const strictRateLimit = rateLimitConfig(10);
 const moderateRateLimit = rateLimitConfig(20);
 const looseRateLimit = rateLimitConfig(30);
-
-// checks chart.pdf-status
-server.get<{ Params: { hash: string } }>("/svgstatus/:hash", looseRateLimit, routes.fetchSVGStatus);
 
 //fetches json object of requested settings file
 server.get<{ Params: { file: string } }>("/settingsXml/:file", looseRateLimit, routes.fetchSettingsXml);
@@ -344,11 +344,7 @@ server.get("/markdown-tree", moderateRateLimit, fetchMarkdownFiles);
 
 // generates chart and sends to proper directory
 // will return url chart path and hash that was generated for it
-server.post<{ Params: { usecache: string; useSuggestedAge: string; username: string } }>(
-  "/chart",
-  looseRateLimit,
-  routes.fetchChart
-);
+server.get("/chart", { websocket: true }, routes.handleChartGeneration);
 
 // Serve timescale data endpoint
 server.get("/timescale", looseRateLimit, routes.fetchTimescale);
