@@ -701,6 +701,45 @@ export type MarkdownTree = {
 export const markerTypes = ["Rect", "Circle", "BASE(FAD)", "TOP(LAD)"];
 export const modelTypes = ["Rect", "Circle"];
 
+export type NormalProgress = {
+  stage: string;
+  percent: number;
+};
+type ErrorProgress = {
+  stage: "Error";
+  percent: 0;
+  error: string;
+  errorCode: number;
+};
+type CompleteProgress = {
+  stage: "Complete";
+  percent: 100;
+} & ChartResponseInfo;
+export type ChartProgressUpdate = NormalProgress | CompleteProgress | ErrorProgress;
+
+export function isErrorProgress(o: ChartProgressUpdate): o is ErrorProgress {
+  return o.stage === "Error";
+}
+export function isCompleteProgress(o: ChartProgressUpdate): o is CompleteProgress {
+  return o.stage === "Complete";
+}
+export function assertChartProgressUpdate(o: any): asserts o is ChartProgressUpdate {
+  if (!o || typeof o !== "object") throw new Error("ChartProgressUpdate must be a non-null object");
+  if (isErrorProgress(o)) {
+    if (typeof o.error !== "string") throwError("ChartProgressUpdate", "error", "string", o.error);
+    if (typeof o.errorCode !== "number") throwError("ChartProgressUpdate", "errorCode", "number", o.errorCode);
+    if (o.percent !== 0) throwError("ChartProgressUpdate", "percent", "0", o.percent);
+  } else if (isCompleteProgress(o)) {
+    if (o.percent !== 100) throwError("ChartProgressUpdate", "percent", "100", o.percent);
+    assertChartInfo(o);
+  } else {
+    if (typeof o.stage !== "string") throwError("ChartProgressUpdate", "stage", "string", o.stage);
+    if (typeof o.percent !== "number" || o.percent < 0 || o.percent > 100) {
+      throwError("ChartProgressUpdate", "percent", "number between 0 and 100", o.percent);
+    }
+  }
+}
+
 export function assertMarkdownFileMetadata(o: any): asserts o is MarkdownFileMetadata {
   if (!o || typeof o !== "object") throw new Error("MarkdownFileMetadata must be a non-null object");
   if (typeof o.title !== "string") throwError("MarkdownFileMetadata", "title", "string", o.title);

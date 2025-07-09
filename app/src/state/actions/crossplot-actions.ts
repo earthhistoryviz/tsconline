@@ -18,6 +18,7 @@ import {
   removeError,
   setChartTabState,
   setTab,
+  updateChartLoadingProgress,
   uploadUserDatapack
 } from "./general-actions";
 import { NavigateFunction } from "react-router";
@@ -670,6 +671,7 @@ export const compileAndSendCrossPlotChartRequest = action(
       };
 
       const response = await sendChartRequestToServer(crossPlotChartRequest);
+      updateChartLoadingProgress(0, "Initializing");
       if (!response) {
         // error SHOULD already displayed
         return;

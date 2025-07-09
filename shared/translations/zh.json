@@ -97,7 +97,6 @@
             }
         },
         "loading": {
-            "loading-chart": "加载图表...",
             "loading-datapacks": "加载数据包",
             "time": "这可能需要超过一分钟"
         },

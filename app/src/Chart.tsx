@@ -203,7 +203,7 @@ export const Chart: React.FC<ChartProps> = observer(({ Component, style, refList
     <Box className="chart-container">
       {state.isLoggedIn && !isCrossPlot && <HistorySideBar />}
       {chartLoading ? (
-        <LoadingChart />
+        <LoadingChart percent={state.chartTab.percent} stage={state.chartTab.stage} />
       ) : madeChart ? (
         <div className="chart-and-options-bar">
           {transformContainerRef?.current && svgContainerRef?.current && (

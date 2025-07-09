@@ -230,7 +230,6 @@
             }
         },
         "loading": {
-            "loading-chart": "Loading Chart...",
             "loading-datapacks": "Loading Datapacks",
             "time": "this could take more than a minute",
             "fetching-datapacks": "Fetching Datapacks"
