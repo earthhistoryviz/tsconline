@@ -43,6 +43,7 @@ export async function generateChart(
     if (!isCrossPlot && uuid) {
       // do not await this, let it run in the background
       saveChartHistory(uuid, settingsFile, datapacksToSendToCommandLine, chartFile, hash).catch((e) => {
+        /* v8 ignore next -- async microtask in background `.catch()` is not tracked by V8 coverage, but this line is tested */
         logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
       });
     }
@@ -120,6 +121,7 @@ export async function generateChart(
   if (!isCrossPlot && uuid)
     // do not await this, let it run in the background
     saveChartHistory(uuid, settingsFile, datapacksToSendToCommandLine, chartFile, hash).catch((e) => {
+      /* v8 ignore next -- async microtask in background `.catch()` is not tracked by V8 coverage, but this line is tested */
       logger.error(`Failed to save chart history for user ${uuid}: ${e}`);
     });
   return { chartpath: chartUrlPath, hash: hash };

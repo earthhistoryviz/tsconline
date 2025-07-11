@@ -327,17 +327,15 @@ describe("handleChartGeneration", () => {
     const ws = new WebSocket("ws://localhost:4650/chart");
     const messages: ChartProgressUpdate[] = [];
 
-    ws.on("message", (msg) => {
-      messages.push(JSON.parse(msg.toString()));
-    });
+    ws.onmessage = (event) => {
+      messages.push(JSON.parse(event.data.toString()));
+    };
 
-    await new Promise((resolve) => ws.once("open", resolve));
+    await new Promise((resolve) => (ws.onopen = resolve));
 
     ws.send(JSON.stringify(validChartRequest));
 
-    await new Promise((resolve) => {
-      ws.on("close", resolve);
-    });
+    await new Promise((resolve) => (ws.onclose = resolve));
 
     expect(messages).toContainEqual({ stage: "Initializing", percent: 0 });
     expect(messages).toContainEqual({ stage: "Waiting for file", percent: 90 });
@@ -352,17 +350,17 @@ describe("handleChartGeneration", () => {
   it("handles ChartGenerationError properly", async () => {
     generateChartSpy.mockRejectedValueOnce(new generateChart.ChartGenerationError("Chart failed", 1234));
     const ws = new WebSocket("ws://localhost:4650/chart");
-    const messages: any[] = [];
+    const messages: ChartProgressUpdate[] = [];
 
-    ws.on("message", (msg) => {
-      messages.push(JSON.parse(msg.toString()));
-    });
+    ws.onmessage = (event) => {
+      messages.push(JSON.parse(event.data.toString()));
+    };
 
-    await new Promise((resolve) => ws.once("open", resolve));
+    await new Promise((resolve) => (ws.onopen = resolve));
 
     ws.send(JSON.stringify(validChartRequest));
 
-    await new Promise((resolve) => ws.on("close", resolve));
+    await new Promise((resolve) => (ws.onclose = resolve));
 
     expect(messages).toContainEqual({
       stage: "Error",
@@ -378,19 +376,17 @@ describe("handleChartGeneration", () => {
     });
 
     const ws = new WebSocket(`ws://localhost:4650/chart`);
-    const messages: any[] = [];
+    const messages: ChartProgressUpdate[] = [];
 
-    ws.on("message", (msg) => {
-      messages.push(JSON.parse(msg.toString()));
-    });
+    ws.onmessage = (event) => {
+      messages.push(JSON.parse(event.data.toString()));
+    };
 
-    await new Promise((resolve) => ws.once("open", resolve));
+    await new Promise((resolve) => (ws.onopen = resolve));
 
     ws.send(JSON.stringify(validChartRequest));
 
-    await new Promise((resolve) => {
-      ws.on("close", resolve);
-    });
+    await new Promise((resolve) => (ws.onclose = resolve));
 
     expect(messages).toContainEqual({
       stage: "Error",
