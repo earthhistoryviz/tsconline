@@ -8,6 +8,49 @@ import { fetchUserDatapackDirectory } from "../user/fetch-user-files.js";
 import { checkFileExists, assetconfigs, deleteDirectory } from "../util.js";
 import { getWorkshopIdFromUUID } from "../workshop/workshop-util.js";
 import { parse } from "svgson";
+import type PQueue from "p-queue";
+import type { QueueAddOptions } from "p-queue";
+import { MAX_CONCURRENCY_SIZE } from "../constants.js";
+
+
+export function startQueueProgressReporter(
+  queue: PQueue,
+  onProgress: (p: ChartProgressUpdate) => void,
+  myPriority: number
+): () => void {
+  // Compute how many tasks are ahead of this one by priority
+  let position = queue.sizeBy((options: QueueAddOptions) => options.priority <= myPriority);
+  if (queue.pending >= queue.concurrency) {
+    position += 1; // include the currently running task
+  }
+
+  if (position === 0) return () => {};
+
+  onProgress({
+    stage: `Waiting in queue (${position} ahead)`,
+    percent: 0
+  });
+
+  const listener = () => {
+    position = queue.sizeBy((options) => options.priority <= myPriority);
+    if (queue.pending >= queue.concurrency) {
+      position += 1;
+    }
+
+    if (position > 0) {
+      onProgress({
+        stage: `Waiting in queue (${position} ahead)`,
+        percent: 0
+      });
+    } else {
+      queue.off("next", listener);
+    }
+  };
+
+  queue.on("next", listener);
+
+  return () => queue.off("next", listener);
+}
 
 export function parseJavaOutputLine(line: string, filenameMap: Record<string, string>): NormalProgress | null {
   if (line.includes("Convert Datapack to sqlite database")) {

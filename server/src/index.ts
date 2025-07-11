@@ -33,9 +33,7 @@ import { deleteAllUserDatapacks } from "./user/user-handler.js";
 import { fetchMarkdownFiles } from "./help/help-routes.js";
 import { CommentType, assertCommentType } from "@tsconline/shared";
 import fastifyWebsocket from "@fastify/websocket";
-
-const maxConcurrencySize = 2;
-export const maxQueueSize = 30;
+import { MAX_CONCURRENCY_SIZE } from "./constants.js";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -471,7 +469,7 @@ server.setNotFoundHandler((_request, reply) => {
   void reply.sendFile("index.html");
 });
 
-export const queue = new PQueue({ concurrency: maxConcurrencySize });
+export const queue = new PQueue({ concurrency: MAX_CONCURRENCY_SIZE });
 
 //Start the server...
 try {

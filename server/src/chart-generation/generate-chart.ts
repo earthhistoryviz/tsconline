@@ -1,15 +1,16 @@
 import { ChartRequest, ChartProgressUpdate } from "@tsconline/shared";
 import md5 from "md5";
 import path from "path";
-import { resolveDatapacks, checkForCacheHit, runJavaChartGeneration } from "./generate-chart-helpers.js";
+import { resolveDatapacks, checkForCacheHit, runJavaChartGeneration, startQueueProgressReporter } from "./generate-chart-helpers.js";
 import { findUser, getActiveWorkshopsUserIsIn } from "../database.js";
 import logger from "../error-logger.js";
 import { updateFileMetadata } from "../file-metadata-handler.js";
 import { saveChartHistory } from "../user/chart-history.js";
 import { assetconfigs } from "../util.js";
-import { queue, maxQueueSize } from "../index.js";
+import { queue } from "../index.js";
 import { deleteUserDatapack } from "../user/user-handler.js";
 import { mkdir, writeFile } from "fs/promises";
+import { MAX_QUEUE_SIZE } from "../constants.js";
 
 export class ChartGenerationError extends Error {
   public errorCode: number;
@@ -48,7 +49,7 @@ export async function generateChart(
     return cached;
   }
 
-  if (queue.size >= maxQueueSize) throw new ChartGenerationError("Queue is too busy", 503);
+  if (queue.size >= MAX_QUEUE_SIZE) throw new ChartGenerationError("Queue is too busy", 503);
 
   await updateFileMetadata(assetconfigs.fileMetadata, usedUserDatapackFilepaths).catch(() => {
     throw new ChartGenerationError("Failed to update file metadata", 100);
@@ -63,8 +64,11 @@ export async function generateChart(
 
   try {
     const priority = isInWorkshop ? 2 : uuid ? 1 : 0;
+    const stopStreaming = startQueueProgressReporter(queue, onProgress);
     await queue.add(
       async () => {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+        stopStreaming();
         const result = await runJavaChartGeneration(
           chartRequest,
           datapacksToSendToCommandLine,
