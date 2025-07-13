@@ -230,7 +230,6 @@
             }
         },
         "loading": {
-            "loading-chart": "Loading Chart...",
             "loading-datapacks": "Loading Datapacks",
             "time": "this could take more than a minute",
             "fetching-datapacks": "Fetching Datapacks"
@@ -438,7 +437,7 @@
             "search": {
                 "search-bar": "Search",
                 "found-result": "Found {{count}} Results",
-                "current-time-settings": "Current Time Settings(Top / Base)",
+                "current-time-settings": "Current Time Settings(Base / Top)",
                 "header": {
                     "status": "Column On?",
                     "center": "Center",

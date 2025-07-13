@@ -1,5 +1,5 @@
 import { vi, beforeAll, afterAll, describe, beforeEach, it, expect } from "vitest";
-import fastify, { FastifyInstance, HTTPMethods, InjectOptions } from "fastify";
+import fastify, { FastifyInstance, InjectOptions, RouteOptions } from "fastify";
 import formAutoContent from "form-auto-content";
 import fastifySecureSession from "@fastify/secure-session";
 import * as runJavaEncryptModule from "../src/encryption";
@@ -8,23 +8,29 @@ import * as fspModule from "fs/promises";
 import * as database from "../src/database";
 import * as verify from "../src/verify";
 import { userRoutes } from "../src/routes/user-auth";
-import {
-  fetchPublicUserDatapack,
-  uploadExternalDatapack,
-  fetchUserHistory,
-  fetchUserHistoryMetadata,
-  deleteUserHistory,
-  fetchDatapackComments
-} from "../src/routes/user-routes";
 import * as pathModule from "path";
 import * as userHandler from "../src/user/user-handler";
 import * as uploadDatapack from "../src/upload-datapack";
 import * as shared from "@tsconline/shared";
-import { User } from "../src/types";
+import { Workshop } from "../src/types";
 import * as generalFileHandlerRequests from "../src/file-handlers/general-file-handler-requests";
 import fastifyMultipart from "@fastify/multipart";
 import * as chartHistory from "../src/user/chart-history";
+import * as workshopUtil from "../src/workshop/workshop-util";
 import { DATAPACK_PROFILE_PICTURE_FILENAME } from "../src/constants";
+import { RouteDefinition, initializeAppRoutes, oneToOneMatch } from "./util/route-checks";
+import { UserRecaptchaActions } from "@tsconline/shared";
+import { uploadExternalDatapack } from "../src/routes/user-routes";
+
+vi.mock("../src/workshop/workshop-util", async () => {
+  return {
+    verifyWorkshopValidity: vi.fn().mockImplementation(() => ({
+      code: 200,
+      message: "Success"
+    })),
+    getWorkshopIdFromUUID: vi.fn().mockReturnValue("workshop-123")
+  };
+});
 
 vi.mock("../src/user/chart-history", async () => {
   return {
@@ -46,7 +52,8 @@ vi.mock("../src/upload-datapack", async () => {
 });
 vi.mock("../src/types", async () => {
   return {
-    isOperationResult: vi.fn().mockReturnValue(false)
+    isOperationResult: vi.fn().mockReturnValue(false),
+    assertDatapackCommentWithProfilePicture: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -60,7 +67,9 @@ vi.mock("@tsconline/shared", async (importOriginal) => {
   const actual = await importOriginal<typeof shared>();
   return {
     ...actual,
-    isPartialDatapackMetadata: vi.fn().mockReturnValue(true)
+    isPartialDatapackMetadata: vi.fn().mockReturnValue(true),
+    getWorkshopUUIDFromWorkshopId: vi.fn().mockReturnValue("workshop-uuid"),
+    checkUserAllowedDownloadDatapack: vi.fn().mockReturnValue(true)
   };
 });
 
@@ -75,12 +84,12 @@ vi.mock("../src/error-logger", async () => {
 vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testUser])),
-    isUserInWorkshopAndWorkshopIsActive: vi.fn().mockResolvedValue(true),
     findCurrentDatapackComments: vi.fn(() => Promise.resolve([testComment])),
     createDatapackComment: vi.fn().mockResolvedValue({}),
     updateComment: vi.fn().mockResolvedValue({}),
     deleteComment: vi.fn().mockResolvedValue({}),
-    findDatapackComment: vi.fn(() => Promise.resolve([testComment]))
+    findDatapackComment: vi.fn(() => Promise.resolve([testComment])),
+    getActiveWorkshopsUserIsIn: vi.fn().mockResolvedValue([])
   };
 });
 
@@ -137,7 +146,8 @@ vi.mock("../src/util", async (importOriginal) => {
     loadAssetConfigs: vi.fn().mockImplementation(() => {}),
     deleteDirectory: vi.fn().mockImplementation(() => {}),
     resetUploadDirectory: vi.fn().mockImplementation(() => {}),
-    checkHeader: vi.fn().mockReturnValue(true)
+    checkHeader: vi.fn().mockReturnValue(true),
+    extractMetadataFromDatapack: vi.fn().mockImplementation((obj) => obj)
   };
 });
 
@@ -151,7 +161,8 @@ vi.mock("../src/user/user-handler", () => {
     renameUserDatapack: vi.fn().mockResolvedValue({}),
     writeUserDatapack: vi.fn().mockResolvedValue({}),
     deleteUserDatapack: vi.fn().mockResolvedValue({}),
-    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([])
+    fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
+    downloadDatapackFilesZip: vi.fn().mockResolvedValue(Buffer.from("test"))
   };
 });
 
@@ -186,9 +197,11 @@ vi.mock("path", async (importOriginal) => {
 
 /*----------------------TEST---------------------*/
 let app: FastifyInstance;
+const appRoutes: RouteDefinition[] = [];
 beforeAll(async () => {
-  app = fastify();
-  app = fastify();
+  app = fastify({
+    exposeHeadRoutes: false
+  });
   await app.register(fastifySecureSession, {
     cookieName: "loginSession",
     key: Buffer.from("d30a7eae1e37a08d6d5c65ac91dfbc75b54ce34dd29153439979364046cc06ae", "hex"),
@@ -218,15 +231,17 @@ beforeAll(async () => {
       }
     };
   });
-  await app.register(userRoutes, { prefix: "/user" });
-  app.get("/user/uuid/:uuid/datapack/:datapackTitle", fetchPublicUserDatapack);
   app.post("/external-chart", uploadExternalDatapack);
-  app.get("/user/history", fetchUserHistoryMetadata);
-  app.get("/user/history/:timestamp", fetchUserHistory);
-  app.delete("/user/history/:timestamp", deleteUserHistory);
-  app.get("/user/datapack/comments/:datapackTitle", fetchDatapackComments);
+  app.addHook("onRoute", (routeOptions: RouteOptions) => {
+    appRoutes.push(
+      ...initializeAppRoutes(routeOptions, {
+        recaptchaHandlerName: "verifyRecaptchaPrehandler",
+        verifyAuthHandlerName: "verifySession"
+      })
+    );
+  });
+  await app.register(userRoutes, { prefix: "/user" });
   vi.spyOn(console, "error").mockImplementation(() => undefined);
-  vi.spyOn(console, "log").mockImplementation(() => undefined);
   await app.listen({ host: "", port: 1234 });
 });
 
@@ -269,44 +284,127 @@ const testComment = {
   datapackTitle: "test"
 };
 
-const routes: { method: HTTPMethods; url: string; body?: object }[] = [
-  { method: "GET", url: `/user/datapack/download/${filename}`, body: { title: "title" } },
-  { method: "POST", url: "/user/datapack" },
-  { method: "DELETE", url: `/user/datapack/${filename}` },
-  { method: "PATCH", url: `/user/datapack/${filename}`, body: { title: "new_title" } },
-  { method: "GET", url: `/user/datapack/${filename}` },
-  { method: "GET", url: "/user/workshop/workshop-1/datapack/test" }
+const routes: RouteDefinition[] = [
+  {
+    method: "GET",
+    url: `/user/datapack/download/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_DOWNLOAD_DATAPACK,
+    hasAuth: true
+  },
+  { method: "POST", url: "/user/datapack", recaptchaAction: UserRecaptchaActions.USER_UPLOAD_DATAPACK, hasAuth: true },
+  {
+    method: "DELETE",
+    url: `/user/datapack/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_DELETE_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "PATCH",
+    url: `/user/datapack/${filename}`,
+    body: { title: "new_title" },
+    recaptchaAction: UserRecaptchaActions.USER_EDIT_DATAPACK_METADATA,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/${filename}`,
+    recaptchaAction: UserRecaptchaActions.USER_FETCH_SINGLE_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/workshop/workshop-1/datapack/test",
+    recaptchaAction: UserRecaptchaActions.USER_FETCH_WORKSHOP_DATAPACK,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/download/public/files/${filename}/${uuid}`,
+    recaptchaAction: UserRecaptchaActions.USER_PUBLIC_DOWNLOAD_DATAPACK_FILES_ZIP,
+    hasAuth: false
+  },
+  {
+    method: "GET",
+    url: `/user/datapack/download/private/files/${filename}/${uuid}`,
+    recaptchaAction: UserRecaptchaActions.USER_PRIVATE_DOWNLOAD_DATAPACK_FILES_ZIP,
+    hasAuth: true
+  },
+  {
+    method: "POST",
+    url: "/user/datapack/addComment/test",
+    body: { commentText: "test comment" },
+    recaptchaAction: UserRecaptchaActions.USER_UPLOAD_DATAPACK_COMMENT,
+    hasAuth: true
+  },
+  {
+    method: "POST",
+    url: "/user/datapack/comments/report/1",
+    body: { flagged: 1 },
+    recaptchaAction: UserRecaptchaActions.USER_REPORT_COMMENT,
+    hasAuth: true
+  },
+  {
+    method: "DELETE",
+    url: `/user/datapack/comments/${testComment.id}`,
+    recaptchaAction: UserRecaptchaActions.USER_DELETE_COMMENT,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/metadata",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/uuid/123e4567-e89b-12d3-a456-426614174000/datapack/test_filename"
+  },
+  {
+    method: "GET",
+    url: "/user/history",
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: `/user/history/${mockDate.toISOString()}`,
+    hasAuth: true
+  },
+  {
+    method: "DELETE",
+    url: `/user/history/${mockDate.toISOString()}`,
+    hasAuth: true
+  },
+  {
+    method: "GET",
+    url: "/user/datapack/comments/test_filename"
+  }
 ];
+describe("Route Consistency Tests", () => {
+  it("should have a 1:1 match between expected and actual routes", () => {
+    const { missingInActual, unexpectedInActual } = oneToOneMatch(appRoutes, routes);
+    expect(missingInActual.length).toBe(0);
+    expect(unexpectedInActual.length).toBe(0);
+  });
+});
 
-describe("get a single user datapack", () => {
+describe("fetchSingleUserDatapack", () => {
   const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
-  const findUser = vi.spyOn(database, "findUser");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 the user is not found", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]).mockResolvedValueOnce([]);
+  it("should reply 400 if datapack title is not provided", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/${filename}`,
+      url: "/user/datapack/",
       headers
     });
-    expect(response.statusCode).toBe(401);
+    expect(response.statusCode).toBe(400);
     expect(fetchUserDatapack).not.toHaveBeenCalled();
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-  });
-  it("should reply 500 if an error occurred in findUser", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]).mockRejectedValueOnce(new Error("Database error"));
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/${filename}`,
-      headers
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapack must NOT have fewer than 1 characters",
+      statusCode: 400
     });
-    expect(response.statusCode).toBe(500);
-    expect(findUser).toHaveBeenCalledTimes(2);
-    expect(fetchUserDatapack).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Database error" });
   });
   it("should reply 404 if an error occurred in fetchUserDatapack", async () => {
     fetchUserDatapack.mockRejectedValueOnce(new Error("Unknown error"));
@@ -316,7 +414,6 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(404);
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
@@ -328,7 +425,6 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(404);
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ error: "Datapack does not exist or cannot be found" });
   });
@@ -340,14 +436,13 @@ describe("get a single user datapack", () => {
       headers
     });
     expect(response.statusCode).toBe(200);
-    expect(findUser).toHaveBeenCalledTimes(2);
     expect(fetchUserDatapack).toHaveBeenCalledOnce();
     expect(await response.json()).toEqual({ title: "test" });
   });
 });
 
 describe("verifySession tests", () => {
-  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+  describe.each(routes.filter((r) => r.hasAuth))("when request is %s %s", ({ method, url, body }) => {
     const findUser = vi.spyOn(database, "findUser");
     beforeEach(() => {
       findUser.mockClear();
@@ -391,7 +486,7 @@ describe("verifySession tests", () => {
 });
 
 describe("verifyRecaptcha tests", () => {
-  describe.each(routes)("when request is %s %s", ({ method, url, body }) => {
+  describe.each(routes.filter((r) => r.recaptchaAction))("when request is %s %s", ({ method, url, body }) => {
     it("should reply 400 when recaptcha token is missing", async () => {
       const response = await app.inject({
         method: method as InjectOptions["method"],
@@ -440,7 +535,13 @@ describe("editDatapackMetadata", () => {
       headers
     });
     expect(response.statusCode).toBe(400);
-    expect(await response.json().error).toBe("Missing datapack");
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapack must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(editDatapackMetadataRequestHandler).not.toHaveBeenCalled();
   });
   it("should return 500 if an error occurred in editDatapackMetadataRequestHandler", async () => {
     editDatapackMetadataRequestHandler.mockRejectedValueOnce(new Error("Unknown error"));
@@ -486,7 +587,13 @@ describe("requestDownload", () => {
       headers
     });
     expect(response.statusCode).toBe(400);
-    expect(await response.json().error).toBe("Missing datapack");
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapack must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(getEncryptionDatapackFileSystemDetails).not.toHaveBeenCalled();
   });
   it("should return 500 if an error occurred in getEncryptionDatapackFileSystemDetails", async () => {
     getEncryptionDatapackFileSystemDetails.mockRejectedValueOnce(new Error("Unknown error"));
@@ -874,8 +981,13 @@ describe("userDeleteDatapack tests", () => {
       url: "/user/datapack/",
       headers
     });
-    expect(await response.json()).toEqual({ error: "Missing datapack" });
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapack must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(deleteUserDatapack).not.toHaveBeenCalled();
   });
   it("should reply 500 when an error occurred in deleteUserDatapack", async () => {
@@ -969,19 +1081,29 @@ describe("uploadDatapack tests", () => {
 });
 
 describe("uploadExternalDatapack", () => {
+  const payload = {
+    datapack: {
+      value: Buffer.from("test"),
+      options: {
+        filename: "test.dpk",
+        contentType: "text/plain"
+      }
+    }
+  };
+  const bearerToken = "auth token";
+  const headers = {
+    Authorization: bearerToken,
+    datapacktitle: "test",
+    datapackhash: "hash"
+  };
+  beforeAll(() => {
+    process.env.BEARER_TOKEN = bearerToken.split(" ")[1];
+  });
   it("should return 401 if authorization header is missing", async () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      payload
     });
 
     expect(response.statusCode).toBe(401);
@@ -992,20 +1114,12 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(401);
     expect(response.json()).toEqual({ error: "Token missing" });
+    expect(response.statusCode).toBe(401);
   });
 
   it("should return 500 if BEARER_TOKEN is missing in enviroment variables", async () => {
@@ -1013,47 +1127,106 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "Incorrect Token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(500);
     expect(response.json()).toEqual({
       error: "Server misconfiguration: Missing BEARER_TOKEN on TSC Online. Contact admin"
     });
+    expect(response.statusCode).toBe(500);
+    process.env.BEARER_TOKEN = bearerToken.split(" ")[1]; // Restore for other tests
   });
 
   it("should return 403 if token is incorrect", async () => {
-    process.env.BEARER_TOKEN = "correct_token";
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer incorrect_token" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers: { Authorization: "Incorrect Token" },
+      payload
     });
 
-    expect(response.statusCode).toBe(403);
     expect(response.json()).toEqual({ error: "Token mismatch" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 401 if datapacktitle header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { Authorization: bearerToken },
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "Datapack requires datapackTitle field in header"
+    });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 401 if datapackhash header is missing", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers: { ...headers, datapackhash: "" },
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "DatapackHash missing"
+    });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 200 if official datapack already exists and file is the same", async () => {
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([
+      { title: headers.datapacktitle, originalFileName: headers.datapackhash + ".txt" } as shared.Datapack
+    ]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      datapackTitle: headers.datapacktitle
+    });
+    expect(response.statusCode).toBe(200);
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+  });
+  it("should return custom operation code if processUploadDatpaack fails", async () => {
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockResolvedValueOnce({
+      code: 500,
+      message: "Custom error message"
+    });
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      error: "Custom error message"
+    });
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalled();
+  });
+  it("should return 500 if processAndUploadDatapack throws an error", async () => {
+    const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
+    const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    processAndUploadDatapack.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "POST",
+      url: "/external-chart",
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({ error: "Internal server error" });
+    expect(response.statusCode).toBe(500);
+    expect(processAndUploadDatapack).toHaveBeenCalledOnce();
   });
 
   it("should return 200 if upload is successful", async () => {
-    process.env.BEARER_TOKEN = "correct_token";
     const processAndUploadDatapack = vi.spyOn(uploadDatapack, "processAndUploadDatapack");
     const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
     fetchAllUsersDatapacks.mockResolvedValueOnce([]);
@@ -1064,16 +1237,11 @@ describe("uploadExternalDatapack", () => {
     const response = await app.inject({
       method: "POST",
       url: "/external-chart",
-      headers: { Authorization: "Bearer correct_token", datapacktitle: "test", datapackHash: "test" },
-      payload: {
-        datapack: {
-          value: Buffer.from("test"),
-          options: {
-            filename: "test.dpk",
-            contentType: "text/plain"
-          }
-        }
-      }
+      headers,
+      payload
+    });
+    expect(await response.json()).toEqual({
+      datapackTitle: headers.datapacktitle
     });
     expect(response.statusCode).toBe(200);
     expect(processAndUploadDatapack).toHaveBeenCalled();
@@ -1103,31 +1271,43 @@ describe("uploadExternalDatapack", () => {
 
 describe("fetchWorkshopDatapack tests", () => {
   const findUser = vi.spyOn(database, "findUser");
-  const isUserInWorkshopAndWorkshopIsActive = vi.spyOn(database, "isUserInWorkshopAndWorkshopIsActive");
+  const verifyWorkshopValidity = vi.spyOn(workshopUtil, "verifyWorkshopValidity");
+  const getWorkshopIdFromUUID = vi.spyOn(workshopUtil, "getWorkshopIdFromUUID");
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 when the user is not logged in", async () => {
+  it("should reply 400 if workshopUUID is empty", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/workshop/workshop-1/datapack/test`,
-      headers: { "mock-uuid": "" }
-    });
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
-  it("should reply 401 if user is not found in database", async () => {
-    findUser.mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/workshop/workshop-1/datapack/test`,
+      url: `/user/workshop//datapack/test`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/workshopUUID must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+    expect(findUser).not.toHaveBeenCalled();
+  });
+  it("should reply 400 if datapackTitle is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/`,
+      headers
+    });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+    expect(findUser).not.toHaveBeenCalled();
   });
   it("should reply 400 if workshopUUID is invalid", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+    getWorkshopIdFromUUID.mockReturnValueOnce(null);
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/1/datapack/test`,
@@ -1137,8 +1317,10 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(response.statusCode).toBe(400);
   });
   it("should reply 403 if workshop is not active", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
-    isUserInWorkshopAndWorkshopIsActive.mockResolvedValueOnce(false);
+    verifyWorkshopValidity.mockResolvedValueOnce({
+      code: 403,
+      message: "User does not have access to this workshop"
+    });
     const response = await app.inject({
       method: "GET",
       url: `/user/workshop/workshop-1/datapack/test`,
@@ -1149,7 +1331,6 @@ describe("fetchWorkshopDatapack tests", () => {
   });
   it("should reply 404 if the datapack is not found", async () => {
     const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
-    findUser.mockResolvedValueOnce([testUser as User]);
     fetchUserDatapack.mockRejectedValueOnce(new Error());
     const response = await app.inject({
       method: "GET",
@@ -1159,9 +1340,21 @@ describe("fetchWorkshopDatapack tests", () => {
     expect(await response.json()).toEqual({ error: "Datapack not found" });
     expect(response.statusCode).toBe(404);
   });
+  it("should reply 500 if verifyWorkshop fails", async () => {
+    verifyWorkshopValidity.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/workshop/workshop-1/datapack/test`,
+      headers
+    });
+    expect(await response.json()).toEqual({ error: "Unknown Error" });
+    expect(response.statusCode).toBe(500);
+    expect(findUser).toHaveBeenCalledOnce();
+    expect(verifyWorkshopValidity).toHaveBeenCalledOnce();
+  });
+
   it("should reply 200 when the datapack is successfully fetched", async () => {
     const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
-    findUser.mockResolvedValueOnce([testUser as User]);
     fetchUserDatapack.mockResolvedValueOnce({ title: "test" } as shared.Datapack);
     const response = await app.inject({
       method: "GET",
@@ -1177,6 +1370,36 @@ describe("fetchPublicUserDatapack tests", () => {
   const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+  it("should reply 400 if uuid is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid//datapack/${filename}`,
+      headers
+    });
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if filename is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/uuid/${testUser.uuid}/datapack/`,
+      headers
+    });
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should reply 404 if the datapack is not found", async () => {
     fetchUserDatapack.mockRejectedValueOnce(new Error());
@@ -1218,24 +1441,46 @@ describe("fetchUserHistory tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is not found", async () => {
+  const timestamp = new Date().toISOString();
+  it("should reply 400 if timestamp is invalid", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/user/history/test"
+      url: `/user/history/invalid-timestamp`,
+      headers
     });
     expect(getChartHistory).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "User not logged in" });
-    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'params/timestamp must match format "date-time"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if timestamp is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/history/`,
+      headers
+    });
+    expect(getChartHistory).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/timestamp must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should reply 404 if symlinks are invalid", async () => {
     getChartHistory.mockRejectedValueOnce(new Error("Invalid datapack symlink"));
     const response = await app.inject({
       method: "GET",
-      url: "/user/history/test",
+      url: `/user/history/${timestamp}`,
       headers
     });
     expect(getChartHistory).toHaveBeenCalledOnce();
-    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, timestamp);
     expect(response.statusCode).toBe(404);
     expect(await response.json()).toEqual({ error: "Datapacks not found" });
   });
@@ -1243,22 +1488,22 @@ describe("fetchUserHistory tests", () => {
     getChartHistory.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "GET",
-      url: "/user/history/test",
+      url: `/user/history/${timestamp}`,
       headers
     });
     expect(getChartHistory).toHaveBeenCalledOnce();
-    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, timestamp);
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Failed to fetch history" });
   });
   it("should reply 200 when the history is successfully fetched", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/user/history/test",
+      url: `/user/history/${timestamp}`,
       headers
     });
     expect(getChartHistory).toHaveBeenCalledOnce();
-    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(getChartHistory).toHaveBeenCalledWith(testUser.uuid, timestamp);
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual(testHistory);
   });
@@ -1268,15 +1513,6 @@ describe("fetchUserHistoryMetadata tests", () => {
   const getChartHistoryMetadata = vi.spyOn(chartHistory, "getChartHistoryMetadata");
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should reply 401 if the user is not found", async () => {
-    const response = await app.inject({
-      method: "GET",
-      url: "/user/history"
-    });
-    expect(getChartHistoryMetadata).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "User not logged in" });
-    expect(response.statusCode).toBe(401);
   });
   it("should reply 500 if an error occurred in getChartHistoryMetadata", async () => {
     getChartHistoryMetadata.mockRejectedValueOnce(new Error("Unknown error"));
@@ -1306,111 +1542,218 @@ describe("deleteUserHistory tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is not found", async () => {
+  const timestamp = new Date().toISOString();
+  it("should reply 400 if timestamp is invalid", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/user/history/test"
+      url: `/user/history/invalid-timestamp`,
+      headers
     });
     expect(deleteChartHistory).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "User not logged in" });
-    expect(response.statusCode).toBe(401);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: 'params/timestamp must match format "date-time"',
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should reply 400 if timestamp is empty", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: `/user/history/`,
+      headers
+    });
+    expect(deleteChartHistory).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/timestamp must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
   });
   it("should reply 500 if an error occurred in deleteChartHistory", async () => {
     deleteChartHistory.mockRejectedValueOnce(new Error("Unknown error"));
     const response = await app.inject({
       method: "DELETE",
-      url: "/user/history/test",
+      url: `/user/history/${timestamp}`,
       headers
     });
     expect(deleteChartHistory).toHaveBeenCalledOnce();
-    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, timestamp);
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Failed to delete history" });
   });
   it("should reply 200 when the history is successfully deleted", async () => {
     const response = await app.inject({
       method: "DELETE",
-      url: "/user/history/test",
+      url: `/user/history/${timestamp}`,
       headers
     });
     expect(deleteChartHistory).toHaveBeenCalledOnce();
-    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, "test");
+    expect(deleteChartHistory).toHaveBeenCalledWith(testUser.uuid, timestamp);
     expect(response.statusCode).toBe(200);
     expect(await response.json()).toEqual({ message: "History deleted" });
   });
 });
 
-describe("fetchDatapacksFiles tests", () => {
-  const findUser = vi.spyOn(database, "findUser");
+describe("downloadPrivateDatapackFilesZip tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-
-  it("should return 401 if user is not logged in", async () => {
+  const fetchUserDatapack = vi.spyOn(userHandler, "fetchUserDatapack");
+  const checkUserAllowedDownloadDatapack = vi.spyOn(shared, "checkUserAllowedDownloadDatapack");
+  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  it("should return 400 if title is empty", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/title/12345/true`,
-      headers: { "mock-uuid": "" }
-    });
-    expect(response.statusCode).toBe(401);
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-  });
-
-  it("should reply 401 if user is not found in database", async () => {
-    findUser.mockResolvedValueOnce([]);
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files/title/12345/true`,
+      url: `/user/datapack/download/private/files//`,
       headers
     });
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
-
-  it("should return 401 if datapackTitle is invalid", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
-    const response = await app.inject({
-      method: "GET",
-      url: `/user/datapack/download/files/invalid:title/12345/true`,
-      headers
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
     });
     expect(response.statusCode).toBe(400);
-    expect(await response.json()).toEqual({ error: "Missing datapack title" });
   });
-
-  it("should return 500 if the files directory is invalid", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 400 if uuid is empty", async () => {
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/`,
       headers
     });
-
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(fetchUserDatapack).not.toHaveBeenCalled();
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
   });
-
-  it("should return 500 if zipfile path is not valid or already exists", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 404 if the datapack is not found", async () => {
+    fetchUserDatapack.mockRejectedValueOnce(new Error("Datapack not found"));
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
       headers
     });
-
-    expect(response.statusCode).toBe(500);
-    expect(await response.json()).toEqual({ error: "Invalid directory path" });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(checkUserAllowedDownloadDatapack).not.toHaveBeenCalled();
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(404);
+    expect(await response.json()).toEqual({ error: "Datapack not found" });
   });
-
-  it("should return 500 if an unknown error occurs while reading", async () => {
-    findUser.mockResolvedValueOnce([testUser as User]);
+  it("should return 403 if the user is not allowed to download the datapack", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(false);
     const response = await app.inject({
       method: "GET",
-      url: `/user/datapack/download/files/testTitle/12345/true`,
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
       headers
     });
-
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(403);
+    expect(await response.json()).toEqual({ error: "Unauthorized to download this datapack" });
+  });
+  it("should return 500 if an error occurred in downloadDatapackFilesZip", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(true);
+    downloadDatapackFilesZip.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(await response.json()).toEqual({ error: "Error downloading datapack files zip" });
     expect(response.statusCode).toBe(500);
+    expect(checkUserAllowedDownloadDatapack).toHaveBeenCalledOnce();
+    expect(downloadDatapackFilesZip).toHaveBeenCalledOnce();
+  });
+  it("should return 200 and download the datapack files zip", async () => {
+    fetchUserDatapack.mockResolvedValueOnce({ isPublic: false } as shared.Datapack);
+    checkUserAllowedDownloadDatapack.mockReturnValueOnce(true);
+    downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/private/files/title/${testUser.uuid}`,
+      headers
+    });
+    expect(fetchUserDatapack).toHaveBeenCalledWith(testUser.uuid, "title");
+    expect(checkUserAllowedDownloadDatapack).toHaveBeenCalledOnce();
+    expect(downloadDatapackFilesZip).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(response.rawPayload).toEqual(Buffer.from("zip content"));
+  });
+});
+describe("downloadPublicDatapackFilesZip tests", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+  it("should return 400 if title is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files//`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if uuid is empty", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/title/`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/uuid must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
+  });
+  it("should return 500 if downloadDatapackFilesZip throws an error", async () => {
+    downloadDatapackFilesZip.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/${filename}/${testUser.uuid}`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error downloading datapack files zip" });
+  });
+  it("should return 200 and download the datapack files zip", async () => {
+    const downloadDatapackFilesZip = vi.spyOn(userHandler, "downloadDatapackFilesZip");
+    downloadDatapackFilesZip.mockResolvedValueOnce(Buffer.from("zip content"));
+    const response = await app.inject({
+      method: "GET",
+      url: `/user/datapack/download/public/files/${filename}/${testUser.uuid}`,
+      headers
+    });
+    expect(downloadDatapackFilesZip).toHaveBeenCalledWith(testUser.uuid, filename);
+    expect(response.statusCode).toBe(200);
+    expect(response.rawPayload).toEqual(Buffer.from("zip content"));
   });
 });
 
@@ -1425,9 +1768,14 @@ describe("fetchDatapackComments tests", () => {
       method: "GET",
       url: `/user/datapack/comments/`
     });
+    expect(findCurrentDatapackComments).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
-    expect(findCurrentDatapackComments).not.toHaveBeenCalledOnce();
-    expect(await response.json()).toEqual({ error: "Missing or invalid datapack title" });
   });
   it("should reply 500 if an error occurred in findCurrentDatapackComments", async () => {
     findCurrentDatapackComments.mockRejectedValueOnce(new Error("Unknown error"));
@@ -1440,6 +1788,17 @@ describe("fetchDatapackComments tests", () => {
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error fetching datapack comments" });
   });
+  it("should return 200 and the comments if successful", async () => {
+    findCurrentDatapackComments.mockResolvedValueOnce([testComment]);
+    const response = await app.inject({
+      method: "GET",
+      url: "/user/datapack/comments/test"
+    });
+    expect(findCurrentDatapackComments).toHaveBeenCalledOnce();
+    expect(findCurrentDatapackComments).toHaveBeenCalledWith({ datapackTitle: "test" });
+    expect(await response.json()).toEqual([testComment]);
+    expect(response.statusCode).toBe(200);
+  });
 });
 
 describe("uploadDatapackComment tests", () => {
@@ -1447,16 +1806,6 @@ describe("uploadDatapackComment tests", () => {
   const findDatapackComment = vi.spyOn(database, "findDatapackComment");
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/user/datapack/addComment/test",
-      headers: { "mock-uuid": "" }
-    });
-    expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
   });
   it("should return 400 if datapack title is missing", async () => {
     const response = await app.inject({
@@ -1468,8 +1817,13 @@ describe("uploadDatapackComment tests", () => {
       }
     });
     expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing datapack title" });
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/datapackTitle must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment text is missing", async () => {
     const response = await app.inject({
@@ -1481,7 +1835,12 @@ describe("uploadDatapackComment tests", () => {
       }
     });
     expect(createDatapackComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing comment text" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/commentText must NOT have fewer than 1 characters",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 200 if successful", async () => {
@@ -1512,25 +1871,27 @@ describe("uploadDatapackComment tests", () => {
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error uploading datapack comment" });
   });
+  it("should return 500 if findDatapackComment does not find the comment", async () => {
+    findDatapackComment.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/addComment/test",
+      headers,
+      payload: {
+        commentText: "test"
+      }
+    });
+    expect(createDatapackComment).toHaveBeenCalledOnce();
+    expect(findDatapackComment).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Error uploading datapack comment" });
+  });
 });
 
 describe("updateDatapackComment tests", () => {
   const updateComment = vi.spyOn(database, "updateComment");
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "POST",
-      url: "/user/datapack/comments/report/1",
-      headers: { "mock-uuid": "" },
-      payload: {
-        flagged: 1
-      }
-    });
-    expect(updateComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
   });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
@@ -1543,6 +1904,12 @@ describe("updateDatapackComment tests", () => {
     });
     expect(updateComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({
@@ -1555,6 +1922,30 @@ describe("updateDatapackComment tests", () => {
     });
     expect(updateComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
+  });
+  it("should return 400 if comment ID is less than 1", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/0",
+      headers,
+      payload: {
+        flagged: 1
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be >= 1",
+      statusCode: 400
+    });
   });
   it("should return 400 if body is missing", async () => {
     const response = await app.inject({
@@ -1566,7 +1957,31 @@ describe("updateDatapackComment tests", () => {
       }
     });
     expect(updateComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Missing flagged in body" });
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body must have required property 'flagged'",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+
+  it("should return 400 if body.flagged is not a number", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/user/datapack/comments/report/1",
+      headers,
+      payload: {
+        flagged: "not-a-number"
+      }
+    });
+    expect(updateComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "body/flagged must be number",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
 
@@ -1621,16 +2036,6 @@ describe("deleteDatapackComment tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should reply 401 if the user is unauthorized", async () => {
-    const response = await app.inject({
-      method: "DELETE",
-      url: "/user/datapack/comments/1",
-      headers: { "mock-uuid": "" }
-    });
-    expect(deleteComment).not.toHaveBeenCalled();
-    expect(await response.json()).toEqual({ error: "Unauthorized access" });
-    expect(response.statusCode).toBe(401);
-  });
   it("should return 400 if comment ID is missing", async () => {
     const response = await app.inject({
       method: "DELETE",
@@ -1639,6 +2044,12 @@ describe("deleteDatapackComment tests", () => {
     });
     expect(deleteComment).not.toHaveBeenCalled();
     expect(response.statusCode).toBe(400);
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
   });
   it("should return 400 if comment ID is invalid", async () => {
     const response = await app.inject({
@@ -1647,6 +2058,27 @@ describe("deleteDatapackComment tests", () => {
       headers
     });
     expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be number",
+      statusCode: 400
+    });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 400 if comment ID is less than 1", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/comments/0",
+      headers
+    });
+    expect(deleteComment).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({
+      code: "FST_ERR_VALIDATION",
+      error: "Bad Request",
+      message: "params/commentId must be >= 1",
+      statusCode: 400
+    });
     expect(response.statusCode).toBe(400);
   });
   it("should return 200 if comment is successfully deleted", async () => {
@@ -1694,5 +2126,61 @@ describe("deleteDatapackComment tests", () => {
     expect(deleteComment).toHaveBeenCalledOnce();
     expect(response.statusCode).toBe(500);
     expect(await response.json()).toEqual({ error: "Error deleting datapack comment" });
+  });
+});
+
+describe("fetchUserDatapacksMetadata", async () => {
+  const fetchAllUsersDatapacks = vi.spyOn(userHandler, "fetchAllUsersDatapacks");
+  const getActiveWorkshopsUserIsIn = vi.spyOn(database, "getActiveWorkshopsUserIsIn");
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("should reply 500 if an error occurred in fetchAllUsersDatapacks", async () => {
+    fetchAllUsersDatapacks.mockRejectedValueOnce(new Error("Unknown error"));
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(500);
+    expect(await response.json()).toEqual({ error: "Failed to fetch metadatas" });
+  });
+  it("should reply 200 and empty if user has no datapacks", async () => {
+    fetchAllUsersDatapacks.mockResolvedValueOnce([]);
+    getActiveWorkshopsUserIsIn.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledOnce();
+    expect(getActiveWorkshopsUserIsIn).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual([]);
+  });
+  it("should reply 200 with metadata when user has datapacks", async () => {
+    fetchAllUsersDatapacks
+      .mockResolvedValueOnce([{ title: "test", isPublic: true } as unknown as shared.Datapack])
+      .mockResolvedValueOnce([{ title: "test2", isPublic: false } as unknown as shared.Datapack]);
+    getActiveWorkshopsUserIsIn.mockResolvedValueOnce([{ workshopId: "workshop-1" } as unknown as Workshop]);
+    const response = await app.inject({
+      method: "GET",
+      url: "user/metadata",
+      headers
+    });
+    expect(fetchAllUsersDatapacks).toHaveBeenCalledTimes(2);
+    expect(getActiveWorkshopsUserIsIn).toHaveBeenCalledOnce();
+    expect(response.statusCode).toBe(200);
+    expect(await response.json()).toEqual([
+      {
+        title: "test",
+        isPublic: true
+      },
+      {
+        title: "test2",
+        isPublic: false
+      }
+    ]);
   });
 });

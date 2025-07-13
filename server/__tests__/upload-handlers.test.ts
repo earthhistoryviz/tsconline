@@ -57,6 +57,13 @@ vi.mock("../src/constants", () => ({
   MAPPACK_DIRECTORY_NAME: "MapImages",
   WORKSHOP_COVER_PICTURE: "coverPicture"
 }));
+vi.mock("../src/error-logger", async () => {
+  return {
+    default: {
+      error: vi.fn().mockReturnValue({})
+    }
+  };
+});
 vi.mock("@tsconline/shared", async (importOriginal) => {
   const original = await importOriginal<typeof shared>();
   return {
@@ -952,7 +959,6 @@ describe("processMultipartPartsForDatapackUpload tests", () => {
     });
 
     const data = await processMultipartPartsForDatapackUpload("user", formData);
-    console.log(data);
 
     expect(findUser).toHaveBeenCalledOnce();
     expect(checkFileTypeIsDatapack).toHaveBeenCalledOnce();

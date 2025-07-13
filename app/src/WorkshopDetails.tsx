@@ -18,6 +18,7 @@ import {
   getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
+import { backendUrl } from "./util/constant";
 
 type WorkshopReservedFileProps = {
   renderLink: boolean;
@@ -32,7 +33,6 @@ const WorkshopReservedFile: React.FC<WorkshopReservedFileProps> = ({
   userInWorkshop
 }) => {
   const { t } = useTranslation();
-  const backendUrl = import.meta.env.DEV ? "http://localhost:3000" : "";
   return (
     <>
       <Typography className={styles.aih} mb={0.5}>
