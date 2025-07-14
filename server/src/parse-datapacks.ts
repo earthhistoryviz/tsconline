@@ -223,6 +223,7 @@ export async function parseDatapacks(
       defaultChronostrat = chronostrat;
       ageUnits = units;
       negativeFlag = isNegativeUnits;
+
       if (datapackDate) date = datapackDate;
       if (vertScale) verticalScale = vertScale;
       if (version) formatVersion = version;
@@ -244,6 +245,7 @@ export async function parseDatapacks(
             negativeFlag,
             warnings
           );
+
           returnValue.maxAge = Math.max(returnValue.maxAge, compare.maxAge);
           returnValue.minAge = Math.min(returnValue.minAge, compare.minAge);
           returnValue.fontOptions = Array.from(
@@ -292,6 +294,7 @@ export async function parseDatapacks(
     show: true,
     expanded: false
   });
+
   const chartColumn: ColumnInfo = {
     name: "Chart Title",
     editName: chartTitle,
@@ -316,6 +319,7 @@ export async function parseDatapacks(
     show: true,
     expanded: true
   };
+
   setShowLabels(chartColumn);
 
   const baseDatapackProps: BaseDatapackProps = {
@@ -394,6 +398,7 @@ export async function getAllEntries(
   let formatVersion = 1.5;
   let vertScale: number | null = null;
   let filePropertyLines = 0;
+
   for await (const line of readline) {
     if (!line) continue;
     // grab any datapack properties
@@ -491,6 +496,7 @@ export async function getAllEntries(
     }
     allEntries.set(parent, parsedChildren);
   }
+
   return {
     title: chartTitle,
     units: ageUnits,
@@ -520,6 +526,7 @@ export async function getColumnTypes(
   filePropertyLines: number,
   warnings: DatapackWarning[]
 ) {
+
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
@@ -606,6 +613,7 @@ export async function getColumnTypes(
       } else if (inSkipBlock) {
         inSkipBlock = false;
       }
+
       continue;
     }
     const tabSeparated = line.split("\t");
@@ -632,6 +640,7 @@ export async function getColumnTypes(
         show: true,
         expanded: false
       });
+
       Object.assign(blank, { ...createDefaultColumnHeaderProps() });
       continue;
     }
@@ -814,6 +823,7 @@ export async function getColumnTypes(
   } else if (inFreehandBlock) {
     processColumn("Freehand", freehand, "subFreehandInfo", units, isNegativeUnits, loneColumns);
   }
+
   return warnings;
 }
 
@@ -1422,6 +1432,7 @@ function recursive(
           units,
           currentColumnInfo.isNegativeUnits
         );
+
         delete currentColumnInfo.width;
         assertSubFaciesInfoArray(currentColumnInfo.subInfo);
         returnValue.subFaciesInfo = currentColumnInfo.subInfo;
@@ -1440,6 +1451,7 @@ function recursive(
           units,
           currentColumnInfo.isNegativeUnits
         );
+
         delete currentColumnInfo.width;
         break;
     }
@@ -1474,6 +1486,7 @@ function recursive(
     expanded: false
   };
 
+
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.popup = parsedColumnEntry.info;
@@ -1497,6 +1510,7 @@ function recursive(
         isNegativeUnits,
         warnings
       );
+
       returnValue.minAge = Math.min(compareValue.minAge, returnValue.minAge);
       returnValue.maxAge = Math.max(compareValue.maxAge, returnValue.maxAge);
       currentColumnInfo.fontOptions = Array.from(
@@ -1564,6 +1578,7 @@ function addFaciesChildren(
     expanded: false,
     subInfo: subFaciesInfo
   });
+
   children.push({
     name: `${name} Members`,
     editName: "Members",
@@ -1585,6 +1600,7 @@ function addFaciesChildren(
     expanded: false,
     columnSpecificSettings: { orientation: "normal" }
   });
+
   children.push({
     name: `${name} Facies Label`,
     editName: "Facies Label",
@@ -1735,6 +1751,7 @@ function addChronChildren(
       }
     }
   }
+
 }
 
 /**
@@ -1770,6 +1787,7 @@ function createLoneColumn(
     show: true,
     expanded: false
   };
+
   addColumnSettings(column, columnSpecificSettings);
   return column;
 }

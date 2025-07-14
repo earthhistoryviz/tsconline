@@ -530,7 +530,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct block columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-block.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma", false, 0, warnings);
     for (const index in key["column-types-block-key"]) {
       expectedLoneColumns.set(index, key["column-types-block-key"][index]);
     }
@@ -540,7 +540,7 @@ describe("getColumnTypes tests", () => {
 
   it("should return correct facies columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-facies.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 0, warnings);
     for (const index in key["column-types-facies-key"]) {
       expectedLoneColumns.set(index, key["column-types-facies-key"][index]);
     }
@@ -550,7 +550,7 @@ describe("getColumnTypes tests", () => {
 
   it("should return correct event columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-event.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 0, warnings);
     for (const index in key["column-types-event-key"]) {
       expectedLoneColumns.set(index, key["column-types-event-key"][index]);
     }
@@ -559,7 +559,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct range columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-range.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma", false, 0, warnings);
     for (const index in key["column-types-range-key"]) {
       expectedLoneColumns.set(index, key["column-types-range-key"][index]);
     }
@@ -568,7 +568,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct chron columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-chron.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false,0, warnings);
     for (const index in key["column-types-chron-key"]) {
       expectedLoneColumns.set(index, key["column-types-chron-key"][index]);
     }
@@ -577,7 +577,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct point columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-point.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 0, warnings);
     for (const index in key["column-types-point-key"]) {
       expectedLoneColumns.set(index, key["column-types-point-key"][index]);
     }
@@ -586,7 +586,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct sequence columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-sequence.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma", false, 0, warnings);
     for (const index in key["column-types-sequence-key"]) {
       expectedLoneColumns.set(index, key["column-types-sequence-key"][index]);
     }
@@ -595,7 +595,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct transect columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-transect.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 0, warnings);
     for (const index in key["column-types-transect-key"]) {
       expectedLoneColumns.set(index, key["column-types-transect-key"][index]);
     }
@@ -604,7 +604,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should return correct freehand columns", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-freehand.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 0, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 0, warnings);
     for (const index in key["column-types-freehand-key"]) {
       expectedLoneColumns.set(index, key["column-types-freehand-key"][index]);
     }
@@ -613,7 +613,7 @@ describe("getColumnTypes tests", () => {
   });
   it("should instantiate warnings on bad formats", async () => {
     const file = "server/__tests__/__data__/parse-datapacks-japan-test-warnings.txt";
-    await getColumnTypes(file, loneColumns, "Ma", 4, warnings);
+    await getColumnTypes(file, loneColumns, "Ma",false, 4, warnings);
     expect(warnings).toEqual([
       {
         lineNumber: 8,

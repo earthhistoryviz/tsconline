@@ -50,6 +50,7 @@
           "minAge": 5e-324,
           "maxAge": 1.7976931348623157e+308,
           "units": "Ma",
+          "isNegativeUnits": false,
           "columnDisplayType": "Ruler"
         },
         {
@@ -105,6 +106,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Facies",
                   "subInfo": [
                     {
@@ -154,6 +156,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -187,6 +190,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -220,6 +224,7 @@
                   },
                   "width": 42,
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "vertical"
@@ -242,6 +247,7 @@
                 "Zone Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "subInfo": [
                 {
                   "rockType": "TOP",
@@ -303,6 +309,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Facies",
                   "subInfo": [
                     {
@@ -352,6 +359,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -385,6 +393,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -418,6 +427,7 @@
                   },
                   "width": 42,
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "vertical"
@@ -440,6 +450,7 @@
                 "Zone Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "subInfo": [
                 {
                   "rockType": "TOP",
@@ -477,6 +488,7 @@
             "Zone Column Label"
           ],
           "units": "Ma",
+          "isNegativeUnits": false,
           "subInfo": [
             {
               "rockType": "TOP",
@@ -502,6 +514,7 @@
       "minAge": 0,
       "maxAge": 10,
       "units": "Ma",
+      "isNegativeUnits": false,
       "columnDisplayType": "RootColumn"
     },
     "ageUnits": "Ma",
@@ -594,6 +607,7 @@
           "minAge": 5e-324,
           "maxAge": 1.7976931348623157e+308,
           "units": "Ma",
+          "isNegativeUnits": false,
           "columnDisplayType": "Ruler"
         },
         {
@@ -636,6 +650,7 @@
                 "Zone Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Zone",
               "columnSpecificSettings": {
                 "orientation": "normal"
@@ -706,6 +721,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Facies",
                   "subInfo": [
                     {
@@ -755,6 +771,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -788,6 +805,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -821,6 +839,7 @@
                   },
                   "width": 42,
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "vertical"
@@ -842,6 +861,7 @@
                 "Zone Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "BlockSeriesMetaColumn",
               "subInfo": [
                 {
@@ -903,6 +923,7 @@
                 "Range Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Event",
               "subInfo": [
                 {
@@ -947,6 +968,7 @@
                 "Popup Body"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Range",
               "columnSpecificSettings": {
                 "agePad": 2,
@@ -1031,6 +1053,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Chron"
                 },
                 {
@@ -1061,6 +1084,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "normal"
@@ -1094,6 +1118,7 @@
                     "b": 255
                   },
                   "units": "Ma",
+                  "isNegativeUnits": false,
                   "columnDisplayType": "Zone",
                   "columnSpecificSettings": {
                     "orientation": "vertical"
@@ -1114,6 +1139,7 @@
                 "Zone Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "BlockSeriesMetaColumn",
               "subInfo": [
                 {
@@ -1161,6 +1187,7 @@
                 "Point Column Scale Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Point",
               "subInfo": [
                 {
@@ -1255,6 +1282,7 @@
                 "Sequence Column Label"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Sequence",
               "subInfo": [
                 {
@@ -1304,6 +1332,7 @@
                 "Column Header"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Freehand",
               "subInfo": [
                 {
@@ -1341,6 +1370,7 @@
                 "Column Header"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Blank"
             },
             {
@@ -1368,6 +1398,7 @@
                 "Column Header"
               ],
               "units": "Ma",
+              "isNegativeUnits": false,
               "columnDisplayType": "Transect",
               "subInfo": [
                 {
@@ -1402,6 +1433,7 @@
             "Sequence Column Label"
           ],
           "units": "Ma",
+          "isNegativeUnits": false,
           "columnDisplayType": "MetaColumn",
           "subInfo": [
             {
@@ -1428,6 +1460,7 @@
       "minAge": 0,
       "maxAge": 433.35,
       "units": "Ma",
+      "isNegativeUnits": false,
       "columnDisplayType": "RootColumn"
     },
     "topAge": 0,
@@ -1475,6 +1508,7 @@
       "show": true,
       "expanded": false,
       "units": "Ma",
+      "isNegativeUnits": false,
       "fontsInfo": {
         "font": "Arial"
       },
@@ -1515,6 +1549,7 @@
       "name": "FaciesTwo",
       "editName": "FaciesTwo",
       "units": "Ma",
+      "isNegativeUnits": false,
       "show": true,
       "expanded": false,
       "fontsInfo": {
@@ -1600,6 +1635,7 @@
       ],
       "width": 100,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 0,
       "maxAge": 201.36,
       "popup": "",
@@ -1631,6 +1667,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "subInfo": [
         {
           "label": "Sub Block Top",
@@ -2001,6 +2038,7 @@
         "drawDualColCompColumn": null
       },
       "units": "Ma",
+      "isNegativeUnits": false,
       "subInfo": [
         {
           "label": "Event 1 SubEvent 1",
@@ -2057,6 +2095,7 @@
         "Range Label"
       ],
       "units": "Ma",
+      "isNegativeUnits": false,
       "subInfo": [
         {
           "label": "Event 2 SubEvent 1",
@@ -2102,6 +2141,7 @@
         "Popup Body"
       ],
       "units": "Ma",
+      "isNegativeUnits": false,
       "subInfo": [
         {
           "label": "Range 1 SubRangeInfo 1",
@@ -2155,6 +2195,7 @@
         "rangeSort": "first occurrence"
       },
       "units": "Ma",
+      "isNegativeUnits": false,
       "subInfo": [
         {
           "label": "Range 2 SubRangeInfo 1",
@@ -2204,6 +2245,7 @@
       "on": false,
       "width": 100,
       "units": "Ma",
+      "isNegativeUnits": false,
       "popup": "Chron 1 info",
       "rgb": {
         "r": 198,
@@ -2240,6 +2282,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 0,
       "maxAge": 0.01,
       "enableTitle": false,
@@ -2283,6 +2326,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "columnSpecificSettings": {
         "drawBackgroundGradient": false,
         "drawCurveGradient": false,
@@ -2375,6 +2419,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "columnSpecificSettings": {
         "drawBackgroundGradient": false,
         "drawCurveGradient": false,
@@ -2470,6 +2515,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 67,
       "maxAge": 69,
       "enableTitle": false,
@@ -2521,6 +2567,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 321.39,
       "maxAge": 322.34,
       "enableTitle": true,
@@ -2572,6 +2619,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 8.61,
       "maxAge": 530.46,
       "enableTitle": true,
@@ -2613,6 +2661,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 0,
       "maxAge": 9.22,
       "enableTitle": true,
@@ -2653,6 +2702,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 0.07,
       "maxAge": 120.3,
       "enableTitle": false,
@@ -2694,6 +2744,7 @@
       "children": [],
       "parent": null,
       "units": "Ma",
+      "isNegativeUnits": false,
       "minAge": 35.9,
       "maxAge": 37.5,
       "enableTitle": false,
@@ -2765,6 +2816,7 @@
           "minAge": 5e-324,
           "maxAge": 1.7976931348623157e+308,
           "units": "Ma",
+          "isNegativeUnits": false,
           "columnDisplayType": "Ruler"
         }
       ],
@@ -2772,6 +2824,7 @@
       "minAge": 99999,
       "maxAge": -99999,
       "units": "Ma",
+      "isNegativeUnits": false,
       "columnDisplayType": "RootColumn"
     },
     "ageUnits": "Ma",
