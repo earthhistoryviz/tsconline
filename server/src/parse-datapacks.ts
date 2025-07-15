@@ -526,7 +526,6 @@ export async function getColumnTypes(
   filePropertyLines: number,
   warnings: DatapackWarning[]
 ) {
-
   const fileStream = createReadStream(filename);
   const readline = createInterface({ input: fileStream, crlfDelay: Infinity });
   const freehand: Freehand = {
@@ -1486,7 +1485,6 @@ function recursive(
     expanded: false
   };
 
-
   if (parsedColumnEntry) {
     currentColumnInfo.on = parsedColumnEntry.on;
     currentColumnInfo.popup = parsedColumnEntry.info;
@@ -1751,7 +1749,6 @@ function addChronChildren(
       }
     }
   }
-
 }
 
 /**
