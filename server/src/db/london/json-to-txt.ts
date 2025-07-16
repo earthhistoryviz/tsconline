@@ -199,6 +199,92 @@ async function processBlockColumns(
   return;
 }
 
+
+async function processChronColumns(
+  datasets: arkL_datasets[],
+  columns: arkL_columns[],
+  intervals: arkL_intervals[],
+  subdatasets: arkL_subdatasets[]
+) {
+  const chronColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    if( column.column_type?.includes("interval") && column.interval_type?.includes("chron")) {
+      const columnLines: string[] = [];
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+      let regex = new RegExp(column.interval_type!, "i");
+      // % in sql is wildcard, so match anything
+      if (column.interval_type === "%") {
+        regex = new RegExp(".*", "i");
+      }
+      let dbIntervals = [];
+      dbIntervals = intervals
+        .filter(
+          (interval) =>
+            interval.dataset_id === column.dataset_id &&
+            interval.interval_type?.match(regex) &&
+            interval.subdataset === ""
+        )
+        .sort((a, b) => a.base_age2020! - b.base_age2020!);
+      // console.log("intervalx:", dbIntervals.map((item) => item.intervalx), "id:", dbIntervals.map((item) => item.id));
+      if (dbIntervals.length === 0) {
+        console.log(chalk.yellow("no chron blocks found for " + column.columnx));
+        continue;
+      }
+      const popup = dataset.notes_Jur;
+      let line = `${column.columnx}\tchron\t${column.width || ""}\t${dataset.colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      columnLines.push(line);
+
+      let prevSeries: string | null = null;
+      let seriesWidth = column.width || ""; // You may want to customize this per series
+
+      for (const inter of dbIntervals) {
+        if (inter.base_age === null) continue;
+        if (inter.polarity === null) continue;
+        if (inter.stage === null) continue;
+
+        // Output the data line
+        let label = "";
+        if (column.col_if_not_intvx !== "" && column.col_if_not_intvx !== null) {
+          if (inter[column.col_if_not_intvx as keyof arkL_intervals] === null) {
+            continue;
+          }
+          label = String(inter[column.col_if_not_intvx as keyof arkL_intervals]);
+        } else {
+          label = inter.intervalx || "";
+        }
+
+        // Insert new series line if series changes
+        if (inter.stage !== prevSeries) {
+          prevSeries = inter.stage ?? null;
+          if (prevSeries !== null) {
+            // Output the series header line: <SERIESNAME> (blank) <WIDTH>
+            columnLines.push(`${prevSeries}\t\t${seriesWidth}`);
+            // Output the TOP line for the series
+            columnLines.push(`\tTOP\t${label}\t${inter.top_age === null ? 0 : inter.top_age}\t`);
+          }
+        }
+        
+        const polarity = inter.polarity == "r" ? "R" : inter.polarity == "n" ? "N" : "No Data";
+        line = `\t${polarity}\t${label}\t${inter.base_age}\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}`;
+        columnLines.push(line);
+      }
+      columnLines.push("");
+      if (column.path && column.columnx) {
+        chronColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines
+        });
+      }
+    }
+  }
+  return chronColumns;
+}
+
 // insert into pathDict and linesDict
 const organizeColumn = (
   path: string,
