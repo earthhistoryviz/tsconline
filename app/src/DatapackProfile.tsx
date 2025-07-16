@@ -442,7 +442,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          {originalFileNames.length > 0 && <Typography className={styles.aih}>Attached Files</Typography>}
+          <Typography className={styles.aih}>{t("settings.datapacks.attached-files")}</Typography>
           <AttachedFiles datapack={datapack} fileNames={originalFileNames} setFileNames={setOriginalFileNames} />
         </div>
         <div className={styles.ai}>
@@ -554,6 +554,7 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
   const { state, actions } = useContext(context);
   const setDatapack = useContext(SetDatapackContext);
   const [pdfFiles, setPDFFiles] = useState<File[]>([]);
+  const { t } = useTranslation();
 
   const handlePDFFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const newFiles: FileList | null = event.target.files;
@@ -617,23 +618,26 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
               </Box>
             ))
           ) : (
-            <Typography className={styles.fileName}>No attached files</Typography>
+            <Typography className={styles.fileName}>{t("settings.datapacks.no-attached-files")}</Typography>
           )}
           <InputFileUpload
             startIcon={<FileUpload />}
-            text={"Change Attached Files"}
+            text={t("settings.datapacks.upload-pdf-files")}
             onChange={handlePDFFileUpload}
             accept=".pdf"
             multiple={true}
           />
         </Box>
       ) : (
-        fileNames.length > 0 &&
-        fileNames.map((fileName, index) => (
-          <Typography key={index} className={styles.fileName}>
-            {fileName}
-          </Typography>
-        ))
+        fileNames.length > 0 ? (
+          fileNames.map((fileName, index) => (
+            <Typography key={index} className={styles.fileName}>
+              {fileName}
+            </Typography>
+          ))
+        ) : (
+          <Typography className={styles.fileName}>{t(t("settings.datapacks.no-attached-files"))}</Typography>
+        )
       )}
     </>
   );
