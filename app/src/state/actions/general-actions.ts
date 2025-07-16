@@ -215,7 +215,7 @@ export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: str
 });
 
 export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
-  const recaptchaToken = await getRecaptchaToken("fetchDatapackFileNames");
+  const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_FETCH_DATAPACK_FILE_NAMES);
   if (!recaptchaToken) return null;
   try {
     const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
@@ -246,7 +246,7 @@ export const deleteAttachedDatapackFile = action(
   async (datapackTitle: string, uuid: string, isPublic: boolean, fileName: string) => {
     try {
       setEditRequestInProgress(true);
-      const recaptchaToken = await getRecaptchaToken("deleteAttachedDatapackFile");
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE);
       if (!recaptchaToken) return null;
       try {
         const response = await fetcher(
@@ -289,7 +289,7 @@ export const addAttachedDatapackFiles = action(
   async (datapackTitle: string, uuid: string, isPublic: boolean, newFiles: File[]) => {
     try {
       setEditRequestInProgress(true);
-      const recaptchaToken = await getRecaptchaToken("addAttachedDatapackFiles");
+      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_ADD_ATTACHED_DATAPACK_FILES);
       if (!recaptchaToken) return null;
 
       // create form data to send files
