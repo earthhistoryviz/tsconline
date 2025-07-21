@@ -204,11 +204,13 @@ const routes: RouteDefinition[] = [
   {
     method: "GET",
     url: "/workshop/workshop-files/1/fileName",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_FILE,
     hasAuth: true
   },
   {
     method: "GET",
     url: "/workshop/workshop-datapack/1/datapackTitle",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
     hasAuth: true
   }
 ];

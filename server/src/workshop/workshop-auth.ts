@@ -119,7 +119,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopFileParams },
-      preHandler: [verifyAuthority]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_FILE)
+      ]
     },
     downloadWorkshopFile
   );
@@ -128,7 +131,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     {
       config: { rateLimit: moderateRateLimit },
       schema: { params: workshopDataPackParams },
-      preHandler: [verifyAuthority]
+      preHandler: [
+        verifyAuthority,
+        genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)
+      ]
     },
     downloadWorkshopDatapack
   );
