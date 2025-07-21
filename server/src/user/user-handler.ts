@@ -1,4 +1,4 @@
-import { access, readFile, rename, rm, writeFile } from "fs/promises";
+import { access, readFile, readdir, rename, rm, writeFile } from "fs/promises";
 import path, { join } from "path";
 import {
   CACHED_USER_DATAPACK_FILENAME,
@@ -475,16 +475,7 @@ export async function processMultipartPartsForAttachedDatapackFilesEditUpload(
     }
     return;
   }
-
-  // find datapack folder and files directory within
-  const directory = await getUserUUIDDirectory(uuid, isPublic);
-  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-  const datapackFolder = path.join(datapacksFolder, datapackTitle);
   const pdfFields: Record<string, string> = {};
-
-  if (!datapackFolder.startsWith(datapacksFolder)) {
-    return { code: 400, message: "Invalid datapack title" };
-  }
 
   // process the multipart form data
   for await (const part of parts) {
@@ -511,4 +502,30 @@ export async function processMultipartPartsForAttachedDatapackFilesEditUpload(
     }
   }
   return { pdfFields };
+}
+
+export async function removeAttachedDatapackFile(
+  uuid: string,
+  datapackTitle: string,
+  fileName: string
+): Promise<number> {
+  // find datapack folder
+  const datapackFolder = await fetchUserDatapackDirectory(uuid, datapackTitle);
+
+  // find the files directory and then remove file. after, check number of files remaining
+  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
+
+  try {
+    const deleteFileDir = path.join(filesDir, fileName);
+    await rm(deleteFileDir);
+    const numFilesRemaining = (await readdir(filesDir)).length;
+
+    // delete outdated zip
+    const zipfile = getDatapackZipFilePath(uuid, datapackTitle);
+    await rm(zipfile, { force: true });
+    return numFilesRemaining;
+  } catch (e) {
+    console.error(`Error deleting attached file ${fileName} from datapack ${datapackFolder} with error ${e}`);
+    throw e;
+  }
 }

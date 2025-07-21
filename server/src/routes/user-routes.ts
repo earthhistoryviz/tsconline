@@ -15,7 +15,8 @@ import {
   downloadDatapackFilesZip,
   fetchAllUsersDatapacks,
   fetchUserDatapack,
-  processMultipartPartsForAttachedDatapackFilesEditUpload
+  processMultipartPartsForAttachedDatapackFilesEditUpload,
+  removeAttachedDatapackFile
 } from "../user/user-handler.js";
 import { getWorkshopIdFromUUID, verifyWorkshopValidity } from "../workshop/workshop-util.js";
 import { processAndUploadDatapack } from "../upload-datapack.js";
@@ -24,6 +25,8 @@ import { DatapackMetadata, getWorkshopUUIDFromWorkshopId, checkUserAllowedDownlo
 import { deleteChartHistory, getChartHistory, getChartHistoryMetadata } from "../user/chart-history.js";
 import logger from "../error-logger.js";
 import {
+  fetchUserDatapackDirectory,
+  getDatapackZipFilePath,
   getPDFFilesDirectoryFromDatapackDirectory,
   getUsersDatapacksDirectoryFromUUIDDirectory,
   getUserUUIDDirectory
@@ -528,14 +531,7 @@ export const fetchDatapackAttachedFileNames = async function fetchDatapackAttach
   }
 
   // find datapack folder
-  const directory = await getUserUUIDDirectory(uuid, isPublic);
-  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-  const datapackFolder = path.join(datapacksFolder, datapackTitle);
-
-  if (!datapackFolder.startsWith(datapacksFolder)) {
-    reply.status(400).send({ error: "Invalid datapack title" });
-    return;
-  }
+  const datapackFolder = await fetchUserDatapackDirectory(uuid, datapackTitle);
 
   // find files directory and check how many files are in it
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
@@ -548,42 +544,18 @@ export const fetchDatapackAttachedFileNames = async function fetchDatapackAttach
   }
 };
 
+interface DeleteDatapackAttachedFile extends RouteGenericInterface {
+  Params: { datapackTitle: string; uuid: string; isPublic: boolean; fileName: string };
+}
+
 export const deleteDatapackAttachedFile = async function deleteDatapackAttachedFile(
-  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean; fileName: string } }>,
+  request: FastifyRequest<DeleteDatapackAttachedFile>,
   reply: FastifyReply
 ) {
   const { datapackTitle, uuid, isPublic, fileName } = request.params;
-  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
-    reply.status(400).send({ error: "Missing datapack title" });
-    return;
-  }
-
-  if (fileName === "" || fileName.trim() === "") {
-    reply.status(400).send({ error: "Missing filename" });
-    return;
-  }
-
-  // find datapack folder
-  const directory = await getUserUUIDDirectory(uuid, isPublic);
-  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-  const datapackFolder = path.join(datapacksFolder, datapackTitle);
-
-  if (!datapackFolder.startsWith(datapacksFolder)) {
-    reply.status(400).send({ error: "Invalid datapack title" });
-    return;
-  }
-
-  // find the files directory and then remove file. after, check number of files remaining
-  const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
 
   try {
-    const deleteFileDir = path.join(filesDir, fileName);
-    await rm(deleteFileDir);
-    const numFilesRemaining = (await readdir(filesDir)).length;
-
-    // delete outdated zip
-    const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`);
-    await rm(zipfile, { force: true });
+    const numFilesRemaining = await removeAttachedDatapackFile(uuid, datapackTitle, fileName);
 
     // if there are no files remaining, we should update the hasFiles attribute in the datapack metadata
     if (numFilesRemaining === 0) {
@@ -602,24 +574,20 @@ export const deleteDatapackAttachedFile = async function deleteDatapackAttachedF
   }
 };
 
+interface AddDatapackAttachedFiles extends RouteGenericInterface {
+  Params: { datapackTitle: string; uuid: string; isPublic: boolean };
+}
+
 export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
-  request: FastifyRequest<{
-    Params: { datapackTitle: string; uuid: string; isPublic: boolean };
-  }>,
+  request: FastifyRequest<AddDatapackAttachedFiles>,
   reply: FastifyReply
 ) {
   const { datapackTitle, uuid, isPublic } = request.params;
   const parts = request.parts();
 
-  if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
-    reply.status(400).send({ error: "Missing or invalid datapack title" });
-    return;
-  }
-
   // find datapack folder and files directory within its
   const directory = await getUserUUIDDirectory(uuid, isPublic);
-  const datapacksFolder = await getUsersDatapacksDirectoryFromUUIDDirectory(directory);
-  const datapackFolder = path.join(datapacksFolder, datapackTitle);
+  const datapackFolder = await fetchUserDatapackDirectory(uuid, datapackTitle);
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
 
   let pdfFields: { [fileName: string]: string } = {};
@@ -659,7 +627,7 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   }
 
   // delete outdated zip
-  const zipfile = path.resolve(directory, `filesFor${datapackTitle}.zip`);
+  const zipfile = getDatapackZipFilePath(uuid, datapackTitle);
   await rm(zipfile, { force: true });
 
   // update the metadata of the datapack to indicate that it has files
