@@ -114,6 +114,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     serveWorkshopHyperlinks
   );
+  
   fastify.get(
     "/workshop-files/:workshopId/:fileName",
     {
