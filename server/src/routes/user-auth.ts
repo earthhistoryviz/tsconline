@@ -85,8 +85,8 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const fetchDatapackAttachedFileNamesParams = {
     type: "object",
     properties: {
-      datapackTitle: { type: "string" },
-      uuid: { type: "string" },
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" },
       isPublic: { type: "boolean" }
     },
     required: ["datapackTitle", "uuid", "isPublic"]
@@ -94,18 +94,18 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
   const deleteDatapackAttachedFileParams = {
     type: "object",
     properties: {
-      datapackTitle: { type: "string" },
-      uuid: { type: "string" },
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" },
       isPublic: { type: "boolean" },
-      fileName: { type: "string" }
+      fileName: { type: "string", minLength: 1 }
     },
     required: ["datapackTitle", "uuid", "isPublic", "fileName"]
   };
   const addDatapackAttachedFilesParams = {
     type: "object",
     properties: {
-      datapackTitle: { type: "string" },
-      uuid: { type: "string" },
+      datapackTitle: { type: "string", minLength: 1 },
+      uuid: { type: "string", minLength: 1, format: "uuid" },
       isPublic: { type: "boolean" }
     },
     required: ["datapackTitle", "uuid", "isPublic"]
@@ -321,7 +321,11 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/files/:datapackTitle/:uuid/:isPublic/:fileName",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: deleteDatapackAttachedFileParams }
+      schema: { params: deleteDatapackAttachedFileParams },
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE)
+      ]
     },
     deleteDatapackAttachedFile
   );
@@ -329,7 +333,11 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     "/datapack/files/:datapackTitle/:uuid/:isPublic",
     {
       config: { rateLimit: looseRateLimit },
-      schema: { params: addDatapackAttachedFilesParams }
+      schema: { params: addDatapackAttachedFilesParams },
+      preHandler: [
+        verifySession,
+        genericRecaptchaMiddlewarePrehandler(UserRecaptchaActions.USER_ADD_ATTACHED_DATAPACK_FILES)
+      ]
     },
     addDatapackAttachedFiles
   );

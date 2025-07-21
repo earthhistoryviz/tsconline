@@ -147,6 +147,7 @@ export const DatapackProfile = observer(() => {
       actions.setDatapackProfileComments([]);
     };
   }, []);
+
   if (loading) return <TSCDialogLoader open={true} transparentBackground />;
   if (!datapack || !areParamsValid) return <PageNotFound />;
   const image = getDatapackProfileImageUrl(datapack);
@@ -388,16 +389,18 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, [state.datapackProfilePage.unsavedChanges]);
+
   // fetch the original attached file names for the datapack
   useEffect(() => {
     const fetchFileNames = async () => {
-      // names will always be an array. could be empty if no files are attached
-      const names = await actions.fetchDatapackFileNames(
-        datapack.title,
-        getUUIDOfDatapackType(datapack),
-        datapack.isPublic
-      );
-      setOriginalFileNames(names);
+      if (datapack) {
+        const names = await actions.fetchDatapackFileNames(
+          datapack.title,
+          getUUIDOfDatapackType(datapack),
+          datapack.isPublic
+        );
+        setOriginalFileNames(names ? names : []);
+      }
     };
     fetchFileNames();
   }, [datapack]);
@@ -442,7 +445,10 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>{t("settings.datapacks.attached-files")}</Typography>
+          <Typography className={styles.aih}>
+            {/* {t("settings.datapacks.attached-files")} */}
+            Attached Files
+          </Typography>
           <AttachedFiles datapack={datapack} fileNames={originalFileNames} setFileNames={setOriginalFileNames} />
         </div>
         <div className={styles.ai}>
@@ -455,7 +461,8 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
               color="primary"
               sx={{ marginTop: 2 }}
               onClick={() => downloadDatapackFiles()}>
-              {t("workshops.details-page.download-button")}
+              {/* {t("workshops.details-page.download-button")} */}
+              Download PDF Files
             </TSCButton>
           )}
         </div>
@@ -546,9 +553,9 @@ const DatapackFile: React.FC<DatapackFileProps> = observer(({ datapack, fileName
 });
 
 type AttachedFilesProps = {
+  datapack: Datapack;
   fileNames: string[];
   setFileNames: React.Dispatch<React.SetStateAction<string[]>>;
-  datapack: Datapack;
 };
 const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNames, setFileNames }) => {
   const { state, actions } = useContext(context);
@@ -618,26 +625,31 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
               </Box>
             ))
           ) : (
-            <Typography className={styles.fileName}>{t("settings.datapacks.no-attached-files")}</Typography>
+            <Typography className={styles.fileName}>
+              {/* {t("settings.datapacks.no-attached-files")} */}
+              No attached files
+            </Typography>
           )}
+          {/* t("settings.datapacks.upload-pdf-files") */}
           <InputFileUpload
             startIcon={<FileUpload />}
-            text={t("settings.datapacks.upload-pdf-files")}
+            text={"Upload PDF Files"}
             onChange={handlePDFFileUpload}
             accept=".pdf"
             multiple={true}
           />
         </Box>
+      ) : fileNames.length > 0 ? (
+        fileNames.map((fileName, index) => (
+          <Typography key={index} className={styles.fileName}>
+            {fileName}
+          </Typography>
+        ))
       ) : (
-        fileNames.length > 0 ? (
-          fileNames.map((fileName, index) => (
-            <Typography key={index} className={styles.fileName}>
-              {fileName}
-            </Typography>
-          ))
-        ) : (
-          <Typography className={styles.fileName}>{t(t("settings.datapacks.no-attached-files"))}</Typography>
-        )
+        <Typography className={styles.fileName}>
+          {/* {t("settings.datapacks.no-attached-files")} */}
+          No attached files
+        </Typography>
       )}
     </>
   );

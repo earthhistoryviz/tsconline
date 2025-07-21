@@ -215,15 +215,10 @@ export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: str
 });
 
 export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
-  const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_FETCH_DATAPACK_FILE_NAMES);
-  if (!recaptchaToken) return null;
   try {
     const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
       method: "GET",
-      credentials: "include",
-      headers: {
-        "recaptcha-token": recaptchaToken
-      }
+      credentials: "include"
     });
     const names = await response.json();
     if (response.ok) {
