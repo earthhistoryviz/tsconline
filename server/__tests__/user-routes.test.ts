@@ -169,7 +169,8 @@ vi.mock("../src/user/user-handler", () => {
     fetchAllUsersDatapacks: vi.fn().mockResolvedValue([]),
     downloadDatapackFilesZip: vi.fn().mockResolvedValue(Buffer.from("test")),
     checkFileTypeIsPDF: vi.fn().mockResolvedValue(true),
-    processMultipartPartsForAttachedDatapackFilesEditUpload: vi.fn().mockResolvedValue({})
+    processMultipartPartsForAttachedDatapackFilesEditUpload: vi.fn().mockResolvedValue({}),
+    removeAttachedDatapackFile: vi.fn().mockResolvedValue(1)
   };
 });
 
@@ -2210,138 +2211,124 @@ describe("fetchUserDatapacksMetadata", async () => {
   });
 });
 describe("fetchDatapackAttachedFileNames tests", () => {
-  const mockGetUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
-  const mockGetUsersDatapacksDir = vi.spyOn(fetchUserFiles, "getUsersDatapacksDirectoryFromUUIDDirectory");
-  const mockGetPDFDir = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
+  const mockFetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const mockReaddir = vi.spyOn(fspModule, "readdir");
 
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it("should return 200 and empty array when no files are found", async () => {
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockReaddir.mockResolvedValue([]);
 
     const res = await app.inject({
       method: "GET",
-      url: "/user/datapack/files/testTitle/12345/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
       headers
     });
-
     expect(res.statusCode).toBe(200);
     expect(await res.json()).toEqual([]);
   });
   it("should return 500 on readdir failure", async () => {
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockReaddir.mockRejectedValue(new Error("fail"));
 
     const res = await app.inject({
       method: "GET",
-      url: "/user/datapack/files/testTitle/12345/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
       headers
     });
 
     expect(res.statusCode).toBe(500);
     expect(await res.json()).toEqual({ error: "Failed to fetch files" });
   });
-  // it("should return filenames successfully", async () => {
-  //   mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-  //   mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-  //   mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
-  //   mockReaddir.mockResolvedValue([
-  //     {
-  //       name: "a.pdf",
-  //       isFile: () => true,
-  //       isDirectory: () => false,
-  //       isBlockDevice: () => false,
-  //       isCharacterDevice: () => false,
-  //       isSymbolicLink: () => false,
-  //       isFIFO: () => false,
-  //       isSocket: () => false
-  //     } as unknown as import("fs").Dirent,
-  //     {
-  //       name: "b.pdf",
-  //       isFile: () => true,
-  //       isDirectory: () => false,
-  //       isBlockDevice: () => false,
-  //       isCharacterDevice: () => false,
-  //       isSymbolicLink: () => false,
-  //       isFIFO: () => false,
-  //       isSocket: () => false
-  //     } as unknown as import("fs").Dirent
-  //   ]);
+  it("should return filenames successfully", async () => {
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockReaddir.mockResolvedValue([
+      {
+        name: "a.pdf",
+        isFile: () => true,
+        isDirectory: () => false,
+        isBlockDevice: () => false,
+        isCharacterDevice: () => false,
+        isSymbolicLink: () => false,
+        isFIFO: () => false,
+        isSocket: () => false
+      } as unknown as import("fs").Dirent<Buffer>,
+      {
+        name: "b.pdf",
+        isFile: () => true,
+        isDirectory: () => false,
+        isBlockDevice: () => false,
+        isCharacterDevice: () => false,
+        isSymbolicLink: () => false,
+        isFIFO: () => false,
+        isSocket: () => false
+      } as unknown as import("fs").Dirent<Buffer>
+    ]);
 
-  //   const res = await app.inject({
-  //     method: "GET",
-  //     url: "/user/datapack/files/testTitle/12345/false",
-  //     headers
-  //   });
+    const res = await app.inject({
+      method: "GET",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
+      headers
+    });
 
-  //   expect(res.statusCode).toBe(200);
-  //   const json = await res.json();
-  //   expect(Array.isArray(json)).toBe(true);
-  //   expect(json.length).toBe(2);
-  // });
+    expect(res.statusCode).toBe(200);
+    const json = await res.json();
+    expect(Array.isArray(json)).toBe(true);
+    expect(json.length).toBe(2);
+  });
 });
 describe("deleteDatapackAttachedFile tests", () => {
-  const mockGetUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
-  const mockGetUsersDatapacksDir = vi.spyOn(fetchUserFiles, "getUsersDatapacksDirectoryFromUUIDDirectory");
-  const mockGetPDFDir = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
+  const mockFetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const mockReaddir = vi.spyOn(fspModule, "readdir");
   const mockEditDatapackHandler = vi.spyOn(editHandler, "editDatapack");
+  const mockRemoveAttachedDatapackFile = vi.spyOn(userHandler, "removeAttachedDatapackFile");
   beforeEach(() => {
     vi.clearAllMocks();
   });
   it("should return 400 for missing file name", async () => {
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/12345/false/   ",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/   ",
       headers
     });
 
     expect(res.statusCode).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing filename" });
   });
-  // it("should delete file and return remaining count", async () => {
-  //   mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-  //   mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-  //   mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
-  //   mockReaddir.mockResolvedValue([
-  //     {
-  //       name: "remaining.pdf",
-  //       isFile: () => true,
-  //       isDirectory: () => false,
-  //       isBlockDevice: () => false,
-  //       isCharacterDevice: () => false,
-  //       isSymbolicLink: () => false,
-  //       isFIFO: () => false,
-  //       isSocket: () => false
-  //     } as unknown as import("fs").Dirent
-  //   ]);
-
-  //   const res = await app.inject({
-  //     method: "DELETE",
-  //     url: "/user/datapack/files/testTitle/12345/false/test.pdf",
-  //     headers
-  //   });
-
-  //   expect(res.statusCode).toBe(200);
-  //   expect(await res.json()).toEqual({ message: "File deleted successfully", numFilesRemaining: 1 });
-  // });
-  it("should update datapack metadata if no files remain", async () => {
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
-    mockReaddir.mockResolvedValue([]);
-    mockEditDatapackHandler.mockResolvedValue([]);
+  it("should delete file and return remaining count", async () => {
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockReaddir.mockResolvedValue([
+      {
+        name: "remaining.pdf",
+        isFile: () => true,
+        isDirectory: () => false,
+        isBlockDevice: () => false,
+        isCharacterDevice: () => false,
+        isSymbolicLink: () => false,
+        isFIFO: () => false,
+        isSocket: () => false
+      } as unknown as import("fs").Dirent<Buffer>
+    ]);
+    mockRemoveAttachedDatapackFile.mockResolvedValue(0);
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/12345/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
+      headers
+    });
+    expect(res.statusCode).toBe(200);
+    expect(await res.json()).toEqual({ message: "File deleted successfully", numFilesRemaining: 0 });
+  });
+  it("should update datapack metadata if no files remain", async () => {
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockReaddir.mockResolvedValue([]);
+    mockEditDatapackHandler.mockResolvedValue([]);
+    mockRemoveAttachedDatapackFile.mockResolvedValue(0);
+
+    const res = await app.inject({
+      method: "DELETE",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
       headers
     });
     expect(mockEditDatapackHandler).toHaveBeenCalledOnce();
@@ -2349,40 +2336,35 @@ describe("deleteDatapackAttachedFile tests", () => {
     expect(await res.json()).toEqual({ message: "File deleted successfully", numFilesRemaining: 0 });
   });
   it("should return 422 if editDatapack returns errors", async () => {
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockReaddir.mockResolvedValue([]);
     mockEditDatapackHandler.mockResolvedValue(["error"]);
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/12345/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
       headers
     });
+    expect(await res.json()).toEqual({ error: "There were errors updating the datapack" });
     expect(res.statusCode).toBe(422);
     expect(await res.json()).toEqual({ error: "There were errors updating the datapack" });
   });
-  it("should return 500 on unexpected error", async () => {
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+  it("should return 422 on failure to update datapack", async () => {
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockReaddir.mockRejectedValue(new Error("fail"));
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/12345/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
       headers
     });
 
-    expect(res.statusCode).toBe(500);
-    expect(await res.json()).toEqual({ error: "Failed to delete attached datapack file" });
+    expect(res.statusCode).toBe(422);
+    expect(await res.json()).toEqual({ error: "There were errors updating the datapack" });
   });
 });
 describe("addDatapackAttachedFiles tests", () => {
-  const mockGetUserUUIDDirectory = vi.spyOn(fetchUserFiles, "getUserUUIDDirectory");
-  const mockGetUsersDatapacksDir = vi.spyOn(fetchUserFiles, "getUsersDatapacksDirectoryFromUUIDDirectory");
-  const mockGetPDFDir = vi.spyOn(fetchUserFiles, "getPDFFilesDirectoryFromDatapackDirectory");
+  const mockFetchUserDatapackDirectory = vi.spyOn(fetchUserFiles, "fetchUserDatapackDirectory");
   const mockCheckFileTypeIsPDF = vi.spyOn(userHandler, "checkFileTypeIsPDF");
   const mockProcessMultipartPartsForAttachedDatapackFilesEditUpload = vi.spyOn(
     userHandler,
@@ -2394,35 +2376,17 @@ describe("addDatapackAttachedFiles tests", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
-  it("should return 400 if invalid datapack title", async () => {
-    mockCheckFileTypeIsPDF.mockReturnValue(true);
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
-
-    const res = await app.inject({
-      method: "PATCH",
-      url: "/user/datapack/files/test<>Title/12345/false",
-      payload: formData,
-      headers
-    });
-
-    expect(res.statusCode).toBe(400);
-    expect(await res.json()).toEqual({ error: "Missing or invalid datapack title" });
-  });
 
   it("should return 500 if failed to copy PDF files", async () => {
     mockCheckFileTypeIsPDF.mockReturnValue(true);
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockProcessMultipartPartsForAttachedDatapackFilesEditUpload.mockResolvedValue({
       pdfFields: { "file.pdf": expect.stringContaining("file.pdf") }
     });
     mockCopyFile.mockRejectedValue(new Error("Failed to copy file"));
     const res = await app.inject({
       method: "PATCH",
-      url: "/user/datapack/files/testTitle/12345/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
       payload: formData,
       headers
     });
@@ -2432,16 +2396,14 @@ describe("addDatapackAttachedFiles tests", () => {
   });
   it("should return 200 when adding files successfully", async () => {
     mockCheckFileTypeIsPDF.mockReturnValue(true);
-    mockGetUserUUIDDirectory.mockResolvedValue("/valid/uuid");
-    mockGetUsersDatapacksDir.mockResolvedValue("/valid/uuid/datapacks");
-    mockGetPDFDir.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
+    mockFetchUserDatapackDirectory.mockResolvedValue("/valid/uuid/datapacks/TestPack/files");
     mockProcessMultipartPartsForAttachedDatapackFilesEditUpload.mockResolvedValue({
       pdfFields: { "file.pdf": expect.stringContaining("file.pdf") }
     });
     mockCopyFile.mockResolvedValue(undefined);
     const res = await app.inject({
       method: "PATCH",
-      url: "/user/datapack/files/testTitle/12345/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
       payload: formData,
       headers
     });

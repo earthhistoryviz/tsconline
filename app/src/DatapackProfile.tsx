@@ -446,8 +446,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
         </div>
         <div className={styles.ai}>
           <Typography className={styles.aih}>
-            {/* {t("settings.datapacks.attached-files")} */}
-            Attached Files
+            {t("settings.datapacks.attached-files")}
           </Typography>
           <AttachedFiles datapack={datapack} fileNames={originalFileNames} setFileNames={setOriginalFileNames} />
         </div>
@@ -461,8 +460,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
               color="primary"
               sx={{ marginTop: 2 }}
               onClick={() => downloadDatapackFiles()}>
-              {/* {t("workshops.details-page.download-button")} */}
-              Download PDF Files
+              {t("workshops.details-page.download-button")}
             </TSCButton>
           )}
         </div>
@@ -626,14 +624,13 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
             ))
           ) : (
             <Typography className={styles.fileName}>
-              {/* {t("settings.datapacks.no-attached-files")} */}
-              No attached files
+              {t("settings.datapacks.no-attached-files")}
             </Typography>
           )}
-          {/* t("settings.datapacks.upload-pdf-files") */}
+          
           <InputFileUpload
             startIcon={<FileUpload />}
-            text={"Upload PDF Files"}
+            text={t("settings.datapacks.upload-pdf-files")}
             onChange={handlePDFFileUpload}
             accept=".pdf"
             multiple={true}
@@ -647,8 +644,7 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
         ))
       ) : (
         <Typography className={styles.fileName}>
-          {/* {t("settings.datapacks.no-attached-files")} */}
-          No attached files
+          {t("settings.datapacks.no-attached-files")}
         </Typography>
       )}
     </>
