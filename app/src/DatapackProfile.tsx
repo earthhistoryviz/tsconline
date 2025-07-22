@@ -394,11 +394,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
   useEffect(() => {
     const fetchFileNames = async () => {
       if (datapack) {
-        const names = await actions.fetchDatapackFileNames(
-          datapack.title,
-          getUUIDOfDatapackType(datapack),
-          datapack.isPublic
-        );
+        const names = await actions.fetchDatapackFileNames(datapack.title, getUUIDOfDatapackType(datapack));
         setOriginalFileNames(names ? names : []);
       }
     };
@@ -445,9 +441,7 @@ const About: React.FC<AboutProps> = observer(({ datapack }) => {
           <Typography>{datapack.size}</Typography>
         </div>
         <div className={styles.ai}>
-          <Typography className={styles.aih}>
-            {t("settings.datapacks.attached-files")}
-          </Typography>
+          <Typography className={styles.aih}>{t("settings.datapacks.attached-files")}</Typography>
           <AttachedFiles datapack={datapack} fileNames={originalFileNames} setFileNames={setOriginalFileNames} />
         </div>
         <div className={styles.ai}>
@@ -597,7 +591,6 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
       const numFilesRemaining = await actions.deleteAttachedDatapackFile(
         datapack.title,
         getUUIDOfDatapackType(datapack),
-        datapack.isPublic,
         fileName
       );
       // if there are no files remaining, set the hasFiles to false
@@ -623,11 +616,9 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
               </Box>
             ))
           ) : (
-            <Typography className={styles.fileName}>
-              {t("settings.datapacks.no-attached-files")}
-            </Typography>
+            <Typography className={styles.fileName}>{t("settings.datapacks.no-attached-files")}</Typography>
           )}
-          
+
           <InputFileUpload
             startIcon={<FileUpload />}
             text={t("settings.datapacks.upload-pdf-files")}
@@ -643,9 +634,7 @@ const AttachedFiles: React.FC<AttachedFilesProps> = observer(({ datapack, fileNa
           </Typography>
         ))
       ) : (
-        <Typography className={styles.fileName}>
-          {t("settings.datapacks.no-attached-files")}
-        </Typography>
+        <Typography className={styles.fileName}>{t("settings.datapacks.no-attached-files")}</Typography>
       )}
     </>
   );

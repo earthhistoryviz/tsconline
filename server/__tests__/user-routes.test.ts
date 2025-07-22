@@ -2223,7 +2223,7 @@ describe("fetchDatapackAttachedFileNames tests", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000",
       headers
     });
     expect(res.statusCode).toBe(200);
@@ -2235,7 +2235,7 @@ describe("fetchDatapackAttachedFileNames tests", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000",
       headers
     });
 
@@ -2269,7 +2269,7 @@ describe("fetchDatapackAttachedFileNames tests", () => {
 
     const res = await app.inject({
       method: "GET",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000",
       headers
     });
 
@@ -2290,7 +2290,7 @@ describe("deleteDatapackAttachedFile tests", () => {
   it("should return 400 for missing file name", async () => {
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/   ",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/   ",
       headers
     });
 
@@ -2314,7 +2314,7 @@ describe("deleteDatapackAttachedFile tests", () => {
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/test.pdf",
       headers
     });
     expect(res.statusCode).toBe(200);
@@ -2328,7 +2328,7 @@ describe("deleteDatapackAttachedFile tests", () => {
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/test.pdf",
       headers
     });
     expect(mockEditDatapackHandler).toHaveBeenCalledOnce();
@@ -2342,7 +2342,7 @@ describe("deleteDatapackAttachedFile tests", () => {
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/test.pdf",
       headers
     });
     expect(await res.json()).toEqual({ error: "There were errors updating the datapack" });
@@ -2355,7 +2355,7 @@ describe("deleteDatapackAttachedFile tests", () => {
 
     const res = await app.inject({
       method: "DELETE",
-      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/false/test.pdf",
+      url: "/user/datapack/files/testTitle/123e4567-e89b-12d3-a456-426614174000/test.pdf",
       headers
     });
 

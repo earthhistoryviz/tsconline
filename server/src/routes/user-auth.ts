@@ -86,20 +86,18 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     type: "object",
     properties: {
       datapackTitle: { type: "string", minLength: 1 },
-      uuid: { type: "string", minLength: 1, format: "uuid" },
-      isPublic: { type: "boolean" }
+      uuid: { type: "string", minLength: 1, format: "uuid" }
     },
-    required: ["datapackTitle", "uuid", "isPublic"]
+    required: ["datapackTitle", "uuid"]
   };
   const deleteDatapackAttachedFileParams = {
     type: "object",
     properties: {
       datapackTitle: { type: "string", minLength: 1 },
       uuid: { type: "string", minLength: 1, format: "uuid" },
-      isPublic: { type: "boolean" },
       fileName: { type: "string", minLength: 1 }
     },
-    required: ["datapackTitle", "uuid", "isPublic", "fileName"]
+    required: ["datapackTitle", "uuid", "fileName"]
   };
   const addDatapackAttachedFilesParams = {
     type: "object",
@@ -310,7 +308,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     downloadPrivateDatapackFilesZip
   );
   fastify.get(
-    "/datapack/files/:datapackTitle/:uuid/:isPublic",
+    "/datapack/files/:datapackTitle/:uuid",
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: fetchDatapackAttachedFileNamesParams }
@@ -318,7 +316,7 @@ export const userRoutes = async (fastify: FastifyInstance, _options: RegisterOpt
     fetchDatapackAttachedFileNames
   );
   fastify.delete(
-    "/datapack/files/:datapackTitle/:uuid/:isPublic/:fileName",
+    "/datapack/files/:datapackTitle/:uuid/:fileName",
     {
       config: { rateLimit: looseRateLimit },
       schema: { params: deleteDatapackAttachedFileParams },

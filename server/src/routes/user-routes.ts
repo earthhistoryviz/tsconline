@@ -28,7 +28,6 @@ import {
   fetchUserDatapackDirectory,
   getDatapackZipFilePath,
   getPDFFilesDirectoryFromDatapackDirectory,
-  getUsersDatapacksDirectoryFromUUIDDirectory,
   getUserUUIDDirectory
 } from "../user/fetch-user-files.js";
 import path from "path";
@@ -521,10 +520,10 @@ interface UploadDatapackComment extends RouteGenericInterface {
 }
 
 export const fetchDatapackAttachedFileNames = async function fetchDatapackAttachedFileNames(
-  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string; isPublic: boolean } }>,
+  request: FastifyRequest<{ Params: { datapackTitle: string; uuid: string } }>,
   reply: FastifyReply
 ) {
-  const { datapackTitle, uuid, isPublic } = request.params;
+  const { datapackTitle, uuid } = request.params;
   if (!datapackTitle || /[<>:"/\\|?*]/.test(datapackTitle)) {
     reply.status(400).send({ error: "Missing datapack title" });
     return;
@@ -545,14 +544,14 @@ export const fetchDatapackAttachedFileNames = async function fetchDatapackAttach
 };
 
 interface DeleteDatapackAttachedFile extends RouteGenericInterface {
-  Params: { datapackTitle: string; uuid: string; isPublic: boolean; fileName: string };
+  Params: { datapackTitle: string; uuid: string; fileName: string };
 }
 
 export const deleteDatapackAttachedFile = async function deleteDatapackAttachedFile(
   request: FastifyRequest<DeleteDatapackAttachedFile>,
   reply: FastifyReply
 ) {
-  const { datapackTitle, uuid, isPublic, fileName } = request.params;
+  const { datapackTitle, uuid, fileName } = request.params;
 
   try {
     const numFilesRemaining = await removeAttachedDatapackFile(uuid, datapackTitle, fileName);
@@ -586,7 +585,6 @@ export const addDatapackAttachedFiles = async function addDatapackAttachedFiles(
   const parts = request.parts();
 
   // find datapack folder and files directory within its
-  const directory = await getUserUUIDDirectory(uuid, isPublic);
   const datapackFolder = await fetchUserDatapackDirectory(uuid, datapackTitle);
   const filesDir = await getPDFFilesDirectoryFromDatapackDirectory(datapackFolder);
 
