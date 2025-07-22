@@ -26,9 +26,7 @@ import {
   getCachedDatapackFilePath,
   getPDFFilesDirectoryFromDatapackDirectory,
   getDatapackZipFileIfExists,
-  getDatapackZipFilePath,
-  getUserUUIDDirectory,
-  getUsersDatapacksDirectoryFromUUIDDirectory
+  getDatapackZipFilePath
 } from "./fetch-user-files.js";
 import { Multipart, MultipartFile } from "@fastify/multipart";
 import { findUser } from "../database.js";

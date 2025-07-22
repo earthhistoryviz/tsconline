@@ -27,8 +27,7 @@ import logger from "../error-logger.js";
 import {
   fetchUserDatapackDirectory,
   getDatapackZipFilePath,
-  getPDFFilesDirectoryFromDatapackDirectory,
-  getUserUUIDDirectory
+  getPDFFilesDirectoryFromDatapackDirectory
 } from "../user/fetch-user-files.js";
 import path from "path";
 import { NewDatapackComment, assertDatapackCommentWithProfilePicture, isOperationResult } from "../types.js";
