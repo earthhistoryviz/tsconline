@@ -73,7 +73,11 @@ async function processSequenceColumns(events: arkL_events[], columns: arkL_colum
       for (const event of sequenceEvents) {
         const sequenceType =
           event.event_type === "seq bdy" ? "SB" : event.event_type === "mfs" ? "MFS" : event.event_type;
-        line = `\t${event.eventx != null ? event.eventx : ""}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
+        let label = sequenceType === "MFS" ? "" : event.eventx != null ? event.eventx : "";
+        if (sequenceType === "SB" && label) {
+          label = label.replace(/seqbdy/gi, "").trim();
+        }
+        line = `\t${label}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
         lines.push(line);
       }
       // for blank space between columns for tscreator to parse
