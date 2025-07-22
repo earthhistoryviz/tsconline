@@ -37,14 +37,61 @@ async function loadJSONS() {
 
 type StringDict = { [key: string]: string[] };
 type StringDictSet = { [key: string]: Set<string> };
+type ProcessColumnOutput = { path: string; column: string; lines: string[] };
 
-async function processEventColumns(
-  datasets: arkL_datasets[],
-  columns: arkL_columns[],
-  events: arkL_events[],
-  pathDict: StringDictSet,
-  linesDict: StringDict
-) {
+async function processSequenceColumns(events: arkL_events[], columns: arkL_columns[], datasets: arkL_datasets[]) {
+  const sequenceColumns: ProcessColumnOutput[] = [];
+  for (const column of columns) {
+    const lines = [];
+    if (column.column_type === "sequence") {
+      const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
+      if (!dataset) {
+        console.log(chalk.yellow("missing dataset id for " + column.columnx));
+        continue;
+      }
+      // Add other column types (intervals but they have sequence types, but no info on SB, MFS, Major, Minor, etc.)
+      let sequenceEvents = [];
+      if (column.sub_columnE !== "" && column.sub_columnE !== null) {
+        const regex = new RegExp(column.sub_columnE!, "i");
+        sequenceEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.sub_columnE.match(regex) && event.age)
+          .sort((a, b) => a.age! - b.age!);
+      } else {
+        sequenceEvents = events
+          .filter((event) => event.dataset_id === column.dataset_id && event.age)
+          .sort((a, b) => a.age! - b.age!);
+      }
+      if (sequenceEvents.length === 0) {
+        console.log(chalk.yellow("missing sequence events for " + column.columnx));
+        continue;
+      }
+      const colour = dataset.colour;
+      // which notes to use? Cenoz, Jur, Cret, multi?
+      const popup = dataset.notes_Cenoz;
+      let line = `${column.columnx}\tsequence\t${column.width || ""}\t${colour || ""}\tnotitle\toff\t${popup !== null ? popup.replace(/[\r\n]+/g, " ") : ""}`;
+      lines.push(line);
+      for (const event of sequenceEvents) {
+        const sequenceType =
+          event.event_type === "seq bdy" ? "SB" : event.event_type === "mfs" ? "MFS" : event.event_type;
+        line = `\t${event.eventx != null ? event.eventx : ""}\t${sequenceType}\t${event.age}\t${event.seq_scale}${event.notes_2020 !== null ? `\t${event.notes_2020?.replace(/[\r\n]+/g, " ")}` : ""}`;
+        lines.push(line);
+      }
+      // for blank space between columns for tscreator to parse
+      lines.push("");
+      if (column.path && column.columnx) {
+        sequenceColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines
+        });
+      }
+    }
+  }
+  return sequenceColumns;
+}
+
+async function processEventColumns(datasets: arkL_datasets[], columns: arkL_columns[], events: arkL_events[]) {
+  const eventColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
     const columnLines: string[] = [];
     if (column.column_type === "events") {
@@ -106,21 +153,24 @@ async function processEventColumns(
       //for blank space between columns for tscreator to parse
       columnLines.push("");
       if (column.path && column.columnx) {
-        organizeColumn(column.path, column.columnx, columnLines, pathDict, linesDict);
+        eventColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines
+        });
       }
     }
   }
-  return;
+  return eventColumns;
 }
 
 async function processBlockColumns(
   datasets: arkL_datasets[],
   columns: arkL_columns[],
   intervals: arkL_intervals[],
-  subdatasets: arkL_subdatasets[],
-  pathDict: StringDictSet,
-  linesDict: StringDict
+  subdatasets: arkL_subdatasets[]
 ) {
+  const blockColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
     if (
       column.column_type?.includes("interval") &&
@@ -192,13 +242,16 @@ async function processBlockColumns(
       }
       columnLines.push("");
       if (column.path && column.columnx) {
-        organizeColumn(column.path, column.columnx, columnLines, pathDict, linesDict);
+        blockColumns.push({
+          path: column.path,
+          column: column.columnx,
+          lines: columnLines
+        });
       }
     }
   }
-  return;
+  return blockColumns;
 }
-
 
 async function processChronColumns(
   datasets: arkL_datasets[],
@@ -208,7 +261,7 @@ async function processChronColumns(
 ) {
   const chronColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
-    if( column.column_type?.includes("interval") && column.interval_type?.includes("chron")) {
+    if( column.column_type?.includes("interval") && column.interval_type?.includes("chron") && column.columnx != "Chron Label") {
       const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
@@ -262,13 +315,13 @@ async function processChronColumns(
           prevSeries = inter.stage ?? null;
           if (prevSeries !== null) {
             // Output the series header line: <SERIESNAME> (blank) <WIDTH>
-            columnLines.push(`${prevSeries}\t\t${seriesWidth}`);
+            columnLines.push(`${prevSeries}\tPrimary`);
             // Output the TOP line for the series
-            columnLines.push(`\tTOP\t${label}\t${inter.top_age === null ? 0 : inter.top_age}\t`);
+            columnLines.push(`\tTOP\t\t${inter!.top_age === null ? 0 : inter!.top_age}`);
           }
         }
         
-        const polarity = inter.polarity == "r" ? "R" : inter.polarity == "n" ? "N" : "No Data";
+        const polarity = inter.polarity == "r" ? "R" : inter.polarity == "n" ? "N" : "U";
         line = `\t${polarity}\t${label}\t${inter.base_age}\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}`;
         columnLines.push(line);
       }
@@ -285,30 +338,22 @@ async function processChronColumns(
   return chronColumns;
 }
 
-// insert into pathDict and linesDict
-const organizeColumn = (
-  path: string,
-  columnName: string,
-  columnLines: string[],
-  pathDict: StringDictSet,
-  linesDict: StringDict
-) => {
-  if (path) {
-    const pathArray: string[] = customSplit(path);
-    if (pathArray && pathArray.length > 0) {
-      for (let i = 0; i < pathArray.length; i++) {
-        const path: string = pathArray[i]!;
-        if (!path) continue;
-        if (!pathDict[path]) {
-          pathDict[path] = new Set<string>();
-        }
-        // if path is the last element, add the column lines
-        if (i === pathArray.length - 1) {
-          pathDict[path]?.add(columnName!);
-          linesDict[path] = [...(linesDict[path] || []), ...columnLines];
-        } else {
-          pathDict[path]?.add(pathArray[i + 1]!);
-        }
+
+const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
+  for (const entry of entries) {
+    const { path, column, lines } = entry;
+    const pathArray = customSplit(path);
+    for (let i = 0; i < pathArray.length; i++) {
+      const currentPath = pathArray[i]!;
+      if (!currentPath) continue;
+      if (!pathDict[currentPath]) {
+        pathDict[currentPath] = new Set<string>();
+      }
+      if (i === pathArray.length - 1) {
+        pathDict[currentPath]?.add(column);
+        linesDict[currentPath] = [...(linesDict[currentPath] || []), ...lines];
+      } else {
+        pathDict[currentPath]?.add(pathArray[i + 1]!);
       }
     }
   }
@@ -375,8 +420,11 @@ try {
   const filePath = join(outputDir, "group_organized_test_datapack.txt");
   const pathDict: StringDictSet = {}; // dictionary to stucture groups and their children
   const linesDict: StringDict = {}; // dictionary to link groups to their columns in the form of lines
-  await processEventColumns(datasets, columns, events, pathDict, linesDict);
-  await processBlockColumns(datasets, columns, intervals, subdatasets, pathDict, linesDict);
+  const eventColumns = await processEventColumns(datasets, columns, events);
+  const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
+  const sequenceColumns = await processSequenceColumns(events, columns, datasets);
+  const chronColumns = await processChronColumns(datasets, columns, intervals, subdatasets);
+  organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns], pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
   console.log(chalk.green("Processed columns"));
