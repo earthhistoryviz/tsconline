@@ -205,7 +205,7 @@ export const downloadAllFilesZip = async (
 ) => {
   const user = request.user!;
   await downloadWorkshopFilesZip(request, reply);
-}
+};
 
 /**
  * Will fetch both user and workshop metadatas

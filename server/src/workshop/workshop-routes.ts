@@ -189,7 +189,6 @@ export const downloadWorkshopFilesZip = async (
       .header("Content-Type", "application/zip")
       .header("Content-Disposition", `attachment; filename="workshop_${workshopId}_all_files.zip"`)
       .send(zipBuffer);
-
   } catch (error) {
     logger.error("Error downloading workshop files zip:", error);
     reply.status(500).send({ error: "An error occurred" });

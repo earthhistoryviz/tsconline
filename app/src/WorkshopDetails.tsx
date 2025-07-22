@@ -14,7 +14,7 @@ import { loadRecaptcha, removeRecaptcha } from "./util";
 import {
   ReservedWorkshopFileKey,
   RESERVED_INSTRUCTIONS_FILENAME,
-  RESERVED_PRESENTATION_FILENAME, 
+  RESERVED_PRESENTATION_FILENAME,
   getWorkshopUUIDFromWorkshopId
 } from "@tsconline/shared";
 import { ErrorCodes } from "./util/error-codes";
@@ -84,7 +84,7 @@ export const WorkshopDetails = observer(() => {
       if (shouldLoadRecaptcha) removeRecaptcha();
     };
   }, [shouldLoadRecaptcha]);
-  
+
   async function downloadWorkshopFiles() {
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);

@@ -59,7 +59,7 @@ export const AddCustomColumnMenu: React.FC<AddCustomColumnMenuProps> = observer(
     return "Data Mining";
   });
   const columnSelected = state.columnMenu.columnSelected
-    ? state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null
+    ? (state.settingsTabs.columnHashMap.get(state.columnMenu.columnSelected) ?? null)
     : null;
   const [baseColumn, setBaseColumn] = useState<RenderColumnInfo | null>(
     columnSelected?.columnDisplayType === "Point" || columnSelected?.columnDisplayType === "Event"
