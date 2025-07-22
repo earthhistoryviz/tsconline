@@ -214,9 +214,9 @@ export const fetchDatapackFiles = action(async (datapackTitle: string, uuid: str
   }
 });
 
-export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string, isPublic: boolean) => {
+export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid: string) => {
   try {
-    const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}`, {
+    const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}`, {
       method: "GET",
       credentials: "include"
     });
@@ -237,48 +237,43 @@ export const fetchDatapackFileNames = action(async (datapackTitle: string, uuid:
   }
 });
 
-export const deleteAttachedDatapackFile = action(
-  async (datapackTitle: string, uuid: string, isPublic: boolean, fileName: string) => {
+export const deleteAttachedDatapackFile = action(async (datapackTitle: string, uuid: string, fileName: string) => {
+  try {
+    setEditRequestInProgress(true);
+    const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE);
+    if (!recaptchaToken) return null;
     try {
-      setEditRequestInProgress(true);
-      const recaptchaToken = await getRecaptchaToken(UserRecaptchaActions.USER_DELETE_DATAPACK_ATTACHED_FILE);
-      if (!recaptchaToken) return null;
-      try {
-        const response = await fetcher(
-          `/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${isPublic}/${fileName}`,
-          {
-            method: "DELETE",
-            credentials: "include",
-            headers: {
-              "recaptcha-token": recaptchaToken
-            }
-          }
-        );
-
-        if (response.ok) {
-          // return number of files remaining
-          const data = await response.json();
-          pushSnackbar("File deleted", "success");
-          return data.numFilesRemaining;
-        } else {
-          displayServerError(
-            response,
-            ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED,
-            ErrorMessages[ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED]
-          );
+      const response = await fetcher(`/user/datapack/files/${encodeURIComponent(datapackTitle)}/${uuid}/${fileName}`, {
+        method: "DELETE",
+        credentials: "include",
+        headers: {
+          "recaptcha-token": recaptchaToken
         }
-      } catch (e) {
-        if ((e as Error).name === "AbortError") return;
-        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-        console.error(e);
+      });
+
+      if (response.ok) {
+        // return number of files remaining
+        const data = await response.json();
+        pushSnackbar("File deleted", "success");
+        return data.numFilesRemaining;
+      } else {
+        displayServerError(
+          response,
+          ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED,
+          ErrorMessages[ErrorCodes.USER_DELETE_ATTACHED_DATAPACK_FILES_FAILED]
+        );
       }
     } catch (e) {
+      if ((e as Error).name === "AbortError") return;
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
       console.error(e);
-    } finally {
-      setEditRequestInProgress(false);
     }
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setEditRequestInProgress(false);
   }
-);
+});
 
 export const addAttachedDatapackFiles = action(
   async (datapackTitle: string, uuid: string, isPublic: boolean, newFiles: File[]) => {
