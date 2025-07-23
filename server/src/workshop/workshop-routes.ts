@@ -16,7 +16,6 @@ import { fetchWorkshopCoverPictureFilepath } from "../upload-handlers.js";
 import { assetconfigs, checkFileExists } from "../util.js";
 import logger from "../error-logger.js";
 import { createReadStream } from "fs";
-import { readdir } from "node:fs/promises";
 import fs from "fs/promises";
 import os from "os";
 import { getUserUUIDDirectory } from "../user/fetch-user-files.js";

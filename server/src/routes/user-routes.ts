@@ -203,7 +203,6 @@ export const downloadAllFilesZip = async (
   request: FastifyRequest<{ Params: { workshopId: number } }>,
   reply: FastifyReply
 ) => {
-  const user = request.user!;
   await downloadWorkshopFilesZip(request, reply);
 };
 
