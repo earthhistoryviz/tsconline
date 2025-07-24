@@ -148,6 +148,11 @@ jobs:
 
           echo "List response: $LIST_RESPONSE"
 
+          USER=$(curl -X POST https://api.dropboxapi.com/2/users/get_current_account \
+          --header "Authorization: Bearer YOUR_ACCESS_TOKEN")
+
+          echo "Current user: $USER"
+
           DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower')
           if [ -z "$DECRYPTION_PATH" ]; then
             echo "Error: Decryption jar not found."
