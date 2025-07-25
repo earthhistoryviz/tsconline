@@ -253,15 +253,14 @@ async function processBlockColumns(
   return blockColumns;
 }
 
-async function processChronColumns(
-  datasets: arkL_datasets[],
-  columns: arkL_columns[],
-  intervals: arkL_intervals[],
-  subdatasets: arkL_subdatasets[]
-) {
+async function processChronColumns(datasets: arkL_datasets[], columns: arkL_columns[], intervals: arkL_intervals[]) {
   const chronColumns: ProcessColumnOutput[] = [];
   for (const column of columns) {
-    if( column.column_type?.includes("interval") && column.interval_type?.includes("chron") && column.columnx != "Chron Label") {
+    if (
+      column.column_type?.includes("interval") &&
+      column.interval_type?.includes("chron") &&
+      column.columnx != "Chron Label"
+    ) {
       const columnLines: string[] = [];
       const dataset = datasets.find((dataset) => dataset.id === column.dataset_id);
       if (!dataset) {
@@ -292,8 +291,6 @@ async function processChronColumns(
       columnLines.push(line);
 
       let prevSeries: string | null = null;
-      let seriesWidth = column.width || ""; // You may want to customize this per series
-
       for (const inter of dbIntervals) {
         if (inter.base_age === null) continue;
         if (inter.polarity === null) continue;
@@ -320,7 +317,7 @@ async function processChronColumns(
             columnLines.push(`\tTOP\t\t${inter!.top_age === null ? 0 : inter!.top_age}`);
           }
         }
-        
+
         const polarity = inter.polarity == "r" ? "R" : inter.polarity == "n" ? "N" : "U";
         line = `\t${polarity}\t${label}\t${inter.base_age}\t${inter.interval_notes !== null ? inter.interval_notes.replace(/[\r\n]+/g, " ") : ""}`;
         columnLines.push(line);
@@ -337,7 +334,6 @@ async function processChronColumns(
   }
   return chronColumns;
 }
-
 
 const organizeColumn = (entries: ProcessColumnOutput[], pathDict: StringDictSet, linesDict: StringDict) => {
   for (const entry of entries) {
@@ -423,7 +419,8 @@ try {
   const eventColumns = await processEventColumns(datasets, columns, events);
   const blockColumns = await processBlockColumns(datasets, columns, intervals, subdatasets);
   const sequenceColumns = await processSequenceColumns(events, columns, datasets);
-  const chronColumns = await processChronColumns(datasets, columns, intervals, subdatasets);
+  const chronColumns = await processChronColumns(datasets, columns, intervals);
+  console.log("getting here");
   organizeColumn([...eventColumns, ...blockColumns, ...sequenceColumns, ...chronColumns], pathDict, linesDict);
   const lines = await linesFromDicts(pathDict, linesDict);
   await writeFile(filePath, lines.join("\n"));
