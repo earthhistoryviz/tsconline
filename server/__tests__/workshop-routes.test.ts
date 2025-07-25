@@ -754,6 +754,25 @@ describe("registerUserForWorkshop tests", () => {
     expect(await response.json()).toEqual({ error: "An error occurred while registering for the workshop" });
     expect(response.statusCode).toBe(500);
   });
+  it("should return 500 if checkWorkshopHasUser returns empty array", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    checkWorkshopHasUser.mockResolvedValueOnce([]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(checkWorkshopHasUser).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ error: "Failed to register user for workshop" });
+    expect(response.statusCode).toBe(500);
+  });
   it("should register user for workshop successfully", async () => {
     findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
     isUserInWorkshop.mockResolvedValueOnce(false);
