@@ -1867,7 +1867,7 @@ export function assertColumnInfo(o: any): asserts o is ColumnInfo {
   if ("width" in o && typeof o.width !== "number") throwError("ColumnInfo", "width", "number", o.width);
   if (typeof o.enableTitle !== "boolean") throwError("ColumnInfo", "enableTitle", "boolean", o.enableTitle);
   if (typeof o.units !== "string") throwError("ColumnInfo", "units", "string", o.units);
-  if(typeof o.isNegativeUnits !== "boolean") throwError("ColumnInfo", "isNegativeUnits", "boolean",o.isNegativeUnits);
+  if (typeof o.isNegativeUnits !== "boolean") throwError("ColumnInfo", "isNegativeUnits", "boolean", o.isNegativeUnits);
   if (typeof o.show !== "boolean") throwError("ColumnInfo", "show", "boolean", o.show);
   if (typeof o.expanded !== "boolean") throwError("ColumnInfo", "expanded", "boolean", o.expanded);
   if ("showAgeLabels" in o && typeof o.showAgeLabels !== "boolean")
