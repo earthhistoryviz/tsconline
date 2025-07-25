@@ -568,6 +568,7 @@
             "loading-subheader": "Please wait while we process your report."
         },
         "errors": {
+            "REGISTER_WORKSHOP_FAILED": "Unable to register for workshop. Please try again later.",
             "NO_FILES_TO_DOWNLOAD": "No files to download.",
             "USER_DATAPACK_UPLOAD_FAILED": "Unable to upload user datapack. Please try again later.",
             "SERVER_RESPONSE_ERROR": "Server response error. Please try again later.",

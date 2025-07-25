@@ -1,6 +1,6 @@
-import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply, RouteGenericInterface } from "fastify";
 import { createZipFile, editDatapackMetadataRequestHandler } from "../file-handlers/general-file-handler-requests.js";
-import { findWorkshop, isUserInWorkshop } from "../database.js";
+import { checkWorkshopHasUser, createUsersWorkshops, findWorkshop, isUserInWorkshop } from "../database.js";
 import { getWorkshopFilesPath, getWorkshopIdFromUUID, verifyWorkshopValidity } from "./workshop-util.js";
 import {
   ReservedWorkshopFileKey,
@@ -179,5 +179,40 @@ export const fetchWorkshopCoverImage = async function (
     }
     console.error("Error fetching image: ", e);
     reply.status(500).send({ error: "Internal Server Error" });
+  }
+};
+
+interface RegisterUserForWorkshopParams extends RouteGenericInterface {
+  Params: {
+    workshopId: number;
+  };
+}
+export const registerUserForWorkshop = async (
+  request: FastifyRequest<RegisterUserForWorkshopParams>,
+  reply: FastifyReply
+) => {
+  const { workshopId } = request.params;
+  const user = request.user!; // already verified in verifyAuthority
+  try {
+    const workshop = await findWorkshop({ workshopId });
+    if (!workshop || workshop.length !== 1) {
+      return reply.status(404).send({ error: "Workshop not found" });
+    }
+    if (workshop[0]!.regRestrict === 1 && !user.isAdmin) {
+      return reply.status(403).send({ error: "Registration restricted to admins only" });
+    }
+    const isRegistered = await isUserInWorkshop(user.userId, workshopId);
+    if (isRegistered) {
+      return reply.status(400).send({ error: "User already registered for this workshop" });
+    }
+    await createUsersWorkshops({ userId: user.userId, workshopId });
+    if ((await checkWorkshopHasUser(user.userId, workshopId)).length === 0) {
+      return reply.status(500).send({ error: "Failed to register user for workshop" });
+    }
+
+    reply.send({ message: "User successfully registered for the workshop" });
+  } catch (error) {
+    logger.error("Error registering user for workshop:", error);
+    reply.status(500).send({ error: "An error occurred while registering for the workshop" });
   }
 };

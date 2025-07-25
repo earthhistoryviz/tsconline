@@ -39,7 +39,9 @@ vi.mock("../src/database", async () => {
   return {
     findUser: vi.fn(() => Promise.resolve([testAdminUser])), // just so we can verify the user is an admin for prehandlers
     isUserInWorkshop: vi.fn().mockResolvedValue(true),
-    findWorkshop: vi.fn().mockResolvedValue([])
+    findWorkshop: vi.fn().mockResolvedValue([]),
+    checkWorkshopHasUser: vi.fn().mockResolvedValue([]),
+    createUsersWorkshops: vi.fn()
   };
 });
 vi.mock("../src/user/fetch-user-files", async () => {
@@ -188,7 +190,13 @@ const routes: RouteDefinition[] = [
     recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
     hasAuth: true
   },
-  { method: "GET", url: "/workshop/1/files/presentation", hasAuth: true }
+  { method: "GET", url: "/workshop/1/files/presentation", hasAuth: true },
+  {
+    method: "POST",
+    url: "/workshop/register/1",
+    recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_REGISTER,
+    hasAuth: true
+  }
 ];
 
 describe("Route Consistency Tests", () => {
@@ -607,7 +615,7 @@ describe("serveWorkshopHyperlinks tests", () => {
     expect(await response.json()).toEqual({
       code: "FST_ERR_VALIDATION",
       error: "Bad Request",
-      message: "params/workshopId must be number",
+      message: "params/workshopId must be integer",
       statusCode: 400
     });
     expect(response.statusCode).toBe(400);
@@ -672,6 +680,115 @@ describe("serveWorkshopHyperlinks tests", () => {
     expect(isUserInWorkshop).toHaveBeenCalledTimes(1);
     expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
     expect(checkFileExists).toHaveBeenCalledTimes(1);
+    expect(response.statusCode).toBe(200);
+  });
+});
+
+describe("registerUserForWorkshop tests", () => {
+  const findWorkshop = vi.spyOn(database, "findWorkshop");
+  const isUserInWorkshop = vi.spyOn(database, "isUserInWorkshop");
+  const createUsersWorkshops = vi.spyOn(database, "createUsersWorkshops");
+  const checkWorkshopHasUser = vi.spyOn(database, "checkWorkshopHasUser");
+  it("should return 401 if user is not logged in", async () => {
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1"
+    });
+    expect(findWorkshop).not.toHaveBeenCalled();
+    expect(await response.json()).toEqual({ error: "Unauthorized access" });
+    expect(response.statusCode).toBe(401);
+  });
+  it("should return 404 if workshop not found", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "Workshop not found" });
+    expect(response.statusCode).toBe(404);
+  });
+  it("should return 403 if registration is restricted to admins only", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testNonAdminUser]);
+    findWorkshop.mockResolvedValueOnce([{ ...testWorkshopDatabase, regRestrict: 1 }]);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "Registration restricted to admins only" });
+    expect(response.statusCode).toBe(403);
+  });
+  it("should return 400 if user is already registered for workshop", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(true);
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ error: "User already registered for this workshop" });
+    expect(response.statusCode).toBe(400);
+  });
+  it("should return 500 if createUsersWorkshops fails", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    createUsersWorkshops.mockRejectedValueOnce(new Error("Database error"));
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(await response.json()).toEqual({ error: "An error occurred while registering for the workshop" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should return 500 if checkWorkshopHasUser returns empty array", async () => {
+    vi.spyOn(database, "findUser").mockResolvedValueOnce([testAdminUser]);
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    checkWorkshopHasUser.mockResolvedValueOnce([]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(checkWorkshopHasUser).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ error: "Failed to register user for workshop" });
+    expect(response.statusCode).toBe(500);
+  });
+  it("should register user for workshop successfully", async () => {
+    findWorkshop.mockResolvedValueOnce([testWorkshopDatabase]);
+    isUserInWorkshop.mockResolvedValueOnce(false);
+    checkWorkshopHasUser.mockResolvedValueOnce([{ workshopId: 1, userId: testAdminUser.userId }]);
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/workshop/register/1",
+      headers
+    });
+
+    expect(findWorkshop).toHaveBeenCalledWith({ workshopId: 1 });
+    expect(isUserInWorkshop).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(createUsersWorkshops).toHaveBeenCalledWith({ userId: testAdminUser.userId, workshopId: 1 });
+    expect(checkWorkshopHasUser).toHaveBeenCalledWith(testAdminUser.userId, 1);
+    expect(await response.json()).toEqual({ message: "User successfully registered for the workshop" });
     expect(response.statusCode).toBe(200);
   });
 });
