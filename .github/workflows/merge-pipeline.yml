@@ -147,6 +147,12 @@ jobs:
           --data "{\"path\": \"$DROPBOX_FOLDER_PATH\"}")
 
           echo "List response: $LIST_RESPONSE"
+          OTHER=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
+          --header "Authorization: Bearer $ACCESS_TOKEN" \
+          --header "Content-Type: application/json" \
+          --data "{\"path\": \"\"}")
+
+          echo "List response: $OTHER"
 
           DECRYPTION_PATH=$(echo "$LIST_RESPONSE" | jq -r --arg DECRYPTION_NAME "$DECRYPTION_NAME" '.entries[] | select(.name == $DECRYPTION_NAME) | .path_lower')
           if [ -z "$DECRYPTION_PATH" ]; then
