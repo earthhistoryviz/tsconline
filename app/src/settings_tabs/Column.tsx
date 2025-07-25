@@ -254,13 +254,15 @@ const ColumnIcon = observer(({ column }: { column: RenderColumnInfo }) => {
     ? checkIfDccDataIsInRange(
         column,
         state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].baseStageAge,
+        column.isNegativeUnits
       )
     : checkIfDataIsInRange(
         column.minAge,
         column.maxAge,
         state.timeSettings[column.units].topStageAge,
-        state.timeSettings[column.units].baseStageAge
+        state.timeSettings[column.units].baseStageAge,
+        column.isNegativeUnits
       );
   const tooltipOrCheckBox =
     !dataInRange && !(column.name === "Ma" || column.name === "Root") ? (
