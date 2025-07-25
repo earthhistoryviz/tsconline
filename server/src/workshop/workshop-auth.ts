@@ -1,6 +1,11 @@
 import { FastifyRequest, FastifyReply, FastifyInstance, RegisterOptions } from "fastify";
 import { findUser } from "../database.js";
-import { downloadWorkshopFilesZip, editWorkshopDatapackMetadata, registerUserForWorkshop, serveWorkshopHyperlinks } from "./workshop-routes.js";
+import {
+  downloadWorkshopFilesZip,
+  editWorkshopDatapackMetadata,
+  registerUserForWorkshop,
+  serveWorkshopHyperlinks
+} from "./workshop-routes.js";
 import { WorkshopRecaptchaActions } from "@tsconline/shared";
 import { genericRecaptchaMiddlewarePrehandler } from "../routes/prehandlers.js";
 
@@ -39,7 +44,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const editWorkshopDatapackMetadataParams = {
     type: "object",
     properties: {
-      workshopUUID: { type: "string", format: "uuid" },
+      workshopUUID: { type: "string", minLength: 1 },
       datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopUUID", "datapackTitle"]
@@ -95,13 +100,10 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   fastify.post(
     "/register/:workshopId",
     {
-    config: { rateLimit: moderateRateLimit },
-    schema: { params: workshopIdParams },
-    preHandler: [
-      verifyAuthority,
-      genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_REGISTER)
-    ]
-  },
-  registerUserForWorkshop
-  )
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: workshopIdParams },
+      preHandler: [verifyAuthority, genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_REGISTER)]
+    },
+    registerUserForWorkshop
+  );
 };
