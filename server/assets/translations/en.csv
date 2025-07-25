@@ -145,7 +145,6 @@ translation.workshops.calendar.months.9,September
 translation.workshops.calendar.months.10,October
 translation.workshops.calendar.months.11,November
 translation.workshops.calendar.months.12,December
-translation.loading.loading-chart,Loading Chart...
 translation.loading.loading-datapacks,Loading Datapacks
 translation.loading.time,this could take more than a minute
 translation.loading.fetching-datapacks,Fetching Datapacks
@@ -294,7 +293,7 @@ translation.settings.column.add-custom-column-menu.select-base-column,Please Sel
 translation.settings.column.add-custom-column-menu.create-column,Create Column
 translation.settings.search.search-bar,Search
 translation.settings.search.found-result,Found {{count}} Results
-translation.settings.search.current-time-settings,Current Time Settings(Top / Base)
+translation.settings.search.current-time-settings,Current Time Settings(Base / Top)
 translation.settings.search.header.status,Column On?
 translation.settings.search.header.center,Center
 translation.settings.search.header.extend,Extend

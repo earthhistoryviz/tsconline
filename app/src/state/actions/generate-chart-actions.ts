@@ -3,7 +3,14 @@ import { displayServerError } from "./util-actions";
 import { state } from "../state";
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { ChartRequest, ColumnInfo, assertChartErrorResponse, assertChartInfo, isTempDatapack } from "@tsconline/shared";
+import {
+  ChartRequest,
+  ColumnInfo,
+  assertChartProgressUpdate,
+  isCompleteProgress,
+  isErrorProgress,
+  isTempDatapack
+} from "@tsconline/shared";
 import { jsonToXml } from "../parse-settings";
 import { NavigateFunction } from "react-router";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -12,6 +19,7 @@ import { cloneDeep } from "lodash";
 import { getDatapackFromArray, purifyChartContent } from "../non-action-util";
 import { defaultChartZoomSettings } from "../../constants";
 import { fetchUserHistoryMetadata } from "./user-actions";
+import { backendUrl } from "../../util/constant";
 
 export const handlePopupResponse = action(
   "handlePopupResponse",
@@ -175,6 +183,7 @@ export const compileChartRequest = action(
         return;
       }
       const response = await sendChartRequestToServer(chartRequest);
+      generalActions.updateChartLoadingProgress(0, "Initializing");
       if (!response) {
         // error SHOULD already displayed
         return;
@@ -186,6 +195,7 @@ export const compileChartRequest = action(
         unsafeChartContent: response.unsafeChartContent,
         chartTimelineEnabled: false
       });
+      generalActions.removeAllErrors();
       if (state.isLoggedIn) fetchUserHistoryMetadata();
     } finally {
       generalActions.setChartTabState(state.chartTab.state, { chartLoading: false });
@@ -198,68 +208,79 @@ const savePreviousSettings = action("savePreviousSettings", () => {
   state.prevConfig = JSON.parse(JSON.stringify(state.config));
 });
 
-export const sendChartRequestToServer = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
-  try {
-    const response = await fetcher(`/chart`, {
-      method: "POST",
-      body: JSON.stringify(chartRequest),
-      credentials: "include"
-    });
-    const answer = await response.json();
-    if (response.status === 500) {
-      assertChartErrorResponse(answer);
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (answer.errorCode) {
-        case 100:
-          errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
-          break;
-        case 1000:
-          errorCode = ErrorCodes.INVALID_SETTINGS;
-          break;
-        case 1001:
-          errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
-          break;
-        case 400:
-        case 1002:
-        case 1003:
-        case 1004:
-        case 1005:
-        case 2000:
-        case 2001:
-        case 2002:
-        case 2003:
-          errorCode = ErrorCodes.INTERNAL_ERROR;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      return;
+export const sendChartRequestToServer: (chartRequest: ChartRequest) => Promise<
+  | {
+      chartContent: string;
+      unsafeChartContent: string;
+      hash: string;
     }
+  | undefined
+> = action("sendChartRequestToServer", async (chartRequest: ChartRequest) => {
+  return await new Promise((resolve) => {
     try {
-      assertChartInfo(answer);
-      await generalActions.checkSVGStatus(answer.hash);
-      const content = await (await fetcher(answer.chartpath)).text();
-      const sanitizedSVG = purifyChartContent(content);
-      generalActions.pushSnackbar("Successfully generated chart", "success");
-      return {
-        chartContent: sanitizedSVG,
-        unsafeChartContent: content,
-        hash: answer.hash
+      const ws = new WebSocket(`${backendUrl}/chart`);
+      ws.onopen = () => {
+        ws.send(JSON.stringify(chartRequest));
+      };
+      ws.onclose = (event) => {
+        if (!event.wasClean) {
+          console.error("WebSocket closed unexpectedly", event.code, event.reason);
+          displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+          resolve(undefined);
+        }
+      };
+      ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+        displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+        resolve(undefined);
+      };
+      ws.onmessage = async (event) => {
+        const progress = JSON.parse(event.data);
+        assertChartProgressUpdate(progress);
+        if (isErrorProgress(progress)) {
+          let errorCode = ErrorCodes.INTERNAL_ERROR;
+          switch (progress.errorCode) {
+            case 100:
+              errorCode = ErrorCodes.SERVER_FILE_METADATA_ERROR;
+              break;
+            case 408:
+              errorCode = ErrorCodes.SERVER_TIMEOUT;
+              break;
+            case 503:
+              errorCode = ErrorCodes.SERVER_BUSY;
+              break;
+            case 1000:
+              errorCode = ErrorCodes.INVALID_SETTINGS;
+              break;
+            case 1001:
+              errorCode = ErrorCodes.NO_COLUMNS_SELECTED;
+              break;
+          }
+          displayServerError(progress.error, errorCode, ErrorMessages[errorCode]);
+          resolve(undefined);
+          return;
+        }
+        generalActions.updateChartLoadingProgress(progress.percent, progress.stage);
+        if (isCompleteProgress(progress)) {
+          try {
+            const content = await (await fetcher(progress.chartpath)).text();
+            const sanitizedSVG = purifyChartContent(content);
+            generalActions.pushSnackbar("Successfully generated chart", "success");
+            resolve({
+              chartContent: sanitizedSVG,
+              unsafeChartContent: content,
+              hash: progress.hash
+            });
+          } catch (e) {
+            console.error("Failed while processing chart result", e);
+            resolve(undefined);
+          }
+        }
       };
     } catch (e) {
-      let errorCode = ErrorCodes.INVALID_CHART_RESPONSE;
-      switch (response.status) {
-        case 408:
-          errorCode = ErrorCodes.SERVER_TIMEOUT;
-          break;
-        case 503:
-          errorCode = ErrorCodes.SERVER_BUSY;
-          break;
-      }
-      displayServerError(answer, errorCode, ErrorMessages[errorCode]);
-      return;
+      console.error(e);
+      displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
+      resolve(undefined);
     }
-  } catch (e) {
-    console.error(e);
-    displayServerError(null, ErrorCodes.SERVER_RESPONSE_ERROR, ErrorMessages[ErrorCodes.SERVER_RESPONSE_ERROR]);
-  }
+  });
 });
