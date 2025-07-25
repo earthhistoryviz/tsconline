@@ -1,4 +1,4 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box, Typography, IconButton } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import styles from "./WorkshopDetails.module.css";
@@ -68,6 +68,7 @@ export const WorkshopDetails = observer(() => {
   const navigate = useNavigate();
   const { id } = useParams();
   const { t } = useTranslation();
+  const [loadingRegister, setLoadingRegister] = useState(false);
 
   const fetchWorkshop = () => {
     if (!id) return;
@@ -76,13 +77,13 @@ export const WorkshopDetails = observer(() => {
   };
 
   const workshop = fetchWorkshop();
-  const shouldLoadRecaptcha = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
+  const isInWorkshop = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
-    if (shouldLoadRecaptcha) loadRecaptcha();
+    loadRecaptcha();
     return () => {
-      if (shouldLoadRecaptcha) removeRecaptcha();
+      removeRecaptcha();
     };
-  }, [shouldLoadRecaptcha]);
+  }, []);
   async function downloadWorkshopFiles() {
     if (workshop && workshop.files && workshop.files.length > 0) {
       await actions.fetchWorkshopFilesForDownload(workshop);
@@ -138,13 +139,13 @@ export const WorkshopDetails = observer(() => {
                 renderLink={workshop.files?.includes(RESERVED_INSTRUCTIONS_FILENAME) || false}
                 fileType="instructions"
                 workshopId={workshop.workshopId}
-                userInWorkshop={shouldLoadRecaptcha}
+                userInWorkshop={isInWorkshop}
               />
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_PRESENTATION_FILENAME) || false}
                 fileType="presentation"
                 workshopId={workshop.workshopId}
-                userInWorkshop={shouldLoadRecaptcha}
+                userInWorkshop={isInWorkshop}
               />
               <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
@@ -167,7 +168,7 @@ export const WorkshopDetails = observer(() => {
                 );
               })()}
               <Box sx={{ display: "flex", marginTop: 2, gap: 2 }}>
-                {!shouldLoadRecaptcha ? (
+                {!isInWorkshop ? (
                   <CustomTooltip
                     title={t("workshops.details-page.please-register")}
                     slotProps={{
@@ -204,11 +205,16 @@ export const WorkshopDetails = observer(() => {
                     <TSCLoadingButton
                       variant="contained"
                       sx={{ marginRight: 2, backgroundColor: "primary" }}
-                      onClick={() => {
-                        console.warn("Register button clicked, but no action defined yet.");
+                      onClick={async () => {
+                        try {
+                          setLoadingRegister(true);
+                          await actions.registerUserForWorkshop(workshop.workshopId);
+                        } finally {
+                          setLoadingRegister(false);
+                        }
                       }}
                       disabled={isRegistered || isDisabled}
-                      loading={false}>
+                      loading={loadingRegister}>
                       {isRegistered
                         ? t("workshops.details-page.registered-button")
                         : t("workshops.details-page.register-button")}

@@ -384,6 +384,7 @@ translation.report-bug.return-to-homepage,to return to the homepage.
 translation.report-bug.second,second
 translation.report-bug.loading-header,Sending your report...
 translation.report-bug.loading-subheader,Please wait while we process your report.
+translation.errors.REGISTER_WORKSHOP_FAILED,Unable to register for workshop. Please try again later.
 translation.errors.NO_FILES_TO_DOWNLOAD,No files to download.
 translation.errors.USER_DATAPACK_UPLOAD_FAILED,Unable to upload user datapack. Please try again later.
 translation.errors.SERVER_RESPONSE_ERROR,Server response error. Please try again later.
