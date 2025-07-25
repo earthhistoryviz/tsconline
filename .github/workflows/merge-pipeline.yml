@@ -139,12 +139,12 @@ jobs:
             echo "Error: decryptionJar not found in config.json"
             exit 1
           fi
-          DROPBOX_FOLDER_PATH="${{ secrets.DROPBOX_PATH }}"
+          DROPBOX_SHARED_LINK="${{ secrets.DROPBOX_SHARED_LINK }}"
 
           LIST_RESPONSE=$(curl -s -X POST "https://api.dropboxapi.com/2/files/list_folder" \
           --header "Authorization: Bearer $ACCESS_TOKEN" \
           --header "Content-Type: application/json" \
-          --data "{\"path\": \"$DROPBOX_FOLDER_PATH\"}")
+          --data "{\"path\": \"\", \"shared_link\": \"$DROPBOX_SHARED_LINK\"}")
 
           echo "List response: $LIST_RESPONSE"
 
