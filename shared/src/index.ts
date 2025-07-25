@@ -2231,3 +2231,16 @@ export function assertDatapackUniqueIdentifier(o: any): asserts o is DatapackUni
       throwError("DatapackUniqueIdentifier", "type", "official | workshop | user", o.type);
   }
 }
+
+export function assertDatapackFileNames(o: any): asserts o is string[] {
+  if (!Array.isArray(o)) throw new Error("DatapackFileNames must be an array");
+  o.forEach((item, index) => {
+    if (typeof item !== "string") throwError("DatapackFileNames", `item at index ${index}`, "string", item);
+  });
+}
+
+export function assertNumFilesRemaining(o: any): asserts o is { numFilesRemaining: number } {
+  if (typeof o !== "object" || o === null || typeof o.numFilesRemaining !== "number") {
+    throwError("numFilesRemaining", "number", "number", o?.numFilesRemaining);
+  }
+}
