@@ -52,7 +52,7 @@ export const Search = observer(function Search() {
                   className="search-time-display-second-header"
                   sx={{ background: theme.palette.backgroundColor.main }}
                   align="left">
-                  Top/Base
+                  Base/Top
                 </TableCell>
               </TableRow>
             </TableHead>
@@ -61,7 +61,7 @@ export const Search = observer(function Search() {
                 <TableRow key={unit} sx={{ "&:last-child td, &:last-child th": { border: 0 } }}>
                   <TableCell>{unit}</TableCell>
                   <TableCell align="left">
-                    {state.settings.timeSettings[unit].topStageAge}/{state.settings.timeSettings[unit].baseStageAge}
+                    {state.settings.timeSettings[unit].baseStageAge}/{state.settings.timeSettings[unit].topStageAge}
                   </TableCell>
                 </TableRow>
               ))}
