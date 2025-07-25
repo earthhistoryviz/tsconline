@@ -77,7 +77,6 @@ export const WorkshopDetails = observer(() => {
   };
 
   const workshop = fetchWorkshop();
-  const isInWorkshop = state.user.workshopIds?.includes(Number(id)) || state.user.isAdmin;
   useEffect(() => {
     loadRecaptcha();
     return () => {
@@ -139,13 +138,13 @@ export const WorkshopDetails = observer(() => {
                 renderLink={workshop.files?.includes(RESERVED_INSTRUCTIONS_FILENAME) || false}
                 fileType="instructions"
                 workshopId={workshop.workshopId}
-                userInWorkshop={isInWorkshop}
+                userInWorkshop={isRegistered}
               />
               <WorkshopReservedFile
                 renderLink={workshop.files?.includes(RESERVED_PRESENTATION_FILENAME) || false}
                 fileType="presentation"
                 workshopId={workshop.workshopId}
-                userInWorkshop={isInWorkshop}
+                userInWorkshop={isRegistered}
               />
               <Typography className={styles.aih}>{t("workshops.details-page.other-files")}</Typography>
               {(() => {
@@ -168,7 +167,7 @@ export const WorkshopDetails = observer(() => {
                 );
               })()}
               <Box sx={{ display: "flex", marginTop: 2, gap: 2 }}>
-                {!isInWorkshop ? (
+                {!isRegistered ? (
                   <CustomTooltip
                     title={t("workshops.details-page.please-register")}
                     slotProps={{
