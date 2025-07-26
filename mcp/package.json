@@ -1,0 +1,23 @@
+{
+  "name": "mcp",
+  "packageManager": "yarn@4.0.2",
+  "main": "dist/index.js",
+  "version": "1.0.0",
+  "description": "Model Context Protocol (MCP) package for TypeScript Online",
+  "type": "module",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.17.0",
+    "fastify": "4.27.0",
+    "nodemon": "^3.1.10",
+    "zod": "3"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsc -b -w",
+    "start": "nodemon --watch dist --watch ../shared/dist --watch ./package.json --watch dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^24.1.0",
+    "typescript": "5.2.2"
+  }
+}
