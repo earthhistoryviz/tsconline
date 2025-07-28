@@ -162,6 +162,9 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
     }
   } catch (error) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+  }
+});
+
 export const registerUserForWorkshop = action(async (workshopId: number) => {
   if (!state.isLoggedIn) {
     pushError(ErrorCodes.NOT_LOGGED_IN);

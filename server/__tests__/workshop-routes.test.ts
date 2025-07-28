@@ -213,6 +213,7 @@ const routes: RouteDefinition[] = [
     method: "GET",
     url: "/workshop/workshop-datapack/1/datapackTitle",
     recaptchaAction: WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK,
+    hasAuth: true
   },
   {
     method: "POST",

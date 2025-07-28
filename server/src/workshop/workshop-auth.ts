@@ -138,6 +138,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
       ]
     },
     downloadWorkshopDatapack
+  );
   fastify.post(
     "/register/:workshopId",
     {
