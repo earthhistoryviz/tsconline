@@ -90,6 +90,21 @@ export const WorkshopDetails = observer(() => {
       actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
     }
   }
+  async function downloadWorkshopFile(fileName: string) {
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopFile(fileName, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
+  }
+  async function downloadWorkshopDatapack(dataPackTitle: string) {
+    if (workshop && workshop.files && workshop.files.length > 0) {
+      await actions.fetchWorkshopDetailsDatapack(dataPackTitle, workshop);
+    } else {
+      actions.pushError(ErrorCodes.NO_FILES_TO_DOWNLOAD);
+    }
+  }
+
   if (!workshop || !id) return <PageNotFound />;
   const isRegistered = state.user.isAdmin || state.user.workshopIds?.includes(workshop.workshopId) || false;
   const isPublicWorkshop = !workshop.regRestrict;
@@ -123,7 +138,19 @@ export const WorkshopDetails = observer(() => {
                 {workshop.datapacks && workshop.datapacks.length > 0 ? (
                   workshop.datapacks.map((datapack, index) => (
                     <Typography key={index} className={styles.fileName}>
-                      • {datapack}
+                      •{" "}
+                      <a
+                        href={isRegistered ? "" : undefined}
+                        onClick={
+                          isRegistered
+                            ? async (e) => {
+                                e.preventDefault();
+                                await downloadWorkshopDatapack(datapack);
+                              }
+                            : undefined
+                        }>
+                        {datapack}
+                      </a>
                     </Typography>
                   ))
                 ) : (
@@ -156,7 +183,19 @@ export const WorkshopDetails = observer(() => {
                   <>
                     {nonReservedFiles.map((file, index) => (
                       <Typography key={index} className={styles.fileName}>
-                        • {file}
+                        •{" "}
+                        <a
+                          href={isRegistered ? "" : undefined}
+                          onClick={
+                            isRegistered
+                              ? async (e) => {
+                                  e.preventDefault();
+                                  await downloadWorkshopFile(file);
+                                }
+                              : undefined
+                          }>
+                          {file}
+                        </a>
                       </Typography>
                     ))}
                   </>
