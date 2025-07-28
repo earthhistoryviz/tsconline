@@ -1,6 +1,12 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { SharedWorkshop, assertSharedWorkshopArray, assertWorkshopDatapackDownloadResponse } from "@tsconline/shared";
+import {
+  SharedWorkshop,
+  assertSharedWorkshopArray,
+  assertWorkshopDatapackDownloadResponse,
+  WorkshopRecaptchaActions
+} from "@tsconline/shared";
+
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -69,7 +75,7 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
 export const fetchWorkshopFile = action(async (fileName: string, workshop: SharedWorkshop) => {
   try {
     const fileURL = `/workshop/workshop-files/${workshop.workshopId}/${encodeURIComponent(fileName)}`;
-    const recaptchaToken = await getRecaptchaToken("fetchWorkshopFileForDownload");
+    const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_FILE);
     if (!recaptchaToken) return null;
 
     const response = await fetcher(fileURL, {
@@ -113,7 +119,7 @@ export const fetchWorkshopFile = action(async (fileName: string, workshop: Share
 export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string, workshop: SharedWorkshop) => {
   const requestURL = `/workshop/workshop-datapack/${workshop.workshopId}/${datapackTitle}`;
   try {
-    const recaptchaToken = await getRecaptchaToken("fetchWorkshopDataPackForDownload");
+    const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK);
     if (!recaptchaToken) return null;
 
     const response = await fetcher(requestURL, {
@@ -124,7 +130,6 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
       }
     });
 
-    console.log("Resonse status:", response.status);
     if (!response.ok) {
       let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
       switch (response.status) {
@@ -139,12 +144,8 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
           break;
       }
       displayServerError(response, errorCode, ErrorMessages[errorCode]);
-      const errorData = await response.json();
-      console.log("Error fetching workshop datapack:", errorData.error, errorData.details);
-
       return;
     }
-    console.log("No server error");
 
     const data = await response.json();
     const { fileName, fileData, fileType } = data;
