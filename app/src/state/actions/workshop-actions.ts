@@ -1,6 +1,6 @@
 import { action, runInAction } from "mobx";
 import { fetcher } from "../../util";
-import { SharedWorkshop, assertSharedWorkshopArray } from "@tsconline/shared";
+import { SharedWorkshop, WorkshopRecaptchaActions, assertSharedWorkshopArray } from "@tsconline/shared";
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -63,5 +63,37 @@ export const fetchWorkshopFilesForDownload = action(async (workshop: SharedWorks
     } catch (error) {
       pushError(ErrorCodes.UNABLE_TO_READ_FILE_OR_EMPTY_FILE);
     }
+  }
+});
+
+export const registerUserForWorkshop = action(async (workshopId: number) => {
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return;
+  }
+  const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_REGISTER);
+  if (!recaptchaToken) return;
+  const response = await fetcher(`/workshop/register/${workshopId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+  if (response.ok) {
+    const workshop = await response.json();
+    runInAction(() => {
+      state.workshops.push(workshop);
+      if (!state.user.workshopIds) {
+        state.user.workshopIds = [];
+      }
+      state.user.workshopIds?.push(workshopId);
+    });
+  } else {
+    displayServerError(
+      response,
+      ErrorCodes.REGISTER_WORKSHOP_FAILED,
+      ErrorMessages[ErrorCodes.REGISTER_WORKSHOP_FAILED]
+    );
   }
 });
