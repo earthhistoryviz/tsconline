@@ -124,6 +124,7 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
       }
     });
 
+    console.log("Resonse status:", response.status);
     if (!response.ok) {
       let errorCode = ErrorCodes.SERVER_RESPONSE_ERROR;
       switch (response.status) {
@@ -138,8 +139,12 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
           break;
       }
       displayServerError(response, errorCode, ErrorMessages[errorCode]);
+      const errorData = await response.json();
+      console.log("Error fetching workshop datapack:", errorData.error, errorData.details);
+
       return;
     }
+    console.log("No server error");
 
     const data = await response.json();
     const { fileName, fileData, fileType } = data;

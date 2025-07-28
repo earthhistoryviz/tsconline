@@ -143,9 +143,9 @@ export const WorkshopDetails = observer(() => {
                         href={isRegistered ? "" : undefined}
                         onClick={
                           isRegistered
-                            ? (e) => {
+                            ? async (e) => {
                                 e.preventDefault();
-                                downloadWorkshopDatapack(datapack);
+                                await downloadWorkshopDatapack(datapack);
                               }
                             : undefined
                         }>
@@ -188,9 +188,9 @@ export const WorkshopDetails = observer(() => {
                           href={isRegistered ? "" : undefined}
                           onClick={
                             isRegistered
-                              ? (e) => {
+                              ? async (e) => {
                                   e.preventDefault();
-                                  downloadWorkshopFile(file);
+                                  await downloadWorkshopFile(file);
                                 }
                               : undefined
                           }>
