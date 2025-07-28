@@ -5,6 +5,7 @@ import {
   downloadWorkshopFile,
   editWorkshopDatapackMetadata,
   downloadWorkshopDatapack,
+  registerUserForWorkshop,
   serveWorkshopHyperlinks
 } from "./workshop-routes.js";
 import { WorkshopRecaptchaActions } from "@tsconline/shared";
@@ -45,22 +46,22 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
   const editWorkshopDatapackMetadataParams = {
     type: "object",
     properties: {
-      workshopUUID: { type: "string" },
-      datapackTitle: { type: "string" }
+      workshopUUID: { type: "string", minLength: 1 },
+      datapackTitle: { type: "string", minLength: 1 }
     },
     required: ["workshopUUID", "datapackTitle"]
   };
-  const workshopTitleParams = {
+  const workshopIdParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" }
+      workshopId: { type: "integer", minimum: 1 }
     },
     required: ["workshopId"]
   };
   const serveWorkshopHyperlinksParams = {
     type: "object",
     properties: {
-      workshopId: { type: "number" },
+      workshopId: { type: "integer", minimum: 1 },
       filename: { type: "string", enum: ["presentation", "instructions"] }
     },
     required: ["workshopId", "filename"]
@@ -97,7 +98,7 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     "/download/:workshopId",
     {
       config: { rateLimit: moderateRateLimit },
-      schema: { params: workshopTitleParams },
+      schema: { params: workshopIdParams },
       preHandler: [
         verifyAuthority,
         genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_DOWNLOAD_DATAPACK)
@@ -114,7 +115,6 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
     },
     serveWorkshopHyperlinks
   );
-
   fastify.get(
     "/workshop-files/:workshopId/:fileName",
     {
@@ -138,5 +138,13 @@ export const workshopRoutes = async (fastify: FastifyInstance, _options: Registe
       ]
     },
     downloadWorkshopDatapack
+  fastify.post(
+    "/register/:workshopId",
+    {
+      config: { rateLimit: moderateRateLimit },
+      schema: { params: workshopIdParams },
+      preHandler: [verifyAuthority, genericRecaptchaMiddlewarePrehandler(WorkshopRecaptchaActions.WORKSHOP_REGISTER)]
+    },
+    registerUserForWorkshop
   );
 };

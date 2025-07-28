@@ -6,7 +6,6 @@ import {
   assertWorkshopDatapackDownloadResponse,
   WorkshopRecaptchaActions
 } from "@tsconline/shared";
-
 import { state } from "../state";
 import { displayServerError } from "./util-actions";
 import { ErrorCodes, ErrorMessages } from "../../util/error-codes";
@@ -163,5 +162,34 @@ export const fetchWorkshopDetailsDatapack = action(async (datapackTitle: string,
     }
   } catch (error) {
     pushError(ErrorCodes.SERVER_RESPONSE_ERROR);
+export const registerUserForWorkshop = action(async (workshopId: number) => {
+  if (!state.isLoggedIn) {
+    pushError(ErrorCodes.NOT_LOGGED_IN);
+    return;
+  }
+  const recaptchaToken = await getRecaptchaToken(WorkshopRecaptchaActions.WORKSHOP_REGISTER);
+  if (!recaptchaToken) return;
+  const response = await fetcher(`/workshop/register/${workshopId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "recaptcha-token": recaptchaToken
+    }
+  });
+  if (response.ok) {
+    const workshop = await response.json();
+    runInAction(() => {
+      state.workshops.push(workshop);
+      if (!state.user.workshopIds) {
+        state.user.workshopIds = [];
+      }
+      state.user.workshopIds?.push(workshopId);
+    });
+  } else {
+    displayServerError(
+      response,
+      ErrorCodes.REGISTER_WORKSHOP_FAILED,
+      ErrorMessages[ErrorCodes.REGISTER_WORKSHOP_FAILED]
+    );
   }
 });
