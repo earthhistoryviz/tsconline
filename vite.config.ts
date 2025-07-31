@@ -19,7 +19,12 @@ export default defineConfig({
     pool: "forks",
     cache: false,
     environment: "node",
-    include: ["server/__tests__/**.test.ts", "app/__tests__/**.test.ts", "shared/__tests__/**.test.ts"],
+    include: [
+      "server/__tests__/**.test.ts",
+      "app/__tests__/**.test.ts",
+      "shared/__tests__/**.test.ts",
+      "mcp/__tests__/**.test.ts"
+    ],
     coverage: {
       reporter: ["text", "lcov", "html"],
       include: ["server/src/**", "app/src/**", "shared/src/**"],
