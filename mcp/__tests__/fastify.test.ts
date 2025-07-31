@@ -3,7 +3,7 @@ import { beforeAll, afterAll, beforeEach, vi, describe, it, expect, Mock, MockIn
 import { createMCPServer } from "../src/mcp";
 import { registerMCPServer } from "../src/fastify";
 import * as nodeCrypto from "node:crypto";
-const __mockServer = {
+const mockServer = {
   connect: vi.fn(),
   registerTool: vi.fn(),
   registerResource: vi.fn(),
@@ -58,11 +58,11 @@ vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
     }
 
     close = () => {
-        transportClose();
-        if (this.onclose) {
-            this.onclose();
-        }
-    }
+      transportClose();
+      if (this.onclose) {
+        this.onclose();
+      }
+    };
   }
   return {
     StreamableHTTPServerTransport: MockTransport
@@ -70,7 +70,7 @@ vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
 });
 vi.mock("../src/mcp", () => {
   return {
-    createMCPServer: vi.fn(() => Promise.resolve(__mockServer))
+    createMCPServer: vi.fn(() => Promise.resolve(mockServer))
   };
 });
 vi.mock("node:crypto", async (importOriginal) => {
@@ -125,7 +125,7 @@ const initializeTransport = async (randomUUIDSpy: MockInstance, sessionId?: stri
     (sessionId || "mock-session-id") as `${string}-${string}-${string}-${string}-${string}`
   );
   // Mock the connect method to simulate the creation of a server connection to a transport
-  __mockServer.connect.mockImplementationOnce((transport) => {
+  mockServer.connect.mockImplementationOnce((transport) => {
     transport.onsessioninitialized(sessionId || "mock-session-id");
     return Promise.resolve();
   });
@@ -138,7 +138,7 @@ const initializeTransport = async (randomUUIDSpy: MockInstance, sessionId?: stri
     payload: initializeRequestBody
   });
   expect(initializeResponse.json()).toEqual(mockInitializeSuccessfulTransportResponse);
-  expect(__mockServer.connect).toHaveBeenCalled();
+  expect(mockServer.connect).toHaveBeenCalled();
   expect(initializeResponse.statusCode).toBe(200);
   expect(handleRequest).toHaveBeenCalled();
   // Now we send a second request with the same session ID
@@ -197,7 +197,7 @@ describe("POST /mcp", () => {
   });
 
   it("should return 500 error for failed connection to MCP server", async () => {
-    __mockServer.connect.mockRejectedValue(new Error("Connection failed"));
+    mockServer.connect.mockRejectedValue(new Error("Connection failed"));
 
     const response = await app.inject({
       method: "POST",
@@ -211,11 +211,11 @@ describe("POST /mcp", () => {
     expect(response.json()).toEqual({
       error: "Internal server error"
     });
-    expect(__mockServer.connect).toHaveBeenCalled();
+    expect(mockServer.connect).toHaveBeenCalled();
     expect(response.statusCode).toBe(500);
   });
   it("should handle mcp initialize request and create a new session", async () => {
-    __mockServer.connect.mockResolvedValue(undefined);
+    mockServer.connect.mockResolvedValue(undefined);
     const response = await app.inject({
       method: "POST",
       url: "/mcp",
@@ -225,7 +225,7 @@ describe("POST /mcp", () => {
       payload: initializeRequestBody
     });
     expect(response.json()).toEqual(mockInitializeSuccessfulTransportResponse);
-    expect(__mockServer.connect).toHaveBeenCalled();
+    expect(mockServer.connect).toHaveBeenCalled();
     expect(response.statusCode).toBe(200);
     expect(handleRequest).toHaveBeenCalled();
   });
