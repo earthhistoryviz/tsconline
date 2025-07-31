@@ -27,7 +27,7 @@ export default defineConfig({
     ],
     coverage: {
       reporter: ["text", "lcov", "html"],
-      include: ["server/src/**", "app/src/**", "shared/src/**"],
+      include: ["server/src/**", "app/src/**", "shared/src/**", "mcp/src/**"],
       // TODO: add the commented out files
       thresholds: {
         "server/src/admin/admin-auth.ts": fullyCoveredConfig,
