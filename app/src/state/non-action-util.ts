@@ -276,3 +276,23 @@ export function getHelpKeysFromPath(path: string) {
   const keys = path.split("/help/")[1]?.split("/") || [];
   return keys;
 }
+
+export async function convertBase64ToBlob(
+  b64Data: string,
+  contentType = "application/octet-stream",
+  sliceSize = 512
+): Promise<Blob> {
+  const byteCharacters = atob(b64Data);
+  const byteArrays: Uint8Array[] = [];
+
+  for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+    const slice = byteCharacters.slice(offset, offset + sliceSize);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    byteArrays.push(new Uint8Array(byteNumbers));
+  }
+
+  return new Blob(byteArrays, { type: contentType });
+}
