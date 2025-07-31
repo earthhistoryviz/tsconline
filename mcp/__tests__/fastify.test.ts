@@ -54,10 +54,15 @@ vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
       this.sessionIdGenerator = options.sessionIdGenerator;
       this.handleRequest = handleRequest;
       this.onclose = null;
-      this.sessionId = "mock-session-id";
+      this.sessionId = this.sessionIdGenerator ? this.sessionIdGenerator() : "mock-session-id";
     }
 
-    close = transportClose;
+    close = () => {
+        transportClose();
+        if (this.onclose) {
+            this.onclose();
+        }
+    }
   }
   return {
     StreamableHTTPServerTransport: MockTransport
