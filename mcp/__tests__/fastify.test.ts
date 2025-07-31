@@ -41,6 +41,7 @@ const handleRequest = vi.fn().mockImplementation((req, res) => {
   res.end(JSON.stringify(mockInitializeSuccessfulTransportResponse));
   return Promise.resolve();
 });
+const transportClose = vi.fn();
 vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
   class MockTransport {
     sessionIdGenerator?: () => string;
@@ -56,7 +57,7 @@ vi.mock("@modelcontextprotocol/sdk/server/streamableHttp.js", () => {
       this.sessionId = "mock-session-id";
     }
 
-    close = vi.fn();
+    close = transportClose;
   }
   return {
     StreamableHTTPServerTransport: MockTransport
@@ -289,5 +290,38 @@ describe("GET /mcp", () => {
     expect(response.statusCode).toBe(200);
     expect(response.headers["content-type"]).toBe("text/event-stream");
     expect(handleRequest).toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /mcp", () => {
+  const randomUUIDSpy = vi.spyOn(nodeCrypto, "randomUUID");
+  it("should return 400 for invalid or missing session ID", async () => {
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/mcp"
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.body).toBe("Invalid or missing session ID");
+  });
+
+  it("should handle DELETE request with valid session ID", async () => {
+    const sessionId = "valid-delete-session-id";
+    await initializeTransport(randomUUIDSpy, sessionId);
+    handleRequest.mockImplementationOnce((_req, res) => {
+      res.end(JSON.stringify({ message: "Session deleted successfully" }));
+      return Promise.resolve();
+    });
+    const response = await app.inject({
+      method: "DELETE",
+      url: "/mcp",
+      headers: {
+        "mcp-session-id": sessionId
+      }
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(handleRequest).toHaveBeenCalled();
+    expect(transportClose).toHaveBeenCalledOnce();
   });
 });

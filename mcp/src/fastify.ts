@@ -79,6 +79,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
     }
 
     await transport.handleRequest(request.raw, reply.raw);
+    transport.close();
     console.log(chalk.yellow("Session closed:", sessionId));
   });
 
