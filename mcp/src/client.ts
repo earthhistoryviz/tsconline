@@ -25,6 +25,7 @@ try {
   });
   console.log("Greeting:", greeting);
   await client.close();
+  await transport.close();
 } catch (err) {
   console.error("Error in MCP client:\n", err);
   process.exit(1);

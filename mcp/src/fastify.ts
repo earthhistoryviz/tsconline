@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
 import chalk from "chalk";
 import { createMCPServer } from "./mcp.js";
+import { shutdown } from "./shutdown.js";
 const transports: Record<string, StreamableHTTPServerTransport> = {};
 interface MCPServerOptions {
   mcpServer: typeof createMCPServer.prototype.return;
@@ -53,6 +54,7 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
       return;
     }
 
+    reply.raw.setHeader("Content-Type", "text/event-stream");
     await transport.handleRequest(request.raw, reply.raw, body);
   });
 
@@ -79,31 +81,9 @@ export const registerMCPServer: FastifyPluginAsync<MCPServerOptions> = async (
     }
 
     await transport.handleRequest(request.raw, reply.raw);
-    transport.close();
+    await transport.close();
     console.log(chalk.yellow("Session closed:", sessionId));
   });
-
-  // Handle server shutdown gracefully
-  const shutdown = async () => {
-    console.log(chalk.cyan("Shutting down MCP server..."));
-    await Promise.all(
-      Object.values(transports).map((t) => {
-        console.log(chalk.yellow("Closing transport:", t.sessionId));
-        t.close?.();
-      })
-    );
-    await fastify.close();
-    console.log(chalk.green("MCP server shutdown complete."));
-  };
-  // make sure to handle process termination gracefully
-  process.on("SIGINT", async () => {
-    await shutdown();
-    process.exit(0);
-  });
-
-  // make sure to handle nodemon restarts gracefully
-  process.once("SIGUSR2", async () => {
-    await shutdown();
-    process.kill(process.pid, "SIGUSR2");
-  });
+  // make sure to handle server shutdown
+  await shutdown(fastify, transports);
 };
